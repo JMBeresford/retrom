@@ -1,0 +1,4 @@
+/target
+mock_content
+mock.db
+.env
