@@ -1,2 +1,2 @@
-pub mod indexer;
-pub mod library_manager;
+pub mod game_library;
+pub(self) mod indexer;

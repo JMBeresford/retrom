@@ -9,7 +9,7 @@ use axum::{
 use db::{schema, Pool};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use library_manager::library::library_manager::NewGameLibrary;
+use library_manager::library::game_library::NewGameLibrary;
 use std::{env, path::Path};
 use tracing::{error, instrument};
 

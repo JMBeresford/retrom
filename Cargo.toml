@@ -10,6 +10,7 @@ authors = ['John Beresford <jberesford@volcaus.com>']
 service = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
+dotenvy = { workspace = true }
 
 [workspace.dependencies]
 diesel = { version = "2.1.5", default-features = false, features = [
@@ -22,11 +23,17 @@ serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-tokio = { version = "1.37.0", features = ["rt-multi-thread"] }
+tokio = { version = "1.37.0", features = [
+  "rt-multi-thread",
+  "macros",
+  "sync",
+  "time",
+] }
 dotenvy = "0.15.7"
 library_manager = { path = "./packages/library_manager" }
 db = { path = "./packages/db" }
 service = { path = "./packages/service" }
+generated = { path = "./packages/generated" }
 futures = "0.3.30"
 uuid = { version = "1.8.0", features = [
   "v7",
@@ -35,3 +42,8 @@ uuid = { version = "1.8.0", features = [
   "macro-diagnostics",
   "serde",
 ] }
+bytes = "1.6.0"
+reqwest = { version = "0.12.3", features = ["json"] }
+tonic = "0.11"
+prost = "0.12"
+prost-types = "0.12"

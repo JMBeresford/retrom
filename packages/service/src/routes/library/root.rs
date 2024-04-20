@@ -8,7 +8,7 @@ use axum::{
 };
 use db::{models, schema, Pool};
 use diesel_async::RunQueryDsl;
-use library_manager::library::library_manager::GameLibrary;
+use library_manager::library::game_library::GameLibrary;
 use tracing::{error, instrument};
 
 pub fn get_root() -> Router<Pool> {

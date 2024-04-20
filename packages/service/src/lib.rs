@@ -1,16 +1,23 @@
-mod middleware;
+mod providers;
 mod routes;
 mod utils;
 
-use crate::routes::{library::library_routes, platforms::platform_routes, root::root_routes};
-use axum::Router;
+use std::time::Duration;
+
+use crate::routes::{
+    games::games_routes, library::library_routes, platforms::platform_routes, root::root_routes,
+};
+use axum::{extract::MatchedPath, http::Request, response::Response, Router};
 use db::get_db_url;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use tracing::{info, instrument};
+use dotenvy::dotenv;
+use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
+use tracing::{info, Span};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-#[instrument]
 pub async fn start_service() {
+    dotenv().ok();
+
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
@@ -31,6 +38,40 @@ pub async fn start_service() {
         .merge(root_routes())
         .merge(library_routes())
         .merge(platform_routes())
+        .merge(games_routes())
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|req: &Request<_>| {
+                    let method = req.method();
+                    let path = req.uri().path();
+
+                    tracing::info_span!("request", method = %method, path = %path)
+                })
+                .on_request(|req: &Request<_>, _span: &Span| {
+                    let path_handler = match req
+                        .extensions()
+                        .get::<MatchedPath>()
+                        .map(MatchedPath::as_str)
+                    {
+                        Some(path) => path,
+                        None => "unknown",
+                    };
+
+                    tracing::info!("Processing request handler: {path_handler}");
+                })
+                .on_response(|res: &Response, latency: Duration, _span: &Span| {
+                    let status = res.status();
+
+                    if !res.status().is_server_error() {
+                        tracing::info!("Completed: {status} - {latency:#?}");
+                    }
+                })
+                .on_failure(
+                    |err: ServerErrorsFailureClass, latency: Duration, _span: &Span| {
+                        tracing::error!("Failed: {err} - {latency:#?}");
+                    },
+                ),
+        )
         .with_state(pool);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:5001").await.unwrap();

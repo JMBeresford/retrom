@@ -21,6 +21,15 @@ diesel::table! {
 }
 
 diesel::table! {
+    metadata (game_id) {
+        game_id -> Uuid,
+        description -> Text,
+        cover_url -> Text,
+        background_url -> Text,
+    }
+}
+
+diesel::table! {
     platforms (id) {
         id -> Uuid,
         name -> Text,
@@ -30,9 +39,11 @@ diesel::table! {
 
 diesel::joinable!(game_files -> games (game_id));
 diesel::joinable!(games -> platforms (platform_id));
+diesel::joinable!(metadata -> games (game_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     game_files,
     games,
+    metadata,
     platforms,
 );
