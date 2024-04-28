@@ -1,10 +1,8 @@
-use db::models::{
-    game::NewGameBuilder, game_file::NewGameFileBuilder, platform::NewPlatformBuilder,
-};
+use generated::retrom::{GameBuilder, GameFileBuilder, PlatformBuilder};
 use sha256::try_digest;
 use std::{fs::DirEntry, future::Future, path::Path};
 use tokio::fs::canonicalize;
-use tracing::{instrument, trace};
+use tracing::trace;
 
 pub type Result<T> = std::result::Result<T, IndexerError>;
 
@@ -99,9 +97,8 @@ impl std::fmt::Display for IndexerError {
     }
 }
 
-impl DirRepresented for NewPlatformBuilder {
-    #[instrument]
-    async fn from_dir(dir: &Path) -> Result<NewPlatformBuilder> {
+impl DirRepresented for PlatformBuilder {
+    async fn from_dir(dir: &Path) -> Result<PlatformBuilder> {
         if !dir.is_dir() {
             return Err(IndexerError::new(
                 "Platform directory does not exist".into(),
@@ -132,17 +129,16 @@ impl DirRepresented for NewPlatformBuilder {
 
         let id = uuid::Uuid::now_v7();
 
-        Ok(NewPlatformBuilder::default()
-            .id(id)
+        Ok(PlatformBuilder::default()
+            .id(id.to_string())
             .name(name)
             .path(path)
             .to_owned())
     }
 }
 
-impl DirRepresented for NewGameBuilder {
-    #[instrument]
-    async fn from_dir(dir: &Path) -> Result<NewGameBuilder> {
+impl DirRepresented for GameBuilder {
+    async fn from_dir(dir: &Path) -> Result<GameBuilder> {
         if !dir.is_dir() {
             return Err(IndexerError::new("Game directory does not exist".into()));
         }
@@ -171,17 +167,16 @@ impl DirRepresented for NewGameBuilder {
 
         let id = uuid::Uuid::now_v7();
 
-        Ok(NewGameBuilder::default()
-            .id(id)
+        Ok(GameBuilder::default()
+            .id(id.to_string())
             .name(name)
             .path(path)
             .to_owned())
     }
 }
 
-impl FileRepresented for NewGameFileBuilder {
-    #[instrument]
-    async fn from_file(file: &std::path::Path) -> Result<NewGameFileBuilder> {
+impl FileRepresented for GameFileBuilder {
+    async fn from_file(file: &std::path::Path) -> Result<GameFileBuilder> {
         let path = match canonicalize(file).await {
             Ok(path) => path,
             Err(why) => {
@@ -221,8 +216,8 @@ impl FileRepresented for NewGameFileBuilder {
 
         let id = uuid::Uuid::now_v7();
 
-        Ok(NewGameFileBuilder::default()
-            .id(id)
+        Ok(GameFileBuilder::default()
+            .id(id.to_string())
             .name(name)
             .byte_size(byte_size as i32)
             .hash(hash)

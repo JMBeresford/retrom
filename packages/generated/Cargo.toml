@@ -10,6 +10,7 @@ prost-types = { workspace = true }
 tokio = { workspace = true }
 serde_json = { workspace = true }
 serde = { workspace = true }
+derive_builder = { workspace = true }
 
 [build-dependencies]
 tonic-build = "0.11"

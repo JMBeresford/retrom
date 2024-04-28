@@ -1,0 +1,32 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build:protos": "protoc --plugin=$(pnpm which protoc-gen-ts_proto) --ts_proto_opt=env=browser,outputServices=nice-grpc,outputServices=generic-definitions,outputJsonMethods=false,useExactTypes=false,esModuleInterop=true --ts_proto_out=./generated -I ../../../protos/ ../../../protos/*.proto",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "long": "^5.2.3",
+    "next": "14.2.3",
+    "nice-grpc-web": "^3.3.3",
+    "protobufjs": "^7.2.6",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.3",
+    "grpc-tools": "^1.12.4",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "ts-proto": "^1.172.0",
+    "typescript": "^5.4"
+  }
+}

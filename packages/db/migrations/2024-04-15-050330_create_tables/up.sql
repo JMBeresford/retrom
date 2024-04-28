@@ -1,7 +1,8 @@
 CREATE TABLE "platforms"(
 	"id" UUID NOT NULL PRIMARY KEY,
 	"name" TEXT NOT NULL,
-	"path" TEXT NOT NULL
+	"path" TEXT NOT NULL,
+  UNIQUE("path")
 );
 
 CREATE TABLE "games"(
@@ -9,7 +10,8 @@ CREATE TABLE "games"(
 	"name" TEXT NOT NULL,
 	"path" TEXT NOT NULL,
 	"platform_id" UUID NOT NULL,
-	FOREIGN KEY ("platform_id") REFERENCES "platforms"("id")
+	FOREIGN KEY ("platform_id") REFERENCES "platforms"("id") ON DELETE CASCADE,
+  UNIQUE("path")
 );
 
 CREATE TABLE "game_files"(
@@ -19,5 +21,6 @@ CREATE TABLE "game_files"(
 	"path" TEXT NOT NULL,
 	"hash" TEXT NOT NULL,
 	"game_id" UUID NOT NULL,
-	FOREIGN KEY ("game_id") REFERENCES "games"("id")
+	FOREIGN KEY ("game_id") REFERENCES "games"("id") ON DELETE CASCADE,
+  UNIQUE("path")
 );

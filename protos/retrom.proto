@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package retrom;
+
+import "igdb.proto";
+
+service LibraryService {
+  rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
+  rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
+}
+
+service PlatformService {
+  rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse);
+}
+
+service GameService {
+  rpc GetGames(GetGamesRequest) returns (GetGamesResponse);
+}
+
+service MetadataService {
+  rpc GetMetadata(GetMetadataRequest) returns (GetMetadataResponse);
+}
+
+message UpdateLibraryRequest {
+  optional bool overwrite = 1;
+}
+message UpdateLibraryResponse {
+  repeated Platform platforms_populated = 1;
+  repeated Game games_populated = 2;
+  repeated GameFile game_files_populated = 3;
+}
+
+message UpdateLibraryMetadataRequest {
+  optional bool overwrite = 1;
+}
+message UpdateLibraryMetadataResponse {
+  repeated Metadata metadata_populated = 1;
+}
+
+enum ItemType {
+  PLATFORM = 0;
+  GAME = 1;
+  GAME_FILE = 2;
+}
+
+message Platform {
+  string id = 1;
+  string name = 2;
+  string path = 3;
+}
+
+message Game {
+  string id = 1;
+  string name = 2;
+  string path = 3;
+  string platform_id = 4;
+}
+
+message GameFile {
+  string id = 1;
+  string name = 2;
+  int32 byte_size = 3;
+  string path = 4;
+  string hash = 5;
+  string game_id = 6;
+}
+
+message Metadata {
+  string game_id = 1;
+  optional string description = 2;
+  optional string cover_url = 3;
+  optional string background_url = 4;
+  optional string icon_url = 5;
+  optional uint64 igdb_id = 6;
+}
+
+message GetPlatformsRequest {
+  repeated string ids = 1;
+}
+
+message GetPlatformsResponse {
+  repeated Platform platforms = 1;
+}
+
+message GetGamesRequest {
+  repeated string platform_ids = 1;
+  repeated string ids = 2;
+  optional bool with_metadata = 3;
+  optional bool with_files = 4;
+}
+
+message GetGamesResponse {
+  repeated Game games = 1;
+  repeated Metadata metadata = 2;
+  repeated GameFile game_files = 3;
+}
+
+message GetMetadataRequest {
+  string game_id = 1;
+}
+
+message GetMetadataResponse {
+  Metadata metadata = 1;
+}

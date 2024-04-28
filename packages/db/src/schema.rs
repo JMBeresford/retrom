@@ -23,9 +23,11 @@ diesel::table! {
 diesel::table! {
     metadata (game_id) {
         game_id -> Uuid,
-        description -> Text,
-        cover_url -> Text,
-        background_url -> Text,
+        description -> Nullable<Text>,
+        cover_url -> Nullable<Text>,
+        background_url -> Nullable<Text>,
+        icon_url -> Nullable<Text>,
+        igdb_id -> Nullable<Numeric>,
     }
 }
 

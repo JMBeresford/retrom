@@ -1,6 +1,6 @@
 use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection};
 use dotenvy::dotenv;
-use std::env;
+use std::{env, fmt::Debug};
 
 pub mod models;
 pub mod schema;

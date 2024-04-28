@@ -16,6 +16,7 @@ dotenvy = { workspace = true }
 diesel = { version = "2.1.5", default-features = false, features = [
   "uuid",
   "serde_json",
+  "numeric",
 ] }
 diesel-async = { version = "0.4.1", features = ["postgres", "bb8"] }
 bb8 = "0.8"
@@ -23,12 +24,7 @@ serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-tokio = { version = "1.37.0", features = [
-  "rt-multi-thread",
-  "macros",
-  "sync",
-  "time",
-] }
+tokio = { version = "1.37.0", features = ["full"] }
 dotenvy = "0.15.7"
 library_manager = { path = "./packages/library_manager" }
 db = { path = "./packages/db" }
@@ -47,3 +43,6 @@ reqwest = { version = "0.12.3", features = ["json"] }
 tonic = "0.11"
 prost = "0.12"
 prost-types = "0.12"
+derive_builder = "0.20.0"
+tonic-reflection = "0.11.0"
+async-trait = "0.1"

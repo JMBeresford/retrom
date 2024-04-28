@@ -14,3 +14,4 @@ tokio = "1.37.0"
 tracing = "0.1.40"
 futures = { workspace = true }
 uuid = { workspace = true }
+generated = { workspace = true }

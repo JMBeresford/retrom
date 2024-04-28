@@ -1,29 +1,33 @@
-mod providers;
-mod routes;
-mod utils;
-
-use std::time::Duration;
-
-use crate::routes::{
-    games::games_routes, library::library_routes, platforms::platform_routes, root::root_routes,
-};
-use axum::{extract::MatchedPath, http::Request, response::Response, Router};
 use db::get_db_url;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use dotenvy::dotenv;
-use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
-use tracing::{info, Span};
+use generated::retrom::{
+    game_service_server::GameServiceServer, library_service_server::LibraryServiceServer,
+    platform_service_server::PlatformServiceServer, FILE_DESCRIPTOR_SET,
+};
+use service::{
+    games::GameServiceHandlers, library::LibraryServiceHandlers, platforms::PlatformServiceHandlers,
+};
+use std::{net::SocketAddr, sync::Arc};
+use tonic::transport::Server;
+use tonic_web::GrpcWebLayer;
+use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-pub async fn start_service() {
-    dotenv().ok();
+use crate::providers::igdb::provider::IGDBProvider;
 
+mod providers;
+mod service;
+mod utils;
+
+pub async fn start_service() {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
+
+    let addr: SocketAddr = "0.0.0.0:5001".parse().unwrap();
 
     let db_url = get_db_url();
 
@@ -34,48 +38,32 @@ pub async fn start_service() {
         .await
         .expect("Could not create pool");
 
-    let app = Router::new()
-        .merge(root_routes())
-        .merge(library_routes())
-        .merge(platform_routes())
-        .merge(games_routes())
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(|req: &Request<_>| {
-                    let method = req.method();
-                    let path = req.uri().path();
+    let pool_state = Arc::new(pool);
+    let igdb_client = Arc::new(IGDBProvider::new());
 
-                    tracing::info_span!("request", method = %method, path = %path)
-                })
-                .on_request(|req: &Request<_>, _span: &Span| {
-                    let path_handler = match req
-                        .extensions()
-                        .get::<MatchedPath>()
-                        .map(MatchedPath::as_str)
-                    {
-                        Some(path) => path,
-                        None => "unknown",
-                    };
+    let reflection_service = tonic_reflection::server::Builder::configure()
+        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
+        .build()
+        .unwrap();
 
-                    tracing::info!("Processing request handler: {path_handler}");
-                })
-                .on_response(|res: &Response, latency: Duration, _span: &Span| {
-                    let status = res.status();
+    let library_service = LibraryServiceServer::new(LibraryServiceHandlers::new(
+        pool_state.clone(),
+        igdb_client.clone(),
+    ));
+    let game_service = GameServiceServer::new(GameServiceHandlers::new(pool_state.clone()));
+    let platform_service =
+        PlatformServiceServer::new(PlatformServiceHandlers::new(pool_state.clone()));
 
-                    if !res.status().is_server_error() {
-                        tracing::info!("Completed: {status} - {latency:#?}");
-                    }
-                })
-                .on_failure(
-                    |err: ServerErrorsFailureClass, latency: Duration, _span: &Span| {
-                        tracing::error!("Failed: {err} - {latency:#?}");
-                    },
-                ),
-        )
-        .with_state(pool);
+    info!("Starting server at: {}", addr.to_string());
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:5001").await.unwrap();
-
-    info!("Listening on: {}", listener.local_addr().unwrap());
-    axum::serve(listener, app).await.unwrap();
+    Server::builder()
+        .accept_http1(true)
+        .trace_fn(|_| tracing::info_span!("service"))
+        .add_service(reflection_service)
+        .add_service(tonic_web::enable(library_service))
+        .add_service(tonic_web::enable(game_service))
+        .add_service(tonic_web::enable(platform_service))
+        .serve(addr)
+        .await
+        .expect("Could not start server");
 }

@@ -6,8 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = { version = "0.7.5", features = ["http2"] }
-tower-http = { version = "0.5", features = ["trace"] }
 serde = { workspace = true }
 dotenvy = { workspace = true }
 serde_json = { workspace = true }
@@ -23,3 +21,9 @@ uuid = { workspace = true }
 generated = { workspace = true }
 bytes = { workspace = true }
 reqwest = { workspace = true }
+tonic = { workspace = true }
+tonic-reflection = { workspace = true }
+prost = { workspace = true }
+futures = { workspace = true }
+tonic-web = "0.11.0"
+deunicode = "1.4.4"
