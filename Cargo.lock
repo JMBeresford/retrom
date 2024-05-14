@@ -654,12 +654,10 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "bb8",
- "bigdecimal",
  "derive_builder",
  "diesel",
  "diesel-async",
  "dotenvy",
- "generated",
  "serde",
  "serde_json",
  "tracing",
@@ -1189,7 +1187,9 @@ dependencies = [
 name = "generated"
 version = "0.1.0"
 dependencies = [
+ "db",
  "derive_builder",
+ "diesel",
  "prost",
  "prost-types",
  "serde",
@@ -1936,7 +1936,7 @@ dependencies = [
  "futures",
  "generated",
  "serde",
- "sha256",
+ "sha1",
  "tokio",
  "tracing",
  "uuid",
@@ -3258,6 +3258,7 @@ name = "service"
 version = "0.1.0"
 dependencies = [
  "bb8",
+ "bigdecimal",
  "bytes",
  "db",
  "deunicode",
@@ -3266,7 +3267,6 @@ dependencies = [
  "dotenvy",
  "futures",
  "generated",
- "library_manager",
  "prost",
  "reqwest",
  "serde",
@@ -3291,6 +3291,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha1"
+version = "0.10.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "digest",
+]
+
+[[package]]
 name = "sha2"
 version = "0.10.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3299,19 +3310,6 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
-]
-
-[[package]]
-name = "sha256"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18278f6a914fa3070aa316493f7d2ddfb9ac86ebc06fa3b83bffda487e9065b0"
-dependencies = [
- "async-trait",
- "bytes",
- "hex",
- "sha2",
- "tokio",
 ]
 
 [[package]]

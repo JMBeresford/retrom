@@ -13,6 +13,7 @@ pub struct MetadataRow {
     pub background_url: Option<String>,
     pub icon_url: Option<String>,
     pub igdb_id: Option<BigDecimal>,
+    pub display_name: Option<String>,
 }
 
 impl FromMessages<retrom::Metadata> for MetadataRow {}
@@ -30,6 +31,7 @@ impl Into<retrom::Metadata> for MetadataRow {
                 Some(igdb_id) => igdb_id.to_u64(),
                 None => None,
             },
+            display_name: self.display_name,
         }
     }
 }
@@ -46,6 +48,7 @@ impl From<retrom::Metadata> for MetadataRow {
                 Some(igdb_id) => Some(BigDecimal::from(igdb_id)),
                 None => None,
             },
+            display_name: metadata.display_name,
         }
     }
 }

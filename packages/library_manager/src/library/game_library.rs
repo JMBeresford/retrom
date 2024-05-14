@@ -4,8 +4,8 @@ use std::{
     fs::DirEntry,
     path::{Path, PathBuf},
 };
-use tokio::{self, fs::canonicalize};
-use tracing::{error, info};
+use tokio;
+use tracing::{error, warn};
 
 #[derive(Debug, Clone)]
 pub struct GameLibrary {
@@ -15,14 +15,10 @@ pub struct GameLibrary {
 }
 
 impl GameLibrary {
+    #[tracing::instrument]
     pub async fn from_content_dir(content_dir: &Path) -> IndexerResult<Self> {
         // content_dir with structure like:
         // content_dir -> plaform[] -> game_dir[] -> game_file[]
-
-        info!(
-            "Creating new library from content directory: {:?}",
-            canonicalize(content_dir).await
-        );
 
         if !content_dir.is_dir() {
             return Err(IndexerError::new(
@@ -39,22 +35,34 @@ impl GameLibrary {
             .filter_map(|node| match node {
                 Ok(node) => Some(node),
                 Err(why) => {
-                    error!("Could not read content directory node: {:?}", why);
+                    warn!("Could not read content directory node: {:?}", why);
                     None
                 }
             })
             .filter(|node| node.path().is_dir())
             .collect();
 
-        let platform_builders = match PlatformBuilder::from_dirs(platform_dirs).await {
-            Ok(builders) => builders,
-            Err(why) => {
-                error!("Could not get platforms from dirs: {:?}", why);
-                return Err(IndexerError::new(
-                    "Could not get platforms from dirs".into(),
-                ));
-            }
-        };
+        let platform_builders: Vec<PlatformBuilder> =
+            futures::future::join_all(platform_dirs.into_iter().map(|dir| {
+                tokio::spawn(async move { PlatformBuilder::from_dir(&dir.path()).await })
+            }))
+            .await
+            .into_iter()
+            .filter_map(|builder| match builder {
+                Ok(builder) => Some(builder),
+                Err(why) => {
+                    error!("Could not get platform builder: {:?}", why);
+                    None
+                }
+            })
+            .filter_map(|builder| match builder {
+                Ok(builder) => Some(builder),
+                Err(why) => {
+                    error!("Could not get platform builder: {:?}", why);
+                    None
+                }
+            })
+            .collect();
 
         let platforms: Vec<Platform> = platform_builders
             .into_iter()
@@ -114,15 +122,21 @@ impl GameLibrary {
                 .filter(|node| node.path().is_file())
                 .collect();
 
-            let new_game_file_builders = match GameFileBuilder::from_files(game_nodes).await {
-                Ok(builders) => builders,
-                Err(why) => {
-                    error!("Could not get game files from dirs: {:?}", why);
-                    return Err(IndexerError::new(
-                        "Could not get game files from dirs".into(),
-                    ));
-                }
-            };
+            let new_game_file_builders: Vec<GameFileBuilder> =
+                futures::future::join_all((game_nodes).into_iter().map(|node| {
+                    tokio::spawn(async move { GameFileBuilder::from_file(&node.path()).await })
+                }))
+                .await
+                .into_iter()
+                .filter_map(|res| {
+                    res.map_err(|e| error!("Could not join thread: {:?}", e))
+                        .ok()
+                })
+                .filter_map(|res| {
+                    res.map_err(|e| error!("Could not get game file builder: {:?}", e))
+                        .ok()
+                })
+                .collect();
 
             new_game_file_builders.into_iter().for_each(|mut builder| {
                 let new_game_file = builder

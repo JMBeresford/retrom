@@ -1,6 +1,5 @@
 use std::{
     env,
-    sync::Arc,
     time::{Duration, Instant},
 };
 
@@ -94,11 +93,12 @@ impl IGDBProvider {
     }
 
     #[instrument(level = Level::DEBUG, skip_all)]
-    pub(super) async fn make_request(
+    pub async fn make_request(
         &self,
         path: String,
         query: String,
     ) -> Result<reqwest::Response, reqwest::Error> {
+        self.maybe_refresh_token().await;
         let auth = self.auth.read().await;
         let token = auth.token.clone().expect("No token found");
 

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use deunicode::deunicode;
 use generated::{igdb, retrom};
 use prost::Message;
@@ -7,14 +8,16 @@ use tracing::{debug, error, info, instrument, Instrument, Level};
 
 use super::provider::IGDBProvider;
 
-#[instrument(level = Level::DEBUG, skip_all, fields(name = game.name))]
+#[instrument(level = Level::DEBUG, skip_all, fields(name = game.path))]
 pub async fn match_game_igdb(
     provider: Arc<IGDBProvider>,
     game: &retrom::Game,
-) -> Result<retrom::Metadata, reqwest::Error> {
+) -> Result<retrom::GameMetadata, reqwest::Error> {
     provider.maybe_refresh_token().await;
 
-    let search = deunicode(&game.name);
+    let name = &game.path.split('/').last().unwrap_or(&game.path);
+
+    let search = deunicode(&name);
     info!("Matching game: {search}");
 
     let matches = match search_games(provider.clone(), &search).await {
@@ -32,60 +35,12 @@ pub async fn match_game_igdb(
         debug!("Match found!");
     }
 
-    let igdb_id = igdb_match.as_ref().and_then(|game| Some(game.id));
-    let description = igdb_match
-        .as_ref()
-        .and_then(|game| Some(game.summary.to_string()));
-
-    let cover_url = igdb_match
-        .as_ref()
-        .and_then(|game| game.cover.as_ref())
-        .and_then(|cover| {
-            Some(
-                cover
-                    .url
-                    .to_string()
-                    .replace("t_thumb", "t_cover_big")
-                    .replace("//", "https://"),
-            )
-        });
-
-    let background_url = igdb_match.as_ref().and_then(|game| {
-        game.artworks
-            .iter()
-            .find(|artwork| artwork.width > artwork.height)
-            .and_then(|artwork| {
-                Some(
-                    artwork
-                        .url
-                        .to_string()
-                        .replace("//", "https://")
-                        .replace("t_thumb", "t_1080p"),
-                )
-            })
-    });
-
-    let icon_url = igdb_match.as_ref().and_then(|game| {
-        game.artworks
-            .iter()
-            .find(|artwork| artwork.width == artwork.height)
-            .and_then(|artwork| Some(artwork.url.to_string().replace("//", "https://")))
-    });
-
-    let icon_url = match icon_url {
-        Some(icon_url) => Some(icon_url),
-        None => cover_url
-            .as_ref()
-            .and_then(|cover_url| Some(cover_url.clone().replace("t_cover_big", "t_thumb"))),
-    };
-
-    let metadata = retrom::Metadata {
-        game_id: game.id.to_string(),
-        igdb_id,
-        description,
-        cover_url,
-        background_url,
-        icon_url,
+    let metadata = match igdb_match {
+        Some(igdb_match) => igdb_game_to_metadata(igdb_match, game),
+        None => retrom::GameMetadata {
+            game_id: game.id.clone(),
+            ..Default::default()
+        },
     };
 
     Ok(metadata)
@@ -94,7 +49,7 @@ pub async fn match_game_igdb(
 pub async fn match_games_igdb(
     provider: Arc<IGDBProvider>,
     games: Vec<retrom::Game>,
-) -> Result<Vec<retrom::Metadata>, reqwest::Error> {
+) -> Result<Vec<retrom::GameMetadata>, reqwest::Error> {
     let all_metadata_res = futures::future::join_all(
         games
             .into_iter()
@@ -127,7 +82,7 @@ pub async fn match_games_igdb(
     Ok(all_metadata)
 }
 
-async fn search_games(
+pub(crate) async fn search_games(
     provider: Arc<IGDBProvider>,
     search_string: &str,
 ) -> Result<igdb::GameResult, reqwest::Error> {
@@ -147,32 +102,71 @@ async fn search_games(
     Ok(igdb::GameResult::decode(bytes).expect("Could not decode response"))
 }
 
-async fn search_artworks(
-    provider: Arc<IGDBProvider>,
-    search_string: Option<&str>,
-    filter_string: Option<&str>,
-) -> Result<igdb::ArtworkResult, reqwest::Error> {
-    let search_string = match search_string {
-        Some(search) => format!("search \"{search}\";", search = search),
-        None => "".to_string(),
+pub fn igdb_game_to_metadata(igdb_match: igdb::Game, game: &retrom::Game) -> retrom::GameMetadata {
+    let description = Some(igdb_match.summary);
+    let name = Some(igdb_match.name);
+    let igdb_id = match BigDecimal::from_u64(igdb_match.id) {
+        Some(id) => id.to_i64(),
+        None => None,
     };
 
-    let filter_string = match filter_string {
-        Some(filter) => format!("where {filter};"),
-        None => "".to_string(),
+    let cover_url = igdb_match.cover.and_then(|cover| {
+        Some(
+            cover
+                .url
+                .to_string()
+                .replace("t_thumb", "t_cover_big")
+                .replace("//", "https://"),
+        )
+    });
+
+    let background_url = igdb_match
+        .artworks
+        .iter()
+        .find(|artwork| artwork.width > artwork.height)
+        .and_then(|artwork| {
+            Some(
+                artwork
+                    .url
+                    .to_string()
+                    .replace("//", "https://")
+                    .replace("t_thumb", "t_1080p"),
+            )
+        })
+        .or(igdb_match.artworks.first().and_then(|artwork| {
+            Some(
+                artwork
+                    .url
+                    .to_string()
+                    .replace("//", "https://")
+                    .replace("t_thumb", "t_1080p"),
+            )
+        }));
+
+    let icon_url = igdb_match
+        .artworks
+        .iter()
+        .find(|artwork| artwork.width == artwork.height)
+        .and_then(|artwork| Some(artwork.url.to_string().replace("//", "https://")))
+        .or(cover_url
+            .as_ref()
+            .and_then(|cover_url| Some(cover_url.clone().replace("t_cover_big", "t_thumb"))));
+
+    let icon_url = match icon_url {
+        Some(icon_url) => Some(icon_url),
+        None => cover_url
+            .as_ref()
+            .and_then(|cover_url| Some(cover_url.clone().replace("t_cover_big", "t_thumb"))),
     };
 
-    let query = format!("fields url, height, width; {search_string} limit 10; {filter_string}");
-
-    let res = match provider.make_request("artworks.pb".into(), query).await {
-        Ok(res) => Ok(res),
-        Err(e) => return Err(e),
-    };
-
-    let bytes = match res {
-        Ok(res) => res.bytes().await.expect("Could not parse response"),
-        Err(e) => return Err(e),
-    };
-
-    Ok(igdb::ArtworkResult::decode(bytes).expect("Could not decode response"))
+    retrom::GameMetadata {
+        game_id: game.id,
+        igdb_id,
+        name,
+        description,
+        cover_url,
+        background_url,
+        icon_url,
+        ..Default::default()
+    }
 }

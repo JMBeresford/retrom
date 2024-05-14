@@ -2,11 +2,10 @@ syntax = "proto3";
 
 package retrom;
 
-import "igdb.proto";
-
 service LibraryService {
   rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
   rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
+  rpc DeleteLibrary(DeleteLibraryRequest) returns (DeleteLibraryResponse);
 }
 
 service PlatformService {
@@ -18,12 +17,119 @@ service GameService {
 }
 
 service MetadataService {
-  rpc GetMetadata(GetMetadataRequest) returns (GetMetadataResponse);
+  rpc GetGameMetadata(GetGameMetadataRequest) returns (GetGameMetadataResponse);
+  rpc UpdateGameMetadata(UpdateGameMetadataRequest) returns (UpdateGameMetadataResponse);
+  rpc GetIgdbGameSearchResults(GetIgdbGameSearchResultsRequest) returns (GetIgdbGameSearchResultsResponse);
 }
 
-message UpdateLibraryRequest {
-  optional bool overwrite = 1;
+message Platform {
+  int32 id = 1;
+  string path = 3;
 }
+
+message NewPlatform {
+  string path = 1;
+}
+
+message UpdatedPlatform {
+  int32 id = 1;
+  optional string path = 2;
+}
+
+message Game {
+  int32 id = 1;
+  string path = 3;
+  optional int32 platform_id = 4;
+}
+
+message NewGame {
+  string path = 1;
+  optional int32 platform_id = 2;
+}
+
+message UpdatedGame {
+  int32 id = 1;
+  optional string path = 2;
+  optional int32 platform_id = 3;
+}
+
+message GameFile {
+  int32 id = 1;
+  int32 byte_size = 3;
+  string path = 4;
+  int32 game_id = 6;
+}
+
+message NewGameFile {
+  int32 byte_size = 1;
+  string path = 2;
+  optional int32 game_id = 3;
+}
+
+message UpdatedGameFile {
+  int32 id = 1;
+  optional int32 byte_size = 2;
+  optional string path = 3;
+  optional int32 game_id = 4;
+}
+
+message GameMetadata {
+  int32 game_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional string cover_url = 4;
+  optional string background_url = 5;
+  optional string icon_url = 6;
+  optional int64 igdb_id = 7;
+}
+
+message NewGameMetadata {
+  optional string name = 1;
+  optional string description = 2;
+  optional string cover_url = 3;
+  optional string background_url = 4;
+  optional string icon_url = 5;
+  optional int64 igdb_id = 6;
+}
+
+message UpdatedGameMetadata {
+  int32 game_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional string cover_url = 4;
+  optional string background_url = 5;
+  optional string icon_url = 6;
+  optional int64 igdb_id = 7;
+}
+
+message PlatformMetadata {
+  int32 platform_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional string background_url = 4;
+  optional string logo_url = 5;
+  optional int64 igdb_id = 6;
+}
+
+message NewPlatformMetadata {
+  optional string name = 1;
+  optional string description = 2;
+  optional string background_url = 3;
+  optional string logo_url = 4;
+  optional int64 igdb_id = 5;
+}
+
+message UpdatedPlatformMetadata {
+  int32 platform_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional string background_url = 4;
+  optional string logo_url = 5;
+  optional int64 igdb_id = 6;
+}
+
+message UpdateLibraryRequest {}
+
 message UpdateLibraryResponse {
   repeated Platform platforms_populated = 1;
   repeated Game games_populated = 2;
@@ -33,49 +139,13 @@ message UpdateLibraryResponse {
 message UpdateLibraryMetadataRequest {
   optional bool overwrite = 1;
 }
+
 message UpdateLibraryMetadataResponse {
-  repeated Metadata metadata_populated = 1;
-}
-
-enum ItemType {
-  PLATFORM = 0;
-  GAME = 1;
-  GAME_FILE = 2;
-}
-
-message Platform {
-  string id = 1;
-  string name = 2;
-  string path = 3;
-}
-
-message Game {
-  string id = 1;
-  string name = 2;
-  string path = 3;
-  string platform_id = 4;
-}
-
-message GameFile {
-  string id = 1;
-  string name = 2;
-  int32 byte_size = 3;
-  string path = 4;
-  string hash = 5;
-  string game_id = 6;
-}
-
-message Metadata {
-  string game_id = 1;
-  optional string description = 2;
-  optional string cover_url = 3;
-  optional string background_url = 4;
-  optional string icon_url = 5;
-  optional uint64 igdb_id = 6;
+  repeated GameMetadata metadata_populated = 1;
 }
 
 message GetPlatformsRequest {
-  repeated string ids = 1;
+  repeated int32 ids = 1;
 }
 
 message GetPlatformsResponse {
@@ -83,22 +153,53 @@ message GetPlatformsResponse {
 }
 
 message GetGamesRequest {
-  repeated string platform_ids = 1;
-  repeated string ids = 2;
+  repeated int32 platform_ids = 1;
+  repeated int32 ids = 2;
   optional bool with_metadata = 3;
   optional bool with_files = 4;
 }
 
 message GetGamesResponse {
   repeated Game games = 1;
-  repeated Metadata metadata = 2;
+  repeated GameMetadata metadata = 2;
   repeated GameFile game_files = 3;
 }
 
-message GetMetadataRequest {
-  string game_id = 1;
+message GetGameMetadataRequest {
+  repeated int32 game_ids = 1;
 }
 
-message GetMetadataResponse {
-  Metadata metadata = 1;
+message GetGameMetadataResponse {
+  repeated GameMetadata metadata = 1;
 }
+
+message IgdbGameSearchQuery {
+  // the retrom game id we are searching for
+  int32 game_id = 1;
+
+  string search = 2;
+  optional uint64 igdb_id = 3;
+  optional string title = 4;
+  optional string platform = 5;
+}
+
+message GetIgdbGameSearchResultsRequest {
+  IgdbGameSearchQuery query = 1;
+  optional int32 limit = 2;
+}
+
+message GetIgdbGameSearchResultsResponse {
+  repeated GameMetadata metadata = 1;
+}
+
+message UpdateGameMetadataRequest {
+  repeated UpdatedGameMetadata metadata = 1;
+}
+
+message UpdateGameMetadataResponse {
+  repeated GameMetadata metadata_updated = 1;
+}
+
+message DeleteLibraryRequest {}
+
+message DeleteLibraryResponse {}

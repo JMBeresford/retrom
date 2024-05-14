@@ -1,15 +1,11 @@
-use db::{
-    models::{platform::PlatformRow, IntoMessages},
-    schema, Pool,
-};
+use db::{schema, Pool};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use generated::retrom::{
-    platform_service_server::PlatformService, GetPlatformsRequest, GetPlatformsResponse,
+    self, platform_service_server::PlatformService, GetPlatformsRequest, GetPlatformsResponse,
 };
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
-use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct PlatformServiceHandlers {
@@ -36,31 +32,18 @@ impl PlatformService for PlatformServiceHandlers {
 
         let mut query = schema::platforms::table
             .into_boxed()
-            .select(PlatformRow::as_select());
+            .select(retrom::Platform::as_select());
 
         if !ids.is_empty() {
-            let ids = ids
-                .iter()
-                .filter_map(|id| match Uuid::parse_str(id) {
-                    Ok(id) => Some(id),
-                    Err(why) => {
-                        tracing::error!("Could not parse UUID: {}", why);
-                        None
-                    }
-                })
-                .collect::<Vec<Uuid>>();
-
             query = query.filter(schema::platforms::id.eq_any(ids));
         }
 
-        let rows: Vec<PlatformRow> = match query.load(&mut conn).await {
+        let platforms: Vec<retrom::Platform> = match query.load(&mut conn).await {
             Ok(rows) => rows,
             Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
         };
 
-        let response = GetPlatformsResponse {
-            platforms: PlatformRow::into_messages(rows),
-        };
+        let response = GetPlatformsResponse { platforms };
 
         Ok(Response::new(response))
     }

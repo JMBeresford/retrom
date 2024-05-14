@@ -10,7 +10,7 @@ pub struct GameFileRow {
     pub name: String,
     pub byte_size: i32,
     pub path: String,
-    pub hash: String,
+    pub sha1: Option<String>,
     pub game_id: uuid::Uuid,
 }
 
@@ -24,7 +24,7 @@ impl Into<retrom::GameFile> for GameFileRow {
             name: self.name,
             byte_size: self.byte_size,
             path: self.path,
-            hash: self.hash,
+            sha1: self.sha1,
             game_id: self.game_id.to_string(),
         }
     }
@@ -37,7 +37,7 @@ impl From<retrom::GameFile> for GameFileRow {
             name: game_file.name,
             byte_size: game_file.byte_size,
             path: game_file.path,
-            hash: game_file.hash,
+            sha1: game_file.sha1,
             game_id: uuid::Uuid::parse_str(&game_file.game_id).unwrap(),
         }
     }

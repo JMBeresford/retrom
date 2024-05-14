@@ -16,6 +16,4 @@ tracing = { workspace = true }
 dotenvy = { workspace = true }
 derive_builder = { workspace = true }
 uuid = { workspace = true }
-generated = { workspace = true }
-bigdecimal = "0.4.3"
 async-trait = { workspace = true }

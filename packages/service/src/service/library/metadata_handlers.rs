@@ -1,12 +1,10 @@
 use crate::providers::igdb::games::match_games_igdb;
 
 use super::LibraryServiceHandlers;
-use db::{
-    models::{game::GameRow, metadata::MetadataRow, FromMessages, IntoMessages},
-    schema,
-};
+use db::schema;
+use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use generated::retrom::UpdateLibraryMetadataResponse;
+use generated::retrom::{self, UpdateLibraryMetadataResponse};
 use tracing::instrument;
 
 #[instrument(skip(state))]
@@ -26,8 +24,8 @@ pub async fn update_metadata(
         }
     };
 
-    let games = match schema::games::table.load::<GameRow>(&mut conn).await {
-        Ok(games) => GameRow::into_messages(games),
+    let games = match schema::games::table.load::<retrom::Game>(&mut conn).await {
+        Ok(games) => games,
         Err(e) => {
             tracing::error!("Failed to load games: {}", e);
             return Ok(response);
@@ -43,40 +41,18 @@ pub async fn update_metadata(
         }
     };
 
-    let metadata_rows = MetadataRow::from_messages(all_metadata);
-    match overwrite {
-        true => {
-            for metadata_row in metadata_rows {
-                match diesel::insert_into(schema::metadata::table)
-                    .values(&metadata_row)
-                    .on_conflict(schema::metadata::game_id)
-                    .do_update()
-                    .set(&metadata_row)
-                    .get_result::<MetadataRow>(&mut conn)
-                    .await
-                {
-                    Ok(row) => response.metadata_populated.push(row.into()),
-                    Err(why) => {
-                        tracing::error!("Could not insert metadata: {:?}", why);
-                    }
-                }
-            }
-        }
-        false => {
-            match diesel::insert_into(schema::metadata::table)
-                .values(&metadata_rows)
-                .on_conflict_do_nothing()
-                .get_results::<MetadataRow>(&mut conn)
-                .await
-            {
-                Ok(rows) => response
-                    .metadata_populated
-                    .extend(MetadataRow::into_messages(rows)),
-                Err(why) => {
-                    tracing::error!("Could not insert metadata: {:?}", why);
-                    return Err(why.to_string());
-                }
-            }
+    match diesel::insert_into(schema::game_metadata::table)
+        .values(&all_metadata)
+        .on_conflict_do_nothing()
+        .get_results::<retrom::GameMetadata>(&mut conn)
+        .await
+        .optional()
+    {
+        Ok(Some(metadata)) => response.metadata_populated.extend(metadata),
+        Ok(None) => (),
+        Err(e) => {
+            tracing::error!("Failed to insert metadata: {}", e);
+            return Err(e.to_string());
         }
     };
 

@@ -2,7 +2,7 @@ use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConne
 use dotenvy::dotenv;
 use std::{env, fmt::Debug};
 
-pub mod models;
+// pub mod models;
 pub mod schema;
 
 #[derive(Debug)]
@@ -19,6 +19,8 @@ impl ToString for DbError {
 pub type Result<T> = std::result::Result<T, DbError>;
 
 pub type Pool = bb8::Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
+pub type DBConnection<'a> =
+    bb8::PooledConnection<'a, AsyncDieselConnectionManager<AsyncPgConnection>>;
 
 pub fn get_db_url() -> String {
     dotenv().ok();

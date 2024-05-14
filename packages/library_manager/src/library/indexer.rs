@@ -1,5 +1,4 @@
 use generated::retrom::{GameBuilder, GameFileBuilder, PlatformBuilder};
-use sha256::try_digest;
 use std::{fs::DirEntry, future::Future, path::Path};
 use tokio::fs::canonicalize;
 use tracing::trace;
@@ -58,7 +57,7 @@ pub trait FileRepresented: Sized + Send {
                     match Self::from_file(&dir.path()).await {
                         Ok(item) => Some(item),
                         Err(why) => {
-                            trace!("Could not create platform from directory: {}", why);
+                            trace!("Could not create item from directory: {}", why);
                             None
                         }
                     }
@@ -70,8 +69,8 @@ pub trait FileRepresented: Sized + Send {
             let mut ret: Vec<Self> = vec![];
 
             for handle in handles {
-                if let Some(platform) = handle.await.unwrap() {
-                    ret.push(platform);
+                if let Some(item) = handle.await.unwrap() {
+                    ret.push(item);
                 }
             }
 
@@ -105,35 +104,13 @@ impl DirRepresented for PlatformBuilder {
             ));
         }
 
-        trace!(
-            "Creating new platform from directory: {:?}",
-            canonicalize(dir)
-                .await
-                .expect("Could not canonicalize platform directory")
-        );
-
-        let name = match dir.file_name() {
-            Some(name) => name.to_string_lossy().into_owned(),
-            None => {
-                return Err(IndexerError::new(
-                    "Could not get platform directory name".into(),
-                ))
-            }
-        };
-
         let path = canonicalize(dir)
             .await
-            .expect("Could not canonicalize platform directory")
+            .expect("Could not canonicalize platform directory, are there illegal/strange characters in the path?")
             .to_string_lossy()
             .into();
 
-        let id = uuid::Uuid::now_v7();
-
-        Ok(PlatformBuilder::default()
-            .id(id.to_string())
-            .name(name)
-            .path(path)
-            .to_owned())
+        Ok(PlatformBuilder::default().path(path).to_owned())
     }
 }
 
@@ -204,24 +181,14 @@ impl FileRepresented for GameFileBuilder {
             }
         };
 
-        let hash = match try_digest(file) {
-            Ok(hash) => hash,
-            Err(why) => {
-                return Err(IndexerError::new(format!(
-                    "Could not hash game file: {}",
-                    why
-                )))
-            }
-        };
-
         let id = uuid::Uuid::now_v7();
 
         Ok(GameFileBuilder::default()
             .id(id.to_string())
             .name(name)
             .byte_size(byte_size as i32)
-            .hash(hash)
             .path(path.display().to_string())
+            .sha1(None)
             .to_owned())
     }
 }

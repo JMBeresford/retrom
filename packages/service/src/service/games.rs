@@ -1,7 +1,4 @@
-use db::{
-    models::{game::GameRow, game_file::GameFileRow, metadata::MetadataRow, IntoMessages},
-    schema, Pool,
-};
+use db::{schema, Pool};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use generated::retrom::{
@@ -9,7 +6,6 @@ use generated::retrom::{
 };
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
-use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct GameServiceHandlers {
@@ -37,40 +33,17 @@ impl GameService for GameServiceHandlers {
 
         let mut query = schema::games::table
             .into_boxed()
-            .select(GameRow::as_select());
+            .select(retrom::Game::as_select());
 
         if !&request.ids.is_empty() {
-            let ids = request
-                .ids
-                .iter()
-                .filter_map(|id| match Uuid::parse_str(id) {
-                    Ok(id) => Some(id),
-                    Err(why) => {
-                        tracing::error!("Could not parse UUID: {}", why);
-                        None
-                    }
-                })
-                .collect::<Vec<Uuid>>();
-
-            query = query.filter(schema::games::id.eq_any(ids));
+            query = query.filter(schema::games::id.eq_any(&request.ids));
         }
 
         if !&request.platform_ids.is_empty() {
-            let platform_ids = request
-                .platform_ids
-                .iter()
-                .filter_map(|id| match Uuid::parse_str(id) {
-                    Ok(id) => Some(id),
-                    Err(why) => {
-                        tracing::error!("Could not parse UUID: {}", why);
-                        None
-                    }
-                })
-                .collect::<Vec<Uuid>>();
-            query = query.filter(schema::games::platform_id.eq_any(platform_ids));
+            query = query.filter(schema::games::platform_id.eq_any(&request.platform_ids));
         }
 
-        let rows: Vec<GameRow> = match query.load(&mut conn).await {
+        let rows: Vec<retrom::Game> = match query.load(&mut conn).await {
             Ok(rows) => rows,
             Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
         };
@@ -78,22 +51,19 @@ impl GameService for GameServiceHandlers {
         let games_data: Vec<generated::retrom::Game> =
             rows.into_iter().map(|game| game.into()).collect();
 
-        let mut metadata_data: Vec<retrom::Metadata> = vec![];
+        let mut metadata_data: Vec<retrom::GameMetadata> = vec![];
         let mut game_files_data: Vec<retrom::GameFile> = vec![];
 
-        let game_ids = games_data
-            .iter()
-            .map(|game| Uuid::parse_str(&game.id).unwrap())
-            .collect::<Vec<Uuid>>();
+        let game_ids: Vec<i32> = games_data.iter().map(|game| game.id).collect();
 
         if request.with_metadata() {
-            let metadata_rows = schema::metadata::table
-                .filter(schema::metadata::game_id.eq_any(&game_ids))
-                .load::<MetadataRow>(&mut conn)
+            let metadata_rows = schema::game_metadata::table
+                .filter(schema::game_metadata::game_id.eq_any(&game_ids))
+                .load::<retrom::GameMetadata>(&mut conn)
                 .await;
 
             match metadata_rows {
-                Ok(rows) => metadata_data.extend(MetadataRow::into_messages(rows)),
+                Ok(rows) => metadata_data.extend(rows),
                 Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
             };
         }
@@ -101,7 +71,7 @@ impl GameService for GameServiceHandlers {
         if request.with_files() {
             let game_files_rows = schema::game_files::table
                 .filter(schema::game_files::game_id.eq_any(&game_ids))
-                .load::<GameFileRow>(&mut conn)
+                .load::<retrom::GameFile>(&mut conn)
                 .await;
 
             match game_files_rows {
