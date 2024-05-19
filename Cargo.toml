@@ -26,7 +26,6 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "fmt"] }
 tokio = { version = "1.37.0", features = ["full"] }
 dotenvy = "0.15.7"
-library_manager = { path = "./packages/library_manager" }
 db = { path = "./packages/db" }
 service = { path = "./packages/service" }
 generated = { path = "./packages/generated" }

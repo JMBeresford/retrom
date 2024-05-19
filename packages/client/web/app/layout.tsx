@@ -16,6 +16,8 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import { Menubar } from "@/components/menubar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getGames } from "@/actions/grpc/games";
+import { getPlatforms } from "@/actions/grpc/platforms";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -29,7 +31,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { games, metadata } = await getGamesWithMetadata();
+  const { games, metadata } = await getGames({ withMetadata: true });
   const { platforms } = await getPlatforms();
 
   return (
@@ -61,49 +63,4 @@ export default async function RootLayout({
       </body>
     </html>
   );
-}
-
-async function getGamesWithMetadata() {
-  const channel = createChannel("http://localhost:5001");
-  const client: Client<GameServiceDefinition> = createClient(
-    GameServiceDefinition,
-    channel,
-  );
-
-  try {
-    const getGamesResponse = await client.getGames({
-      withMetadata: true,
-    });
-
-    channel.close();
-
-    const games = getGamesResponse.games;
-    const metadata = getGamesResponse.metadata;
-
-    return { games, metadata, error: null };
-  } catch (error) {
-    console.error(error);
-    return { games: [], metadata: [], error };
-  }
-}
-
-async function getPlatforms() {
-  const channel = createChannel("http://localhost:5001");
-  const client: Client<PlatformServiceDefinition> = createClient(
-    PlatformServiceDefinition,
-    channel,
-  );
-
-  try {
-    const getPlatformsResponse = await client.getPlatforms({});
-
-    channel.close();
-
-    const platforms = getPlatformsResponse.platforms;
-
-    return { platforms, error: null };
-  } catch (error) {
-    console.error(error);
-    return { platforms: [], error };
-  }
 }

@@ -3,10 +3,9 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type {
-  Game,
   GameMetadata,
-  Platform,
-  UpdatedGameMetadata,
+  UpdateGameMetadataRequest,
+  UpdateGameMetadataResponse,
 } from "@/generated/retrom";
 import { useCallback, useState } from "react";
 import { Button } from "../ui/button";
@@ -25,7 +24,7 @@ import { LoaderIcon } from "lucide-react";
 import { asOptionalString, cn } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
-import { ScrollArea } from "../ui/scroll-area";
+import { useGameDetail } from "@/app/games/[id]/game-context";
 
 type FormFieldRenderer = ({
   form,
@@ -34,10 +33,9 @@ type FormFieldRenderer = ({
 }) => JSX.Element;
 
 type Props = {
-  game: Game;
-  currentMetadata?: GameMetadata;
-  platform?: Platform;
-  updateHandler: (metadata: UpdatedGameMetadata) => Promise<void>;
+  updateHandler: (
+    req: Partial<UpdateGameMetadataRequest>,
+  ) => Promise<UpdateGameMetadataResponse>;
 };
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -60,7 +58,8 @@ const formSchema = z.object({
 });
 
 export function ManualTab(props: Props) {
-  const { game, currentMetadata, updateHandler } = props;
+  const { game, metadata: currentMetadata } = useGameDetail();
+  const { updateHandler } = props;
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const form = useForm<FormSchema>({
@@ -80,9 +79,12 @@ export function ManualTab(props: Props) {
     (values: FormSchema) => {
       const { igdbId, ...restValues } = values;
       const igdbIdNum = igdbId !== undefined ? parseInt(igdbId) : undefined;
+      const updated = { ...restValues, igdbId: igdbIdNum, gameId: game.id };
 
       setLoading(true);
-      updateHandler({ ...restValues, igdbId: igdbIdNum, gameId: game.id })
+      updateHandler({
+        metadata: [updated],
+      })
         .then(() => {
           toast({
             title: "Metadata updated",

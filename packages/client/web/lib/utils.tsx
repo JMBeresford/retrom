@@ -59,3 +59,8 @@ export function Image(props: ImageProps) {
     />
   );
 }
+
+export function getFileName(path: string) {
+  const filename = path.split("/").pop() ?? "";
+  return filename.split(".").slice(0, -1).join(".");
+}

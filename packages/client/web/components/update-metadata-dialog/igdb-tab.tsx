@@ -3,10 +3,11 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type {
-  Game,
   GameMetadata,
-  IgdbGameSearchQuery,
-  Platform,
+  GetIgdbGameSearchResultsRequest,
+  GetIgdbGameSearchResultsResponse,
+  UpdateGameMetadataRequest,
+  UpdateGameMetadataResponse,
 } from "@/generated/retrom";
 import {
   Select,
@@ -23,31 +24,29 @@ import { Input } from "../ui/input";
 import { useToast } from "../ui/use-toast";
 import { Separator } from "../ui/separator";
 import { LoaderIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { asOptionalString, cn } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
+import { useGameDetail } from "@/app/games/[id]/game-context";
 
 type Props = {
-  game: Game;
-  currentMetadata?: GameMetadata;
-  platform?: Platform;
-  searchHandler: (query: IgdbGameSearchQuery) => Promise<Array<GameMetadata>>;
-  updateHandler: (metadata: GameMetadata) => Promise<void>;
+  searchHandler: (
+    req: Partial<GetIgdbGameSearchResultsRequest>,
+  ) => Promise<GetIgdbGameSearchResultsResponse>;
+  updateHandler: (
+    req: Partial<UpdateGameMetadataRequest>,
+  ) => Promise<UpdateGameMetadataResponse>;
 };
-
-const emptyToUndefined = z.literal("").transform(() => undefined);
-function asOptional<T extends z.ZodTypeAny>(schema: T) {
-  return schema.optional().or(emptyToUndefined);
-}
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
   search: z.string().min(1).max(50),
-  igdbId: asOptional(z.string().min(1).max(20)),
+  igdbId: asOptionalString(z.string().min(1).max(20)),
   // platform: asOptional(z.string().min(1).max(50)),
 });
 
 export function IgdbTab(props: Props) {
-  const { game, currentMetadata, searchHandler, updateHandler } = props;
+  const { game, metadata: currentMetadata } = useGameDetail();
+  const { searchHandler, updateHandler } = props;
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const form = useForm<FormSchema>({
@@ -67,9 +66,12 @@ export function IgdbTab(props: Props) {
       const igdbIdNum = igdbId !== undefined ? parseInt(igdbId) : undefined;
 
       setLoading(true);
-      searchHandler({ search, igdbId: igdbIdNum, gameId: game.id })
-        .then((matches) => {
-          setMatches(matches);
+      searchHandler({
+        query: { search, igdbId: igdbIdNum, gameId: game.id },
+        limit: 10,
+      })
+        .then(({ metadata }) => {
+          setMatches(metadata);
         })
         .catch((error) => {
           console.error(error);
@@ -103,7 +105,7 @@ export function IgdbTab(props: Props) {
     }
 
     setLoading(true);
-    updateHandler(match)
+    updateHandler({ metadata: [match] })
       .then(() => {
         toast({
           title: "Metadata updated",
