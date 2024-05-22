@@ -58,7 +58,7 @@ const formSchema = z.object({
 });
 
 export function ManualTab(props: Props) {
-  const { game, metadata: currentMetadata } = useGameDetail();
+  const { game, gameMetadata } = useGameDetail();
   const { updateHandler } = props;
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -66,12 +66,12 @@ export function ManualTab(props: Props) {
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
-      name: currentMetadata?.name ?? "",
-      igdbId: currentMetadata?.igdbId?.toString() ?? "",
-      description: currentMetadata?.description ?? "",
-      coverUrl: currentMetadata?.coverUrl ?? "",
-      backgroundUrl: currentMetadata?.backgroundUrl ?? "",
-      iconUrl: currentMetadata?.iconUrl ?? "",
+      name: gameMetadata?.name ?? "",
+      igdbId: gameMetadata?.igdbId?.toString() ?? "",
+      description: gameMetadata?.description ?? "",
+      coverUrl: gameMetadata?.coverUrl ?? "",
+      backgroundUrl: gameMetadata?.backgroundUrl ?? "",
+      iconUrl: gameMetadata?.iconUrl ?? "",
     },
   });
 

@@ -2,8 +2,13 @@
 
 import { Button } from "../components/ui/button";
 import { Image, cn, toInitials } from "@/lib/utils";
-import { useMemo, useState } from "react";
-import { Game, GameMetadata, Platform } from "@/generated/retrom";
+import { useCallback, useMemo, useState } from "react";
+import {
+  Game,
+  GameMetadata,
+  Platform,
+  PlatformMetadata,
+} from "@/generated/retrom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -21,13 +26,14 @@ import {
 
 type Props = {
   games: Game[];
-  metadata: GameMetadata[];
+  gamesMetadata: GameMetadata[];
   platforms: Platform[];
+  platformsMetadata: PlatformMetadata[];
 };
 
 export function SideBar(props: Props) {
   const path = usePathname();
-  const { games, platforms, metadata } = props;
+  const { games, platforms, gamesMetadata, platformsMetadata } = props;
   const [platformFilters, setPlatformFilters] = useState(new Set<number>());
 
   const gamesByPlatform = useMemo(() => {
@@ -41,6 +47,16 @@ export function SideBar(props: Props) {
     }, ret);
   }, [games, platforms]);
 
+  const getPlatformName = useCallback(
+    (platform: Platform) => {
+      return (
+        platformsMetadata.find((md) => md.platformId === platform.id)?.name ??
+        platform.path.split("/").pop()
+      );
+    },
+    [platformsMetadata],
+  );
+
   return (
     <TooltipProvider>
       <aside
@@ -51,12 +67,14 @@ export function SideBar(props: Props) {
 
           <div className="flex flex-wrap gap-1 py-3">
             {platforms.map((platform) => {
-              const platformName = platform.path.split("/").pop();
+              const platformName = getPlatformName(platform);
+
               return (
                 <Tooltip key={platform.id}>
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => {
                         if (platformFilters.has(platform.id)) {
                           platformFilters.delete(platform.id);
@@ -68,12 +86,12 @@ export function SideBar(props: Props) {
                         }
                       }}
                       className={cn(
-                        "rounded transition-colors bg-transparent",
+                        "rounded transition-colors bg-transparent text-xs font-semibold",
                         platformFilters.has(platform.id) &&
                           "hover:bg-primary hover:text-primary-foreground bg-primary text-primary-foreground",
                       )}
                     >
-                      {toInitials(platformName)}
+                      {platformName}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -98,7 +116,7 @@ export function SideBar(props: Props) {
               )
               .map((platform) => {
                 let games = gamesByPlatform[platform.id];
-                let name = platform.path.split("/").pop();
+                let name = getPlatformName(platform);
 
                 return games ? (
                   <AccordionItem
@@ -116,10 +134,10 @@ export function SideBar(props: Props) {
                       <ul>
                         {games.map((game) => {
                           const gameName =
-                            metadata.find((m) => m.gameId === game.id)?.name ??
-                            game.path.split("/").pop();
+                            gamesMetadata.find((m) => m.gameId === game.id)
+                              ?.name ?? game.path.split("/").pop();
 
-                          const iconUrl = metadata.find(
+                          const iconUrl = gamesMetadata.find(
                             (m) => m.gameId === game.id,
                           )?.iconUrl;
 

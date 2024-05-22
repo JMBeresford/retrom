@@ -2,12 +2,13 @@
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type {
-  GameMetadata,
-  GetIgdbGameSearchResultsRequest,
-  GetIgdbGameSearchResultsResponse,
-  UpdateGameMetadataRequest,
-  UpdateGameMetadataResponse,
+import {
+  UpdatedGameMetadata,
+  type GetIgdbGameSearchResultsRequest,
+  type GetIgdbGameSearchResultsResponse,
+  type NewGameMetadata,
+  type UpdateGameMetadataRequest,
+  type UpdateGameMetadataResponse,
 } from "@/generated/retrom";
 import {
   Select,
@@ -41,11 +42,14 @@ type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
   search: z.string().min(1).max(50),
   igdbId: asOptionalString(z.string().min(1).max(20)),
-  // platform: asOptional(z.string().min(1).max(50)),
 });
 
 export function IgdbTab(props: Props) {
-  const { game, metadata: currentMetadata } = useGameDetail();
+  const {
+    game,
+    gameMetadata: currentMetadata,
+    platformMetadata,
+  } = useGameDetail();
   const { searchHandler, updateHandler } = props;
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -56,7 +60,7 @@ export function IgdbTab(props: Props) {
       igdbId: "",
     },
   });
-  const [matches, setMatches] = useState<Array<GameMetadata>>([]);
+  const [matches, setMatches] = useState<Array<NewGameMetadata>>([]);
   const [selectedMatch, setSelectedMatch] = useState<string | undefined>();
 
   const handleSearch = useCallback(
@@ -67,8 +71,14 @@ export function IgdbTab(props: Props) {
 
       setLoading(true);
       searchHandler({
-        query: { search, igdbId: igdbIdNum, gameId: game.id },
-        limit: 10,
+        query: {
+          search: { value: search },
+          fields: {
+            id: igdbIdNum,
+            platform: platformMetadata?.igdbId,
+          },
+          gameId: game.id,
+        },
       })
         .then(({ metadata }) => {
           setMatches(metadata);
@@ -85,7 +95,7 @@ export function IgdbTab(props: Props) {
           setLoading(false);
         });
     },
-    [game, searchHandler, toast],
+    [game, searchHandler, toast, platformMetadata],
   );
 
   const handleUpdate = useCallback(() => {
@@ -105,7 +115,9 @@ export function IgdbTab(props: Props) {
     }
 
     setLoading(true);
-    updateHandler({ metadata: [match] })
+    updateHandler({
+      metadata: [UpdatedGameMetadata.create({ ...match, gameId: game.id })],
+    })
       .then(() => {
         toast({
           title: "Metadata updated",
@@ -123,7 +135,7 @@ export function IgdbTab(props: Props) {
       .finally(() => {
         setLoading(false);
       });
-  }, [matches, toast, updateHandler, selectedMatch]);
+  }, [matches, toast, updateHandler, selectedMatch, game]);
 
   return (
     <>

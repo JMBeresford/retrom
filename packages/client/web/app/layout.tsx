@@ -31,8 +31,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { games, metadata } = await getGames({ withMetadata: true });
-  const { platforms } = await getPlatforms();
+  const { games, metadata: gamesMetadata } = await getGames({
+    withMetadata: true,
+  });
+  const { platforms, metadata: platformsMetadata } = await getPlatforms({
+    withMetadata: true,
+  });
 
   return (
     <html lang="en">
@@ -46,7 +50,8 @@ export default async function RootLayout({
               <SideBar
                 platforms={platforms}
                 games={games}
-                metadata={metadata}
+                gamesMetadata={gamesMetadata}
+                platformsMetadata={platformsMetadata}
               />
             </ResizablePanel>
 

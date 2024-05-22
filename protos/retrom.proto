@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package retrom;
 
+import "igdb.proto";
+
 service LibraryService {
   rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
   rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
@@ -19,7 +21,13 @@ service GameService {
 service MetadataService {
   rpc GetGameMetadata(GetGameMetadataRequest) returns (GetGameMetadataResponse);
   rpc UpdateGameMetadata(UpdateGameMetadataRequest) returns (UpdateGameMetadataResponse);
+
+  rpc GetPlatformMetadata(GetPlatformMetadataRequest) returns (GetPlatformMetadataResponse);
+  rpc UpdatePlatformMetadata(UpdatePlatformMetadataRequest) returns (UpdatePlatformMetadataResponse);
+
+  rpc GetIgdbSearch(GetIgdbSearchRequest) returns (GetIgdbSearchResponse);
   rpc GetIgdbGameSearchResults(GetIgdbGameSearchResultsRequest) returns (GetIgdbGameSearchResultsResponse);
+  rpc GetIgdbPlatformSearchResults(GetIgdbPlatformSearchResultsRequest) returns (GetIgdbPlatformSearchResultsResponse);
 }
 
 message Platform {
@@ -84,12 +92,13 @@ message GameMetadata {
 }
 
 message NewGameMetadata {
-  optional string name = 1;
-  optional string description = 2;
-  optional string cover_url = 3;
-  optional string background_url = 4;
-  optional string icon_url = 5;
-  optional int64 igdb_id = 6;
+  optional int32 game_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional string cover_url = 4;
+  optional string background_url = 5;
+  optional string icon_url = 6;
+  optional int64 igdb_id = 7;
 }
 
 message UpdatedGameMetadata {
@@ -112,11 +121,12 @@ message PlatformMetadata {
 }
 
 message NewPlatformMetadata {
-  optional string name = 1;
-  optional string description = 2;
-  optional string background_url = 3;
-  optional string logo_url = 4;
-  optional int64 igdb_id = 5;
+  optional int32 platform_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional string background_url = 4;
+  optional string logo_url = 5;
+  optional int64 igdb_id = 6;
 }
 
 message UpdatedPlatformMetadata {
@@ -141,15 +151,18 @@ message UpdateLibraryMetadataRequest {
 }
 
 message UpdateLibraryMetadataResponse {
-  repeated GameMetadata metadata_populated = 1;
+  repeated GameMetadata game_metadata_populated = 1;
+  repeated PlatformMetadata platform_metadata_populated = 2;
 }
 
 message GetPlatformsRequest {
   repeated int32 ids = 1;
+  optional bool with_metadata = 2;
 }
 
 message GetPlatformsResponse {
   repeated Platform platforms = 1;
+  repeated PlatformMetadata metadata = 2;
 }
 
 message GetGamesRequest {
@@ -173,23 +186,82 @@ message GetGameMetadataResponse {
   repeated GameMetadata metadata = 1;
 }
 
+message GetPlatformMetadataRequest {
+  repeated int32 platform_ids = 1;
+}
+
+message GetPlatformMetadataResponse {
+  repeated PlatformMetadata metadata = 1;
+}
+
+message IgdbSearch {
+  string value = 1;
+}
+
+message IgdbPagination {
+  optional int32 limit = 1;
+  optional int32 offset = 2;
+}
+
+message IgdbFilters {
+  enum FilterOperator {
+    EQUAL = 0;
+    NOT_EQUAL = 1;
+    GREATER_THAN = 2;
+    GREATER_THAN_OR_EQUAL = 3;
+    LESS_THAN = 4;
+    LESS_THAN_OR_EQUAL = 5;
+    PREFIX_MATCH = 6;
+    SUFFIX_MATCH = 7;
+    INFIX_MATCH = 8;
+  }
+
+  message FilterValue {
+    string value = 1;
+    optional FilterOperator operator = 2;
+  }
+
+  // map of field name to filter operation
+  map<string, FilterValue> filters = 1;
+}
+
+message IgdbFields {
+  message IncludeFields {
+    repeated string value = 1;
+  }
+
+  message ExcludeFields {
+    repeated string value = 1;
+  }
+
+  oneof selector {
+    IncludeFields include = 1;
+    ExcludeFields exclude = 2;
+  }
+}
+
 message IgdbGameSearchQuery {
+  message Fields {
+    optional uint64 id = 1;
+    optional string title = 2;
+    // IGDB id of the platform this game is for
+    optional uint64 platform = 3;
+  }
+
   // the retrom game id we are searching for
   int32 game_id = 1;
 
-  string search = 2;
-  optional uint64 igdb_id = 3;
-  optional string title = 4;
-  optional string platform = 5;
+  IgdbSearch search = 2;
+  optional Fields fields = 3;
+  optional IgdbPagination pagination = 4;
 }
 
 message GetIgdbGameSearchResultsRequest {
   IgdbGameSearchQuery query = 1;
-  optional int32 limit = 2;
 }
 
 message GetIgdbGameSearchResultsResponse {
-  repeated GameMetadata metadata = 1;
+  repeated NewGameMetadata metadata = 1;
 }
 
 message UpdateGameMetadataRequest {
@@ -198,6 +270,65 @@ message UpdateGameMetadataRequest {
 
 message UpdateGameMetadataResponse {
   repeated GameMetadata metadata_updated = 1;
+}
+
+message IgdbPlatformSearchQuery {
+  message Fields {
+    optional uint64 id = 1;
+    optional string name = 2;
+  }
+
+  // the retrom platform id we are searching for
+  int32 platform_id = 1;
+
+  IgdbSearch search = 2;
+  optional Fields fields = 3;
+  optional IgdbPagination pagination = 4;
+}
+
+message GetIgdbPlatformSearchResultsRequest {
+  IgdbPlatformSearchQuery query = 1;
+}
+
+message GetIgdbPlatformSearchResultsResponse {
+  repeated NewPlatformMetadata metadata = 1;
+}
+
+message UpdatePlatformMetadataRequest {
+  repeated UpdatedPlatformMetadata metadata = 1;
+}
+
+message UpdatePlatformMetadataResponse {
+  repeated PlatformMetadata metadata_updated = 1;
+}
+
+enum IgdbSearchType {
+  GAME = 0;
+  PLATFORM = 1;
+}
+
+// Arbitrary search query for IGDB
+message GetIgdbSearchRequest {
+  IgdbSearchType search_type = 1;
+  optional IgdbSearch search = 2;
+  optional IgdbPagination pagination = 3;
+  optional IgdbFilters filters = 4;
+  optional IgdbFields fields = 5;
+}
+
+message IgdbSearchGameResponse {
+  repeated NewGameMetadata games = 1;
+}
+
+message IgdbSearchPlatformResponse {
+  repeated NewPlatformMetadata platforms = 1;
+}
+
+message GetIgdbSearchResponse {
+  oneof search_results {
+    IgdbSearchGameResponse game_matches = 1;
+    IgdbSearchPlatformResponse platform_matches = 2;
+  }
 }
 
 message DeleteLibraryRequest {}

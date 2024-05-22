@@ -12,25 +12,26 @@ type Props = {
 
 export default async function Page(props: Props) {
   const { params } = props;
-  const { games, metadata } = await getGames({
+  const gamesResponse = await getGames({
     ids: [parseInt(params.id)],
     withMetadata: true,
   });
 
-  const game = games.at(0);
-  const gameMetadata = metadata.at(0);
+  const game = gamesResponse.games.at(0);
+  const gameMetadata = gamesResponse.metadata.at(0);
 
   if (!game) {
     return redirect("/");
   }
 
-  const { platforms } = game.platformId
-    ? await getPlatforms({ ids: [game.platformId] })
-    : { platforms: [] };
+  const platformsResponse = game.platformId
+    ? await getPlatforms({ ids: [game.platformId], withMetadata: true })
+    : { platforms: [], metadata: [] };
 
-  const platform = platforms.at(0);
+  const platform = platformsResponse.platforms.at(0);
+  const platformMetadata = platformsResponse.metadata.at(0);
 
-  const gameDetail = { game, platform, metadata: gameMetadata };
+  const gameDetail = { game, platform, gameMetadata, platformMetadata };
 
   return (
     <GameDetailProvider value={gameDetail}>

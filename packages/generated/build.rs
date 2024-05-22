@@ -119,6 +119,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 get_diesel_macro("game_metadata", None)
             ),
         )
+        .type_attribute(
+            "retrom.PlatformMetadata",
+            format!(
+                "#[derive({diesel_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("platform_metadata", "platform_id".into())
+            ),
+        )
+        .type_attribute(
+            "retrom.NewPlatformMetadata",
+            format!(
+                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("platform_metadata", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.UpdatedPlatformMetadata",
+            format!(
+                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("platform_metadata", None)
+            ),
+        )
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))
         .compile(&["../../protos/retrom.proto"], &["../../protos"])?;
 

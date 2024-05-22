@@ -24,7 +24,10 @@ impl PlatformService for PlatformServiceHandlers {
         &self,
         request: Request<GetPlatformsRequest>,
     ) -> Result<Response<GetPlatformsResponse>, Status> {
-        let ids = request.into_inner().ids;
+        let request = request.into_inner();
+        let ids = &request.ids;
+        let with_metadata = request.with_metadata();
+
         let mut conn = match self.db_pool.get().await {
             Ok(conn) => conn,
             Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
@@ -43,7 +46,30 @@ impl PlatformService for PlatformServiceHandlers {
             Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
         };
 
-        let response = GetPlatformsResponse { platforms };
+        let metadata = match with_metadata {
+            true => {
+                let mut query = schema::platform_metadata::table
+                    .into_boxed()
+                    .select(retrom::PlatformMetadata::as_select());
+
+                if !ids.is_empty() {
+                    query = query.filter(schema::platform_metadata::platform_id.eq_any(ids));
+                }
+
+                let metadata: Vec<retrom::PlatformMetadata> = match query.load(&mut conn).await {
+                    Ok(rows) => rows,
+                    Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
+                };
+
+                metadata
+            }
+            false => vec![],
+        };
+
+        let response = GetPlatformsResponse {
+            platforms,
+            metadata,
+        };
 
         Ok(Response::new(response))
     }

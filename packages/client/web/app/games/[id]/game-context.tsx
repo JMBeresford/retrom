@@ -1,12 +1,18 @@
 "use client";
 
-import { Game, GameMetadata, Platform } from "@/generated/retrom";
+import {
+  Game,
+  GameMetadata,
+  Platform,
+  PlatformMetadata,
+} from "@/generated/retrom";
 import { PropsWithChildren, createContext, useContext } from "react";
 
-type GameDetailContext = {
+export type GameDetailContext = {
   game: Game;
   platform?: Platform;
-  metadata?: GameMetadata;
+  gameMetadata?: GameMetadata;
+  platformMetadata?: PlatformMetadata;
 };
 
 const GameDetailContext = createContext<GameDetailContext | null>(null);

@@ -89,5 +89,8 @@ export function UpdateMetadataMenuItem(props: Props) {
 }
 
 function updateMetadataSuccessMessage(response: UpdateLibraryMetadataResponse) {
-  return `Updated: ${response.metadataPopulated.length} metadata entries`;
+  const gameMetadata = response.gameMetadataPopulated.length;
+  const platformMetadata = response.platformMetadataPopulated.length;
+
+  return `Updated: ${gameMetadata} game metadata entries, ${platformMetadata} platform metadata entries`;
 }

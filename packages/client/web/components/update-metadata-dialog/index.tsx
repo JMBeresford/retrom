@@ -3,7 +3,7 @@ import { DialogContent, DialogHeader, DialogOverlay } from "../ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { IgdbTab } from "./igdb-tab";
 import { ManualTab } from "./manual-tab";
-import { searchIgdbGames, updateMetadata } from "@/actions/grpc/metadata";
+import { searchIgdbGames, updateGameMetadata } from "@/actions/grpc/metadata";
 
 type Props = ComponentProps<typeof DialogContent>;
 
@@ -24,11 +24,11 @@ export function UpdateMetadataDialog(props: Props) {
           <TabsContent value="igdb">
             <IgdbTab
               searchHandler={searchIgdbGames}
-              updateHandler={updateMetadata}
+              updateHandler={updateGameMetadata}
             />
           </TabsContent>
           <TabsContent value="manual">
-            <ManualTab updateHandler={updateMetadata} />
+            <ManualTab updateHandler={updateGameMetadata} />
           </TabsContent>
         </Tabs>
       </DialogContent>

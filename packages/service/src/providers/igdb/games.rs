@@ -12,7 +12,7 @@ use super::provider::IGDBProvider;
 pub async fn match_game_igdb(
     provider: Arc<IGDBProvider>,
     game: &retrom::Game,
-) -> Result<retrom::GameMetadata, reqwest::Error> {
+) -> Result<retrom::NewGameMetadata, reqwest::Error> {
     provider.maybe_refresh_token().await;
 
     let name = &game.path.split('/').last().unwrap_or(&game.path);
@@ -36,9 +36,9 @@ pub async fn match_game_igdb(
     }
 
     let metadata = match igdb_match {
-        Some(igdb_match) => igdb_game_to_metadata(igdb_match, game),
-        None => retrom::GameMetadata {
-            game_id: game.id.clone(),
+        Some(igdb_match) => igdb_game_to_metadata(igdb_match, Some(game)),
+        None => retrom::NewGameMetadata {
+            game_id: Some(game.id),
             ..Default::default()
         },
     };
@@ -49,7 +49,7 @@ pub async fn match_game_igdb(
 pub async fn match_games_igdb(
     provider: Arc<IGDBProvider>,
     games: Vec<retrom::Game>,
-) -> Result<Vec<retrom::GameMetadata>, reqwest::Error> {
+) -> Result<Vec<retrom::NewGameMetadata>, reqwest::Error> {
     let all_metadata_res = futures::future::join_all(
         games
             .into_iter()
@@ -102,7 +102,10 @@ pub(crate) async fn search_games(
     Ok(igdb::GameResult::decode(bytes).expect("Could not decode response"))
 }
 
-pub fn igdb_game_to_metadata(igdb_match: igdb::Game, game: &retrom::Game) -> retrom::GameMetadata {
+pub fn igdb_game_to_metadata(
+    igdb_match: igdb::Game,
+    game: Option<&retrom::Game>,
+) -> retrom::NewGameMetadata {
     let description = Some(igdb_match.summary);
     let name = Some(igdb_match.name);
     let igdb_id = match BigDecimal::from_u64(igdb_match.id) {
@@ -159,8 +162,8 @@ pub fn igdb_game_to_metadata(igdb_match: igdb::Game, game: &retrom::Game) -> ret
             .and_then(|cover_url| Some(cover_url.clone().replace("t_cover_big", "t_thumb"))),
     };
 
-    retrom::GameMetadata {
-        game_id: game.id,
+    retrom::NewGameMetadata {
+        game_id: game.and_then(|game| Some(game.id)),
         igdb_id,
         name,
         description,

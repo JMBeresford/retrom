@@ -35,7 +35,7 @@ diesel::table! {
         name -> Nullable<Text>,
         description -> Nullable<Text>,
         background_url -> Nullable<Text>,
-        icon_url -> Nullable<Text>,
+        logo_url -> Nullable<Text>,
         igdb_id -> Nullable<Int8>,
     }
 }

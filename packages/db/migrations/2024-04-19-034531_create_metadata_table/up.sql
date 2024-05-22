@@ -3,7 +3,7 @@ CREATE TABLE "platform_metadata"(
   "name" TEXT,
   "description" TEXT,
   "background_url" TEXT,
-  "icon_url" TEXT,
+  "logo_url" TEXT,
   "igdb_id" BIGINT,
   CONSTRAINT "fk_platform_id" FOREIGN KEY ("platform_id") REFERENCES "platforms"("id") ON DELETE CASCADE,
   UNIQUE("platform_id")
