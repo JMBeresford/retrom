@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { MenubarItem } from "@/components/ui/menubar";
 import { useToast } from "../../ui/use-toast";
 import {
@@ -10,41 +10,40 @@ import {
   DialogTrigger,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
-import { DeleteLibraryResponse } from "@/generated/retrom";
 import { LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRetromClient } from "@/providers/retrom-client/web";
+import { redirect } from "next/navigation";
 
-type Props = {
-  handler: () => Promise<DeleteLibraryResponse>;
-};
-
-export function DeleteLibraryMenuItem(props: Props) {
-  const handler = props.handler;
+export function DeleteLibraryMenuItem() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const handleLibraryDelete = useCallback(() => {
-    setLoading(true);
-    handler()
-      .then(() => {
-        toast({
-          title: "Library deleted!",
-          description: "Library has been deleted successfully.",
-        });
-      })
-      .catch((err) => {
-        toast({
-          title: "Error deleting library",
-          variant: "destructive",
-          description: err.message,
-        });
-      })
-      .finally(() => {
-        setLoading(false);
-        setDialogOpen(false);
+  const queryClient = useQueryClient();
+  const retromClient = useRetromClient();
+  const { mutate, isPending } = useMutation({
+    onError: (err) => {
+      toast({
+        title: "Error deleting library",
+        variant: "destructive",
+        description: err.message,
       });
-  }, [handler, toast]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["library"] });
+      queryClient.invalidateQueries({ queryKey: ["games"] });
+      queryClient.invalidateQueries({ queryKey: ["platforms"] });
+      queryClient.invalidateQueries({ queryKey: ["metadata"] });
+
+      toast({
+        title: "Library deleted!",
+        description: "Library has been deleted successfully.",
+      });
+
+      redirect("/");
+    },
+    mutationFn: async () => await retromClient.libraryClient.deleteLibrary(),
+  });
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -67,12 +66,15 @@ export function DeleteLibraryMenuItem(props: Props) {
           <Button
             className="relative"
             variant="destructive"
-            onClick={() => handleLibraryDelete()}
+            onClick={() => {
+              mutate();
+              setDialogOpen(false);
+            }}
           >
             <LoaderIcon
-              className={cn("animate-spin absolute", !loading && "opacity-0")}
+              className={cn("animate-spin absolute", !isPending && "opacity-0")}
             />
-            <p className={cn(loading && "opacity-0")}>Delete</p>
+            <p className={cn(isPending && "opacity-0")}>Delete</p>
           </Button>
         </div>
       </DialogContent>

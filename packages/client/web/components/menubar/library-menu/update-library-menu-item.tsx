@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { MenubarItem } from "@/components/ui/menubar";
 import { useToast } from "../../ui/use-toast";
 import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -16,38 +17,35 @@ import { Button } from "../../ui/button";
 import { UpdateLibraryResponse } from "@/generated/retrom";
 import { LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRetromClient } from "@/providers/retrom-client/web";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-type Props = {
-  handler: () => Promise<UpdateLibraryResponse>;
-};
-
-export function UpdateLibraryMenuItem(props: Props) {
-  const handler = props.handler;
+export function UpdateLibraryMenuItem() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const retromClient = useRetromClient();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleLibraryUpdate = useCallback(() => {
-    setLoading(true);
-    handler()
-      .then((res) =>
-        toast({
-          title: "Library updated!",
-          description: updateLibrarySuccessMessage(res),
-        }),
-      )
-      .catch((err) =>
-        toast({
-          title: "Error updating library",
-          variant: "destructive",
-          description: err.message,
-        }),
-      )
-      .finally(() => {
-        setLoading(false);
-        setDialogOpen(false);
+  const { mutate, isPending } = useMutation({
+    onError: (err) => {
+      toast({
+        title: "Error updating library",
+        variant: "destructive",
+        description: err.message,
       });
-  }, [handler, toast]);
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["library"] });
+      queryClient.invalidateQueries({ queryKey: ["games"] });
+      queryClient.invalidateQueries({ queryKey: ["platforms"] });
+
+      toast({
+        title: "Library updated!",
+        description: updateLibrarySuccessMessage(res),
+      });
+    },
+    mutationFn: async () => await retromClient.libraryClient.updateLibrary(),
+  });
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -60,24 +58,28 @@ export function UpdateLibraryMenuItem(props: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Update Library</DialogTitle>
+          <DialogDescription>
+            Starts the update process to populate missing data for platforms,
+            games and game files.
+          </DialogDescription>
         </DialogHeader>
-
-        <p>
-          Start the update process to populate missing data for platforms, games
-          and game files. Force update will overwrite existing data in addition
-          to populating missing data.
-        </p>
 
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="secondary">Cancel</Button>
           </DialogClose>
 
-          <Button className="relative" onClick={() => handleLibraryUpdate()}>
+          <Button
+            className="relative"
+            onClick={() => {
+              mutate();
+              setDialogOpen(false);
+            }}
+          >
             <LoaderIcon
-              className={cn("animate-spin absolute", !loading && "opacity-0")}
+              className={cn("animate-spin absolute", !isPending && "opacity-0")}
             />
-            <p className={cn(loading && "opacity-0")}>Update</p>
+            <p className={cn(isPending && "opacity-0")}>Update</p>
           </Button>
         </DialogFooter>
       </DialogContent>

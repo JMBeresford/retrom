@@ -1,9 +1,4 @@
 import type { Metadata } from "next";
-import {
-  GameServiceDefinition,
-  PlatformServiceDefinition,
-} from "@/generated/retrom";
-import { Client, createChannel, createClient } from "nice-grpc";
 import { Inter } from "next/font/google";
 import "./globals.scss";
 import { cn } from "@/lib/utils";
@@ -16,8 +11,9 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import { Menubar } from "@/components/menubar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getGames } from "@/actions/grpc/games";
-import { getPlatforms } from "@/actions/grpc/platforms";
+import { RetromClientProvider } from "@/providers/retrom-client/web";
+import { RetromWebClient } from "@/providers/retrom-client/web/actions";
+import { QueryClientProvider } from "@/providers/query-client";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -31,40 +27,38 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { games, metadata: gamesMetadata } = await getGames({
-    withMetadata: true,
-  });
-  const { platforms, metadata: platformsMetadata } = await getPlatforms({
-    withMetadata: true,
-  });
+  const retromClient = RetromWebClient;
 
   return (
     <html lang="en">
       <body
         className={cn("bg-background font-sans antialiased", inter.variable)}
       >
-        <div className="h-screen max-h-screen relative flex flex-col">
-          <Menubar />
-          <ResizablePanelGroup direction="horizontal" className="h-full">
-            <ResizablePanel defaultSize={25} maxSize={40} className="bg-muted">
-              <SideBar
-                platforms={platforms}
-                games={games}
-                gamesMetadata={gamesMetadata}
-                platformsMetadata={platformsMetadata}
-              />
-            </ResizablePanel>
+        <RetromClientProvider value={retromClient}>
+          <QueryClientProvider>
+            <div className="h-screen max-h-screen relative flex flex-col">
+              <Menubar />
+              <ResizablePanelGroup direction="horizontal" className="h-full">
+                <ResizablePanel
+                  defaultSize={25}
+                  maxSize={40}
+                  className="bg-muted"
+                >
+                  <SideBar />
+                </ResizablePanel>
 
-            <ResizableHandle />
+                <ResizableHandle />
 
-            <ResizablePanel defaultSize={75}>
-              <ScrollArea className="h-full max-h-full">
-                <main className="pb-16">{children}</main>
-              </ScrollArea>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </div>
-        <Toaster />
+                <ResizablePanel defaultSize={75}>
+                  <ScrollArea className="h-full max-h-full">
+                    <main className="pb-16">{children}</main>
+                  </ScrollArea>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            </div>
+            <Toaster />
+          </QueryClientProvider>
+        </RetromClientProvider>
       </body>
     </html>
   );

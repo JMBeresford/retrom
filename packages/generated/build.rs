@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use walkdir::WalkDir;
 
 // Derives that are used for structs representing existing rows in db
 const DIESEL_ROW_DERIVES: [&str; 5] = [
@@ -33,6 +34,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|d| format!("diesel::{d}"))
         .collect::<Vec<String>>()
         .join(",");
+
+    let proto_paths: Vec<PathBuf> = WalkDir::new("../../protos/retrom")
+        .follow_links(true)
+        .into_iter()
+        .filter_map(|dir_entry| dir_entry.ok())
+        .map(|dir_entry| PathBuf::from(dir_entry.path()))
+        .filter(|path| path.extension() == Some("proto".as_ref()))
+        .collect();
 
     tonic_build::configure()
         .type_attribute(
@@ -141,7 +150,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ),
         )
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))
-        .compile(&["../../protos/retrom.proto"], &["../../protos"])?;
+        .compile(&proto_paths, &["../../protos/retrom/"])?;
 
     tonic_build::configure().compile(&["../../protos/igdb.proto"], &["../../protos"])?;
 

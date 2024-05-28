@@ -16,3 +16,4 @@ db = { workspace = true }
 
 [build-dependencies]
 tonic-build = "0.11"
+walkdir = "2.5.0"

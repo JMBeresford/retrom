@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package retrom;
+
+message IgdbSearch {
+  string value = 1;
+}
+
+message IgdbPagination {
+  optional int32 limit = 1;
+  optional int32 offset = 2;
+}
+
+message IgdbFilters {
+  enum FilterOperator {
+    EQUAL = 0;
+    NOT_EQUAL = 1;
+    GREATER_THAN = 2;
+    GREATER_THAN_OR_EQUAL = 3;
+    LESS_THAN = 4;
+    LESS_THAN_OR_EQUAL = 5;
+    PREFIX_MATCH = 6;
+    SUFFIX_MATCH = 7;
+    INFIX_MATCH = 8;
+  }
+
+  message FilterValue {
+    string value = 1;
+    optional FilterOperator operator = 2;
+  }
+
+  // map of field name to filter operation
+  map<string, FilterValue> filters = 1;
+}
+
+message IgdbFields {
+  message IncludeFields {
+    repeated string value = 1;
+  }
+
+  message ExcludeFields {
+    repeated string value = 1;
+  }
+
+  oneof selector {
+    IncludeFields include = 1;
+    ExcludeFields exclude = 2;
+  }
+}
+
+message IgdbGameSearchQuery {
+  message Fields {
+    optional uint64 id = 1;
+    optional string title = 2;
+    // IGDB id of the platform this game is for
+    optional uint64 platform = 3;
+  }
+
+  // the retrom game id we are searching for
+  int32 game_id = 1;
+
+  IgdbSearch search = 2;
+  optional Fields fields = 3;
+  optional IgdbPagination pagination = 4;
+}
+
+message IgdbPlatformSearchQuery {
+  message Fields {
+    optional uint64 id = 1;
+    optional string name = 2;
+  }
+
+  // the retrom platform id we are searching for
+  int32 platform_id = 1;
+
+  IgdbSearch search = 2;
+  optional Fields fields = 3;
+  optional IgdbPagination pagination = 4;
+}

@@ -2,3 +2,5 @@
 mock_content
 mock.db
 .env
+
+**/node_modules

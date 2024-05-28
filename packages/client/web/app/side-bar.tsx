@@ -1,14 +1,9 @@
 "use client";
 
 import { Button } from "../components/ui/button";
-import { Image, cn, toInitials } from "@/lib/utils";
+import { Image, cn } from "@/lib/utils";
 import { useCallback, useMemo, useState } from "react";
-import {
-  Game,
-  GameMetadata,
-  Platform,
-  PlatformMetadata,
-} from "@/generated/retrom";
+import { Game, Platform } from "@/generated/retrom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -23,39 +18,61 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useRetromClient } from "@/providers/retrom-client/web";
+import { useQuery } from "@tanstack/react-query";
 
-type Props = {
-  games: Game[];
-  gamesMetadata: GameMetadata[];
-  platforms: Platform[];
-  platformsMetadata: PlatformMetadata[];
-};
-
-export function SideBar(props: Props) {
+export function SideBar() {
   const path = usePathname();
-  const { games, platforms, gamesMetadata, platformsMetadata } = props;
+  const retromClient = useRetromClient();
+
+  const { data: platformData, status: platformStatus } = useQuery({
+    queryKey: ["platforms", "platform-metadata"],
+    queryFn: async () =>
+      await retromClient.platformClient.getPlatforms({ withMetadata: true }),
+  });
+
+  const { data: gameData, status: gameStatus } = useQuery({
+    queryKey: ["games", "game-metadata"],
+    queryFn: async () =>
+      await retromClient.gameClient.getGames({ withMetadata: true }),
+  });
+
+  const loading = platformStatus === "pending" || gameStatus === "pending";
+  const error = platformStatus === "error" || gameStatus === "error";
+
   const [platformFilters, setPlatformFilters] = useState(new Set<number>());
 
   const gamesByPlatform = useMemo(() => {
+    if (!gameData || !platformData) return {};
     const ret: Record<string, Array<Game>> = {};
 
+    const { platforms } = platformData;
+
     return platforms.reduce((acc, platform) => {
-      acc[platform.id] = games.filter(
+      acc[platform.id] = gameData.games.filter(
         (game) => game.platformId === platform.id,
       );
       return acc;
     }, ret);
-  }, [games, platforms]);
+  }, [gameData, platformData]);
 
   const getPlatformName = useCallback(
     (platform: Platform) => {
       return (
-        platformsMetadata.find((md) => md.platformId === platform.id)?.name ??
-        platform.path.split("/").pop()
+        platformData?.metadata.find((md) => md.platformId === platform.id)
+          ?.name ?? platform.path.split("/").pop()
       );
     },
-    [platformsMetadata],
+    [platformData],
   );
+
+  if (loading) {
+    return <span>Loading...</span>;
+  }
+
+  if (error) {
+    return <span>Error...</span>;
+  }
 
   return (
     <TooltipProvider>
@@ -66,7 +83,7 @@ export function SideBar(props: Props) {
           <h2 className="text-muted-foreground text-sm">Filter by platform:</h2>
 
           <div className="flex flex-wrap gap-1 py-3">
-            {platforms.map((platform) => {
+            {platformData.platforms.map((platform) => {
               const platformName = getPlatformName(platform);
 
               return (
@@ -106,9 +123,9 @@ export function SideBar(props: Props) {
         <section className="w-full flex flex-col gap-2 overflow-hidden">
           <Accordion
             type="multiple"
-            defaultValue={platforms.map((p) => p.id.toString())}
+            defaultValue={platformData.platforms.map((p) => p.id.toString())}
           >
-            {platforms
+            {platformData.platforms
               .filter(
                 (platform) =>
                   platformFilters.size === 0 ||
@@ -133,13 +150,13 @@ export function SideBar(props: Props) {
                     <AccordionContent>
                       <ul>
                         {games.map((game) => {
-                          const gameName =
-                            gamesMetadata.find((m) => m.gameId === game.id)
-                              ?.name ?? game.path.split("/").pop();
-
-                          const iconUrl = gamesMetadata.find(
+                          const gameMetadata = gameData.metadata.find(
                             (m) => m.gameId === game.id,
-                          )?.iconUrl;
+                          );
+
+                          const iconUrl = gameMetadata?.iconUrl;
+                          const gameName =
+                            gameMetadata?.name ?? game.path.split("/").pop();
 
                           return (
                             <Tooltip key={game.id}>
@@ -154,16 +171,18 @@ export function SideBar(props: Props) {
                                   )}
                                 >
                                   <Link
-                                    href={`/games/${game.id}`}
+                                    href={`/games/${platform.id}/${game.id}`}
                                     className="flex items-center"
                                   >
                                     <div className="relative min-w-[24px] min-h-[24px] mr-2">
-                                      <Image
-                                        src={iconUrl ?? ""}
-                                        width={24}
-                                        height={24}
-                                        alt={gameName ?? ""}
-                                      />
+                                      {iconUrl && (
+                                        <Image
+                                          src={iconUrl}
+                                          width={24}
+                                          height={24}
+                                          alt={gameName ?? ""}
+                                        />
+                                      )}
                                     </div>
                                     {gameName}
                                   </Link>

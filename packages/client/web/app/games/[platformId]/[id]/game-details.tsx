@@ -1,13 +1,12 @@
+"use client";
+
 import styles from "./game-details.module.scss";
 import { cn, getFileName, Image } from "@/lib/utils";
-import { Game, GameMetadata, Platform } from "@/generated/retrom";
 import { Actions } from "./actions";
-import { GameDetailContext } from "./game-context";
+import { useGameDetail } from "./game-context";
 
-type Props = GameDetailContext;
-
-export async function GameDetails(props: Props) {
-  const { game, gameMetadata } = props;
+export function GameDetails() {
+  const { game, gameMetadata } = useGameDetail();
 
   const name = gameMetadata?.name || getFileName(game.path);
 
@@ -23,8 +22,7 @@ export async function GameDetails(props: Props) {
           <Image
             src={gameMetadata.backgroundUrl}
             alt={gameMetadata.name}
-            fill
-            className="object-cover absolute w-full"
+            className="object-cover absolute min-w-full min-h-full"
           />
         )}
       </div>
@@ -35,9 +33,13 @@ export async function GameDetails(props: Props) {
           "flex flex-col justify-center py-16 px-3 gap-2",
         )}
       >
-        <div className={cn("border-2", "relative w-[264px] h-[374px]")}>
+        <div className={cn("border-2", "relative")}>
           {gameMetadata?.coverUrl && gameMetadata?.name && (
-            <Image src={gameMetadata.coverUrl} alt={gameMetadata.name} fill />
+            <Image
+              src={gameMetadata.coverUrl}
+              alt={gameMetadata.name}
+              className="object-cover min-w-full min-h-full"
+            />
           )}
         </div>
 

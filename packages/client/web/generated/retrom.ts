@@ -214,8 +214,10 @@ export interface IgdbFilters_FiltersEntry {
 }
 
 export interface IgdbFields {
-  include?: IgdbFields_IncludeFields | undefined;
-  exclude?: IgdbFields_ExcludeFields | undefined;
+  selector?: { $case: "include"; include: IgdbFields_IncludeFields } | {
+    $case: "exclude";
+    exclude: IgdbFields_ExcludeFields;
+  } | undefined;
 }
 
 export interface IgdbFields_IncludeFields {
@@ -306,8 +308,10 @@ export interface IgdbSearchPlatformResponse {
 }
 
 export interface GetIgdbSearchResponse {
-  gameMatches?: IgdbSearchGameResponse | undefined;
-  platformMatches?: IgdbSearchPlatformResponse | undefined;
+  searchResults?: { $case: "gameMatches"; gameMatches: IgdbSearchGameResponse } | {
+    $case: "platformMatches";
+    platformMatches: IgdbSearchPlatformResponse;
+  } | undefined;
 }
 
 export interface DeleteLibraryRequest {
@@ -2536,16 +2540,18 @@ export const IgdbFilters_FiltersEntry = {
 };
 
 function createBaseIgdbFields(): IgdbFields {
-  return { include: undefined, exclude: undefined };
+  return { selector: undefined };
 }
 
 export const IgdbFields = {
   encode(message: IgdbFields, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.include !== undefined) {
-      IgdbFields_IncludeFields.encode(message.include, writer.uint32(10).fork()).ldelim();
-    }
-    if (message.exclude !== undefined) {
-      IgdbFields_ExcludeFields.encode(message.exclude, writer.uint32(18).fork()).ldelim();
+    switch (message.selector?.$case) {
+      case "include":
+        IgdbFields_IncludeFields.encode(message.selector.include, writer.uint32(10).fork()).ldelim();
+        break;
+      case "exclude":
+        IgdbFields_ExcludeFields.encode(message.selector.exclude, writer.uint32(18).fork()).ldelim();
+        break;
     }
     return writer;
   },
@@ -2562,14 +2568,14 @@ export const IgdbFields = {
             break;
           }
 
-          message.include = IgdbFields_IncludeFields.decode(reader, reader.uint32());
+          message.selector = { $case: "include", include: IgdbFields_IncludeFields.decode(reader, reader.uint32()) };
           continue;
         case 2:
           if (tag !== 18) {
             break;
           }
 
-          message.exclude = IgdbFields_ExcludeFields.decode(reader, reader.uint32());
+          message.selector = { $case: "exclude", exclude: IgdbFields_ExcludeFields.decode(reader, reader.uint32()) };
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -2585,12 +2591,20 @@ export const IgdbFields = {
   },
   fromPartial(object: DeepPartial<IgdbFields>): IgdbFields {
     const message = createBaseIgdbFields();
-    message.include = (object.include !== undefined && object.include !== null)
-      ? IgdbFields_IncludeFields.fromPartial(object.include)
-      : undefined;
-    message.exclude = (object.exclude !== undefined && object.exclude !== null)
-      ? IgdbFields_ExcludeFields.fromPartial(object.exclude)
-      : undefined;
+    if (
+      object.selector?.$case === "include" &&
+      object.selector?.include !== undefined &&
+      object.selector?.include !== null
+    ) {
+      message.selector = { $case: "include", include: IgdbFields_IncludeFields.fromPartial(object.selector.include) };
+    }
+    if (
+      object.selector?.$case === "exclude" &&
+      object.selector?.exclude !== undefined &&
+      object.selector?.exclude !== null
+    ) {
+      message.selector = { $case: "exclude", exclude: IgdbFields_ExcludeFields.fromPartial(object.selector.exclude) };
+    }
     return message;
   },
 };
@@ -3528,16 +3542,18 @@ export const IgdbSearchPlatformResponse = {
 };
 
 function createBaseGetIgdbSearchResponse(): GetIgdbSearchResponse {
-  return { gameMatches: undefined, platformMatches: undefined };
+  return { searchResults: undefined };
 }
 
 export const GetIgdbSearchResponse = {
   encode(message: GetIgdbSearchResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.gameMatches !== undefined) {
-      IgdbSearchGameResponse.encode(message.gameMatches, writer.uint32(10).fork()).ldelim();
-    }
-    if (message.platformMatches !== undefined) {
-      IgdbSearchPlatformResponse.encode(message.platformMatches, writer.uint32(18).fork()).ldelim();
+    switch (message.searchResults?.$case) {
+      case "gameMatches":
+        IgdbSearchGameResponse.encode(message.searchResults.gameMatches, writer.uint32(10).fork()).ldelim();
+        break;
+      case "platformMatches":
+        IgdbSearchPlatformResponse.encode(message.searchResults.platformMatches, writer.uint32(18).fork()).ldelim();
+        break;
     }
     return writer;
   },
@@ -3554,14 +3570,20 @@ export const GetIgdbSearchResponse = {
             break;
           }
 
-          message.gameMatches = IgdbSearchGameResponse.decode(reader, reader.uint32());
+          message.searchResults = {
+            $case: "gameMatches",
+            gameMatches: IgdbSearchGameResponse.decode(reader, reader.uint32()),
+          };
           continue;
         case 2:
           if (tag !== 18) {
             break;
           }
 
-          message.platformMatches = IgdbSearchPlatformResponse.decode(reader, reader.uint32());
+          message.searchResults = {
+            $case: "platformMatches",
+            platformMatches: IgdbSearchPlatformResponse.decode(reader, reader.uint32()),
+          };
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -3577,12 +3599,26 @@ export const GetIgdbSearchResponse = {
   },
   fromPartial(object: DeepPartial<GetIgdbSearchResponse>): GetIgdbSearchResponse {
     const message = createBaseGetIgdbSearchResponse();
-    message.gameMatches = (object.gameMatches !== undefined && object.gameMatches !== null)
-      ? IgdbSearchGameResponse.fromPartial(object.gameMatches)
-      : undefined;
-    message.platformMatches = (object.platformMatches !== undefined && object.platformMatches !== null)
-      ? IgdbSearchPlatformResponse.fromPartial(object.platformMatches)
-      : undefined;
+    if (
+      object.searchResults?.$case === "gameMatches" &&
+      object.searchResults?.gameMatches !== undefined &&
+      object.searchResults?.gameMatches !== null
+    ) {
+      message.searchResults = {
+        $case: "gameMatches",
+        gameMatches: IgdbSearchGameResponse.fromPartial(object.searchResults.gameMatches),
+      };
+    }
+    if (
+      object.searchResults?.$case === "platformMatches" &&
+      object.searchResults?.platformMatches !== undefined &&
+      object.searchResults?.platformMatches !== null
+    ) {
+      message.searchResults = {
+        $case: "platformMatches",
+        platformMatches: IgdbSearchPlatformResponse.fromPartial(object.searchResults.platformMatches),
+      };
+    }
     return message;
   },
 };
@@ -3902,6 +3938,7 @@ type Builtin = Date | Function | Uint8Array | string | number | boolean | undefi
 export type DeepPartial<T> = T extends Builtin ? T
   : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
   : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
+  : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 

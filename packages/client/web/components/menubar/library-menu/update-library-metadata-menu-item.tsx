@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { MenubarItem } from "@/components/ui/menubar";
 import { useToast } from "../../ui/use-toast";
 import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -16,38 +17,35 @@ import { Button } from "../../ui/button";
 import { UpdateLibraryMetadataResponse } from "@/generated/retrom";
 import { LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRetromClient } from "@/providers/retrom-client/web";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-type Props = {
-  handler: () => Promise<UpdateLibraryMetadataResponse>;
-};
-
-export function UpdateMetadataMenuItem(props: Props) {
-  const handler = props.handler;
+export function UpdateMetadataMenuItem() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const retromClient = useRetromClient();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleLibraryMetadataUpdate = useCallback(() => {
-    setLoading(true);
-    handler()
-      .then((res) =>
-        toast({
-          title: "Library metadata updated!",
-          description: updateMetadataSuccessMessage(res),
-        }),
-      )
-      .catch((err) =>
-        toast({
-          title: "Error updating library metadata",
-          variant: "destructive",
-          description: err.message,
-        }),
-      )
-      .finally(() => {
-        setLoading(false);
-        setDialogOpen(false);
+  const { mutate, isPending } = useMutation({
+    onError: (err) => {
+      toast({
+        title: "Error updating library metadata",
+        variant: "destructive",
+        description: err.message,
       });
-  }, [handler, toast]);
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["game-metadata"] });
+      queryClient.invalidateQueries({ queryKey: ["platform-metadata"] });
+
+      toast({
+        title: "Library metadata updated!",
+        description: updateMetadataSuccessMessage(res),
+      });
+    },
+    mutationFn: async () =>
+      await retromClient.libraryClient.updateLibraryMetadata(),
+  });
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -60,13 +58,13 @@ export function UpdateMetadataMenuItem(props: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Update Library Metadata</DialogTitle>
+          <DialogDescription>
+            Starts the metadata update process to populate missing metadata for
+            games.
+          </DialogDescription>
         </DialogHeader>
 
-        <p>
-          Run the metadata update process to populate missing metadata for
-          games. Force update will overwrite existing metadata in addition to
-          populating missing metadata.
-        </p>
+        <p></p>
 
         <DialogFooter>
           <DialogClose asChild>
@@ -75,12 +73,15 @@ export function UpdateMetadataMenuItem(props: Props) {
 
           <Button
             className="relative"
-            onClick={() => handleLibraryMetadataUpdate()}
+            onClick={() => {
+              mutate();
+              setDialogOpen(false);
+            }}
           >
             <LoaderIcon
-              className={cn("animate-spin absolute", !loading && "opacity-0")}
+              className={cn("animate-spin absolute", !isPending && "opacity-0")}
             />
-            <p className={cn(loading && "opacity-0")}>Update</p>
+            <p className={cn(isPending && "opacity-0")}>Update</p>
           </Button>
         </DialogFooter>
       </DialogContent>

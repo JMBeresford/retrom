@@ -1,21 +1,28 @@
 {
   "build": {
-    "beforeDevCommand": "pnpm --filter=web dev",
-    "beforeBuildCommand": "pnpm --filter=web build",
-    "devPath": "http://localhost:3000",
-    "distDir": "./web/out"
+    "beforeDevCommand": "pnpm --filter=web dev:desktop",
+    "beforeBuildCommand": "pnpm --filter=web build:desktop",
+    "frontendDist": "./web/out",
+    "devUrl": "http://localhost:3000"
   },
-  "package": {
-    "productName": "client",
-    "version": "0.0.0"
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
   },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      }
+  "productName": "client",
+  "version": "0.0.0",
+  "identifier": "com.tauri.dev",
+  "plugins": {},
+  "app": {
+    "security": {
+      "csp": null
     },
     "windows": [
       {
@@ -23,21 +30,6 @@
         "width": 800,
         "height": 600
       }
-    ],
-    "security": {
-      "csp": null
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "com.tauri.dev",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ]
-    }
+    ]
   }
 }

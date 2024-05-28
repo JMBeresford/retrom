@@ -1,7 +1,4 @@
-import nextConfig from "@/next.config.mjs";
-import { default as ImageImpl, ImageProps } from "next/image";
 import { type ClassValue, clsx } from "clsx";
-import { DetailedHTMLProps, HTMLAttributes } from "react";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
@@ -34,29 +31,10 @@ export function asOptionalNumber<T extends z.ZodTypeAny>(schema: T) {
   return schema.optional().or(emptyNumberToUndefined);
 }
 
-export function Image(props: ImageProps) {
-  const { src } = props;
-
-  const srcUrl = typeof src === "string" ? new URL(src) : undefined;
-
-  if (
-    typeof src === "string" &&
-    nextConfig.images?.remotePatterns?.some(
-      ({ hostname }) => hostname === srcUrl?.hostname,
-    )
-  ) {
-    return <ImageImpl {...props} />;
-  }
-
+export function Image(props: JSX.IntrinsicElements["img"]) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img
-      {...(props as DetailedHTMLProps<
-        HTMLAttributes<HTMLImageElement>,
-        HTMLImageElement
-      >)}
-      alt={props.alt ?? ""}
-    />
+    <img {...props} alt={props.alt ?? ""} />
   );
 }
 

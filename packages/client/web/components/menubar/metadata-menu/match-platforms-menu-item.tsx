@@ -14,9 +14,10 @@ import {
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
 import {
-  NewPlatformMetadata,
+  IgdbSearchType,
+  Platform,
+  PlatformMetadata,
   UpdatePlatformMetadataRequest,
-  UpdatePlatformMetadataResponse,
 } from "@/generated/retrom";
 import { LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,37 +35,118 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlatformAndMetadata } from ".";
+import { useRetromClient } from "@/providers/retrom-client/web";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { redirect } from "next/navigation";
 
-type Props = {
-  allIgdbPlatforms: NewPlatformMetadata[];
-  currentPlatformMetadata: PlatformAndMetadata[];
-  updatePlatformMetadataAction: (
-    req: UpdatePlatformMetadataRequest,
-  ) => Promise<UpdatePlatformMetadataResponse>;
-};
+export type PlatformAndMetadata = Platform & { metadata: PlatformMetadata };
 
-export function MatchPlatformsMenuItem(props: Props) {
-  const {
-    updatePlatformMetadataAction,
-    allIgdbPlatforms,
-    currentPlatformMetadata,
-  } = props;
+export function MatchPlatformsMenuItem() {
+  const retromClient = useRetromClient();
+  const queryClient = useQueryClient();
 
-  const defaultSelections = useMemo(
-    () =>
-      currentPlatformMetadata.reduce(
-        (acc, platform) => acc.set(platform.id, platform.metadata.igdbId),
-        new Map<number, number | undefined>(),
-      ),
-    [currentPlatformMetadata],
-  );
+  const { data: allIgdbPlatforms, status: igdbSearchStatus } = useQuery({
+    queryKey: ["igdb-search"],
+    queryFn: async () =>
+      await retromClient.metadataClient.getIgdbSearch({
+        searchType: IgdbSearchType.PLATFORM,
+        fields: {
+          selector: {
+            $case: "include",
+            include: { value: ["id", "name", "summary"] },
+          },
+        },
+
+        // 500 is the maximum limit for the IGDB API, default is 10
+        pagination: { limit: 500 },
+      }),
+    select: (res) => {
+      if (res.searchResults?.$case === "platformMatches") {
+        return res.searchResults.platformMatches.platforms;
+      }
+
+      console.error("Wrong enum encountered in oneOf type");
+
+      toast({
+        title: "Failed to fetch IGDB platforms",
+        variant: "destructive",
+        description: "Check console for details",
+      });
+
+      redirect("/500");
+    },
+  });
+
+  const { data: platformData, status: platformStatus } = useQuery({
+    queryKey: ["platforms", "platform-metadata"],
+    queryFn: async () =>
+      await retromClient.platformClient.getPlatforms({ withMetadata: true }),
+    select: (data) => {
+      const platforms = data.platforms;
+      const metadata = data.metadata;
+
+      const platformsWithMetadata: PlatformAndMetadata[] = [];
+      for (const platform of platforms) {
+        const platformMetadata = metadata.find(
+          (m) => m.platformId === platform.id,
+        );
+
+        platformsWithMetadata.push({
+          ...platform,
+          metadata: platformMetadata ?? PlatformMetadata.create(),
+        });
+      }
+
+      return platformsWithMetadata;
+    },
+  });
+
+  const { mutate, isPending } = useMutation({
+    onError: (error) => {
+      console.error(error);
+      toast({
+        title: "Error updating metadata",
+        description: "Check the console for details",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["platform-metadata"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["platforms"],
+      });
+
+      toast({
+        title: "Successfully updated metadata",
+        description: "Updated metadata entries",
+      });
+    },
+    mutationFn: async (req: UpdatePlatformMetadataRequest) =>
+      await retromClient.metadataClient.updatePlatformMetadata(req),
+  });
+
+  const defaultSelections = useMemo(() => {
+    const map = new Map<number, number | undefined>();
+    platformData?.forEach(
+      (platform) => map.set(platform.id, platform.metadata.igdbId),
+      map,
+    );
+
+    return map;
+  }, [platformData]);
+
+  const error = igdbSearchStatus === "error" || platformStatus === "error";
+
+  const loading =
+    isPending || igdbSearchStatus === "pending" || platformStatus === "pending";
+
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selections, setSelections] =
     useState<Map<number, number | undefined>>(defaultSelections);
-  const [loading, setLoading] = useState(false);
 
   const allUnchanged = useMemo(() => {
     for (const [platformId, igdbId] of selections.entries()) {
@@ -77,15 +159,14 @@ export function MatchPlatformsMenuItem(props: Props) {
   }, [selections, defaultSelections]);
 
   const handleUpdate = useCallback(() => {
-    setLoading(true);
     const req = UpdatePlatformMetadataRequest.create();
 
     for (const [platformId, igdbId] of selections.entries()) {
-      if (!igdbId) {
+      const igdbMetadata = allIgdbPlatforms?.find((p) => p.igdbId === igdbId);
+
+      if (!igdbId || !igdbMetadata) {
         continue;
       }
-
-      const igdbMetadata = allIgdbPlatforms.find((p) => p.igdbId === igdbId);
 
       req.metadata.push({
         platformId,
@@ -93,29 +174,23 @@ export function MatchPlatformsMenuItem(props: Props) {
       });
     }
 
-    updatePlatformMetadataAction(req)
-      .then((res) =>
-        toast({
-          title: "Successfully updated metadta",
-          description: `Updated ${res.metadataUpdated.length} metadata entries`,
-        }),
-      )
-      .catch((err) => {
-        console.error(err);
-        toast({
-          title: "Failed to update metadata",
-          variant: "destructive",
-          description: "Check console for details",
-        });
-      })
-      .finally(() => setLoading(false));
-  }, [allIgdbPlatforms, toast, updatePlatformMetadataAction, selections]);
+    mutate(req);
+    setDialogOpen(false);
+  }, [allIgdbPlatforms, selections, mutate]);
 
   const findIgdbSelection = useCallback(
     (id?: number) =>
-      id ? allIgdbPlatforms.find((p) => p.igdbId === id) : undefined,
+      id ? allIgdbPlatforms?.find((p) => p.igdbId === id) : undefined,
     [allIgdbPlatforms],
   );
+
+  if (error) {
+    redirect("/500");
+  }
+
+  if (loading) {
+    return <span>Loading...</span>;
+  }
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -129,7 +204,7 @@ export function MatchPlatformsMenuItem(props: Props) {
         <DialogContent className="max-h-screen">
           <DialogTitle>Match Platforms</DialogTitle>
           Match your platforms to IGDB platforms to get more accurate metadata.
-          {currentPlatformMetadata.map((platform) => {
+          {platformData.map((platform) => {
             const selection = selections.get(platform.id);
             const unchanged = defaultSelections.get(platform.id) === selection;
 

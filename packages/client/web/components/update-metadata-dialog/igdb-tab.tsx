@@ -3,12 +3,9 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  GetIgdbGameSearchResultsRequest,
   UpdatedGameMetadata,
-  type GetIgdbGameSearchResultsRequest,
-  type GetIgdbGameSearchResultsResponse,
-  type NewGameMetadata,
   type UpdateGameMetadataRequest,
-  type UpdateGameMetadataResponse,
 } from "@/generated/retrom";
 import {
   Select,
@@ -27,16 +24,9 @@ import { Separator } from "../ui/separator";
 import { LoaderIcon } from "lucide-react";
 import { asOptionalString, cn } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
-import { useGameDetail } from "@/app/games/[id]/game-context";
-
-type Props = {
-  searchHandler: (
-    req: Partial<GetIgdbGameSearchResultsRequest>,
-  ) => Promise<GetIgdbGameSearchResultsResponse>;
-  updateHandler: (
-    req: Partial<UpdateGameMetadataRequest>,
-  ) => Promise<UpdateGameMetadataResponse>;
-};
+import { useGameDetail } from "@/app/games/[platformId]/[id]/game-context";
+import { useRetromClient } from "@/providers/retrom-client/web";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
@@ -44,62 +34,112 @@ const formSchema = z.object({
   igdbId: asOptionalString(z.string().min(1).max(20)),
 });
 
-export function IgdbTab(props: Props) {
+export function IgdbTab() {
   const {
     game,
     gameMetadata: currentMetadata,
     platformMetadata,
   } = useGameDetail();
-  const { searchHandler, updateHandler } = props;
-  const [loading, setLoading] = useState(false);
+
   const { toast } = useToast();
+  const [selectedMatch, setSelectedMatch] = useState<string | undefined>();
+  const retromClient = useRetromClient();
+  const queryClient = useQueryClient();
+
+  const [searchRequest, setSearchRequest] =
+    useState<GetIgdbGameSearchResultsRequest>({
+      query: {
+        search: {
+          value: currentMetadata?.name ?? "",
+        },
+        gameId: game.id,
+        fields: {
+          platform: platformMetadata?.igdbId,
+          id: currentMetadata?.igdbId,
+        },
+      },
+    });
+
+  const { data: matches, isPending: searchPending } = useQuery({
+    enabled: !!searchRequest,
+    queryKey: ["games", "igdb-search", searchRequest],
+    queryFn: async () => {
+      return await retromClient.metadataClient.getIgdbGameSearchResults(
+        searchRequest,
+      );
+    },
+    select: (data) => data.metadata,
+  });
+
+  const { mutate, isPending: updatePending } = useMutation({
+    onError: (error) => {
+      console.error(error);
+      toast({
+        title: "Error updating metadata",
+        description: "Check the console for details",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["games"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["game-metadata"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [game.id],
+      });
+
+      toast({
+        title: "Metadata updated",
+        description: "Game metadata has been updated successfully",
+      });
+    },
+    mutationFn: async (req: UpdateGameMetadataRequest) => {
+      return await retromClient.metadataClient.updateGameMetadata(req);
+    },
+  });
+
+  const loading = searchPending || updatePending;
+
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       search: currentMetadata?.name ?? "",
-      igdbId: "",
+      igdbId: currentMetadata?.igdbId?.toString() ?? undefined,
     },
   });
-  const [matches, setMatches] = useState<Array<NewGameMetadata>>([]);
-  const [selectedMatch, setSelectedMatch] = useState<string | undefined>();
 
   const handleSearch = useCallback(
     (values: FormSchema) => {
       const { search, igdbId } = values;
 
-      const igdbIdNum = igdbId !== undefined ? parseInt(igdbId) : undefined;
+      if (!game) {
+        return;
+      }
 
-      setLoading(true);
-      searchHandler({
+      const igdbIdNum = igdbId !== undefined ? parseInt(igdbId) : undefined;
+      const platform = platformMetadata?.igdbId;
+
+      setSearchRequest({
         query: {
-          search: { value: search },
+          search: {
+            value: search,
+          },
           fields: {
             id: igdbIdNum,
-            platform: platformMetadata?.igdbId,
+            platform,
           },
           gameId: game.id,
         },
-      })
-        .then(({ metadata }) => {
-          setMatches(metadata);
-        })
-        .catch((error) => {
-          console.error(error);
-          toast({
-            title: "Failed to search IGDB",
-            description: "Check the console for details",
-            variant: "destructive",
-          });
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      });
     },
-    [game, searchHandler, toast, platformMetadata],
+    [game, platformMetadata],
   );
 
   const handleUpdate = useCallback(() => {
-    if (!selectedMatch) {
+    if (!selectedMatch || !matches) {
       return;
     }
 
@@ -114,28 +154,10 @@ export function IgdbTab(props: Props) {
       return;
     }
 
-    setLoading(true);
-    updateHandler({
+    mutate({
       metadata: [UpdatedGameMetadata.create({ ...match, gameId: game.id })],
-    })
-      .then(() => {
-        toast({
-          title: "Metadata updated",
-          description: "Metadata has been updated successfully",
-        });
-      })
-      .catch((error) => {
-        console.error(error);
-        toast({
-          title: "Error updating metadata",
-          description: "Check the console for details",
-          variant: "destructive",
-        });
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [matches, toast, updateHandler, selectedMatch, game]);
+    });
+  }, [matches, selectedMatch, game, mutate, toast]);
 
   return (
     <>
@@ -183,14 +205,14 @@ export function IgdbTab(props: Props) {
         <Separator />
 
         <Select
-          disabled={matches.length < 1}
+          disabled={!matches?.length}
           value={selectedMatch}
           onValueChange={setSelectedMatch}
         >
           <SelectTrigger>
             <SelectValue
               placeholder={
-                matches.length < 1
+                matches && matches.length < 1
                   ? "Search for a game"
                   : "Select a matching game"
               }
@@ -198,7 +220,7 @@ export function IgdbTab(props: Props) {
           </SelectTrigger>
 
           <SelectContent>
-            {matches.map((match, i) => (
+            {matches?.map((match, i) => (
               <SelectItem
                 key={`${match.gameId}-${i}`}
                 value={match.igdbId?.toString() ?? i.toString()}

@@ -5,6 +5,10 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -19,6 +23,7 @@ import { EllipsisVertical, LoaderIcon } from "lucide-react";
 import { useState } from "react";
 import { useGameDetail } from "./game-context";
 import { REST_HOST } from "@/lib/env";
+import { useMutation } from "@tanstack/react-query";
 
 type Modal = (typeof Modal)[number];
 const Modal = ["edit", "delete"] as const;
@@ -66,26 +71,44 @@ export function Actions() {
 }
 
 function DeleteGameModal() {
-  const [loading, setLoading] = useState(false);
-  const { game, metadata } = useGameDetail();
-
+  const { game, gameMetadata: metadata } = useGameDetail();
   const name = metadata?.name || getFileName(game.path);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async () => {
+      // await retromClient.gameClient.deleteGame(game.id);
+    },
+  });
 
   return (
     <DialogContent>
-      Are you sure you want to delete {name}?
-      <div className="flex justify-end gap-2 mt-4">
+      <DialogHeader>
+        <DialogTitle>Delete Game</DialogTitle>
+        <DialogDescription>
+          Are you sure you want to delete {name}?
+        </DialogDescription>
+      </DialogHeader>
+
+      <p>This will not delete the game from your filesystem.</p>
+
+      <DialogFooter>
         <DialogClose asChild>
           <Button>Cancel</Button>
         </DialogClose>
 
-        <Button className="relative" variant="destructive" onClick={() => {}}>
+        <Button
+          className="relative"
+          variant="destructive"
+          onClick={() => {
+            mutate();
+          }}
+        >
           <LoaderIcon
-            className={cn("animate-spin absolute", !loading && "opacity-0")}
+            className={cn("animate-spin absolute", !isPending && "opacity-0")}
           />
-          <p className={cn(loading && "opacity-0")}>Delete</p>
+          <p className={cn(isPending && "opacity-0")}>Delete</p>
         </Button>
-      </div>
+      </DialogFooter>
     </DialogContent>
   );
 }

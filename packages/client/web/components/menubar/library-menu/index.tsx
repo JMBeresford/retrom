@@ -7,11 +7,6 @@ import {
 import { UpdateLibraryMenuItem } from "./update-library-menu-item";
 import { UpdateMetadataMenuItem } from "./update-library-metadata-menu-item";
 import { DeleteLibraryMenuItem } from "./delete-library-menu-item";
-import {
-  deleteLibrary,
-  updateLibrary,
-  updateLibraryMetadata,
-} from "@/actions/grpc/library";
 
 export async function LibraryMenu() {
   return (
@@ -21,13 +16,13 @@ export async function LibraryMenu() {
       </MenubarTrigger>
 
       <MenubarContent>
-        <UpdateLibraryMenuItem handler={updateLibrary} />
+        <UpdateLibraryMenuItem />
 
-        <UpdateMetadataMenuItem handler={updateLibraryMetadata} />
+        <UpdateMetadataMenuItem />
 
         <MenubarSeparator />
 
-        <DeleteLibraryMenuItem handler={deleteLibrary} />
+        <DeleteLibraryMenuItem />
       </MenubarContent>
     </MenubarMenu>
   );

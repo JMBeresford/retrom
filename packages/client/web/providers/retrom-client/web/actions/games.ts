@@ -9,7 +9,7 @@ import {
 import { GRPC_HOST } from "@/lib/env";
 import { createChannel, createClient } from "nice-grpc";
 
-export async function getGames(opts: Partial<GetGamesRequest> = {}) {
+export async function getGames(req: Partial<GetGamesRequest> = {}) {
   const channel = createChannel(GRPC_HOST);
   const client: GameServiceClient = createClient(
     GameServiceDefinition,
@@ -17,7 +17,7 @@ export async function getGames(opts: Partial<GetGamesRequest> = {}) {
   );
 
   try {
-    return await client.getGames(opts);
+    return await client.getGames(req);
   } catch (error) {
     console.error(error);
     return GetGamesResponse.create();

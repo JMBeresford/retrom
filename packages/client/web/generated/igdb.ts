@@ -357,7 +357,7 @@ export interface AlternativeNameResult {
 export interface AlternativeName {
   id: number;
   comment: string;
-  game: Game | undefined;
+  game?: Game | undefined;
   name: string;
   checksum: string;
 }
@@ -370,7 +370,7 @@ export interface Artwork {
   id: number;
   alphaChannel: boolean;
   animated: boolean;
-  game: Game | undefined;
+  game?: Game | undefined;
   height: number;
   imageId: string;
   url: string;
@@ -386,15 +386,15 @@ export interface Character {
   id: number;
   akas: string[];
   countryName: string;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   description: string;
   games: Game[];
   gender: GenderGenderEnum;
-  mugShot: CharacterMugShot | undefined;
+  mugShot?: CharacterMugShot | undefined;
   name: string;
   slug: string;
   species: CharacterSpeciesEnum;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
 }
@@ -420,14 +420,14 @@ export interface CollectionResult {
 
 export interface Collection {
   id: number;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   games: Game[];
   name: string;
   slug: string;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
-  type: CollectionType | undefined;
+  type?: CollectionType | undefined;
   asParentRelations: CollectionRelation[];
   asChildRelations: CollectionRelation[];
 }
@@ -438,11 +438,11 @@ export interface CollectionMembershipResult {
 
 export interface CollectionMembership {
   id: number;
-  game: Game | undefined;
-  collection: Collection | undefined;
-  type: CollectionMembershipType | undefined;
-  updatedAt: Date | undefined;
-  createdAt: Date | undefined;
+  game?: Game | undefined;
+  collection?: Collection | undefined;
+  type?: CollectionMembershipType | undefined;
+  updatedAt?: Date | undefined;
+  createdAt?: Date | undefined;
   checksum: string;
 }
 
@@ -454,9 +454,9 @@ export interface CollectionMembershipType {
   id: number;
   name: string;
   description: string;
-  allowedCollectionType: CollectionType | undefined;
-  updatedAt: Date | undefined;
-  createdAt: Date | undefined;
+  allowedCollectionType?: CollectionType | undefined;
+  updatedAt?: Date | undefined;
+  createdAt?: Date | undefined;
   checksum: string;
 }
 
@@ -466,11 +466,11 @@ export interface CollectionRelationResult {
 
 export interface CollectionRelation {
   id: number;
-  childCollection: Collection | undefined;
-  parentCollection: Collection | undefined;
-  type: CollectionRelationType | undefined;
-  updatedAt: Date | undefined;
-  createdAt: Date | undefined;
+  childCollection?: Collection | undefined;
+  parentCollection?: Collection | undefined;
+  type?: CollectionRelationType | undefined;
+  updatedAt?: Date | undefined;
+  createdAt?: Date | undefined;
   checksum: string;
 }
 
@@ -482,10 +482,10 @@ export interface CollectionRelationType {
   id: number;
   name: string;
   description: string;
-  allowedChildType: CollectionType | undefined;
-  allowedParentType: CollectionType | undefined;
-  updatedAt: Date | undefined;
-  createdAt: Date | undefined;
+  allowedChildType?: CollectionType | undefined;
+  allowedParentType?: CollectionType | undefined;
+  updatedAt?: Date | undefined;
+  createdAt?: Date | undefined;
   checksum: string;
 }
 
@@ -497,8 +497,8 @@ export interface CollectionType {
   id: number;
   name: string;
   description: string;
-  updatedAt: Date | undefined;
-  createdAt: Date | undefined;
+  updatedAt?: Date | undefined;
+  createdAt?: Date | undefined;
   checksum: string;
 }
 
@@ -508,21 +508,21 @@ export interface CompanyResult {
 
 export interface Company {
   id: number;
-  changeDate: Date | undefined;
+  changeDate?: Date | undefined;
   changeDateCategory: DateFormatChangeDateCategoryEnum;
-  changedCompanyId: Company | undefined;
+  changedCompanyId?: Company | undefined;
   country: number;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   description: string;
   developed: Game[];
-  logo: CompanyLogo | undefined;
+  logo?: CompanyLogo | undefined;
   name: string;
-  parent: Company | undefined;
+  parent?: Company | undefined;
   published: Game[];
   slug: string;
-  startDate: Date | undefined;
+  startDate?: Date | undefined;
   startDateCategory: DateFormatChangeDateCategoryEnum;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   websites: CompanyWebsite[];
   checksum: string;
@@ -563,13 +563,13 @@ export interface Cover {
   id: number;
   alphaChannel: boolean;
   animated: boolean;
-  game: Game | undefined;
+  game?: Game | undefined;
   height: number;
   imageId: string;
   url: string;
   width: number;
   checksum: string;
-  gameLocalization: GameLocalization | undefined;
+  gameLocalization?: GameLocalization | undefined;
 }
 
 export interface EventResult {
@@ -581,16 +581,16 @@ export interface Event {
   name: string;
   description: string;
   slug: string;
-  eventLogo: EventLogo | undefined;
-  startTime: Date | undefined;
+  eventLogo?: EventLogo | undefined;
+  startTime?: Date | undefined;
   timeZone: string;
-  endTime: Date | undefined;
+  endTime?: Date | undefined;
   liveStreamUrl: string;
   games: Game[];
   videos: GameVideo[];
   eventNetworks: EventNetwork[];
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -600,15 +600,15 @@ export interface EventLogoResult {
 
 export interface EventLogo {
   id: number;
-  event: Event | undefined;
+  event?: Event | undefined;
   alphaChannel: boolean;
   animated: boolean;
   height: number;
   imageId: string;
   url: string;
   width: number;
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -618,11 +618,11 @@ export interface EventNetworkResult {
 
 export interface EventNetwork {
   id: number;
-  event: Event | undefined;
+  event?: Event | undefined;
   url: string;
-  networkType: NetworkType | undefined;
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+  networkType?: NetworkType | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -633,15 +633,15 @@ export interface ExternalGameResult {
 export interface ExternalGame {
   id: number;
   category: ExternalGameCategoryEnum;
-  createdAt: Date | undefined;
-  game: Game | undefined;
+  createdAt?: Date | undefined;
+  game?: Game | undefined;
   name: string;
   uid: string;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   year: number;
   media: ExternalGameMediaEnum;
-  platform: Platform | undefined;
+  platform?: Platform | undefined;
   countries: number[];
   checksum: string;
 }
@@ -652,11 +652,11 @@ export interface FranchiseResult {
 
 export interface Franchise {
   id: number;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   games: Game[];
   name: string;
   slug: string;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
 }
@@ -674,18 +674,18 @@ export interface Game {
   artworks: Artwork[];
   bundles: Game[];
   category: GameCategoryEnum;
-  collection: Collection | undefined;
-  cover: Cover | undefined;
-  createdAt: Date | undefined;
+  collection?: Collection | undefined;
+  cover?: Cover | undefined;
+  createdAt?: Date | undefined;
   dlcs: Game[];
   expansions: Game[];
   externalGames: ExternalGame[];
-  firstReleaseDate:
+  firstReleaseDate?:
     | Date
     | undefined;
   /** @deprecated */
   follows: number;
-  franchise: Franchise | undefined;
+  franchise?: Franchise | undefined;
   franchises: Franchise[];
   gameEngines: GameEngine[];
   gameModes: GameMode[];
@@ -695,7 +695,7 @@ export interface Game {
   keywords: Keyword[];
   multiplayerModes: MultiplayerMode[];
   name: string;
-  parentGame: Game | undefined;
+  parentGame?: Game | undefined;
   platforms: Platform[];
   playerPerspectives: PlayerPerspective[];
   rating: number;
@@ -712,9 +712,9 @@ export interface Game {
   themes: Theme[];
   totalRating: number;
   totalRatingCount: number;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
-  versionParent: Game | undefined;
+  versionParent?: Game | undefined;
   versionTitle: string;
   videos: GameVideo[];
   websites: Website[];
@@ -736,13 +736,13 @@ export interface GameEngineResult {
 export interface GameEngine {
   id: number;
   companies: Company[];
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   description: string;
-  logo: GameEngineLogo | undefined;
+  logo?: GameEngineLogo | undefined;
   name: string;
   platforms: Platform[];
   slug: string;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
 }
@@ -769,11 +769,11 @@ export interface GameLocalizationResult {
 export interface GameLocalization {
   id: number;
   name: string;
-  cover: Cover | undefined;
-  game: Game | undefined;
-  region: Region | undefined;
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+  cover?: Cover | undefined;
+  game?: Game | undefined;
+  region?: Region | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -783,10 +783,10 @@ export interface GameModeResult {
 
 export interface GameMode {
   id: number;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   name: string;
   slug: string;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
 }
@@ -797,11 +797,11 @@ export interface GameVersionResult {
 
 export interface GameVersion {
   id: number;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   features: GameVersionFeature[];
-  game: Game | undefined;
+  game?: Game | undefined;
   games: Game[];
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
 }
@@ -826,8 +826,8 @@ export interface GameVersionFeatureValueResult {
 
 export interface GameVersionFeatureValue {
   id: number;
-  game: Game | undefined;
-  gameFeature: GameVersionFeature | undefined;
+  game?: Game | undefined;
+  gameFeature?: GameVersionFeature | undefined;
   includedFeature: GameVersionFeatureValueIncludedFeatureEnum;
   note: string;
   checksum: string;
@@ -839,7 +839,7 @@ export interface GameVideoResult {
 
 export interface GameVideo {
   id: number;
-  game: Game | undefined;
+  game?: Game | undefined;
   name: string;
   videoId: string;
   checksum: string;
@@ -851,10 +851,10 @@ export interface GenreResult {
 
 export interface Genre {
   id: number;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   name: string;
   slug: string;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
 }
@@ -865,14 +865,14 @@ export interface InvolvedCompanyResult {
 
 export interface InvolvedCompany {
   id: number;
-  company: Company | undefined;
-  createdAt: Date | undefined;
+  company?: Company | undefined;
+  createdAt?: Date | undefined;
   developer: boolean;
-  game: Game | undefined;
+  game?: Game | undefined;
   porting: boolean;
   publisher: boolean;
   supporting: boolean;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -882,10 +882,10 @@ export interface KeywordResult {
 
 export interface Keyword {
   id: number;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   name: string;
   slug: string;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
 }
@@ -899,8 +899,8 @@ export interface Language {
   name: string;
   nativeName: string;
   locale: string;
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -910,11 +910,11 @@ export interface LanguageSupportResult {
 
 export interface LanguageSupport {
   id: number;
-  game: Game | undefined;
-  language: Language | undefined;
-  languageSupportType: LanguageSupportType | undefined;
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+  game?: Game | undefined;
+  language?: Language | undefined;
+  languageSupportType?: LanguageSupportType | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -925,8 +925,8 @@ export interface LanguageSupportTypeResult {
 export interface LanguageSupportType {
   id: number;
   name: string;
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -938,7 +938,7 @@ export interface MultiplayerMode {
   id: number;
   campaigncoop: boolean;
   dropin: boolean;
-  game: Game | undefined;
+  game?: Game | undefined;
   lancoop: boolean;
   offlinecoop: boolean;
   offlinecoopmax: number;
@@ -946,7 +946,7 @@ export interface MultiplayerMode {
   onlinecoop: boolean;
   onlinecoopmax: number;
   onlinemax: number;
-  platform: Platform | undefined;
+  platform?: Platform | undefined;
   splitscreen: boolean;
   splitscreenonline: boolean;
   checksum: string;
@@ -960,8 +960,8 @@ export interface NetworkType {
   id: number;
   name: string;
   eventNetworks: EventNetwork[];
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -974,14 +974,14 @@ export interface Platform {
   abbreviation: string;
   alternativeName: string;
   category: PlatformCategoryEnum;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   generation: number;
   name: string;
-  platformLogo: PlatformLogo | undefined;
-  platformFamily: PlatformFamily | undefined;
+  platformLogo?: PlatformLogo | undefined;
+  platformFamily?: PlatformFamily | undefined;
   slug: string;
   summary: string;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   versions: PlatformVersion[];
   websites: PlatformWebsite[];
@@ -1024,14 +1024,14 @@ export interface PlatformVersion {
   connectivity: string;
   cpu: string;
   graphics: string;
-  mainManufacturer: PlatformVersionCompany | undefined;
+  mainManufacturer?: PlatformVersionCompany | undefined;
   media: string;
   memory: string;
   name: string;
   online: string;
   os: string;
   output: string;
-  platformLogo: PlatformLogo | undefined;
+  platformLogo?: PlatformLogo | undefined;
   platformVersionReleaseDates: PlatformVersionReleaseDate[];
   resolutions: string;
   slug: string;
@@ -1049,7 +1049,7 @@ export interface PlatformVersionCompanyResult {
 export interface PlatformVersionCompany {
   id: number;
   comment: string;
-  company: Company | undefined;
+  company?: Company | undefined;
   developer: boolean;
   manufacturer: boolean;
   checksum: string;
@@ -1062,13 +1062,13 @@ export interface PlatformVersionReleaseDateResult {
 export interface PlatformVersionReleaseDate {
   id: number;
   category: DateFormatChangeDateCategoryEnum;
-  createdAt: Date | undefined;
-  date: Date | undefined;
+  createdAt?: Date | undefined;
+  date?: Date | undefined;
   human: string;
   m: number;
-  platformVersion: PlatformVersion | undefined;
+  platformVersion?: PlatformVersion | undefined;
   region: RegionRegionEnum;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   y: number;
   checksum: string;
 }
@@ -1091,10 +1091,10 @@ export interface PlayerPerspectiveResult {
 
 export interface PlayerPerspective {
   id: number;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   name: string;
   slug: string;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
 }
@@ -1108,8 +1108,8 @@ export interface Region {
   name: string;
   category: string;
   identifier: string;
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -1120,17 +1120,17 @@ export interface ReleaseDateResult {
 export interface ReleaseDate {
   id: number;
   category: DateFormatChangeDateCategoryEnum;
-  createdAt: Date | undefined;
-  date: Date | undefined;
-  game: Game | undefined;
+  createdAt?: Date | undefined;
+  date?: Date | undefined;
+  game?: Game | undefined;
   human: string;
   m: number;
-  platform: Platform | undefined;
+  platform?: Platform | undefined;
   region: RegionRegionEnum;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   y: number;
   checksum: string;
-  status: ReleaseDateStatus | undefined;
+  status?: ReleaseDateStatus | undefined;
 }
 
 export interface ReleaseDateStatusResult {
@@ -1141,8 +1141,8 @@ export interface ReleaseDateStatus {
   id: number;
   name: string;
   description: string;
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
   checksum: string;
 }
 
@@ -1154,7 +1154,7 @@ export interface Screenshot {
   id: number;
   alphaChannel: boolean;
   animated: boolean;
-  game: Game | undefined;
+  game?: Game | undefined;
   height: number;
   imageId: string;
   url: string;
@@ -1169,16 +1169,16 @@ export interface SearchResult {
 export interface Search {
   id: number;
   alternativeName: string;
-  character: Character | undefined;
-  collection: Collection | undefined;
-  company: Company | undefined;
+  character?: Character | undefined;
+  collection?: Collection | undefined;
+  company?: Company | undefined;
   description: string;
-  game: Game | undefined;
+  game?: Game | undefined;
   name: string;
-  platform: Platform | undefined;
-  publishedAt: Date | undefined;
-  testDummy: TestDummy | undefined;
-  theme: Theme | undefined;
+  platform?: Platform | undefined;
+  publishedAt?: Date | undefined;
+  testDummy?: TestDummy | undefined;
+  theme?: Theme | undefined;
   checksum: string;
 }
 
@@ -1189,10 +1189,10 @@ export interface TestDummyResult {
 export interface TestDummy {
   id: number;
   boolValue: boolean;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   enumTest: TestDummyEnumTestEnum;
   floatValue: number;
-  game: Game | undefined;
+  game?: Game | undefined;
   integerArray: number[];
   integerValue: number;
   name: string;
@@ -1201,8 +1201,8 @@ export interface TestDummy {
   slug: string;
   stringArray: string[];
   testDummies: TestDummy[];
-  testDummy: TestDummy | undefined;
-  updatedAt: Date | undefined;
+  testDummy?: TestDummy | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
 }
@@ -1213,10 +1213,10 @@ export interface ThemeResult {
 
 export interface Theme {
   id: number;
-  createdAt: Date | undefined;
+  createdAt?: Date | undefined;
   name: string;
   slug: string;
-  updatedAt: Date | undefined;
+  updatedAt?: Date | undefined;
   url: string;
   checksum: string;
 }
@@ -1228,7 +1228,7 @@ export interface WebsiteResult {
 export interface Website {
   id: number;
   category: WebsiteCategoryEnum;
-  game: Game | undefined;
+  game?: Game | undefined;
   trusted: boolean;
   url: string;
   checksum: string;
@@ -11982,6 +11982,7 @@ type Builtin = Date | Function | Uint8Array | string | number | boolean | undefi
 export type DeepPartial<T> = T extends Builtin ? T
   : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
   : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
+  : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 

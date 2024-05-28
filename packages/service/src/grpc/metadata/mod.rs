@@ -11,6 +11,7 @@ use generated::{
     igdb,
     retrom::{
         self,
+        get_igdb_search_request::IgdbSearchType,
         get_igdb_search_response::SearchResults,
         igdb_fields::Selector,
         igdb_filters::{FilterOperator, FilterValue},
@@ -18,9 +19,8 @@ use generated::{
         GetGameMetadataRequest, GetGameMetadataResponse, GetIgdbGameSearchResultsRequest,
         GetIgdbGameSearchResultsResponse, GetIgdbPlatformSearchResultsRequest,
         GetIgdbPlatformSearchResultsResponse, GetIgdbSearchRequest, GetIgdbSearchResponse,
-        GetPlatformMetadataRequest, GetPlatformMetadataResponse, IgdbSearchType,
-        UpdateGameMetadataRequest, UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
-        UpdatePlatformMetadataResponse,
+        GetPlatformMetadataRequest, GetPlatformMetadataResponse, UpdateGameMetadataRequest,
+        UpdateGameMetadataResponse, UpdatePlatformMetadataRequest, UpdatePlatformMetadataResponse,
     },
 };
 use prost::Message;
@@ -445,7 +445,6 @@ impl MetadataService for MetadataServiceHandlers {
                 return Err(Status::internal(why.to_string()));
             }
         };
-
         match search_type {
             IgdbSearchType::Game => {
                 let matches = match igdb::GameResult::decode(bytes) {

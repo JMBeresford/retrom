@@ -5,9 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type {
   GameMetadata,
   UpdateGameMetadataRequest,
-  UpdateGameMetadataResponse,
 } from "@/generated/retrom";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Button } from "../ui/button";
 import { UseFormReturn, useForm } from "react-hook-form";
 import {
@@ -24,19 +23,15 @@ import { LoaderIcon } from "lucide-react";
 import { asOptionalString, cn } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
-import { useGameDetail } from "@/app/games/[id]/game-context";
+import { useGameDetail } from "@/app/games/[platformId]/[id]/game-context";
+import { useMutation } from "@tanstack/react-query";
+import { useRetromClient } from "@/providers/retrom-client/web";
 
 type FormFieldRenderer = ({
   form,
 }: {
   form: UseFormReturn<FormSchema>;
 }) => JSX.Element;
-
-type Props = {
-  updateHandler: (
-    req: Partial<UpdateGameMetadataRequest>,
-  ) => Promise<UpdateGameMetadataResponse>;
-};
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
@@ -57,11 +52,25 @@ const formSchema = z.object({
   ),
 });
 
-export function ManualTab(props: Props) {
+export function ManualTab() {
+  const retromClient = useRetromClient();
   const { game, gameMetadata } = useGameDetail();
-  const { updateHandler } = props;
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const { mutate, status } = useMutation({
+    onError: (error) => {
+      console.error(error);
+      toast({
+        title: "Error updating metadata",
+        description: "Check the console for details",
+        variant: "destructive",
+      });
+    },
+    mutationFn: async (req: UpdateGameMetadataRequest) => {
+      return await retromClient.metadataClient.updateGameMetadata(req);
+    },
+  });
+
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
@@ -81,29 +90,9 @@ export function ManualTab(props: Props) {
       const igdbIdNum = igdbId !== undefined ? parseInt(igdbId) : undefined;
       const updated = { ...restValues, igdbId: igdbIdNum, gameId: game.id };
 
-      setLoading(true);
-      updateHandler({
-        metadata: [updated],
-      })
-        .then(() => {
-          toast({
-            title: "Metadata updated",
-            description: "Metadata has been updated successfully",
-          });
-        })
-        .catch((error) => {
-          console.error(error);
-          toast({
-            title: "Error updating metadata",
-            description: "Check the console for details",
-            variant: "destructive",
-          });
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      mutate({ metadata: [updated] });
     },
-    [toast, updateHandler, game.id],
+    [game.id, mutate],
   );
 
   return (
@@ -129,10 +118,12 @@ export function ManualTab(props: Props) {
                 <LoaderIcon
                   className={cn(
                     "animate-spin absolute",
-                    !loading && "opacity-0",
+                    status !== "pending" && "opacity-0",
                   )}
                 />
-                <p className={cn(loading && "opacity-0")}>Update Metadata</p>
+                <p className={cn(status === "pending" && "opacity-0")}>
+                  Update Metadata
+                </p>
               </Button>
             </DialogFooter>
           </form>

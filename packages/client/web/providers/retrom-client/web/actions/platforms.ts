@@ -9,7 +9,7 @@ import {
 import { GRPC_HOST } from "@/lib/env";
 import { createChannel, createClient } from "nice-grpc";
 
-export async function getPlatforms(opts: Partial<GetPlatformsRequest> = {}) {
+export async function getPlatforms(req: Partial<GetPlatformsRequest> = {}) {
   const channel = createChannel(GRPC_HOST);
   const client: PlatformServiceClient = createClient(
     PlatformServiceDefinition,
@@ -17,7 +17,7 @@ export async function getPlatforms(opts: Partial<GetPlatformsRequest> = {}) {
   );
 
   try {
-    return await client.getPlatforms(opts);
+    return await client.getPlatforms(req);
   } catch (error) {
     console.error(error);
 
