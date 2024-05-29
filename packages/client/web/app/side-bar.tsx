@@ -5,7 +5,7 @@ import { Image, cn } from "@/lib/utils";
 import { useCallback, useMemo, useState } from "react";
 import { Game, Platform } from "@/generated/retrom";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Tooltip,
   TooltipContent,
@@ -22,7 +22,7 @@ import { useRetromClient } from "@/providers/retrom-client/web";
 import { useQuery } from "@tanstack/react-query";
 
 export function SideBar() {
-  const path = usePathname();
+  const searchParams = useSearchParams();
   const retromClient = useRetromClient();
 
   const { data: platformData, status: platformStatus } = useQuery({
@@ -150,6 +150,14 @@ export function SideBar() {
                     <AccordionContent>
                       <ul>
                         {games.map((game) => {
+                          const currentGame = searchParams.get("gameId");
+                          const currentPlatform =
+                            searchParams.get("platformId");
+
+                          const isCurrentGame =
+                            currentGame === game.id.toString() &&
+                            currentPlatform === platform.id.toString();
+
                           const gameMetadata = gameData.metadata.find(
                             (m) => m.gameId === game.id,
                           );
@@ -165,13 +173,12 @@ export function SideBar() {
                                   className={cn(
                                     "pb-1 text-[1rem] text-muted-foreground/40 transition-colors",
                                     "hover:text-muted-foreground",
-                                    path === `/games/${game.id}` &&
-                                      "text-muted-foreground",
+                                    isCurrentGame && "text-muted-foreground",
                                     "max-w-full whitespace-nowrap overflow-hidden overflow-ellipsis",
                                   )}
                                 >
                                   <Link
-                                    href={`/games/${platform.id}/${game.id}`}
+                                    href={`/game?platformId=${platform.id}&gameId=${game.id}`}
                                     className="flex items-center"
                                   >
                                     <div className="relative min-w-[24px] min-h-[24px] mr-2">

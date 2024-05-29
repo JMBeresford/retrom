@@ -24,7 +24,7 @@ import { Separator } from "../ui/separator";
 import { LoaderIcon } from "lucide-react";
 import { asOptionalString, cn } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
-import { useGameDetail } from "@/app/games/[platformId]/[id]/game-context";
+import { useGameDetail } from "@/app/game/game-context";
 import { useRetromClient } from "@/providers/retrom-client/web";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 

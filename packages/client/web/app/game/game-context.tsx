@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/use-toast";
 import {
   Game,
   GameMetadata,
@@ -8,7 +9,7 @@ import {
 } from "@/generated/retrom";
 import { useRetromClient } from "@/providers/retrom-client/web";
 import { useQuery } from "@tanstack/react-query";
-import { redirect } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PropsWithChildren, createContext, useContext } from "react";
 
 export type GameDetailContext = {
@@ -20,30 +21,24 @@ export type GameDetailContext = {
 
 const GameDetailContext = createContext<GameDetailContext | null>(null);
 
-type Props = {
-  id: number;
-  platformId: number;
-};
-
-export function GameDetailProvider(props: PropsWithChildren<Props>) {
+export function GameDetailProvider(props: PropsWithChildren) {
+  const params = useSearchParams();
+  const router = useRouter();
   const retromClient = useRetromClient();
-  const { id, platformId, children } = props;
+
+  const gameId = parseInt(params.get("gameId") ?? "");
+  const platformId = parseInt(params.get("platformId") ?? "");
 
   const { data: gameData, status: gameStatus } = useQuery({
-    queryKey: ["games", "game-metadata", id],
+    queryKey: ["games", "game-metadata", gameId],
     queryFn: async () => {
-      return await retromClient.gameClient.getGames({
+      const data = await retromClient.gameClient.getGames({
         withMetadata: true,
-        ids: [id],
+        ids: [gameId],
       });
-    },
-    select: (data) => {
+
       const game = data.games.at(0);
       const gameMetadata = data.metadata.at(0);
-
-      if (!game) {
-        throw new Error(`Game with id ${id} not found`);
-      }
 
       return {
         game,
@@ -55,18 +50,13 @@ export function GameDetailProvider(props: PropsWithChildren<Props>) {
   const { data: platformData, status: platformStatus } = useQuery({
     queryKey: ["platforms", "platform-metadata", platformId],
     queryFn: async () => {
-      return await retromClient.platformClient.getPlatforms({
+      const data = await retromClient.platformClient.getPlatforms({
         withMetadata: true,
         ids: [platformId],
       });
-    },
-    select: (data) => {
+
       const platform = data.platforms.at(0);
       const platformMetadata = data.metadata.at(0);
-
-      if (!platform) {
-        throw new Error(`Platform with id ${platformId} not found`);
-      }
 
       return {
         platform,
@@ -76,11 +66,23 @@ export function GameDetailProvider(props: PropsWithChildren<Props>) {
   });
 
   if (gameStatus === "error" || platformStatus === "error") {
-    return redirect("/500");
+    return <span>Error loading game details</span>;
   }
 
   if (gameStatus === "pending" || platformStatus === "pending") {
     return <span>Loading...</span>;
+  }
+
+  if (!gameData.game || !platformData.platform) {
+    toast({
+      title: "Error loading game details",
+      description: "Game or platform not found",
+      variant: "destructive",
+      duration: 5000,
+    });
+
+    router.replace("/");
+    return <></>;
   }
 
   const value = {
@@ -92,7 +94,7 @@ export function GameDetailProvider(props: PropsWithChildren<Props>) {
 
   return (
     <GameDetailContext.Provider value={value}>
-      {children}
+      {props.children}
     </GameDetailContext.Provider>
   );
 }

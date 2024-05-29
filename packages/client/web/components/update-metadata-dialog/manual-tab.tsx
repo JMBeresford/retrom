@@ -23,7 +23,7 @@ import { LoaderIcon } from "lucide-react";
 import { asOptionalString, cn } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
-import { useGameDetail } from "@/app/games/[platformId]/[id]/game-context";
+import { useGameDetail } from "@/app/game/game-context";
 import { useMutation } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client/web";
 

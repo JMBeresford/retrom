@@ -19,7 +19,7 @@ import {
   PlatformMetadata,
   UpdatePlatformMetadataRequest,
 } from "@/generated/retrom";
-import { LoaderIcon } from "lucide-react";
+import { LoaderCircleIcon, LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 
@@ -189,7 +189,11 @@ export function MatchPlatformsMenuItem() {
   }
 
   if (loading) {
-    return <span>Loading...</span>;
+    return (
+      <MenubarItem className="text-muted-foreground/50 pointer-events-none touch-none flex gap-2">
+        <LoaderCircleIcon className="animate-spin" /> Match Platforms
+      </MenubarItem>
+    );
   }
 
   return (

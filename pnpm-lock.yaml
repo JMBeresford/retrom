@@ -69,6 +69,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.40.0
         version: 5.40.0(react@18.3.1)
+      '@tauri-apps/api':
+        specifier: 2.0.0-beta.13
+        version: 2.0.0-beta.13
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -121,6 +124,9 @@ importers:
         specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
+      '@next/eslint-plugin-next':
+        specifier: ^14.2.3
+        version: 14.2.3
       '@tanstack/eslint-plugin-query':
         specifier: ^5.35.6
         version: 5.35.6(eslint@8.57.0)(typescript@5.4.5)
@@ -1420,6 +1426,11 @@ packages:
       react: 18.3.1
     dev: false
 
+  /@tauri-apps/api@2.0.0-beta.13:
+    resolution: {integrity: sha512-Np1opKANzRMF3lgJ9gDquBCB9SxlE2lRmNpVx1+L6RyzAmigkuh0ZulT5jMnDA3JLsuSDU135r/s4t/Pmx4atg==}
+    engines: {node: '>= 18', npm: '>= 6.6.0', yarn: '>= 1.19.1'}
+    dev: false
+
   /@tauri-apps/cli-darwin-arm64@2.0.0-beta.18:
     resolution: {integrity: sha512-Jq49VH/UpHVkWw+qqymY1xWLMu7FF+4r5C4qVZvgm5Mkgulgf63jyCkrejdlXvOJQNm5MAHTyn2hnX6ZDeWVxA==}
     engines: {node: '>= 10'}
@@ -2386,7 +2397,7 @@ packages:
       eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@7.2.0)(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.2.0)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@8.57.0)
-      eslint-plugin-react: 7.34.1(eslint@8.57.0)
+      eslint-plugin-react: 7.34.2(eslint@8.57.0)
       eslint-plugin-react-hooks: 4.6.2(eslint@8.57.0)
       typescript: 5.4.5
     transitivePeerDependencies:
@@ -2526,8 +2537,8 @@ packages:
       eslint: 8.57.0
     dev: true
 
-  /eslint-plugin-react@7.34.1(eslint@8.57.0):
-    resolution: {integrity: sha512-N97CxlouPT1AHt8Jn0mhhN2RrADlUAsk1/atcT2KyA/l9Q/E6ll7OIGwNumFmWfZ9skV3XXccYS19h80rHtgkw==}
+  /eslint-plugin-react@7.34.2(eslint@8.57.0):
+    resolution: {integrity: sha512-2HCmrU+/JNigDN6tg55cRDKCQWicYAPB38JGSFDQt95jDm8rrvSUo7YPkOIm5l6ts1j1zCvysNcasvfTMQzUOw==}
     engines: {node: '>=4'}
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8

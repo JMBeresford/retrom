@@ -1,6 +1,6 @@
 module.exports = async () => {
   const isProd = process.env.NODE_ENV === "production";
-  const isWeb = process.env.PLATFORM === "web";
+  const isWeb = process.env.NEXT_PUBLIC_PLATFORM === "web";
 
   let internalHost = null;
 

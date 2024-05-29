@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "PLATFORM=web next dev",
-    "dev:desktop": "PLATFORM=desktop next dev",
+    "dev": "NEXT_PUBLIC_PLATFORM=web next dev",
+    "dev:desktop": "NEXT_PUBLIC_PLATFORM=desktop next dev",
     "build:protos": "protoc --plugin=$(pnpm which protoc-gen-ts_proto) --ts_proto_opt=oneof=unions,outputServices=nice-grpc,outputServices=generic-definitions,outputJsonMethods=false,useExactTypes=false,esModuleInterop=true,useOptionals=messages --ts_proto_out=./generated -I ../../../protos/ ../../../protos/*.proto",
-    "build": "PLATFORM=web next build",
-    "build:desktop": "PLATFORM=desktop next build",
+    "build": "NEXT_PUBLIC_PLATFORM=web next build",
+    "build:desktop": "NEXT_PUBLIC_PLATFORM=desktop next build",
     "start": "PLATFORM=web next start",
     "lint": "next lint"
   },
@@ -29,6 +29,7 @@
     "@radix-ui/react-toast": "^1.1.5",
     "@radix-ui/react-tooltip": "^1.0.7",
     "@tanstack/react-query": "^5.40.0",
+    "@tauri-apps/api": "2.0.0-beta.13",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -48,6 +49,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^14.2.3",
     "@tanstack/eslint-plugin-query": "^5.35.6",
     "@types/node": "^20",
     "@types/react": "^18",
