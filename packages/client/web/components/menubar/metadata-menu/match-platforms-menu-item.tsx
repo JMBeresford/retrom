@@ -13,12 +13,6 @@ import {
   DialogTrigger,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
-import {
-  IgdbSearchType,
-  Platform,
-  PlatformMetadata,
-  UpdatePlatformMetadataRequest,
-} from "@/generated/retrom";
 import { LoaderCircleIcon, LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
@@ -35,9 +29,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useRetromClient } from "@/providers/retrom-client/web";
+import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { redirect } from "next/navigation";
+import { Platform, PlatformMetadata } from "@/generated/retrom/models";
+import {
+  GetIgdbSearchRequest_IgdbSearchType,
+  UpdatePlatformMetadataRequest,
+} from "@/generated/retrom/services";
 
 export type PlatformAndMetadata = Platform & { metadata: PlatformMetadata };
 
@@ -49,12 +48,15 @@ export function MatchPlatformsMenuItem() {
     queryKey: ["igdb-search"],
     queryFn: async () =>
       await retromClient.metadataClient.getIgdbSearch({
-        searchType: IgdbSearchType.PLATFORM,
+        searchType: GetIgdbSearchRequest_IgdbSearchType.PLATFORM,
         fields: {
           selector: {
             $case: "include",
             include: { value: ["id", "name", "summary"] },
           },
+        },
+        filters: {
+          filters: new Map(),
         },
 
         // 500 is the maximum limit for the IGDB API, default is 10

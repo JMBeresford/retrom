@@ -1,16 +1,7 @@
-use crate::{grpc::metadata::MetadataServiceHandlers, providers::igdb::provider::IGDBProvider};
 use db::get_db_url;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
-use generated::retrom::{
-    game_service_server::GameServiceServer, library_service_server::LibraryServiceServer,
-    metadata_service_server::MetadataServiceServer, platform_service_server::PlatformServiceServer,
-    FILE_DESCRIPTOR_SET,
-};
-use grpc::{
-    games::GameServiceHandlers, library::LibraryServiceHandlers, platforms::PlatformServiceHandlers,
-};
-use http::header::CONTENT_TYPE;
+use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
 use std::{
     convert::Infallible,
@@ -19,7 +10,6 @@ use std::{
     sync::Arc,
     task::{Context, Poll},
 };
-use tonic::transport::Server as TonicServer;
 use tower::Service;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -28,7 +18,8 @@ mod grpc;
 mod providers;
 mod rest;
 
-pub async fn start_service() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -50,35 +41,9 @@ pub async fn start_service() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Could not create pool");
 
     let pool_state = Arc::new(pool);
-    let igdb_client = Arc::new(IGDBProvider::new());
 
     let rest_service = warp::service(rest::rest_service(pool_state.clone()));
-
-    let reflection_service = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
-        .build()
-        .unwrap();
-
-    let library_service = LibraryServiceServer::new(LibraryServiceHandlers::new(
-        pool_state.clone(),
-        igdb_client.clone(),
-    ));
-    let metadata_service = MetadataServiceServer::new(MetadataServiceHandlers::new(
-        pool_state.clone(),
-        igdb_client.clone(),
-    ));
-    let game_service = GameServiceServer::new(GameServiceHandlers::new(pool_state.clone()));
-    let platform_service =
-        PlatformServiceServer::new(PlatformServiceHandlers::new(pool_state.clone()));
-
-    let grpc_service = TonicServer::builder()
-        .trace_fn(|_| tracing::info_span!("service"))
-        .add_service(reflection_service)
-        .add_service(library_service)
-        .add_service(game_service)
-        .add_service(platform_service)
-        .add_service(metadata_service)
-        .into_service();
+    let grpc_service = grpc::grpc_service(pool_state.clone());
 
     info!("Starting server at: {}", addr.to_string());
     Server::bind(&addr)
@@ -159,9 +124,23 @@ fn map_option_err<T, U: Into<Error>>(err: Option<Result<T, U>>) -> Option<Result
 }
 
 fn is_grpc_request(req: &hyper::Request<hyper::Body>) -> bool {
-    req.headers()
+    let is_grpc = req
+        .headers()
         .get(CONTENT_TYPE)
         .map(|content_type| content_type.as_bytes())
         .filter(|content_type| content_type.starts_with(b"application/grpc"))
-        .is_some()
+        .is_some();
+
+    let is_grpc_preflight = req.method() == hyper::Method::OPTIONS
+        && req
+            .headers()
+            .get(ACCESS_CONTROL_REQUEST_HEADERS)
+            .map(|headers| {
+                headers.to_str().ok().and_then(|headers| {
+                    Some(headers.contains("content-type") && headers.contains("grpc"))
+                })
+            })
+            .is_some();
+
+    is_grpc || is_grpc_preflight
 }

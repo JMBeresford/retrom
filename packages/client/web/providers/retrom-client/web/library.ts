@@ -6,7 +6,7 @@ import {
   LibraryServiceDefinition,
   UpdateLibraryMetadataRequest,
   UpdateLibraryRequest,
-} from "@/generated/retrom";
+} from "@/generated/retrom/services";
 import { GRPC_HOST } from "@/lib/env";
 import { revalidatePath } from "next/cache";
 import { createChannel, createClient } from "nice-grpc";

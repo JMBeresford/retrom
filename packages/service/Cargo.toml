@@ -10,28 +10,26 @@ serde = { workspace = true }
 dotenvy = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
-# library_manager = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 bb8 = { workspace = true }
 db = { workspace = true }
-uuid = { workspace = true }
 generated = { workspace = true }
 bytes = { workspace = true }
 reqwest = { workspace = true }
 tonic = { workspace = true }
+tonic-web = { workspace = true }
 tonic-reflection = { workspace = true }
 prost = { workspace = true }
 futures = { workspace = true }
-tonic-web = "0.11.0"
 deunicode = "1.4.4"
 bigdecimal = "0.4.3"
 tower = { version = "0.4.13", features = ["full"] }
 http-body-util = "0.1.1"
 hyper-util = { version = "0.1.3", features = ["full"] }
-hyper = { version = "0.14", features = ["full", "http2"] }
+hyper = { version = "0.14", features = ["full", "http2", "http1"] }
 either = "1.12.0"
 http-body = "0.4"
 http = "0.2"

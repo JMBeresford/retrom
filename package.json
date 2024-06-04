@@ -1,0 +1,14 @@
+{
+  "name": "retrom",
+  "devDependencies": {
+    "@tauri-apps/cli": "2.0.0-beta.20"
+  },
+  "pnpm": {
+    "overrides": {
+      "@tauri-apps/cli": "$@tauri-apps/cli"
+    }
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.0.0-beta.13"
+  }
+}

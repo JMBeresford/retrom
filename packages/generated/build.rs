@@ -44,6 +44,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
 
     tonic_build::configure()
+        .type_attribute(".retrom", "#[derive(serde::Serialize, serde::Deserialize)]")
+        .type_attribute(
+            ".retrom",
+            "#[serde(rename_all(serialize = \"camelCase\", deserialize = \"camelCase\"))]",
+        )
         .type_attribute(
             "retrom.Platform",
             format!(

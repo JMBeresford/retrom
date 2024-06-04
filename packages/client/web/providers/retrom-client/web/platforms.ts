@@ -5,7 +5,7 @@ import {
   GetPlatformsResponse,
   PlatformServiceClient,
   PlatformServiceDefinition,
-} from "@/generated/retrom";
+} from "@/generated/retrom/services";
 import { GRPC_HOST } from "@/lib/env";
 import { createChannel, createClient } from "nice-grpc";
 

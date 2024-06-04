@@ -2,10 +2,7 @@
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type {
-  GameMetadata,
-  UpdateGameMetadataRequest,
-} from "@/generated/retrom";
+import type { UpdateGameMetadataRequest } from "@/generated/retrom/services";
 import { useCallback } from "react";
 import { Button } from "../ui/button";
 import { UseFormReturn, useForm } from "react-hook-form";
@@ -25,7 +22,8 @@ import { DialogFooter } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
 import { useGameDetail } from "@/app/game/game-context";
 import { useMutation } from "@tanstack/react-query";
-import { useRetromClient } from "@/providers/retrom-client/web";
+import { useRetromClient } from "@/providers/retrom-client";
+import { GameMetadata } from "@/generated/retrom/models";
 
 type FormFieldRenderer = ({
   form,

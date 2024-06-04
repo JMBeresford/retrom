@@ -6,8 +6,8 @@ import {
   GameMetadata,
   Platform,
   PlatformMetadata,
-} from "@/generated/retrom";
-import { useRetromClient } from "@/providers/retrom-client/web";
+} from "@/generated/retrom/models";
+import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PropsWithChildren, createContext, useContext } from "react";

@@ -15,5 +15,4 @@ serde_json = { workspace = true }
 tracing = { workspace = true }
 dotenvy = { workspace = true }
 derive_builder = { workspace = true }
-uuid = { workspace = true }
 async-trait = { workspace = true }

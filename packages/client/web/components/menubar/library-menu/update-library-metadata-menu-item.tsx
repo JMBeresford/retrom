@@ -14,10 +14,10 @@ import {
   DialogTrigger,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
-import { UpdateLibraryMetadataResponse } from "@/generated/retrom";
+import { UpdateLibraryMetadataResponse } from "@/generated/retrom/services";
 import { LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRetromClient } from "@/providers/retrom-client/web";
+import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function UpdateMetadataMenuItem() {

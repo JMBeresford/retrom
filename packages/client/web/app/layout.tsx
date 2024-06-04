@@ -11,9 +11,8 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import { Menubar } from "@/components/menubar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RetromClientProvider } from "@/providers/retrom-client/web";
+import { RetromClientProvider } from "@/providers/retrom-client/";
 import { QueryClientProvider } from "@/providers/query-client";
-import { RetromClient } from "@/providers/retrom-client";
 import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -30,8 +29,8 @@ export default async function RootLayout({
 }>) {
   const retromClient =
     process.env.NEXT_PUBLIC_PLATFORM === "desktop"
-      ? ({} as RetromClient)
-      : await import("@/providers/retrom-client/web/actions").then(
+      ? undefined
+      : await import("@/providers/retrom-client/web").then(
           (mod) => mod.RetromWebClient,
         );
 

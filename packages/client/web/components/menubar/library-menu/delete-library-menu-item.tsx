@@ -13,7 +13,7 @@ import { Button } from "../../ui/button";
 import { LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRetromClient } from "@/providers/retrom-client/web";
+import { useRetromClient } from "@/providers/retrom-client";
 import { redirect } from "next/navigation";
 
 export function DeleteLibraryMenuItem() {

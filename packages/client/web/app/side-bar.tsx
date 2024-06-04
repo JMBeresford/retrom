@@ -3,7 +3,7 @@
 import { Button } from "../components/ui/button";
 import { Image, cn } from "@/lib/utils";
 import { useCallback, useMemo, useState } from "react";
-import { Game, Platform } from "@/generated/retrom";
+import { Game, Platform } from "@/generated/retrom/models";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -18,7 +18,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useRetromClient } from "@/providers/retrom-client/web";
+import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 
 export function SideBar() {

@@ -1,9 +1,12 @@
 [package]
-name = "client"
-version = "0.0.0"
+name = "retrom-client"
+version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
+license = ""
+repository = ""
 edition = "2021"
+rust-version = "1.60"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,16 +14,18 @@ edition = "2021"
 tauri-build = { version = "2.0.0-beta", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-beta.19", features = [] }
-specta = { version = "2.0.0-rc.12" }
-tauri-specta = { version = "2.0.0-rc.5", features = [
-  "javascript",
-  "typescript",
-] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tauri-plugin-shell = "2.0.0-beta.5"
+serde_json = { workspace = true }
+serde = { workspace = true }
+tauri = { version = "2.0.0-beta", features = [] }
+generated = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
+prost = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 
 [features]
-# This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
+# this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
+# If you use cargo directly instead of tauri's cli you can use this feature flag to switch between tauri's `dev` and `build` modes.
+# DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]

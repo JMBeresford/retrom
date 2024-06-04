@@ -12,6 +12,5 @@ serde = { version = "1.0.197", features = ["derive"] }
 tokio = "1.37.0"
 tracing = "0.1.40"
 futures = { workspace = true }
-uuid = { workspace = true }
 generated = { workspace = true }
 sha1 = "0.10.6"

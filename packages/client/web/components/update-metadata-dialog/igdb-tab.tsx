@@ -4,9 +4,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   GetIgdbGameSearchResultsRequest,
-  UpdatedGameMetadata,
   type UpdateGameMetadataRequest,
-} from "@/generated/retrom";
+} from "@/generated/retrom/services";
 import {
   Select,
   SelectContent,
@@ -25,8 +24,9 @@ import { LoaderIcon } from "lucide-react";
 import { asOptionalString, cn } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
 import { useGameDetail } from "@/app/game/game-context";
-import { useRetromClient } from "@/providers/retrom-client/web";
+import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { UpdatedGameMetadata } from "@/generated/retrom/models";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
