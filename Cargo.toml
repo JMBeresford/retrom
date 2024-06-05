@@ -1,15 +1,14 @@
 [workspace]
 resolver = "2"
-members = [
-  "./packages/service/",
-  "./packages/db/",
-  "./packages/generated/",
-  "./packages/client/",
-]
+members = ["./packages/*"]
+default-members = ["./packages/service/"]
 
 [workspace.package]
-edition = "2021"
 authors = ["John Beresford <jberesford@volcaus.com>"]
+repository = "https://github.com/JMBeresford/retrom"
+license = "GPL-3.0"
+readme = "./README.md"
+edition = "2021"
 
 [workspace.dependencies]
 diesel = { version = "2.1.5", default-features = false, features = [
@@ -25,9 +24,9 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter", "fmt"] }
 tokio = { version = "1.37.0", features = ["full"] }
 dotenvy = "0.15.7"
 db = { path = "./packages/db" }
-service = { path = "./packages/service" }
+retrom-service = { path = "./packages/service" }
 generated = { path = "./packages/generated" }
-client = { path = "./packages/client/" }
+retrom-client = { path = "./packages/client/" }
 futures = "0.3.30"
 bytes = "1.6.0"
 reqwest = { version = "0.12.3", features = ["json"] }
@@ -38,3 +37,6 @@ prost-types = "0.12"
 derive_builder = "0.20.0"
 tonic-reflection = "0.11.0"
 async-trait = "0.1"
+
+[workspace.metadata.workspaces]
+allow_branch = "main"

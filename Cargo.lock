@@ -651,7 +651,7 @@ checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
 
 [[package]]
 name = "db"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "async-trait",
  "bb8",
@@ -1274,7 +1274,7 @@ dependencies = [
 
 [[package]]
 name = "generated"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "db",
  "derive_builder",
@@ -3253,7 +3253,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-client"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "generated",
  "prost",
@@ -3265,6 +3265,56 @@ dependencies = [
  "tonic",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "retrom-library-manager"
+version = "0.0.0"
+dependencies = [
+ "db",
+ "diesel",
+ "futures",
+ "generated",
+ "serde",
+ "sha1",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "retrom-service"
+version = "0.0.1"
+dependencies = [
+ "bb8",
+ "bigdecimal",
+ "bytes",
+ "db",
+ "deunicode",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "either",
+ "futures",
+ "generated",
+ "http 0.2.12",
+ "http-body 0.4.6",
+ "http-body-util",
+ "hyper 0.14.28",
+ "hyper-util",
+ "prost",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "tonic",
+ "tonic-reflection",
+ "tonic-web",
+ "tower",
+ "tracing",
+ "tracing-subscriber",
+ "warp",
+ "zipit",
 ]
 
 [[package]]
@@ -3565,42 +3615,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "service"
-version = "0.1.0"
-dependencies = [
- "bb8",
- "bigdecimal",
- "bytes",
- "db",
- "deunicode",
- "diesel",
- "diesel-async",
- "dotenvy",
- "either",
- "futures",
- "generated",
- "http 0.2.12",
- "http-body 0.4.6",
- "http-body-util",
- "hyper 0.14.28",
- "hyper-util",
- "prost",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
- "tokio-util",
- "tonic",
- "tonic-reflection",
- "tonic-web",
- "tower",
- "tracing",
- "tracing-subscriber",
- "warp",
- "zipit",
 ]
 
 [[package]]

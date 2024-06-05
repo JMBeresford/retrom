@@ -1,7 +1,12 @@
 [package]
 name = "generated"
-version = "0.1.0"
-edition = "2021"
+publish = false
+version = "0.0.0"
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
 
 [lib]
 name = "generated"
@@ -20,3 +25,6 @@ db = { workspace = true }
 [build-dependencies]
 tonic-build = "0.11"
 walkdir = "2.5.0"
+
+[package.metadata.workspaces]
+independent = true
