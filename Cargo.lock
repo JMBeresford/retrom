@@ -3235,7 +3235,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-client"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "prost",
  "retrom-codegen",
@@ -3251,7 +3251,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-codegen"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "derive_builder",
  "diesel",
@@ -3268,7 +3268,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-db"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "async-trait",
  "bb8",
@@ -3283,7 +3283,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "bb8",
  "bigdecimal",
