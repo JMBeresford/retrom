@@ -1,5 +1,7 @@
 use super::indexer::{DirRepresented, FileRepresented, IndexerError, Result as IndexerResult};
-use generated::retrom::{Game, GameBuilder, GameFile, GameFileBuilder, Platform, PlatformBuilder};
+use retrom_codegen::retrom::{
+    Game, GameBuilder, GameFile, GameFileBuilder, Platform, PlatformBuilder,
+};
 use std::{
     fs::DirEntry,
     path::{Path, PathBuf},

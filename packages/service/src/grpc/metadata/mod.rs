@@ -3,11 +3,11 @@ use std::sync::Arc;
 use crate::providers::igdb::{
     games::igdb_game_to_metadata, platforms::igdb_platform_to_metadata, provider::IGDBProvider,
 };
-use db::{schema, Pool};
 use deunicode::deunicode;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use generated::{
+use prost::Message;
+use retrom_codegen::{
     igdb,
     retrom::{
         self,
@@ -23,7 +23,7 @@ use generated::{
         UpdateGameMetadataResponse, UpdatePlatformMetadataRequest, UpdatePlatformMetadataResponse,
     },
 };
-use prost::Message;
+use retrom_db::{schema, Pool};
 use tonic::{Request, Response, Status};
 use tracing::{error, info, Level};
 
@@ -58,8 +58,8 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        let metadata = match db::schema::game_metadata::table
-            .filter(db::schema::game_metadata::game_id.eq_any(game_ids))
+        let metadata = match retrom_db::schema::game_metadata::table
+            .filter(retrom_db::schema::game_metadata::game_id.eq_any(game_ids))
             .load::<retrom::GameMetadata>(&mut conn)
             .await
         {
@@ -90,9 +90,9 @@ impl MetadataService for MetadataServiceHandlers {
         let mut metadata_updated: Vec<retrom::GameMetadata> = vec![];
 
         for metadata_row in metadata_to_update {
-            let updated_row = match diesel::insert_into(db::schema::game_metadata::table)
+            let updated_row = match diesel::insert_into(retrom_db::schema::game_metadata::table)
                 .values(&metadata_row)
-                .on_conflict(db::schema::game_metadata::game_id)
+                .on_conflict(retrom_db::schema::game_metadata::game_id)
                 .do_update()
                 .set(&metadata_row)
                 .get_result::<retrom::GameMetadata>(&mut conn)
@@ -127,8 +127,8 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        let metadata = match db::schema::platform_metadata::table
-            .filter(db::schema::platform_metadata::platform_id.eq_any(platform_ids))
+        let metadata = match retrom_db::schema::platform_metadata::table
+            .filter(retrom_db::schema::platform_metadata::platform_id.eq_any(platform_ids))
             .load::<retrom::PlatformMetadata>(&mut conn)
             .await
         {
@@ -159,9 +159,9 @@ impl MetadataService for MetadataServiceHandlers {
         let mut metadata_updated: Vec<retrom::PlatformMetadata> = vec![];
 
         for metadata_row in metadata_to_update {
-            let updated_row = match diesel::insert_into(db::schema::platform_metadata::table)
+            let updated_row = match diesel::insert_into(retrom_db::schema::platform_metadata::table)
                 .values(&metadata_row)
-                .on_conflict(db::schema::platform_metadata::platform_id)
+                .on_conflict(retrom_db::schema::platform_metadata::platform_id)
                 .do_update()
                 .set(&metadata_row)
                 .get_result::<retrom::PlatformMetadata>(&mut conn)

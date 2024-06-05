@@ -168,5 +168,5 @@ fn get_diesel_macro(table_name: &str, primary_key: Option<&str>) -> String {
         None => "".to_string(),
     };
 
-    format!("#[diesel(table_name = db::schema::{table_name}, check_for_backend(diesel::pg::Pg){primary_key_clause})]")
+    format!("#[diesel(table_name = retrom_db::schema::{table_name}, check_for_backend(diesel::pg::Pg){primary_key_clause})]")
 }

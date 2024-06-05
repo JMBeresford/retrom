@@ -1,4 +1,4 @@
-use generated::retrom::{GameBuilder, GameFileBuilder, PlatformBuilder};
+use retrom_codegen::retrom::{GameBuilder, GameFileBuilder, PlatformBuilder};
 use std::{fs::DirEntry, future::Future, path::Path};
 use tokio::fs::canonicalize;
 use tracing::trace;

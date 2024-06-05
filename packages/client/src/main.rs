@@ -4,7 +4,7 @@
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
 
-use generated::retrom::{
+use retrom_codegen::retrom::{
     game_service_client::GameServiceClient, metadata_service_client::MetadataServiceClient,
     platform_service_client::PlatformServiceClient,
 };

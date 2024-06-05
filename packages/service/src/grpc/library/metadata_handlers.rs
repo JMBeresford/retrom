@@ -1,10 +1,10 @@
 use crate::providers::igdb::{games::match_games_igdb, platforms::match_platforms_igdb};
 
 use super::LibraryServiceHandlers;
-use db::schema;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use generated::retrom::{self, UpdateLibraryMetadataResponse};
+use retrom_codegen::retrom::{self, UpdateLibraryMetadataResponse};
+use retrom_db::schema;
 use tracing::instrument;
 
 #[instrument(skip(state))]

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use generated::retrom::{
+use retrom_codegen::retrom::{
     platform_service_client::PlatformServiceClient, GetPlatformsRequest, GetPlatformsResponse,
 };
 use tauri::{async_runtime::Mutex, State};

@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use deunicode::deunicode;
-use generated::{igdb, retrom};
 use prost::Message;
+use retrom_codegen::{igdb, retrom};
 use tracing::{debug, error, info, instrument, Instrument, Level};
 
 use super::provider::IGDBProvider;

@@ -2,7 +2,7 @@ use super::{FromMessages, IntoMessages};
 use bigdecimal::{BigDecimal, ToPrimitive};
 use derive_builder::Builder;
 use diesel::prelude::*;
-use generated::retrom;
+use retrom_codegen::retrom;
 
 #[derive(Debug, Clone, Builder, Queryable, Selectable, Insertable, AsChangeset)]
 #[diesel(table_name = crate::schema::metadata, check_for_backend(diesel::pg::Pg), primary_key(game_id), treat_none_as_null = true)]

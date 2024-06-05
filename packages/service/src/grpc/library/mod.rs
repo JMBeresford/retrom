@@ -1,10 +1,10 @@
 use crate::providers::igdb::provider::IGDBProvider;
-use db::Pool;
-use generated::retrom::{
+use retrom_codegen::retrom::{
     library_service_server::LibraryService, DeleteLibraryRequest, DeleteLibraryResponse,
     UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdateLibraryRequest,
     UpdateLibraryResponse,
 };
+use retrom_db::Pool;
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Result, Status};
 use tracing::instrument;

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use db::Pool;
+use retrom_db::Pool;
 use warp::Filter;
 
 pub mod file;

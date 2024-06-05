@@ -1,11 +1,12 @@
 [package]
 name = "retrom-client"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
-edition = "2021"
+version = "0.0.0"
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "The Retrom video game library client"
 rust-version = "1.60"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -17,7 +18,7 @@ tauri-build = { version = "2.0.0-beta", features = [] }
 serde_json = { workspace = true }
 serde = { workspace = true }
 tauri = { version = "2.0.0-beta", features = [] }
-generated = { workspace = true }
+retrom-codegen = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
 prost = { workspace = true }

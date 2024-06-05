@@ -1,8 +1,8 @@
-use db::get_db_url;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
+use retrom_db::get_db_url;
 use std::{
     convert::Infallible,
     net::SocketAddr,

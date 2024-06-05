@@ -1,9 +1,9 @@
-use db::{schema, Pool};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use generated::retrom::{
+use retrom_codegen::retrom::{
     self, game_service_server::GameService, GetGamesRequest, GetGamesResponse,
 };
+use retrom_db::{schema, Pool};
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
 
@@ -48,7 +48,7 @@ impl GameService for GameServiceHandlers {
             Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
         };
 
-        let games_data: Vec<generated::retrom::Game> =
+        let games_data: Vec<retrom_codegen::retrom::Game> =
             rows.into_iter().map(|game| game.into()).collect();
 
         let mut metadata_data: Vec<retrom::GameMetadata> = vec![];

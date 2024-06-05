@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use generated::retrom::{
+use retrom_codegen::retrom::{
     game_service_client::GameServiceClient, GetGamesRequest, GetGamesResponse,
 };
 use tauri::{async_runtime::Mutex, State};

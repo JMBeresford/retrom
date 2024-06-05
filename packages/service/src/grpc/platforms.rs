@@ -1,9 +1,9 @@
-use db::{schema, Pool};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use generated::retrom::{
+use retrom_codegen::retrom::{
     self, platform_service_server::PlatformService, GetPlatformsRequest, GetPlatformsResponse,
 };
+use retrom_db::{schema, Pool};
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
 

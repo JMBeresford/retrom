@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use generated::retrom::{
+use retrom_codegen::retrom::{
     metadata_service_client::MetadataServiceClient, GetGameMetadataRequest,
     GetGameMetadataResponse, GetIgdbGameSearchResultsRequest, GetIgdbGameSearchResultsResponse,
     GetIgdbPlatformSearchResultsRequest, GetIgdbPlatformSearchResultsResponse,

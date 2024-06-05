@@ -143,7 +143,7 @@ dependencies = [
  "futures-util",
  "http 0.2.12",
  "http-body 0.4.6",
- "hyper 0.14.28",
+ "hyper 0.14.29",
  "itoa 1.0.11",
  "matchit",
  "memchr",
@@ -379,7 +379,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a969e13a7589e9e3e4207e153bae624ade2b5622fb4684a4923b23ec3d57719"
 dependencies = [
  "serde",
- "toml 0.8.13",
+ "toml 0.8.14",
 ]
 
 [[package]]
@@ -650,21 +650,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
 
 [[package]]
-name = "db"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bb8",
- "derive_builder",
- "diesel",
- "diesel-async",
- "dotenvy",
- "serde",
- "serde_json",
- "tracing",
-]
-
-[[package]]
 name = "deranged"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -925,7 +910,7 @@ dependencies = [
  "cc",
  "memchr",
  "rustc_version",
- "toml 0.8.13",
+ "toml 0.8.14",
  "vswhom",
  "winreg",
 ]
@@ -1270,23 +1255,6 @@ dependencies = [
  "libc",
  "system-deps",
  "x11",
-]
-
-[[package]]
-name = "generated"
-version = "0.1.0"
-dependencies = [
- "db",
- "derive_builder",
- "diesel",
- "prost",
- "prost-types",
- "serde",
- "serde_json",
- "tokio",
- "tonic",
- "tonic-build",
- "walkdir",
 ]
 
 [[package]]
@@ -1695,9 +1663,9 @@ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 
 [[package]]
 name = "hyper"
-version = "0.14.28"
+version = "0.14.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf96e135eb83a2a8ddf766e426a841d8ddd7449d5f00d34ea02b41d2f19eef80"
+checksum = "f361cde2f109281a220d4307746cdfd5ee3f410da58a70377762396775634b33"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -1744,7 +1712,7 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbb958482e8c7be4bc3cf272a766a2b0bf1a6755e7a6ae777f017a31d11b13b1"
 dependencies = [
- "hyper 0.14.28",
+ "hyper 0.14.29",
  "pin-project-lite",
  "tokio",
  "tokio-io-timeout",
@@ -2052,6 +2020,20 @@ name = "libm"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ec2a862134d2a7d32d7983ddcdd1c4923530833c9f2ea1a44fc5fa473989058"
+
+[[package]]
+name = "library_manager"
+version = "0.1.0"
+dependencies = [
+ "diesel",
+ "futures",
+ "retrom-codegen",
+ "retrom-db",
+ "serde",
+ "sha1",
+ "tokio",
+ "tracing",
+]
 
 [[package]]
 name = "libredox"
@@ -2963,9 +2945,9 @@ checksum = "dc375e1527247fe1a97d8b7156678dfe7c1af2fc075c9a4db3690ecd2a148068"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.84"
+version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec96c6a92621310b51366f1e28d05ef11489516e93be030060e5fc12024a49d6"
+checksum = "22244ce15aa966053a896d1accb3a6e68469b97c7f33f284b99f0d576879fc23"
 dependencies = [
  "unicode-ident",
 ]
@@ -3253,10 +3235,10 @@ dependencies = [
 
 [[package]]
 name = "retrom-client"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
- "generated",
  "prost",
+ "retrom-codegen",
  "serde",
  "serde_json",
  "tauri",
@@ -3265,6 +3247,74 @@ dependencies = [
  "tonic",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "retrom-codegen"
+version = "0.0.0"
+dependencies = [
+ "derive_builder",
+ "diesel",
+ "prost",
+ "prost-types",
+ "retrom-db",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tonic",
+ "tonic-build",
+ "walkdir",
+]
+
+[[package]]
+name = "retrom-db"
+version = "0.0.0"
+dependencies = [
+ "async-trait",
+ "bb8",
+ "derive_builder",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "retrom-service"
+version = "0.0.0"
+dependencies = [
+ "bb8",
+ "bigdecimal",
+ "bytes",
+ "deunicode",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "either",
+ "futures",
+ "http 0.2.12",
+ "http-body 0.4.6",
+ "http-body-util",
+ "hyper 0.14.29",
+ "hyper-util",
+ "prost",
+ "reqwest",
+ "retrom-codegen",
+ "retrom-db",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "tonic",
+ "tonic-reflection",
+ "tonic-web",
+ "tower",
+ "tracing",
+ "tracing-subscriber",
+ "warp",
+ "zipit",
 ]
 
 [[package]]
@@ -3568,42 +3618,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "service"
-version = "0.1.0"
-dependencies = [
- "bb8",
- "bigdecimal",
- "bytes",
- "db",
- "deunicode",
- "diesel",
- "diesel-async",
- "dotenvy",
- "either",
- "futures",
- "generated",
- "http 0.2.12",
- "http-body 0.4.6",
- "http-body-util",
- "hyper 0.14.28",
- "hyper-util",
- "prost",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
- "tokio-util",
- "tonic",
- "tonic-reflection",
- "tonic-web",
- "tower",
- "tracing",
- "tracing-subscriber",
- "warp",
- "zipit",
-]
-
-[[package]]
 name = "servo_arc"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3879,7 +3893,7 @@ dependencies = [
  "cfg-expr",
  "heck 0.5.0",
  "pkg-config",
- "toml 0.8.13",
+ "toml 0.8.14",
  "version-compare",
 ]
 
@@ -4006,7 +4020,7 @@ dependencies = [
  "serde_json",
  "tauri-utils",
  "tauri-winres",
- "toml 0.8.13",
+ "toml 0.8.14",
  "walkdir",
 ]
 
@@ -4122,7 +4136,7 @@ dependencies = [
  "serde_with",
  "swift-rs",
  "thiserror",
- "toml 0.8.13",
+ "toml 0.8.14",
  "url",
  "urlpattern",
  "walkdir",
@@ -4369,14 +4383,14 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.8.13"
+version = "0.8.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4e43f8cc456c9704c851ae29c67e17ef65d2c30017c17a9765b89c382dc8bba"
+checksum = "6f49eb2ab21d2f26bd6db7bf383edc527a7ebaee412d17af4d40fdccd442f335"
 dependencies = [
  "serde",
  "serde_spanned",
  "toml_datetime",
- "toml_edit 0.22.13",
+ "toml_edit 0.22.14",
 ]
 
 [[package]]
@@ -4414,15 +4428,15 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.22.13"
+version = "0.22.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c127785850e8c20836d49732ae6abfa47616e60bf9d9f57c43c250361a9db96c"
+checksum = "f21c7aaf97f1bd9ca9d4f9e73b0a6c74bd5afef56f2bc931943a6e1c37e04e38"
 dependencies = [
  "indexmap 2.2.6",
  "serde",
  "serde_spanned",
  "toml_datetime",
- "winnow 0.6.9",
+ "winnow 0.6.11",
 ]
 
 [[package]]
@@ -4439,7 +4453,7 @@ dependencies = [
  "h2 0.3.26",
  "http 0.2.12",
  "http-body 0.4.6",
- "hyper 0.14.28",
+ "hyper 0.14.29",
  "hyper-timeout",
  "percent-encoding",
  "pin-project",
@@ -4488,7 +4502,7 @@ dependencies = [
  "bytes",
  "http 0.2.12",
  "http-body 0.4.6",
- "hyper 0.14.28",
+ "hyper 0.14.29",
  "pin-project",
  "tokio-stream",
  "tonic",
@@ -4613,9 +4627,9 @@ dependencies = [
 
 [[package]]
 name = "tray-icon"
-version = "0.14.2"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b27516dfcfa22a9faaf192283a122bfbede38c1e59ef194e3c4db6549b419c0"
+checksum = "3ad8319cca93189ea9ab1b290de0595960529750b6b8b501a399ed1ec3775d60"
 dependencies = [
  "cocoa",
  "core-graphics",
@@ -4859,7 +4873,7 @@ dependencies = [
  "futures-util",
  "headers",
  "http 0.2.12",
- "hyper 0.14.28",
+ "hyper 0.14.29",
  "log",
  "mime",
  "mime_guess",
@@ -5426,9 +5440,9 @@ dependencies = [
 
 [[package]]
 name = "winnow"
-version = "0.6.9"
+version = "0.6.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86c949fede1d13936a99f14fafd3e76fd642b556dd2ce96287fbe2e0151bfac6"
+checksum = "56c52728401e1dc672a56e81e593e912aa54c78f40246869f78359a2bf24d29d"
 dependencies = [
  "memchr",
 ]
@@ -5445,9 +5459,9 @@ dependencies = [
 
 [[package]]
 name = "wry"
-version = "0.40.0"
+version = "0.40.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cd42682bad8d1efd0e0d0593770c602c13b8922bb1ca705cb845967de81bbc4"
+checksum = "1fa597526af53f310a8e6218630c5024fdde8271f229e70d7d2fc70b52b8fb1e"
 dependencies = [
  "base64 0.22.1",
  "block",

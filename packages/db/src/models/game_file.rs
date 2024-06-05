@@ -1,7 +1,7 @@
 use super::{FromMessages, IntoMessages};
 use derive_builder::Builder;
 use diesel::prelude::*;
-use generated::retrom;
+use retrom_codegen::retrom;
 
 #[derive(Debug, Clone, Builder, Selectable, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = crate::schema::game_files, check_for_backend(diesel::pg::Pg))]

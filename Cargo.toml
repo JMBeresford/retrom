@@ -1,15 +1,13 @@
 [workspace]
 resolver = "2"
-members = [
-  "./packages/service/",
-  "./packages/db/",
-  "./packages/generated/",
-  "./packages/client/",
-]
+members = ["./packages/*"]
 
 [workspace.package]
 edition = "2021"
 authors = ["John Beresford <jberesford@volcaus.com>"]
+license = "GPL-3.0"
+readme = "./README.md"
+repository = "https://github.com/JMBeresford/retrom"
 
 [workspace.dependencies]
 diesel = { version = "2.1.5", default-features = false, features = [
@@ -24,10 +22,10 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "fmt"] }
 tokio = { version = "1.37.0", features = ["full"] }
 dotenvy = "0.15.7"
-db = { path = "./packages/db" }
-service = { path = "./packages/service" }
-generated = { path = "./packages/generated" }
-client = { path = "./packages/client/" }
+retrom-db = { path = "./packages/db" }
+retrom-service = { path = "./packages/service" }
+retrom-codegen = { path = "./packages/codegen" }
+retrom-client = { path = "./packages/client/" }
 futures = "0.3.30"
 bytes = "1.6.0"
 reqwest = { version = "0.12.3", features = ["json"] }

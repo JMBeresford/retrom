@@ -4,13 +4,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use db::{schema, DBConnection};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use generated::retrom::{
+use retrom_codegen::retrom::{
     Game, GameFile, NewGame, NewGameFile, NewPlatform, Platform, UpdateLibraryRequest,
     UpdateLibraryResponse,
 };
+use retrom_db::{schema, DBConnection};
 use tonic::{Request, Status};
 use tracing::{error, warn, Level};
 

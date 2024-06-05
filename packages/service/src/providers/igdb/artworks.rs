@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use generated::igdb;
 use prost::Message;
+use retrom_codegen::igdb;
 
 use super::provider::IGDBProvider;
 

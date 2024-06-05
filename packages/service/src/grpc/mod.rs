@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
-use db::Pool;
 use games::GameServiceHandlers;
-use generated::retrom::{
+use library::LibraryServiceHandlers;
+use metadata::MetadataServiceHandlers;
+use platforms::PlatformServiceHandlers;
+use retrom_codegen::retrom::{
     game_service_server::GameServiceServer, library_service_server::LibraryServiceServer,
     metadata_service_server::MetadataServiceServer, platform_service_server::PlatformServiceServer,
     FILE_DESCRIPTOR_SET,
 };
-use library::LibraryServiceHandlers;
-use metadata::MetadataServiceHandlers;
-use platforms::PlatformServiceHandlers;
+use retrom_db::Pool;
 use tonic::transport::{server::Routes, Server};
 
 use crate::providers::igdb::provider::IGDBProvider;

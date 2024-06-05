@@ -1,9 +1,12 @@
 [package]
-name = "service"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+name = "retrom-service"
+version = "0.0.0"
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "The Retrom video game library service"
 
 [dependencies]
 serde = { workspace = true }
@@ -15,8 +18,8 @@ tracing-subscriber = { workspace = true }
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 bb8 = { workspace = true }
-db = { workspace = true }
-generated = { workspace = true }
+retrom-db = { workspace = true }
+retrom-codegen = { workspace = true }
 bytes = { workspace = true }
 reqwest = { workspace = true }
 tonic = { workspace = true }

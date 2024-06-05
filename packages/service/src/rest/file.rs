@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use db::Pool;
 use diesel::associations::HasTable;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use generated::retrom;
 use http::header;
+use retrom_codegen::retrom;
+use retrom_db::Pool;
 use tokio_util::io::ReaderStream;
 use warp::{filters::BoxedFilter, Filter};
 

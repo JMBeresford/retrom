@@ -1,6 +1,6 @@
-use db::DBConnection;
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use generated::retrom::{DeleteLibraryRequest, DeleteLibraryResponse};
+use retrom_codegen::retrom::{DeleteLibraryRequest, DeleteLibraryResponse};
+use retrom_db::DBConnection;
 use tonic::Status;
 use tracing::error;
 
@@ -28,7 +28,7 @@ pub async fn delete_library(
 }
 
 async fn do_delete(conn: &mut DBConnection<'_>) -> Result<(), diesel::result::Error> {
-    if let Err(e) = diesel::delete(db::schema::platforms::table)
+    if let Err(e) = diesel::delete(retrom_db::schema::platforms::table)
         .execute(conn)
         .await
     {
