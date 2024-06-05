@@ -1,9 +1,8 @@
 [package]
 name = "retrom-client"
-version = "0.0.1"
+version = "0.0.2"
 authors.workspace = true
 repository.workspace = true
-readme.workspace = true
 license.workspace = true
 edition.workspace = true
 description = "The Retrom video game library client"
