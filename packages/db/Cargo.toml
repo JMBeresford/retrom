@@ -1,6 +1,7 @@
 [package]
 name = "retrom-db"
-version = "0.0.0"
+version = "0.0.1"
+description = "Database layer for Retrom"
 authors.workspace = true
 repository.workspace = true
 readme.workspace = true
