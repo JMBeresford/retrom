@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package retrom;
+
+enum RomType {
+  Custom = 0;
+  SingleFile = 1;
+  MultiFile = 2;
+}
+
+message Emulator {
+  int32 id = 1;
+  repeated int32 supported_platforms = 2;
+  string name = 3;
+  RomType rom_type = 4;
+  string executable_path = 5;
+}
+
+message NewEmulator {
+  repeated int32 supported_platforms = 1;
+  string name = 2;
+  RomType rom_type = 3;
+  string executable_path = 4;
+}
+
+message UpdatedEmulator {
+  int32 id = 1;
+  repeated int32 supported_platforms = 2;
+  optional string name = 3;
+  optional RomType rom_type = 4;
+  optional string executable_path = 5;
+}
+
+message EmulatorProfile {
+  int32 id = 1;
+  int32 emulator_id = 2;
+  string name = 3;
+  repeated string supported_extensions = 4;
+  optional string extra_args = 5;
+}

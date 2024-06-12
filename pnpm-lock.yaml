@@ -6,6 +6,9 @@ settings:
 
 overrides:
   '@tauri-apps/cli': 2.0.0-beta.20
+  '@tauri-apps/api': 2.0.0-beta.13
+  '@tauri-apps/plugin-fs': 2.0.0-beta.5
+  '@tauri-apps/plugin-upload': 2.0.0-beta.6
 
 importers:
 
@@ -14,12 +17,22 @@ importers:
       '@tauri-apps/api':
         specifier: 2.0.0-beta.13
         version: 2.0.0-beta.13
+      '@tauri-apps/plugin-fs':
+        specifier: 2.0.0-beta.5
+        version: 2.0.0-beta.5
+      '@tauri-apps/plugin-upload':
+        specifier: 2.0.0-beta.6
+        version: 2.0.0-beta.6
     devDependencies:
       '@tauri-apps/cli':
         specifier: 2.0.0-beta.20
         version: 2.0.0-beta.20
 
   packages/client:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: 2.0.0-beta.13
+        version: 2.0.0-beta.13
     devDependencies:
       '@tauri-apps/cli':
         specifier: 2.0.0-beta.20
@@ -54,6 +67,9 @@ importers:
       '@radix-ui/react-popover':
         specifier: ^1.0.7
         version: 1.0.7(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1)(react@18.3.1)
+      '@radix-ui/react-progress':
+        specifier: ^1.0.3
+        version: 1.0.3(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1)(react@18.3.1)
       '@radix-ui/react-scroll-area':
         specifier: ^1.0.5
         version: 1.0.5(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1)(react@18.3.1)
@@ -81,6 +97,12 @@ importers:
       '@tauri-apps/api':
         specifier: 2.0.0-beta.13
         version: 2.0.0-beta.13
+      '@tauri-apps/plugin-fs':
+        specifier: 2.0.0-beta.5
+        version: 2.0.0-beta.5
+      '@tauri-apps/plugin-upload':
+        specifier: 2.0.0-beta.6
+        version: 2.0.0-beta.6
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -1039,6 +1061,28 @@ packages:
       react-dom: 18.3.1(react@18.3.1)
     dev: false
 
+  /@radix-ui/react-progress@1.0.3(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-5G6Om/tYSxjSeEdrb1VfKkfZfn/1IlPWd731h2RfPuSbIfNUgfqAwbKfJCg/PP6nuUCTrYzalwHSpSinoWoCag==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.24.6
+      '@radix-ui/react-context': 1.0.1(@types/react@18.3.3)(react@18.3.1)
+      '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1)(react@18.3.1)
+      '@types/react': 18.3.3
+      '@types/react-dom': 18.3.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    dev: false
+
   /@radix-ui/react-roving-focus@1.0.4(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-2mUg5Mgcu001VkGy+FfzZyzbmuUWzgWkj3rvv4yu+mLw03+mTzbxZHvfcGyFp2b8EkQeMkpRQ5FiA2Vr2O6TeQ==}
     peerDependencies:
@@ -1546,6 +1590,18 @@ packages:
       '@tauri-apps/cli-win32-ia32-msvc': 2.0.0-beta.20
       '@tauri-apps/cli-win32-x64-msvc': 2.0.0-beta.20
     dev: true
+
+  /@tauri-apps/plugin-fs@2.0.0-beta.5:
+    resolution: {integrity: sha512-uTqCDFA1z8KDtTe5fKlbRrKV4zxh63UVUvD/PR8GnyNLV+qxj/fEuJuGvMdfMbVKrTljGqSpun5wnP5jqD5fMg==}
+    dependencies:
+      '@tauri-apps/api': 2.0.0-beta.13
+    dev: false
+
+  /@tauri-apps/plugin-upload@2.0.0-beta.6:
+    resolution: {integrity: sha512-CbIj5ew167/Xfi/tsomPlRhty8U52m+FXEIj2tVNu6F1Kc6NEfd5BQM6iLf6RfKQ4WsUo+zwUkftnlpgP4FCpA==}
+    dependencies:
+      '@tauri-apps/api': 2.0.0-beta.13
+    dev: false
 
   /@types/json-schema@7.0.15:
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}

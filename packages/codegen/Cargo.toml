@@ -14,6 +14,7 @@ prost-types = { workspace = true }
 tokio = { workspace = true }
 serde_json = { workspace = true }
 serde = { workspace = true }
+serde_repr = { workspace = true }
 diesel = { workspace = true }
 derive_builder = { workspace = true }
 retrom-db = { workspace = true }

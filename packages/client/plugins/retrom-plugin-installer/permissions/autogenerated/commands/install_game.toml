@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-install-game"
+description = "Enables the install_game command without any pre-configured scope."
+commands.allow = ["install_game"]
+
+[[permission]]
+identifier = "deny-install-game"
+description = "Denies the install_game command without any pre-configured scope."
+commands.deny = ["install_game"]

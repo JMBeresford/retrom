@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package retrom;
+
+message Game {
+  int32 id = 1;
+  string path = 3;
+  optional int32 platform_id = 4;
+}
+
+message NewGame {
+  string path = 1;
+  optional int32 platform_id = 2;
+}
+
+message UpdatedGame {
+  int32 id = 1;
+  optional string path = 2;
+  optional int32 platform_id = 3;
+}

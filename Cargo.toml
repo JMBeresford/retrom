@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["./packages/*"]
+members = ["./packages/*", "./packages/client/plugins/*"]
 
 [workspace.package]
 edition = "2021"
@@ -10,25 +10,33 @@ readme = "./README.md"
 repository = "https://github.com/JMBeresford/retrom"
 
 [workspace.dependencies]
-diesel = { version = "2.1.5", default-features = false, features = [
-  "serde_json",
-  "numeric",
-] }
+diesel = { version = "2.1.5", features = ["serde_json", "postgres", "numeric"] }
 diesel-async = { version = "0.4.1", features = ["postgres", "bb8"] }
 bb8 = "0.8"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
 tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter", "fmt"] }
+tracing-subscriber = { version = "0.3.18", features = [
+  "env-filter",
+  "fmt",
+  "json",
+] }
+tracing-futures = { version = "0.2.5", features = ["tokio", "futures"] }
 tokio = { version = "1.37.0", features = ["full"] }
+tokio-util = { version = "0.7.11", features = ["io", "compat"] }
 dotenvy = "0.15.7"
 retrom-db = { path = "./packages/db", version = "0.0.2" }
-retrom-service = { path = "./packages/service", version = "0.0.2" }
 retrom-codegen = { path = "./packages/codegen", version = "0.0.2" }
-retrom-client = { path = "./packages/client/", version = "0.0.2" }
+retrom-plugin-installer = { path = "./packages/client/plugins/retrom-plugin-installer/", version = "0.0.1" }
 futures = "0.3.30"
 bytes = "1.6.0"
-reqwest = { version = "0.12.3", features = ["json"] }
+reqwest = { version = "0.12.3", features = [
+  "json",
+  "stream",
+  "gzip",
+  "brotli",
+  "deflate",
+] }
 tonic = "0.11"
 tonic-web = "0.11"
 prost = "0.12"
@@ -36,3 +44,5 @@ prost-types = "0.12"
 derive_builder = "0.20.0"
 tonic-reflection = "0.11.0"
 async-trait = "0.1"
+tauri-plugin-http = "2.0.0-beta.9"
+serde_repr = "0.1.19"

@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use bigdecimal::ToPrimitive;
 use diesel::associations::HasTable;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;

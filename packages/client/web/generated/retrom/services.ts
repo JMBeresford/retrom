@@ -7,17 +7,17 @@
 /* eslint-disable */
 import { type CallContext, type CallOptions } from "nice-grpc-common";
 import _m0 from "protobufjs/minimal";
+import { GameFile } from "./models/game-files";
+import { Game } from "./models/games";
 import {
-  Game,
-  GameFile,
   GameMetadata,
   NewGameMetadata,
   NewPlatformMetadata,
-  Platform,
   PlatformMetadata,
   UpdatedGameMetadata,
   UpdatedPlatformMetadata,
-} from "./models";
+} from "./models/metadata";
+import { Platform } from "./models/platforms";
 import {
   IgdbFields,
   IgdbFilters,

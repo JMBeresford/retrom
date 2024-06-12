@@ -4,3 +4,5 @@ const API_HOST = process.env.API_HOST ?? `${API_HOSTNAME}:${API_PORT}`;
 
 export const GRPC_HOST = process.env.GRPC_HOST ?? API_HOST;
 export const REST_HOST = process.env.REST_HOST ?? `${API_HOST}/rest`;
+
+export const IS_DESKTOP = process.env.NEXT_PUBLIC_PLATFORM === "desktop";

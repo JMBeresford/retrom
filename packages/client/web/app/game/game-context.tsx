@@ -3,6 +3,7 @@
 import { toast } from "@/components/ui/use-toast";
 import {
   Game,
+  GameFile,
   GameMetadata,
   Platform,
   PlatformMetadata,
@@ -14,6 +15,7 @@ import { PropsWithChildren, createContext, useContext } from "react";
 
 export type GameDetailContext = {
   game: Game;
+  gameFiles: GameFile[];
   platform: Platform;
   gameMetadata?: GameMetadata;
   platformMetadata?: PlatformMetadata;
@@ -34,15 +36,18 @@ export function GameDetailProvider(props: PropsWithChildren) {
     queryFn: async () => {
       const data = await retromClient.gameClient.getGames({
         withMetadata: true,
+        withFiles: true,
         ids: [gameId],
       });
 
       const game = data.games.at(0);
       const gameMetadata = data.metadata.at(0);
+      const gameFiles = data.gameFiles;
 
       return {
         game,
         gameMetadata,
+        gameFiles,
       };
     },
   });
@@ -87,6 +92,7 @@ export function GameDetailProvider(props: PropsWithChildren) {
 
   const value = {
     game: gameData.game,
+    gameFiles: gameData.gameFiles,
     platform: platformData.platform,
     gameMetadata: gameData.gameMetadata,
     platformMetadata: platformData.platformMetadata,

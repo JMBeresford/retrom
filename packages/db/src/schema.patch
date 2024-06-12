@@ -1,0 +1,28 @@
+diff --git a/packages/db/src/schema.rs b/packages/db/src/schema.rs
+index ad08d1a..12ce8d8 100644
+--- a/packages/db/src/schema.rs
++++ b/packages/db/src/schema.rs
+@@ -2,21 +2,21 @@
+ 
+ diesel::table! {
+     emulator_profiles (id) {
+         id -> Int4,
+         emulator_id -> Int4,
+         name -> Text,
+-        supported_extensions -> Array<Nullable<Text>>,
++        supported_extensions -> Array<Text>,
+         extra_args -> Nullable<Text>,
+     }
+ }
+ 
+ diesel::table! {
+     emulators (id) {
+         id -> Int4,
+-        supported_platforms -> Array<Nullable<Int4>>,
++        supported_platforms -> Array<Int4>,
+         name -> Text,
+         rom_type -> Int4,
+         executable_path -> Text,
+     }
+ }
+ 

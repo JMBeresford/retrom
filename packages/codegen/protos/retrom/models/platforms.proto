@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package retrom;
+
+message Platform {
+  int32 id = 1;
+  string path = 3;
+}
+
+message NewPlatform {
+  string path = 1;
+}
+
+message UpdatedPlatform {
+  int32 id = 1;
+  optional string path = 2;
+}

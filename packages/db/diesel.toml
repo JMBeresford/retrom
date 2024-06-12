@@ -3,6 +3,7 @@
 
 [print_schema]
 file = "src/schema.rs"
+patch_file = "src/schema.patch"
 custom_type_derives = ["diesel::query_builder::QueryId"]
 
 [migrations_directory]

@@ -2,9 +2,7 @@
   "identifier": "migrated",
   "description": "permissions that were migrated from v1",
   "local": true,
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
   "permissions": [
     "path:default",
     "event:default",
@@ -12,6 +10,32 @@
     "app:default",
     "resources:default",
     "menu:default",
-    "tray:default"
+    "tray:default",
+    "fs:default",
+    "fs:deny-default",
+    "fs:allow-appdata-write-recursive",
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [
+        {
+          "path": "$APPDATA/*"
+        },
+        {
+          "path": "$APPDATA"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [
+        {
+          "path": "$APPDATA"
+        }
+      ]
+    },
+    "installer:allow-install-game",
+    "installer:allow-uninstall-game",
+    "installer:allow-get-game-installation-status"
   ]
 }
+

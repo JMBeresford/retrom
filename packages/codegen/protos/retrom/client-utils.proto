@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package retrom;
+
+import "models/game-files.proto";
+import "models/games.proto";
+
+enum InstallationStatus {
+  INSTALLED = 0;
+  INSTALLING = 1;
+  NOT_INSTALLED = 2;
+}
+
+message InstallationProgressUpdate {
+  int32 gameId = 1;
+  uint32 progress = 2;
+}
+
+message InstallGamePayload {
+  Game game = 1;
+  repeated GameFile files = 2;
+}
+
+message UninstallGamePayload {
+  Game game = 1;
+}

@@ -9,6 +9,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "@tauri-apps/api": "workspace:*"
+  },
   "devDependencies": {
     "@tauri-apps/cli": "workspace:*"
   }

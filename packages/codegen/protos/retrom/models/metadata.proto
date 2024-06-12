@@ -2,57 +2,6 @@ syntax = "proto3";
 
 package retrom;
 
-message Platform {
-  int32 id = 1;
-  string path = 3;
-}
-
-message NewPlatform {
-  string path = 1;
-}
-
-message UpdatedPlatform {
-  int32 id = 1;
-  optional string path = 2;
-}
-
-message Game {
-  int32 id = 1;
-  string path = 3;
-  optional int32 platform_id = 4;
-}
-
-message NewGame {
-  string path = 1;
-  optional int32 platform_id = 2;
-}
-
-message UpdatedGame {
-  int32 id = 1;
-  optional string path = 2;
-  optional int32 platform_id = 3;
-}
-
-message GameFile {
-  int32 id = 1;
-  int32 byte_size = 3;
-  string path = 4;
-  int32 game_id = 6;
-}
-
-message NewGameFile {
-  int32 byte_size = 1;
-  string path = 2;
-  optional int32 game_id = 3;
-}
-
-message UpdatedGameFile {
-  int32 id = 1;
-  optional int32 byte_size = 2;
-  optional string path = 3;
-  optional int32 game_id = 4;
-}
-
 message GameMetadata {
   int32 game_id = 1;
   optional string name = 2;

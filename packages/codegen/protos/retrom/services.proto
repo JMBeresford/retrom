@@ -2,7 +2,10 @@ syntax = "proto3";
 
 package retrom;
 
-import 'models.proto';
+import 'models/game-files.proto';
+import 'models/games.proto';
+import 'models/metadata.proto';
+import 'models/platforms.proto';
 import 'providers/igdb.proto';
 
 service LibraryService {

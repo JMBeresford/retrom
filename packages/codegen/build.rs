@@ -2,18 +2,18 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 
 // Derives that are used for structs representing existing rows in db
-const DIESEL_ROW_DERIVES: [&str; 5] = [
+const DIESEL_ROW_DERIVES: [&str; 3] = [
     "Queryable",
     "Selectable",
     "Identifiable",
-    "Insertable",
-    "AsChangeset",
+    // "Insertable",
+    // "AsChangeset",
 ];
 
 // Derives that are used for structs representing changesets, or to-be-inserted rows
 const DIESEL_NON_ROW_DERIVES: [&str; 2] = ["Insertable", "AsChangeset"];
 
-const OTHER_DERIVES: [&str; 1] = ["derive_builder::Builder"];
+const OTHER_DERIVES: [&str; 3] = ["derive_builder::Builder", "Hash", "Eq"];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not set"));
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tonic_build::configure()
         .type_attribute(".retrom", "#[derive(serde::Serialize, serde::Deserialize)]")
-        .type_attribute(
+        .message_attribute(
             ".retrom",
             "#[serde(rename_all(serialize = \"camelCase\", deserialize = \"camelCase\"))]",
         )
@@ -152,6 +152,48 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             format!(
                 "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("platform_metadata", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.Emulator",
+            format!(
+                "#[derive({diesel_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("emulators", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.NewEmulator",
+            format!(
+                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("emulators", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.UpdatedEmulator",
+            format!(
+                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("emulators", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.EmulatorProfile",
+            format!(
+                "#[derive({diesel_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("emulator_profiles", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.NewEmulatorProfile",
+            format!(
+                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("emulator_profiles", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.UpdatedEmulatorProfile",
+            format!(
+                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("emulator_profiles", None)
             ),
         )
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))

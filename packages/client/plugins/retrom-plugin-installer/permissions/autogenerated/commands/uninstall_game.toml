@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-uninstall-game"
+description = "Enables the uninstall_game command without any pre-configured scope."
+commands.allow = ["uninstall_game"]
+
+[[permission]]
+identifier = "deny-uninstall-game"
+description = "Denies the uninstall_game command without any pre-configured scope."
+commands.deny = ["uninstall_game"]
