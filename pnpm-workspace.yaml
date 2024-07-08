@@ -1,3 +1,4 @@
 packages:
   - packages/client
   - packages/client/web
+  - plugins/*

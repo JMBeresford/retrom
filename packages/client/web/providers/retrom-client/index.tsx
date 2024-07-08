@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  EmulatorServiceClient,
   GameServiceClient,
   LibraryServiceClient,
   MetadataServiceClient,
@@ -14,12 +15,13 @@ export interface RetromClient {
   readonly platformClient: PlatformServiceClient;
   readonly gameClient: GameServiceClient;
   readonly metadataClient: MetadataServiceClient;
+  readonly emulatorClient: EmulatorServiceClient;
 }
 
 const context = createContext<RetromClient | undefined>(undefined);
 
-export function RetromClientProvider<T extends RetromClient>(
-  props: PropsWithChildren<{ value?: T }>,
+export function RetromClientProvider(
+  props: PropsWithChildren<{ value?: RetromClient }>,
 ) {
   const { value, children } = props;
 

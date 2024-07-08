@@ -7,6 +7,7 @@ license.workspace = true
 edition.workspace = true
 description = "The Retrom video game library client"
 rust-version = "1.60"
+exclude = ["./web"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -14,9 +15,9 @@ rust-version = "1.60"
 tauri-build = { version = "2.0.0-beta", features = [] }
 
 [dependencies]
+tauri = { workspace = true }
 serde_json = { workspace = true }
 serde = { workspace = true }
-tauri = { version = "2.0.0-beta", features = ["tracing"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 retrom-codegen = { workspace = true }
@@ -32,7 +33,10 @@ diesel = { workspace = true }
 diesel-async = { workspace = true }
 bb8 = { workspace = true }
 retrom-plugin-installer = { workspace = true }
+retrom-plugin-launcher = { workspace = true }
 tracing-futures = { workspace = true }
+tauri-plugin-dialog = "2.0.0-beta.9"
+tauri-plugin-shell = "2.0.0-beta.7"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

@@ -22,7 +22,7 @@ export function GameDetails() {
           <Image
             src={gameMetadata.backgroundUrl}
             alt={gameMetadata.name}
-            className="object-cover absolute min-w-full min-h-full"
+            className="object-cover absolute min-w-full min-h-full max-w-full max-h-full"
           />
         )}
       </div>

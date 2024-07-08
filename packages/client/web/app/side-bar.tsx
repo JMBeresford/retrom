@@ -18,23 +18,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useRetromClient } from "@/providers/retrom-client";
-import { useQuery } from "@tanstack/react-query";
+import { usePlatforms } from "@/queries/usePlatforms";
+import { useGames } from "@/queries/useGames";
 
 export function SideBar() {
   const searchParams = useSearchParams();
-  const retromClient = useRetromClient();
 
-  const { data: platformData, status: platformStatus } = useQuery({
-    queryKey: ["platforms", "platform-metadata"],
-    queryFn: async () =>
-      await retromClient.platformClient.getPlatforms({ withMetadata: true }),
+  const { data: platformData, status: platformStatus } = usePlatforms({
+    request: { withMetadata: true },
   });
 
-  const { data: gameData, status: gameStatus } = useQuery({
-    queryKey: ["games", "game-metadata"],
-    queryFn: async () =>
-      await retromClient.gameClient.getGames({ withMetadata: true }),
+  const { data: gameData, status: gameStatus } = useGames({
+    withMetadata: true,
   });
 
   const loading = platformStatus === "pending" || gameStatus === "pending";

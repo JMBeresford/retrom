@@ -4,6 +4,7 @@ package retrom;
 
 import "models/game-files.proto";
 import "models/games.proto";
+import "models/emulators.proto";
 
 enum InstallationStatus {
   INSTALLED = 0;
@@ -23,4 +24,27 @@ message InstallGamePayload {
 
 message UninstallGamePayload {
   Game game = 1;
+}
+
+enum PlayStatus {
+  PLAYING = 0;
+  NOT_PLAYING = 1;
+}
+
+message PlayGamePayload {
+  Game game = 1;
+  EmulatorProfile emulator_profile = 2;
+}
+
+message StopGamePayload {
+  Game game = 1;
+}
+
+message GetGamePlayStatusPayload {
+  Game game = 1;
+}
+
+message GamePlayStatusUpdate {
+  int32 game_id = 1;
+  PlayStatus play_status = 2;
 }

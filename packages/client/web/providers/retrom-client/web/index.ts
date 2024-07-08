@@ -1,6 +1,12 @@
 import { RetromClient } from "@/providers/retrom-client";
-import { getGames } from "./games";
+import { getGames, deleteGames } from "./games";
 import { deleteLibrary, updateLibrary, updateLibraryMetadata } from "./library";
+import {
+  getEmulators,
+  deleteEmulators,
+  updateEmulators,
+  createEmulators,
+} from "./emulators";
 import {
   getIgdbSearch,
   getIgdbPlatformSearchResults,
@@ -10,10 +16,10 @@ import {
   updateGameMetadata,
   getGameMetadata,
 } from "./metadata";
-import { getPlatforms } from "./platforms";
+import { getPlatforms, deletePlatforms } from "./platforms";
 
 export const RetromWebClient: RetromClient = {
-  gameClient: { getGames },
+  gameClient: { getGames, deleteGames },
   libraryClient: {
     deleteLibrary,
     updateLibrary,
@@ -30,5 +36,12 @@ export const RetromWebClient: RetromClient = {
   },
   platformClient: {
     getPlatforms,
+    deletePlatforms,
+  },
+  emulatorClient: {
+    getEmulators,
+    createEmulators,
+    deleteEmulators,
+    updateEmulators,
   },
 };

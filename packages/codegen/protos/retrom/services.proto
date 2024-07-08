@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package retrom;
 
+import 'models/emulators.proto';
 import 'models/game-files.proto';
 import 'models/games.proto';
 import 'models/metadata.proto';
@@ -16,10 +17,12 @@ service LibraryService {
 
 service PlatformService {
   rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse);
+  rpc DeletePlatforms(DeletePlatformsRequest) returns (DeletePlatformsResponse);
 }
 
 service GameService {
   rpc GetGames(GetGamesRequest) returns (GetGamesResponse);
+  rpc DeleteGames(DeleteGamesRequest) returns (DeleteGamesResponse);
 }
 
 service MetadataService {
@@ -32,6 +35,22 @@ service MetadataService {
   rpc GetIgdbSearch(GetIgdbSearchRequest) returns (GetIgdbSearchResponse);
   rpc GetIgdbGameSearchResults(GetIgdbGameSearchResultsRequest) returns (GetIgdbGameSearchResultsResponse);
   rpc GetIgdbPlatformSearchResults(GetIgdbPlatformSearchResultsRequest) returns (GetIgdbPlatformSearchResultsResponse);
+}
+
+service EmulatorService {
+  rpc CreateEmulators(CreateEmulatorsRequest) returns (CreateEmulatorsResponse);
+  rpc GetEmulators(GetEmulatorsRequest) returns (GetEmulatorsResponse);
+  rpc UpdateEmulators(UpdateEmulatorsRequest) returns (UpdateEmulatorsResponse);
+  rpc DeleteEmulators(DeleteEmulatorsRequest) returns (DeleteEmulatorsResponse);
+
+  rpc CreateEmulatorProfiles(CreateEmulatorProfilesRequest) returns (CreateEmulatorProfilesResponse);
+  rpc GetEmulatorProfiles(GetEmulatorProfilesRequest) returns (GetEmulatorProfilesResponse);
+  rpc UpdateEmulatorProfiles(UpdateEmulatorProfilesRequest) returns (UpdateEmulatorProfilesResponse);
+  rpc DeleteEmulatorProfiles(DeleteEmulatorProfilesRequest) returns (DeleteEmulatorProfilesResponse);
+
+  rpc GetDefaultEmulatorProfiles(GetDefaultEmulatorProfilesRequest) returns (GetDefaultEmulatorProfilesResponse);
+  rpc UpdateDefaultEmulatorProfiles(UpdateDefaultEmulatorProfilesRequest) returns (UpdateDefaultEmulatorProfilesResponse);
+  rpc DeleteDefaultEmulatorProfiles(DeleteDefaultEmulatorProfilesRequest) returns (DeleteDefaultEmulatorProfilesResponse);
 }
 
 message UpdateLibraryRequest {}
@@ -154,3 +173,105 @@ message GetIgdbSearchResponse {
 message DeleteLibraryRequest {}
 
 message DeleteLibraryResponse {}
+
+message DeletePlatformsRequest {
+  repeated int32 ids = 1;
+}
+
+message DeletePlatformsResponse {}
+
+message DeleteGamesRequest {
+  repeated int32 ids = 1;
+}
+
+message DeleteGamesResponse {}
+
+message CreateEmulatorsRequest {
+  repeated NewEmulator emulators = 1;
+}
+
+message CreateEmulatorsResponse {
+  repeated Emulator emulators_created = 1;
+}
+
+message GetEmulatorsRequest {
+  repeated int32 ids = 1;
+  repeated int32 supported_platform_ids = 2;
+}
+
+message GetEmulatorsResponse {
+  repeated Emulator emulators = 1;
+}
+
+message UpdateEmulatorsRequest {
+  repeated UpdatedEmulator emulators = 1;
+}
+
+message UpdateEmulatorsResponse {
+  repeated Emulator emulators_updated = 1;
+}
+
+message DeleteEmulatorsRequest {
+  repeated int32 ids = 1;
+}
+
+message DeleteEmulatorsResponse {
+  repeated Emulator emulators_deleted = 1;
+}
+
+message CreateEmulatorProfilesRequest {
+  repeated NewEmulatorProfile profiles = 1;
+}
+
+message CreateEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles_created = 1;
+}
+
+message GetEmulatorProfilesRequest {
+  repeated int32 ids = 1;
+  repeated int32 emulator_ids = 2;
+}
+
+message GetEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles = 1;
+}
+
+message UpdateEmulatorProfilesRequest {
+  repeated UpdatedEmulatorProfile profiles = 1;
+}
+
+message UpdateEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles_updated = 1;
+}
+
+message DeleteEmulatorProfilesRequest {
+  repeated int32 ids = 1;
+}
+
+message DeleteEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles_deleted = 1;
+}
+
+message GetDefaultEmulatorProfilesRequest {
+  repeated int32 platform_ids = 1;
+}
+
+message GetDefaultEmulatorProfilesResponse {
+  repeated DefaultEmulatorProfile default_profiles = 1;
+}
+
+message UpdateDefaultEmulatorProfilesRequest {
+  repeated UpdatedDefaultEmulatorProfile default_profiles = 1;
+}
+
+message UpdateDefaultEmulatorProfilesResponse {
+  repeated DefaultEmulatorProfile default_profiles_updated = 1;
+}
+
+message DeleteDefaultEmulatorProfilesRequest {
+  repeated int32 platform_ids = 1;
+}
+
+message DeleteDefaultEmulatorProfilesResponse {
+  repeated DefaultEmulatorProfile default_profiles_deleted = 1;
+}

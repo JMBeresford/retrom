@@ -50,7 +50,9 @@ export default async function RootLayout({
                     maxSize={40}
                     className="bg-muted"
                   >
-                    <SideBar />
+                    <ScrollArea className="h-full max-h-full">
+                      <SideBar />
+                    </ScrollArea>
                   </ResizablePanel>
 
                   <ResizableHandle />

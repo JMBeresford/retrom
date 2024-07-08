@@ -1,7 +1,8 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::{
-    self, platform_service_server::PlatformService, GetPlatformsRequest, GetPlatformsResponse,
+    self, platform_service_server::PlatformService, DeletePlatformsRequest,
+    DeletePlatformsResponse, GetPlatformsRequest, GetPlatformsResponse,
 };
 use retrom_db::{schema, Pool};
 use std::sync::Arc;
@@ -70,6 +71,27 @@ impl PlatformService for PlatformServiceHandlers {
             platforms,
             metadata,
         };
+
+        Ok(Response::new(response))
+    }
+
+    async fn delete_platforms(
+        &self,
+        request: Request<DeletePlatformsRequest>,
+    ) -> Result<Response<DeletePlatformsResponse>, Status> {
+        let request = request.into_inner();
+
+        let mut conn = match self.db_pool.get().await {
+            Ok(conn) => conn,
+            Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
+        };
+
+        diesel::delete(schema::platforms::table.filter(schema::platforms::id.eq_any(&request.ids)))
+            .execute(&mut conn)
+            .await
+            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
+
+        let response = DeletePlatformsResponse {};
 
         Ok(Response::new(response))
     }

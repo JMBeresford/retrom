@@ -1,12 +1,20 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    default_emulator_profiles (platform_id) {
+        platform_id -> Int4,
+        emulator_profile_id -> Int4,
+    }
+}
+
+diesel::table! {
     emulator_profiles (id) {
         id -> Int4,
         emulator_id -> Int4,
         name -> Text,
+        executable_path -> Text,
         supported_extensions -> Array<Text>,
-        extra_args -> Nullable<Text>,
+        custom_args -> Array<Text>,
     }
 }
 
@@ -16,7 +24,6 @@ diesel::table! {
         supported_platforms -> Array<Int4>,
         name -> Text,
         rom_type -> Int4,
-        executable_path -> Text,
     }
 }
 
@@ -67,6 +74,8 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(default_emulator_profiles -> emulator_profiles (emulator_profile_id));
+diesel::joinable!(default_emulator_profiles -> platforms (platform_id));
 diesel::joinable!(emulator_profiles -> emulators (emulator_id));
 diesel::joinable!(game_files -> games (game_id));
 diesel::joinable!(game_metadata -> games (game_id));
@@ -74,6 +83,7 @@ diesel::joinable!(games -> platforms (platform_id));
 diesel::joinable!(platform_metadata -> platforms (platform_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    default_emulator_profiles,
     emulator_profiles,
     emulators,
     game_files,

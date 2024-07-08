@@ -1,19 +1,21 @@
 use std::sync::Arc;
 
+use emulators::EmulatorServiceHandlers;
 use games::GameServiceHandlers;
 use library::LibraryServiceHandlers;
 use metadata::MetadataServiceHandlers;
 use platforms::PlatformServiceHandlers;
 use retrom_codegen::retrom::{
-    game_service_server::GameServiceServer, library_service_server::LibraryServiceServer,
-    metadata_service_server::MetadataServiceServer, platform_service_server::PlatformServiceServer,
-    FILE_DESCRIPTOR_SET,
+    emulator_service_server::EmulatorServiceServer, game_service_server::GameServiceServer,
+    library_service_server::LibraryServiceServer, metadata_service_server::MetadataServiceServer,
+    platform_service_server::PlatformServiceServer, FILE_DESCRIPTOR_SET,
 };
 use retrom_db::Pool;
 use tonic::transport::{server::Routes, Server};
 
 use crate::providers::igdb::provider::IGDBProvider;
 
+pub mod emulators;
 pub mod games;
 pub mod library;
 pub mod metadata;
@@ -41,6 +43,9 @@ pub fn grpc_service(db_pool: Arc<Pool>) -> Routes {
     let platform_service =
         PlatformServiceServer::new(PlatformServiceHandlers::new(db_pool.clone()));
 
+    let emulator_service =
+        EmulatorServiceServer::new(EmulatorServiceHandlers::new(db_pool.clone()));
+
     Server::builder()
         .trace_fn(|_| tracing::info_span!("service"))
         .accept_http1(true)
@@ -49,5 +54,6 @@ pub fn grpc_service(db_pool: Arc<Pool>) -> Routes {
         .add_service(tonic_web::enable(game_service))
         .add_service(tonic_web::enable(platform_service))
         .add_service(tonic_web::enable(metadata_service))
+        .add_service(tonic_web::enable(emulator_service))
         .into_service()
 }

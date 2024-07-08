@@ -37,6 +37,11 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
+  }
+
+  .ring {
+    @apply ring-inset;
   }
   body {
     @apply bg-background text-foreground;

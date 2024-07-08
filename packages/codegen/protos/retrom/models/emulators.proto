@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package retrom;
 
+import "google/protobuf/struct.proto";
+
 enum RomType {
   Custom = 0;
   SingleFile = 1;
@@ -13,14 +15,12 @@ message Emulator {
   repeated int32 supported_platforms = 2;
   string name = 3;
   RomType rom_type = 4;
-  string executable_path = 5;
 }
 
 message NewEmulator {
   repeated int32 supported_platforms = 1;
   string name = 2;
   RomType rom_type = 3;
-  string executable_path = 4;
 }
 
 message UpdatedEmulator {
@@ -28,13 +28,45 @@ message UpdatedEmulator {
   repeated int32 supported_platforms = 2;
   optional string name = 3;
   optional RomType rom_type = 4;
-  optional string executable_path = 5;
 }
 
 message EmulatorProfile {
   int32 id = 1;
   int32 emulator_id = 2;
   string name = 3;
+  string executable_path = 4;
+  repeated string supported_extensions = 5;
+  repeated string custom_args = 6;
+}
+
+message NewEmulatorProfile {
+  int32 emulator_id = 1;
+  string name = 2;
+  string executable_path = 3;
   repeated string supported_extensions = 4;
-  optional string extra_args = 5;
+  repeated string custom_args = 5;
+}
+
+message UpdatedEmulatorProfile {
+  int32 id = 1;
+  optional int32 emulator_id = 2;
+  optional string name = 3;
+  optional string executable_path = 4;
+  repeated string supported_extensions = 5;
+  repeated string custom_args = 6;
+}
+
+message DefaultEmulatorProfile {
+  int32 platform_id = 1;
+  int32 emulator_profile_id = 2;
+}
+
+message NewDefaultEmulatorProfile {
+  int32 platform_id = 1;
+  int32 emulator_profile_id = 2;
+}
+
+message UpdatedDefaultEmulatorProfile {
+  int32 platform_id = 1;
+  int32 emulator_profile_id = 2;
 }

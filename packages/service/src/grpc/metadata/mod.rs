@@ -5,7 +5,7 @@ use crate::providers::igdb::{
 };
 use deunicode::deunicode;
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use prost::Message;
 use retrom_codegen::{
     igdb,
@@ -156,29 +156,34 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        let mut metadata_updated: Vec<retrom::PlatformMetadata> = vec![];
+        conn.transaction(|mut conn| {
+            async move {
+                let mut metadata_updated: Vec<retrom::PlatformMetadata> = vec![];
 
-        for metadata_row in metadata_to_update {
-            let updated_row = match diesel::insert_into(retrom_db::schema::platform_metadata::table)
-                .values(&metadata_row)
-                .on_conflict(retrom_db::schema::platform_metadata::platform_id)
-                .do_update()
-                .set(&metadata_row)
-                .get_result::<retrom::PlatformMetadata>(&mut conn)
-                .await
-            {
-                Ok(row) => row,
-                Err(why) => {
-                    return Err(Status::internal(why.to_string()));
+                for metadata_row in metadata_to_update {
+                    let updated_row =
+                        diesel::insert_into(retrom_db::schema::platform_metadata::table)
+                            .values(&metadata_row)
+                            .on_conflict(retrom_db::schema::platform_metadata::platform_id)
+                            .do_update()
+                            .set(&metadata_row)
+                            .get_result::<retrom::PlatformMetadata>(&mut conn)
+                            .await?;
+
+                    metadata_updated.push(updated_row);
                 }
-            };
 
-            metadata_updated.push(updated_row);
-        }
-
-        Ok(Response::new(UpdatePlatformMetadataResponse {
-            metadata_updated,
-        }))
+                diesel::result::QueryResult::Ok(Response::new(UpdatePlatformMetadataResponse {
+                    metadata_updated,
+                }))
+            }
+            .scope_boxed()
+        })
+        .await
+        .map_err(|why| {
+            error!("Failed to update platform metadata: {}", why);
+            Status::internal(why.to_string())
+        })
     }
 
     #[tracing::instrument(level = Level::DEBUG, skip_all)]
@@ -218,7 +223,6 @@ impl MetadataService for MetadataServiceHandlers {
         let fields = query.fields.as_ref();
 
         if let Some(igdb_id) = fields.and_then(|fields| fields.id) {
-            info!("IGDB ID: {igdb_id}");
             where_clauses.push(format!("id = {igdb_id}"));
         }
 

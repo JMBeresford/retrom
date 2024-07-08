@@ -24,6 +24,7 @@ import { useGameDetail } from "@/app/game/game-context";
 import { useMutation } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client";
 import { GameMetadata } from "@/generated/retrom/models";
+import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 
 type FormFieldRenderer = ({
   form,
@@ -51,23 +52,9 @@ const formSchema = z.object({
 });
 
 export function ManualTab() {
-  const retromClient = useRetromClient();
   const { game, gameMetadata } = useGameDetail();
-  const { toast } = useToast();
 
-  const { mutate, status } = useMutation({
-    onError: (error) => {
-      console.error(error);
-      toast({
-        title: "Error updating metadata",
-        description: "Check the console for details",
-        variant: "destructive",
-      });
-    },
-    mutationFn: async (req: UpdateGameMetadataRequest) => {
-      return await retromClient.metadataClient.updateGameMetadata(req);
-    },
-  });
+  const { mutate, status } = useUpdateGameMetadata();
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),

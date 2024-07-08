@@ -2,8 +2,9 @@ import { cn } from "@/lib/utils";
 import { Menubar as MenubarImpl } from "@/components/ui/menubar";
 import { FileMenu } from "./file-menu";
 import { LibraryMenu } from "./library-menu";
-import { MetadataMenu } from "./metadata-menu";
+import { PlatformsMenu } from "./platforms-menu";
 import { Suspense } from "react";
+import { EmulatorsMenu } from "./emulators-menu";
 
 export function Menubar() {
   return (
@@ -16,8 +17,10 @@ export function Menubar() {
         <FileMenu />
         <LibraryMenu />
         <Suspense fallback={null}>
-          <MetadataMenu />
+          <PlatformsMenu />
         </Suspense>
+
+        <EmulatorsMenu />
       </MenubarImpl>
     </header>
   );

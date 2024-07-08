@@ -2,6 +2,12 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
+export type InferSchema<T extends object> = z.ZodObject<{
+  [K in keyof T]: T[K] extends object & { length?: never }
+    ? InferSchema<T[K]>
+    : z.ZodType<T[K]>;
+}>;
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { MenubarItem } from "@/components/ui/menubar";
-import { useToast } from "../../ui/use-toast";
 import {
   Dialog,
   DialogClose,
@@ -14,38 +13,14 @@ import {
   DialogTrigger,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
-import { UpdateLibraryResponse } from "@/generated/retrom/services";
 import { LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRetromClient } from "@/providers/retrom-client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useUpdateLibrary } from "@/mutations/useUpdateLibrary";
 
 export function UpdateLibraryMenuItem() {
-  const { toast } = useToast();
-  const retromClient = useRetromClient();
-  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { mutate, isPending } = useMutation({
-    onError: (err) => {
-      toast({
-        title: "Error updating library",
-        variant: "destructive",
-        description: err.message,
-      });
-    },
-    onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ["library"] });
-      queryClient.invalidateQueries({ queryKey: ["games"] });
-      queryClient.invalidateQueries({ queryKey: ["platforms"] });
-
-      toast({
-        title: "Library updated!",
-        description: updateLibrarySuccessMessage(res),
-      });
-    },
-    mutationFn: async () => await retromClient.libraryClient.updateLibrary(),
-  });
+  const { mutate, isPending } = useUpdateLibrary();
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -59,8 +34,8 @@ export function UpdateLibraryMenuItem() {
         <DialogHeader>
           <DialogTitle>Update Library</DialogTitle>
           <DialogDescription>
-            Starts the update process to populate missing data for platforms,
-            games and game files.
+            Starts the update process to populate platforms and games that have
+            been added to the filesystem since the last update.
           </DialogDescription>
         </DialogHeader>
 
@@ -85,8 +60,4 @@ export function UpdateLibraryMenuItem() {
       </DialogContent>
     </Dialog>
   );
-}
-
-function updateLibrarySuccessMessage(response: UpdateLibraryResponse) {
-  return `Updated: ${response.platformsPopulated.length} platforms, ${response.gamesPopulated.length} games and ${response.gameFilesPopulated.length} game files`;
 }

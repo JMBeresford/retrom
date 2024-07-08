@@ -24,16 +24,17 @@ import { useState } from "react";
 import { useGameDetail } from "./game-context";
 import { IS_DESKTOP, REST_HOST } from "@/lib/env";
 import { useMutation } from "@tanstack/react-query";
-import { InstallGameButton } from "@/components/install-game-button";
+import { InstallGameButton } from "@/app/game/install-game-button";
 import { useUninstallGame } from "@/mutations/useUninstallGame";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { InstallationStatus } from "@/generated/retrom/client-utils";
+import { PlayGameButton } from "./play-game-button";
 
 type Modal = (typeof Modal)[number];
 const Modal = ["edit", "delete", "uninstall"] as const;
 
 export function Actions() {
-  const { game, gameFiles } = useGameDetail();
+  const { game } = useGameDetail();
   const [activeModal, setActiveModal] = useState<Modal | null>(null);
   const { data: installationState } = useInstallationQuery(game);
 
@@ -42,10 +43,16 @@ export function Actions() {
       <div className="flex gap-2">
         <div className="w-full *:w-full">
           {IS_DESKTOP ? (
-            <InstallGameButton game={game} files={gameFiles} />
+            installationState === InstallationStatus.INSTALLED ? (
+              <PlayGameButton />
+            ) : (
+              <InstallGameButton />
+            )
           ) : (
             <form action={`${REST_HOST}/game/${game.id}`} className="w-full">
-              <Button type="submit">Download</Button>
+              <Button type="submit" className="w-full">
+                Download
+              </Button>
             </form>
           )}
         </div>
@@ -84,7 +91,9 @@ export function Actions() {
         </DropdownMenu>
       </div>
 
-      {activeModal === "edit" && <UpdateMetadataDialog />}
+      {activeModal === "edit" && (
+        <UpdateMetadataDialog className="min-w-[35vw]" />
+      )}
       {activeModal === "uninstall" && <UninstallGameModal />}
       {activeModal === "delete" && <DeleteGameModal />}
     </Dialog>

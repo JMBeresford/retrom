@@ -1,0 +1,42 @@
+import { useToast } from "@/components/ui/use-toast";
+import { UpdateLibraryMetadataResponse } from "@/generated/retrom/services";
+import { useRetromClient } from "@/providers/retrom-client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+export function useUpdateLibraryMetadata() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const retromClient = useRetromClient();
+
+  return useMutation({
+    onError: (err) => {
+      toast({
+        title: "Error updating library metadata",
+        variant: "destructive",
+        description: err.message,
+      });
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          ["game-metadata", "platform-metadata"].some((key) =>
+            query.queryKey.includes(key),
+          ),
+      });
+
+      toast({
+        title: "Library metadata updated!",
+        description: updateMetadataSuccessMessage(res),
+      });
+    },
+    mutationFn: async () =>
+      await retromClient.libraryClient.updateLibraryMetadata({}),
+  });
+}
+
+function updateMetadataSuccessMessage(response: UpdateLibraryMetadataResponse) {
+  const gameMetadata = response.gameMetadataPopulated.length;
+  const platformMetadata = response.platformMetadataPopulated.length;
+
+  return `Updated: ${gameMetadata} game metadata entries, ${platformMetadata} platform metadata entries`;
+}

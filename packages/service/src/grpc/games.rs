@@ -1,7 +1,8 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::{
-    self, game_service_server::GameService, GetGamesRequest, GetGamesResponse,
+    self, game_service_server::GameService, DeleteGamesRequest, DeleteGamesResponse,
+    GetGamesRequest, GetGamesResponse,
 };
 use retrom_db::{schema, Pool};
 use std::sync::Arc;
@@ -89,6 +90,27 @@ impl GameService for GameServiceHandlers {
             metadata: metadata_data,
             game_files: game_files_data,
         };
+
+        Ok(Response::new(response))
+    }
+
+    async fn delete_games(
+        &self,
+        request: Request<DeleteGamesRequest>,
+    ) -> Result<Response<DeleteGamesResponse>, Status> {
+        let request = request.into_inner();
+
+        let mut conn = match self.db_pool.get().await {
+            Ok(conn) => conn,
+            Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
+        };
+
+        diesel::delete(schema::games::table.filter(schema::games::id.eq_any(&request.ids)))
+            .execute(&mut conn)
+            .await
+            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
+
+        let response = DeleteGamesResponse {};
 
         Ok(Response::new(response))
     }

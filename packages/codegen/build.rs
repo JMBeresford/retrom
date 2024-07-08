@@ -2,16 +2,13 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 
 // Derives that are used for structs representing existing rows in db
-const DIESEL_ROW_DERIVES: [&str; 3] = [
-    "Queryable",
-    "Selectable",
-    "Identifiable",
-    // "Insertable",
-    // "AsChangeset",
-];
+const DIESEL_ROW_DERIVES: [&str; 4] = ["Queryable", "Selectable", "Identifiable", "Insertable"];
 
-// Derives that are used for structs representing changesets, or to-be-inserted rows
-const DIESEL_NON_ROW_DERIVES: [&str; 2] = ["Insertable", "AsChangeset"];
+// Derives that are used for structs representing new rows to be inserted into db
+const DIESEL_INSERTABLE_DERIVES: [&str; 1] = ["Insertable"];
+
+// Derives that are used for structs representing changesets, or to-be-updated rows
+const DIESEL_UPDATE_DERIVES: [&str; 2] = ["AsChangeset", "Insertable"];
 
 const OTHER_DERIVES: [&str; 3] = ["derive_builder::Builder", "Hash", "Eq"];
 
@@ -29,7 +26,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect::<Vec<String>>()
         .join(",");
 
-    let diesel_non_row_derivations = DIESEL_NON_ROW_DERIVES
+    let diesel_insertable_derivations = DIESEL_INSERTABLE_DERIVES
+        .iter()
+        .map(|d| format!("diesel::{d}"))
+        .collect::<Vec<String>>()
+        .join(",");
+
+    let diesel_update_derivations = DIESEL_UPDATE_DERIVES
         .iter()
         .map(|d| format!("diesel::{d}"))
         .collect::<Vec<String>>()
@@ -59,14 +62,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .type_attribute(
             "retrom.NewPlatform",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("platforms", None)
             ),
         )
         .type_attribute(
             "retrom.UpdatedPlatform",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("platforms", None)
             ),
         )
@@ -80,14 +83,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .type_attribute(
             "retrom.NewGame",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("games", None)
             ),
         )
         .type_attribute(
             "retrom.UpdatedGame",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("games", None)
             ),
         )
@@ -101,14 +104,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .type_attribute(
             "retrom.NewGameFile",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("game_files", None)
             ),
         )
         .type_attribute(
             "retrom.UpdatedGameFile",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("game_files", None)
             ),
         )
@@ -122,14 +125,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .type_attribute(
             "retrom.NewGameMetadata",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("game_metadata", None)
             ),
         )
         .type_attribute(
             "retrom.UpdatedGameMetadata",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("game_metadata", None)
             ),
         )
@@ -143,14 +146,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .type_attribute(
             "retrom.NewPlatformMetadata",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("platform_metadata", None)
             ),
         )
         .type_attribute(
             "retrom.UpdatedPlatformMetadata",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("platform_metadata", None)
             ),
         )
@@ -164,14 +167,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .type_attribute(
             "retrom.NewEmulator",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("emulators", None)
             ),
         )
         .type_attribute(
             "retrom.UpdatedEmulator",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("emulators", None)
             ),
         )
@@ -185,15 +188,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .type_attribute(
             "retrom.NewEmulatorProfile",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("emulator_profiles", None)
             ),
         )
         .type_attribute(
             "retrom.UpdatedEmulatorProfile",
             format!(
-                "#[derive({diesel_non_row_derivations},{other_derivations})]\n{}",
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("emulator_profiles", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.DefaultEmulatorProfile",
+            format!(
+                "#[derive({diesel_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("default_emulator_profiles", "platform_id".into())
+            ),
+        )
+        .type_attribute(
+            "retrom.NewDefaultEmulatorProfile",
+            format!(
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("default_emulator_profiles", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.UpdatedDefaultEmulatorProfile",
+            format!(
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("default_emulator_profiles", None)
             ),
         )
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))

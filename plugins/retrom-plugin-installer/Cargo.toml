@@ -1,0 +1,29 @@
+[package]
+name = "retrom-plugin-installer"
+version = "0.0.1"
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = ""
+rust-version = "1.70"
+exclude = ["./examples", "./webview-dist", "./webview-src", "**/node_modules"]
+links = "tauri-plugin-installer"
+
+[dependencies]
+tauri = { workspace = true }
+serde = "1.0"
+thiserror = "1.0"
+retrom-codegen = { workspace = true }
+retrom-db = { workspace = true }
+stream-unzip = "0.2.1"
+futures = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+reqwest = { workspace = true }
+tracing = { workspace = true }
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0-beta.17", features = ["build"] }

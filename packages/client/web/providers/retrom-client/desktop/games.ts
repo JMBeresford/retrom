@@ -1,6 +1,7 @@
-import { createChannel, createClient } from "nice-grpc-web";
-import { RetromGameClient } from "../game-client";
+import { CallOptions, createChannel, createClient } from "nice-grpc-web";
 import {
+  DeleteGamesRequest,
+  DeleteGamesResponse,
   GameServiceClient,
   GameServiceDefinition,
   GetGamesRequest,
@@ -8,7 +9,7 @@ import {
 } from "@/generated/retrom/services";
 import { GRPC_HOST } from "@/lib/env";
 
-export class GameClient implements RetromGameClient {
+export class GameClient implements GameServiceClient {
   private client: GameServiceClient = createClient(
     GameServiceDefinition,
     createChannel(GRPC_HOST),
@@ -20,6 +21,15 @@ export class GameClient implements RetromGameClient {
     } catch (error) {
       console.error(error);
       return GetGamesResponse.create();
+    }
+  };
+
+  deleteGames = async (request: Partial<DeleteGamesRequest>) => {
+    try {
+      return await this.client.deleteGames(request);
+    } catch (error) {
+      console.error(error);
+      return DeleteGamesResponse.create();
     }
   };
 }
