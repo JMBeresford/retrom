@@ -57,7 +57,7 @@ jobs:
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: ${{ env.REGISTRY }}/retrom-${{ matrix.image }}
+          subject-name: ${{ env.REGISTRY }}/JMBeresford/retrom-${{ matrix.image }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
       
