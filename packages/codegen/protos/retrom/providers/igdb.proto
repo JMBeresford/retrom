@@ -22,6 +22,11 @@ message IgdbFilters {
     PREFIX_MATCH = 6;
     SUFFIX_MATCH = 7;
     INFIX_MATCH = 8;
+    ANY = 9;
+    ALL = 10;
+    NONE = 11;
+    NOT_ALL = 12;
+    EXACT = 13;
   }
 
   message FilterValue {

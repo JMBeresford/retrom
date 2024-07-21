@@ -4,6 +4,8 @@ diesel::table! {
     default_emulator_profiles (platform_id) {
         platform_id -> Int4,
         emulator_profile_id -> Int4,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -15,6 +17,8 @@ diesel::table! {
         executable_path -> Text,
         supported_extensions -> Array<Text>,
         custom_args -> Array<Text>,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -24,6 +28,8 @@ diesel::table! {
         supported_platforms -> Array<Int4>,
         name -> Text,
         rom_type -> Int4,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -33,6 +39,27 @@ diesel::table! {
         byte_size -> Int4,
         path -> Text,
         game_id -> Int4,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
+    game_genre_maps (game_id, genre_id) {
+        game_id -> Int4,
+        genre_id -> Int4,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
+    game_genres (id) {
+        id -> Int4,
+        slug -> Text,
+        name -> Text,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -45,6 +72,12 @@ diesel::table! {
         background_url -> Nullable<Text>,
         icon_url -> Nullable<Text>,
         igdb_id -> Nullable<Int8>,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
+        links -> Array<Text>,
+        video_urls -> Array<Text>,
+        screenshot_urls -> Array<Text>,
+        artwork_urls -> Array<Text>,
     }
 }
 
@@ -53,6 +86,8 @@ diesel::table! {
         id -> Int4,
         path -> Text,
         platform_id -> Nullable<Int4>,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -64,6 +99,8 @@ diesel::table! {
         background_url -> Nullable<Text>,
         logo_url -> Nullable<Text>,
         igdb_id -> Nullable<Int8>,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -71,6 +108,17 @@ diesel::table! {
     platforms (id) {
         id -> Int4,
         path -> Text,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
+    similar_game_maps (game_id, similar_game_id) {
+        game_id -> Int4,
+        similar_game_id -> Int4,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -78,6 +126,8 @@ diesel::joinable!(default_emulator_profiles -> emulator_profiles (emulator_profi
 diesel::joinable!(default_emulator_profiles -> platforms (platform_id));
 diesel::joinable!(emulator_profiles -> emulators (emulator_id));
 diesel::joinable!(game_files -> games (game_id));
+diesel::joinable!(game_genre_maps -> game_genres (genre_id));
+diesel::joinable!(game_genre_maps -> games (game_id));
 diesel::joinable!(game_metadata -> games (game_id));
 diesel::joinable!(games -> platforms (platform_id));
 diesel::joinable!(platform_metadata -> platforms (platform_id));
@@ -87,8 +137,11 @@ diesel::allow_tables_to_appear_in_same_query!(
     emulator_profiles,
     emulators,
     game_files,
+    game_genre_maps,
+    game_genres,
     game_metadata,
     games,
     platform_metadata,
     platforms,
+    similar_game_maps,
 );

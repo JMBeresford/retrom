@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UpdateMetadataDialog } from "@/components/update-metadata-dialog";
-import { cn, getFileName } from "@/lib/utils";
+import { cn, getFileStub } from "@/lib/utils";
 import { EllipsisVertical, LoaderIcon } from "lucide-react";
 import { useState } from "react";
 import { useGameDetail } from "./game-context";
@@ -40,8 +40,8 @@ export function Actions() {
 
   return (
     <Dialog>
-      <div className="flex gap-2">
-        <div className="w-full *:w-full">
+      <div className="flex">
+        <div className="w-full *:w-full rounded-bl-lg overflow-hidden border-r-2">
           {IS_DESKTOP ? (
             installationState === InstallationStatus.INSTALLED ? (
               <PlayGameButton />
@@ -59,7 +59,7 @@ export function Actions() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="icon">
+            <Button size="icon" className="rounded-br-lg overflow-hidden">
               <EllipsisVertical />
             </Button>
           </DropdownMenuTrigger>
@@ -83,7 +83,7 @@ export function Actions() {
             )}
 
             <DropdownMenuItem onSelect={() => setActiveModal("delete")} asChild>
-              <DialogTrigger className="w-full cursor-pointer text-red-500">
+              <DialogTrigger className="w-full cursor-pointer text-destructive-text">
                 Delete
               </DialogTrigger>
             </DropdownMenuItem>
@@ -102,7 +102,7 @@ export function Actions() {
 
 function UninstallGameModal() {
   const { game, gameMetadata: metadata } = useGameDetail();
-  const name = metadata?.name || getFileName(game.path);
+  const name = metadata?.name || getFileStub(game.path);
   const { data: installationState } = useInstallationQuery(game);
 
   const { mutate: uninstall, isPending } = useUninstallGame(game);
@@ -145,7 +145,7 @@ function UninstallGameModal() {
 
 function DeleteGameModal() {
   const { game, gameMetadata: metadata } = useGameDetail();
-  const name = metadata?.name || getFileName(game.path);
+  const name = metadata?.name || getFileStub(game.path);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {

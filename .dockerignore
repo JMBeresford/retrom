@@ -1,0 +1,10 @@
+**/*/.env
+**/*/.env.*
+/**/*/.git
+/**/*/.gitignore
+/**/*/.dockerignore
+/**/*/Dockerfile
+
+**/*/node_modules
+**/*/.git
+**/*/target

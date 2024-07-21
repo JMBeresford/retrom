@@ -34,12 +34,13 @@ import {
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { redirect } from "next/navigation";
-import { Platform, PlatformMetadata } from "@/generated/retrom/models";
+import { Platform } from "@/generated/retrom/models/platforms";
 import {
   GetIgdbSearchRequest_IgdbSearchType,
   UpdatePlatformMetadataRequest,
 } from "@/generated/retrom/services";
 import { usePlatforms } from "@/queries/usePlatforms";
+import { PlatformMetadata } from "@/generated/retrom/models/metadata";
 
 export type PlatformAndMetadata = Platform & { metadata: PlatformMetadata };
 

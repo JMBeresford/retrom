@@ -20,6 +20,7 @@ import {
 import { GameFile } from "./models/game-files";
 import { Game } from "./models/games";
 import {
+  GameGenre,
   GameMetadata,
   NewGameMetadata,
   NewPlatformMetadata,
@@ -86,6 +87,26 @@ export interface GetGameMetadataRequest {
 
 export interface GetGameMetadataResponse {
   metadata: GameMetadata[];
+  similarGames: Map<number, GetGameMetadataResponse_SimilarGames>;
+  genres: Map<number, GetGameMetadataResponse_GameGenres>;
+}
+
+export interface GetGameMetadataResponse_GameGenres {
+  value: GameGenre[];
+}
+
+export interface GetGameMetadataResponse_SimilarGames {
+  value: Game[];
+}
+
+export interface GetGameMetadataResponse_SimilarGamesEntry {
+  key: number;
+  value?: GetGameMetadataResponse_SimilarGames | undefined;
+}
+
+export interface GetGameMetadataResponse_GenresEntry {
+  key: number;
+  value?: GetGameMetadataResponse_GameGenres | undefined;
 }
 
 export interface GetPlatformMetadataRequest {
@@ -827,7 +848,7 @@ export const GetGameMetadataRequest = {
 };
 
 function createBaseGetGameMetadataResponse(): GetGameMetadataResponse {
-  return { metadata: [] };
+  return { metadata: [], similarGames: new Map(), genres: new Map() };
 }
 
 export const GetGameMetadataResponse = {
@@ -835,6 +856,12 @@ export const GetGameMetadataResponse = {
     for (const v of message.metadata) {
       GameMetadata.encode(v!, writer.uint32(10).fork()).ldelim();
     }
+    message.similarGames.forEach((value, key) => {
+      GetGameMetadataResponse_SimilarGamesEntry.encode({ key: key as any, value }, writer.uint32(18).fork()).ldelim();
+    });
+    message.genres.forEach((value, key) => {
+      GetGameMetadataResponse_GenresEntry.encode({ key: key as any, value }, writer.uint32(26).fork()).ldelim();
+    });
     return writer;
   },
 
@@ -852,6 +879,26 @@ export const GetGameMetadataResponse = {
 
           message.metadata.push(GameMetadata.decode(reader, reader.uint32()));
           continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          const entry2 = GetGameMetadataResponse_SimilarGamesEntry.decode(reader, reader.uint32());
+          if (entry2.value !== undefined) {
+            message.similarGames.set(entry2.key, entry2.value);
+          }
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          const entry3 = GetGameMetadataResponse_GenresEntry.decode(reader, reader.uint32());
+          if (entry3.value !== undefined) {
+            message.genres.set(entry3.key, entry3.value);
+          }
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -867,6 +914,232 @@ export const GetGameMetadataResponse = {
   fromPartial(object: DeepPartial<GetGameMetadataResponse>): GetGameMetadataResponse {
     const message = createBaseGetGameMetadataResponse();
     message.metadata = object.metadata?.map((e) => GameMetadata.fromPartial(e)) || [];
+    message.similarGames = (() => {
+      const m = new Map();
+      (object.similarGames as Map<number, GetGameMetadataResponse_SimilarGames> ?? new Map()).forEach((value, key) => {
+        if (value !== undefined) {
+          m.set(key, GetGameMetadataResponse_SimilarGames.fromPartial(value));
+        }
+      });
+      return m;
+    })();
+    message.genres = (() => {
+      const m = new Map();
+      (object.genres as Map<number, GetGameMetadataResponse_GameGenres> ?? new Map()).forEach((value, key) => {
+        if (value !== undefined) {
+          m.set(key, GetGameMetadataResponse_GameGenres.fromPartial(value));
+        }
+      });
+      return m;
+    })();
+    return message;
+  },
+};
+
+function createBaseGetGameMetadataResponse_GameGenres(): GetGameMetadataResponse_GameGenres {
+  return { value: [] };
+}
+
+export const GetGameMetadataResponse_GameGenres = {
+  encode(message: GetGameMetadataResponse_GameGenres, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.value) {
+      GameGenre.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GetGameMetadataResponse_GameGenres {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetGameMetadataResponse_GameGenres();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.value.push(GameGenre.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<GetGameMetadataResponse_GameGenres>): GetGameMetadataResponse_GameGenres {
+    return GetGameMetadataResponse_GameGenres.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetGameMetadataResponse_GameGenres>): GetGameMetadataResponse_GameGenres {
+    const message = createBaseGetGameMetadataResponse_GameGenres();
+    message.value = object.value?.map((e) => GameGenre.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseGetGameMetadataResponse_SimilarGames(): GetGameMetadataResponse_SimilarGames {
+  return { value: [] };
+}
+
+export const GetGameMetadataResponse_SimilarGames = {
+  encode(message: GetGameMetadataResponse_SimilarGames, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.value) {
+      Game.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GetGameMetadataResponse_SimilarGames {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetGameMetadataResponse_SimilarGames();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.value.push(Game.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<GetGameMetadataResponse_SimilarGames>): GetGameMetadataResponse_SimilarGames {
+    return GetGameMetadataResponse_SimilarGames.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetGameMetadataResponse_SimilarGames>): GetGameMetadataResponse_SimilarGames {
+    const message = createBaseGetGameMetadataResponse_SimilarGames();
+    message.value = object.value?.map((e) => Game.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseGetGameMetadataResponse_SimilarGamesEntry(): GetGameMetadataResponse_SimilarGamesEntry {
+  return { key: 0, value: undefined };
+}
+
+export const GetGameMetadataResponse_SimilarGamesEntry = {
+  encode(message: GetGameMetadataResponse_SimilarGamesEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.key !== 0) {
+      writer.uint32(8).int32(message.key);
+    }
+    if (message.value !== undefined) {
+      GetGameMetadataResponse_SimilarGames.encode(message.value, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GetGameMetadataResponse_SimilarGamesEntry {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetGameMetadataResponse_SimilarGamesEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.key = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = GetGameMetadataResponse_SimilarGames.decode(reader, reader.uint32());
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<GetGameMetadataResponse_SimilarGamesEntry>): GetGameMetadataResponse_SimilarGamesEntry {
+    return GetGameMetadataResponse_SimilarGamesEntry.fromPartial(base ?? {});
+  },
+  fromPartial(
+    object: DeepPartial<GetGameMetadataResponse_SimilarGamesEntry>,
+  ): GetGameMetadataResponse_SimilarGamesEntry {
+    const message = createBaseGetGameMetadataResponse_SimilarGamesEntry();
+    message.key = object.key ?? 0;
+    message.value = (object.value !== undefined && object.value !== null)
+      ? GetGameMetadataResponse_SimilarGames.fromPartial(object.value)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseGetGameMetadataResponse_GenresEntry(): GetGameMetadataResponse_GenresEntry {
+  return { key: 0, value: undefined };
+}
+
+export const GetGameMetadataResponse_GenresEntry = {
+  encode(message: GetGameMetadataResponse_GenresEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.key !== 0) {
+      writer.uint32(8).int32(message.key);
+    }
+    if (message.value !== undefined) {
+      GetGameMetadataResponse_GameGenres.encode(message.value, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GetGameMetadataResponse_GenresEntry {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetGameMetadataResponse_GenresEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.key = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = GetGameMetadataResponse_GameGenres.decode(reader, reader.uint32());
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<GetGameMetadataResponse_GenresEntry>): GetGameMetadataResponse_GenresEntry {
+    return GetGameMetadataResponse_GenresEntry.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetGameMetadataResponse_GenresEntry>): GetGameMetadataResponse_GenresEntry {
+    const message = createBaseGetGameMetadataResponse_GenresEntry();
+    message.key = object.key ?? 0;
+    message.value = (object.value !== undefined && object.value !== null)
+      ? GetGameMetadataResponse_GameGenres.fromPartial(object.value)
+      : undefined;
     return message;
   },
 };

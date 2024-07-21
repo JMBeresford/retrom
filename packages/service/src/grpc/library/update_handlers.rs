@@ -77,6 +77,8 @@ async fn do_update(
         .iter()
         .map(|path| NewPlatform {
             path: path.to_string(),
+            created_at: None,
+            updated_at: None,
         })
         .collect();
 
@@ -128,6 +130,8 @@ async fn do_update(
             .map(|path| NewGame {
                 path: path.to_string(),
                 platform_id: Some(platform.id),
+                created_at: None,
+                updated_at: None,
             })
             .collect();
 
@@ -190,6 +194,8 @@ async fn do_update(
                     path: path.to_string(),
                     game_id: Some(game.id.clone()),
                     byte_size,
+                    created_at: None,
+                    updated_at: None,
                 }
             })
             .collect();

@@ -29,7 +29,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let addr: SocketAddr = "0.0.0.0:5001".parse().unwrap();
+    dotenvy::dotenv().ok();
+
+    let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5001".to_string());
+    let addr: SocketAddr = format!("0.0.0.0:{port}").parse().unwrap();
 
     let db_url = get_db_url();
 
@@ -136,9 +139,10 @@ fn is_grpc_request(req: &hyper::Request<hyper::Body>) -> bool {
             .headers()
             .get(ACCESS_CONTROL_REQUEST_HEADERS)
             .map(|headers| {
-                headers.to_str().ok().and_then(|headers| {
-                    Some(headers.contains("content-type") && headers.contains("grpc"))
-                })
+                headers
+                    .to_str()
+                    .ok()
+                    .map(|headers| headers.contains("content-type") && headers.contains("grpc"))
             })
             .is_some();
 

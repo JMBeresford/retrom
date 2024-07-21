@@ -47,7 +47,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
 
     tonic_build::configure()
-        .type_attribute(".retrom", "#[derive(serde::Serialize, serde::Deserialize)]")
+        .type_attribute(".", "#[derive(serde::Serialize, serde::Deserialize)]")
+        .extern_path(".google.protobuf.Timestamp", "crate::timestamp::Timestamp")
         .message_attribute(
             ".retrom",
             "#[serde(rename_all(serialize = \"camelCase\", deserialize = \"camelCase\"))]",
@@ -218,6 +219,69 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             format!(
                 "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("default_emulator_profiles", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.GameGenre",
+            format!(
+                "#[derive({diesel_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("game_genres", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.NewGameGenre",
+            format!(
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("game_genres", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.UpdatedGameGenre",
+            format!(
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("game_genres", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.GameGenreMap",
+            format!(
+                "#[derive({diesel_row_derivations},diesel::Associations,{other_derivations})]\n{}\n#[diesel(belongs_to(Game))]\n#[diesel(belongs_to(GameGenre, foreign_key = genre_id))]",
+                get_diesel_macro("game_genre_maps", "game_id, genre_id".into())
+            ),
+        )
+        .type_attribute(
+            "retrom.NewGameGenreMap",
+            format!(
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("game_genre_maps", "game_id, genre_id".into())
+            ),
+        )
+        .type_attribute(
+            "retrom.UpdatedGameGenreMap",
+            format!(
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("game_genre_maps", "game_id, genre_id".into())
+            ),
+        )
+        .type_attribute(
+            "retrom.SimilarGameMap",
+            format!(
+                "#[derive({diesel_row_derivations},diesel::Associations,{other_derivations})]\n{}\n#[diesel(belongs_to(Game, foreign_key = game_id))]",
+                get_diesel_macro("similar_game_maps", "game_id, similar_game_id".into())
+            ),
+        )
+        .type_attribute(
+            "retrom.NewSimilarGameMap",
+            format!(
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("similar_game_maps", "game_id, similar_game_id".into())
+            ),
+        )
+        .type_attribute(
+            "retrom.UpdatedSimilarGameMap",
+            format!(
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("similar_game_maps", "game_id, similar_game_id".into())
             ),
         )
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))

@@ -6,25 +6,32 @@
 
 /* eslint-disable */
 import _m0 from "protobufjs/minimal";
+import { Timestamp } from "../google/protobuf/timestamp";
 
 export const protobufPackage = "retrom";
 
 export interface Platform {
   id: number;
   path: string;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface NewPlatform {
   path: string;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface UpdatedPlatform {
   id: number;
   path?: string | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 function createBasePlatform(): Platform {
-  return { id: 0, path: "" };
+  return { id: 0, path: "", createdAt: undefined, updatedAt: undefined };
 }
 
 export const Platform = {
@@ -33,7 +40,13 @@ export const Platform = {
       writer.uint32(8).int32(message.id);
     }
     if (message.path !== "") {
-      writer.uint32(26).string(message.path);
+      writer.uint32(18).string(message.path);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -52,12 +65,26 @@ export const Platform = {
 
           message.id = reader.int32();
           continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.path = reader.string();
+          continue;
         case 3:
           if (tag !== 26) {
             break;
           }
 
-          message.path = reader.string();
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -75,18 +102,26 @@ export const Platform = {
     const message = createBasePlatform();
     message.id = object.id ?? 0;
     message.path = object.path ?? "";
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
 
 function createBaseNewPlatform(): NewPlatform {
-  return { path: "" };
+  return { path: "", createdAt: undefined, updatedAt: undefined };
 }
 
 export const NewPlatform = {
   encode(message: NewPlatform, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.path !== "") {
       writer.uint32(10).string(message.path);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(18).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(26).fork()).ldelim();
     }
     return writer;
   },
@@ -105,6 +140,20 @@ export const NewPlatform = {
 
           message.path = reader.string();
           continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -120,12 +169,14 @@ export const NewPlatform = {
   fromPartial(object: DeepPartial<NewPlatform>): NewPlatform {
     const message = createBaseNewPlatform();
     message.path = object.path ?? "";
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
 
 function createBaseUpdatedPlatform(): UpdatedPlatform {
-  return { id: 0, path: undefined };
+  return { id: 0, path: undefined, createdAt: undefined, updatedAt: undefined };
 }
 
 export const UpdatedPlatform = {
@@ -135,6 +186,12 @@ export const UpdatedPlatform = {
     }
     if (message.path !== undefined) {
       writer.uint32(18).string(message.path);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -160,6 +217,20 @@ export const UpdatedPlatform = {
 
           message.path = reader.string();
           continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -176,6 +247,8 @@ export const UpdatedPlatform = {
     const message = createBaseUpdatedPlatform();
     message.id = object.id ?? 0;
     message.path = object.path ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
@@ -188,3 +261,15 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+function toTimestamp(date: Date): Timestamp {
+  const seconds = Math.trunc(date.getTime() / 1_000);
+  const nanos = (date.getTime() % 1_000) * 1_000_000;
+  return { seconds, nanos };
+}
+
+function fromTimestamp(t: Timestamp): Date {
+  let millis = (t.seconds || 0) * 1_000;
+  millis += (t.nanos || 0) / 1_000_000;
+  return new globalThis.Date(millis);
+}

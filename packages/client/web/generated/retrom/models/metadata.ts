@@ -7,6 +7,7 @@
 /* eslint-disable */
 import Long from "long";
 import _m0 from "protobufjs/minimal";
+import { Timestamp } from "../google/protobuf/timestamp";
 
 export const protobufPackage = "retrom";
 
@@ -18,6 +19,12 @@ export interface GameMetadata {
   backgroundUrl?: string | undefined;
   iconUrl?: string | undefined;
   igdbId?: number | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+  links: string[];
+  videoUrls: string[];
+  screenshotUrls: string[];
+  artworkUrls: string[];
 }
 
 export interface NewGameMetadata {
@@ -28,6 +35,12 @@ export interface NewGameMetadata {
   backgroundUrl?: string | undefined;
   iconUrl?: string | undefined;
   igdbId?: number | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+  links: string[];
+  videoUrls: string[];
+  screenshotUrls: string[];
+  artworkUrls: string[];
 }
 
 export interface UpdatedGameMetadata {
@@ -38,6 +51,12 @@ export interface UpdatedGameMetadata {
   backgroundUrl?: string | undefined;
   iconUrl?: string | undefined;
   igdbId?: number | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+  links: string[];
+  videoUrls: string[];
+  screenshotUrls: string[];
+  artworkUrls: string[];
 }
 
 export interface PlatformMetadata {
@@ -47,6 +66,8 @@ export interface PlatformMetadata {
   backgroundUrl?: string | undefined;
   logoUrl?: string | undefined;
   igdbId?: number | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface NewPlatformMetadata {
@@ -56,6 +77,8 @@ export interface NewPlatformMetadata {
   backgroundUrl?: string | undefined;
   logoUrl?: string | undefined;
   igdbId?: number | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface UpdatedPlatformMetadata {
@@ -65,6 +88,74 @@ export interface UpdatedPlatformMetadata {
   backgroundUrl?: string | undefined;
   logoUrl?: string | undefined;
   igdbId?: number | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+}
+
+export interface GameGenre {
+  id: number;
+  slug: string;
+  name: string;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+}
+
+export interface NewGameGenre {
+  id?: number | undefined;
+  slug: string;
+  name: string;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+}
+
+export interface UpdatedGameGenre {
+  id: number;
+  slug?: string | undefined;
+  name?: string | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+}
+
+export interface GameGenreMap {
+  gameId: number;
+  genreId: number;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+}
+
+export interface NewGameGenreMap {
+  gameId: number;
+  genreId: number;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+}
+
+export interface UpdatedGameGenreMap {
+  gameId?: number | undefined;
+  genreId?: number | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+}
+
+export interface SimilarGameMap {
+  gameId: number;
+  similarGameId: number;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+}
+
+export interface NewSimilarGameMap {
+  gameId: number;
+  similarGameId: number;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
+}
+
+export interface UpdatedSimilarGameMap {
+  gameId: number;
+  similarGameId: number;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 function createBaseGameMetadata(): GameMetadata {
@@ -76,6 +167,12 @@ function createBaseGameMetadata(): GameMetadata {
     backgroundUrl: undefined,
     iconUrl: undefined,
     igdbId: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
+    links: [],
+    videoUrls: [],
+    screenshotUrls: [],
+    artworkUrls: [],
   };
 }
 
@@ -101,6 +198,24 @@ export const GameMetadata = {
     }
     if (message.igdbId !== undefined) {
       writer.uint32(56).int64(message.igdbId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(66).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(74).fork()).ldelim();
+    }
+    for (const v of message.links) {
+      writer.uint32(82).string(v!);
+    }
+    for (const v of message.videoUrls) {
+      writer.uint32(90).string(v!);
+    }
+    for (const v of message.screenshotUrls) {
+      writer.uint32(98).string(v!);
+    }
+    for (const v of message.artworkUrls) {
+      writer.uint32(106).string(v!);
     }
     return writer;
   },
@@ -161,6 +276,48 @@ export const GameMetadata = {
 
           message.igdbId = longToNumber(reader.int64() as Long);
           continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 9:
+          if (tag !== 74) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 10:
+          if (tag !== 82) {
+            break;
+          }
+
+          message.links.push(reader.string());
+          continue;
+        case 11:
+          if (tag !== 90) {
+            break;
+          }
+
+          message.videoUrls.push(reader.string());
+          continue;
+        case 12:
+          if (tag !== 98) {
+            break;
+          }
+
+          message.screenshotUrls.push(reader.string());
+          continue;
+        case 13:
+          if (tag !== 106) {
+            break;
+          }
+
+          message.artworkUrls.push(reader.string());
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -182,6 +339,12 @@ export const GameMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.iconUrl = object.iconUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    message.links = object.links?.map((e) => e) || [];
+    message.videoUrls = object.videoUrls?.map((e) => e) || [];
+    message.screenshotUrls = object.screenshotUrls?.map((e) => e) || [];
+    message.artworkUrls = object.artworkUrls?.map((e) => e) || [];
     return message;
   },
 };
@@ -195,6 +358,12 @@ function createBaseNewGameMetadata(): NewGameMetadata {
     backgroundUrl: undefined,
     iconUrl: undefined,
     igdbId: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
+    links: [],
+    videoUrls: [],
+    screenshotUrls: [],
+    artworkUrls: [],
   };
 }
 
@@ -220,6 +389,24 @@ export const NewGameMetadata = {
     }
     if (message.igdbId !== undefined) {
       writer.uint32(56).int64(message.igdbId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(66).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(74).fork()).ldelim();
+    }
+    for (const v of message.links) {
+      writer.uint32(82).string(v!);
+    }
+    for (const v of message.videoUrls) {
+      writer.uint32(90).string(v!);
+    }
+    for (const v of message.screenshotUrls) {
+      writer.uint32(98).string(v!);
+    }
+    for (const v of message.artworkUrls) {
+      writer.uint32(106).string(v!);
     }
     return writer;
   },
@@ -280,6 +467,48 @@ export const NewGameMetadata = {
 
           message.igdbId = longToNumber(reader.int64() as Long);
           continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 9:
+          if (tag !== 74) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 10:
+          if (tag !== 82) {
+            break;
+          }
+
+          message.links.push(reader.string());
+          continue;
+        case 11:
+          if (tag !== 90) {
+            break;
+          }
+
+          message.videoUrls.push(reader.string());
+          continue;
+        case 12:
+          if (tag !== 98) {
+            break;
+          }
+
+          message.screenshotUrls.push(reader.string());
+          continue;
+        case 13:
+          if (tag !== 106) {
+            break;
+          }
+
+          message.artworkUrls.push(reader.string());
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -301,6 +530,12 @@ export const NewGameMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.iconUrl = object.iconUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    message.links = object.links?.map((e) => e) || [];
+    message.videoUrls = object.videoUrls?.map((e) => e) || [];
+    message.screenshotUrls = object.screenshotUrls?.map((e) => e) || [];
+    message.artworkUrls = object.artworkUrls?.map((e) => e) || [];
     return message;
   },
 };
@@ -314,6 +549,12 @@ function createBaseUpdatedGameMetadata(): UpdatedGameMetadata {
     backgroundUrl: undefined,
     iconUrl: undefined,
     igdbId: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
+    links: [],
+    videoUrls: [],
+    screenshotUrls: [],
+    artworkUrls: [],
   };
 }
 
@@ -339,6 +580,24 @@ export const UpdatedGameMetadata = {
     }
     if (message.igdbId !== undefined) {
       writer.uint32(56).int64(message.igdbId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(66).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(74).fork()).ldelim();
+    }
+    for (const v of message.links) {
+      writer.uint32(82).string(v!);
+    }
+    for (const v of message.videoUrls) {
+      writer.uint32(90).string(v!);
+    }
+    for (const v of message.screenshotUrls) {
+      writer.uint32(98).string(v!);
+    }
+    for (const v of message.artworkUrls) {
+      writer.uint32(106).string(v!);
     }
     return writer;
   },
@@ -399,6 +658,48 @@ export const UpdatedGameMetadata = {
 
           message.igdbId = longToNumber(reader.int64() as Long);
           continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 9:
+          if (tag !== 74) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 10:
+          if (tag !== 82) {
+            break;
+          }
+
+          message.links.push(reader.string());
+          continue;
+        case 11:
+          if (tag !== 90) {
+            break;
+          }
+
+          message.videoUrls.push(reader.string());
+          continue;
+        case 12:
+          if (tag !== 98) {
+            break;
+          }
+
+          message.screenshotUrls.push(reader.string());
+          continue;
+        case 13:
+          if (tag !== 106) {
+            break;
+          }
+
+          message.artworkUrls.push(reader.string());
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -420,6 +721,12 @@ export const UpdatedGameMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.iconUrl = object.iconUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    message.links = object.links?.map((e) => e) || [];
+    message.videoUrls = object.videoUrls?.map((e) => e) || [];
+    message.screenshotUrls = object.screenshotUrls?.map((e) => e) || [];
+    message.artworkUrls = object.artworkUrls?.map((e) => e) || [];
     return message;
   },
 };
@@ -432,6 +739,8 @@ function createBasePlatformMetadata(): PlatformMetadata {
     backgroundUrl: undefined,
     logoUrl: undefined,
     igdbId: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
   };
 }
 
@@ -454,6 +763,12 @@ export const PlatformMetadata = {
     }
     if (message.igdbId !== undefined) {
       writer.uint32(48).int64(message.igdbId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(58).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -507,6 +822,20 @@ export const PlatformMetadata = {
 
           message.igdbId = longToNumber(reader.int64() as Long);
           continue;
+        case 7:
+          if (tag !== 58) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -527,6 +856,8 @@ export const PlatformMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.logoUrl = object.logoUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
@@ -539,6 +870,8 @@ function createBaseNewPlatformMetadata(): NewPlatformMetadata {
     backgroundUrl: undefined,
     logoUrl: undefined,
     igdbId: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
   };
 }
 
@@ -561,6 +894,12 @@ export const NewPlatformMetadata = {
     }
     if (message.igdbId !== undefined) {
       writer.uint32(48).int64(message.igdbId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(58).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -614,6 +953,20 @@ export const NewPlatformMetadata = {
 
           message.igdbId = longToNumber(reader.int64() as Long);
           continue;
+        case 7:
+          if (tag !== 58) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -634,6 +987,8 @@ export const NewPlatformMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.logoUrl = object.logoUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
@@ -646,6 +1001,8 @@ function createBaseUpdatedPlatformMetadata(): UpdatedPlatformMetadata {
     backgroundUrl: undefined,
     logoUrl: undefined,
     igdbId: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
   };
 }
 
@@ -668,6 +1025,12 @@ export const UpdatedPlatformMetadata = {
     }
     if (message.igdbId !== undefined) {
       writer.uint32(48).int64(message.igdbId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(58).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -721,6 +1084,20 @@ export const UpdatedPlatformMetadata = {
 
           message.igdbId = longToNumber(reader.int64() as Long);
           continue;
+        case 7:
+          if (tag !== 58) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -741,6 +1118,743 @@ export const UpdatedPlatformMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.logoUrl = object.logoUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBaseGameGenre(): GameGenre {
+  return { id: 0, slug: "", name: "", createdAt: undefined, updatedAt: undefined };
+}
+
+export const GameGenre = {
+  encode(message: GameGenre, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).int32(message.id);
+    }
+    if (message.slug !== "") {
+      writer.uint32(18).string(message.slug);
+    }
+    if (message.name !== "") {
+      writer.uint32(26).string(message.name);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(34).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(42).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GameGenre {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGameGenre();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.id = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.slug = reader.string();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 5:
+          if (tag !== 42) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<GameGenre>): GameGenre {
+    return GameGenre.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GameGenre>): GameGenre {
+    const message = createBaseGameGenre();
+    message.id = object.id ?? 0;
+    message.slug = object.slug ?? "";
+    message.name = object.name ?? "";
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBaseNewGameGenre(): NewGameGenre {
+  return { id: undefined, slug: "", name: "", createdAt: undefined, updatedAt: undefined };
+}
+
+export const NewGameGenre = {
+  encode(message: NewGameGenre, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== undefined) {
+      writer.uint32(8).int32(message.id);
+    }
+    if (message.slug !== "") {
+      writer.uint32(18).string(message.slug);
+    }
+    if (message.name !== "") {
+      writer.uint32(26).string(message.name);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(34).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(42).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): NewGameGenre {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseNewGameGenre();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.id = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.slug = reader.string();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 5:
+          if (tag !== 42) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<NewGameGenre>): NewGameGenre {
+    return NewGameGenre.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<NewGameGenre>): NewGameGenre {
+    const message = createBaseNewGameGenre();
+    message.id = object.id ?? undefined;
+    message.slug = object.slug ?? "";
+    message.name = object.name ?? "";
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBaseUpdatedGameGenre(): UpdatedGameGenre {
+  return { id: 0, slug: undefined, name: undefined, createdAt: undefined, updatedAt: undefined };
+}
+
+export const UpdatedGameGenre = {
+  encode(message: UpdatedGameGenre, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).int32(message.id);
+    }
+    if (message.slug !== undefined) {
+      writer.uint32(18).string(message.slug);
+    }
+    if (message.name !== undefined) {
+      writer.uint32(26).string(message.name);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(34).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(42).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdatedGameGenre {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdatedGameGenre();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.id = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.slug = reader.string();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 5:
+          if (tag !== 42) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<UpdatedGameGenre>): UpdatedGameGenre {
+    return UpdatedGameGenre.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<UpdatedGameGenre>): UpdatedGameGenre {
+    const message = createBaseUpdatedGameGenre();
+    message.id = object.id ?? 0;
+    message.slug = object.slug ?? undefined;
+    message.name = object.name ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBaseGameGenreMap(): GameGenreMap {
+  return { gameId: 0, genreId: 0, createdAt: undefined, updatedAt: undefined };
+}
+
+export const GameGenreMap = {
+  encode(message: GameGenreMap, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.gameId !== 0) {
+      writer.uint32(8).int32(message.gameId);
+    }
+    if (message.genreId !== 0) {
+      writer.uint32(16).int32(message.genreId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GameGenreMap {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGameGenreMap();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.gameId = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.genreId = reader.int32();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<GameGenreMap>): GameGenreMap {
+    return GameGenreMap.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GameGenreMap>): GameGenreMap {
+    const message = createBaseGameGenreMap();
+    message.gameId = object.gameId ?? 0;
+    message.genreId = object.genreId ?? 0;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBaseNewGameGenreMap(): NewGameGenreMap {
+  return { gameId: 0, genreId: 0, createdAt: undefined, updatedAt: undefined };
+}
+
+export const NewGameGenreMap = {
+  encode(message: NewGameGenreMap, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.gameId !== 0) {
+      writer.uint32(8).int32(message.gameId);
+    }
+    if (message.genreId !== 0) {
+      writer.uint32(16).int32(message.genreId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): NewGameGenreMap {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseNewGameGenreMap();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.gameId = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.genreId = reader.int32();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<NewGameGenreMap>): NewGameGenreMap {
+    return NewGameGenreMap.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<NewGameGenreMap>): NewGameGenreMap {
+    const message = createBaseNewGameGenreMap();
+    message.gameId = object.gameId ?? 0;
+    message.genreId = object.genreId ?? 0;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBaseUpdatedGameGenreMap(): UpdatedGameGenreMap {
+  return { gameId: undefined, genreId: undefined, createdAt: undefined, updatedAt: undefined };
+}
+
+export const UpdatedGameGenreMap = {
+  encode(message: UpdatedGameGenreMap, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.gameId !== undefined) {
+      writer.uint32(8).int32(message.gameId);
+    }
+    if (message.genreId !== undefined) {
+      writer.uint32(16).int32(message.genreId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdatedGameGenreMap {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdatedGameGenreMap();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.gameId = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.genreId = reader.int32();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<UpdatedGameGenreMap>): UpdatedGameGenreMap {
+    return UpdatedGameGenreMap.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<UpdatedGameGenreMap>): UpdatedGameGenreMap {
+    const message = createBaseUpdatedGameGenreMap();
+    message.gameId = object.gameId ?? undefined;
+    message.genreId = object.genreId ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBaseSimilarGameMap(): SimilarGameMap {
+  return { gameId: 0, similarGameId: 0, createdAt: undefined, updatedAt: undefined };
+}
+
+export const SimilarGameMap = {
+  encode(message: SimilarGameMap, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.gameId !== 0) {
+      writer.uint32(8).int32(message.gameId);
+    }
+    if (message.similarGameId !== 0) {
+      writer.uint32(16).int32(message.similarGameId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): SimilarGameMap {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSimilarGameMap();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.gameId = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.similarGameId = reader.int32();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<SimilarGameMap>): SimilarGameMap {
+    return SimilarGameMap.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<SimilarGameMap>): SimilarGameMap {
+    const message = createBaseSimilarGameMap();
+    message.gameId = object.gameId ?? 0;
+    message.similarGameId = object.similarGameId ?? 0;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBaseNewSimilarGameMap(): NewSimilarGameMap {
+  return { gameId: 0, similarGameId: 0, createdAt: undefined, updatedAt: undefined };
+}
+
+export const NewSimilarGameMap = {
+  encode(message: NewSimilarGameMap, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.gameId !== 0) {
+      writer.uint32(8).int32(message.gameId);
+    }
+    if (message.similarGameId !== 0) {
+      writer.uint32(16).int32(message.similarGameId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): NewSimilarGameMap {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseNewSimilarGameMap();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.gameId = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.similarGameId = reader.int32();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<NewSimilarGameMap>): NewSimilarGameMap {
+    return NewSimilarGameMap.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<NewSimilarGameMap>): NewSimilarGameMap {
+    const message = createBaseNewSimilarGameMap();
+    message.gameId = object.gameId ?? 0;
+    message.similarGameId = object.similarGameId ?? 0;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBaseUpdatedSimilarGameMap(): UpdatedSimilarGameMap {
+  return { gameId: 0, similarGameId: 0, createdAt: undefined, updatedAt: undefined };
+}
+
+export const UpdatedSimilarGameMap = {
+  encode(message: UpdatedSimilarGameMap, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.gameId !== 0) {
+      writer.uint32(8).int32(message.gameId);
+    }
+    if (message.similarGameId !== 0) {
+      writer.uint32(16).int32(message.similarGameId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdatedSimilarGameMap {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdatedSimilarGameMap();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.gameId = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.similarGameId = reader.int32();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<UpdatedSimilarGameMap>): UpdatedSimilarGameMap {
+    return UpdatedSimilarGameMap.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<UpdatedSimilarGameMap>): UpdatedSimilarGameMap {
+    const message = createBaseUpdatedSimilarGameMap();
+    message.gameId = object.gameId ?? 0;
+    message.similarGameId = object.similarGameId ?? 0;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
@@ -753,6 +1867,18 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+function toTimestamp(date: Date): Timestamp {
+  const seconds = Math.trunc(date.getTime() / 1_000);
+  const nanos = (date.getTime() % 1_000) * 1_000_000;
+  return { seconds, nanos };
+}
+
+function fromTimestamp(t: Timestamp): Date {
+  let millis = (t.seconds || 0) * 1_000;
+  millis += (t.nanos || 0) / 1_000_000;
+  return new globalThis.Date(millis);
+}
 
 function longToNumber(long: Long): number {
   if (long.gt(globalThis.Number.MAX_SAFE_INTEGER)) {

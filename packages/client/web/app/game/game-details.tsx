@@ -1,57 +1,85 @@
 "use client";
 
-import styles from "./game-details.module.scss";
-import { cn, getFileName, Image } from "@/lib/utils";
+import { cn, getFileStub, Image } from "@/lib/utils";
 import { Actions } from "./actions";
 import { useGameDetail } from "./game-context";
+import { Genres } from "./genres";
+import { Media } from "./media";
+import { Links } from "./links";
+import { SimilarGames } from "./similar_games";
+import { GameFiles } from "./game-files";
+
+const GRID_TEMPLATE = "";
 
 export function GameDetails() {
   const { game, gameMetadata } = useGameDetail();
 
-  const name = gameMetadata?.name || getFileName(game.path);
+  const name = gameMetadata?.name || getFileStub(game.path);
+  const bgUrl = gameMetadata?.backgroundUrl ?? gameMetadata?.coverUrl;
+  const titleSize = (name?.length ?? 0) > 20 ? "text-7xl" : "text-9xl";
 
   return (
-    <div className={cn(styles.details, "")}>
+    <div className={cn("relative grid grid-cols-[300px_1fr] gap-8 p-5")}>
       <div
         className={cn(
-          styles.background,
-          "relative h-[clamp(200px,60vh,800px)] overflow-hidden border-b bg-accent",
+          "col-span-2 fixed top-0 left-0 right-0 h-[90dvh]  z-[-1] overflow-hidden bg-secondary",
         )}
       >
-        {gameMetadata?.backgroundUrl && gameMetadata?.name && (
+        {bgUrl && (
           <Image
-            src={gameMetadata.backgroundUrl}
-            alt={gameMetadata.name}
-            className="object-cover absolute min-w-full min-h-full max-w-full max-h-full"
+            src={bgUrl}
+            alt={gameMetadata?.name ?? "Game Background"}
+            className="object-cover absolute min-w-full min-h-full max-w-full max-h-full blur-xl"
           />
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-background to-background/70"></div>
       </div>
 
-      <div
-        className={cn(
-          styles.coverActions,
-          "flex flex-col justify-center py-16 px-3 gap-2",
-        )}
-      >
-        <div className={cn("border-2", "relative")}>
-          {gameMetadata?.coverUrl && gameMetadata?.name && (
-            <Image
-              src={gameMetadata.coverUrl}
-              alt={gameMetadata.name}
-              className="object-cover min-w-full min-h-full"
-            />
-          )}
+      <div id="left" className="flex flex-col gap-5">
+        <div className={cn("flex flex-col relative")}>
+          <div className={cn("relative")}>
+            {gameMetadata?.coverUrl && gameMetadata?.name && (
+              <div>
+                <Image
+                  src={gameMetadata.coverUrl}
+                  alt={gameMetadata.name}
+                  className="object-cover min-w-full min-h-full rounded-t-lg border"
+                />
+              </div>
+            )}
+          </div>
+
+          <Actions />
         </div>
 
-        <Actions />
+        <Genres />
       </div>
 
-      <div className={styles.info}>
-        <h1 className={cn(styles.title, "font-black text-3xl py-3")}>{name}</h1>
+      <div id="right" className="pr-5">
+        <div className="pb-5">
+          <h1
+            className={cn("font-black pb-4 pr-4 text-foreground/95", titleSize)}
+          >
+            {name}
+          </h1>
 
-        <p className={cn(styles.description, "max-w-[80ch]")}>
-          {gameMetadata?.description || "No description available."}
-        </p>
+          <p className={cn("text-foreground/90")}>
+            {gameMetadata?.description || "No description available."}
+          </p>
+        </div>
+
+        <div
+          className={cn(
+            `grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] grid-rows-[repeat(auto-fit,minmax(100px,1fr))]`,
+            "grid-flow-dense gap-5",
+          )}
+        >
+          <Links />
+          <GameFiles />
+          <Media />
+
+          <SimilarGames />
+        </div>
       </div>
     </div>
   );

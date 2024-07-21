@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{path::PathBuf, str::FromStr, sync::Arc};
 
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use deunicode::deunicode;
@@ -15,7 +15,12 @@ pub async fn match_game_igdb(
 ) -> Result<retrom::NewGameMetadata, reqwest::Error> {
     provider.maybe_refresh_token().await;
 
-    let name = &game.path.split('/').last().unwrap_or(&game.path);
+    let naive_name = game.path.split('/').last().unwrap_or(&game.path);
+    let path = PathBuf::from_str(&game.path).unwrap();
+    let name = path
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .unwrap_or(naive_name);
 
     let search = deunicode(&name);
     info!("Matching game: {search}");
@@ -86,8 +91,21 @@ pub(crate) async fn search_games(
     provider: Arc<IGDBProvider>,
     search_string: &str,
 ) -> Result<igdb::GameResult, reqwest::Error> {
-    let query =
-        format!("fields name, cover.url, artworks.url, artworks.height, artworks.width, summary; search \"{search_string}\"; limit 10;");
+    let fields = vec![
+        "name".to_string(),
+        "cover.url".to_string(),
+        "artworks.url".to_string(),
+        "artworks.height".to_string(),
+        "artworks.width".to_string(),
+        "summary".to_string(),
+        "websites.url".to_string(),
+        "websites.trusted".to_string(),
+        "videos.name".to_string(),
+        "videos.video_id".to_string(),
+    ]
+    .join(",");
+
+    let query = format!("fields {fields}; search \"{search_string}\"; limit 10;");
 
     let res = match provider.make_request("games.pb".into(), query).await {
         Ok(res) => Ok(res),
@@ -162,6 +180,41 @@ pub fn igdb_game_to_metadata(
             .and_then(|cover_url| Some(cover_url.clone().replace("t_cover_big", "t_thumb"))),
     };
 
+    let links = igdb_match
+        .websites
+        .into_iter()
+        .filter(|website| website.trusted)
+        .map(|website| website.url)
+        .collect();
+
+    let artwork_urls: Vec<String> = igdb_match
+        .artworks
+        .into_iter()
+        .map(|artwork| {
+            artwork
+                .url
+                .replace("t_thumb", "t_1080p")
+                .replace("//", "https://")
+        })
+        .collect();
+
+    let screenshot_urls: Vec<String> = igdb_match
+        .screenshots
+        .into_iter()
+        .map(|screenshot| {
+            screenshot
+                .url
+                .replace("//", "https://")
+                .replace("t_thumb", "screenshot_huge")
+        })
+        .collect();
+
+    let video_urls: Vec<String> = igdb_match
+        .videos
+        .into_iter()
+        .map(|video| format!("https://www.youtube.com/embed/{}", video.video_id))
+        .collect();
+
     retrom::NewGameMetadata {
         game_id: game.and_then(|game| Some(game.id)),
         igdb_id,
@@ -170,6 +223,10 @@ pub fn igdb_game_to_metadata(
         cover_url,
         background_url,
         icon_url,
+        links,
+        artwork_urls,
+        screenshot_urls,
+        video_urls,
         ..Default::default()
     }
 }

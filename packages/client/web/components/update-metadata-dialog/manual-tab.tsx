@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { UpdateGameMetadataRequest } from "@/generated/retrom/services";
 import { useCallback } from "react";
 import { Button } from "../ui/button";
 import { UseFormReturn, useForm } from "react-hook-form";
@@ -15,15 +14,12 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { useToast } from "../ui/use-toast";
 import { LoaderIcon } from "lucide-react";
-import { asOptionalString, cn } from "@/lib/utils";
+import { asOptionalString, cn, InferSchema } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
 import { useGameDetail } from "@/app/game/game-context";
-import { useMutation } from "@tanstack/react-query";
-import { useRetromClient } from "@/providers/retrom-client";
-import { GameMetadata } from "@/generated/retrom/models";
+import { GameMetadata } from "@/generated/retrom/models/metadata";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 
 type FormFieldRenderer = ({
@@ -32,10 +28,14 @@ type FormFieldRenderer = ({
   form: UseFormReturn<FormSchema>;
 }) => JSX.Element;
 
+type EditableGameMetadata = Omit<
+  GameMetadata,
+  "gameId" | "createdAt" | "updatedAt"
+>;
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name cannot be empty" }),
-  igdbId: asOptionalString(z.string().optional()),
+  igdbId: z.number().optional(),
   description: asOptionalString(z.string().optional()),
   coverUrl: asOptionalString(
     z.string().url({ message: "Cover URL must be a valid URL" }).optional(),
@@ -49,7 +49,17 @@ const formSchema = z.object({
   iconUrl: asOptionalString(
     z.string().url({ message: "Icon URL must be a valid URL" }).optional(),
   ),
-});
+  links: z.array(z.string().url({ message: "Link must be a valid URL" })),
+  videoUrls: z.array(
+    z.string().url({ message: "Video URL must be a valid URL" }),
+  ),
+  artworkUrls: z.array(
+    z.string().url({ message: "Artwork URL must be a valid URL" }),
+  ),
+  screenshotUrls: z.array(
+    z.string().url({ message: "Screenshot URL must be a valid URL" }),
+  ),
+}) satisfies InferSchema<EditableGameMetadata>;
 
 export function ManualTab() {
   const { game, gameMetadata } = useGameDetail();
@@ -61,7 +71,7 @@ export function ManualTab() {
     mode: "onChange",
     defaultValues: {
       name: gameMetadata?.name ?? "",
-      igdbId: gameMetadata?.igdbId?.toString() ?? "",
+      igdbId: gameMetadata?.igdbId,
       description: gameMetadata?.description ?? "",
       coverUrl: gameMetadata?.coverUrl ?? "",
       backgroundUrl: gameMetadata?.backgroundUrl ?? "",
@@ -72,7 +82,7 @@ export function ManualTab() {
   const handleUpdate = useCallback(
     (values: FormSchema) => {
       const { igdbId, ...restValues } = values;
-      const igdbIdNum = igdbId !== undefined ? parseInt(igdbId) : undefined;
+      const igdbIdNum = igdbId;
       const updated = { ...restValues, igdbId: igdbIdNum, gameId: game.id };
 
       mutate({ metadata: [updated] });
@@ -118,7 +128,10 @@ export function ManualTab() {
   );
 }
 
-const fields: Record<keyof Omit<GameMetadata, "gameId">, FormFieldRenderer> = {
+const fields: Record<
+  keyof Omit<EditableGameMetadata, "gameId">,
+  FormFieldRenderer
+> = {
   name: ({ form }) => (
     <FormField
       name="name"
@@ -150,6 +163,7 @@ const fields: Record<keyof Omit<GameMetadata, "gameId">, FormFieldRenderer> = {
           <FormControl>
             <Input
               {...field}
+              type="number"
               className={cn(
                 fieldState.isDirty ? "text-unset" : "text-muted-foreground",
                 "transition-colors",
@@ -233,6 +247,94 @@ const fields: Record<keyof Omit<GameMetadata, "gameId">, FormFieldRenderer> = {
       render={({ field, fieldState }) => (
         <FormItem>
           <FormLabel>Icon Image URL</FormLabel>
+          <FormControl>
+            <Input
+              {...field}
+              className={cn(
+                fieldState.isDirty ? "text-unset" : "text-muted-foreground",
+                "transition-colors",
+              )}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  ),
+  links: ({ form }) => (
+    <FormField
+      name="links"
+      disabled
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <FormItem>
+          <FormLabel>Links</FormLabel>
+          <FormControl>
+            <Input
+              {...field}
+              className={cn(
+                fieldState.isDirty ? "text-unset" : "text-muted-foreground",
+                "transition-colors",
+              )}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  ),
+  screenshotUrls: ({ form }) => (
+    <FormField
+      name="screenshotUrls"
+      disabled
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <FormItem>
+          <FormLabel>Screenshots</FormLabel>
+          <FormControl>
+            <Input
+              {...field}
+              className={cn(
+                fieldState.isDirty ? "text-unset" : "text-muted-foreground",
+                "transition-colors",
+              )}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  ),
+  artworkUrls: ({ form }) => (
+    <FormField
+      name="artworkUrls"
+      disabled
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <FormItem>
+          <FormLabel>Artworks</FormLabel>
+          <FormControl>
+            <Input
+              {...field}
+              className={cn(
+                fieldState.isDirty ? "text-unset" : "text-muted-foreground",
+                "transition-colors",
+              )}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  ),
+  videoUrls: ({ form }) => (
+    <FormField
+      name="videoUrls"
+      disabled
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <FormItem>
+          <FormLabel>Videos</FormLabel>
           <FormControl>
             <Input
               {...field}

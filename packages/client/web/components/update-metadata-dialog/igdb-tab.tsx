@@ -26,7 +26,7 @@ import { DialogFooter } from "../ui/dialog";
 import { useGameDetail } from "@/app/game/game-context";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { UpdatedGameMetadata } from "@/generated/retrom/models";
+import { UpdatedGameMetadata } from "@/generated/retrom/models/metadata";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
@@ -82,13 +82,10 @@ export function IgdbTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["games"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["game-metadata"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [game.id],
+        predicate: (query) =>
+          ["games", "game-metadata", game.id].some((key) =>
+            query.queryKey.includes(key),
+          ),
       });
 
       toast({

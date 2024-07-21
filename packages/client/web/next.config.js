@@ -1,9 +1,14 @@
+const path = require("path");
+
 module.exports = async () => {
   const isWeb = process.env.NEXT_PUBLIC_PLATFORM === "web";
 
   /** @type {import('next').NextConfig} */
   const nextConfig = {
-    output: isWeb ? undefined : "export",
+    experimental: {
+      outputFileTracingRoot: path.join(__dirname, "../../../"),
+    },
+    output: isWeb ? "standalone" : "export",
     images: {
       unoptimized: !isWeb,
       remotePatterns: [

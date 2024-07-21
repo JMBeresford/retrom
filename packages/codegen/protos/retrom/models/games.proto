@@ -2,19 +2,27 @@ syntax = "proto3";
 
 package retrom;
 
+import "google/protobuf/timestamp.proto";
+
 message Game {
   int32 id = 1;
   string path = 3;
   optional int32 platform_id = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
 }
 
 message NewGame {
   string path = 1;
   optional int32 platform_id = 2;
+  optional google.protobuf.Timestamp created_at = 3;
+  optional google.protobuf.Timestamp updated_at = 4;
 }
 
 message UpdatedGame {
   int32 id = 1;
   optional string path = 2;
   optional int32 platform_id = 3;
+  optional google.protobuf.Timestamp created_at = 4;
+  optional google.protobuf.Timestamp updated_at = 5;
 }

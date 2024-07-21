@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package retrom;
 
-import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
 
 enum RomType {
   Custom = 0;
@@ -15,12 +15,16 @@ message Emulator {
   repeated int32 supported_platforms = 2;
   string name = 3;
   RomType rom_type = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
 }
 
 message NewEmulator {
   repeated int32 supported_platforms = 1;
   string name = 2;
   RomType rom_type = 3;
+  optional google.protobuf.Timestamp created_at = 4;
+  optional google.protobuf.Timestamp updated_at = 5;
 }
 
 message UpdatedEmulator {
@@ -28,6 +32,8 @@ message UpdatedEmulator {
   repeated int32 supported_platforms = 2;
   optional string name = 3;
   optional RomType rom_type = 4;
+  optional google.protobuf.Timestamp created_at = 5;
+  optional google.protobuf.Timestamp updated_at = 6;
 }
 
 message EmulatorProfile {
@@ -37,6 +43,8 @@ message EmulatorProfile {
   string executable_path = 4;
   repeated string supported_extensions = 5;
   repeated string custom_args = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
 }
 
 message NewEmulatorProfile {
@@ -45,6 +53,8 @@ message NewEmulatorProfile {
   string executable_path = 3;
   repeated string supported_extensions = 4;
   repeated string custom_args = 5;
+  optional google.protobuf.Timestamp created_at = 6;
+  optional google.protobuf.Timestamp updated_at = 7;
 }
 
 message UpdatedEmulatorProfile {
@@ -54,19 +64,27 @@ message UpdatedEmulatorProfile {
   optional string executable_path = 4;
   repeated string supported_extensions = 5;
   repeated string custom_args = 6;
+  optional google.protobuf.Timestamp created_at = 7;
+  optional google.protobuf.Timestamp updated_at = 8;
 }
 
 message DefaultEmulatorProfile {
   int32 platform_id = 1;
   int32 emulator_profile_id = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
 }
 
 message NewDefaultEmulatorProfile {
   int32 platform_id = 1;
   int32 emulator_profile_id = 2;
+  optional google.protobuf.Timestamp created_at = 3;
+  optional google.protobuf.Timestamp updated_at = 4;
 }
 
 message UpdatedDefaultEmulatorProfile {
   int32 platform_id = 1;
   int32 emulator_profile_id = 2;
+  optional google.protobuf.Timestamp created_at = 3;
+  optional google.protobuf.Timestamp updated_at = 4;
 }

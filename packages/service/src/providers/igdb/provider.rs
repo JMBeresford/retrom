@@ -4,7 +4,7 @@ use std::{
 };
 
 use tokio::sync::RwLock;
-use tracing::{debug, error, instrument, Level};
+use tracing::{debug, error, info, instrument, Level};
 
 #[derive(Debug, serde::Deserialize)]
 struct IGDBTokenResponse {
@@ -101,6 +101,8 @@ impl IGDBProvider {
         self.maybe_refresh_token().await;
         let auth = self.auth.read().await;
         let token = auth.token.clone().expect("No token found");
+
+        info!("Making request to IGDB: {} {}", path, query);
 
         let res = self
             .http_client

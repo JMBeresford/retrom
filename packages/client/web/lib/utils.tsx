@@ -44,7 +44,20 @@ export function Image(props: JSX.IntrinsicElements["img"]) {
   );
 }
 
-export function getFileName(path: string) {
+export function getFileParts(path: string) {
   const filename = path.split("/").pop() ?? "";
-  return filename.split(".").slice(0, -1).join(".");
+  const parts = filename.split(".");
+  const extension = parts.pop();
+  const name = parts.pop();
+
+  return { name, extension };
+}
+
+export function getFileStub(path: string) {
+  return getFileParts(path).name;
+}
+
+export function getFileName(path: string) {
+  const { name, extension } = getFileParts(path);
+  return `${name}.${extension}`;
 }

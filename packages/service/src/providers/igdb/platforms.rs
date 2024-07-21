@@ -82,6 +82,7 @@ pub async fn match_platforms_igdb(
     Ok(all_metadata)
 }
 
+#[instrument(skip(provider))]
 pub(crate) async fn search_platforms(
     provider: Arc<IGDBProvider>,
     search_string: &str,

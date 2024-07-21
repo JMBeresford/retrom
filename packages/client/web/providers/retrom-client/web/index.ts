@@ -6,6 +6,13 @@ import {
   deleteEmulators,
   updateEmulators,
   createEmulators,
+  createEmulatorProfiles,
+  getEmulatorProfiles,
+  deleteEmulatorProfiles,
+  updateEmulatorProfiles,
+  getDefaultEmulatorProfiles,
+  deleteDefaultEmulatorProfiles,
+  updateDefaultEmulatorProfiles,
 } from "./emulators";
 import {
   getIgdbSearch,
@@ -43,5 +50,12 @@ export const RetromWebClient: RetromClient = {
     createEmulators,
     deleteEmulators,
     updateEmulators,
+    createEmulatorProfiles,
+    updateDefaultEmulatorProfiles,
+    getDefaultEmulatorProfiles,
+    deleteDefaultEmulatorProfiles,
+    updateEmulatorProfiles,
+    getEmulatorProfiles,
+    deleteEmulatorProfiles,
   },
 };

@@ -1,13 +1,27 @@
 services:
+  retrom-service:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    restart: always
+    ports:
+      - 5101:5101
+    environment:
+      DATABASE_URL: postgresql://postgres:password@retrom-db:5432/retrom-dev
+    depends_on:
+      - retrom-db
 
-  db:
+  retrom-db:
     image: postgres
+    hostname: retrom-db
     restart: always
     # set shared memory limit when using docker-compose
     shm_size: 128mb
     ports:
       - 5432:5432
     environment:
+      TZ: "America/Los_Angeles"
+      PGTZ: "America/Los_Angeles"
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
       POSTGRES_DB: retrom-dev

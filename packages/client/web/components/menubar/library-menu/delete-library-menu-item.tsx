@@ -42,14 +42,14 @@ export function DeleteLibraryMenuItem() {
 
       redirect("/");
     },
-    mutationFn: async () => await retromClient.libraryClient.deleteLibrary(),
+    mutationFn: async () => await retromClient.libraryClient.deleteLibrary({}),
   });
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <MenubarItem
-          className="text-red-500"
+          className="text-destructive-text"
           onSelect={(e) => e.preventDefault()}
         >
           Delete Library

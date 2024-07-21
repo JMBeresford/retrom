@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package retrom;
 
+import "google/protobuf/timestamp.proto";
+
 message GameMetadata {
   int32 game_id = 1;
   optional string name = 2;
@@ -10,6 +12,12 @@ message GameMetadata {
   optional string background_url = 5;
   optional string icon_url = 6;
   optional int64 igdb_id = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+  repeated string links = 10;
+  repeated string video_urls = 11;
+  repeated string screenshot_urls = 12;
+  repeated string artwork_urls = 13;
 }
 
 message NewGameMetadata {
@@ -20,6 +28,12 @@ message NewGameMetadata {
   optional string background_url = 5;
   optional string icon_url = 6;
   optional int64 igdb_id = 7;
+  optional google.protobuf.Timestamp created_at = 8;
+  optional google.protobuf.Timestamp updated_at = 9;
+  repeated string links = 10;
+  repeated string video_urls = 11;
+  repeated string screenshot_urls = 12;
+  repeated string artwork_urls = 13;
 }
 
 message UpdatedGameMetadata {
@@ -30,6 +44,12 @@ message UpdatedGameMetadata {
   optional string background_url = 5;
   optional string icon_url = 6;
   optional int64 igdb_id = 7;
+  optional google.protobuf.Timestamp created_at = 8;
+  optional google.protobuf.Timestamp updated_at = 9;
+  repeated string links = 10;
+  repeated string video_urls = 11;
+  repeated string screenshot_urls = 12;
+  repeated string artwork_urls = 13;
 }
 
 message PlatformMetadata {
@@ -39,6 +59,8 @@ message PlatformMetadata {
   optional string background_url = 4;
   optional string logo_url = 5;
   optional int64 igdb_id = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
 }
 
 message NewPlatformMetadata {
@@ -48,6 +70,8 @@ message NewPlatformMetadata {
   optional string background_url = 4;
   optional string logo_url = 5;
   optional int64 igdb_id = 6;
+  optional google.protobuf.Timestamp created_at = 7;
+  optional google.protobuf.Timestamp updated_at = 8;
 }
 
 message UpdatedPlatformMetadata {
@@ -57,4 +81,72 @@ message UpdatedPlatformMetadata {
   optional string background_url = 4;
   optional string logo_url = 5;
   optional int64 igdb_id = 6;
+  optional google.protobuf.Timestamp created_at = 7;
+  optional google.protobuf.Timestamp updated_at = 8;
+}
+
+message GameGenre {
+  int32 id = 1;
+  string slug = 2;
+  string name = 3;
+  optional google.protobuf.Timestamp created_at = 4;
+  optional google.protobuf.Timestamp updated_at = 5;
+}
+
+message NewGameGenre {
+  optional int32 id = 1;
+  string slug = 2;
+  string name = 3;
+  optional google.protobuf.Timestamp created_at = 4;
+  optional google.protobuf.Timestamp updated_at = 5;
+}
+
+message UpdatedGameGenre {
+  int32 id = 1;
+  optional string slug = 2;
+  optional string name = 3;
+  optional google.protobuf.Timestamp created_at = 4;
+  optional google.protobuf.Timestamp updated_at = 5;
+}
+
+message GameGenreMap {
+  int32 game_id = 1;
+  int32 genre_id = 2;
+  optional google.protobuf.Timestamp created_at = 3;
+  optional google.protobuf.Timestamp updated_at = 4;
+}
+
+message NewGameGenreMap {
+  int32 game_id = 1;
+  int32 genre_id = 2;
+  optional google.protobuf.Timestamp created_at = 3;
+  optional google.protobuf.Timestamp updated_at = 4;
+}
+
+message UpdatedGameGenreMap {
+  optional int32 game_id = 1;
+  optional int32 genre_id = 2;
+  optional google.protobuf.Timestamp created_at = 3;
+  optional google.protobuf.Timestamp updated_at = 4;
+}
+
+message SimilarGameMap {
+  int32 game_id = 1;
+  int32 similar_game_id = 2;
+  optional google.protobuf.Timestamp created_at = 3;
+  optional google.protobuf.Timestamp updated_at = 4;
+}
+
+message NewSimilarGameMap {
+  int32 game_id = 1;
+  int32 similar_game_id = 2;
+  optional google.protobuf.Timestamp created_at = 3;
+  optional google.protobuf.Timestamp updated_at = 4;
+}
+
+message UpdatedSimilarGameMap {
+  int32 game_id = 1;
+  int32 similar_game_id = 2;
+  optional google.protobuf.Timestamp created_at = 3;
+  optional google.protobuf.Timestamp updated_at = 4;
 }

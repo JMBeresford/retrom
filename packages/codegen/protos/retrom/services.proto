@@ -98,7 +98,17 @@ message GetGameMetadataRequest {
 }
 
 message GetGameMetadataResponse {
+  message GameGenres {
+    repeated GameGenre value = 1;
+  }
+
+  message SimilarGames {
+    repeated Game value = 1;
+  }
+
   repeated GameMetadata metadata = 1;
+  map<int32, SimilarGames> similar_games = 2;
+  map<int32, GameGenres> genres = 3;
 }
 
 message GetPlatformMetadataRequest {
@@ -275,3 +285,4 @@ message DeleteDefaultEmulatorProfilesRequest {
 message DeleteDefaultEmulatorProfilesResponse {
   repeated DefaultEmulatorProfile default_profiles_deleted = 1;
 }
+

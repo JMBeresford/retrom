@@ -1,8 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["./packages/*", "./plugins/*"]
-exclude = ["**/node_modules"]
-default-members = ["./packages/service/", "./packages/client/"]
+exclude = ["**/node_modules", "./target"]
 
 [workspace.package]
 edition = "2021"

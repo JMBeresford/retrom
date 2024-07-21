@@ -1,4 +1,4 @@
-import { Game } from "@/generated/retrom/models";
+import { Game } from "@/generated/retrom/models/games";
 import { EmulatorProfile } from "@/generated/retrom/models/emulators";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";

@@ -18,7 +18,7 @@ import {
   LoaderCircleIcon,
   XCircleIcon,
 } from "lucide-react";
-import { cn, getFileName } from "@/lib/utils";
+import { cn, getFileStub } from "@/lib/utils";
 import { useEmulators } from "@/queries/useEmulators";
 import {
   Command,
@@ -28,7 +28,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { usePlatforms } from "@/queries/usePlatforms";
-import { Platform, PlatformMetadata } from "@/generated/retrom/models";
+import { Platform } from "@/generated/retrom/models/platforms";
 import {
   Emulator,
   NewEmulator,
@@ -59,6 +59,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDeleteEmulators } from "@/mutations/useDeleteEmulators";
+import { PlatformMetadata } from "@/generated/retrom/models/metadata";
 
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
@@ -74,7 +75,9 @@ export const emulatorSchema = z.object({
   name: z.string().min(1).max(128),
   supportedPlatforms: z.array(z.number()).min(1),
   romType: z.nativeEnum(RomType),
-}) satisfies z.ZodObject<Record<keyof NewEmulator, z.ZodTypeAny>>;
+}) satisfies z.ZodObject<
+  Record<keyof Omit<NewEmulator, "createdAt" | "updatedAt">, z.ZodTypeAny>
+>;
 
 export type ChangesetSchema = z.infer<typeof changesetSchema>;
 export const changesetSchema = z.object({
@@ -86,7 +89,12 @@ export const changesetSchema = z.object({
   ),
 }) satisfies z.ZodObject<{
   emulators: z.ZodArray<
-    z.ZodObject<Record<keyof UpdatedEmulator, z.ZodTypeAny>>
+    z.ZodObject<
+      Record<
+        keyof Omit<UpdatedEmulator, "createdAt" | "updatedAt">,
+        z.ZodTypeAny
+      >
+    >
   >;
 }>;
 
@@ -398,7 +406,7 @@ export function PlatformsDropdown(props: {
                     : "opacity-0",
                 )}
               />
-              {platform.metadata?.name ?? getFileName(platform.path)}
+              {platform.metadata?.name ?? getFileStub(platform.path)}
             </CommandItem>
           ))}
         </CommandGroup>
@@ -416,7 +424,7 @@ function DeleteButton(props: { emulator: Emulator }) {
   return (
     <Button
       size="icon"
-      className="text-destructive"
+      className="text-destructive-text"
       variant="ghost"
       disabled={isPending}
       type="button"

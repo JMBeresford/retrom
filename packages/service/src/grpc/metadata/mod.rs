@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use crate::providers::igdb::{
     games::igdb_game_to_metadata, platforms::igdb_platform_to_metadata, provider::IGDBProvider,
@@ -11,15 +11,17 @@ use retrom_codegen::{
     igdb,
     retrom::{
         self,
+        get_game_metadata_response::{GameGenres, SimilarGames},
         get_igdb_search_request::IgdbSearchType,
         get_igdb_search_response::SearchResults,
         igdb_fields::Selector,
         igdb_filters::{FilterOperator, FilterValue},
         metadata_service_server::MetadataService,
-        GetGameMetadataRequest, GetGameMetadataResponse, GetIgdbGameSearchResultsRequest,
-        GetIgdbGameSearchResultsResponse, GetIgdbPlatformSearchResultsRequest,
-        GetIgdbPlatformSearchResultsResponse, GetIgdbSearchRequest, GetIgdbSearchResponse,
-        GetPlatformMetadataRequest, GetPlatformMetadataResponse, UpdateGameMetadataRequest,
+        Game, GameGenre, GameGenreMap, GetGameMetadataRequest, GetGameMetadataResponse,
+        GetIgdbGameSearchResultsRequest, GetIgdbGameSearchResultsResponse,
+        GetIgdbPlatformSearchResultsRequest, GetIgdbPlatformSearchResultsResponse,
+        GetIgdbSearchRequest, GetIgdbSearchResponse, GetPlatformMetadataRequest,
+        GetPlatformMetadataResponse, SimilarGameMap, UpdateGameMetadataRequest,
         UpdateGameMetadataResponse, UpdatePlatformMetadataRequest, UpdatePlatformMetadataResponse,
     },
 };
@@ -59,7 +61,7 @@ impl MetadataService for MetadataServiceHandlers {
         };
 
         let metadata = match retrom_db::schema::game_metadata::table
-            .filter(retrom_db::schema::game_metadata::game_id.eq_any(game_ids))
+            .filter(retrom_db::schema::game_metadata::game_id.eq_any(&game_ids))
             .load::<retrom::GameMetadata>(&mut conn)
             .await
         {
@@ -69,7 +71,64 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        Ok(Response::new(GetGameMetadataResponse { metadata }))
+        let (games1, games2) = diesel::alias!(schema::games as games1, schema::games as games2);
+
+        let games: Vec<Game> = games1
+            .filter(games1.field(schema::games::id).eq_any(game_ids))
+            .load::<retrom::Game>(&mut conn)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let genre_maps: Vec<(GameGenreMap, GameGenre)> = GameGenreMap::belonging_to(&games)
+            .inner_join(schema::game_genres::table)
+            .select((GameGenreMap::as_select(), GameGenre::as_select()))
+            .load(&mut conn)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let genres: HashMap<i32, GameGenres> = genre_maps
+            .grouped_by(&games)
+            .into_iter()
+            .zip(&games)
+            .map(|(maps, game)| {
+                let genres = maps
+                    .into_iter()
+                    .map(|map| map.1)
+                    .collect::<Vec<GameGenre>>();
+
+                (game.id, GameGenres { value: genres })
+            })
+            .collect();
+
+        let similar_maps_flat: Vec<(SimilarGameMap, Game)> =
+            SimilarGameMap::belonging_to(&games)
+                .inner_join(games2.on(
+                    schema::similar_game_maps::similar_game_id.eq(games2.field(schema::games::id)),
+                ))
+                .select((
+                    SimilarGameMap::as_select(),
+                    games2.fields(schema::games::all_columns),
+                ))
+                .load(&mut conn)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+
+        let similar_games: HashMap<i32, SimilarGames> = similar_maps_flat
+            .grouped_by(&games)
+            .into_iter()
+            .zip(games)
+            .map(|(maps, game)| {
+                let games: Vec<Game> = maps.into_iter().map(|map| map.1).collect();
+
+                (game.id, SimilarGames { value: games })
+            })
+            .collect();
+
+        Ok(Response::new(GetGameMetadataResponse {
+            metadata,
+            genres,
+            similar_games,
+        }))
     }
 
     #[tracing::instrument(level = Level::DEBUG, skip_all)]
@@ -216,8 +275,21 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        let fields_query =
-            "fields name, cover.url, artworks.url, artworks.height, artworks.width, summary;";
+        let fields = vec![
+            "name".to_string(),
+            "cover.url".to_string(),
+            "artworks.url".to_string(),
+            "artworks.height".to_string(),
+            "artworks.width".to_string(),
+            "summary".to_string(),
+            "websites.url".to_string(),
+            "websites.trusted".to_string(),
+            "videos.name".to_string(),
+            "videos.video_id".to_string(),
+        ]
+        .join(",");
+
+        let fields_query = format!("fields {fields};");
         let mut where_clauses = vec![];
 
         let fields = query.fields.as_ref();
@@ -236,10 +308,7 @@ impl MetadataService for MetadataServiceHandlers {
             _ => format!("where {};", where_clauses.join(" | ")),
         };
 
-        let limit_query = match query
-            .pagination
-            .and_then(|pagination| Some(pagination.limit))
-        {
+        let limit_query = match query.pagination.map(|pagination| pagination.limit) {
             Some(Some(limit)) => format!("limit {limit};"),
             _ => "limit 15;".to_string(),
         };
@@ -449,6 +518,7 @@ impl MetadataService for MetadataServiceHandlers {
                 return Err(Status::internal(why.to_string()));
             }
         };
+
         match search_type {
             IgdbSearchType::Game => {
                 let matches = match igdb::GameResult::decode(bytes) {
@@ -513,5 +583,10 @@ fn render_filter_operation(igdb_filter: (String, FilterValue)) -> String {
         FilterOperator::PrefixMatch => format!("{field} ~ {value}*"),
         FilterOperator::SuffixMatch => format!("{field} ~ *{value}"),
         FilterOperator::InfixMatch => format!("{field} ~ *{value}*"),
+        FilterOperator::All => format!("{field} = [{value}]"),
+        FilterOperator::Any => format!("{field} = ({value})"),
+        FilterOperator::NotAll => format!("{field} = ![{value}]"),
+        FilterOperator::None => format!("{field} = !({value})"),
+        FilterOperator::Exact => format!("{field} = {{{value}}}"),
     }
 }

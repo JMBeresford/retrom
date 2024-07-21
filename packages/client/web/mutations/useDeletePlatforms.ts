@@ -1,4 +1,4 @@
-import { Game, Platform } from "@/generated/retrom/models";
+import { Platform } from "@/generated/retrom/models/platforms";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

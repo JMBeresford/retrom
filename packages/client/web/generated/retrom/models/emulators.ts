@@ -6,6 +6,7 @@
 
 /* eslint-disable */
 import _m0 from "protobufjs/minimal";
+import { Timestamp } from "../google/protobuf/timestamp";
 
 export const protobufPackage = "retrom";
 
@@ -25,12 +26,16 @@ export interface Emulator {
   supportedPlatforms: number[];
   name: string;
   romType: RomType;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface NewEmulator {
   supportedPlatforms: number[];
   name: string;
   romType: RomType;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface UpdatedEmulator {
@@ -38,6 +43,8 @@ export interface UpdatedEmulator {
   supportedPlatforms: number[];
   name?: string | undefined;
   romType?: RomType | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface EmulatorProfile {
@@ -47,6 +54,8 @@ export interface EmulatorProfile {
   executablePath: string;
   supportedExtensions: string[];
   customArgs: string[];
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface NewEmulatorProfile {
@@ -55,6 +64,8 @@ export interface NewEmulatorProfile {
   executablePath: string;
   supportedExtensions: string[];
   customArgs: string[];
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface UpdatedEmulatorProfile {
@@ -64,25 +75,33 @@ export interface UpdatedEmulatorProfile {
   executablePath?: string | undefined;
   supportedExtensions: string[];
   customArgs: string[];
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface DefaultEmulatorProfile {
   platformId: number;
   emulatorProfileId: number;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface NewDefaultEmulatorProfile {
   platformId: number;
   emulatorProfileId: number;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export interface UpdatedDefaultEmulatorProfile {
   platformId: number;
   emulatorProfileId: number;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 function createBaseEmulator(): Emulator {
-  return { id: 0, supportedPlatforms: [], name: "", romType: 0 };
+  return { id: 0, supportedPlatforms: [], name: "", romType: 0, createdAt: undefined, updatedAt: undefined };
 }
 
 export const Emulator = {
@@ -100,6 +119,12 @@ export const Emulator = {
     }
     if (message.romType !== 0) {
       writer.uint32(32).int32(message.romType);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(42).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(50).fork()).ldelim();
     }
     return writer;
   },
@@ -149,6 +174,20 @@ export const Emulator = {
 
           message.romType = reader.int32() as any;
           continue;
+        case 5:
+          if (tag !== 42) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 6:
+          if (tag !== 50) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -167,12 +206,14 @@ export const Emulator = {
     message.supportedPlatforms = object.supportedPlatforms?.map((e) => e) || [];
     message.name = object.name ?? "";
     message.romType = object.romType ?? 0;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
 
 function createBaseNewEmulator(): NewEmulator {
-  return { supportedPlatforms: [], name: "", romType: 0 };
+  return { supportedPlatforms: [], name: "", romType: 0, createdAt: undefined, updatedAt: undefined };
 }
 
 export const NewEmulator = {
@@ -187,6 +228,12 @@ export const NewEmulator = {
     }
     if (message.romType !== 0) {
       writer.uint32(24).int32(message.romType);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(34).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(42).fork()).ldelim();
     }
     return writer;
   },
@@ -229,6 +276,20 @@ export const NewEmulator = {
 
           message.romType = reader.int32() as any;
           continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 5:
+          if (tag !== 42) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -246,12 +307,21 @@ export const NewEmulator = {
     message.supportedPlatforms = object.supportedPlatforms?.map((e) => e) || [];
     message.name = object.name ?? "";
     message.romType = object.romType ?? 0;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
 
 function createBaseUpdatedEmulator(): UpdatedEmulator {
-  return { id: 0, supportedPlatforms: [], name: undefined, romType: undefined };
+  return {
+    id: 0,
+    supportedPlatforms: [],
+    name: undefined,
+    romType: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
+  };
 }
 
 export const UpdatedEmulator = {
@@ -269,6 +339,12 @@ export const UpdatedEmulator = {
     }
     if (message.romType !== undefined) {
       writer.uint32(32).int32(message.romType);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(42).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(50).fork()).ldelim();
     }
     return writer;
   },
@@ -318,6 +394,20 @@ export const UpdatedEmulator = {
 
           message.romType = reader.int32() as any;
           continue;
+        case 5:
+          if (tag !== 42) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 6:
+          if (tag !== 50) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -336,12 +426,23 @@ export const UpdatedEmulator = {
     message.supportedPlatforms = object.supportedPlatforms?.map((e) => e) || [];
     message.name = object.name ?? undefined;
     message.romType = object.romType ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
 
 function createBaseEmulatorProfile(): EmulatorProfile {
-  return { id: 0, emulatorId: 0, name: "", executablePath: "", supportedExtensions: [], customArgs: [] };
+  return {
+    id: 0,
+    emulatorId: 0,
+    name: "",
+    executablePath: "",
+    supportedExtensions: [],
+    customArgs: [],
+    createdAt: undefined,
+    updatedAt: undefined,
+  };
 }
 
 export const EmulatorProfile = {
@@ -363,6 +464,12 @@ export const EmulatorProfile = {
     }
     for (const v of message.customArgs) {
       writer.uint32(50).string(v!);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(58).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -416,6 +523,20 @@ export const EmulatorProfile = {
 
           message.customArgs.push(reader.string());
           continue;
+        case 7:
+          if (tag !== 58) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -436,12 +557,22 @@ export const EmulatorProfile = {
     message.executablePath = object.executablePath ?? "";
     message.supportedExtensions = object.supportedExtensions?.map((e) => e) || [];
     message.customArgs = object.customArgs?.map((e) => e) || [];
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
 
 function createBaseNewEmulatorProfile(): NewEmulatorProfile {
-  return { emulatorId: 0, name: "", executablePath: "", supportedExtensions: [], customArgs: [] };
+  return {
+    emulatorId: 0,
+    name: "",
+    executablePath: "",
+    supportedExtensions: [],
+    customArgs: [],
+    createdAt: undefined,
+    updatedAt: undefined,
+  };
 }
 
 export const NewEmulatorProfile = {
@@ -460,6 +591,12 @@ export const NewEmulatorProfile = {
     }
     for (const v of message.customArgs) {
       writer.uint32(42).string(v!);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(50).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(58).fork()).ldelim();
     }
     return writer;
   },
@@ -506,6 +643,20 @@ export const NewEmulatorProfile = {
 
           message.customArgs.push(reader.string());
           continue;
+        case 6:
+          if (tag !== 50) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 7:
+          if (tag !== 58) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -525,6 +676,8 @@ export const NewEmulatorProfile = {
     message.executablePath = object.executablePath ?? "";
     message.supportedExtensions = object.supportedExtensions?.map((e) => e) || [];
     message.customArgs = object.customArgs?.map((e) => e) || [];
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
@@ -537,6 +690,8 @@ function createBaseUpdatedEmulatorProfile(): UpdatedEmulatorProfile {
     executablePath: undefined,
     supportedExtensions: [],
     customArgs: [],
+    createdAt: undefined,
+    updatedAt: undefined,
   };
 }
 
@@ -559,6 +714,12 @@ export const UpdatedEmulatorProfile = {
     }
     for (const v of message.customArgs) {
       writer.uint32(50).string(v!);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(58).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -612,6 +773,20 @@ export const UpdatedEmulatorProfile = {
 
           message.customArgs.push(reader.string());
           continue;
+        case 7:
+          if (tag !== 58) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -632,12 +807,14 @@ export const UpdatedEmulatorProfile = {
     message.executablePath = object.executablePath ?? undefined;
     message.supportedExtensions = object.supportedExtensions?.map((e) => e) || [];
     message.customArgs = object.customArgs?.map((e) => e) || [];
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
 
 function createBaseDefaultEmulatorProfile(): DefaultEmulatorProfile {
-  return { platformId: 0, emulatorProfileId: 0 };
+  return { platformId: 0, emulatorProfileId: 0, createdAt: undefined, updatedAt: undefined };
 }
 
 export const DefaultEmulatorProfile = {
@@ -647,6 +824,12 @@ export const DefaultEmulatorProfile = {
     }
     if (message.emulatorProfileId !== 0) {
       writer.uint32(16).int32(message.emulatorProfileId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -672,6 +855,20 @@ export const DefaultEmulatorProfile = {
 
           message.emulatorProfileId = reader.int32();
           continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -688,12 +885,14 @@ export const DefaultEmulatorProfile = {
     const message = createBaseDefaultEmulatorProfile();
     message.platformId = object.platformId ?? 0;
     message.emulatorProfileId = object.emulatorProfileId ?? 0;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
 
 function createBaseNewDefaultEmulatorProfile(): NewDefaultEmulatorProfile {
-  return { platformId: 0, emulatorProfileId: 0 };
+  return { platformId: 0, emulatorProfileId: 0, createdAt: undefined, updatedAt: undefined };
 }
 
 export const NewDefaultEmulatorProfile = {
@@ -703,6 +902,12 @@ export const NewDefaultEmulatorProfile = {
     }
     if (message.emulatorProfileId !== 0) {
       writer.uint32(16).int32(message.emulatorProfileId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -728,6 +933,20 @@ export const NewDefaultEmulatorProfile = {
 
           message.emulatorProfileId = reader.int32();
           continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -744,12 +963,14 @@ export const NewDefaultEmulatorProfile = {
     const message = createBaseNewDefaultEmulatorProfile();
     message.platformId = object.platformId ?? 0;
     message.emulatorProfileId = object.emulatorProfileId ?? 0;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
 
 function createBaseUpdatedDefaultEmulatorProfile(): UpdatedDefaultEmulatorProfile {
-  return { platformId: 0, emulatorProfileId: 0 };
+  return { platformId: 0, emulatorProfileId: 0, createdAt: undefined, updatedAt: undefined };
 }
 
 export const UpdatedDefaultEmulatorProfile = {
@@ -759,6 +980,12 @@ export const UpdatedDefaultEmulatorProfile = {
     }
     if (message.emulatorProfileId !== 0) {
       writer.uint32(16).int32(message.emulatorProfileId);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -784,6 +1011,20 @@ export const UpdatedDefaultEmulatorProfile = {
 
           message.emulatorProfileId = reader.int32();
           continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -800,6 +1041,8 @@ export const UpdatedDefaultEmulatorProfile = {
     const message = createBaseUpdatedDefaultEmulatorProfile();
     message.platformId = object.platformId ?? 0;
     message.emulatorProfileId = object.emulatorProfileId ?? 0;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };
@@ -812,3 +1055,15 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+function toTimestamp(date: Date): Timestamp {
+  const seconds = Math.trunc(date.getTime() / 1_000);
+  const nanos = (date.getTime() % 1_000) * 1_000_000;
+  return { seconds, nanos };
+}
+
+function fromTimestamp(t: Timestamp): Date {
+  let millis = (t.seconds || 0) * 1_000;
+  millis += (t.nanos || 0) / 1_000_000;
+  return new globalThis.Date(millis);
+}

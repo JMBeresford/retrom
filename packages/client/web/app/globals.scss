@@ -4,33 +4,36 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 263 91.4% 4.1%;
+    --foreground: 263 20% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 264 71.4% 4.1%;
+    --card-foreground: 260 20% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 264 71.4% 4.1%;
+    --popover-foreground: 260 20% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 270 30.9% 38.9%;
+    --primary-foreground: 270 20% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
 
-    --muted: 217.2 42.6% 8.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 245 37.9% 7.9%;
+    --muted-foreground: 245.9 10.6% 64.9%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 263.4 35% 23.4%;
+    --accent-foreground: 263 20% 98%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 350 100% 60.6%;
+    --destructive-foreground: 340 30% 98%;
+    --destructive-text: 350 100% 60.6%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 235 37.9% 25.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 263.4 70% 50.4%;
+
+    --radius: 6px;
   }
 }
 
@@ -43,6 +46,7 @@
   .ring {
     @apply ring-inset;
   }
+
   body {
     @apply bg-background text-foreground;
   }

@@ -34,6 +34,11 @@ export const IgdbFilters_FilterOperator = {
   PREFIX_MATCH: 6,
   SUFFIX_MATCH: 7,
   INFIX_MATCH: 8,
+  ANY: 9,
+  ALL: 10,
+  NONE: 11,
+  NOT_ALL: 12,
+  EXACT: 13,
   UNRECOGNIZED: -1,
 } as const;
 
@@ -49,6 +54,11 @@ export namespace IgdbFilters_FilterOperator {
   export type PREFIX_MATCH = typeof IgdbFilters_FilterOperator.PREFIX_MATCH;
   export type SUFFIX_MATCH = typeof IgdbFilters_FilterOperator.SUFFIX_MATCH;
   export type INFIX_MATCH = typeof IgdbFilters_FilterOperator.INFIX_MATCH;
+  export type ANY = typeof IgdbFilters_FilterOperator.ANY;
+  export type ALL = typeof IgdbFilters_FilterOperator.ALL;
+  export type NONE = typeof IgdbFilters_FilterOperator.NONE;
+  export type NOT_ALL = typeof IgdbFilters_FilterOperator.NOT_ALL;
+  export type EXACT = typeof IgdbFilters_FilterOperator.EXACT;
   export type UNRECOGNIZED = typeof IgdbFilters_FilterOperator.UNRECOGNIZED;
 }
 

@@ -1,13 +1,18 @@
 "use client";
 
 import { toast } from "@/components/ui/use-toast";
+import { GameFile } from "@/generated/retrom/models/game-files";
+import { Game } from "@/generated/retrom/models/games";
 import {
-  Game,
-  GameFile,
   GameMetadata,
-  Platform,
   PlatformMetadata,
-} from "@/generated/retrom/models";
+} from "@/generated/retrom/models/metadata";
+import { Platform } from "@/generated/retrom/models/platforms";
+
+import {
+  GetGameMetadataResponse_GameGenres,
+  GetGameMetadataResponse_SimilarGames,
+} from "@/generated/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -18,6 +23,10 @@ export type GameDetailContext = {
   gameFiles: GameFile[];
   platform: Platform;
   gameMetadata?: GameMetadata;
+  extraMetadata?: {
+    genres?: GetGameMetadataResponse_GameGenres;
+    similarGames?: GetGameMetadataResponse_SimilarGames;
+  };
   platformMetadata?: PlatformMetadata;
 };
 
@@ -29,35 +38,45 @@ export function GameDetailProvider(props: PropsWithChildren) {
   const retromClient = useRetromClient();
 
   const gameId = parseInt(params.get("gameId") ?? "");
-  const platformId = parseInt(params.get("platformId") ?? "");
 
   const { data: gameData, status: gameStatus } = useQuery({
     queryKey: ["games", "game-metadata", gameId],
     queryFn: async () => {
       const data = await retromClient.gameClient.getGames({
-        withMetadata: true,
         withFiles: true,
         ids: [gameId],
       });
 
       const game = data.games.at(0);
-      const gameMetadata = data.metadata.at(0);
       const gameFiles = data.gameFiles;
 
       return {
         game,
-        gameMetadata,
         gameFiles,
       };
     },
   });
 
+  const paramsPlatformId = params.get("platformId");
+  const platformId =
+    gameData?.game?.platformId ??
+    (paramsPlatformId !== null ? parseInt(paramsPlatformId) : undefined);
+
+  const { data: gameMetadata, status: gameMetadataStatus } = useQuery({
+    queryKey: ["game", "games", "game-metadata", gameId],
+    queryFn: async () =>
+      retromClient.metadataClient.getGameMetadata({
+        gameIds: [gameId],
+      }),
+  });
+
   const { data: platformData, status: platformStatus } = useQuery({
     queryKey: ["platforms", "platform-metadata", platformId],
+    enabled: platformId !== undefined,
     queryFn: async () => {
       const data = await retromClient.platformClient.getPlatforms({
         withMetadata: true,
-        ids: [platformId],
+        ids: [platformId!],
       });
 
       const platform = data.platforms.at(0);
@@ -70,11 +89,19 @@ export function GameDetailProvider(props: PropsWithChildren) {
     },
   });
 
-  if (gameStatus === "error" || platformStatus === "error") {
+  if (
+    gameStatus === "error" ||
+    platformStatus === "error" ||
+    gameMetadataStatus === "error"
+  ) {
     return <span>Error loading game details</span>;
   }
 
-  if (gameStatus === "pending" || platformStatus === "pending") {
+  if (
+    gameStatus === "pending" ||
+    platformStatus === "pending" ||
+    gameMetadataStatus === "pending"
+  ) {
     return <span>Loading...</span>;
   }
 
@@ -94,7 +121,11 @@ export function GameDetailProvider(props: PropsWithChildren) {
     game: gameData.game,
     gameFiles: gameData.gameFiles,
     platform: platformData.platform,
-    gameMetadata: gameData.gameMetadata,
+    gameMetadata: gameMetadata.metadata.at(0),
+    extraMetadata: {
+      genres: gameMetadata.genres.get(gameData.game.id),
+      similarGames: gameMetadata.similarGames.get(gameData.game.id),
+    },
     platformMetadata: platformData.platformMetadata,
   };
 
