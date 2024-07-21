@@ -3900,7 +3900,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-client"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "async-compression",
  "bb8",
@@ -3929,7 +3929,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-codegen"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "derive_builder",
  "diesel",
@@ -3947,7 +3947,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-db"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "async-trait",
  "bb8",
@@ -3962,7 +3962,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-installer"
-version = "0.0.1"
+version = "0.0.3"
 dependencies = [
  "diesel",
  "diesel-async",
@@ -3982,7 +3982,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-launcher"
-version = "0.0.1"
+version = "0.0.3"
 dependencies = [
  "open",
  "retrom-codegen",
@@ -3997,7 +3997,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "bb8",
  "bigdecimal",
