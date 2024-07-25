@@ -3,6 +3,7 @@ syntax = "proto3";
 package retrom;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 message GameMetadata {
   int32 game_id = 1;
@@ -18,6 +19,9 @@ message GameMetadata {
   repeated string video_urls = 11;
   repeated string screenshot_urls = 12;
   repeated string artwork_urls = 13;
+  google.protobuf.Timestamp release_date = 14;
+  google.protobuf.Timestamp last_played = 15;
+  optional int32 minutes_played = 16;
 }
 
 message NewGameMetadata {
@@ -34,6 +38,9 @@ message NewGameMetadata {
   repeated string video_urls = 11;
   repeated string screenshot_urls = 12;
   repeated string artwork_urls = 13;
+  optional google.protobuf.Timestamp release_date = 14;
+  optional google.protobuf.Timestamp last_played = 15;
+  optional int32 minutes_played = 16;
 }
 
 message UpdatedGameMetadata {
@@ -50,6 +57,9 @@ message UpdatedGameMetadata {
   repeated string video_urls = 11;
   repeated string screenshot_urls = 12;
   repeated string artwork_urls = 13;
+  optional google.protobuf.Timestamp release_date = 14;
+  optional google.protobuf.Timestamp last_played = 15;
+  optional int32 minutes_played = 16;
 }
 
 message PlatformMetadata {

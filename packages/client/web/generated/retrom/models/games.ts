@@ -14,23 +14,23 @@ export interface Game {
   id: number;
   path: string;
   platformId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface NewGame {
   path: string;
   platformId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface UpdatedGame {
   id: number;
   path?: string | undefined;
   platformId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 function createBaseGame(): Game {
@@ -49,10 +49,10 @@ export const Game = {
       writer.uint32(32).int32(message.platformId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(42).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(42).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(50).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(50).fork()).ldelim();
     }
     return writer;
   },
@@ -90,14 +90,14 @@ export const Game = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 6:
           if (tag !== 50) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -116,8 +116,12 @@ export const Game = {
     message.id = object.id ?? 0;
     message.path = object.path ?? "";
     message.platformId = object.platformId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -135,10 +139,10 @@ export const NewGame = {
       writer.uint32(16).int32(message.platformId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(26).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -169,14 +173,14 @@ export const NewGame = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -194,8 +198,12 @@ export const NewGame = {
     const message = createBaseNewGame();
     message.path = object.path ?? "";
     message.platformId = object.platformId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -216,10 +224,10 @@ export const UpdatedGame = {
       writer.uint32(24).int32(message.platformId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(34).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(42).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(42).fork()).ldelim();
     }
     return writer;
   },
@@ -257,14 +265,14 @@ export const UpdatedGame = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 5:
           if (tag !== 42) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -283,8 +291,12 @@ export const UpdatedGame = {
     message.id = object.id ?? 0;
     message.path = object.path ?? undefined;
     message.platformId = object.platformId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -297,15 +309,3 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
-
-function toTimestamp(date: Date): Timestamp {
-  const seconds = Math.trunc(date.getTime() / 1_000);
-  const nanos = (date.getTime() % 1_000) * 1_000_000;
-  return { seconds, nanos };
-}
-
-function fromTimestamp(t: Timestamp): Date {
-  let millis = (t.seconds || 0) * 1_000;
-  millis += (t.nanos || 0) / 1_000_000;
-  return new globalThis.Date(millis);
-}

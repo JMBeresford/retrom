@@ -78,6 +78,9 @@ diesel::table! {
         video_urls -> Array<Text>,
         screenshot_urls -> Array<Text>,
         artwork_urls -> Array<Text>,
+        release_date -> Nullable<Timestamptz>,
+        last_played -> Nullable<Timestamptz>,
+        minutes_played -> Nullable<Int4>,
     }
 }
 

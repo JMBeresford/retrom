@@ -30,7 +30,12 @@ type FormFieldRenderer = ({
 
 type EditableGameMetadata = Omit<
   GameMetadata,
-  "gameId" | "createdAt" | "updatedAt"
+  | "gameId"
+  | "createdAt"
+  | "updatedAt"
+  | "releaseDate"
+  | "lastPlayed"
+  | "minutesPlayed"
 >;
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({

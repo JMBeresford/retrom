@@ -13,12 +13,13 @@ links = "tauri-plugin-launcher"
 [dependencies]
 tauri = { workspace = true }
 tokio = { workspace = true }
+tonic = { workspace = true }
 serde = { workspace = true }
+dotenvy = { workspace = true }
 thiserror = "1.0"
 tracing = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-plugin-installer = { workspace = true }
-open = "5.2.0"
 
 [build-dependencies]
 tauri-plugin = { version = "2.0.0-beta.17", features = ["build"] }

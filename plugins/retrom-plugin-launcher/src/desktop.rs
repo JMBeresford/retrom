@@ -1,13 +1,21 @@
 use std::{collections::HashMap, path::PathBuf};
 
-use retrom_codegen::retrom::{GamePlayStatusUpdate, PlayStatus};
+use retrom_codegen::{
+    retrom::{
+        metadata_service_client::MetadataServiceClient, GamePlayStatusUpdate, GetGamesRequest,
+        PlayStatus, UpdateGameMetadataRequest, UpdatedGameMetadata,
+    },
+    timestamp::Timestamp,
+};
 use serde::de::DeserializeOwned;
-use tauri::{plugin::PluginApi, AppHandle, Manager, Runtime};
+use tauri::{plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
 use tokio::{
     process::Command,
     sync::{Mutex, RwLock},
 };
 use tracing::{info, instrument, warn};
+
+use crate::LauncherExt;
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
     app: &AppHandle<R>,
@@ -19,6 +27,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 type GameId = i32;
 pub struct GameProcess {
     pub send: Mutex<tokio::sync::mpsc::Sender<()>>,
+    pub start_time: std::time::SystemTime,
 }
 
 /// Access to the launcher APIs.
@@ -75,6 +84,65 @@ impl<R: Runtime> Launcher<R> {
             warn!("Game {} is not running", game_id);
         }
 
+        let game_client = self.app_handle.game_client();
+        let metadata_client = self.app_handle.metadata_client();
+
+        let metadata = game_client
+            .write()
+            .await
+            .get_games(tonic::Request::new(GetGamesRequest {
+                ids: vec![game_id],
+                with_metadata: Some(true),
+                ..Default::default()
+            }))
+            .await
+            .ok()
+            .and_then(|res| res.into_inner().metadata.into_iter().next());
+
+        if let (Some(metadata), Some(child)) = (metadata, child) {
+            // Use existing array members as we cannot define them as optional in the proto
+            // definition.
+            let mut updated_metadata = UpdatedGameMetadata {
+                game_id,
+                links: metadata.links,
+                video_urls: metadata.video_urls,
+                artwork_urls: metadata.artwork_urls,
+                screenshot_urls: metadata.screenshot_urls,
+                ..Default::default()
+            };
+
+            let now = std::time::SystemTime::now();
+
+            updated_metadata.last_played = Some(now.into());
+
+            if let Some(played) = metadata.minutes_played {
+                let session_duration = now
+                    .duration_since(child.start_time)
+                    .ok()
+                    .map(|dur| dur.as_secs() / 60)
+                    .map(i32::try_from)
+                    .map(|res| res.ok().unwrap_or(0));
+
+                if let Some(mins) = session_duration {
+                    info!("Game {} played for {} minutes", game_id, mins);
+                    updated_metadata.minutes_played = Some(played + mins);
+                }
+            }
+
+            let request = tonic::Request::new(UpdateGameMetadataRequest {
+                metadata: vec![updated_metadata],
+            });
+
+            if let Err(why) = metadata_client
+                .write()
+                .await
+                .update_game_metadata(request)
+                .await
+            {
+                warn!("Failed to update game metadata: {}", why);
+            }
+        }
+
         self.app_handle.emit(
             "game-stopped",
             GamePlayStatusUpdate {
@@ -112,9 +180,7 @@ impl<R: Runtime> Launcher<R> {
                 path
             };
 
-            let cmd = Command::new(program);
-
-            cmd
+            Command::new(program)
         }
         #[cfg(target_os = "windows")]
         {

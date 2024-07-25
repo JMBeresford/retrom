@@ -19,7 +19,7 @@ export function GameDetails() {
   const titleSize = (name?.length ?? 0) > 20 ? "text-7xl" : "text-9xl";
 
   return (
-    <div className={cn("relative grid grid-cols-[300px_1fr] gap-8 p-5")}>
+    <div className={cn("relative grid grid-cols-[300px_1fr] gap-8")}>
       <div
         className={cn(
           "col-span-2 fixed top-0 left-0 right-0 h-[90dvh]  z-[-1] overflow-hidden bg-secondary",

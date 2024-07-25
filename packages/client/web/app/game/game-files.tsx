@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGameDetail } from "./game-context";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { getFileName } from "@/lib/utils";
+import { cn, getFileName } from "@/lib/utils";
 import { useState } from "react";
 import {
   Select,
@@ -24,11 +24,7 @@ import { EllipsisVerticalIcon } from "lucide-react";
 export function GameFiles() {
   const { gameFiles } = useGameDetail();
 
-  console.log(gameFiles);
-
-  const [selectedFile, setSelectedFile] = useState(
-    gameFiles.at(0)?.id.toString(),
-  );
+  const [selectedFile, setSelectedFile] = useState<string | undefined>();
 
   return (
     <Card className="col-span-2 ring-inset">
@@ -37,13 +33,18 @@ export function GameFiles() {
       </CardHeader>
 
       <CardContent className="flex gap-px">
-        <Select
-          value={selectedFile}
-          onValueChange={setSelectedFile}
-          defaultValue={gameFiles.at(0)?.id.toString()}
-        >
-          <SelectTrigger className="text-left rounded-r-none">
-            <SelectValue placeholder="No files found" />
+        <Select value={selectedFile} onValueChange={setSelectedFile}>
+          <SelectTrigger
+            className={cn(
+              selectedFile === undefined && "text-muted-foreground",
+              "text-left rounded-r-none",
+            )}
+          >
+            <SelectValue
+              placeholder={
+                gameFiles.length ? "Select a file" : "No files found"
+              }
+            />
           </SelectTrigger>
 
           <SelectContent>

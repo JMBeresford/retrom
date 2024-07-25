@@ -28,7 +28,10 @@ export function usePlayStatusQuery(game: Game) {
           (event: { payload: GamePlayStatusUpdate }) => {
             if (event.payload.gameId === game.id) {
               queryClient.invalidateQueries({
-                queryKey: [queryKey, game.path],
+                predicate: (query) =>
+                  [queryKey, game.path, "game-metadata"].some((key) =>
+                    query.queryKey.includes(key),
+                  ),
               });
             }
           },
@@ -41,7 +44,10 @@ export function usePlayStatusQuery(game: Game) {
           (event: { payload: GamePlayStatusUpdate }) => {
             if (event.payload.gameId === game.id) {
               queryClient.invalidateQueries({
-                queryKey: [queryKey, game.path],
+                predicate: (query) =>
+                  [queryKey, game.path, "game-metadata"].some((key) =>
+                    query.queryKey.includes(key),
+                  ),
               });
             }
           },

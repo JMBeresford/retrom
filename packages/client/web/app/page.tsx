@@ -1,3 +1,11 @@
+import { RecentlyAdded } from "./recently-added";
+import { RecentlyPlayed } from "./recently-played";
+
 export default async function Home() {
-  return <main className="flex min-h-screen flex-col items-center p-24"></main>;
+  return (
+    <section className="flex flex-col gap-5">
+      <RecentlyAdded />
+      <RecentlyPlayed />
+    </section>
+  );
 }

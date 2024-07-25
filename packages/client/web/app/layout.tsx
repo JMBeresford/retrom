@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Exo_2 as Inter } from "next/font/google";
 import "./globals.scss";
 import { cn } from "@/lib/utils";
 import { SideBar } from "./side-bar";
@@ -10,13 +10,17 @@ import {
 } from "@/components/ui/resizable";
 import { Toaster } from "@/components/ui/toaster";
 import { Menubar } from "@/components/menubar";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { RetromClientProvider } from "@/providers/retrom-client/";
 import { QueryClientProvider } from "@/providers/query-client";
 import { Suspense } from "react";
 import { IS_DESKTOP } from "@/lib/env";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({
+  weight: "variable",
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -42,9 +46,12 @@ export default async function RootLayout({
         <Suspense fallback={null}>
           <RetromClientProvider value={retromClient}>
             <QueryClientProvider>
-              <div className="h-screen max-h-screen relative flex flex-col">
+              <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
                 <Menubar />
-                <ResizablePanelGroup direction="horizontal" className="h-full">
+                <ResizablePanelGroup
+                  direction="horizontal"
+                  className="h-full w-full"
+                >
                   <ResizablePanel
                     defaultSize={25}
                     maxSize={40}
@@ -63,8 +70,8 @@ export default async function RootLayout({
                   <ResizableHandle />
 
                   <ResizablePanel defaultSize={75}>
-                    <ScrollArea className="h-full max-h-full">
-                      <main className="pb-16">{children}</main>
+                    <ScrollArea className="h-full max-h-full w-full max-w-full">
+                      <main className="p-5 pb-16">{children}</main>
                     </ScrollArea>
                   </ResizablePanel>
                 </ResizablePanelGroup>

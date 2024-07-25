@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, path::PathBuf, sync::Arc};
+use std::{ffi::OsStr, path::PathBuf};
 
 use retrom_codegen::retrom::{
     GamePlayStatusUpdate, GetGamePlayStatusPayload, InstallationStatus, PlayGamePayload,
@@ -6,7 +6,7 @@ use retrom_codegen::retrom::{
 };
 use retrom_plugin_installer::InstallerExt;
 use tauri::{command, AppHandle, Runtime};
-use tokio::sync::{Mutex, RwLock};
+use tokio::{sync::Mutex, time::Instant};
 use tracing::{info, instrument};
 
 use crate::{desktop::GameProcess, LauncherExt, Result};
@@ -80,7 +80,13 @@ pub(crate) async fn play_game<R: Runtime>(
     let send = Mutex::new(send);
 
     launcher
-        .mark_game_as_running(game_id, GameProcess { send })
+        .mark_game_as_running(
+            game_id,
+            GameProcess {
+                send,
+                start_time: std::time::SystemTime::now(),
+            },
+        )
         .await?;
 
     let app = app.clone();

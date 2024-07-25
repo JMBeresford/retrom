@@ -33,15 +33,24 @@ export function PlayGameButton() {
   });
 
   if (queryStatus === "pending") {
-    return <Button disabled>Launching...</Button>;
+    return (
+      <Button className="rounded-none" disabled>
+        Launching...
+      </Button>
+    );
   }
 
   if (playStatusUpdate?.playStatus === PlayStatus.PLAYING) {
-    return <Button onClick={() => stopAction({ game })}>Stop</Button>;
+    return (
+      <Button className="rounded-none" onClick={() => stopAction({ game })}>
+        Stop
+      </Button>
+    );
   }
 
   return (
     <Button
+      className="rounded-none"
       disabled={!profile}
       onClick={() => {
         const emulatorProfile = emulatorProfilesQuery.data?.at(0);

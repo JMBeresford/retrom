@@ -1,5 +1,5 @@
 diff --git a/packages/db/src/schema.rs b/packages/db/src/schema.rs
-index 02352ec..acbbb1c 100644
+index 4d49dfd..33f7ae3 100644
 --- a/packages/db/src/schema.rs
 +++ b/packages/db/src/schema.rs
 @@ -12,23 +12,23 @@ diesel::table! {
@@ -44,9 +44,9 @@ index 02352ec..acbbb1c 100644
 +        video_urls -> Array<Text>,
 +        screenshot_urls -> Array<Text>,
 +        artwork_urls -> Array<Text>,
+         release_date -> Nullable<Timestamptz>,
+         last_played -> Nullable<Timestamptz>,
+         minutes_played -> Nullable<Int4>,
      }
  }
  
- diesel::table! {
-     games (id) {
-         id -> Int4,

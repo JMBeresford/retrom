@@ -9,11 +9,10 @@ edition.workspace = true
 
 [dependencies]
 diesel = { workspace = true }
+diesel_migrations = { workspace = true }
 diesel-async = { workspace = true }
 bb8 = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-tracing = { workspace = true }
 dotenvy = { workspace = true }
-derive_builder = { workspace = true }
 async-trait = { workspace = true }

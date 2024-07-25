@@ -27,19 +27,16 @@ export function InstallGameButton() {
     installationRequest.status === "pending";
 
   if (error) {
-    toast({
-      title: "Error checking installation",
-      description:
-        "An error occurred while checking if the game is installed. Check the logs for more information.",
-      variant: "destructive",
-    });
-
-    return <Button disabled>Install</Button>;
+    return (
+      <Button className="rounded-none" disabled>
+        Something went wrong...
+      </Button>
+    );
   }
 
   if (pending) {
     return (
-      <Button disabled>
+      <Button className="rounded-none" disabled>
         <LoaderCircleIcon className="animate-spin" />
       </Button>
     );
@@ -53,5 +50,12 @@ export function InstallGameButton() {
     );
   }
 
-  return <Button onClick={async () => void install()}>Install</Button>;
+  return (
+    <Button
+      className="rounded-none"
+      onClick={async () => void install(undefined)}
+    >
+      Install
+    </Button>
+  );
 }

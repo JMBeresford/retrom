@@ -10,7 +10,7 @@ const DIESEL_INSERTABLE_DERIVES: [&str; 1] = ["Insertable"];
 // Derives that are used for structs representing changesets, or to-be-updated rows
 const DIESEL_UPDATE_DERIVES: [&str; 2] = ["AsChangeset", "Insertable"];
 
-const OTHER_DERIVES: [&str; 3] = ["derive_builder::Builder", "Hash", "Eq"];
+const OTHER_DERIVES: [&str; 2] = ["Hash", "Eq"];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not set"));
@@ -49,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tonic_build::configure()
         .type_attribute(".", "#[derive(serde::Serialize, serde::Deserialize)]")
         .extern_path(".google.protobuf.Timestamp", "crate::timestamp::Timestamp")
+        .extern_path(".google.protobuf.Duration", "::prost_wkt_types::Duration")
         .message_attribute(
             ".retrom",
             "#[serde(rename_all(serialize = \"camelCase\", deserialize = \"camelCase\"))]",

@@ -1,16 +1,4 @@
 services:
-  retrom-service:
-    build:
-      context: ..
-      dockerfile: ./docker/Dockerfile
-    restart: always
-    ports:
-      - 5101:5101
-    environment:
-      DATABASE_URL: postgresql://postgres:password@retrom-db:5432/retrom-dev
-    depends_on:
-      - retrom-db
-
   retrom-db:
     image: postgres
     hostname: retrom-db

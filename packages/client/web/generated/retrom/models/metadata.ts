@@ -19,12 +19,15 @@ export interface GameMetadata {
   backgroundUrl?: string | undefined;
   iconUrl?: string | undefined;
   igdbId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
   links: string[];
   videoUrls: string[];
   screenshotUrls: string[];
   artworkUrls: string[];
+  releaseDate?: Timestamp | undefined;
+  lastPlayed?: Timestamp | undefined;
+  minutesPlayed?: number | undefined;
 }
 
 export interface NewGameMetadata {
@@ -35,12 +38,15 @@ export interface NewGameMetadata {
   backgroundUrl?: string | undefined;
   iconUrl?: string | undefined;
   igdbId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
   links: string[];
   videoUrls: string[];
   screenshotUrls: string[];
   artworkUrls: string[];
+  releaseDate?: Timestamp | undefined;
+  lastPlayed?: Timestamp | undefined;
+  minutesPlayed?: number | undefined;
 }
 
 export interface UpdatedGameMetadata {
@@ -51,12 +57,15 @@ export interface UpdatedGameMetadata {
   backgroundUrl?: string | undefined;
   iconUrl?: string | undefined;
   igdbId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
   links: string[];
   videoUrls: string[];
   screenshotUrls: string[];
   artworkUrls: string[];
+  releaseDate?: Timestamp | undefined;
+  lastPlayed?: Timestamp | undefined;
+  minutesPlayed?: number | undefined;
 }
 
 export interface PlatformMetadata {
@@ -66,8 +75,8 @@ export interface PlatformMetadata {
   backgroundUrl?: string | undefined;
   logoUrl?: string | undefined;
   igdbId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface NewPlatformMetadata {
@@ -77,8 +86,8 @@ export interface NewPlatformMetadata {
   backgroundUrl?: string | undefined;
   logoUrl?: string | undefined;
   igdbId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface UpdatedPlatformMetadata {
@@ -88,74 +97,74 @@ export interface UpdatedPlatformMetadata {
   backgroundUrl?: string | undefined;
   logoUrl?: string | undefined;
   igdbId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface GameGenre {
   id: number;
   slug: string;
   name: string;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface NewGameGenre {
   id?: number | undefined;
   slug: string;
   name: string;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface UpdatedGameGenre {
   id: number;
   slug?: string | undefined;
   name?: string | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface GameGenreMap {
   gameId: number;
   genreId: number;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface NewGameGenreMap {
   gameId: number;
   genreId: number;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface UpdatedGameGenreMap {
   gameId?: number | undefined;
   genreId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface SimilarGameMap {
   gameId: number;
   similarGameId: number;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface NewSimilarGameMap {
   gameId: number;
   similarGameId: number;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface UpdatedSimilarGameMap {
   gameId: number;
   similarGameId: number;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 function createBaseGameMetadata(): GameMetadata {
@@ -173,6 +182,9 @@ function createBaseGameMetadata(): GameMetadata {
     videoUrls: [],
     screenshotUrls: [],
     artworkUrls: [],
+    releaseDate: undefined,
+    lastPlayed: undefined,
+    minutesPlayed: undefined,
   };
 }
 
@@ -200,10 +212,10 @@ export const GameMetadata = {
       writer.uint32(56).int64(message.igdbId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(66).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(66).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(74).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(74).fork()).ldelim();
     }
     for (const v of message.links) {
       writer.uint32(82).string(v!);
@@ -216,6 +228,15 @@ export const GameMetadata = {
     }
     for (const v of message.artworkUrls) {
       writer.uint32(106).string(v!);
+    }
+    if (message.releaseDate !== undefined) {
+      Timestamp.encode(message.releaseDate, writer.uint32(114).fork()).ldelim();
+    }
+    if (message.lastPlayed !== undefined) {
+      Timestamp.encode(message.lastPlayed, writer.uint32(122).fork()).ldelim();
+    }
+    if (message.minutesPlayed !== undefined) {
+      writer.uint32(128).int32(message.minutesPlayed);
     }
     return writer;
   },
@@ -281,14 +302,14 @@ export const GameMetadata = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 9:
           if (tag !== 74) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 10:
           if (tag !== 82) {
@@ -318,6 +339,27 @@ export const GameMetadata = {
 
           message.artworkUrls.push(reader.string());
           continue;
+        case 14:
+          if (tag !== 114) {
+            break;
+          }
+
+          message.releaseDate = Timestamp.decode(reader, reader.uint32());
+          continue;
+        case 15:
+          if (tag !== 122) {
+            break;
+          }
+
+          message.lastPlayed = Timestamp.decode(reader, reader.uint32());
+          continue;
+        case 16:
+          if (tag !== 128) {
+            break;
+          }
+
+          message.minutesPlayed = reader.int32();
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -339,12 +381,23 @@ export const GameMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.iconUrl = object.iconUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     message.links = object.links?.map((e) => e) || [];
     message.videoUrls = object.videoUrls?.map((e) => e) || [];
     message.screenshotUrls = object.screenshotUrls?.map((e) => e) || [];
     message.artworkUrls = object.artworkUrls?.map((e) => e) || [];
+    message.releaseDate = (object.releaseDate !== undefined && object.releaseDate !== null)
+      ? Timestamp.fromPartial(object.releaseDate)
+      : undefined;
+    message.lastPlayed = (object.lastPlayed !== undefined && object.lastPlayed !== null)
+      ? Timestamp.fromPartial(object.lastPlayed)
+      : undefined;
+    message.minutesPlayed = object.minutesPlayed ?? undefined;
     return message;
   },
 };
@@ -364,6 +417,9 @@ function createBaseNewGameMetadata(): NewGameMetadata {
     videoUrls: [],
     screenshotUrls: [],
     artworkUrls: [],
+    releaseDate: undefined,
+    lastPlayed: undefined,
+    minutesPlayed: undefined,
   };
 }
 
@@ -391,10 +447,10 @@ export const NewGameMetadata = {
       writer.uint32(56).int64(message.igdbId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(66).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(66).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(74).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(74).fork()).ldelim();
     }
     for (const v of message.links) {
       writer.uint32(82).string(v!);
@@ -407,6 +463,15 @@ export const NewGameMetadata = {
     }
     for (const v of message.artworkUrls) {
       writer.uint32(106).string(v!);
+    }
+    if (message.releaseDate !== undefined) {
+      Timestamp.encode(message.releaseDate, writer.uint32(114).fork()).ldelim();
+    }
+    if (message.lastPlayed !== undefined) {
+      Timestamp.encode(message.lastPlayed, writer.uint32(122).fork()).ldelim();
+    }
+    if (message.minutesPlayed !== undefined) {
+      writer.uint32(128).int32(message.minutesPlayed);
     }
     return writer;
   },
@@ -472,14 +537,14 @@ export const NewGameMetadata = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 9:
           if (tag !== 74) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 10:
           if (tag !== 82) {
@@ -509,6 +574,27 @@ export const NewGameMetadata = {
 
           message.artworkUrls.push(reader.string());
           continue;
+        case 14:
+          if (tag !== 114) {
+            break;
+          }
+
+          message.releaseDate = Timestamp.decode(reader, reader.uint32());
+          continue;
+        case 15:
+          if (tag !== 122) {
+            break;
+          }
+
+          message.lastPlayed = Timestamp.decode(reader, reader.uint32());
+          continue;
+        case 16:
+          if (tag !== 128) {
+            break;
+          }
+
+          message.minutesPlayed = reader.int32();
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -530,12 +616,23 @@ export const NewGameMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.iconUrl = object.iconUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     message.links = object.links?.map((e) => e) || [];
     message.videoUrls = object.videoUrls?.map((e) => e) || [];
     message.screenshotUrls = object.screenshotUrls?.map((e) => e) || [];
     message.artworkUrls = object.artworkUrls?.map((e) => e) || [];
+    message.releaseDate = (object.releaseDate !== undefined && object.releaseDate !== null)
+      ? Timestamp.fromPartial(object.releaseDate)
+      : undefined;
+    message.lastPlayed = (object.lastPlayed !== undefined && object.lastPlayed !== null)
+      ? Timestamp.fromPartial(object.lastPlayed)
+      : undefined;
+    message.minutesPlayed = object.minutesPlayed ?? undefined;
     return message;
   },
 };
@@ -555,6 +652,9 @@ function createBaseUpdatedGameMetadata(): UpdatedGameMetadata {
     videoUrls: [],
     screenshotUrls: [],
     artworkUrls: [],
+    releaseDate: undefined,
+    lastPlayed: undefined,
+    minutesPlayed: undefined,
   };
 }
 
@@ -582,10 +682,10 @@ export const UpdatedGameMetadata = {
       writer.uint32(56).int64(message.igdbId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(66).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(66).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(74).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(74).fork()).ldelim();
     }
     for (const v of message.links) {
       writer.uint32(82).string(v!);
@@ -598,6 +698,15 @@ export const UpdatedGameMetadata = {
     }
     for (const v of message.artworkUrls) {
       writer.uint32(106).string(v!);
+    }
+    if (message.releaseDate !== undefined) {
+      Timestamp.encode(message.releaseDate, writer.uint32(114).fork()).ldelim();
+    }
+    if (message.lastPlayed !== undefined) {
+      Timestamp.encode(message.lastPlayed, writer.uint32(122).fork()).ldelim();
+    }
+    if (message.minutesPlayed !== undefined) {
+      writer.uint32(128).int32(message.minutesPlayed);
     }
     return writer;
   },
@@ -663,14 +772,14 @@ export const UpdatedGameMetadata = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 9:
           if (tag !== 74) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 10:
           if (tag !== 82) {
@@ -700,6 +809,27 @@ export const UpdatedGameMetadata = {
 
           message.artworkUrls.push(reader.string());
           continue;
+        case 14:
+          if (tag !== 114) {
+            break;
+          }
+
+          message.releaseDate = Timestamp.decode(reader, reader.uint32());
+          continue;
+        case 15:
+          if (tag !== 122) {
+            break;
+          }
+
+          message.lastPlayed = Timestamp.decode(reader, reader.uint32());
+          continue;
+        case 16:
+          if (tag !== 128) {
+            break;
+          }
+
+          message.minutesPlayed = reader.int32();
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -721,12 +851,23 @@ export const UpdatedGameMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.iconUrl = object.iconUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     message.links = object.links?.map((e) => e) || [];
     message.videoUrls = object.videoUrls?.map((e) => e) || [];
     message.screenshotUrls = object.screenshotUrls?.map((e) => e) || [];
     message.artworkUrls = object.artworkUrls?.map((e) => e) || [];
+    message.releaseDate = (object.releaseDate !== undefined && object.releaseDate !== null)
+      ? Timestamp.fromPartial(object.releaseDate)
+      : undefined;
+    message.lastPlayed = (object.lastPlayed !== undefined && object.lastPlayed !== null)
+      ? Timestamp.fromPartial(object.lastPlayed)
+      : undefined;
+    message.minutesPlayed = object.minutesPlayed ?? undefined;
     return message;
   },
 };
@@ -765,10 +906,10 @@ export const PlatformMetadata = {
       writer.uint32(48).int64(message.igdbId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(58).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(58).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(66).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -827,14 +968,14 @@ export const PlatformMetadata = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 8:
           if (tag !== 66) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -856,8 +997,12 @@ export const PlatformMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.logoUrl = object.logoUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -896,10 +1041,10 @@ export const NewPlatformMetadata = {
       writer.uint32(48).int64(message.igdbId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(58).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(58).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(66).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -958,14 +1103,14 @@ export const NewPlatformMetadata = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 8:
           if (tag !== 66) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -987,8 +1132,12 @@ export const NewPlatformMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.logoUrl = object.logoUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1027,10 +1176,10 @@ export const UpdatedPlatformMetadata = {
       writer.uint32(48).int64(message.igdbId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(58).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(58).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(66).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -1089,14 +1238,14 @@ export const UpdatedPlatformMetadata = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 8:
           if (tag !== 66) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1118,8 +1267,12 @@ export const UpdatedPlatformMetadata = {
     message.backgroundUrl = object.backgroundUrl ?? undefined;
     message.logoUrl = object.logoUrl ?? undefined;
     message.igdbId = object.igdbId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1140,10 +1293,10 @@ export const GameGenre = {
       writer.uint32(26).string(message.name);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(34).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(42).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(42).fork()).ldelim();
     }
     return writer;
   },
@@ -1181,14 +1334,14 @@ export const GameGenre = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 5:
           if (tag !== 42) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1207,8 +1360,12 @@ export const GameGenre = {
     message.id = object.id ?? 0;
     message.slug = object.slug ?? "";
     message.name = object.name ?? "";
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1229,10 +1386,10 @@ export const NewGameGenre = {
       writer.uint32(26).string(message.name);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(34).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(42).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(42).fork()).ldelim();
     }
     return writer;
   },
@@ -1270,14 +1427,14 @@ export const NewGameGenre = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 5:
           if (tag !== 42) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1296,8 +1453,12 @@ export const NewGameGenre = {
     message.id = object.id ?? undefined;
     message.slug = object.slug ?? "";
     message.name = object.name ?? "";
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1318,10 +1479,10 @@ export const UpdatedGameGenre = {
       writer.uint32(26).string(message.name);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(34).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(42).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(42).fork()).ldelim();
     }
     return writer;
   },
@@ -1359,14 +1520,14 @@ export const UpdatedGameGenre = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 5:
           if (tag !== 42) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1385,8 +1546,12 @@ export const UpdatedGameGenre = {
     message.id = object.id ?? 0;
     message.slug = object.slug ?? undefined;
     message.name = object.name ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1404,10 +1569,10 @@ export const GameGenreMap = {
       writer.uint32(16).int32(message.genreId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(26).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -1438,14 +1603,14 @@ export const GameGenreMap = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1463,8 +1628,12 @@ export const GameGenreMap = {
     const message = createBaseGameGenreMap();
     message.gameId = object.gameId ?? 0;
     message.genreId = object.genreId ?? 0;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1482,10 +1651,10 @@ export const NewGameGenreMap = {
       writer.uint32(16).int32(message.genreId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(26).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -1516,14 +1685,14 @@ export const NewGameGenreMap = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1541,8 +1710,12 @@ export const NewGameGenreMap = {
     const message = createBaseNewGameGenreMap();
     message.gameId = object.gameId ?? 0;
     message.genreId = object.genreId ?? 0;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1560,10 +1733,10 @@ export const UpdatedGameGenreMap = {
       writer.uint32(16).int32(message.genreId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(26).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -1594,14 +1767,14 @@ export const UpdatedGameGenreMap = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1619,8 +1792,12 @@ export const UpdatedGameGenreMap = {
     const message = createBaseUpdatedGameGenreMap();
     message.gameId = object.gameId ?? undefined;
     message.genreId = object.genreId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1638,10 +1815,10 @@ export const SimilarGameMap = {
       writer.uint32(16).int32(message.similarGameId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(26).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -1672,14 +1849,14 @@ export const SimilarGameMap = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1697,8 +1874,12 @@ export const SimilarGameMap = {
     const message = createBaseSimilarGameMap();
     message.gameId = object.gameId ?? 0;
     message.similarGameId = object.similarGameId ?? 0;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1716,10 +1897,10 @@ export const NewSimilarGameMap = {
       writer.uint32(16).int32(message.similarGameId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(26).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -1750,14 +1931,14 @@ export const NewSimilarGameMap = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1775,8 +1956,12 @@ export const NewSimilarGameMap = {
     const message = createBaseNewSimilarGameMap();
     message.gameId = object.gameId ?? 0;
     message.similarGameId = object.similarGameId ?? 0;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1794,10 +1979,10 @@ export const UpdatedSimilarGameMap = {
       writer.uint32(16).int32(message.similarGameId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(26).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -1828,14 +2013,14 @@ export const UpdatedSimilarGameMap = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1853,8 +2038,12 @@ export const UpdatedSimilarGameMap = {
     const message = createBaseUpdatedSimilarGameMap();
     message.gameId = object.gameId ?? 0;
     message.similarGameId = object.similarGameId ?? 0;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -1867,18 +2056,6 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
-
-function toTimestamp(date: Date): Timestamp {
-  const seconds = Math.trunc(date.getTime() / 1_000);
-  const nanos = (date.getTime() % 1_000) * 1_000_000;
-  return { seconds, nanos };
-}
-
-function fromTimestamp(t: Timestamp): Date {
-  let millis = (t.seconds || 0) * 1_000;
-  millis += (t.nanos || 0) / 1_000_000;
-  return new globalThis.Date(millis);
-}
 
 function longToNumber(long: Long): number {
   if (long.gt(globalThis.Number.MAX_SAFE_INTEGER)) {

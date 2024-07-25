@@ -6,6 +6,12 @@ import "models/game-files.proto";
 import "models/games.proto";
 import "models/emulators.proto";
 
+message RetromHostInfo {
+  string host_name = 1;
+  string port = 2;
+  string host = 3;
+}
+
 enum InstallationStatus {
   INSTALLED = 0;
   INSTALLING = 1;

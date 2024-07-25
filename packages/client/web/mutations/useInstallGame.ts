@@ -34,19 +34,19 @@ export function useInstallGame(game: Game, files: GameFile[]) {
     };
   }, [game, queryClient]);
 
-  const { mutate, status } = useMutation({
+  const mutation = useMutation({
     mutationKey: ["installation", game.path, files],
-    mutationFn: async () => {
-      return invoke("plugin:installer|install_game", {
+    mutationFn: () =>
+      invoke<void>("plugin:installer|install_game", {
         payload: { game, files },
-      });
-    },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["installation-status", game.path],
       });
     },
+    onError: console.error,
   });
 
-  return { mutate, status, progress };
+  return { ...mutation, progress };
 }

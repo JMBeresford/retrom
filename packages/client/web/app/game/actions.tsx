@@ -59,7 +59,10 @@ export function Actions() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="icon" className="rounded-br-lg overflow-hidden">
+            <Button
+              size="icon"
+              className="rounded-none rounded-br-lg overflow-hidden"
+            >
               <EllipsisVertical />
             </Button>
           </DropdownMenuTrigger>
@@ -111,12 +114,11 @@ function UninstallGameModal() {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Uninstall Game</DialogTitle>
-        <DialogDescription>
-          Are you sure you want to uninstall {name}?
+        <DialogDescription className="w-[60ch]">
+          Are you sure you want to uninstall {name}? This will remove the game
+          files from your filesystem.
         </DialogDescription>
       </DialogHeader>
-
-      <p>This will remove the game files from your filesystem.</p>
 
       <DialogFooter>
         <DialogClose asChild>

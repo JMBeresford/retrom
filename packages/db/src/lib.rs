@@ -1,9 +1,9 @@
-use diesel::prelude::*;
+use diesel::{migration::MigrationVersion, prelude::*};
 use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection};
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
 use std::{env, fmt::Debug};
 
-// pub mod models;
 pub mod schema;
 
 #[derive(Debug)]
@@ -11,9 +11,9 @@ pub struct DbError {
     pub message: String,
 }
 
-impl ToString for DbError {
-    fn to_string(&self) -> String {
-        self.message.clone()
+impl std::fmt::Display for DbError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "DbError: {}", self.message)
     }
 }
 
@@ -34,4 +34,15 @@ pub fn get_db_url() -> String {
 pub fn get_db_connection_sync() -> DBConnectionSync {
     let db_url = get_db_url();
     diesel::pg::PgConnection::establish(&db_url).expect("Could not establish connection")
+}
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+
+pub fn run_migrations(
+    conn: &mut impl MigrationHarness<diesel::pg::Pg>,
+) -> Result<Vec<MigrationVersion>> {
+    conn.run_pending_migrations(MIGRATIONS)
+        .map_err(|e| DbError {
+            message: format!("Error running migrations: {:?}", e),
+        })
 }

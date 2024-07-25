@@ -1,11 +1,11 @@
 {
   "name": "web",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "scripts": {
     "dev": "NEXT_PUBLIC_PLATFORM=web next dev",
     "dev:desktop": "NEXT_PUBLIC_PLATFORM=desktop next dev",
-    "build:protos": "protoc --plugin=$(pnpm which protoc-gen-ts_proto) --ts_proto_opt=oneof=unions,outputServices=nice-grpc,outputServices=generic-definitions,outputJsonMethods=false,useExactTypes=false,esModuleInterop=true,useOptionals=messages,useMapType=true,enumsAsLiterals=true --ts_proto_out=./generated/retrom -I ../../codegen/protos/retrom/ ../../codegen/protos/**/*.proto",
+    "build:protos": "protoc --plugin=$(pnpm which protoc-gen-ts_proto) --ts_proto_opt=useDate=false,oneof=unions,outputServices=nice-grpc,outputServices=generic-definitions,outputJsonMethods=false,useExactTypes=false,esModuleInterop=true,useOptionals=messages,useMapType=true,enumsAsLiterals=true --ts_proto_out=./generated/retrom -I ../../codegen/protos/retrom/ ../../codegen/protos/**/*.proto",
     "build": "NEXT_PUBLIC_PLATFORM=web next build",
     "build:desktop": "NEXT_PUBLIC_PLATFORM=desktop next build",
     "start": "NEXT_PUBLIC_PLATFORM=web next start",

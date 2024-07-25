@@ -102,8 +102,6 @@ impl IGDBProvider {
         let auth = self.auth.read().await;
         let token = auth.token.clone().expect("No token found");
 
-        info!("Making request to IGDB: {} {}", path, query);
-
         let res = self
             .http_client
             .post(format!("{}/{}", base_url(), path))

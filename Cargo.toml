@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["./packages/*", "./plugins/*"]
-exclude = ["**/node_modules", "./target"]
+exclude = ["**/node_modules"]
 
 [workspace.package]
 edition = "2021"
@@ -12,8 +12,13 @@ repository = "https://github.com/JMBeresford/retrom"
 
 [workspace.dependencies]
 tauri = { version = "2.0.0-beta", features = ["tracing"] }
-diesel = { version = "2.1.5", features = ["serde_json", "postgres", "numeric"] }
-diesel-async = { version = "0.4.1", features = ["postgres", "bb8"] }
+diesel = { version = "^2.2.0", features = [
+  "serde_json",
+  "postgres",
+  "numeric",
+] }
+diesel_migrations = { version = "^2.2.0", features = ["postgres"] }
+diesel-async = { version = "^0.5.0", features = ["postgres", "bb8"] }
 bb8 = "0.8"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
@@ -44,10 +49,8 @@ tonic = "0.11"
 tonic-web = "0.11"
 prost = "0.12"
 prost-types = "0.12"
-derive_builder = "0.20.0"
 tonic-reflection = "0.11.0"
 async-trait = "0.1"
-tauri-plugin-http = "2.0.0-beta.9"
 serde_repr = "0.1.19"
 
 [workspace.metadata.workspaces]

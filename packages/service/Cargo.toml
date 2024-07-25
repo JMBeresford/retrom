@@ -15,6 +15,7 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 diesel = { workspace = true }
+diesel_migrations = { workspace = true }
 diesel-async = { workspace = true }
 bb8 = { workspace = true }
 retrom-db = { workspace = true }

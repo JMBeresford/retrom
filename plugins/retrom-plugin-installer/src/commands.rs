@@ -1,9 +1,9 @@
 use futures::TryStreamExt;
 use reqwest::header::CONTENT_DISPOSITION;
-use retrom_codegen::retrom::{InstallGamePayload, UninstallGamePayload};
-use tauri::{AppHandle, Runtime};
+use retrom_codegen::retrom::{InstallGamePayload, RetromHostInfo, UninstallGamePayload};
+use tauri::{AppHandle, Manager, Runtime};
 use tokio::io::AsyncWriteExt;
-use tracing::{instrument, Instrument};
+use tracing::instrument;
 
 use crate::{
     desktop::{FileInstallationProgress, GameInstallationProgress},
@@ -23,7 +23,7 @@ pub async fn install_game<R: Runtime>(
     let install_dir = installer.installation_directory.read().await;
     let output_directory = install_dir.join(game.id.to_string());
 
-    if output_directory.try_exists()? == false {
+    if !(output_directory.try_exists()?) {
         std::fs::create_dir_all(&output_directory)?;
     }
 
@@ -48,8 +48,15 @@ pub async fn install_game<R: Runtime>(
         let output_directory = output_directory.clone();
         let client = client.clone();
 
-        let _ = tauri::async_runtime::spawn(async move {
-            let download_uri = format!("http://localhost:5001/rest/file/{}", file.id);
+        tauri::async_runtime::spawn(async move {
+            let host_info = app_handle
+                .try_state::<RetromHostInfo>()
+                .expect("Host info not found")
+                .inner();
+
+            let host = &host_info.host;
+
+            let download_uri = format!("{host}/rest/file/{}", file.id);
 
             let res = client.get(download_uri).send().await?;
             let filename = res
@@ -74,11 +81,11 @@ pub async fn install_game<R: Runtime>(
                     Err(e) => return Err(crate::Error::from(e)),
                 };
 
-                if bytes.len() == 0 {
+                if bytes.is_empty() {
                     break;
                 }
 
-                outfile.write(&bytes).await?;
+                outfile.write_all(&bytes).await?;
                 installer
                     .update_installation_progress(game.id, file.id, bytes.len())
                     .await;

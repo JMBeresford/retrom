@@ -15,16 +15,16 @@ export interface GameFile {
   byteSize: number;
   path: string;
   gameId: number;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface NewGameFile {
   byteSize: number;
   path: string;
   gameId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface UpdatedGameFile {
@@ -32,8 +32,8 @@ export interface UpdatedGameFile {
   byteSize?: number | undefined;
   path?: string | undefined;
   gameId?: number | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 function createBaseGameFile(): GameFile {
@@ -55,10 +55,10 @@ export const GameFile = {
       writer.uint32(48).int32(message.gameId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(58).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(58).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(66).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -103,14 +103,14 @@ export const GameFile = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 8:
           if (tag !== 66) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -130,8 +130,12 @@ export const GameFile = {
     message.byteSize = object.byteSize ?? 0;
     message.path = object.path ?? "";
     message.gameId = object.gameId ?? 0;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -152,10 +156,10 @@ export const NewGameFile = {
       writer.uint32(24).int32(message.gameId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(34).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(42).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(42).fork()).ldelim();
     }
     return writer;
   },
@@ -193,14 +197,14 @@ export const NewGameFile = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 5:
           if (tag !== 42) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -219,8 +223,12 @@ export const NewGameFile = {
     message.byteSize = object.byteSize ?? 0;
     message.path = object.path ?? "";
     message.gameId = object.gameId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -244,10 +252,10 @@ export const UpdatedGameFile = {
       writer.uint32(32).int32(message.gameId);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(42).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(42).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(50).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(50).fork()).ldelim();
     }
     return writer;
   },
@@ -292,14 +300,14 @@ export const UpdatedGameFile = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 6:
           if (tag !== 50) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -319,8 +327,12 @@ export const UpdatedGameFile = {
     message.byteSize = object.byteSize ?? undefined;
     message.path = object.path ?? undefined;
     message.gameId = object.gameId ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -333,15 +345,3 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
-
-function toTimestamp(date: Date): Timestamp {
-  const seconds = Math.trunc(date.getTime() / 1_000);
-  const nanos = (date.getTime() % 1_000) * 1_000_000;
-  return { seconds, nanos };
-}
-
-function fromTimestamp(t: Timestamp): Date {
-  let millis = (t.seconds || 0) * 1_000;
-  millis += (t.nanos || 0) / 1_000_000;
-  return new globalThis.Date(millis);
-}

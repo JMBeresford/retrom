@@ -4,7 +4,7 @@ use std::{
     fs::create_dir_all,
     path::PathBuf,
 };
-use tauri::{plugin::PluginApi, AppHandle, Manager, Runtime};
+use tauri::{plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
 use tracing::{debug, info, instrument, trace};
 
 use retrom_codegen::retrom::{InstallationProgressUpdate, InstallationStatus};
@@ -18,7 +18,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 
     let install_dir = app_data.join("installed");
 
-    if install_dir.try_exists().unwrap() == false {
+    if !install_dir.try_exists().unwrap() {
         create_dir_all(&install_dir)?;
     };
 
@@ -27,7 +27,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
         let dir = dir?;
         let game_id = dir.file_name().to_string_lossy().parse::<i32>();
 
-        if let Err(_) = game_id {
+        if game_id.is_err() {
             continue;
         }
 

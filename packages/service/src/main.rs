@@ -2,7 +2,7 @@ use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
-use retrom_db::get_db_url;
+use retrom_db::{get_db_url, run_migrations};
 use std::{
     convert::Infallible,
     net::SocketAddr,
@@ -11,7 +11,7 @@ use std::{
     task::{Context, Poll},
 };
 use tower::Service;
-use tracing::info;
+use tracing::{info, Instrument};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod grpc;
@@ -42,6 +42,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build(config)
         .await
         .expect("Could not create pool");
+
+    tokio::task::spawn_blocking(|| {
+        let mut sync_conn = retrom_db::get_db_connection_sync();
+        let migrations = run_migrations(&mut sync_conn).expect("Could not run migrations");
+
+        migrations
+            .into_iter()
+            .for_each(|migration| info!("Ran migration: {}", migration));
+    })
+    .instrument(tracing::info_span!("run_migrations"))
+    .await
+    .expect("Could not run migrations");
 
     let pool_state = Arc::new(pool);
 

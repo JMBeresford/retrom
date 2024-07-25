@@ -13,21 +13,21 @@ export const protobufPackage = "retrom";
 export interface Platform {
   id: number;
   path: string;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface NewPlatform {
   path: string;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface UpdatedPlatform {
   id: number;
   path?: string | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 function createBasePlatform(): Platform {
@@ -43,10 +43,10 @@ export const Platform = {
       writer.uint32(18).string(message.path);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(26).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -77,14 +77,14 @@ export const Platform = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -102,8 +102,12 @@ export const Platform = {
     const message = createBasePlatform();
     message.id = object.id ?? 0;
     message.path = object.path ?? "";
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -118,10 +122,10 @@ export const NewPlatform = {
       writer.uint32(10).string(message.path);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(18).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(18).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(26).fork()).ldelim();
     }
     return writer;
   },
@@ -145,14 +149,14 @@ export const NewPlatform = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 3:
           if (tag !== 26) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -169,8 +173,12 @@ export const NewPlatform = {
   fromPartial(object: DeepPartial<NewPlatform>): NewPlatform {
     const message = createBaseNewPlatform();
     message.path = object.path ?? "";
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -188,10 +196,10 @@ export const UpdatedPlatform = {
       writer.uint32(18).string(message.path);
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(message.createdAt, writer.uint32(26).fork()).ldelim();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(34).fork()).ldelim();
+      Timestamp.encode(message.updatedAt, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -222,14 +230,14 @@ export const UpdatedPlatform = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.createdAt = Timestamp.decode(reader, reader.uint32());
           continue;
         case 4:
           if (tag !== 34) {
             break;
           }
 
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.updatedAt = Timestamp.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -247,8 +255,12 @@ export const UpdatedPlatform = {
     const message = createBaseUpdatedPlatform();
     message.id = object.id ?? 0;
     message.path = object.path ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+    message.createdAt = (object.createdAt !== undefined && object.createdAt !== null)
+      ? Timestamp.fromPartial(object.createdAt)
+      : undefined;
+    message.updatedAt = (object.updatedAt !== undefined && object.updatedAt !== null)
+      ? Timestamp.fromPartial(object.updatedAt)
+      : undefined;
     return message;
   },
 };
@@ -261,15 +273,3 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
-
-function toTimestamp(date: Date): Timestamp {
-  const seconds = Math.trunc(date.getTime() / 1_000);
-  const nanos = (date.getTime() % 1_000) * 1_000_000;
-  return { seconds, nanos };
-}
-
-function fromTimestamp(t: Timestamp): Date {
-  let millis = (t.seconds || 0) * 1_000;
-  millis += (t.nanos || 0) / 1_000_000;
-  return new globalThis.Date(millis);
-}

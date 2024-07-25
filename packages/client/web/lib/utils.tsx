@@ -1,3 +1,4 @@
+import { Timestamp } from "@/generated/retrom/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
@@ -60,4 +61,14 @@ export function getFileStub(path: string) {
 export function getFileName(path: string) {
   const { name, extension } = getFileParts(path);
   return `${name}.${extension}`;
+}
+
+export function timestampToDate(timestamp?: Timestamp): Date {
+  if (!timestamp) {
+    return new Date(0);
+  }
+
+  const { seconds, nanos } = timestamp;
+
+  return new Date(seconds * 1000 + nanos / 1000000);
 }

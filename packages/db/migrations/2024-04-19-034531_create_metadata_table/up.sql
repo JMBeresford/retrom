@@ -25,6 +25,9 @@ CREATE TABLE "game_metadata"(
   "video_urls" TEXT[] NOT NULL,
   "screenshot_urls" TEXT[] NOT NULL,
   "artwork_urls" TEXT[] NOT NULL,
+  "release_date" TIMESTAMP WITH TIME ZONE,
+  "last_played" TIMESTAMP WITH TIME ZONE,
+  "minutes_played" INTEGER,
   CONSTRAINT "fk_game_id" FOREIGN KEY ("game_id") REFERENCES "games"("id") ON DELETE CASCADE,
   UNIQUE("game_id")
 );

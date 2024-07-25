@@ -1,8 +1,0 @@
-{
-  "$schema": "https://json.schemastore.org/cargo-build-scripts.json",
-  "cargo": {
-    "buildScripts": {
-      "enable": false
-    }
-  }
-}
