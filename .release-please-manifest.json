@@ -1,5 +1,6 @@
 {
   "packages/client": "0.0.5",
+  "packages/client/web": "0.0.5",
   "packages/codegen": "0.0.5",
   "packages/db": "0.0.5",
   "packages/service": "0.0.5"
