@@ -18,8 +18,6 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
-        with:
-          include-component-in-tag: false
       - name: tag major and minor versions
         if: ${{ steps.release.outputs.release_created }}
         run: |
