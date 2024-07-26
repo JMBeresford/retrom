@@ -3830,6 +3830,7 @@ dependencies = [
  "reqwest",
  "retrom-codegen",
  "retrom-db",
+ "retry",
  "serde",
  "serde_json",
  "tokio",
@@ -3842,6 +3843,15 @@ dependencies = [
  "tracing-subscriber",
  "warp",
  "zipit",
+]
+
+[[package]]
+name = "retry"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9166d72162de3575f950507683fac47e30f6f2c3836b71b7fbc61aa517c9c5f4"
+dependencies = [
+ "rand 0.8.5",
 ]
 
 [[package]]

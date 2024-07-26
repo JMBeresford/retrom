@@ -3,6 +3,7 @@ use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
 use retrom_db::{get_db_url, run_migrations};
+use retry::retry;
 use std::{
     convert::Infallible,
     net::SocketAddr,
@@ -31,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     dotenvy::dotenv().ok();
 
-    let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5001".to_string());
+    let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5101".to_string());
     let addr: SocketAddr = format!("0.0.0.0:{port}").parse().unwrap();
 
     let db_url = get_db_url();
@@ -44,8 +45,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Could not create pool");
 
     tokio::task::spawn_blocking(|| {
-        let mut sync_conn = retrom_db::get_db_connection_sync();
-        let migrations = run_migrations(&mut sync_conn).expect("Could not run migrations");
+        let mut conn = retry(retry::delay::Exponential::from_millis(100), || {
+            match retrom_db::get_db_connection_sync() {
+                Ok(conn) => retry::OperationResult::Ok(conn),
+                Err(diesel::ConnectionError::BadConnection(err)) => {
+                    info!("Error connecting to database, is the server running and accessible? Retrying...");
+                    retry::OperationResult::Retry(err)
+                },
+                _ => retry::OperationResult::Err("Could not connect to database".to_string())
+            }
+        }).expect("Could not connect to database");
+
+        let migrations = run_migrations(&mut conn).expect("Could not run migrations");
 
         migrations
             .into_iter()

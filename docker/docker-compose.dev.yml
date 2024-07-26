@@ -1,6 +1,7 @@
 services:
   retrom-db:
     image: postgres
+    container_name: retrom-db
     hostname: retrom-db
     restart: always
     # set shared memory limit when using docker-compose
@@ -10,12 +11,44 @@ services:
     environment:
       TZ: "America/Los_Angeles"
       PGTZ: "America/Los_Angeles"
-      POSTGRES_PASSWORD: password
-      POSTGRES_USER: postgres
-      POSTGRES_DB: retrom-dev
+      POSTGRES_PASSWORD: ${DB_PASS:-password}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_DB: ${DB_NAME:-retrom-dev}
 
   adminer:
     image: adminer
     restart: always
     ports:
       - 8080:8080
+
+  retrom:
+    build:
+      context: ../
+      dockerfile: docker/service.Dockerfile
+    container_name: retrom
+    hostname: retrom
+    ports:
+      - 5101:${RETROM_PORT:-5101}
+    environment:
+      RETROM_PORT: ${RETROM_PORT:-5101}
+      IGDB_CLIENT_ID: ${IGDB_CLIENT_ID}
+      IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET}
+      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASS:-password}@retrom-db/${DB_NAME:-retrom-dev}
+    volumes:
+      - ${CONTENT_DIR:?Content directory not set}:/app/library
+    depends_on:
+      - retrom-db
+
+  retrom-web:
+    build:
+      context: ../
+      dockerfile: docker/web.Dockerfile
+    container_name: retrom-web
+    hostname: retrom-web
+    ports:
+      - 3000:${RETROM_WEB_PORT:-3000}
+    environment:
+      RETROM_WEB_PORT: ${RETROM_WEB_PORT:-3000}
+      RETROM_HOST: ${RETROM_HOST:-retrom:5101}
+    depends_on:
+      - retrom

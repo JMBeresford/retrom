@@ -31,9 +31,9 @@ pub fn get_db_url() -> String {
     env::var("DATABASE_URL").expect("DATABASE_URL must be set")
 }
 
-pub fn get_db_connection_sync() -> DBConnectionSync {
+pub fn get_db_connection_sync() -> std::result::Result<DBConnectionSync, diesel::ConnectionError> {
     let db_url = get_db_url();
-    diesel::pg::PgConnection::establish(&db_url).expect("Could not establish connection")
+    diesel::pg::PgConnection::establish(&db_url)
 }
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
