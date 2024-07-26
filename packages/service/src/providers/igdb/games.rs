@@ -4,7 +4,7 @@ use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use deunicode::deunicode;
 use prost::Message;
 use retrom_codegen::{igdb, retrom};
-use tracing::{debug, error, info, instrument, Instrument, Level};
+use tracing::{debug, error, info, instrument, warn, Instrument, Level};
 
 use super::provider::IGDBProvider;
 
@@ -12,7 +12,7 @@ use super::provider::IGDBProvider;
 pub async fn match_game_igdb(
     provider: Arc<IGDBProvider>,
     game: &retrom::Game,
-) -> Result<retrom::NewGameMetadata, reqwest::Error> {
+) -> Option<retrom::NewGameMetadata> {
     provider.maybe_refresh_token().await;
 
     let naive_name = game.path.split('/').last().unwrap_or(&game.path);
@@ -22,14 +22,14 @@ pub async fn match_game_igdb(
         .and_then(|stem| stem.to_str())
         .unwrap_or(naive_name);
 
-    let search = deunicode(&name);
+    let search = deunicode(name);
     info!("Matching game: {search}");
 
     let matches = match search_games(provider.clone(), &search).await {
         Ok(igdb_games) => igdb_games,
         Err(e) => {
-            error!("Could not get IGDB game: {:?}", e);
-            return Err(e);
+            warn!("Could not get IGDB game: {:?}", e);
+            return None;
         }
     };
 
@@ -48,24 +48,19 @@ pub async fn match_game_igdb(
         },
     };
 
-    Ok(metadata)
+    Some(metadata)
 }
 
 pub async fn match_games_igdb(
     provider: Arc<IGDBProvider>,
     games: Vec<retrom::Game>,
-) -> Result<Vec<retrom::NewGameMetadata>, reqwest::Error> {
+) -> Vec<retrom::NewGameMetadata> {
     let all_metadata_res = futures::future::join_all(
         games
             .into_iter()
             .map(|game| {
                 let provider = provider.clone();
-                tokio::spawn(async move {
-                    match match_game_igdb(provider, &game).await {
-                        Ok(metadata) => Ok(metadata),
-                        Err(e) => Err(e),
-                    }
-                })
+                tokio::spawn(async move { match_game_igdb(provider, &game).await })
             })
             .map(|future| future.instrument(tracing::info_span!("match_games")))
             .collect::<Vec<_>>(),
@@ -74,23 +69,21 @@ pub async fn match_games_igdb(
     let mut all_metadata = vec![];
     for res in all_metadata_res.await {
         match res {
-            Ok(Ok(metadata)) => all_metadata.push(metadata),
-            Ok(Err(e)) => {
-                error!("Could not get IGDB game: {:?}", e);
-            }
+            Ok(Some(metadata)) => all_metadata.push(metadata),
+            Ok(None) => {}
             Err(e) => {
-                error!("Could not get IGDB game: {:?}", e);
+                error!("Could not get IGDB game, skipping this game: {:?}", e);
             }
         };
     }
 
-    Ok(all_metadata)
+    all_metadata
 }
 
 pub(crate) async fn search_games(
     provider: Arc<IGDBProvider>,
     search_string: &str,
-) -> Result<igdb::GameResult, reqwest::Error> {
+) -> Result<igdb::GameResult, String> {
     let fields = vec![
         "name".to_string(),
         "cover.url".to_string(),
@@ -107,17 +100,22 @@ pub(crate) async fn search_games(
 
     let query = format!("fields {fields}; search \"{search_string}\"; limit 10;");
 
-    let res = match provider.make_request("games.pb".into(), query).await {
-        Ok(res) => Ok(res),
-        Err(e) => return Err(e),
-    };
+    let res = provider.make_request("games.pb".into(), query).await;
 
     let bytes = match res {
         Ok(res) => res.bytes().await.expect("Could not parse response"),
-        Err(e) => return Err(e),
+        Err(e) => return Err(e.to_string()),
     };
 
-    Ok(igdb::GameResult::decode(bytes).expect("Could not decode response"))
+    let game = match igdb::GameResult::decode(bytes) {
+        Ok(game) => game,
+        Err(e) => {
+            error!("Could not decode response: {:?}", e);
+            return Err(e.to_string());
+        }
+    };
+
+    Ok(game)
 }
 
 pub fn igdb_game_to_metadata(
@@ -131,53 +129,47 @@ pub fn igdb_game_to_metadata(
         None => None,
     };
 
-    let cover_url = igdb_match.cover.and_then(|cover| {
-        Some(
-            cover
-                .url
-                .to_string()
-                .replace("t_thumb", "t_cover_big")
-                .replace("//", "https://"),
-        )
+    let cover_url = igdb_match.cover.map(|cover| {
+        cover
+            .url
+            .to_string()
+            .replace("t_thumb", "t_cover_big")
+            .replace("//", "https://")
     });
 
     let background_url = igdb_match
         .artworks
         .iter()
         .find(|artwork| artwork.width > artwork.height)
-        .and_then(|artwork| {
-            Some(
-                artwork
-                    .url
-                    .to_string()
-                    .replace("//", "https://")
-                    .replace("t_thumb", "t_1080p"),
-            )
+        .map(|artwork| {
+            artwork
+                .url
+                .to_string()
+                .replace("//", "https://")
+                .replace("t_thumb", "t_1080p")
         })
-        .or(igdb_match.artworks.first().and_then(|artwork| {
-            Some(
-                artwork
-                    .url
-                    .to_string()
-                    .replace("//", "https://")
-                    .replace("t_thumb", "t_1080p"),
-            )
+        .or(igdb_match.artworks.first().map(|artwork| {
+            artwork
+                .url
+                .to_string()
+                .replace("//", "https://")
+                .replace("t_thumb", "t_1080p")
         }));
 
     let icon_url = igdb_match
         .artworks
         .iter()
         .find(|artwork| artwork.width == artwork.height)
-        .and_then(|artwork| Some(artwork.url.to_string().replace("//", "https://")))
+        .map(|artwork| artwork.url.to_string().replace("//", "https://"))
         .or(cover_url
             .as_ref()
-            .and_then(|cover_url| Some(cover_url.clone().replace("t_cover_big", "t_thumb"))));
+            .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")));
 
     let icon_url = match icon_url {
         Some(icon_url) => Some(icon_url),
         None => cover_url
             .as_ref()
-            .and_then(|cover_url| Some(cover_url.clone().replace("t_cover_big", "t_thumb"))),
+            .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")),
     };
 
     let links = igdb_match
@@ -216,7 +208,7 @@ pub fn igdb_game_to_metadata(
         .collect();
 
     retrom::NewGameMetadata {
-        game_id: game.and_then(|game| Some(game.id)),
+        game_id: game.map(|game| game.id),
         igdb_id,
         name,
         description,

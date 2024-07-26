@@ -8,7 +8,7 @@ use prost::Message;
 use retrom_codegen::{
     igdb,
     retrom::{
-        self, GameGenre, NewGameGenre, NewGameGenreMap, NewSimilarGameMap,
+        self, GameGenre, GameMetadata, NewGameGenre, NewGameGenreMap, NewSimilarGameMap,
         UpdateLibraryMetadataResponse,
     },
 };
@@ -42,13 +42,7 @@ pub async fn update_metadata(
     };
 
     let igdb_provider = state.igdb_client.clone();
-    let new_game_metadata = match match_games_igdb(igdb_provider, games).await {
-        Ok(metadata) => metadata,
-        Err(e) => {
-            tracing::error!("Failed to match games: {}", e);
-            return Err(e.to_string());
-        }
-    };
+    let new_game_metadata = match_games_igdb(igdb_provider, games).await;
 
     match diesel::insert_into(schema::game_metadata::table)
         .values(&new_game_metadata)
@@ -61,11 +55,10 @@ pub async fn update_metadata(
         Ok(None) => (),
         Err(e) => {
             tracing::error!("Failed to insert metadata: {}", e);
-            return Err(e.to_string());
         }
     };
 
-    let all_game_metadata = match schema::game_metadata::table
+    let all_game_metadata: Vec<GameMetadata> = match schema::game_metadata::table
         .load::<retrom::GameMetadata>(&mut conn)
         .await
     {
@@ -87,44 +80,38 @@ pub async fn update_metadata(
             .join(",")
     );
 
-    let res = match state
+    let res = state
         .igdb_client
         .make_request("games.pb".into(), query)
         .await
-    {
-        Ok(res) => res,
-        Err(e) => {
-            tracing::error!("Failed to get extra metadata: {}", e);
-            return Err(e.to_string());
+        .ok();
+
+    let bytes = match res {
+        Some(res) => Some(res.bytes().await),
+        None => {
+            tracing::warn!("Failed to parse IGDB response");
+            None
         }
     };
 
-    let bytes = match res.bytes().await {
-        Ok(bytes) => bytes,
-        Err(e) => {
-            tracing::error!("Failed to parse response: {}", e);
-            return Err(e.to_string());
-        }
-    };
+    let extra_metadata = bytes
+        .and_then(|bytes| bytes.ok())
+        .and_then(|bytes| igdb::GameResult::decode(bytes).ok());
 
-    let extra_metadata = match igdb::GameResult::decode(bytes) {
-        Ok(metadata) => metadata.games,
-        Err(e) => {
-            tracing::error!("Failed to decode response: {}", e);
-            return Err(e.to_string());
-        }
-    };
+    let mut new_genres: Vec<NewGameGenre> = vec![];
 
-    let new_genres: Vec<NewGameGenre> = extra_metadata
-        .iter()
-        .flat_map(|igdb_game| {
-            igdb_game.genres.iter().map(|genre| NewGameGenre {
-                slug: genre.slug.clone(),
-                name: genre.name.clone(),
-                ..Default::default()
+    if let Some(res) = &extra_metadata {
+        res.games
+            .iter()
+            .flat_map(|igdb_game| {
+                igdb_game.genres.iter().map(|genre| NewGameGenre {
+                    slug: genre.slug.clone(),
+                    name: genre.name.clone(),
+                    ..Default::default()
+                })
             })
-        })
-        .collect();
+            .for_each(|genre| new_genres.push(genre));
+    }
 
     diesel::insert_into(schema::game_genres::table)
         .values(&new_genres)
@@ -133,50 +120,39 @@ pub async fn update_metadata(
         .await
         .map_err(|e| e.to_string())?;
 
-    let genres: Vec<GameGenre> = match schema::game_genres::table
+    let genres: Option<Vec<GameGenre>> = schema::game_genres::table
         .load::<GameGenre>(&mut conn)
         .await
-    {
-        Ok(genres) => genres,
-        Err(e) => {
-            tracing::error!("Failed to load genres: {}", e);
-            return Ok(response);
-        }
-    };
+        .ok();
 
-    let genre_maps: Vec<NewGameGenreMap> = extra_metadata
-        .iter()
-        .flat_map(|igdb_game| {
-            igdb_game.genres.iter().filter_map(|igdb_genre| {
+    let mut genre_maps: Vec<NewGameGenreMap> = vec![];
+    if let (Some(res), Some(genres)) = (&extra_metadata, genres) {
+        res.games.iter().for_each(|igdb_game| {
+            igdb_game.genres.iter().for_each(|igdb_genre| {
                 let genre = match genres
                     .iter()
                     .find(|g| g.slug == igdb_genre.slug && g.name == igdb_genre.name)
                 {
                     Some(genre) => genre,
-                    None => return None,
+                    None => return,
                 };
 
-                let igdb_id = match BigDecimal::from_u64(igdb_game.id) {
-                    Some(id) => id.to_i64(),
-                    None => return None,
-                };
+                let igdb_id = BigDecimal::from_u64(igdb_game.id).and_then(|big| big.to_i64());
 
-                match all_game_metadata
+                if let Some(game_id) = &all_game_metadata
                     .iter()
                     .find(|metadata| metadata.igdb_id == igdb_id)
-                    .and_then(|metadata| Some(metadata.game_id))
+                    .map(|meta| meta.game_id)
                 {
-                    Some(game_id) => Some(NewGameGenreMap {
-                        game_id,
+                    genre_maps.push(NewGameGenreMap {
+                        game_id: *game_id,
                         genre_id: genre.id,
                         ..Default::default()
-                    }),
-
-                    None => None,
-                }
+                    });
+                };
             })
         })
-        .collect();
+    }
 
     diesel::insert_into(schema::game_genre_maps::table)
         .values(&genre_maps)
@@ -186,49 +162,51 @@ pub async fn update_metadata(
         .map_err(|e| e.to_string())?;
 
     let mut similar_games: Vec<NewSimilarGameMap> = vec![];
-    extra_metadata.iter().for_each(|game| {
-        game.similar_games.iter().for_each(|similar_game| {
-            let igdb_id_1 = match BigDecimal::from_u64(game.id) {
-                Some(id) => id.to_i64(),
-                None => return,
-            };
+    if let Some(res) = extra_metadata {
+        res.games.iter().for_each(|game| {
+            game.similar_games.iter().for_each(|similar_game| {
+                let igdb_id_1 = match BigDecimal::from_u64(game.id) {
+                    Some(id) => id.to_i64(),
+                    None => return,
+                };
 
-            let igdb_id_2 = match BigDecimal::from_u64(similar_game.id) {
-                Some(id) => id.to_i64(),
-                None => return,
-            };
+                let igdb_id_2 = match BigDecimal::from_u64(similar_game.id) {
+                    Some(id) => id.to_i64(),
+                    None => return,
+                };
 
-            let game_id = match all_game_metadata
-                .iter()
-                .find(|metadata| metadata.igdb_id == igdb_id_1)
-                .and_then(|metadata| Some(metadata.game_id))
-            {
-                Some(id) => id,
-                None => return,
-            };
+                let game_id = match all_game_metadata
+                    .iter()
+                    .find(|metadata| metadata.igdb_id == igdb_id_1)
+                    .map(|metadata| metadata.game_id)
+                {
+                    Some(id) => id,
+                    None => return,
+                };
 
-            let similar_game_id = match all_game_metadata
-                .iter()
-                .find(|metadata| metadata.igdb_id == igdb_id_2)
-                .and_then(|metadata| Some(metadata.game_id))
-            {
-                Some(id) => id,
-                None => return,
-            };
+                let similar_game_id = match all_game_metadata
+                    .iter()
+                    .find(|metadata| metadata.igdb_id == igdb_id_2)
+                    .map(|metadata| metadata.game_id)
+                {
+                    Some(id) => id,
+                    None => return,
+                };
 
-            similar_games.push(NewSimilarGameMap {
-                game_id,
-                similar_game_id,
-                ..Default::default()
-            });
+                similar_games.push(NewSimilarGameMap {
+                    game_id,
+                    similar_game_id,
+                    ..Default::default()
+                });
 
-            similar_games.push(NewSimilarGameMap {
-                game_id: similar_game_id,
-                similar_game_id: game_id,
-                ..Default::default()
-            });
-        })
-    });
+                similar_games.push(NewSimilarGameMap {
+                    game_id: similar_game_id,
+                    similar_game_id: game_id,
+                    ..Default::default()
+                });
+            })
+        });
+    }
 
     diesel::insert_into(schema::similar_game_maps::table)
         .values(&similar_games)
@@ -253,7 +231,7 @@ pub async fn update_metadata(
         Ok(metadata) => metadata,
         Err(e) => {
             tracing::error!("Failed to match platforms: {}", e);
-            return Err(e.to_string());
+            vec![]
         }
     };
 
