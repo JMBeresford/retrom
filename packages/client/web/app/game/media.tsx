@@ -9,7 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Image } from "@/lib/utils";
+import { cn, Image } from "@/lib/utils";
 
 export function Media() {
   const { gameMetadata } = useGameDetail();
@@ -84,11 +84,19 @@ function ImageCarousel(props: { images: string[] }) {
       <CarouselContent className="h-max">
         {images.map((img, idx) => (
           <CarouselItem key={idx}>
-            <Image
-              src={img}
-              className="w-full aspect-video rounded-lg"
-              alt=""
-            />
+            <div
+              className={cn(
+                "relative h-full aspect-video rounded-lg overflow-hidden",
+                "flex justify-center items-center",
+              )}
+            >
+              <Image
+                src={img}
+                className="absolute inset-0 blur-3xl z-[-1]"
+                alt=""
+              />
+              <Image src={img} className="max-h-full mx-auto" alt="" />
+            </div>
           </CarouselItem>
         ))}
       </CarouselContent>
