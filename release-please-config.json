@@ -3,11 +3,10 @@
   "bootstrap-sha": "82b6101b3f8c29e37efaa13926a6e9f1e46f19a1",
   "plugins": [
     { "type": "cargo-workspace", "merge": false },
-    { "type": "node-workspace", "merge": false },
     {
       "type": "linked-versions",
       "groupName": "retrom",
-      "components": ["client", "client/web", "codegen", "db", "service"]
+      "components": ["client", "codegen", "db", "service"]
     }
   ],
 
@@ -20,11 +19,6 @@
       "release-type": "rust",
       "release-as": "0.0.6",
       "component": "client"
-    },
-    "packages/client/web": {
-      "release-type": "node",
-      "release-as": "0.0.6",
-      "component": "client/web"
     },
     "packages/codegen": {
       "release-type": "rust",
