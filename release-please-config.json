@@ -2,21 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "bootstrap-sha": "4415f62c9d15b6921d23a356b21f0c6a10e2de57",
   "last-release-sha": "82b6101b3f8c29e37efaa13926a6e9f1e46f19a1",
-  "plugins": [
-    { "type": "cargo-workspace", "updateAllPackages": true },
-    {
-      "type": "linked-versions",
-      "groupName": "retrom",
-      "components": [
-        "client",
-        "codegen",
-        "db",
-        "service",
-        "plugin_launcher",
-        "plugin_installer"
-      ]
-    }
-  ],
+  "plugins": [{ "type": "cargo-workspace", "updateAllPackages": true }],
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "include-component-in-tag": false,
@@ -26,36 +12,6 @@
       "release-type": "rust",
       "release-as": "0.0.6",
       "component": "client"
-    },
-    "packages/client": {
-      "release-type": "rust",
-      "release-as": "0.0.6",
-      "component": "client"
-    },
-    "packages/codegen": {
-      "release-type": "rust",
-      "release-as": "0.0.6",
-      "component": "codegen"
-    },
-    "packages/db": {
-      "release-type": "rust",
-      "release-as": "0.0.6",
-      "component": "db"
-    },
-    "plugins/retrom-plugin-launcher": {
-      "release-type": "rust",
-      "release-as": "0.0.6",
-      "component": "plugin_launcher"
-    },
-    "plugins/retrom-plugin-installer": {
-      "release-type": "rust",
-      "release-as": "0.0.6",
-      "component": "plugin_installer"
-    },
-    "packages/service": {
-      "release-type": "rust",
-      "release-as": "0.0.6",
-      "component": "service"
     }
   }
 }
