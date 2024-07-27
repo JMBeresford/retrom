@@ -1,11 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["./packages/*", "./plugins/*"]
+members = ["./packages/*/", "./plugins/*/"]
 exclude = ["**/node_modules"]
 
 [package]
 name = "retrom"
-version = "0.0.6"
+version = "0.0.7"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true

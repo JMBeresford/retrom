@@ -3711,7 +3711,7 @@ dependencies = [
 
 [[package]]
 name = "retrom"
-version = "0.0.6"
+version = "0.0.7"
 
 [[package]]
 name = "retrom-client"
@@ -3744,7 +3744,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-codegen"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "diesel",
  "prost",
