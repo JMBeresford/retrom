@@ -6,6 +6,7 @@ exclude = ["**/node_modules"]
 [package]
 name = "retrom"
 version = "0.0.8"
+description = "Retrom is a centralized game library/collection management service with a focus on emulation."
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -42,12 +43,12 @@ tracing-futures = { version = "0.2.5", features = ["tokio", "futures"] }
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-util = { version = "0.7.11", features = ["io", "compat"] }
 dotenvy = "0.15.7"
-retrom-db = { path = "./packages/db" }
-retrom-client = { path = "./packages/client" }
-retrom-service = { path = "./packages/service" }
-retrom-codegen = { path = "./packages/codegen" }
-retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer" }
-retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher" }
+retrom-db = { path = "./packages/db", version = "0.0.8" }
+retrom-client = { path = "./packages/client", version = "0.0.8" }
+retrom-service = { path = "./packages/service", version = "0.0.8" }
+retrom-codegen = { path = "./packages/codegen", version = "0.0.8" }
+retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "0.0.8" }
+retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "0.0.8" }
 futures = "0.3.30"
 bytes = "1.6.0"
 reqwest = { version = "0.12.3", features = [
