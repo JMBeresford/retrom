@@ -3,6 +3,14 @@ resolver = "2"
 members = ["./packages/*", "./plugins/*"]
 exclude = ["**/node_modules"]
 
+[package]
+name = "retrom"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+
 [workspace.package]
 edition = "2021"
 authors = ["John Beresford <jberesford@volcaus.com>"]
