@@ -13,6 +13,7 @@ fn greet(name: &str) -> String {
 pub async fn main() {
     dotenvy::dotenv().ok();
     let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5051".to_string());
+
     let host_name =
         std::env::var("RETROM_HOSTNAME").unwrap_or_else(|_| "http://localhost".to_string());
 
