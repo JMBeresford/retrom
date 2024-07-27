@@ -6,25 +6,30 @@
   "include-component-in-tag": false,
   "pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
   "group-pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
-  "release-type": "rust",
 
   "packages": {
     "packages/client": {
+      "release-type": "rust",
       "component": "retrom-client"
     },
     "packages/codegen": {
+      "release-type": "rust",
       "component": "retrom-codegen"
     },
     "packages/db": {
+      "release-type": "rust",
       "component": "retrom-db"
     },
     "packages/service": {
+      "release-type": "rust",
       "component": "retrom-service"
     },
     "plugins/retrom-plugin-installer": {
+      "release-type": "rust",
       "component": "retrom-plugin-installer"
     },
     "plugins/retrom-plugin-launcher": {
+      "release-type": "rust",
       "component": "retrom-plugin-launcher"
     }
   },
