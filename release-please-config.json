@@ -5,30 +5,29 @@
   "bump-patch-for-minor-pre-major": true,
   "pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
   "group-pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
+  "release-type": "rust",
 
   "packages": {
+    ".": {
+      "component": "root",
+      "exclude-paths": ["pacakges/", "plugins/"]
+    },
     "packages/client": {
-      "release-type": "rust",
       "component": "client"
     },
     "packages/codegen": {
-      "release-type": "rust",
       "component": "codegen"
     },
     "packages/db": {
-      "release-type": "rust",
       "component": "db"
     },
     "packages/service": {
-      "release-type": "rust",
       "component": "service"
     },
     "plugins/retrom-plugin-installer": {
-      "release-type": "rust",
       "component": "plugin-installer"
     },
     "plugins/retrom-plugin-launcher": {
-      "release-type": "rust",
       "component": "plugin-launcher"
     }
   },
