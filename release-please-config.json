@@ -29,6 +29,5 @@
     "plugins/retrom-plugin-launcher": {
       "component": "plugin-launcher"
     }
-  },
-  "plugins": [{ "type": "cargo-workspace", "updateAllPackages": true }]
+  }
 }
