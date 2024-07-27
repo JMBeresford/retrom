@@ -5,6 +5,7 @@ exclude = ["**/node_modules"]
 
 [package]
 name = "retrom"
+version = "0.0.5"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true

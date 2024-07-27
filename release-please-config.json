@@ -22,6 +22,11 @@
   "include-component-in-tag": false,
 
   "packages": {
+    ".": {
+      "release-type": "rust",
+      "release-as": "0.0.6",
+      "component": "client"
+    },
     "packages/client": {
       "release-type": "rust",
       "release-as": "0.0.6",
