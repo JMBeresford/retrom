@@ -9,8 +9,7 @@
 
   "packages": {
     ".": {
-      "component": "root",
-      "exclude-paths": ["pacakges/", "plugins/"]
+      "component": "root"
     },
     "packages/client": {
       "component": "client"
@@ -31,5 +30,5 @@
       "component": "plugin-launcher"
     }
   },
-  "plugins": [{ "type": "cargo-workspace" }]
+  "plugins": [{ "type": "cargo-workspace", "updateAllPackages": true }]
 }
