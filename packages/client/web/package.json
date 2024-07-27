@@ -68,5 +68,6 @@
     "tailwindcss": "^3.4.1",
     "ts-proto": "^1.172.0",
     "typescript": "^5.5"
-  }
+  },
+  "version": "1.0.0"
 }

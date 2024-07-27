@@ -4,5 +4,7 @@
   "packages/db": "0.0.5",
   "packages/service": "0.0.5",
   "plugin/retrom-plugin-installer": "0.0.5",
-  "plugin/retrom-plugin-launcher": "0.0.5"
+  "plugin/retrom-plugin-launcher": "0.0.5",
+  "packages/client/web": "1.0.0",
+  ".": "0.0.7"
 }
