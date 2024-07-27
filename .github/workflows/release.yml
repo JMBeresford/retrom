@@ -17,6 +17,11 @@ jobs:
           token: ${{ secrets.RELEASE_PLZ_GH_TOKEN }}
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
       - name: Run release-plz
         id: release
         uses: MarcoIeni/release-plz-action@v0.5
