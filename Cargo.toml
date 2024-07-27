@@ -3,14 +3,15 @@ resolver = "2"
 members = ["./packages/*", "./plugins/*"]
 exclude = ["**/node_modules"]
 
-# [package]
-# name = "retrom"
+[package]
+name = "retrom"
 # version.workspace = true
 # edition.workspace = true
 # authors.workspace = true
 # license.workspace = true
 # readme.workspace = true
 # repository.workspace = true
+
 
 [workspace.package]
 edition = "2021"

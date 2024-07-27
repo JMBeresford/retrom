@@ -3710,6 +3710,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "retrom"
+version = "0.0.0"
+
+[[package]]
 name = "retrom-client"
 version = "0.0.5"
 dependencies = [
