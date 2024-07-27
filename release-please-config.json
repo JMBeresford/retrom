@@ -11,10 +11,6 @@
   "group-pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
 
   "packages": {
-    ".": {
-      "release-type": "rust",
-      "release-as": "0.0.6"
-    },
     "packages/client": {
       "release-type": "rust",
       "release-as": "0.0.6"
