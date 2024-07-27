@@ -1,6 +1,13 @@
 [workspace]
 resolver = "2"
-members = ["./packages/*", "./plugins/*"]
+members = [
+  "./packages/db/",
+  "./packages/client/",
+  "./packages/codegen/",
+  "./packages/service/",
+  "./plugins/retrom-plugin-launcher/",
+  "./plugins/retrom-plugin-installer/",
+]
 exclude = ["**/node_modules"]
 
 [package]
