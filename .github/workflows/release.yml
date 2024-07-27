@@ -8,7 +8,8 @@ name: release
 jobs:
   release-plz:
     outputs:
-      created: ${{ steps.release.outputs.releases_created }}
+      created: ${{ fromJson(steps.release.outputs.releases_created) }}
+
     name: Release-plz
     runs-on: ubuntu-latest
     steps:
