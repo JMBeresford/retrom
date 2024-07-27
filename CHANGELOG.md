@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.7](https://github.com/JMBeresford/retrom/compare/root-v0.0.6...root-v0.0.7) (2024-07-27)
+
+
+### Bug Fixes
+
+* test deps versioning ([b6863a2](https://github.com/JMBeresford/retrom/commit/b6863a290fbb3e3f28dfe4ebb59f0ee640e9436c))
+* test deps versioning2 ([97e19d7](https://github.com/JMBeresford/retrom/commit/97e19d7f22e9d6b14960a866d48993fe19fe84da))
+
 ## [0.0.6](https://github.com/JMBeresford/retrom/compare/root-v0.0.5...root-v0.0.6) (2024-07-27)
 
 
