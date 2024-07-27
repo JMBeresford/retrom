@@ -10,15 +10,15 @@ members = [
 ]
 exclude = ["**/node_modules"]
 
-# [package]
-# name = "retrom"
-# version = "0.0.5"
-# edition.workspace = true
-# authors.workspace = true
-# license.workspace = true
-# readme.workspace = true
-# repository.workspace = true
-#
+[package]
+name = "retrom"
+version = "0.0.5"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+
 [workspace.package]
 edition = "2021"
 authors = ["John Beresford <jberesford@volcaus.com>"]
