@@ -1,6 +1,6 @@
 [package]
 name = "retrom-plugin-installer"
-version = "0.1.0"
+version = "0.0.8"
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
