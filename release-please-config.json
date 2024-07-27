@@ -1,15 +1,34 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
 
-  "plugins": [{ "type": "cargo-workspace" }],
+  "plugins": [{ "type": "cargo-workspace", "updateAllPackages": true }],
 
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "include-component-in-tag": false,
   "pull-request-title-pattern": "chore(${scope}): release ${component} ${version}",
+  "group-pull-request-title-pattern": "chore(${scope}): release ${component} ${version}",
 
   "packages": {
-    ".": {
+    "packages/client": {
+      "release-type": "rust"
+    },
+    "packages/client/web": {
+      "release-type": "node"
+    },
+    "packages/codegen": {
+      "release-type": "rust"
+    },
+    "packages/db": {
+      "release-type": "rust"
+    },
+    "packages/service": {
+      "release-type": "rust"
+    },
+    "plugins/retrom-plugin-installer": {
+      "release-type": "rust"
+    },
+    "plugins/retrom-plugin-launcher": {
       "release-type": "rust"
     }
   }
