@@ -2,8 +2,8 @@ name: Publish To Container Registry
 
 on:
   workflow_dispatch:
-  # push:
-  # branches: ["release"]
+  release:
+    types: [published]
 
 env:
   REGISTRY: ghcr.io
