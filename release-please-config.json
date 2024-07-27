@@ -8,14 +8,20 @@
     {
       "type": "linked-versions",
       "groupName": "retrom",
-      "components": ["client", "client/web", "codegen", "db", "service"]
+      "components": ["root", "client", "client/web", "codegen", "db", "service"]
     }
   ],
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "include-component-in-tag": false,
+  "pull-request-title-pattern": "chore(release): release ${version}",
 
   "packages": {
+    ".": {
+      "release-type": "rust",
+      "release-as": "0.0.6",
+      "component": "root"
+    },
     "packages/client": {
       "release-type": "rust",
       "release-as": "0.0.6",
