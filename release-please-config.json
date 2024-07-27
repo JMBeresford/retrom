@@ -5,10 +5,27 @@
   "bump-patch-for-minor-pre-major": true,
   "pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
   "group-pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
+  "release-type": "rust",
 
   "packages": {
-    ".": {
-      "release-type": "rust"
+    "packages/client": {
+      "component": "client"
+    },
+    "packages/codegen": {
+      "component": "codegen"
+    },
+    "packages/db": {
+      "component": "db"
+    },
+    "packages/service": {
+      "component": "service"
+    },
+    "plugins/retrom-plugin-installer": {
+      "component": "plugin-installer"
+    },
+    "plugins/retrom-plugin-launcher": {
+      "component": "plugin-launcher"
     }
-  }
+  },
+  "plugins": [{ "type": "cargo-workspace" }]
 }
