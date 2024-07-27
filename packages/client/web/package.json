@@ -1,6 +1,5 @@
 {
   "name": "web",
-  "version": "0.0.5",
   "private": true,
   "scripts": {
     "dev": "NEXT_PUBLIC_PLATFORM=web next dev",
