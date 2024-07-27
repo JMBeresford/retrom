@@ -9,10 +9,6 @@
   "release-type": "rust",
 
   "packages": {
-    ".": {
-      "exclude-paths": ["^packages/.*", "^plugins/.*"],
-      "component": "retrom"
-    },
     "packages/client": {
       "component": "retrom-client"
     },
@@ -36,9 +32,8 @@
     { "type": "cargo-workspace", "merge": false },
     {
       "type": "linked-versions",
-      "groupName": "retrom_group",
+      "groupName": "retrom",
       "components": [
-        "retrom",
         "retrom-client",
         "retrom-codegen",
         "retrom-db",
