@@ -7,10 +7,11 @@ import {
   GetGamesResponse,
 } from "@/generated/retrom/services";
 import { GRPC_HOST } from "@/lib/env";
-import { createChannel, createClient } from "nice-grpc";
+import { createClient } from "nice-grpc";
+import { createGrpcChannel } from "./utils";
 
 export const getGames: GameServiceClient["getGames"] = async (req = {}) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: GameServiceClient = createClient(
     GameServiceDefinition,
     channel,
@@ -29,7 +30,7 @@ export const getGames: GameServiceClient["getGames"] = async (req = {}) => {
 export const deleteGames: GameServiceClient["deleteGames"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: GameServiceClient = createClient(
     GameServiceDefinition,
     channel,

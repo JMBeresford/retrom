@@ -1,3 +1,5 @@
+import { ChannelCredentials, createChannel } from "nice-grpc";
+
 export const API_HOSTNAME = process.env.RETROM_HOSTNAME ?? "http://localhost";
 export const API_PORT = process.env.RETROM_PORT ?? "5101";
 

@@ -16,12 +16,13 @@ import {
   UpdateEmulatorsResponse,
 } from "@/generated/retrom/services";
 import { GRPC_HOST } from "@/lib/env";
-import { createChannel, createClient } from "nice-grpc";
+import { createClient } from "nice-grpc";
+import { createGrpcChannel } from "./utils";
 
 export const createEmulators: EmulatorServiceClient["createEmulators"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: EmulatorServiceClient = createClient(
     EmulatorServiceDefinition,
     channel,
@@ -40,7 +41,7 @@ export const createEmulators: EmulatorServiceClient["createEmulators"] = async (
 export const getEmulators: EmulatorServiceClient["getEmulators"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: EmulatorServiceClient = createClient(
     EmulatorServiceDefinition,
     channel,
@@ -59,7 +60,7 @@ export const getEmulators: EmulatorServiceClient["getEmulators"] = async (
 export const updateEmulators: EmulatorServiceClient["updateEmulators"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: EmulatorServiceClient = createClient(
     EmulatorServiceDefinition,
     channel,
@@ -79,7 +80,7 @@ export const updateEmulators: EmulatorServiceClient["updateEmulators"] = async (
 export const deleteEmulators: EmulatorServiceClient["deleteEmulators"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: EmulatorServiceClient = createClient(
     EmulatorServiceDefinition,
     channel,
@@ -97,7 +98,7 @@ export const deleteEmulators: EmulatorServiceClient["deleteEmulators"] = async (
 
 export const getEmulatorProfiles: EmulatorServiceClient["getEmulatorProfiles"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: EmulatorServiceClient = createClient(
       EmulatorServiceDefinition,
       channel,
@@ -115,7 +116,7 @@ export const getEmulatorProfiles: EmulatorServiceClient["getEmulatorProfiles"] =
 
 export const createEmulatorProfiles: EmulatorServiceClient["createEmulatorProfiles"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: EmulatorServiceClient = createClient(
       EmulatorServiceDefinition,
       channel,
@@ -133,7 +134,7 @@ export const createEmulatorProfiles: EmulatorServiceClient["createEmulatorProfil
 
 export const deleteEmulatorProfiles: EmulatorServiceClient["deleteEmulatorProfiles"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: EmulatorServiceClient = createClient(
       EmulatorServiceDefinition,
       channel,
@@ -151,7 +152,7 @@ export const deleteEmulatorProfiles: EmulatorServiceClient["deleteEmulatorProfil
 
 export const updateEmulatorProfiles: EmulatorServiceClient["updateEmulatorProfiles"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: EmulatorServiceClient = createClient(
       EmulatorServiceDefinition,
       channel,
@@ -169,7 +170,7 @@ export const updateEmulatorProfiles: EmulatorServiceClient["updateEmulatorProfil
 
 export const getDefaultEmulatorProfiles: EmulatorServiceClient["getDefaultEmulatorProfiles"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: EmulatorServiceClient = createClient(
       EmulatorServiceDefinition,
       channel,
@@ -187,7 +188,7 @@ export const getDefaultEmulatorProfiles: EmulatorServiceClient["getDefaultEmulat
 
 export const updateDefaultEmulatorProfiles: EmulatorServiceClient["updateDefaultEmulatorProfiles"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: EmulatorServiceClient = createClient(
       EmulatorServiceDefinition,
       channel,
@@ -205,7 +206,7 @@ export const updateDefaultEmulatorProfiles: EmulatorServiceClient["updateDefault
 
 export const deleteDefaultEmulatorProfiles: EmulatorServiceClient["deleteDefaultEmulatorProfiles"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: EmulatorServiceClient = createClient(
       EmulatorServiceDefinition,
       channel,

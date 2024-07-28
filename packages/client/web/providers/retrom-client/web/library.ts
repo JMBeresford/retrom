@@ -5,12 +5,13 @@ import {
   LibraryServiceDefinition,
 } from "@/generated/retrom/services";
 import { GRPC_HOST } from "@/lib/env";
-import { createChannel, createClient } from "nice-grpc";
+import { createGrpcChannel } from "./utils";
+import { createClient } from "nice-grpc";
 
 export const deleteLibrary: LibraryServiceClient["deleteLibrary"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: LibraryServiceClient = createClient(
     LibraryServiceDefinition,
     channel,
@@ -29,7 +30,7 @@ export const deleteLibrary: LibraryServiceClient["deleteLibrary"] = async (
 export const updateLibrary: LibraryServiceClient["updateLibrary"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: LibraryServiceClient = createClient(
     LibraryServiceDefinition,
     channel,
@@ -47,7 +48,7 @@ export const updateLibrary: LibraryServiceClient["updateLibrary"] = async (
 
 export const updateLibraryMetadata: LibraryServiceClient["updateLibraryMetadata"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: LibraryServiceClient = createClient(
       LibraryServiceDefinition,
       channel,
