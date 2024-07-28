@@ -7,12 +7,13 @@ import {
   PlatformServiceDefinition,
 } from "@/generated/retrom/services";
 import { GRPC_HOST } from "@/lib/env";
-import { createChannel, createClient } from "nice-grpc";
+import { createClient } from "nice-grpc";
+import { createGrpcChannel } from "./utils";
 
 export const getPlatforms: PlatformServiceClient["getPlatforms"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: PlatformServiceClient = createClient(
     PlatformServiceDefinition,
     channel,
@@ -32,7 +33,7 @@ export const getPlatforms: PlatformServiceClient["getPlatforms"] = async (
 export const deletePlatforms: PlatformServiceClient["deletePlatforms"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: PlatformServiceClient = createClient(
     PlatformServiceDefinition,
     channel,

@@ -5,12 +5,13 @@ import {
   MetadataServiceDefinition,
 } from "@/generated/retrom/services";
 import { GRPC_HOST } from "@/lib/env";
-import { createChannel, createClient } from "nice-grpc";
+import { createClient } from "nice-grpc";
+import { createGrpcChannel } from "./utils";
 
 export const getGameMetadata: MetadataServiceClient["getGameMetadata"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: MetadataServiceClient = createClient(
     MetadataServiceDefinition,
     channel,
@@ -28,7 +29,7 @@ export const getGameMetadata: MetadataServiceClient["getGameMetadata"] = async (
 
 export const updateGameMetadata: MetadataServiceClient["updateGameMetadata"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: MetadataServiceClient = createClient(
       MetadataServiceDefinition,
       channel,
@@ -46,7 +47,7 @@ export const updateGameMetadata: MetadataServiceClient["updateGameMetadata"] =
 
 export const getPlatformMetadata: MetadataServiceClient["getPlatformMetadata"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: MetadataServiceClient = createClient(
       MetadataServiceDefinition,
       channel,
@@ -64,7 +65,7 @@ export const getPlatformMetadata: MetadataServiceClient["getPlatformMetadata"] =
 
 export const updatePlatformMetadata: MetadataServiceClient["updatePlatformMetadata"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: MetadataServiceClient = createClient(
       MetadataServiceDefinition,
       channel,
@@ -83,7 +84,7 @@ export const updatePlatformMetadata: MetadataServiceClient["updatePlatformMetada
 export const getIgdbSearch: MetadataServiceClient["getIgdbSearch"] = async (
   req = {},
 ) => {
-  const channel = createChannel(GRPC_HOST);
+  const channel = await createGrpcChannel(GRPC_HOST);
   const client: MetadataServiceClient = createClient(
     MetadataServiceDefinition,
     channel,
@@ -101,7 +102,7 @@ export const getIgdbSearch: MetadataServiceClient["getIgdbSearch"] = async (
 
 export const getIgdbGameSearchResults: MetadataServiceClient["getIgdbGameSearchResults"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: MetadataServiceClient = createClient(
       MetadataServiceDefinition,
       channel,
@@ -119,7 +120,7 @@ export const getIgdbGameSearchResults: MetadataServiceClient["getIgdbGameSearchR
 
 export const getIgdbPlatformSearchResults: MetadataServiceClient["getIgdbPlatformSearchResults"] =
   async (req = {}) => {
-    const channel = createChannel(GRPC_HOST);
+    const channel = await createGrpcChannel(GRPC_HOST);
     const client: MetadataServiceClient = createClient(
       MetadataServiceDefinition,
       channel,
