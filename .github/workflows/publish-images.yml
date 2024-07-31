@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   release:
     types: [published]
-  push:
-    tags:
-      - "retrom-v*"
 
 env:
   REGISTRY: ghcr.io
