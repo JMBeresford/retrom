@@ -71,10 +71,7 @@ export function SideBar() {
     <TooltipProvider>
       <aside className={cn("min-h-full h-full w-full min-w-0 max-w-full")}>
         <section className="w-full overflow-hidden">
-          <Accordion
-            type="multiple"
-            defaultValue={platformData.platforms.map((p) => p.id.toString())}
-          >
+          <Accordion type="multiple">
             {platformData.platforms.map((platform) => {
               let games = gamesByPlatform[platform.id];
               let name = getPlatformName(platform);

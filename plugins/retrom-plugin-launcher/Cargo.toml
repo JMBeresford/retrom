@@ -16,7 +16,7 @@ tokio = { workspace = true }
 tonic = { workspace = true }
 serde = { workspace = true }
 dotenvy = { workspace = true }
-thiserror = "1.0"
+thiserror = { workspace = true }
 tracing = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-plugin-installer = { workspace = true }

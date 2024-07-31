@@ -1,10 +1,15 @@
+use core::panic;
 use std::sync::Arc;
 
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use deunicode::deunicode;
+use futures::TryFutureExt;
 use prost::Message;
-use retrom_codegen::{igdb, retrom};
-use tracing::{debug, error, info, instrument, Instrument, Level};
+use retrom_codegen::{
+    igdb,
+    retrom::{self},
+};
+use tracing::{error, info, instrument, warn, Instrument, Level};
 
 use super::provider::IGDBProvider;
 
@@ -12,28 +17,23 @@ use super::provider::IGDBProvider;
 pub async fn match_platform_igdb(
     provider: Arc<IGDBProvider>,
     platform: &retrom::Platform,
-) -> Result<retrom::NewPlatformMetadata, reqwest::Error> {
+) -> Option<retrom::NewPlatformMetadata> {
     provider.maybe_refresh_token().await;
 
     let name = &platform.path.split('/').last().unwrap_or(&platform.path);
 
-    let search = deunicode(&name);
-    info!("Matching platform: {search}");
+    let search = deunicode(name);
+    info!("Searching for platform: {}", search);
 
     let matches = match search_platforms(provider.clone(), &search).await {
         Ok(igdb_platforms) => igdb_platforms,
         Err(e) => {
             error!("Could not get IGDB platform: {:?}", e);
-            return Err(e);
+            return None;
         }
     };
 
     let igdb_match = matches.platforms.into_iter().next();
-    if igdb_match.is_none() {
-        debug!("No match found.");
-    } else {
-        debug!("Match found!");
-    }
 
     let metadata = match igdb_match {
         Some(igdb_match) => igdb_platform_to_metadata(igdb_match, Some(platform)),
@@ -43,63 +43,74 @@ pub async fn match_platform_igdb(
         },
     };
 
-    Ok(metadata)
+    Some(metadata)
 }
 
 pub async fn match_platforms_igdb(
     provider: Arc<IGDBProvider>,
     platforms: Vec<retrom::Platform>,
-) -> Result<Vec<retrom::NewPlatformMetadata>, reqwest::Error> {
-    let all_metadata_res = futures::future::join_all(
+) -> Vec<retrom::NewPlatformMetadata> {
+    let all_metadata = futures::future::join_all(
         platforms
             .into_iter()
             .map(|platform| {
                 let provider = provider.clone();
-                tokio::spawn(async move {
-                    match match_platform_igdb(provider, &platform).await {
-                        Ok(metadata) => Ok(metadata),
-                        Err(e) => Err(e),
-                    }
-                })
+                let path = platform.path.clone();
+                tokio::spawn(async move { match_platform_igdb(provider, &platform).await }).map_err(
+                    move |e| {
+                        warn!("Could not match platform {path}: {e:?}");
+                        e
+                    },
+                )
             })
-            .map(|future| future.instrument(tracing::info_span!("match_platforms")))
-            .collect::<Vec<_>>(),
-    );
+            .map(|future| future.instrument(tracing::info_span!("match_platforms"))),
+    )
+    .await;
 
-    let mut all_metadata = vec![];
-    for res in all_metadata_res.await {
-        match res {
-            Ok(Ok(metadata)) => all_metadata.push(metadata),
-            Ok(Err(e)) => {
-                error!("Could not get IGDB platform: {:?}", e);
-            }
-            Err(e) => {
-                error!("Could not get IGDB platform: {:?}", e);
-            }
-        };
-    }
-
-    Ok(all_metadata)
+    all_metadata
+        .into_iter()
+        .filter_map(|future| future.ok())
+        .flatten()
+        .collect()
 }
 
 #[instrument(skip(provider))]
 pub(crate) async fn search_platforms(
     provider: Arc<IGDBProvider>,
     search_string: &str,
-) -> Result<igdb::PlatformResult, reqwest::Error> {
+) -> Result<igdb::PlatformResult, reqwest::StatusCode> {
     let query = format!("fields name, summary; search \"{search_string}\"; limit 10;");
 
     let res = match provider.make_request("platforms.pb".into(), query).await {
-        Ok(res) => Ok(res),
-        Err(e) => return Err(e),
+        Ok(res) => res,
+        Err(e) => {
+            error!("Could not get IGDB platform: {:?}", e);
+            return Err(e);
+        }
     };
 
-    let bytes = match res {
-        Ok(res) => res.bytes().await.expect("Could not parse response"),
-        Err(e) => return Err(e),
+    let bytes = match res.bytes().await {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            error!(
+                "Could not parse IGDB response for query {search_string}: {:?}",
+                e
+            );
+            return Err(reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+        }
     };
 
-    Ok(igdb::PlatformResult::decode(bytes).expect("Could not decode response"))
+    let result = match igdb::PlatformResult::decode(bytes) {
+        Ok(result) => result,
+        Err(e) => {
+            panic!(
+                "Could not parse IGDB response for query {search_string}: {:?}",
+                e
+            );
+        }
+    };
+
+    Ok(result)
 }
 
 pub fn igdb_platform_to_metadata(
@@ -115,10 +126,10 @@ pub fn igdb_platform_to_metadata(
 
     let logo_url = igdb_match
         .platform_logo
-        .and_then(|logo| Some(logo.url.to_string().replace("//", "https://")));
+        .map(|logo| logo.url.to_string().replace("//", "https://"));
 
     retrom::NewPlatformMetadata {
-        platform_id: platform.and_then(|platform| Some(platform.id)),
+        platform_id: platform.map(|platform| platform.id),
         igdb_id,
         name,
         description,

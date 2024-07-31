@@ -40,3 +40,7 @@ http = "0.2"
 warp = "0.3.7"
 tokio-util = { workspace = true }
 zipit = { version = "0.4.0", features = ["tokio-async-io", "chrono-datetime"] }
+tokio-retry = { workspace = true }
+futures-util = "0.3.30"
+tokio-stream = { workspace = true }
+thiserror = { workspace = true }

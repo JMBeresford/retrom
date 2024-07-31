@@ -13,7 +13,7 @@ links = "tauri-plugin-installer"
 [dependencies]
 tauri = { workspace = true }
 serde = "1.0"
-thiserror = "1.0"
+thiserror = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-db = { workspace = true }
 futures = { workspace = true }

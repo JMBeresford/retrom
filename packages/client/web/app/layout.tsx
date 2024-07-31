@@ -10,11 +10,10 @@ import {
 } from "@/components/ui/resizable";
 import { Toaster } from "@/components/ui/toaster";
 import { Menubar } from "@/components/menubar";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { RetromClientProvider } from "@/providers/retrom-client/";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { RetromClientProvider } from "@/providers/retrom-client";
 import { QueryClientProvider } from "@/providers/query-client";
 import { Suspense } from "react";
-import { IS_DESKTOP } from "@/lib/env";
 
 const inter = Inter({
   weight: "variable",
@@ -32,19 +31,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const retromClient = IS_DESKTOP
-    ? undefined
-    : await import("@/providers/retrom-client/web").then(
-        (mod) => mod.RetromWebClient,
-      );
-
   return (
     <html lang="en">
       <body
         className={cn("bg-background font-sans antialiased", inter.variable)}
       >
         <Suspense fallback={null}>
-          <RetromClientProvider value={retromClient}>
+          <RetromClientProvider>
             <QueryClientProvider>
               <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
                 <Menubar />
