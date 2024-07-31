@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.10...retrom-client-v0.0.11) - 2024-07-31
+
+### Added
+- web client ssl
+
+### Fixed
+- rendering issues
+- rate-limited igdb metadata fetching
+
 ## [0.0.10](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.9...retrom-client-v0.0.10) - 2024-07-27
 
 ### Other
