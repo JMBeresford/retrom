@@ -14,6 +14,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RetromClientProvider } from "@/providers/retrom-client";
 import { QueryClientProvider } from "@/providers/query-client";
 import { Suspense } from "react";
+import { unstable_noStore } from "next/cache";
+import { GRPC_HOST, IS_DESKTOP } from "@/lib/env";
 
 const inter = Inter({
   weight: "variable",
@@ -31,13 +33,21 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // opt into dynamic rendering for web clients,
+  // this way env vars are read at runtime (useful for docker deployments)
+  if (!IS_DESKTOP) {
+    unstable_noStore();
+  }
+
+  const host = GRPC_HOST();
+
   return (
     <html lang="en">
       <body
         className={cn("bg-background font-sans antialiased", inter.variable)}
       >
         <Suspense fallback={null}>
-          <RetromClientProvider>
+          <RetromClientProvider host={host}>
             <QueryClientProvider>
               <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
                 <Menubar />
