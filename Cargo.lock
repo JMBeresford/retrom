@@ -3711,11 +3711,11 @@ dependencies = [
 
 [[package]]
 name = "retrom"
-version = "0.0.14"
+version = "0.0.15"
 
 [[package]]
 name = "retrom-client"
-version = "0.0.13"
+version = "0.0.14"
 dependencies = [
  "async-compression",
  "bb8",
@@ -3763,7 +3763,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-db"
-version = "0.0.8"
+version = "0.0.9"
 dependencies = [
  "async-trait",
  "bb8",
