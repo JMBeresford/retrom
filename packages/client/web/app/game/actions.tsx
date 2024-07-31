@@ -57,7 +57,7 @@ export function Actions() {
           )}
         </div>
 
-        <DropdownMenu>
+        <DropdownMenu modal={true}>
           <DropdownMenuTrigger asChild>
             <Button
               size="icon"
