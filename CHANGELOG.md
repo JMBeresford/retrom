@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.13](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.12...retrom-v0.0.13) - 2024-07-31
+
+### Fixed
+- client env-vars
+
+### Other
+- fix action trigger pattern
+
 ## [0.0.12](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.11...retrom-v0.0.12) - 2024-07-31
 
 ### Added
