@@ -48,7 +48,7 @@ services:
     ports:
       - 3000:${RETROM_WEB_PORT:-3000}
     environment:
-      RETROM_WEB_PORT: ${RETROM_WEB_PORT:-3000}
-      RETROM_HOST: ${RETROM_HOST:-retrom:5101}
+      NEXT_PUBLIC_RETROM_WEB_PORT: ${RETROM_WEB_PORT:-3000}
+      NEXT_PUBLIC_RETROM_HOST: ${RETROM_HOST:-retrom:5101}
     depends_on:
       - retrom

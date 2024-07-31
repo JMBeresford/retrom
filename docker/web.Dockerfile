@@ -32,9 +32,9 @@ ENV NODE_ENV=production
 ENV UID=1001
 ENV GID=1001
 ENV PORT=3000
-ENV RETROM_PORT=5101
-ENV RETROM_HOSTNAME=http://localhost
-ENV RETROM_HOST=http://localhost:5101
+ENV NEXT_PUBLIC_RETROM_PORT=5101
+ENV NEXT_PUBLIC_RETROM_HOSTNAME=http://localhost
+ENV NEXT_PUBLIC_RETROM_HOST=http://localhost:5101
 
 RUN addgroup --system --gid $GID retrom
 RUN adduser --system --uid $UID retrom
