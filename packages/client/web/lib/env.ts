@@ -16,7 +16,7 @@ function API_HOST() {
   return (
     RETROM_HOST ??
     process.env.NEXT_PUBLIC_RETROM_HOST ??
-    `${API_HOSTNAME}:${API_PORT}`
+    `${API_HOSTNAME()}:${API_PORT()}`
   );
 }
 
