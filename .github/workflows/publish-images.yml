@@ -6,7 +6,7 @@ on:
     types: [published]
   push:
     tags:
-      - "retrom*"
+      - "retrom-v*"
 
 env:
   REGISTRY: ghcr.io
