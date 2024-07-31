@@ -14,6 +14,10 @@ import { cn, Image } from "@/lib/utils";
 export function Media() {
   const { gameMetadata } = useGameDetail();
 
+  if (!gameMetadata) {
+    return null;
+  }
+
   const showImages = gameMetadata?.artworkUrls.length;
   const showScreenshots = gameMetadata?.screenshotUrls.length;
   const showVideos = gameMetadata?.videoUrls.length;
