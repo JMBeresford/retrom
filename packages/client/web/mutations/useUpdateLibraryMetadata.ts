@@ -26,17 +26,22 @@ export function useUpdateLibraryMetadata() {
 
       toast({
         title: "Library metadata updated!",
-        description: updateMetadataSuccessMessage(res),
+        // description: updateMetadataSuccessMessage(res),
       });
     },
-    mutationFn: async () =>
-      await retromClient.libraryClient.updateLibraryMetadata({}),
+    mutationFn: async () => {
+      const stream = retromClient.libraryClient.updateLibraryMetadata({});
+
+      for await (const response of stream) {
+        console.log(response);
+      }
+    },
   });
 }
 
-function updateMetadataSuccessMessage(response: UpdateLibraryMetadataResponse) {
-  const gameMetadata = response.gameMetadataPopulated.length;
-  const platformMetadata = response.platformMetadataPopulated.length;
-
-  return `Updated: ${gameMetadata} game metadata entries, ${platformMetadata} platform metadata entries`;
-}
+// function updateMetadataSuccessMessage(response: UpdateLibraryMetadataResponse) {
+//   const gameMetadata = response.gameMetadataPopulated.length;
+//   const platformMetadata = response.platformMetadataPopulated.length;
+//
+//   return `Updated: ${gameMetadata} game metadata entries, ${platformMetadata} platform metadata entries`;
+// }

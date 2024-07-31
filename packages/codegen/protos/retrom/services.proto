@@ -11,7 +11,7 @@ import 'providers/igdb.proto';
 
 service LibraryService {
   rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
-  rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
+  rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (stream UpdateLibraryMetadataResponse);
   rpc DeleteLibrary(DeleteLibraryRequest) returns (DeleteLibraryResponse);
 }
 
@@ -66,8 +66,22 @@ message UpdateLibraryMetadataRequest {
 }
 
 message UpdateLibraryMetadataResponse {
-  repeated GameMetadata game_metadata_populated = 1;
-  repeated PlatformMetadata platform_metadata_populated = 2;
+  message GameMetadataProgress {
+    // map of game_id to metadata
+    repeated int32 game_ids_updated = 1;
+    repeated int32 game_ids_failed = 2;
+    uint32 total_games = 3;
+  }
+
+  message PlatformMetadataProgress {
+    // map of platform_id to metadata
+    repeated int32 platform_ids_updated = 1;
+    repeated int32 platform_ids_failed = 2;
+    uint32 total_platforms = 3;
+  }
+
+  GameMetadataProgress game_metadata_progress = 1;
+  PlatformMetadataProgress platform_metadata_progress = 2;
 }
 
 message GetPlatformsRequest {

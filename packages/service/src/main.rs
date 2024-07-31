@@ -16,6 +16,7 @@ use tracing::{info, Instrument};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod grpc;
+// mod jobs;
 mod providers;
 mod rest;
 
@@ -25,7 +26,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| "info,".into())
-                .add_directive("tokio_postgres=info".parse().unwrap()),
+                .add_directive("tokio_postgres=info".parse().unwrap())
+                .add_directive("hyper=info".parse().unwrap()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();

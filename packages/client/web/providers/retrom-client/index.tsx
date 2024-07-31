@@ -1,31 +1,49 @@
 "use client";
 
-import {
-  EmulatorServiceClient,
-  GameServiceClient,
-  LibraryServiceClient,
-  MetadataServiceClient,
-  PlatformServiceClient,
-} from "@/generated/retrom/services";
-import { RetromDesktopClient } from "./desktop";
 import { PropsWithChildren, createContext, useContext } from "react";
+import { createChannel, createClient } from "nice-grpc-web";
+import {
+  EmulatorServiceDefinition,
+  LibraryServiceDefinition,
+  GameServiceDefinition,
+  PlatformServiceDefinition,
+  MetadataServiceDefinition,
+} from "@/generated/retrom/services";
+import { GRPC_HOST } from "@/lib/env";
 
-export interface RetromClient {
-  readonly libraryClient: LibraryServiceClient;
-  readonly platformClient: PlatformServiceClient;
-  readonly gameClient: GameServiceClient;
-  readonly metadataClient: MetadataServiceClient;
-  readonly emulatorClient: EmulatorServiceClient;
+export class RetromClient {
+  public gameClient = createClient(
+    GameServiceDefinition,
+    createChannel(GRPC_HOST),
+  );
+
+  public platformClient = createClient(
+    PlatformServiceDefinition,
+    createChannel(GRPC_HOST),
+  );
+
+  public emulatorClient = createClient(
+    EmulatorServiceDefinition,
+    createChannel(GRPC_HOST),
+  );
+
+  public metadataClient = createClient(
+    MetadataServiceDefinition,
+    createChannel(GRPC_HOST),
+  );
+
+  public libraryClient = createClient(
+    LibraryServiceDefinition,
+    createChannel(GRPC_HOST),
+  );
 }
 
 const context = createContext<RetromClient | undefined>(undefined);
 
-export function RetromClientProvider(
-  props: PropsWithChildren<{ value?: RetromClient }>,
-) {
-  const { value, children } = props;
+export function RetromClientProvider(props: PropsWithChildren<{}>) {
+  const { children } = props;
 
-  const client = value ?? new RetromDesktopClient();
+  const client = new RetromClient();
 
   return <context.Provider value={client}>{children}</context.Provider>;
 }

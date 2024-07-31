@@ -33,6 +33,12 @@ export namespace PlayStatus {
   export type UNRECOGNIZED = typeof PlayStatus.UNRECOGNIZED;
 }
 
+export interface RetromHostInfo {
+  hostName: string;
+  port: string;
+  host: string;
+}
+
 export interface InstallationProgressUpdate {
   gameId: number;
   progress: number;
@@ -64,6 +70,73 @@ export interface GamePlayStatusUpdate {
   gameId: number;
   playStatus: PlayStatus;
 }
+
+function createBaseRetromHostInfo(): RetromHostInfo {
+  return { hostName: "", port: "", host: "" };
+}
+
+export const RetromHostInfo = {
+  encode(message: RetromHostInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.hostName !== "") {
+      writer.uint32(10).string(message.hostName);
+    }
+    if (message.port !== "") {
+      writer.uint32(18).string(message.port);
+    }
+    if (message.host !== "") {
+      writer.uint32(26).string(message.host);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): RetromHostInfo {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRetromHostInfo();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.hostName = reader.string();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.port = reader.string();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.host = reader.string();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<RetromHostInfo>): RetromHostInfo {
+    return RetromHostInfo.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<RetromHostInfo>): RetromHostInfo {
+    const message = createBaseRetromHostInfo();
+    message.hostName = object.hostName ?? "";
+    message.port = object.port ?? "";
+    message.host = object.host ?? "";
+    return message;
+  },
+};
 
 function createBaseInstallationProgressUpdate(): InstallationProgressUpdate {
   return { gameId: 0, progress: 0 };

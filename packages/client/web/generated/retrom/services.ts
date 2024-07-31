@@ -54,8 +54,22 @@ export interface UpdateLibraryMetadataRequest {
 }
 
 export interface UpdateLibraryMetadataResponse {
-  gameMetadataPopulated: GameMetadata[];
-  platformMetadataPopulated: PlatformMetadata[];
+  gameMetadataProgress?: UpdateLibraryMetadataResponse_GameMetadataProgress | undefined;
+  platformMetadataProgress?: UpdateLibraryMetadataResponse_PlatformMetadataProgress | undefined;
+}
+
+export interface UpdateLibraryMetadataResponse_GameMetadataProgress {
+  /** map of game_id to metadata */
+  gameIdsUpdated: number[];
+  gameIdsFailed: number[];
+  totalGames: number;
+}
+
+export interface UpdateLibraryMetadataResponse_PlatformMetadataProgress {
+  /** map of platform_id to metadata */
+  platformIdsUpdated: number[];
+  platformIdsFailed: number[];
+  totalPlatforms: number;
 }
 
 export interface GetPlatformsRequest {
@@ -441,16 +455,20 @@ export const UpdateLibraryMetadataRequest = {
 };
 
 function createBaseUpdateLibraryMetadataResponse(): UpdateLibraryMetadataResponse {
-  return { gameMetadataPopulated: [], platformMetadataPopulated: [] };
+  return { gameMetadataProgress: undefined, platformMetadataProgress: undefined };
 }
 
 export const UpdateLibraryMetadataResponse = {
   encode(message: UpdateLibraryMetadataResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.gameMetadataPopulated) {
-      GameMetadata.encode(v!, writer.uint32(10).fork()).ldelim();
+    if (message.gameMetadataProgress !== undefined) {
+      UpdateLibraryMetadataResponse_GameMetadataProgress.encode(message.gameMetadataProgress, writer.uint32(10).fork())
+        .ldelim();
     }
-    for (const v of message.platformMetadataPopulated) {
-      PlatformMetadata.encode(v!, writer.uint32(18).fork()).ldelim();
+    if (message.platformMetadataProgress !== undefined) {
+      UpdateLibraryMetadataResponse_PlatformMetadataProgress.encode(
+        message.platformMetadataProgress,
+        writer.uint32(18).fork(),
+      ).ldelim();
     }
     return writer;
   },
@@ -467,14 +485,20 @@ export const UpdateLibraryMetadataResponse = {
             break;
           }
 
-          message.gameMetadataPopulated.push(GameMetadata.decode(reader, reader.uint32()));
+          message.gameMetadataProgress = UpdateLibraryMetadataResponse_GameMetadataProgress.decode(
+            reader,
+            reader.uint32(),
+          );
           continue;
         case 2:
           if (tag !== 18) {
             break;
           }
 
-          message.platformMetadataPopulated.push(PlatformMetadata.decode(reader, reader.uint32()));
+          message.platformMetadataProgress = UpdateLibraryMetadataResponse_PlatformMetadataProgress.decode(
+            reader,
+            reader.uint32(),
+          );
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -490,9 +514,209 @@ export const UpdateLibraryMetadataResponse = {
   },
   fromPartial(object: DeepPartial<UpdateLibraryMetadataResponse>): UpdateLibraryMetadataResponse {
     const message = createBaseUpdateLibraryMetadataResponse();
-    message.gameMetadataPopulated = object.gameMetadataPopulated?.map((e) => GameMetadata.fromPartial(e)) || [];
-    message.platformMetadataPopulated = object.platformMetadataPopulated?.map((e) => PlatformMetadata.fromPartial(e)) ||
-      [];
+    message.gameMetadataProgress = (object.gameMetadataProgress !== undefined && object.gameMetadataProgress !== null)
+      ? UpdateLibraryMetadataResponse_GameMetadataProgress.fromPartial(object.gameMetadataProgress)
+      : undefined;
+    message.platformMetadataProgress =
+      (object.platformMetadataProgress !== undefined && object.platformMetadataProgress !== null)
+        ? UpdateLibraryMetadataResponse_PlatformMetadataProgress.fromPartial(object.platformMetadataProgress)
+        : undefined;
+    return message;
+  },
+};
+
+function createBaseUpdateLibraryMetadataResponse_GameMetadataProgress(): UpdateLibraryMetadataResponse_GameMetadataProgress {
+  return { gameIdsUpdated: [], gameIdsFailed: [], totalGames: 0 };
+}
+
+export const UpdateLibraryMetadataResponse_GameMetadataProgress = {
+  encode(
+    message: UpdateLibraryMetadataResponse_GameMetadataProgress,
+    writer: _m0.Writer = _m0.Writer.create(),
+  ): _m0.Writer {
+    writer.uint32(10).fork();
+    for (const v of message.gameIdsUpdated) {
+      writer.int32(v);
+    }
+    writer.ldelim();
+    writer.uint32(18).fork();
+    for (const v of message.gameIdsFailed) {
+      writer.int32(v);
+    }
+    writer.ldelim();
+    if (message.totalGames !== 0) {
+      writer.uint32(24).uint32(message.totalGames);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdateLibraryMetadataResponse_GameMetadataProgress {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateLibraryMetadataResponse_GameMetadataProgress();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag === 8) {
+            message.gameIdsUpdated.push(reader.int32());
+
+            continue;
+          }
+
+          if (tag === 10) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.gameIdsUpdated.push(reader.int32());
+            }
+
+            continue;
+          }
+
+          break;
+        case 2:
+          if (tag === 16) {
+            message.gameIdsFailed.push(reader.int32());
+
+            continue;
+          }
+
+          if (tag === 18) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.gameIdsFailed.push(reader.int32());
+            }
+
+            continue;
+          }
+
+          break;
+        case 3:
+          if (tag !== 24) {
+            break;
+          }
+
+          message.totalGames = reader.uint32();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(
+    base?: DeepPartial<UpdateLibraryMetadataResponse_GameMetadataProgress>,
+  ): UpdateLibraryMetadataResponse_GameMetadataProgress {
+    return UpdateLibraryMetadataResponse_GameMetadataProgress.fromPartial(base ?? {});
+  },
+  fromPartial(
+    object: DeepPartial<UpdateLibraryMetadataResponse_GameMetadataProgress>,
+  ): UpdateLibraryMetadataResponse_GameMetadataProgress {
+    const message = createBaseUpdateLibraryMetadataResponse_GameMetadataProgress();
+    message.gameIdsUpdated = object.gameIdsUpdated?.map((e) => e) || [];
+    message.gameIdsFailed = object.gameIdsFailed?.map((e) => e) || [];
+    message.totalGames = object.totalGames ?? 0;
+    return message;
+  },
+};
+
+function createBaseUpdateLibraryMetadataResponse_PlatformMetadataProgress(): UpdateLibraryMetadataResponse_PlatformMetadataProgress {
+  return { platformIdsUpdated: [], platformIdsFailed: [], totalPlatforms: 0 };
+}
+
+export const UpdateLibraryMetadataResponse_PlatformMetadataProgress = {
+  encode(
+    message: UpdateLibraryMetadataResponse_PlatformMetadataProgress,
+    writer: _m0.Writer = _m0.Writer.create(),
+  ): _m0.Writer {
+    writer.uint32(10).fork();
+    for (const v of message.platformIdsUpdated) {
+      writer.int32(v);
+    }
+    writer.ldelim();
+    writer.uint32(18).fork();
+    for (const v of message.platformIdsFailed) {
+      writer.int32(v);
+    }
+    writer.ldelim();
+    if (message.totalPlatforms !== 0) {
+      writer.uint32(24).uint32(message.totalPlatforms);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdateLibraryMetadataResponse_PlatformMetadataProgress {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateLibraryMetadataResponse_PlatformMetadataProgress();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag === 8) {
+            message.platformIdsUpdated.push(reader.int32());
+
+            continue;
+          }
+
+          if (tag === 10) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.platformIdsUpdated.push(reader.int32());
+            }
+
+            continue;
+          }
+
+          break;
+        case 2:
+          if (tag === 16) {
+            message.platformIdsFailed.push(reader.int32());
+
+            continue;
+          }
+
+          if (tag === 18) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.platformIdsFailed.push(reader.int32());
+            }
+
+            continue;
+          }
+
+          break;
+        case 3:
+          if (tag !== 24) {
+            break;
+          }
+
+          message.totalPlatforms = reader.uint32();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  create(
+    base?: DeepPartial<UpdateLibraryMetadataResponse_PlatformMetadataProgress>,
+  ): UpdateLibraryMetadataResponse_PlatformMetadataProgress {
+    return UpdateLibraryMetadataResponse_PlatformMetadataProgress.fromPartial(base ?? {});
+  },
+  fromPartial(
+    object: DeepPartial<UpdateLibraryMetadataResponse_PlatformMetadataProgress>,
+  ): UpdateLibraryMetadataResponse_PlatformMetadataProgress {
+    const message = createBaseUpdateLibraryMetadataResponse_PlatformMetadataProgress();
+    message.platformIdsUpdated = object.platformIdsUpdated?.map((e) => e) || [];
+    message.platformIdsFailed = object.platformIdsFailed?.map((e) => e) || [];
+    message.totalPlatforms = object.totalPlatforms ?? 0;
     return message;
   },
 };
@@ -3257,7 +3481,7 @@ export const LibraryServiceDefinition = {
       requestType: UpdateLibraryMetadataRequest,
       requestStream: false,
       responseType: UpdateLibraryMetadataResponse,
-      responseStream: false,
+      responseStream: true,
       options: {},
     },
     deleteLibrary: {
@@ -3279,7 +3503,7 @@ export interface LibraryServiceImplementation<CallContextExt = {}> {
   updateLibraryMetadata(
     request: UpdateLibraryMetadataRequest,
     context: CallContext & CallContextExt,
-  ): Promise<DeepPartial<UpdateLibraryMetadataResponse>>;
+  ): ServerStreamingMethodResult<DeepPartial<UpdateLibraryMetadataResponse>>;
   deleteLibrary(
     request: DeleteLibraryRequest,
     context: CallContext & CallContextExt,
@@ -3294,7 +3518,7 @@ export interface LibraryServiceClient<CallOptionsExt = {}> {
   updateLibraryMetadata(
     request: DeepPartial<UpdateLibraryMetadataRequest>,
     options?: CallOptions & CallOptionsExt,
-  ): Promise<UpdateLibraryMetadataResponse>;
+  ): AsyncIterable<UpdateLibraryMetadataResponse>;
   deleteLibrary(
     request: DeepPartial<DeleteLibraryRequest>,
     options?: CallOptions & CallOptionsExt,
@@ -3711,3 +3935,5 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+export type ServerStreamingMethodResult<Response> = { [Symbol.asyncIterator](): AsyncIterator<Response, void> };

@@ -3,7 +3,10 @@ use std::{path::PathBuf, str::FromStr, sync::Arc};
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use deunicode::deunicode;
 use prost::Message;
-use retrom_codegen::{igdb, retrom};
+use retrom_codegen::{
+    igdb,
+    retrom::{self, GameMetadata, NewGameMetadata},
+};
 use tracing::{debug, error, info, instrument, warn, Instrument, Level};
 
 use super::provider::IGDBProvider;
@@ -28,7 +31,7 @@ pub async fn match_game_igdb(
     let matches = match search_games(provider.clone(), &search).await {
         Ok(igdb_games) => igdb_games,
         Err(e) => {
-            warn!("Could not get IGDB game: {:?}", e);
+            warn!("Could not get IGDB games: {:?}", e);
             return None;
         }
     };
@@ -54,32 +57,34 @@ pub async fn match_game_igdb(
 pub async fn match_games_igdb(
     provider: Arc<IGDBProvider>,
     games: Vec<retrom::Game>,
-) -> Vec<retrom::NewGameMetadata> {
-    let all_metadata_res = futures::future::join_all(
+    progress_tx: tokio::sync::mpsc::Sender<(i32, Option<NewGameMetadata>)>,
+) {
+    futures::future::join_all(
         games
             .into_iter()
             .map(|game| {
                 let provider = provider.clone();
-                tokio::spawn(async move { match_game_igdb(provider, &game).await })
+                let progress_tx = progress_tx.clone();
+                tokio::spawn(async move {
+                    match match_game_igdb(provider, &game).await {
+                        Some(metadata) => progress_tx
+                            .send((metadata.game_id.unwrap(), Some(metadata)))
+                            .await
+                            .expect("Could not send progress"),
+                        None => progress_tx
+                            .send((game.id, None))
+                            .await
+                            .expect("Could not send progress"),
+                    }
+                })
             })
             .map(|future| future.instrument(tracing::info_span!("match_games")))
             .collect::<Vec<_>>(),
-    );
-
-    let mut all_metadata = vec![];
-    for res in all_metadata_res.await {
-        match res {
-            Ok(Some(metadata)) => all_metadata.push(metadata),
-            Ok(None) => {}
-            Err(e) => {
-                error!("Could not get IGDB game, skipping this game: {:?}", e);
-            }
-        };
-    }
-
-    all_metadata
+    )
+    .await;
 }
 
+#[instrument(level = Level::DEBUG, skip(provider), fields(search_string))]
 pub(crate) async fn search_games(
     provider: Arc<IGDBProvider>,
     search_string: &str,
@@ -110,7 +115,10 @@ pub(crate) async fn search_games(
     let game = match igdb::GameResult::decode(bytes) {
         Ok(game) => game,
         Err(e) => {
-            error!("Could not decode response: {:?}", e);
+            error!(
+                "Could not decode response for query {search_string}: {:?}",
+                e
+            );
             return Err(e.to_string());
         }
     };
