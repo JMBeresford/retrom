@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.17](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.16...retrom-v0.0.17) - 2024-08-02
+
+### Other
+- updated the following local packages: retrom-client, retrom-service
+
 ## [0.0.16](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.15...retrom-v0.0.16) - 2024-08-01
 
 ### Fixed
