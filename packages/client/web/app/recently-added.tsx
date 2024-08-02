@@ -23,7 +23,8 @@ export function RecentlyAdded() {
             const bTime = timestampToDate(b.createdAt).getTime();
 
             return bTime - aTime;
-          }),
+          })
+          .slice(0, 20),
       [data],
     ) ?? [];
 

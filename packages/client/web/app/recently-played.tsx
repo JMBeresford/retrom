@@ -23,15 +23,14 @@ export function RecentlyPlayed() {
             const bTime = timestampToDate(b.metadata?.lastPlayed).getTime();
 
             return bTime - aTime;
-          }),
+          })
+          .slice(0, 20),
       [data],
     ) ?? [];
 
   if (status === "error") {
     return <div>Error</div>;
   }
-
-  console.log({ gamesByPlayedDate });
 
   return (
     <div className="w-full">
