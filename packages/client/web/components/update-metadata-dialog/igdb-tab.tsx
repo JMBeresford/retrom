@@ -30,7 +30,7 @@ import { UpdatedGameMetadata } from "@/generated/retrom/models/metadata";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
-  search: z.string().min(1).max(50),
+  search: z.string().min(1).max(255),
   igdbId: asOptionalString(z.string().min(1).max(20)),
 });
 

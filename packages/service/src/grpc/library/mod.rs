@@ -51,12 +51,11 @@ impl LibraryService for LibraryServiceHandlers {
         &self,
         request: Request<UpdateLibraryMetadataRequest>,
     ) -> Result<Response<Self::UpdateLibraryMetadataStream>, Status> {
-        let (tx, mut rx) =
+        let (tx, rx) =
             tokio::sync::mpsc::channel::<Result<UpdateLibraryMetadataResponse, Status>>(32);
         let output_stream = ReceiverStream::new(rx);
 
-        match metadata_handlers::update_metadata(&self, request.into_inner().overwrite(), tx).await
-        {
+        match metadata_handlers::update_metadata(self, request.into_inner().overwrite(), tx).await {
             Ok(_) => Ok(Response::new(
                 Box::pin(output_stream) as MetadataResponseStream
             )),
@@ -69,7 +68,7 @@ impl LibraryService for LibraryServiceHandlers {
         &self,
         request: Request<DeleteLibraryRequest>,
     ) -> Result<Response<DeleteLibraryResponse>, Status> {
-        match delete_handlers::delete_library(&self, request.into_inner()).await {
+        match delete_handlers::delete_library(self, request.into_inner()).await {
             Ok(response) => Ok(Response::new(response)),
             Err(why) => Err(why),
         }

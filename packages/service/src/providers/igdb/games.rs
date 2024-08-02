@@ -5,7 +5,7 @@ use deunicode::deunicode;
 use prost::Message;
 use retrom_codegen::{
     igdb,
-    retrom::{self, GameMetadata, NewGameMetadata},
+    retrom::{self, NewGameMetadata},
 };
 use tracing::{debug, error, info, instrument, warn, Instrument, Level};
 
@@ -20,12 +20,42 @@ pub async fn match_game_igdb(
 
     let naive_name = game.path.split('/').last().unwrap_or(&game.path);
     let path = PathBuf::from_str(&game.path).unwrap();
-    let name = path
+    let mut name = path
         .file_stem()
         .and_then(|stem| stem.to_str())
-        .unwrap_or(naive_name);
+        .unwrap_or(naive_name)
+        .to_string();
 
-    let search = deunicode(name);
+    // normalize name, remove anything in braces and coallesce spaces
+    while let Some(begin) = name.find('(') {
+        let end = name.find(')').unwrap_or(name.len() - 1);
+
+        name.replace_range(begin..=end, "");
+    }
+
+    while let Some(begin) = name.find('[') {
+        let end = name.find(']').unwrap_or(name.len() - 1);
+
+        name.replace_range(begin..=end, "");
+    }
+
+    while let Some(begin) = name.find('{') {
+        let end = name.find('}').unwrap_or(name.len() - 1);
+
+        name.replace_range(begin..=end, "");
+    }
+
+    name = name
+        .chars()
+        .map(|c| match c {
+            ':' | '-' | '_' | '.' => ' ',
+            _ => c,
+        })
+        .collect();
+
+    name = name.split_whitespace().collect::<Vec<&str>>().join(" ");
+
+    let search = deunicode(&name);
     info!("Matching game: {search}");
 
     let matches = match search_games(provider.clone(), &search).await {
