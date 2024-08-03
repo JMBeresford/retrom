@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not set"));
     let other_derivations = OTHER_DERIVES
         .iter()
-        .map(|d| format!("{d}"))
+        .map(|d| d.to_string())
         .collect::<Vec<String>>()
         .join(",");
 

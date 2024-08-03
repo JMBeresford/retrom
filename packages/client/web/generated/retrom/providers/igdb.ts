@@ -2,7 +2,7 @@
 // versions:
 //   protoc-gen-ts_proto  v1.180.0
 //   protoc               v5.27.1
-// source: providers/igdb.proto
+// source: retrom/providers/igdb.proto
 
 /* eslint-disable */
 import Long from "long";

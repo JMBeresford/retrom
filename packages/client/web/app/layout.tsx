@@ -15,7 +15,8 @@ import { RetromClientProvider } from "@/providers/retrom-client";
 import { QueryClientProvider } from "@/providers/query-client";
 import { Suspense } from "react";
 import { unstable_noStore } from "next/cache";
-import { GRPC_HOST, IS_DESKTOP } from "@/lib/env";
+import { IS_DESKTOP } from "@/lib/env";
+import { ConfigProvider } from "@/providers/config";
 
 const inter = Inter({
   weight: "variable",
@@ -39,49 +40,49 @@ export default async function RootLayout({
     unstable_noStore();
   }
 
-  const host = GRPC_HOST();
-
   return (
     <html lang="en">
       <body
         className={cn("bg-background font-sans antialiased", inter.variable)}
       >
         <Suspense fallback={null}>
-          <RetromClientProvider host={host}>
-            <QueryClientProvider>
-              <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
-                <Menubar />
-                <ResizablePanelGroup
-                  direction="horizontal"
-                  className="h-full w-full"
-                >
-                  <ResizablePanel
-                    defaultSize={25}
-                    maxSize={40}
-                    className="bg-muted"
+          <QueryClientProvider>
+            <ConfigProvider>
+              <RetromClientProvider>
+                <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
+                  <Menubar />
+                  <ResizablePanelGroup
+                    direction="horizontal"
+                    className="h-full w-full"
                   >
-                    <ScrollArea
-                      className={cn(
-                        "h-full max-h-full w-full max-w-full",
-                        "bg-gradient-to-b from-primary/5 to-background",
-                      )}
+                    <ResizablePanel
+                      defaultSize={25}
+                      maxSize={40}
+                      className="bg-muted"
                     >
-                      <SideBar />
-                    </ScrollArea>
-                  </ResizablePanel>
+                      <ScrollArea
+                        className={cn(
+                          "h-full max-h-full w-full max-w-full",
+                          "bg-gradient-to-b from-primary/5 to-background",
+                        )}
+                      >
+                        <SideBar />
+                      </ScrollArea>
+                    </ResizablePanel>
 
-                  <ResizableHandle />
+                    <ResizableHandle />
 
-                  <ResizablePanel defaultSize={75}>
-                    <ScrollArea className="h-full max-h-full w-full max-w-full">
-                      <main className="p-5 pb-16">{children}</main>
-                    </ScrollArea>
-                  </ResizablePanel>
-                </ResizablePanelGroup>
-              </div>
-              <Toaster />
-            </QueryClientProvider>
-          </RetromClientProvider>
+                    <ResizablePanel defaultSize={75}>
+                      <ScrollArea className="h-full max-h-full w-full max-w-full">
+                        <main className="p-5 pb-16">{children}</main>
+                      </ScrollArea>
+                    </ResizablePanel>
+                  </ResizablePanelGroup>
+                </div>
+                <Toaster />
+              </RetromClientProvider>
+            </ConfigProvider>
+          </QueryClientProvider>
         </Suspense>
       </body>
     </html>

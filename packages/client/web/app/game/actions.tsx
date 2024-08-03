@@ -19,24 +19,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UpdateMetadataDialog } from "@/components/update-metadata-dialog";
 import { cn, getFileStub } from "@/lib/utils";
-import { EllipsisVertical, LoaderIcon } from "lucide-react";
+import { EllipsisVertical, LoaderCircleIcon } from "lucide-react";
 import { useState } from "react";
 import { useGameDetail } from "./game-context";
-import { IS_DESKTOP, REST_HOST } from "@/lib/env";
+import { IS_DESKTOP } from "@/lib/env";
 import { useMutation } from "@tanstack/react-query";
 import { InstallGameButton } from "@/app/game/install-game-button";
 import { useUninstallGame } from "@/mutations/useUninstallGame";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { InstallationStatus } from "@/generated/retrom/client-utils";
+import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { PlayGameButton } from "./play-game-button";
+import { useConfig } from "@/providers/config";
 
 type Modal = (typeof Modal)[number];
 const Modal = ["edit", "delete", "uninstall"] as const;
 
 export function Actions() {
   const { game } = useGameDetail();
+  const { config } = useConfig();
   const [activeModal, setActiveModal] = useState<Modal | null>(null);
   const { data: installationState } = useInstallationQuery(game);
+
+  if (config.status !== "success") {
+    return null;
+  }
+
+  const restHost = `//${config.data.server.hostname}:${config.data.server.port}/rest`;
 
   return (
     <Dialog>
@@ -49,8 +57,8 @@ export function Actions() {
               <InstallGameButton />
             )
           ) : (
-            <form action={`${REST_HOST}/game/${game.id}`} className="w-full">
-              <Button type="submit" className="w-full">
+            <form action={`${restHost}/game/${game.id}`} className="w-full">
+              <Button type="submit" className="w-full rounded-none">
                 Download
               </Button>
             </form>
@@ -116,7 +124,8 @@ function UninstallGameModal() {
         <DialogTitle>Uninstall Game</DialogTitle>
         <DialogDescription className="w-[60ch]">
           Are you sure you want to uninstall {name}? This will remove the game
-          files from your filesystem.
+          files from your filesystem. You will need to re-install the game to
+          play it again.
         </DialogDescription>
       </DialogHeader>
 
@@ -135,7 +144,7 @@ function UninstallGameModal() {
             uninstall();
           }}
         >
-          <LoaderIcon
+          <LoaderCircleIcon
             className={cn("animate-spin absolute", !isPending && "opacity-0")}
           />
           <p className={cn(isPending && "opacity-0")}>Uninstall</p>
@@ -181,7 +190,7 @@ function DeleteGameModal() {
             mutate();
           }}
         >
-          <LoaderIcon
+          <LoaderCircleIcon
             className={cn("animate-spin absolute", !isPending && "opacity-0")}
           />
           <p className={cn(isPending && "opacity-0")}>Delete</p>

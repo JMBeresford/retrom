@@ -9,8 +9,6 @@ import { Links } from "./links";
 import { SimilarGames } from "./similar_games";
 import { GameFiles } from "./game-files";
 
-const GRID_TEMPLATE = "";
-
 export function GameDetails() {
   const { game, gameMetadata } = useGameDetail();
 
@@ -28,7 +26,7 @@ export function GameDetails() {
         {bgUrl && (
           <Image
             src={bgUrl}
-            alt={gameMetadata?.name ?? "Game Background"}
+            alt={name ?? "Game Background"}
             className="object-cover absolute min-w-full min-h-full max-w-full max-h-full blur-xl"
           />
         )}
@@ -37,13 +35,20 @@ export function GameDetails() {
 
       <div id="left" className="flex flex-col gap-5">
         <div className={cn("flex flex-col relative")}>
-          <div className={cn("relative")}>
-            {gameMetadata?.coverUrl && gameMetadata?.name && (
+          <div
+            className={cn(
+              "relative rounded-t-lg border min-w-full aspect-[3/4] overflow-hidden",
+            )}
+          >
+            <div className="absolute inset-0 grid place-items-center z-[-1] bg-muted">
+              <h5 className="font-semibold text-lg">{name}</h5>
+            </div>
+            {gameMetadata?.coverUrl && (
               <div>
                 <Image
                   src={gameMetadata.coverUrl}
-                  alt={gameMetadata.name}
-                  className="object-cover min-w-full min-h-full rounded-t-lg border"
+                  alt={name}
+                  className="object-cover min-w-full min-h-full"
                 />
               </div>
             )}

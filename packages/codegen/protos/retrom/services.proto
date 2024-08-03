@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package retrom;
 
-import 'models/emulators.proto';
-import 'models/game-files.proto';
-import 'models/games.proto';
-import 'models/metadata.proto';
-import 'models/platforms.proto';
-import 'providers/igdb.proto';
+import 'retrom/models/emulators.proto';
+import 'retrom/models/game-files.proto';
+import 'retrom/models/games.proto';
+import 'retrom/models/metadata.proto';
+import 'retrom/models/platforms.proto';
+import 'retrom/providers/igdb.proto';
 
 service LibraryService {
   rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);

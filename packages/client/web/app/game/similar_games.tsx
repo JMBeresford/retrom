@@ -15,6 +15,10 @@ export function SimilarGames() {
     selectFn: (data) => data.metadata,
   });
 
+  if (!similarGamesMetadata?.length) {
+    return null;
+  }
+
   return (
     <Card className="col-span-4">
       <CardHeader>

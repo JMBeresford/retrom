@@ -2,11 +2,11 @@
 // versions:
 //   protoc-gen-ts_proto  v1.180.0
 //   protoc               v5.27.1
-// source: models/game-files.proto
+// source: retrom/models/game-files.proto
 
 /* eslint-disable */
 import _m0 from "protobufjs/minimal";
-import { Timestamp } from "../google/protobuf/timestamp";
+import { Timestamp } from "../../google/protobuf/timestamp";
 
 export const protobufPackage = "retrom";
 

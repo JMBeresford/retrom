@@ -5,6 +5,10 @@ import { Badge } from "@/components/ui/badge";
 export function Genres() {
   const { extraMetadata } = useGameDetail();
 
+  if (!extraMetadata?.genres?.value) {
+    return null;
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>

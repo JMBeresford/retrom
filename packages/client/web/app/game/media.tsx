@@ -27,6 +27,10 @@ export function Media() {
   if (showScreenshots) tabsShown++;
   if (showVideos) tabsShown++;
 
+  if (tabsShown === 0) {
+    return null;
+  }
+
   const defaultTab = showImages
     ? "images"
     : showScreenshots

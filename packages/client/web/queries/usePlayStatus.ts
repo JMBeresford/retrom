@@ -1,7 +1,7 @@
 import {
   GamePlayStatusUpdate,
   GetGamePlayStatusPayload,
-} from "@/generated/retrom/client-utils";
+} from "@/generated/retrom/client/client-utils";
 import { Game } from "@/generated/retrom/models/games";
 import { IS_DESKTOP } from "@/lib/env";
 import { useQuery, useQueryClient } from "@tanstack/react-query";

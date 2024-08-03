@@ -4,7 +4,7 @@ import { usePlayGame } from "@/mutations/usePlayGame";
 import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
 import { useEmulators } from "@/queries/useEmulators";
 import { usePlayStatusQuery } from "@/queries/usePlayStatus";
-import { PlayStatus } from "@/generated/retrom/client-utils";
+import { PlayStatus } from "@/generated/retrom/client/client-utils";
 import { useStopGame } from "@/mutations/useStopGame";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
 

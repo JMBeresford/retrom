@@ -71,7 +71,7 @@ export function SideBar() {
     <TooltipProvider>
       <aside className={cn("min-h-full h-full w-full min-w-0 max-w-full")}>
         <section className="w-full overflow-hidden">
-          <Accordion type="multiple">
+          <Accordion type="single" collapsible={true} className="mt-2">
             {platformData.platforms.map((platform) => {
               let games = gamesByPlatform[platform.id];
               let name = getPlatformName(platform);
@@ -82,7 +82,7 @@ export function SideBar() {
                   value={platform.id.toString()}
                   className="border-b-0"
                 >
-                  <AccordionTrigger className="py-0 pt-4 px-3">
+                  <AccordionTrigger className="py-1 px-3">
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <h3 className="font-extrabold">{name}</h3>
                       <span className="sr-only">Toggle</span>

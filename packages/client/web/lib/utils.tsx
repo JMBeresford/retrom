@@ -1,4 +1,4 @@
-import { Timestamp } from "@/generated/retrom/google/protobuf/timestamp";
+import { Timestamp } from "@/generated/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
@@ -8,6 +8,12 @@ export type InferSchema<T extends object> = z.ZodObject<{
     ? InferSchema<T[K]>
     : z.ZodType<T[K]>;
 }>;
+
+export type DeepRequired<T> = {
+  [K in keyof T]-?: T[K] extends object & { length?: never }
+    ? DeepRequired<T[K]>
+    : T[K];
+};
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -48,8 +54,8 @@ export function Image(props: JSX.IntrinsicElements["img"]) {
 export function getFileParts(path: string) {
   const filename = path.split("/").pop() ?? "";
   const parts = filename.split(".");
-  const extension = parts.pop();
-  const name = parts.pop();
+  const name = parts.shift();
+  const extension = parts.shift();
 
   return { name, extension };
 }

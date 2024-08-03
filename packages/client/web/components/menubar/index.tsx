@@ -8,7 +8,7 @@ import Link from "next/link";
 
 export function Menubar() {
   return (
-    <header className={cn("px-3 sticky top-0 z-40 bg-background")}>
+    <header className={cn("px-3 sticky top-0 z-40 bg-background border-b")}>
       <MenubarImpl className="border-0 flex items-baseline">
         <Link
           href="/"

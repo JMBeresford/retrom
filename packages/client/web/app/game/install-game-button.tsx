@@ -3,7 +3,7 @@ import { Button } from "../../components/ui/button";
 import { LoaderCircleIcon } from "lucide-react";
 import { useToast } from "../../components/ui/use-toast";
 import { useInstallGame } from "@/mutations/useInstallGame";
-import { InstallationStatus } from "@/generated/retrom/client-utils";
+import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { Progress } from "../../components/ui/progress";
 import { useGameDetail } from "@/app/game/game-context";
 

@@ -1,4 +1,4 @@
-import { InstallationProgressUpdate } from "@/generated/retrom/client-utils";
+import { InstallationProgressUpdate } from "@/generated/retrom/client/client-utils";
 import { Game } from "@/generated/retrom/models/games";
 import { GameFile } from "@/generated/retrom/models/game-files";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

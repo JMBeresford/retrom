@@ -1,4 +1,4 @@
-import { StopGamePayload } from "@/generated/retrom/client-utils";
+import { StopGamePayload } from "@/generated/retrom/client/client-utils";
 import { Game } from "@/generated/retrom/models/games";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";

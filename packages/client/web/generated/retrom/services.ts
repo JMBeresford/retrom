@@ -2,7 +2,7 @@
 // versions:
 //   protoc-gen-ts_proto  v1.180.0
 //   protoc               v5.27.1
-// source: services.proto
+// source: retrom/services.proto
 
 /* eslint-disable */
 import { type CallContext, type CallOptions } from "nice-grpc-common";
