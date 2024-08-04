@@ -3,6 +3,7 @@ import { useGameDetail } from "./game-context";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ExternalLinkIcon } from "lucide-react";
 
 export function Links() {
   const { gameMetadata } = useGameDetail();
@@ -14,7 +15,7 @@ export function Links() {
   return (
     <Card className={`col-span-3`}>
       <CardHeader>
-        <CardTitle>Links</CardTitle>
+        <CardTitle>External Links</CardTitle>
       </CardHeader>
       <CardContent className="max-w-full">
         <ScrollArea
@@ -31,10 +32,11 @@ export function Links() {
                 key={idx}
                 href={link}
                 className={cn(
-                  "underline text-muted-foreground hover:text-card-foreground transition-colors",
+                  "underline text-muted-foreground hover:text-card-foreground transition-colors flex items-baseline gap-1",
                 )}
               >
                 {new URL(link).hostname.split(".").at(-2)}
+                <ExternalLinkIcon className="h-[0.8rem] w-[0.8rem]" />
               </Link>
             ))}
           </div>

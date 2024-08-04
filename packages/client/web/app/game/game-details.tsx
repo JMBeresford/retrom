@@ -8,6 +8,7 @@ import { Media } from "./media";
 import { Links } from "./links";
 import { SimilarGames } from "./similar_games";
 import { GameFiles } from "./game-files";
+import { GeneralInfo } from "./general-info";
 
 export function GameDetails() {
   const { game, gameMetadata } = useGameDetail();
@@ -57,6 +58,7 @@ export function GameDetails() {
           <Actions />
         </div>
 
+        <GeneralInfo />
         <Genres />
       </div>
 
