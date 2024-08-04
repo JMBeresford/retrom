@@ -5,7 +5,7 @@ package retrom;
 message RetromClientConfig {
   message Server {
     string hostname = 1;
-    int32 port = 2;
+    optional int32 port = 2;
   }
 
   Server server = 1;

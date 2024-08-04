@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { MenubarItem } from "@/components/ui/menubar";
 import { RetromClientConfig } from "@/generated/retrom/client/client-config";
-import { DeepRequired } from "@/lib/utils";
+import { InferSchema } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { configSchema } from "@/providers/config/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,18 +68,17 @@ export function ConfigMenuItem() {
   );
 }
 
-function ConfigForm(props: {
-  currentConfig: DeepRequired<RetromClientConfig>;
-}) {
+type Schema = z.infer<typeof configSchema>;
+function ConfigForm(props: { currentConfig: Required<RetromClientConfig> }) {
   const { setConfig } = useConfig();
   const { setOpen } = useDialogOpen();
-  const form = useForm<z.infer<typeof configSchema>>({
+  const form = useForm<Schema>({
     resolver: zodResolver(configSchema),
     defaultValues: props.currentConfig,
   });
 
   const handleSubmit = useCallback(
-    (values: z.infer<typeof configSchema>) => {
+    (values: Schema) => {
       setConfig(values);
       setOpen(false);
     },
@@ -98,7 +97,6 @@ function ConfigForm(props: {
                 <FormLabel>Hostname</FormLabel>
                 <FormControl>
                   <Input
-                    type="url"
                     className="rounded-none rounded-l-md border-r-0"
                     {...field}
                   />

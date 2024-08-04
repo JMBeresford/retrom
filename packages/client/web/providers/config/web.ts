@@ -30,13 +30,10 @@ export const WebConfigManager = {
       const msg =
         "Invalid config found in local storage, using default config. This is likely a bug.";
       console.error(msg);
-      toast({
-        variant: "destructive",
-        description: msg,
-        title: "Load Config Error",
-      });
 
-      return WebConfigManager.reset();
+      WebConfigManager.reset();
+
+      throw e;
     }
   },
 
@@ -48,11 +45,8 @@ export const WebConfigManager = {
       const msg =
         "Tried to save an invalid config. This is likely a bug. Please report this issue.";
       console.error(msg, config);
-      toast({
-        variant: "destructive",
-        description: msg,
-        title: "Save Config Error",
-      });
+
+      throw e;
     }
   },
 

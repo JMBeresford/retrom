@@ -15,7 +15,7 @@ export interface RetromClientConfig {
 
 export interface RetromClientConfig_Server {
   hostname: string;
-  port: number;
+  port?: number | undefined;
 }
 
 function createBaseRetromClientConfig(): RetromClientConfig {
@@ -66,7 +66,7 @@ export const RetromClientConfig = {
 };
 
 function createBaseRetromClientConfig_Server(): RetromClientConfig_Server {
-  return { hostname: "", port: 0 };
+  return { hostname: "", port: undefined };
 }
 
 export const RetromClientConfig_Server = {
@@ -74,7 +74,7 @@ export const RetromClientConfig_Server = {
     if (message.hostname !== "") {
       writer.uint32(10).string(message.hostname);
     }
-    if (message.port !== 0) {
+    if (message.port !== undefined) {
       writer.uint32(16).int32(message.port);
     }
     return writer;
@@ -116,7 +116,7 @@ export const RetromClientConfig_Server = {
   fromPartial(object: DeepPartial<RetromClientConfig_Server>): RetromClientConfig_Server {
     const message = createBaseRetromClientConfig_Server();
     message.hostname = object.hostname ?? "";
-    message.port = object.port ?? 0;
+    message.port = object.port ?? undefined;
     return message;
   },
 };

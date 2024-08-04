@@ -5,12 +5,11 @@ import { createContext, PropsWithChildren, useContext } from "react";
 import { defaultAPIHostname, defaultAPIPort } from "./utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { WebConfigManager } from "./web";
-import { DeepRequired } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 
 export interface ConfigManager {
-  setConfig(config: DeepRequired<RetromClientConfig>): Promise<void>;
-  getConfig(): Promise<DeepRequired<RetromClientConfig>>;
+  setConfig(config: Required<RetromClientConfig>): Promise<void>;
+  getConfig(): Promise<Required<RetromClientConfig>>;
 }
 
 const context = createContext<ConfigManager | undefined>(undefined);
@@ -56,6 +55,6 @@ export function useConfig() {
   };
 }
 
-export const defaultConfig: DeepRequired<RetromClientConfig> = {
+export const defaultConfig: Required<RetromClientConfig> = {
   server: { hostname: defaultAPIHostname(), port: defaultAPIPort() },
 };

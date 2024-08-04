@@ -31,11 +31,17 @@ export function defaultAPIHost() {
   );
 }
 
-export const configSchema: InferSchema<Required<RetromClientConfig>> = z.object(
-  {
-    server: z.object({
-      hostname: z.string().url().or(z.string().ip()),
-      port: z.number().int().positive(),
-    }),
-  },
-);
+export const configSchema = z.object({
+  server: z.object({
+    hostname: z.string().url().or(z.string().ip()),
+    port: z
+      .string()
+      .optional()
+      .transform((val) => {
+        if (val === undefined || val === "") return undefined;
+        return parseInt(val);
+      })
+      .pipe(z.number().int().positive().optional())
+      .or(z.number().int().positive().optional()),
+  }),
+}) satisfies z.ZodSchema<RetromClientConfig, z.ZodTypeDef, unknown>;
