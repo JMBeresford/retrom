@@ -65,7 +65,7 @@ async fn do_update(
     let normalized_paths: Vec<String> = platform_paths
         .iter()
         .filter_map(|path| match path.canonicalize() {
-            Ok(path) => path.to_str().and_then(|p| Some(p.to_string())),
+            Ok(path) => path.to_str().map(|p| p.to_string()),
             Err(why) => {
                 warn!("Could not normalize path: {:?}", why);
                 None
@@ -100,8 +100,21 @@ async fn do_update(
         response.platforms_populated.extend(platforms);
     }
 
-    for platform in response.platforms_populated.as_slice() {
+    let all_platforms: Vec<Platform> = match schema::platforms::table.load(conn).await {
+        Ok(platforms) => platforms,
+        Err(why) => {
+            error!("Failed to get all platforms: {}", why);
+            return Err(Status::internal(why.to_string()));
+        }
+    };
+
+    for platform in all_platforms.as_slice() {
         let platform_dir = Path::new(&platform.path);
+
+        if !platform_dir.exists() {
+            continue;
+        }
+
         let game_paths: Vec<PathBuf> = platform_dir
             .read_dir()?
             .filter_map(|entry| match entry {
@@ -117,7 +130,7 @@ async fn do_update(
         let normalized_paths: Vec<String> = game_paths
             .iter()
             .filter_map(|path| match path.canonicalize() {
-                Ok(path) => path.to_str().and_then(|p| Some(p.to_string())),
+                Ok(path) => path.to_str().map(|p| p.to_string()),
                 Err(why) => {
                     warn!("Could not normalize path: {:?}", why);
                     None
@@ -154,8 +167,21 @@ async fn do_update(
         }
     }
 
-    for game in response.games_populated.as_slice() {
+    let all_games: Vec<Game> = match schema::games::table.load(conn).await {
+        Ok(games) => games,
+        Err(why) => {
+            error!("Failed to get all games: {}", why);
+            return Err(Status::internal(why.to_string()));
+        }
+    };
+
+    for game in all_games.as_slice() {
         let game_dir = Path::new(&game.path);
+
+        if !game_dir.exists() {
+            continue;
+        }
+
         let game_file_paths: Vec<PathBuf> = game_dir
             .read_dir()?
             .filter_map(|entry| match entry {
@@ -171,7 +197,7 @@ async fn do_update(
         let normalized_paths: Vec<String> = game_file_paths
             .iter()
             .filter_map(|path| match path.canonicalize() {
-                Ok(path) => path.to_str().and_then(|p| Some(p.to_string())),
+                Ok(path) => path.to_str().map(|p| p.to_string()),
                 Err(why) => {
                     warn!("Could not normalize path: {:?}", why);
                     None
@@ -192,7 +218,7 @@ async fn do_update(
 
                 NewGameFile {
                     path: path.to_string(),
-                    game_id: Some(game.id.clone()),
+                    game_id: Some(game.id),
                     byte_size,
                     created_at: None,
                     updated_at: None,
