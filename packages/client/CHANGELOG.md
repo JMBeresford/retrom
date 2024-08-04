@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.19](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.18...retrom-client-v0.0.19) - 2024-08-04
+
+### Added
+- add action button to game lists on home page
+- add general info component
+
 ## [0.0.18](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.17...retrom-client-v0.0.18) - 2024-08-04
 
 ### Fixed
