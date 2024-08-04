@@ -1,6 +1,6 @@
 "use client";
 
-import { Image, cn } from "@/lib/utils";
+import { Image, cn, getFileStub } from "@/lib/utils";
 import { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -20,6 +20,7 @@ import { usePlatforms } from "@/queries/usePlatforms";
 import { useGames } from "@/queries/useGames";
 import { Game } from "@/generated/retrom/models/games";
 import { Platform } from "@/generated/retrom/models/platforms";
+import { GameMetadata } from "@/generated/retrom/models/metadata";
 
 export function SideBar() {
   const searchParams = useSearchParams();
@@ -37,12 +38,21 @@ export function SideBar() {
 
   const gamesByPlatform = useMemo(() => {
     if (!gameData || !platformData) return {};
-    const ret: Record<string, Array<Game>> = {};
+    const ret: Record<string, Array<Game & { metadata?: GameMetadata }>> = {};
 
     const { platforms } = platformData;
+    const { games, metadata } = gameData;
+
+    const gamesWithMetadata = games.map((game) => {
+      const gameMetadata = metadata.find((m) => m.gameId === game.id);
+      return {
+        ...game,
+        metadata: gameMetadata,
+      };
+    });
 
     return platforms.reduce((acc, platform) => {
-      acc[platform.id] = gameData.games.filter(
+      acc[platform.id] = gamesWithMetadata.filter(
         (game) => game.platformId === platform.id,
       );
       return acc;
@@ -73,7 +83,13 @@ export function SideBar() {
         <section className="w-full overflow-hidden">
           <Accordion type="single" collapsible={true} className="mt-2">
             {platformData.platforms.map((platform) => {
-              let games = gamesByPlatform[platform.id];
+              let games = gamesByPlatform[platform.id]?.sort((a, b) => {
+                const aName = a.metadata?.name ?? getFileStub(a.path) ?? "";
+                const bName = b.metadata?.name ?? getFileStub(b.path) ?? "";
+
+                return aName.localeCompare(bName);
+              });
+
               let name = getPlatformName(platform);
 
               return games ? (

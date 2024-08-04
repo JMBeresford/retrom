@@ -2,13 +2,14 @@ import { Button } from "@/components/ui/button";
 import { useGameDetail } from "./game-context";
 import { usePlayGame } from "@/mutations/usePlayGame";
 import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
-import { useEmulators } from "@/queries/useEmulators";
 import { usePlayStatusQuery } from "@/queries/usePlayStatus";
 import { PlayStatus } from "@/generated/retrom/client/client-utils";
 import { useStopGame } from "@/mutations/useStopGame";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
+import { ComponentProps } from "react";
+import { LoaderCircleIcon, PlayIcon, Square } from "lucide-react";
 
-export function PlayGameButton() {
+export function PlayGameButton(props: ComponentProps<typeof Button>) {
   const { game, platform } = useGameDetail();
   const { mutate: playAction } = usePlayGame(game);
   const { mutate: stopAction } = useStopGame(game);
@@ -34,7 +35,8 @@ export function PlayGameButton() {
 
   if (queryStatus === "pending") {
     return (
-      <Button className="rounded-none" disabled>
+      <Button {...props} disabled>
+        <LoaderCircleIcon className="h-[1.2rem] w-[1.2rem]" />
         Launching...
       </Button>
     );
@@ -42,7 +44,8 @@ export function PlayGameButton() {
 
   if (playStatusUpdate?.playStatus === PlayStatus.PLAYING) {
     return (
-      <Button className="rounded-none" onClick={() => stopAction({ game })}>
+      <Button {...props} onClick={() => stopAction({ game })}>
+        <Square className="h-[1.2rem] w-[1.2rem] fill-current" />
         Stop
       </Button>
     );
@@ -50,7 +53,7 @@ export function PlayGameButton() {
 
   return (
     <Button
-      className="rounded-none"
+      {...props}
       disabled={!profile}
       onClick={() => {
         const emulatorProfile = emulatorProfilesQuery.data?.at(0);
@@ -64,6 +67,7 @@ export function PlayGameButton() {
         });
       }}
     >
+      <PlayIcon className="h-[1.2rem] w-[1.2rem] fill-current" />
       Play
     </Button>
   );

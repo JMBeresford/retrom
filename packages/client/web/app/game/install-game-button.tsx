@@ -1,15 +1,18 @@
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { Button } from "../../components/ui/button";
-import { LoaderCircleIcon } from "lucide-react";
-import { useToast } from "../../components/ui/use-toast";
+import {
+  CircleAlertIcon,
+  DownloadCloudIcon,
+  LoaderCircleIcon,
+} from "lucide-react";
 import { useInstallGame } from "@/mutations/useInstallGame";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { Progress } from "../../components/ui/progress";
 import { useGameDetail } from "@/app/game/game-context";
+import { ComponentProps } from "react";
 
-export function InstallGameButton() {
+export function InstallGameButton(props: ComponentProps<typeof Button>) {
   const { game, gameFiles: files } = useGameDetail();
-  const { toast } = useToast();
 
   const installationQuery = useInstallationQuery(game);
   const installationRequest = useInstallGame(game, files);
@@ -28,16 +31,18 @@ export function InstallGameButton() {
 
   if (error) {
     return (
-      <Button className="rounded-none" disabled>
-        Something went wrong...
+      <Button {...props} disabled>
+        <CircleAlertIcon />
+        Error
       </Button>
     );
   }
 
   if (pending) {
     return (
-      <Button className="rounded-none" disabled>
+      <Button {...props} disabled>
         <LoaderCircleIcon className="animate-spin" />
+        Installing
       </Button>
     );
   }
@@ -45,16 +50,14 @@ export function InstallGameButton() {
   if (installState === InstallationStatus.INSTALLING) {
     return (
       <div className="h-full grid place-items-center">
-        <Progress value={installProgress} className="w-[85%] h-3" />
+        <Progress value={installProgress} className="w-[85%] h-2" />
       </div>
     );
   }
 
   return (
-    <Button
-      className="rounded-none"
-      onClick={async () => void install(undefined)}
-    >
+    <Button {...props} onClick={async () => void install(undefined)}>
+      <DownloadCloudIcon className="h-[1.2rem] 1-[1.2rem]" />
       Install
     </Button>
   );

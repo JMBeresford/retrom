@@ -32,12 +32,13 @@ export type GameDetailContext = {
 
 const GameDetailContext = createContext<GameDetailContext | null>(null);
 
-export function GameDetailProvider(props: PropsWithChildren) {
+export function GameDetailProvider(props: PropsWithChildren<{ game?: Game }>) {
+  const { game } = props;
   const params = useSearchParams();
   const router = useRouter();
   const retromClient = useRetromClient();
 
-  const gameId = parseInt(params.get("gameId") ?? "");
+  const gameId = game?.id ?? parseInt(params.get("gameId") ?? "");
 
   const { data: gameData, status: gameStatus } = useQuery({
     queryKey: ["games", "game-metadata", gameId],

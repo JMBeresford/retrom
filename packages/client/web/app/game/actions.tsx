@@ -22,47 +22,25 @@ import { cn, getFileStub } from "@/lib/utils";
 import { EllipsisVertical, LoaderCircleIcon } from "lucide-react";
 import { useState } from "react";
 import { useGameDetail } from "./game-context";
-import { IS_DESKTOP } from "@/lib/env";
 import { useMutation } from "@tanstack/react-query";
-import { InstallGameButton } from "@/app/game/install-game-button";
 import { useUninstallGame } from "@/mutations/useUninstallGame";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
-import { PlayGameButton } from "./play-game-button";
-import { useConfig } from "@/providers/config";
+import { ActionButton } from "./action-button";
 
 type Modal = (typeof Modal)[number];
 const Modal = ["edit", "delete", "uninstall"] as const;
 
 export function Actions() {
   const { game } = useGameDetail();
-  const { config } = useConfig();
   const [activeModal, setActiveModal] = useState<Modal | null>(null);
   const { data: installationState } = useInstallationQuery(game);
-
-  if (config.status !== "success") {
-    return null;
-  }
-
-  const restHost = `${config.data.server.hostname}:${config.data.server.port}/rest`;
 
   return (
     <Dialog>
       <div className="flex">
         <div className="w-full *:w-full rounded-bl-lg overflow-hidden border-r-2">
-          {IS_DESKTOP ? (
-            installationState === InstallationStatus.INSTALLED ? (
-              <PlayGameButton />
-            ) : (
-              <InstallGameButton />
-            )
-          ) : (
-            <form action={`${restHost}/game/${game.id}`} className="w-full">
-              <Button type="submit" className="w-full rounded-none">
-                Download
-              </Button>
-            </form>
-          )}
+          <ActionButton game={game} />
         </div>
 
         <DropdownMenu modal={true}>
