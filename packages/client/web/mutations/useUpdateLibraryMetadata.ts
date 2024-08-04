@@ -1,5 +1,4 @@
 import { useToast } from "@/components/ui/use-toast";
-import { UpdateLibraryMetadataResponse } from "@/generated/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -16,7 +15,7 @@ export function useUpdateLibraryMetadata() {
         description: err.message,
       });
     },
-    onSuccess: (res) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         predicate: (query) =>
           ["game-metadata", "platform-metadata"].some((key) =>

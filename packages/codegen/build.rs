@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect::<Vec<String>>()
         .join(",");
 
-    let proto_paths: Vec<PathBuf> = WalkDir::new("./protos/retrom")
+    let proto_paths: Vec<PathBuf> = WalkDir::new("./protos")
         .follow_links(true)
         .into_iter()
         .filter_map(|dir_entry| dir_entry.ok())
@@ -286,9 +286,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ),
         )
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))
-        .compile(&proto_paths, &["./protos/retrom/"])?;
-
-    tonic_build::configure().compile(&["./protos/igdb.proto"], &["./protos"])?;
+        .compile(&proto_paths, &["./protos/"])?;
 
     Ok(())
 }

@@ -84,7 +84,7 @@ export function SideBar() {
                 >
                   <AccordionTrigger className="py-1 px-3">
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <h3 className="font-extrabold">{name}</h3>
+                      <h3 className="font-medium">{name}</h3>
                       <span className="sr-only">Toggle</span>
                     </div>
                   </AccordionTrigger>

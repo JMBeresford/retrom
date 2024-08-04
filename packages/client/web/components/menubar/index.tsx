@@ -5,6 +5,7 @@ import { PlatformsMenu } from "./platforms-menu";
 import { Suspense } from "react";
 import { EmulatorsMenu } from "./emulators-menu";
 import Link from "next/link";
+import { FileMenu } from "./file-menu";
 
 export function Menubar() {
   return (
@@ -16,6 +17,8 @@ export function Menubar() {
         >
           Retrom
         </Link>
+
+        <FileMenu />
 
         <LibraryMenu />
         <Suspense fallback={null}>

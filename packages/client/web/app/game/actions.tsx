@@ -44,7 +44,7 @@ export function Actions() {
     return null;
   }
 
-  const restHost = `//${config.data.server.hostname}:${config.data.server.port}/rest`;
+  const restHost = `${config.data.server.hostname}:${config.data.server.port}/rest`;
 
   return (
     <Dialog>
