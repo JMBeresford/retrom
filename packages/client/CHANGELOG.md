@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.20](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.19...retrom-client-v0.0.20) - 2024-08-05
+
+### Fixed
+- game file size overflow issues
+
 ## [0.0.19](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.18...retrom-client-v0.0.19) - 2024-08-04
 
 ### Added
