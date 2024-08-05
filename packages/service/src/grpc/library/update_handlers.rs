@@ -4,6 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use bigdecimal::ToPrimitive;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::{
@@ -209,7 +210,7 @@ async fn do_update(
             .iter()
             .map(|path| {
                 let byte_size = match Path::new(path).metadata() {
-                    Ok(metadata) => metadata.size() as i32,
+                    Ok(metadata) => metadata.size().to_i64().unwrap_or(0),
                     Err(why) => {
                         warn!("Could not get file metadata: {:?}", why);
                         0

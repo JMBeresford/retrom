@@ -5,6 +5,7 @@
 // source: retrom/models/game-files.proto
 
 /* eslint-disable */
+import Long from "long";
 import _m0 from "protobufjs/minimal";
 import { Timestamp } from "../../google/protobuf/timestamp";
 
@@ -46,7 +47,7 @@ export const GameFile = {
       writer.uint32(8).int32(message.id);
     }
     if (message.byteSize !== 0) {
-      writer.uint32(24).int32(message.byteSize);
+      writer.uint32(24).int64(message.byteSize);
     }
     if (message.path !== "") {
       writer.uint32(34).string(message.path);
@@ -82,7 +83,7 @@ export const GameFile = {
             break;
           }
 
-          message.byteSize = reader.int32();
+          message.byteSize = longToNumber(reader.int64() as Long);
           continue;
         case 4:
           if (tag !== 34) {
@@ -147,7 +148,7 @@ function createBaseNewGameFile(): NewGameFile {
 export const NewGameFile = {
   encode(message: NewGameFile, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.byteSize !== 0) {
-      writer.uint32(8).int32(message.byteSize);
+      writer.uint32(8).int64(message.byteSize);
     }
     if (message.path !== "") {
       writer.uint32(18).string(message.path);
@@ -176,7 +177,7 @@ export const NewGameFile = {
             break;
           }
 
-          message.byteSize = reader.int32();
+          message.byteSize = longToNumber(reader.int64() as Long);
           continue;
         case 2:
           if (tag !== 18) {
@@ -243,7 +244,7 @@ export const UpdatedGameFile = {
       writer.uint32(8).int32(message.id);
     }
     if (message.byteSize !== undefined) {
-      writer.uint32(16).int32(message.byteSize);
+      writer.uint32(16).int64(message.byteSize);
     }
     if (message.path !== undefined) {
       writer.uint32(26).string(message.path);
@@ -279,7 +280,7 @@ export const UpdatedGameFile = {
             break;
           }
 
-          message.byteSize = reader.int32();
+          message.byteSize = longToNumber(reader.int64() as Long);
           continue;
         case 3:
           if (tag !== 26) {
@@ -345,3 +346,18 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends { $case: string } ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+function longToNumber(long: Long): number {
+  if (long.gt(globalThis.Number.MAX_SAFE_INTEGER)) {
+    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+  }
+  if (long.lt(globalThis.Number.MIN_SAFE_INTEGER)) {
+    throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
+  }
+  return long.toNumber();
+}
+
+if (_m0.util.Long !== Long) {
+  _m0.util.Long = Long as any;
+  _m0.configure();
+}

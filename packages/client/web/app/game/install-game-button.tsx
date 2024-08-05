@@ -10,6 +10,7 @@ import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { Progress } from "../../components/ui/progress";
 import { useGameDetail } from "@/app/game/game-context";
 import { ComponentProps } from "react";
+import { cn } from "@/lib/utils";
 
 export function InstallGameButton(props: ComponentProps<typeof Button>) {
   const { game, gameFiles: files } = useGameDetail();
@@ -48,9 +49,16 @@ export function InstallGameButton(props: ComponentProps<typeof Button>) {
   }
 
   if (installState === InstallationStatus.INSTALLING) {
+    const { className } = props;
+
     return (
-      <div className="h-full grid place-items-center">
-        <Progress value={installProgress} className="w-[85%] h-2" />
+      <div
+        className={cn(
+          className,
+          "h-full min-w-[100px] grid place-items-center",
+        )}
+      >
+        <Progress value={installProgress} className="h-2" />
       </div>
     );
   }

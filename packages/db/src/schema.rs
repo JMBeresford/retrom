@@ -36,7 +36,7 @@ diesel::table! {
 diesel::table! {
     game_files (id) {
         id -> Int4,
-        byte_size -> Int4,
+        byte_size -> Int8,
         path -> Text,
         game_id -> Int4,
         created_at -> Nullable<Timestamptz>,
