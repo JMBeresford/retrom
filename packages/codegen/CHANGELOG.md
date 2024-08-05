@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.12](https://github.com/JMBeresford/retrom/compare/retrom-codegen-v0.0.11...retrom-codegen-v0.0.12) - 2024-08-05
+
+### Fixed
+- game file size overflow issues
+
 ## [0.0.11](https://github.com/JMBeresford/retrom/compare/retrom-codegen-v0.0.10...retrom-codegen-v0.0.11) - 2024-08-04
 
 ### Fixed
