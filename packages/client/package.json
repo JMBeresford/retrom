@@ -5,6 +5,6 @@
     "build": "tauri build"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "workspace:*"
+    "@tauri-apps/cli": "2.0.0-rc.2"
   }
 }

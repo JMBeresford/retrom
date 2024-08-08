@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use retrom_codegen::retrom::RetromHostInfo;
+use tauri::Manager;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tauri::command]
@@ -40,6 +41,14 @@ pub async fn main() {
             host,
             port,
         })
+        .plugin(tauri_plugin_single_instance::init(|app, _, _| {
+            app.webview_windows()
+                .values()
+                .next()
+                .expect("no window found")
+                .set_focus()
+                .expect("failed to set focus");
+        }))
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
