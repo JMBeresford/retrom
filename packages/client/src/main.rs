@@ -12,8 +12,9 @@ fn greet(name: &str) -> String {
 
 #[tokio::main]
 pub async fn main() {
+    let _ = fix_path_env::fix();
     dotenvy::dotenv().ok();
-    let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5051".to_string());
+    let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5101".to_string());
 
     let host_name =
         std::env::var("RETROM_HOSTNAME").unwrap_or_else(|_| "http://localhost".to_string());

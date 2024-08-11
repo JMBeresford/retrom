@@ -37,6 +37,7 @@ retrom-plugin-installer = { workspace = true }
 retrom-plugin-launcher = { workspace = true }
 tauri-plugin-dialog = "2.0.0-beta.9"
 tauri-plugin-shell = "2.0.0-beta.7"
+fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

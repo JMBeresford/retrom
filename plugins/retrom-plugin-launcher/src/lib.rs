@@ -45,7 +45,7 @@ impl<R: Runtime, T: Manager<R>> crate::LauncherExt<R> for T {
 /// Initializes the plugin.
 pub async fn init<R: Runtime>() -> TauriPlugin<R> {
     dotenvy::dotenv().ok();
-    let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5051".to_string());
+    let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5101".to_string());
     let hostname =
         std::env::var("RETROM_HOSTNAME").unwrap_or_else(|_| "http://localhost".to_string());
 
