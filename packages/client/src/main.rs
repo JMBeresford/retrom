@@ -2,7 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use retrom_codegen::retrom::RetromHostInfo;
-use tauri::Manager;
+use std::str;
+use tauri::{is_dev, path::BaseDirectory, Manager};
+use tauri_plugin_shell::{process::CommandEvent, ShellExt};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tauri::command]
@@ -56,6 +58,52 @@ pub async fn main() {
         .plugin(retrom_plugin_installer::init())
         .plugin(retrom_plugin_launcher::init().await)
         .invoke_handler(tauri::generate_handler![greet])
+        .setup(|app| {
+            if is_dev() {
+                return Ok(());
+            }
+
+            let web_server_path = "web/.next/node-server/packages/client/web/server.js";
+            let path = app
+                .path()
+                .resolve(web_server_path, BaseDirectory::Resource)?;
+
+            #[cfg(target_os = "windows")]
+            let executable = "node.exe";
+            #[cfg(not(target_os = "windows"))]
+            let executable = "node";
+
+            let cmd = app.shell().sidecar(executable).unwrap().args([path]);
+
+            let (mut rx, _) = cmd.spawn().expect("failed to spawn sidecar");
+
+            tauri::async_runtime::spawn(async move {
+                while let Some(event) = rx.recv().await {
+                    match event {
+                        CommandEvent::Stdout(line) => {
+                            if let Ok(s) = str::from_utf8(&line) {
+                                tracing::info!("{}", s)
+                            }
+                        }
+                        CommandEvent::Terminated(payload) => {
+                            if let Some(code) = payload.code {
+                                if code != 0 {
+                                    tracing::error!("Node server exited with code: {}", code);
+                                }
+                            }
+                        }
+                        CommandEvent::Stderr(line) => {
+                            if let Ok(s) = str::from_utf8(&line) {
+                                tracing::error!("{}", s)
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            });
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

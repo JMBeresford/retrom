@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/@tauri-apps/cli/schema.json",
+  "bundle": {
+    "externalBin": ["./bin/node"],
+    "resources": ["web/.next/node-server"]
+  }
+}
