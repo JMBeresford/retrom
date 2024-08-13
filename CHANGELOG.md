@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.32](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.31...retrom-v0.0.32) - 2024-08-13
+
+### Fixed
+- better web/desktop mode detection
+
+### Other
+- fix CI step name
+
 ## [0.0.31](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.30...retrom-v0.0.31) - 2024-08-13
 
 ### Fixed
