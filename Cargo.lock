@@ -3742,14 +3742,10 @@ name = "retrom-client"
 version = "0.0.34"
 dependencies = [
  "async-compression",
- "bb8",
- "diesel",
- "diesel-async",
  "dotenvy",
  "futures",
  "prost",
  "retrom-codegen",
- "retrom-db",
  "retrom-plugin-installer",
  "retrom-plugin-launcher",
  "serde",
@@ -3804,13 +3800,10 @@ dependencies = [
 name = "retrom-plugin-installer"
 version = "0.0.9"
 dependencies = [
- "diesel",
- "diesel-async",
  "dotenvy",
  "futures",
  "reqwest",
  "retrom-codegen",
- "retrom-db",
  "serde",
  "tauri",
  "tauri-plugin",

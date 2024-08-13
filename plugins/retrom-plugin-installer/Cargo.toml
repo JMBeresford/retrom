@@ -15,12 +15,9 @@ tauri = { workspace = true }
 serde = "1.0"
 thiserror = { workspace = true }
 retrom-codegen = { workspace = true }
-retrom-db = { workspace = true }
 futures = { workspace = true }
 tokio = { workspace = true }
 tokio-util = { workspace = true }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
 reqwest = { workspace = true }
 tracing = { workspace = true }
 dotenvy = { workspace = true }

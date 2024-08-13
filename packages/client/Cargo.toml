@@ -6,7 +6,7 @@ repository.workspace = true
 license.workspace = true
 edition.workspace = true
 description = "The Retrom video game library client"
-rust-version = "1.75"
+rust-version = "1.80"
 exclude = ["**/node_modules"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -23,16 +23,12 @@ tracing-subscriber = { workspace = true }
 retrom-codegen = { workspace = true }
 tokio = { workspace = true }
 tokio-util = { workspace = true }
-retrom-db = { workspace = true }
 tonic = { workspace = true }
 prost = { workspace = true }
 tauri-plugin-fs = "2.0.0-beta.9"
 dotenvy = { workspace = true }
 async-compression = { version = "0.4.11", features = ["all"] }
 futures = { workspace = true }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
-bb8 = { workspace = true }
 retrom-plugin-installer = { workspace = true }
 retrom-plugin-launcher = { workspace = true }
 tauri-plugin-dialog = "2.0.0-beta.9"
