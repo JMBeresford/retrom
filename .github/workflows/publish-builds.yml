@@ -131,6 +131,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tauriScript: pnpm --filter client
           releaseId: ${{ github.event.release.id }}
           tagName: ${{ github.event.release.tag_name }}
-          args: ${{ matrix.args }}
+          args: ${{ matrix.args }} --config packages/client/tauri.build.conf.json
