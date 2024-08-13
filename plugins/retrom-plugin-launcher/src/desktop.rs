@@ -1,14 +1,11 @@
 use std::{collections::HashMap, path::PathBuf};
 
-use retrom_codegen::{
-    retrom::{
-        metadata_service_client::MetadataServiceClient, GamePlayStatusUpdate, GetGamesRequest,
-        PlayStatus, UpdateGameMetadataRequest, UpdatedGameMetadata,
-    },
-    timestamp::Timestamp,
+use retrom_codegen::retrom::{
+    GamePlayStatusUpdate, GetGamesRequest, PlayStatus, UpdateGameMetadataRequest,
+    UpdatedGameMetadata,
 };
 use serde::de::DeserializeOwned;
-use tauri::{plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
+use tauri::{plugin::PluginApi, AppHandle, Emitter, Runtime};
 use tokio::{
     process::Command,
     sync::{Mutex, RwLock},
@@ -88,6 +85,7 @@ impl<R: Runtime> Launcher<R> {
         let metadata_client = self.app_handle.metadata_client();
 
         let metadata = game_client
+            .await
             .write()
             .await
             .get_games(tonic::Request::new(GetGamesRequest {
@@ -134,6 +132,7 @@ impl<R: Runtime> Launcher<R> {
             });
 
             if let Err(why) = metadata_client
+                .await
                 .write()
                 .await
                 .update_game_metadata(request)

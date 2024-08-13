@@ -15,11 +15,14 @@ pub use error::{Error, Result};
 use tokio::sync::RwLock;
 use tonic::transport::Channel;
 
+type MetadataClient = MetadataServiceClient<Channel>;
+type GameClient = GameServiceClient<Channel>;
+
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the launcher APIs.
 pub trait LauncherExt<R: Runtime> {
     fn launcher(&self) -> &Launcher<R>;
-    fn metadata_client(&self) -> &RwLock<MetadataServiceClient<Channel>>;
-    fn game_client(&self) -> &RwLock<GameServiceClient<Channel>>;
+    fn metadata_client(&self) -> impl std::future::Future<Output = &RwLock<MetadataClient>>;
+    fn game_client(&self) -> impl std::future::Future<Output = &RwLock<GameClient>>;
 }
 
 impl<R: Runtime, T: Manager<R>> crate::LauncherExt<R> for T {
@@ -29,14 +32,64 @@ impl<R: Runtime, T: Manager<R>> crate::LauncherExt<R> for T {
             .inner()
     }
 
-    fn metadata_client(&self) -> &RwLock<MetadataServiceClient<Channel>> {
-        self.try_state::<RwLock<MetadataServiceClient<Channel>>>()
+    async fn metadata_client(&self) -> &RwLock<MetadataClient> {
+        if self.try_state::<RwLock<MetadataClient>>().is_none() {
+            dotenvy::dotenv().ok();
+            let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5101".to_string());
+            let hostname =
+                std::env::var("RETROM_HOSTNAME").unwrap_or_else(|_| "http://localhost".to_string());
+
+            let host = format!("{hostname}:{port}");
+            let mut sleep = 100.0;
+
+            loop {
+                match MetadataServiceClient::connect(host.clone()).await {
+                    Ok(client) => {
+                        self.manage::<RwLock<MetadataClient>>(RwLock::new(client));
+
+                        break;
+                    }
+                    Err(_) => {
+                        tracing::warn!("Failed to connect to metadata service, retring");
+                        tokio::time::sleep(std::time::Duration::from_millis(sleep as u64)).await;
+                        sleep *= 1.2;
+                    }
+                }
+            }
+        }
+
+        self.try_state::<RwLock<MetadataClient>>()
             .expect("Could not get metadata client from app instance")
             .inner()
     }
 
-    fn game_client(&self) -> &RwLock<GameServiceClient<Channel>> {
-        self.try_state::<RwLock<GameServiceClient<Channel>>>()
+    async fn game_client(&self) -> &RwLock<GameClient> {
+        if self.try_state::<RwLock<GameClient>>().is_none() {
+            dotenvy::dotenv().ok();
+            let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5101".to_string());
+            let hostname =
+                std::env::var("RETROM_HOSTNAME").unwrap_or_else(|_| "http://localhost".to_string());
+
+            let host = format!("{hostname}:{port}");
+            let mut sleep = 100.0;
+
+            loop {
+                match GameServiceClient::connect(host.clone()).await {
+                    Ok(client) => {
+                        self.manage::<RwLock<GameClient>>(RwLock::new(client));
+
+                        break;
+                    }
+                    Err(_) => {
+                        tracing::warn!("Failed to connect to metadata service, retring");
+                        tokio::time::sleep(std::time::Duration::from_millis(sleep as u64)).await;
+                        sleep *= 1.2;
+                    }
+                }
+            }
+        }
+
+        self.try_state::<RwLock<GameClient>>()
             .expect("Could not get game client from app instance")
             .inner()
     }
@@ -44,26 +97,8 @@ impl<R: Runtime, T: Manager<R>> crate::LauncherExt<R> for T {
 
 /// Initializes the plugin.
 pub async fn init<R: Runtime>() -> TauriPlugin<R> {
-    dotenvy::dotenv().ok();
-    let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5101".to_string());
-    let hostname =
-        std::env::var("RETROM_HOSTNAME").unwrap_or_else(|_| "http://localhost".to_string());
-
-    let host = format!("{hostname}:{port}");
-
-    let game_client = GameServiceClient::connect(host.clone())
-        .await
-        .expect("Failed to connect to game service");
-
-    let metadata_client = MetadataServiceClient::connect(host)
-        .await
-        .expect("Failed to connect to metadata service");
-
     Builder::new("launcher")
         .setup(|app, api| {
-            app.manage(RwLock::new(metadata_client));
-            app.manage(RwLock::new(game_client));
-
             let launcher = desktop::init(app, api)?;
             app.manage(launcher);
 

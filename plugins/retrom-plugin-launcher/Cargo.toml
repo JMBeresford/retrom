@@ -20,6 +20,7 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-plugin-installer = { workspace = true }
+retry = { workspace = true }
 
 [build-dependencies]
 tauri-plugin = { version = "2.0.0-beta.17", features = ["build"] }

@@ -3837,6 +3837,7 @@ dependencies = [
  "dotenvy",
  "retrom-codegen",
  "retrom-plugin-installer",
+ "retry",
  "serde",
  "tauri",
  "tauri-plugin",

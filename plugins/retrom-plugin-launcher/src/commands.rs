@@ -6,7 +6,7 @@ use retrom_codegen::retrom::{
 };
 use retrom_plugin_installer::InstallerExt;
 use tauri::{command, AppHandle, Runtime};
-use tokio::{sync::Mutex, time::Instant};
+use tokio::sync::Mutex;
 use tracing::{info, instrument};
 
 use crate::{desktop::GameProcess, LauncherExt, Result};
