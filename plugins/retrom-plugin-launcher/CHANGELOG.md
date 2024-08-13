@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11](https://github.com/JMBeresford/retrom/compare/retrom-plugin-launcher-v0.0.10...retrom-plugin-launcher-v0.0.11) - 2024-08-13
+
+### Fixed
+- lazy-connect to service
+- default macos builds now run
+
 ## [0.0.10](https://github.com/JMBeresford/retrom/compare/retrom-plugin-launcher-v0.0.9...retrom-plugin-launcher-v0.0.10) - 2024-07-31
 
 ### Fixed
