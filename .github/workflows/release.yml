@@ -68,21 +68,24 @@ jobs:
           # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
         run: |
           sudo apt-get update
-          sudo apt-get install -y protobuf-compiler libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libpq-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: install dependencies (windows only)
         if: matrix.platform == 'windows-latest' # This must match the platform value defined above.
         run: |
-          choco install -y protobuf
+          # choco install -y protobuf
 
       - name: install dependencies (macos only)
         if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
         run: |
-          brew install protobuf
+          brew install libpq && brew link --force libpq
 
       - name: install frontend dependencies
         run: pnpm install && pnpm --filter=web build:protos
