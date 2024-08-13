@@ -1,6 +1,6 @@
 [package]
 name = "retrom-client"
-version = "0.0.32"
+version = "0.0.33"
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
