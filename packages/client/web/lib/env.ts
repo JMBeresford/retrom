@@ -1,1 +1,2 @@
-export const IS_DESKTOP = process.env.NEXT_PUBLIC_PLATFORM === "desktop";
+export const IS_DESKTOP =
+  "__TAURI__" in window || "__TAURI_INTERNALS__" in window;

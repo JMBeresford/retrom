@@ -2,11 +2,9 @@
   "name": "web",
   "private": true,
   "scripts": {
-    "dev": "NEXT_PUBLIC_PLATFORM=web next dev",
-    "dev:desktop": "NEXT_PUBLIC_PLATFORM=desktop next dev",
-    "build": "NEXT_PUBLIC_PLATFORM=web next build",
-    "build:desktop": "NEXT_PUBLIC_PLATFORM=desktop next build",
-    "start": "NEXT_PUBLIC_PLATFORM=web next start",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
