@@ -6,7 +6,7 @@ repository.workspace = true
 license.workspace = true
 edition.workspace = true
 description = "Retrom plugin that facilitates the installation of games locally."
-rust-version = "1.70"
+rust-version = "1.80"
 exclude = ["./examples", "./webview-dist", "./webview-src", "**/node_modules"]
 links = "tauri-plugin-installer"
 
