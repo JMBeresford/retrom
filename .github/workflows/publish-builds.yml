@@ -43,7 +43,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/JMBeresford/retrom-${{ matrix.image }}
 
-      - name: Build Service Image
+      - name: Build and Push Image
         id: push
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
