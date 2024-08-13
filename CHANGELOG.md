@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.23](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.22...retrom-v0.0.23) - 2024-08-13
+
+### Added
+- nextjs node server as sidecar
+
+### Fixed
+- lazy-connect to service
+
+### Other
+- setup pnpm
+- only build tauri on release
+- build client binaries
+
 ## [0.0.22](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.21...retrom-v0.0.22) - 2024-08-08
 
 ### Added
