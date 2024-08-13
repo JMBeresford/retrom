@@ -14,8 +14,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RetromClientProvider } from "@/providers/retrom-client";
 import { QueryClientProvider } from "@/providers/query-client";
 import { Suspense } from "react";
-import { unstable_noStore } from "next/cache";
-import { IS_DESKTOP } from "@/lib/env";
 import { ConfigProvider } from "@/providers/config";
 
 const inter = Inter({
@@ -34,12 +32,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // opt into dynamic rendering for web clients,
-  // this way env vars are read at runtime (useful for docker deployments)
-  if (!IS_DESKTOP) {
-    unstable_noStore();
-  }
-
   return (
     <html lang="en">
       <body

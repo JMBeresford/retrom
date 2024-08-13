@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useGameDetail } from "./game-context";
+import { useGameDetail } from "../../app/games/[id]/game-details-context";
 import { usePlayGame } from "@/mutations/usePlayGame";
 import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
 import { usePlayStatusQuery } from "@/queries/usePlayStatus";

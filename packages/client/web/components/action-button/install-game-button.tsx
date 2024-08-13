@@ -1,5 +1,5 @@
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { Button } from "../../components/ui/button";
+import { Button } from "../ui/button";
 import {
   CircleAlertIcon,
   DownloadCloudIcon,
@@ -7,8 +7,8 @@ import {
 } from "lucide-react";
 import { useInstallGame } from "@/mutations/useInstallGame";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
-import { Progress } from "../../components/ui/progress";
-import { useGameDetail } from "@/app/game/game-context";
+import { Progress } from "../ui/progress";
+import { useGameDetail } from "@/app/games/[id]/game-details-context";
 import { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 

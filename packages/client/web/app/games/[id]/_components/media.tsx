@@ -1,7 +1,8 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useGameDetail } from "./game-context";
-import { useMemo } from "react";
+import { useGameDetail } from "../game-details-context";
 import {
   Carousel,
   CarouselContent,

@@ -21,12 +21,12 @@ import { UpdateMetadataDialog } from "@/components/update-metadata-dialog";
 import { cn, getFileStub } from "@/lib/utils";
 import { EllipsisVertical, LoaderCircleIcon } from "lucide-react";
 import { useState } from "react";
-import { useGameDetail } from "./game-context";
+import { useGameDetail } from "../game-details-context";
 import { useMutation } from "@tanstack/react-query";
 import { useUninstallGame } from "@/mutations/useUninstallGame";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
-import { ActionButton } from "./action-button";
+import { ActionButton } from "../../../../components/action-button";
 
 type Modal = (typeof Modal)[number];
 const Modal = ["edit", "delete", "uninstall"] as const;

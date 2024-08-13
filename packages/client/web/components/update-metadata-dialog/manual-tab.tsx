@@ -18,7 +18,7 @@ import { LoaderIcon } from "lucide-react";
 import { asOptionalString, cn, InferSchema } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
-import { useGameDetail } from "@/app/game/game-context";
+import { useGameDetail } from "@/app/games/[id]/game-details-context";
 import { GameMetadata } from "@/generated/retrom/models/metadata";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 

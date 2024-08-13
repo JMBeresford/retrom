@@ -1,5 +1,7 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGameDetail } from "./game-context";
+import { useGameDetail } from "../game-details-context";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";

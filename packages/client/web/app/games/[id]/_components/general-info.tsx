@@ -1,5 +1,7 @@
+"use client";
+
 import { Card, CardContent } from "@/components/ui/card";
-import { useGameDetail } from "./game-context";
+import { useGameDetail } from "../game-details-context";
 import { useMemo } from "react";
 import { getFileStub, timestampToDate } from "@/lib/utils";
 

@@ -1,5 +1,7 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGameDetail } from "./game-context";
+import { useGameDetail } from "../game-details-context";
 import { useGameMetadata } from "@/queries/useGameMetadata";
 import { cn, Image } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -29,10 +31,7 @@ export function SimilarGames() {
         <ScrollArea>
           <div className="flex gap-5">
             {similarGamesMetadata?.map((metadata) => (
-              <Link
-                key={metadata.gameId}
-                href={`/game?gameId=${metadata.gameId}`}
-              >
+              <Link key={metadata.gameId} href={`/games/${metadata.gameId}`}>
                 <div className="aspect-[3/4] relative rounded-lg overflow-hidden">
                   <Image src={metadata.coverUrl} alt="" className="w-[150px]" />
 

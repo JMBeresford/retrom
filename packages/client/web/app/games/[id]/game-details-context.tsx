@@ -15,7 +15,7 @@ import {
 } from "@/generated/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { PropsWithChildren, createContext, useContext } from "react";
 
 export type GameDetailContext = {
@@ -32,13 +32,12 @@ export type GameDetailContext = {
 
 const GameDetailContext = createContext<GameDetailContext | null>(null);
 
-export function GameDetailProvider(props: PropsWithChildren<{ game?: Game }>) {
-  const { game } = props;
-  const params = useSearchParams();
+export function GameDetailProvider(
+  props: PropsWithChildren<{ gameId: number }>,
+) {
+  const { gameId } = props;
   const router = useRouter();
   const retromClient = useRetromClient();
-
-  const gameId = game?.id ?? parseInt(params.get("gameId") ?? "");
 
   const { data: gameData, status: gameStatus } = useQuery({
     queryKey: ["games", "game-metadata", gameId],
@@ -58,10 +57,7 @@ export function GameDetailProvider(props: PropsWithChildren<{ game?: Game }>) {
     },
   });
 
-  const paramsPlatformId = params.get("platformId");
-  const platformId =
-    gameData?.game?.platformId ??
-    (paramsPlatformId !== null ? parseInt(paramsPlatformId) : undefined);
+  const platformId = gameData?.game?.platformId;
 
   const { data: gameMetadata, status: gameMetadataStatus } = useQuery({
     queryKey: ["game", "games", "game-metadata", gameId],

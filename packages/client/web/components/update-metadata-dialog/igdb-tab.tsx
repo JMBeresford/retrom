@@ -23,7 +23,7 @@ import { Separator } from "../ui/separator";
 import { LoaderIcon } from "lucide-react";
 import { asOptionalString, cn } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
-import { useGameDetail } from "@/app/game/game-context";
+import { useGameDetail } from "@/app/games/[id]/game-details-context";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UpdatedGameMetadata } from "@/generated/retrom/models/metadata";

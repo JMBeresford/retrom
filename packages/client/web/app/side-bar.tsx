@@ -135,7 +135,7 @@ export function SideBar() {
                                 )}
                               >
                                 <Link
-                                  href={`/game?platformId=${platform.id}&gameId=${game.id}`}
+                                  href={`/games/${game.id}`}
                                   className="grid grid-cols-[auto_1fr] items-center max-w-full"
                                 >
                                   <div className="relative min-w-[24px] min-h-[24px] mr-2">

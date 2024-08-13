@@ -1,5 +1,7 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGameDetail } from "./game-context";
+import { useGameDetail } from "../game-details-context";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn, getFileName } from "@/lib/utils";

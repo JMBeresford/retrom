@@ -2,8 +2,8 @@ import { Game } from "@/generated/retrom/models/games";
 import { GameMetadata } from "@/generated/retrom/models/metadata";
 import { cn, Image, timestampToDate } from "@/lib/utils";
 import Link from "next/link";
-import { ActionButton } from "./game/action-button";
-import { GameDetailProvider } from "./game/game-context";
+import { ActionButton } from "../components/action-button";
+import { GameDetailProvider } from "./games/[id]/game-details-context";
 
 export type GameWithMetadata = Game & { metadata?: GameMetadata };
 
@@ -57,17 +57,14 @@ export function GameList(props: { games: GameWithMetadata[] }) {
                     {playedRender}
                   </h5>
 
-                  <GameDetailProvider game={game}>
+                  <GameDetailProvider gameId={game.id}>
                     <div className="rounded-md overflow-hidden w-fit pointer-events-auto touch-auto z-50">
                       <ActionButton size="sm" className="text-md" game={game} />
                     </div>
                   </GameDetailProvider>
                 </div>
               </div>
-              <Link
-                href={`/game/?gameId=${game.id}`}
-                className="cursor-pointer"
-              >
+              <Link href={`/games/${game.id}`} className="cursor-pointer">
                 <div className="w-full h-full z-[-1]">
                   <Image
                     src={image}
