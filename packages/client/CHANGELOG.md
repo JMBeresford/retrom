@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.35](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.34...retrom-client-v0.0.35) - 2024-08-13
+
+### Other
+- remove db deps from client
+
 ## [0.0.34](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.33...retrom-client-v0.0.34) - 2024-08-13
 
 ### Fixed
