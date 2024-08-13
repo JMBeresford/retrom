@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.34](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.33...retrom-client-v0.0.34) - 2024-08-13
+
+### Fixed
+- windows build psql linking
+
 ## [0.0.33](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.32...retrom-client-v0.0.33) - 2024-08-13
 
 ### Other
