@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.23](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.22...retrom-client-v0.0.23) - 2024-08-13
+
+### Other
+- update Cargo.lock dependencies
+
 ## [0.0.22](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.21...retrom-client-v0.0.22) - 2024-08-13
 
 ### Added
