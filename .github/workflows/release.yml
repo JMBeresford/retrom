@@ -10,6 +10,7 @@ jobs:
     name: Release-plz
     outputs:
       release_id: ${{ steps.release.outputs.release_id }}
+      released: ${{ steps.release.outputs.releases_created }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -30,6 +31,7 @@ jobs:
 
   build-tauri:
     needs: release-plz
+    if: ${{ needs.release-plz.outputs.released == 'true' }}
     permissions:
       contents: write
     strategy:
