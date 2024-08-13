@@ -1,6 +1,7 @@
 {
   "name": "retrom",
   "devDependencies": {
+    "@bufbuild/buf": "^1.36.0",
     "@tauri-apps/cli": "2.0.0-beta.20"
   },
   "pnpm": {
@@ -13,10 +14,10 @@
     }
   },
   "dependencies": {
-    "typescript": "^5.5",
     "@tauri-apps/api": "2.0.0-beta.13",
     "@tauri-apps/plugin-fs": "2.0.0-beta.5",
-    "@tauri-apps/plugin-upload": "2.0.0-beta.6"
+    "@tauri-apps/plugin-upload": "2.0.0-beta.6",
+    "typescript": "^5.5"
   },
   "packageManager": "pnpm@9.5.0"
 }

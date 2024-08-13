@@ -9,13 +9,14 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # package deps
 RUN mkdir -p packages/client/ && mkdir -p packages/codegen/
+COPY buf*.yaml ./
 COPY packages/codegen/protos/ ./packages/codegen/protos/
 COPY packages/client/package.json ./packages/client/
 COPY packages/client/web/ ./packages/client/web/
 
 RUN corepack enable pnpm && pnpm i
 
-RUN pnpm --filter web build:protos
+RUN pnpm exec buf generate
 
 FROM base AS builder
 WORKDIR /app

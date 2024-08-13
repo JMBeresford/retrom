@@ -37,3 +37,6 @@ next-env.d.ts
 
 # ssl
 ssl/
+
+# codegen
+generated/
