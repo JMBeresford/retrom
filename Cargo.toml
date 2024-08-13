@@ -5,7 +5,7 @@ exclude = ["**/node_modules"]
 
 [package]
 name = "retrom"
-version = "0.0.29"
+version = "0.0.30"
 description = "Retrom is a centralized game library/collection management service with a focus on emulation."
 edition.workspace = true
 authors.workspace = true
@@ -44,7 +44,7 @@ tokio = { version = "1.37.0", features = ["full"] }
 tokio-util = { version = "0.7.11", features = ["io", "compat"] }
 dotenvy = "0.15.7"
 retrom-db = { path = "./packages/db", version = "0.0.10" }
-retrom-client = { path = "./packages/client", version = "0.0.28" }
+retrom-client = { path = "./packages/client", version = "0.0.29" }
 retrom-service = { path = "./packages/service", version = "0.0.14" }
 retrom-codegen = { path = "./packages/codegen", version = "0.0.12" }
 retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "0.0.9" }
