@@ -95,10 +95,13 @@ jobs:
           cache: "pnpm"
 
       - name: install Rust stable
+        id: rust
         uses: dtolnay/rust-toolchain@stable
         with:
           # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -114,7 +117,7 @@ jobs:
       - name: install dependencies (windows only)
         if: matrix.platform == 'windows-latest' # This must match the platform value defined above.
         run: |
-          # choco install -y protobuf
+          choco install -y postgresql
 
       - name: install dependencies (macos only)
         if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
@@ -122,7 +125,7 @@ jobs:
           brew install libpq && brew link --force libpq
 
       - name: install frontend dependencies
-        run: pnpm install && pnpm --filter=web build:protos
+        run: pnpm install && pnpm exec buf generate
 
       - uses: tauri-apps/tauri-action@v0
         env:
