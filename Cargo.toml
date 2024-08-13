@@ -5,7 +5,7 @@ exclude = ["**/node_modules"]
 
 [package]
 name = "retrom"
-version = "0.0.40"
+version = "0.0.41"
 description = "Retrom is a centralized game library/collection management service with a focus on emulation."
 edition.workspace = true
 authors.workspace = true
