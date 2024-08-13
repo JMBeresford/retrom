@@ -131,7 +131,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          projectPath: ./packages/client/
           releaseId: ${{ github.event.release.id }}
           tagName: ${{ github.event.release.tag_name }}
           args: ${{ matrix.args }}
