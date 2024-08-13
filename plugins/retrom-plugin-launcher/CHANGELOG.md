@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.12](https://github.com/JMBeresford/retrom/compare/retrom-plugin-launcher-v0.0.11...retrom-plugin-launcher-v0.0.12) - 2024-08-13
+
+### Other
+- etc
+
 ## [0.0.11](https://github.com/JMBeresford/retrom/compare/retrom-plugin-launcher-v0.0.10...retrom-plugin-launcher-v0.0.11) - 2024-08-13
 
 ### Fixed
