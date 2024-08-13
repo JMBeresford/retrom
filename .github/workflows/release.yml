@@ -9,7 +9,7 @@ jobs:
   release-plz:
     name: Release-plz
     outputs:
-      release_id: ${{ steps.release.outputs.release_id }}
+      release_id: ${{ fromJson(steps.release.outputs.releases)[0].version }}
       released: ${{ steps.release.outputs.releases_created }}
     runs-on: ubuntu-latest
     steps:
