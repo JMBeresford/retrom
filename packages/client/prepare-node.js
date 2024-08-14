@@ -14,9 +14,14 @@ async function getNodeBin() {
   }
 
   const dir = dirname(fileURLToPath(import.meta.url));
-  const dest = `./bin/node-${targetTriple}${process.platform === "win32" ? ".exe" : ""}`;
+  const dest = resolve(
+    dir,
+    `./bin/node-${targetTriple}${process.platform === "win32" ? ".exe" : ""}`,
+  );
 
-  copyFileSync(process.execPath, resolve(dir, dest));
+  copyFileSync(process.execPath, dest);
+
+  console.log(`Node binary copied to ${dest}`);
 }
 
 function prepareWebDir() {
@@ -44,5 +49,5 @@ function prepareWebDir() {
   });
 }
 
-getNodeBin().catch(console.error);
 prepareWebDir();
+getNodeBin();
