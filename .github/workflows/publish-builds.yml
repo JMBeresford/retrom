@@ -124,7 +124,7 @@ jobs:
           choco install -y postgresql
 
       - name: install dependencies (macos only)
-        if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
+        if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-13' # This must match the platform value defined above.
         run: |
           brew install libpq && brew link --force libpq
 
