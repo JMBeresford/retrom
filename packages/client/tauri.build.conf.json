@@ -1,6 +1,10 @@
 {
   "bundle": {
     "externalBin": ["./bin/node"],
-    "resources": ["web/.next/node-server"]
+    "resources": ["web/.next/node-server"],
+    "macOS": {
+      "signingIdentity": "-",
+      "entitlements": "./entitlements.plist.xml"
+    }
   }
 }

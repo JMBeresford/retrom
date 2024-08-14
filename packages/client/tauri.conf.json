@@ -8,7 +8,7 @@
   },
   "bundle": {
     "active": true,
-    "category": "DeveloperTool",
+    "category": "Utility",
     "copyright": "",
     "targets": "all",
     "icon": [
@@ -23,15 +23,14 @@
       "digestAlgorithm": "sha256",
       "timestampUrl": ""
     },
-    "longDescription": "",
+    "longDescription": "A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.",
     "macOS": {
       "entitlements": null,
       "exceptionDomain": "",
       "frameworks": [],
-      "providerShortName": null,
-      "signingIdentity": null
+      "providerShortName": null
     },
-    "shortDescription": "",
+    "shortDescription": "A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.",
     "linux": {
       "deb": {
         "depends": []
@@ -39,7 +38,6 @@
     }
   },
   "productName": "retrom-client",
-  "version": "0.1.0",
   "identifier": "com.retrom.app",
   "plugins": {},
   "app": {
