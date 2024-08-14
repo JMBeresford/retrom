@@ -68,7 +68,7 @@ jobs:
       matrix:
         include:
           - platform: "macos-latest" # for Arm based macs (M1 and above).
-            args: "--target aarch64-apple-darwin --config tauri.build.conf.json"
+            args: "--target aarch64-apple-darwin--config tauri.build.conf.json"
           - platform: "macos-latest" # for Intel based macs.
             args: "--target x86_64-apple-darwin --config tauri.build.conf.json"
           - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
@@ -131,7 +131,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tauriScript: pnpm --filter retrom-client tauri
+          projectPath: packages/client
+          tauriScript: pnpm tauri
           releaseId: ${{ github.event.release.id }}
           tagName: ${{ github.event.release.tag_name }}
           args: ${{ matrix.args }}
