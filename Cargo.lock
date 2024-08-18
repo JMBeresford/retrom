@@ -3735,11 +3735,11 @@ dependencies = [
 
 [[package]]
 name = "retrom"
-version = "0.0.43"
+version = "0.0.44"
 
 [[package]]
 name = "retrom-client"
-version = "0.0.39"
+version = "0.0.40"
 dependencies = [
  "async-compression",
  "dotenvy",
