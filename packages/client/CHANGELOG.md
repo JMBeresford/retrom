@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.39](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.38...retrom-client-v0.0.39) - 2024-08-18
+
+### Added
+- setup wizard
+
+### Fixed
+- macOS adhoc signing
+- macOS adhoc signing
+
+### Other
+- Update build.rs
+- Update build.rs
+
 ## [0.0.38](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.37...retrom-client-v0.0.38) - 2024-08-14
 
 ### Other
