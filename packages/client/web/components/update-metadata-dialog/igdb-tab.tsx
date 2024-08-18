@@ -20,7 +20,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
 import { Input } from "../ui/input";
 import { useToast } from "../ui/use-toast";
 import { Separator } from "../ui/separator";
-import { LoaderIcon } from "lucide-react";
+import { LoaderCircleIcon } from "lucide-react";
 import { asOptionalString, cn } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
 import { useGameDetail } from "@/app/games/[id]/game-details-context";
@@ -191,7 +191,7 @@ export function IgdbTab() {
             />
 
             <Button type="submit">
-              <LoaderIcon
+              <LoaderCircleIcon
                 className={cn("animate-spin absolute", !loading && "opacity-0")}
               />
               <p className={cn(loading && "opacity-0")}>Search IGDB</p>
@@ -235,7 +235,7 @@ export function IgdbTab() {
           onClick={() => handleUpdate()}
           disabled={selectedMatch === undefined}
         >
-          <LoaderIcon
+          <LoaderCircleIcon
             className={cn("animate-spin absolute", !loading && "opacity-0")}
           />
           <p className={cn(loading && "opacity-0")}>Update Metadata</p>

@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { LoaderIcon } from "lucide-react";
+import { LoaderCircleIcon } from "lucide-react";
 import { asOptionalString, cn, InferSchema } from "@/lib/utils";
 import { DialogFooter } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
@@ -36,6 +36,10 @@ type EditableGameMetadata = Omit<
   | "releaseDate"
   | "lastPlayed"
   | "minutesPlayed"
+  | "links"
+  | "videoUrls"
+  | "artworkUrls"
+  | "screenshotUrls"
 >;
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
@@ -81,6 +85,10 @@ export function ManualTab() {
       coverUrl: gameMetadata?.coverUrl ?? "",
       backgroundUrl: gameMetadata?.backgroundUrl ?? "",
       iconUrl: gameMetadata?.iconUrl ?? "",
+      links: gameMetadata?.links ?? [],
+      videoUrls: gameMetadata?.videoUrls ?? [],
+      artworkUrls: gameMetadata?.artworkUrls ?? [],
+      screenshotUrls: gameMetadata?.screenshotUrls ?? [],
     },
   });
 
@@ -110,12 +118,9 @@ export function ManualTab() {
               <Button
                 type="submit"
                 className="mt-4"
-                disabled={
-                  !form.formState.isValid ||
-                  Object.keys(form.formState.dirtyFields).length === 0
-                }
+                disabled={!form.formState.isDirty}
               >
-                <LoaderIcon
+                <LoaderCircleIcon
                   className={cn(
                     "animate-spin absolute",
                     status !== "pending" && "opacity-0",
@@ -133,10 +138,7 @@ export function ManualTab() {
   );
 }
 
-const fields: Record<
-  keyof Omit<EditableGameMetadata, "gameId">,
-  FormFieldRenderer
-> = {
+const fields: Record<keyof EditableGameMetadata, FormFieldRenderer> = {
   name: ({ form }) => (
     <FormField
       name="name"
@@ -266,92 +268,92 @@ const fields: Record<
       )}
     />
   ),
-  links: ({ form }) => (
-    <FormField
-      name="links"
-      disabled
-      control={form.control}
-      render={({ field, fieldState }) => (
-        <FormItem>
-          <FormLabel>Links</FormLabel>
-          <FormControl>
-            <Input
-              {...field}
-              className={cn(
-                fieldState.isDirty ? "text-unset" : "text-muted-foreground",
-                "transition-colors",
-              )}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  ),
-  screenshotUrls: ({ form }) => (
-    <FormField
-      name="screenshotUrls"
-      disabled
-      control={form.control}
-      render={({ field, fieldState }) => (
-        <FormItem>
-          <FormLabel>Screenshots</FormLabel>
-          <FormControl>
-            <Input
-              {...field}
-              className={cn(
-                fieldState.isDirty ? "text-unset" : "text-muted-foreground",
-                "transition-colors",
-              )}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  ),
-  artworkUrls: ({ form }) => (
-    <FormField
-      name="artworkUrls"
-      disabled
-      control={form.control}
-      render={({ field, fieldState }) => (
-        <FormItem>
-          <FormLabel>Artworks</FormLabel>
-          <FormControl>
-            <Input
-              {...field}
-              className={cn(
-                fieldState.isDirty ? "text-unset" : "text-muted-foreground",
-                "transition-colors",
-              )}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  ),
-  videoUrls: ({ form }) => (
-    <FormField
-      name="videoUrls"
-      disabled
-      control={form.control}
-      render={({ field, fieldState }) => (
-        <FormItem>
-          <FormLabel>Videos</FormLabel>
-          <FormControl>
-            <Input
-              {...field}
-              className={cn(
-                fieldState.isDirty ? "text-unset" : "text-muted-foreground",
-                "transition-colors",
-              )}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  ),
+  // links: ({ form }) => (
+  //   <FormField
+  //     name="links"
+  //     disabled
+  //     control={form.control}
+  //     render={({ field, fieldState }) => (
+  //       <FormItem>
+  //         <FormLabel>Links</FormLabel>
+  //         <FormControl>
+  //           <Input
+  //             {...field}
+  //             className={cn(
+  //               fieldState.isDirty ? "text-unset" : "text-muted-foreground",
+  //               "transition-colors",
+  //             )}
+  //           />
+  //         </FormControl>
+  //         <FormMessage />
+  //       </FormItem>
+  //     )}
+  //   />
+  // ),
+  // screenshotUrls: ({ form }) => (
+  //   <FormField
+  //     name="screenshotUrls"
+  //     disabled
+  //     control={form.control}
+  //     render={({ field, fieldState }) => (
+  //       <FormItem>
+  //         <FormLabel>Screenshots</FormLabel>
+  //         <FormControl>
+  //           <Input
+  //             {...field}
+  //             className={cn(
+  //               fieldState.isDirty ? "text-unset" : "text-muted-foreground",
+  //               "transition-colors",
+  //             )}
+  //           />
+  //         </FormControl>
+  //         <FormMessage />
+  //       </FormItem>
+  //     )}
+  //   />
+  // ),
+  // artworkUrls: ({ form }) => (
+  //   <FormField
+  //     name="artworkUrls"
+  //     disabled
+  //     control={form.control}
+  //     render={({ field, fieldState }) => (
+  //       <FormItem>
+  //         <FormLabel>Artworks</FormLabel>
+  //         <FormControl>
+  //           <Input
+  //             {...field}
+  //             className={cn(
+  //               fieldState.isDirty ? "text-unset" : "text-muted-foreground",
+  //               "transition-colors",
+  //             )}
+  //           />
+  //         </FormControl>
+  //         <FormMessage />
+  //       </FormItem>
+  //     )}
+  //   />
+  // ),
+  // videoUrls: ({ form }) => (
+  //   <FormField
+  //     name="videoUrls"
+  //     disabled
+  //     control={form.control}
+  //     render={({ field, fieldState }) => (
+  //       <FormItem>
+  //         <FormLabel>Videos</FormLabel>
+  //         <FormControl>
+  //           <Input
+  //             {...field}
+  //             className={cn(
+  //               fieldState.isDirty ? "text-unset" : "text-muted-foreground",
+  //               "transition-colors",
+  //             )}
+  //           />
+  //         </FormControl>
+  //         <FormMessage />
+  //       </FormItem>
+  //     )}
+  //   />
+  // ),
 } as const;

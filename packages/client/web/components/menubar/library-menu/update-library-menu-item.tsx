@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
-import { LoaderIcon } from "lucide-react";
+import { LoaderCircleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUpdateLibrary } from "@/mutations/useUpdateLibrary";
 
@@ -51,7 +51,7 @@ export function UpdateLibraryMenuItem() {
               setDialogOpen(false);
             }}
           >
-            <LoaderIcon
+            <LoaderCircleIcon
               className={cn("animate-spin absolute", !isPending && "opacity-0")}
             />
             <p className={cn(isPending && "opacity-0")}>Update</p>

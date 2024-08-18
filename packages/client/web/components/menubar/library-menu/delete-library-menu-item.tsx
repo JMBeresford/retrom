@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
-import { LoaderIcon } from "lucide-react";
+import { LoaderCircleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client";
@@ -71,7 +71,7 @@ export function DeleteLibraryMenuItem() {
               setDialogOpen(false);
             }}
           >
-            <LoaderIcon
+            <LoaderCircleIcon
               className={cn("animate-spin absolute", !isPending && "opacity-0")}
             />
             <p className={cn(isPending && "opacity-0")}>Delete</p>

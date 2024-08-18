@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import {
   ChevronsUpDown,
   FolderOpenIcon,
-  LoaderIcon,
+  LoaderCircleIcon,
   PlusCircleIcon,
 } from "lucide-react";
 import {
@@ -253,7 +253,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
             onClick={() => console.log(form)}
             disabled={creationPending}
           >
-            <LoaderIcon
+            <LoaderCircleIcon
               className={cn(
                 "animate-spin absolute",
                 !creationPending && "opacity-0",

@@ -15,7 +15,7 @@ import {
   DialogTrigger,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
-import { LoaderCircleIcon, LoaderIcon } from "lucide-react";
+import { LoaderCircleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 
@@ -314,7 +314,7 @@ export function MatchPlatformsMenuItem() {
                 className="relative"
                 onClick={() => handleUpdate()}
               >
-                <LoaderIcon
+                <LoaderCircleIcon
                   className={cn(
                     "animate-spin absolute",
                     !loading && "opacity-0",
