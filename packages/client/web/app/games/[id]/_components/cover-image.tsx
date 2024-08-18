@@ -14,7 +14,7 @@ export function CoverImage() {
         "relative rounded-t-lg border min-w-full aspect-[3/4] overflow-hidden",
       )}
     >
-      <div className="absolute inset-0 grid place-items-center z-[-1] bg-muted">
+      <div className="absolute inset-0 grid place-items-center z-[-1] bg-muted text-center">
         <h5 className="font-semibold text-lg">{name}</h5>
       </div>
       {gameMetadata?.coverUrl && (

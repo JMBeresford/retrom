@@ -15,6 +15,8 @@ import {
 import {
   Check,
   ChevronsUpDown,
+  Circle,
+  FolderOpenIcon,
   LoaderCircleIcon,
   XCircleIcon,
 } from "lucide-react";
@@ -32,11 +34,10 @@ import { Platform } from "@/generated/retrom/models/platforms";
 import {
   Emulator,
   NewEmulator,
-  RomType,
+  SaveStrategy,
   UpdatedEmulator,
 } from "@/generated/retrom/models/emulators";
 import { z } from "zod";
-import { Separator } from "@/components/ui/separator";
 import { CreateEmulator } from "./create-emulator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -60,21 +61,35 @@ import {
 } from "@/components/ui/select";
 import { useDeleteEmulators } from "@/mutations/useDeleteEmulators";
 import { PlatformMetadata } from "@/generated/retrom/models/metadata";
+import { useConfig } from "@/providers/config";
+import { open } from "@tauri-apps/plugin-dialog";
 
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
-export const romTypeDisplayMap: Record<RomType, string> = {
-  [RomType.Custom]: "Custom",
-  [RomType.MultiFile]: "Multi-file",
-  [RomType.SingleFile]: "Single-file",
-  [RomType.UNRECOGNIZED]: "Unknown",
+export const saveStrategyDisplayMap: Record<SaveStrategy, string> = {
+  [SaveStrategy.SINGLE_FILE]: "Single File",
+  [SaveStrategy.FILE_SYSTEM_DIRECTORY]: "File System Directory",
+  [SaveStrategy.DISK_IMAGE]: "Disk Image",
+  [SaveStrategy.UNRECOGNIZED]: "Unrecognized",
 };
 
 export type EmulatorSchema = z.infer<typeof emulatorSchema>;
 export const emulatorSchema = z.object({
-  name: z.string().min(1).max(128),
-  supportedPlatforms: z.array(z.number()).min(1),
-  romType: z.nativeEnum(RomType),
+  name: z
+    .string()
+    .min(1, "Emulator name must not be empty")
+    .max(128, "Emulator name must not exceed 128 characters"),
+  supportedPlatforms: z
+    .array(z.number())
+    .min(1, "Select at least one platform"),
+  saveStrategy: z.nativeEnum(SaveStrategy, {
+    message: "Select a save strategy",
+  }),
+  executablePath: z
+    .string()
+    .min(1, "Executable path must not be empty")
+    .max(256, "Executable path must not exceed 256 characters"),
+  clientId: z.number(),
 }) satisfies z.ZodObject<
   Record<keyof Omit<NewEmulator, "createdAt" | "updatedAt">, z.ZodTypeAny>
 >;
@@ -129,8 +144,6 @@ export function ManageEmulatorsMenuItem() {
             Manage existing emulator configurations and/or create new ones.
           </DialogDescription>
         </DialogHeader>
-
-        <Separator className="mb-4" />
 
         {emulatorsStatus === "pending" || platformsStatus === "pending" ? (
           <LoaderCircleIcon className="animate-spin h-8 w-8" />
@@ -187,16 +200,18 @@ function EmulatorList(props: {
   return (
     <>
       <ScrollArea className="h-[60vh]">
-        <main className="grid grid-cols-[1fr_1fr_1fr_min-content] pr-2 pb-4">
+        <main className="grid grid-cols-[10px_1fr_1fr_1fr_1fr_min-content] pr-2 pb-4">
           <div
             className={cn(
-              "grid grid-cols-subgrid col-span-4",
-              "text-sm font-bold border-b pb-2 pl-2",
+              "grid grid-cols-subgrid col-span-6",
+              "text-sm font-bold border-b pb-2 *:px-3",
             )}
           >
+            <p></p>
             <p>Name</p>
             <p>Platforms</p>
-            <p>Rom Type</p>
+            <p>Save Strategy</p>
+            <p>Executable</p>
             <p></p>
           </div>
 
@@ -204,8 +219,8 @@ function EmulatorList(props: {
           <Form {...form}>
             <form
               className={cn(
-                "grid grid-cols-subgrid col-span-4 grid-flow-row auto-rows-max",
-                "*:grid *:grid-flow-col *:grid-cols-subgrid *:col-span-4",
+                "grid grid-cols-subgrid col-span-6 grid-flow-row auto-rows-max",
+                "*:grid *:grid-flow-col *:grid-cols-subgrid *:col-span-6",
                 "*:border-b [&_*]:ring-inset",
               )}
             >
@@ -217,6 +232,12 @@ function EmulatorList(props: {
                     key={change.id}
                     className={cn(!isDirty && "text-muted-foreground")}
                   >
+                    <Circle
+                      className={cn(
+                        isDirty ? "opacity-100" : "opacity-0",
+                        "w-[8px] h-[8px] place-self-center fill-foreground text-foreground transition-colors",
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name={`emulators.${index}.name` as const}
@@ -249,7 +270,7 @@ function EmulatorList(props: {
                                   variant="ghost"
                                   role="combobox"
                                   className={cn(
-                                    "justify-between w-full",
+                                    "justify-between w-full hover:bg-transparent",
                                     error &&
                                       "border-solid border-2 border-destructive",
                                     field.value.length === 0 &&
@@ -301,49 +322,90 @@ function EmulatorList(props: {
 
                     <FormField
                       control={form.control}
-                      name={`emulators.${index}.romType` as const}
+                      name={`emulators.${index}.saveStrategy` as const}
                       render={({ field, fieldState: { error } }) => (
                         <FormItem>
                           <Select
                             defaultValue={field.value?.toString()}
                             onValueChange={(value) => {
                               const valueNum = parseInt(value);
-                              const romType = Object.values(RomType).find(
-                                (v) => v === valueNum,
-                              );
+                              const saveStrategy = Object.values(
+                                SaveStrategy,
+                              ).find((v) => v === valueNum);
 
-                              if (romType === undefined) return;
+                              if (saveStrategy === undefined) return;
 
-                              field.onChange(romType);
+                              field.onChange(saveStrategy);
                             }}
                           >
                             <FormControl>
                               <SelectTrigger
                                 className={cn(
+                                  "hover:bg-transparent",
                                   error
                                     ? "border-solid border-2 border-destructive"
                                     : "border-none",
                                 )}
                               >
-                                <SelectValue placeholder="Select rom type" />
+                                <SelectValue placeholder="Select save strategy" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {Object.values(RomType)
+                              {Object.values(SaveStrategy)
                                 .filter((value) => typeof value !== "string")
                                 .filter(
-                                  (value) => value !== RomType.UNRECOGNIZED,
+                                  (value) =>
+                                    value !== SaveStrategy.UNRECOGNIZED,
                                 )
                                 .map((value) => (
                                   <SelectItem
                                     key={value}
                                     value={value.toString()}
                                   >
-                                    {romTypeDisplayMap[value]}
+                                    {saveStrategyDisplayMap[value]}
                                   </SelectItem>
                                 ))}
                             </SelectContent>
                           </Select>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`emulators.${index}.executablePath` as const}
+                      render={({ field, fieldState: { error } }) => (
+                        <FormItem>
+                          <FormControl>
+                            <div className="flex items-center pl-3">
+                              <Button
+                                size="icon"
+                                className="p-2 h-min w-min"
+                                variant="secondary"
+                                onClick={async () => {
+                                  const result = await open({
+                                    title: "Select Emulator Executable",
+                                    multiple: false,
+                                  });
+
+                                  if (result?.path) {
+                                    field.onChange(`${result.path}`);
+                                  }
+                                }}
+                              >
+                                <FolderOpenIcon className="w-[1rem] h-[1rem]" />
+                              </Button>
+                              <Input
+                                {...field}
+                                placeholder="Enter path to executable"
+                                className={cn(
+                                  error
+                                    ? "border-solid border-2 border-destructive"
+                                    : "border-none",
+                                )}
+                              />
+                            </div>
+                          </FormControl>
                         </FormItem>
                       )}
                     />
@@ -386,29 +448,45 @@ export function PlatformsDropdown(props: {
 }) {
   const { platforms, onChange, selections } = props;
 
+  function sortBySelection(a: PlatformWithMetadata, b: PlatformWithMetadata) {
+    const aSelected = selections.includes(a.id);
+    const bSelected = selections.includes(b.id);
+    const aName = a.metadata?.name ?? getFileStub(a.path) ?? "";
+    const bName = b.metadata?.name ?? getFileStub(b.path) ?? "";
+
+    if (aSelected && !bSelected) return -1;
+    if (!aSelected && bSelected) return 1;
+
+    return aName.localeCompare(bName);
+  }
+
   return (
     <Command>
       <CommandInput placeholder="Search platforms" />
       <CommandList>
         <CommandGroup>
-          {platforms?.map((platform) => (
-            <CommandItem
-              className="cursor-pointer"
-              key={platform.id}
-              value={platform.id.toString()}
-              onSelect={(value) => onChange && onChange(parseInt(value))}
-            >
-              <Check
-                className={cn(
-                  "mr-2 h-4 w-4",
-                  selections.includes(platform.id)
-                    ? "opacity-100"
-                    : "opacity-0",
-                )}
-              />
-              {platform.metadata?.name ?? getFileStub(platform.path)}
-            </CommandItem>
-          ))}
+          {platforms?.sort(sortBySelection).map((platform) => {
+            const name = platform.metadata?.name ?? getFileStub(platform.path);
+
+            return (
+              <CommandItem
+                className="cursor-pointer"
+                key={platform.id}
+                value={name}
+                onSelect={() => onChange && onChange(platform.id)}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    selections.includes(platform.id)
+                      ? "opacity-100"
+                      : "opacity-0",
+                  )}
+                />
+                {name}
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
       </CommandList>
     </Command>

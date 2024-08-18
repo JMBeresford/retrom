@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { open } from "@tauri-apps/plugin-dialog";
 import {
   DialogClose,
   DialogContent,
@@ -40,7 +39,6 @@ type Props = {
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name cannot be empty" }),
-  executablePath: z.string().min(1, { message: "Executable path is required" }),
   supportedExtensions: z
     .string()
     .min(1)
@@ -63,7 +61,6 @@ export function EditProfileDialog(props: Props) {
     reValidateMode: "onChange",
     defaultValues: {
       name: existingProfile?.name ?? "",
-      executablePath: existingProfile?.executablePath ?? "",
       supportedExtensions: existingProfile?.supportedExtensions ?? [],
       customArgs: existingProfile?.customArgs ?? [],
     },
@@ -130,37 +127,6 @@ export function EditProfileDialog(props: Props) {
                 <FormControl>
                   <Input {...field} placeholder="Enter profile name" />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            name="executablePath"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Executable Path</FormLabel>
-                <div className="flex items-center space-x-2">
-                  <FormControl>
-                    <Input {...field} placeholder="Enter path to executable" />
-                  </FormControl>
-
-                  <Button
-                    onClick={async () => {
-                      const result = await open({
-                        title: "Select Emulator Executable",
-                        multiple: false,
-                      });
-
-                      if (result?.path) {
-                        field.onChange(`${result.path}`);
-                      }
-                    }}
-                  >
-                    Browse
-                  </Button>
-                </div>
                 <FormMessage />
               </FormItem>
             )}

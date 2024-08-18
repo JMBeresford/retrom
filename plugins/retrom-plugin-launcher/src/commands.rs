@@ -27,6 +27,7 @@ pub(crate) async fn play_game<R: Runtime>(
 
     let game_id = game.id;
     let profile = payload.emulator_profile.unwrap();
+    let emulator = payload.emulator.unwrap();
 
     if installer.get_game_installation_status(game_id).await != InstallationStatus::Installed {
         return Err(crate::Error::NotInstalled(game_id));
@@ -61,7 +62,7 @@ pub(crate) async fn play_game<R: Runtime>(
         None => return Err(crate::Error::FileNotFound(game_id)),
     };
 
-    let mut cmd = launcher.get_open_cmd(&profile.executable_path);
+    let mut cmd = launcher.get_open_cmd(&emulator.executable_path);
 
     let args = if !profile.custom_args.is_empty() {
         profile

@@ -39,7 +39,12 @@ export function Actions() {
   return (
     <Dialog>
       <div className="flex">
-        <div className="w-full *:w-full rounded-bl-lg overflow-hidden border-r-2 bg-primary">
+        <div
+          className={cn(
+            "w-full *:w-full rounded-bl-lg overflow-hidden border-r-2",
+            installationState === InstallationStatus.INSTALLING && "bg-primary",
+          )}
+        >
           <ActionButton
             game={game}
             className='[&_div[role="progressbar"]]:w-[85%] [&_div[role="progressbar"]_>_*]:bg-primary-foreground'

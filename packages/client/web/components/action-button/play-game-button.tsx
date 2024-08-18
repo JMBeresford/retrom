@@ -8,6 +8,7 @@ import { useStopGame } from "@/mutations/useStopGame";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
 import { ComponentProps } from "react";
 import { LoaderCircleIcon, PlayIcon, Square } from "lucide-react";
+import { useEmulators } from "@/queries/useEmulators";
 
 export function PlayGameButton(props: ComponentProps<typeof Button>) {
   const { game, platform } = useGameDetail();
@@ -17,19 +18,22 @@ export function PlayGameButton(props: ComponentProps<typeof Button>) {
   const { data: playStatusUpdate, status: queryStatus } =
     usePlayStatusQuery(game);
 
-  const { data: profile } = useDefaultEmulatorProfiles({
+  const { data: defaultProfileId } = useDefaultEmulatorProfiles({
     request: { platformIds: [platform.id] },
-    selectFn: (data) => data.defaultProfiles.at(0),
+    selectFn: (data) => data.defaultProfiles.at(0)?.emulatorProfileId,
   });
 
-  const emulatorProfilesQuery = useEmulatorProfiles({
-    enabled: profile?.emulatorProfileId !== undefined,
+  const { data: emulator, status: emulatorsStatus } = useEmulators({
+    request: { supportedPlatformIds: [platform.id] },
+    selectFn: (data) => data.emulators.at(0),
+  });
+
+  const { data: profiles } = useEmulatorProfiles({
+    enabled: emulatorsStatus === "success",
     selectFn: (data) => data.profiles,
     request: {
-      ids:
-        profile?.emulatorProfileId !== undefined
-          ? [profile.emulatorProfileId]
-          : [],
+      ids: defaultProfileId !== undefined ? [defaultProfileId] : [],
+      emulatorIds: emulator ? [emulator.id] : [],
     },
   });
 
@@ -51,19 +55,19 @@ export function PlayGameButton(props: ComponentProps<typeof Button>) {
     );
   }
 
+  const defaultProfile =
+    profiles?.find((profile) => profile.id === defaultProfileId) ??
+    profiles?.at(0);
+
   return (
     <Button
       {...props}
-      disabled={!profile}
+      disabled={!defaultProfile || !emulator}
       onClick={() => {
-        const emulatorProfile = emulatorProfilesQuery.data?.at(0);
-        if (!emulatorProfile) {
-          return;
-        }
-
         playAction({
           game,
-          emulatorProfile,
+          emulatorProfile: defaultProfile,
+          emulator: emulator!,
         });
       }}
     >

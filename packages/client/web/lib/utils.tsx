@@ -9,11 +9,11 @@ export type InferSchema<T extends object> = z.ZodObject<{
     : z.ZodType<T[K]>;
 }>;
 
-export type DeepRequired<T> = {
-  [K in keyof T]-?: T[K] extends object & { length?: never }
-    ? DeepRequired<T[K]>
+export type DeepRequired<T> = Required<{
+  [K in keyof T]-?: T[K] extends object | undefined
+    ? DeepRequired<Required<T[K]>>
     : T[K];
-};
+}>;
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

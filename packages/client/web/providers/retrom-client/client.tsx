@@ -4,6 +4,7 @@ import {
   EmulatorServiceDefinition,
   MetadataServiceDefinition,
   LibraryServiceDefinition,
+  ClientServiceDefinition,
 } from "@/generated/retrom/services";
 import { createClient, createChannel } from "nice-grpc-web";
 
@@ -13,6 +14,7 @@ export class RetromClient {
   public emulatorClient;
   public metadataClient;
   public libraryClient;
+  public clientsClient;
 
   constructor(host: string) {
     this.gameClient = createClient(GameServiceDefinition, createChannel(host));
@@ -34,6 +36,11 @@ export class RetromClient {
 
     this.libraryClient = createClient(
       LibraryServiceDefinition,
+      createChannel(host),
+    );
+
+    this.clientsClient = createClient(
+      ClientServiceDefinition,
       createChannel(host),
     );
   }

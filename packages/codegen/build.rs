@@ -50,6 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .type_attribute(".", "#[derive(serde::Serialize, serde::Deserialize)]")
         .extern_path(".google.protobuf.Timestamp", "crate::timestamp::Timestamp")
         .extern_path(".google.protobuf.Duration", "::prost_wkt_types::Duration")
+        .extern_path(".google.protobuf.Value", "::prost_wkt_types::Value")
         .message_attribute(
             ".retrom",
             "#[serde(rename_all(serialize = \"camelCase\", deserialize = \"camelCase\"))]",
@@ -157,6 +158,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             format!(
                 "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
                 get_diesel_macro("platform_metadata", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.Client", 
+            format!(
+                "#[derive({diesel_row_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("clients", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.NewClient",
+            format!(
+                "#[derive({diesel_insertable_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("clients", None)
+            ),
+        )
+        .type_attribute(
+            "retrom.UpdatedClient", 
+            format!(
+                "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
+                get_diesel_macro("clients", None)
             ),
         )
         .type_attribute(

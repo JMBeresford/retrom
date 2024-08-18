@@ -112,19 +112,18 @@ impl<R: Runtime> Launcher<R> {
             let now = std::time::SystemTime::now();
 
             updated_metadata.last_played = Some(now.into());
+            let played = metadata.minutes_played.unwrap_or(0);
 
-            if let Some(played) = metadata.minutes_played {
-                let session_duration = now
-                    .duration_since(child.start_time)
-                    .ok()
-                    .map(|dur| dur.as_secs() / 60)
-                    .map(i32::try_from)
-                    .map(|res| res.ok().unwrap_or(0));
+            let session_duration = now
+                .duration_since(child.start_time)
+                .ok()
+                .map(|dur| dur.as_secs() / 60)
+                .map(i32::try_from)
+                .map(|res| res.ok().unwrap_or(0));
 
-                if let Some(mins) = session_duration {
-                    info!("Game {} played for {} minutes", game_id, mins);
-                    updated_metadata.minutes_played = Some(played + mins);
-                }
+            if let Some(mins) = session_duration {
+                info!("Game {} played for {} minutes", game_id, mins);
+                updated_metadata.minutes_played = Some(played + mins);
             }
 
             let request = tonic::Request::new(UpdateGameMetadataRequest {

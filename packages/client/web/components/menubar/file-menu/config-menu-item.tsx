@@ -22,33 +22,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { MenubarItem } from "@/components/ui/menubar";
-import { RetromClientConfig } from "@/generated/retrom/client/client-config";
-import { InferSchema } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { configSchema } from "@/providers/config/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoaderCircleIcon } from "lucide-react";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export function ConfigMenuItem() {
-  const { config } = useConfig();
-
-  if (config.status === "pending") {
-    return (
-      <MenubarItem className="text-muted-foreground/50 pointer-events-none touch-none flex gap-2">
-        <LoaderCircleIcon className="animate-spin" /> Configuration
-      </MenubarItem>
-    );
-  }
-
-  if (config.status === "error") {
-    return (
-      <MenubarItem className="text-destructive-text">Configuration</MenubarItem>
-    );
-  }
-
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -62,27 +43,48 @@ export function ConfigMenuItem() {
           <DialogTitle>Configuration</DialogTitle>
         </DialogHeader>
 
-        <ConfigForm currentConfig={config.data} />
+        <ConfigForm />
       </DialogContent>
     </Dialog>
   );
 }
 
-type Schema = z.infer<typeof configSchema>;
-function ConfigForm(props: { currentConfig: Required<RetromClientConfig> }) {
-  const { setConfig } = useConfig();
+type Schema = z.infer<typeof mutableConfigSchema>;
+const mutableConfigSchema = z.object({
+  server: z.object({
+    hostname: z.string().min(1).url().or(z.string().min(1).ip()),
+    port: z.coerce.number(),
+  }),
+});
+
+function ConfigForm() {
+  const configStore = useConfig();
+  const currentConfig = configStore.getState();
   const { setOpen } = useDialogOpen();
+
   const form = useForm<Schema>({
     resolver: zodResolver(configSchema),
-    defaultValues: props.currentConfig,
+    mode: "all",
+    reValidateMode: "onChange",
+    defaultValues: {
+      server: {
+        hostname: currentConfig.server.hostname,
+        port: currentConfig.server.port,
+      },
+    },
   });
 
   const handleSubmit = useCallback(
     (values: Schema) => {
-      setConfig(values);
+      console.log({ values });
+      configStore.setState((prev) => {
+        prev.server = values.server;
+
+        return { ...prev };
+      });
       setOpen(false);
     },
-    [setConfig, setOpen],
+    [configStore, setOpen],
   );
 
   return (
@@ -120,6 +122,8 @@ function ConfigForm(props: { currentConfig: Required<RetromClientConfig> }) {
                     type="number"
                     className="rounded-none rounded-r-md"
                     {...field}
+                    value={field.value.toString()}
+                    onChange={({ target: { value } }) => field.onChange(+value)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -132,7 +136,9 @@ function ConfigForm(props: { currentConfig: Required<RetromClientConfig> }) {
           <DialogClose asChild>
             <Button variant="secondary">Cancel</Button>
           </DialogClose>
-          <Button type="submit">Save</Button>
+          <Button type="submit" disabled={!form.formState.isDirty}>
+            Save
+          </Button>
         </DialogFooter>
       </form>
     </Form>

@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package retrom;
 
+import "retrom/models/emulators.proto";
 import "retrom/models/game-files.proto";
 import "retrom/models/games.proto";
-import "retrom/models/emulators.proto";
 
 message RetromHostInfo {
   string host_name = 1;
@@ -40,6 +40,7 @@ enum PlayStatus {
 message PlayGamePayload {
   Game game = 1;
   EmulatorProfile emulator_profile = 2;
+  Emulator emulator = 3;
 }
 
 message StopGamePayload {
@@ -54,5 +55,3 @@ message GamePlayStatusUpdate {
   int32 game_id = 1;
   PlayStatus play_status = 2;
 }
-
-

@@ -2,11 +2,23 @@ syntax = "proto3";
 
 package retrom;
 
+import "retrom/models/clients.proto";
+
 message RetromClientConfig {
   message Server {
     string hostname = 1;
     optional int32 port = 2;
   }
 
+  message Config {
+    Client client_info = 1;
+  }
+
+  message FlowCompletions {
+    bool setup_complete = 1;
+  }
+
   Server server = 1;
+  Config config = 2;
+  FlowCompletions flow_completions = 3;
 }

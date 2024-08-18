@@ -24,7 +24,12 @@ export function useDefaultEmulatorProfiles<
     enabled,
     queryFn: () =>
       retromClient.emulatorClient.getDefaultEmulatorProfiles(request),
-    queryKey: ["default-emulator-profiles", queryClient, request],
+    queryKey: [
+      "default-emulator-profiles",
+      "emulator-profiles",
+      queryClient,
+      request,
+    ],
     select: selectFn,
   });
 }

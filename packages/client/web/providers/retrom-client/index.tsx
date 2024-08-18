@@ -1,27 +1,22 @@
 "use client";
 
-import { PropsWithChildren, createContext, useContext } from "react";
+import { PropsWithChildren, createContext, useContext, useMemo } from "react";
 import { RetromClient } from "./client";
 import { useConfig } from "../config";
-import { LoaderCircleIcon } from "lucide-react";
 
 const context = createContext<RetromClient | undefined>(undefined);
 
 export function RetromClientProvider(props: PropsWithChildren<{}>) {
-  const { config } = useConfig();
+  const configStore = useConfig();
+  const hostname = configStore((store) => store.server.hostname);
+  const port = configStore((store) => store.server.port);
   const { children } = props;
 
-  if (config.status === "pending") {
-    return <LoaderCircleIcon />;
-  }
+  const client = useMemo(() => {
+    const host = hostname + (port ? `:${port}` : "");
 
-  if (config.status === "error") {
-    return <div>Failed to load config</div>;
-  }
-
-  const host = `${config.data.server?.hostname}:${config.data.server?.port}`;
-
-  const client = new RetromClient(host);
+    return new RetromClient(host);
+  }, [hostname, port]);
 
   return <context.Provider value={client}>{children}</context.Provider>;
 }

@@ -55,7 +55,6 @@ export function ProfileList(props: Props) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[10%]">Name</TableHead>
-              <TableHead className="w-[20%]">Path</TableHead>
               <TableHead className="w-[10%]">Extensions</TableHead>
               <TableHead>Args</TableHead>
               <TableHead></TableHead>
@@ -66,7 +65,6 @@ export function ProfileList(props: Props) {
             {profiles.map((profile) => (
               <TableRow key={profile.id}>
                 <TableCell>{profile.name}</TableCell>
-                <TableCell>{profile.executablePath}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     {profile.supportedExtensions.map((ext) => (

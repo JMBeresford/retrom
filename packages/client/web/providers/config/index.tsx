@@ -1,60 +1,62 @@
 "use client";
 
+import { create, StoreApi, UseBoundStore } from "zustand";
+import { persist, subscribeWithSelector } from "zustand/middleware";
 import { RetromClientConfig } from "@/generated/retrom/client/client-config";
 import { createContext, PropsWithChildren, useContext } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { DeepRequired } from "@/lib/utils";
 import { defaultAPIHostname, defaultAPIPort } from "./utils";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { WebConfigManager } from "./web";
-import { useToast } from "@/components/ui/use-toast";
+import { Timestamp } from "@/generated/google/protobuf/timestamp";
 
-export interface ConfigManager {
-  setConfig(config: Required<RetromClientConfig>): Promise<void>;
-  getConfig(): Promise<Required<RetromClientConfig>>;
-}
+const STORAGE_KEY = "retrom-client-config";
+type LocalConfig = DeepRequired<RetromClientConfig>;
 
-const context = createContext<ConfigManager | undefined>(undefined);
+const context = createContext<UseBoundStore<StoreApi<LocalConfig>> | undefined>(
+  undefined,
+);
 
 export function ConfigProvider(props: PropsWithChildren<{}>) {
   const { children } = props;
+  const router = useRouter();
+  const pathname = usePathname();
 
-  // TODO: use a config file on the desktop client
-  const manager = WebConfigManager;
+  const configStore = create<LocalConfig>()(
+    subscribeWithSelector(
+      persist(() => defaultConfig, { name: STORAGE_KEY, version: 1 }),
+    ),
+  );
 
-  return <context.Provider value={manager}>{children}</context.Provider>;
+  const initialConfig = configStore.getState();
+
+  if (!initialConfig?.flowCompletions.setupComplete && pathname !== "/setup") {
+    router.push("/setup");
+  }
+
+  return <context.Provider value={configStore}>{children}</context.Provider>;
 }
 
 export function useConfig() {
-  const manager = useContext(context);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const store = useContext(context);
 
-  if (!manager) {
+  if (!store) {
     throw new Error("useConfig must be used within a ConfigProvider");
   }
 
-  const config = useQuery({
-    queryKey: ["config"],
-    queryFn: manager.getConfig,
-  });
-
-  const { mutate } = useMutation({
-    mutationFn: manager.setConfig,
-    onSuccess: () => {
-      toast({
-        title: "Configuration updated",
-        description: "Configuration has been updated successfully.",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["config"] });
-    },
-  });
-
-  return {
-    config,
-    setConfig: mutate,
-  };
+  return store;
 }
 
-export const defaultConfig: Required<RetromClientConfig> = {
+const defaultConfig: DeepRequired<RetromClientConfig> = {
   server: { hostname: defaultAPIHostname(), port: defaultAPIPort() },
+  config: {
+    clientInfo: {
+      name: "",
+      id: -1,
+      createdAt: Timestamp.create(),
+      updatedAt: Timestamp.create(),
+    },
+  },
+  flowCompletions: {
+    setupComplete: false,
+  },
 };

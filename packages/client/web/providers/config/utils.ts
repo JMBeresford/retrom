@@ -1,5 +1,4 @@
 import { RetromClientConfig } from "@/generated/retrom/client/client-config";
-import { InferSchema } from "@/lib/utils";
 import { z } from "zod";
 
 const { RETROM_PORT, RETROM_HOST, RETROM_HOSTNAME } = process.env;
@@ -43,5 +42,14 @@ export const configSchema = z.object({
       })
       .pipe(z.number().int().positive().optional())
       .or(z.number().int().positive().optional()),
+  }),
+  config: z.object({
+    clientInfo: z.object({
+      name: z.string(),
+      id: z.number(),
+    }),
+  }),
+  flowCompletions: z.object({
+    setupComplete: z.boolean(),
   }),
 }) satisfies z.ZodSchema<RetromClientConfig, z.ZodTypeDef, unknown>;

@@ -14,7 +14,8 @@ export function ActionButton(
   props: { game: Game } & ComponentProps<typeof Button>,
 ) {
   const { game, className, ...rest } = props;
-  const { config } = useConfig();
+  const configStore = useConfig();
+  const server = configStore((store) => store.server);
   const { data: installationState, status } = useInstallationQuery(game);
 
   const buttonClasses = cn(
@@ -22,7 +23,7 @@ export function ActionButton(
     className,
   );
 
-  if (config.status === "pending" || status === "pending") {
+  if (status === "pending") {
     return (
       <Button disabled {...rest} className={cn(buttonClasses)}>
         <LoaderCircleIcon />
@@ -30,11 +31,11 @@ export function ActionButton(
     );
   }
 
-  if (config.status === "error" || status === "error") {
+  if (status === "error") {
     return null;
   }
 
-  const restHost = `${config.data.server.hostname}:${config.data.server.port}/rest`;
+  const restHost = `${server.hostname}:${server.port}/rest`;
 
   return (
     <>

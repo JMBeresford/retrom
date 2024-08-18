@@ -13,31 +13,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RomType } from "@/generated/retrom/models/emulators";
 import { cn } from "@/lib/utils";
 import { useCreateEmulators } from "@/mutations/useCreateEmulators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { ChevronsUpDown, LoaderIcon, PlusCircleIcon } from "lucide-react";
+import {
+  ChevronsUpDown,
+  FolderOpenIcon,
+  LoaderIcon,
+  PlusCircleIcon,
+} from "lucide-react";
 import {
   emulatorSchema,
   EmulatorSchema,
   PlatformsDropdown,
   PlatformWithMetadata,
-  romTypeDisplayMap,
+  saveStrategyDisplayMap,
 } from ".";
 import { useCallback } from "react";
+import { SaveStrategy } from "@/generated/retrom/models/emulators";
+import { useConfig } from "@/providers/config";
+import { open } from "@tauri-apps/plugin-dialog";
 
 export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
   const { platforms } = props;
+  const configStore = useConfig();
+  const clientId = configStore((store) => store.config.clientInfo.id);
   const form = useForm<EmulatorSchema>({
     reValidateMode: "onChange",
     resolver: zodResolver(emulatorSchema),
     defaultValues: {
       name: "",
       supportedPlatforms: [],
-      romType: undefined,
+      saveStrategy: undefined,
+      executablePath: "",
+      clientId,
     },
   });
 
@@ -46,10 +57,15 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
 
   const onCreationFormSubmit = useCallback(
     (values: EmulatorSchema) => {
-      createEmulators({ emulators: [values] });
+      const emulator = { ...values, clientId };
+      console.log(emulator);
+      createEmulators({
+        emulators: [emulator],
+      });
+
       form.reset();
     },
-    [createEmulators, form],
+    [createEmulators, form, clientId],
   );
 
   return (
@@ -57,11 +73,12 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
       <form
         onSubmit={form.handleSubmit(onCreationFormSubmit)}
         className={cn(
-          "grid col-span-4 grid-flow-col grid-cols-subgrid w-full",
+          "grid col-span-6 grid-flow-col grid-cols-subgrid w-full",
           "[&_*]:ring-inset *:grid *:grid-rows-[auto_auto_1fr] *:grid-flow-row",
-          "*:space-y-0 [&_label]:p-2 *:border-b",
+          "*:space-y-0 [&_label]:p-2 *:border-b pb-1 border-b",
         )}
       >
+        <div></div>
         <FormField
           control={form.control}
           name="name"
@@ -94,7 +111,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                       variant="outline"
                       role="combobox"
                       className={cn(
-                        "justify-between w-full border-l-0 font-normal",
+                        "justify-between w-full border-l-0 font-normal hover:bg-transparent",
                         error
                           ? "border-solid border-2 border-destructive"
                           : "border-none",
@@ -146,44 +163,84 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
 
         <FormField
           control={form.control}
-          name="romType"
+          name="saveStrategy"
           render={({ field, fieldState: { error } }) => (
             <FormItem>
               <Select
                 defaultValue={field.value?.toString()}
                 onValueChange={(value) => {
                   const valueNum = parseInt(value);
-                  const romType = Object.values(RomType).find(
+                  const saveStrategy = Object.values(SaveStrategy).find(
                     (v) => v === valueNum,
                   );
 
-                  if (romType === undefined) return;
-                  field.onChange(romType);
+                  if (saveStrategy === undefined) return;
+                  field.onChange(saveStrategy);
                 }}
               >
                 <FormControl>
                   <SelectTrigger
                     className={cn(
+                      "hover:bg-transparent",
                       error
                         ? "border-solid border-2 border-destructive"
                         : "border-none",
                       field.value === undefined && "text-muted-foreground",
                     )}
                   >
-                    <SelectValue placeholder="Select rom type" />
+                    <SelectValue placeholder="Select save strategy" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {Object.values(RomType)
+                  {Object.values(SaveStrategy)
                     .filter((value) => typeof value !== "string")
-                    .filter((value) => value !== RomType.UNRECOGNIZED)
+                    .filter((value) => value !== SaveStrategy.UNRECOGNIZED)
                     .map((value) => (
                       <SelectItem key={value} value={value.toString()}>
-                        {romTypeDisplayMap[value]}
+                        {saveStrategyDisplayMap[value]}
                       </SelectItem>
                     ))}
                 </SelectContent>
               </Select>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="executablePath"
+          render={({ field, fieldState: { error } }) => (
+            <FormItem>
+              <FormControl>
+                <div className="flex items-center pl-3">
+                  <Button
+                    size="icon"
+                    className="p-2 h-min w-min"
+                    variant="secondary"
+                    onClick={async () => {
+                      const result = await open({
+                        title: "Select Emulator Executable",
+                        multiple: false,
+                      });
+
+                      if (result?.path) {
+                        field.onChange(`${result.path}`);
+                      }
+                    }}
+                  >
+                    <FolderOpenIcon className="w-[1rem] h-[1rem]" />
+                  </Button>
+                  <Input
+                    {...field}
+                    placeholder="Enter path to executable"
+                    className={cn(
+                      error
+                        ? "border-solid border-2 border-destructive"
+                        : "border-none",
+                    )}
+                  />
+                </div>
+              </FormControl>
             </FormItem>
           )}
         />
@@ -193,6 +250,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
             type="submit"
             size="icon"
             variant="ghost"
+            onClick={() => console.log(form)}
             disabled={creationPending}
           >
             <LoaderIcon
