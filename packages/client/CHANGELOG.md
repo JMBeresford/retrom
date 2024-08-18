@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.40](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.39...retrom-client-v0.0.40) - 2024-08-18
+
+### Fixed
+- platform detection
+
+### Other
+- simplify build target artifacts
+
 ## [0.0.39](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.38...retrom-client-v0.0.39) - 2024-08-18
 
 ### Added
