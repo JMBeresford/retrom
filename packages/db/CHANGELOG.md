@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11](https://github.com/JMBeresford/retrom/compare/retrom-db-v0.0.10...retrom-db-v0.0.11) - 2024-08-18
+
+### Added
+- setup wizard
+
 ## [0.0.10](https://github.com/JMBeresford/retrom/compare/retrom-db-v0.0.9...retrom-db-v0.0.10) - 2024-08-05
 
 ### Fixed
