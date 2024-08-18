@@ -42,14 +42,14 @@ export function Confirm() {
       }
 
       configStore.setState((prev) => {
-        if (!client) return prev;
-
-        prev.config.clientInfo = {
-          id: client.id,
-          name: client.name,
-          createdAt: client.createdAt ?? Timestamp.create(),
-          updatedAt: client.updatedAt ?? Timestamp.create(),
-        };
+        if (client) {
+          prev.config.clientInfo = {
+            id: client.id,
+            name: client.name,
+            createdAt: client.createdAt ?? Timestamp.create(),
+            updatedAt: client.updatedAt ?? Timestamp.create(),
+          };
+        }
 
         prev.flowCompletions.setupComplete = true;
         return { ...prev };

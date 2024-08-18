@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/menubar";
 import { MatchPlatformsMenuItem } from "./match-platforms-menu-item";
 import { DefaultProfilesMenuItem } from "./default-profiles-menu-item";
-import { IS_DESKTOP } from "@/lib/env";
+import { DesktopOnly } from "@/lib/env";
 
 export async function PlatformsMenu() {
   return (
@@ -16,7 +16,9 @@ export async function PlatformsMenu() {
 
       <MenubarContent>
         <MatchPlatformsMenuItem />
-        {IS_DESKTOP ? <DefaultProfilesMenuItem /> : null}
+        <DesktopOnly>
+          <DefaultProfilesMenuItem />
+        </DesktopOnly>
       </MenubarContent>
     </MenubarMenu>
   );

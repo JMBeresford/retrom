@@ -49,14 +49,16 @@ export function GameFiles() {
             />
           </SelectTrigger>
 
-          <SelectContent>
-            <SelectGroup>
-              {gameFiles?.map((file) => (
-                <SelectItem key={file.id} value={file.id.toString()}>
-                  {getFileName(file.path)}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+          <SelectContent
+            position="popper"
+            side="bottom"
+            className="max-h-[calc(var(--radix-select-content-available-height)*0.85)]"
+          >
+            {gameFiles?.map((file) => (
+              <SelectItem key={file.id} value={file.id.toString()}>
+                {getFileName(file.path)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 

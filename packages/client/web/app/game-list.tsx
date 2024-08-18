@@ -1,6 +1,6 @@
 import { Game } from "@/generated/retrom/models/games";
 import { GameMetadata } from "@/generated/retrom/models/metadata";
-import { cn, Image, timestampToDate } from "@/lib/utils";
+import { cn, getFileStub, Image } from "@/lib/utils";
 import Link from "next/link";
 import { ActionButton } from "../components/action-button";
 import { GameDetailProvider } from "./games/[id]/game-details-context";
@@ -22,6 +22,7 @@ export function GameList(props: { games: GameWithMetadata[] }) {
           : "Not played yet";
 
         const image = bgUrl ?? coverUrl;
+        const name = game.metadata?.name ?? getFileStub(game.path);
 
         return (
           <div
@@ -35,7 +36,8 @@ export function GameList(props: { games: GameWithMetadata[] }) {
             <div
               className={cn(
                 "relative w-full h-full group",
-                "rounded-lg border border-border overflow-hidden",
+                "rounded-lg overflow-hidden",
+                !image && "border",
               )}
             >
               <div
@@ -64,13 +66,21 @@ export function GameList(props: { games: GameWithMetadata[] }) {
                   </GameDetailProvider>
                 </div>
               </div>
+
               <Link href={`/games/${game.id}`} className="cursor-pointer">
-                <div className="w-full h-full z-[-1]">
-                  <Image
-                    src={image}
-                    alt=""
-                    className="object-cover h-full w-full rounded-lg mx-auto z-[-1]"
-                  />
+                <div className="relative w-full h-full z-[-1] bg-muted">
+                  <div className="absolute inset-0 p-4 text-center grid place-items-center z-[-2]">
+                    <h3 className="text-2xl font-black text-muted-foreground/50">
+                      {name}
+                    </h3>
+                  </div>
+                  {image ? (
+                    <Image
+                      src={image}
+                      alt=""
+                      className="object-cover h-full w-full rounded-lg mx-auto z-[-1] bg-transparent"
+                    />
+                  ) : null}
                 </div>
               </Link>
             </div>

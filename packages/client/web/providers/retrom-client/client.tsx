@@ -9,6 +9,7 @@ import {
 import { createClient, createChannel } from "nice-grpc-web";
 
 export class RetromClient {
+  readonly host: string;
   public gameClient;
   public platformClient;
   public emulatorClient;
@@ -17,6 +18,7 @@ export class RetromClient {
   public clientsClient;
 
   constructor(host: string) {
+    this.host = host;
     this.gameClient = createClient(GameServiceDefinition, createChannel(host));
 
     this.platformClient = createClient(

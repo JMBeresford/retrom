@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { Game } from "@/generated/retrom/models/games";
-import { IS_DESKTOP } from "@/lib/env";
+import { PlatformDependent } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
@@ -38,14 +38,15 @@ export function ActionButton(
   const restHost = `${server.hostname}:${server.port}/rest`;
 
   return (
-    <>
-      {IS_DESKTOP ? (
+    <PlatformDependent
+      desktop={
         installationState === InstallationStatus.INSTALLED ? (
           <PlayGameButton {...rest} className={cn(buttonClasses)} />
         ) : (
           <InstallGameButton {...rest} className={cn(buttonClasses)} />
         )
-      ) : (
+      }
+      web={
         <form action={`${restHost}/game/${game.id}`} className="w-full">
           <Button
             type="submit"
@@ -56,7 +57,7 @@ export function ActionButton(
             Download
           </Button>
         </form>
-      )}
-    </>
+      }
+    />
   );
 }
