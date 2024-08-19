@@ -23,7 +23,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { MenubarItem } from "@/components/ui/menubar";
 import { useConfig } from "@/providers/config";
-import { configSchema } from "@/providers/config/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
@@ -53,7 +52,7 @@ type Schema = z.infer<typeof mutableConfigSchema>;
 const mutableConfigSchema = z.object({
   server: z.object({
     hostname: z.string().min(1).url().or(z.string().min(1).ip()),
-    port: z.coerce.number(),
+    port: z.string().optional(),
   }),
 });
 
@@ -63,22 +62,31 @@ function ConfigForm() {
   const { setOpen } = useDialogOpen();
 
   const form = useForm<Schema>({
-    resolver: zodResolver(configSchema),
+    resolver: zodResolver(mutableConfigSchema),
     mode: "all",
     reValidateMode: "onChange",
     defaultValues: {
       server: {
         hostname: currentConfig.server.hostname,
-        port: currentConfig.server.port,
+        port: currentConfig.server.port.toString(),
       },
     },
   });
 
   const handleSubmit = useCallback(
     (values: Schema) => {
-      console.log({ values });
       configStore.setState((prev) => {
-        prev.server = values.server;
+        const { hostname, port } = values.server;
+        const portActual = port
+          ? +port
+          : hostname.startsWith("https")
+            ? 443
+            : 80;
+
+        prev.server = {
+          hostname,
+          port: portActual,
+        };
 
         return { ...prev };
       });
@@ -122,8 +130,6 @@ function ConfigForm() {
                     type="number"
                     className="rounded-none rounded-r-md"
                     {...field}
-                    value={field.value.toString()}
-                    onChange={({ target: { value } }) => field.onChange(+value)}
                   />
                 </FormControl>
                 <FormMessage />
