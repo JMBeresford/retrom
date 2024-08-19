@@ -1,7 +1,6 @@
 {
   "$schema": "../../node_modules/@tauri-apps/cli/schema.json",
   "bundle": {
-    "targets": ["deb", "rpm", "msi", "app", "updater", "appimage"],
     "externalBin": ["./bin/node"],
     "resources": ["web/.next/node-server"],
     "macOS": {
