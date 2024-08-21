@@ -21,12 +21,15 @@ import { Input } from "../ui/input";
 import { useToast } from "../ui/use-toast";
 import { Separator } from "../ui/separator";
 import { LoaderCircleIcon } from "lucide-react";
-import { asOptionalString, cn } from "@/lib/utils";
-import { DialogFooter } from "../ui/dialog";
+import { asOptionalString, cn, getFileName } from "@/lib/utils";
+import { DialogClose, DialogFooter } from "../ui/dialog";
 import { useGameDetail } from "@/app/games/[id]/game-details-context";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UpdatedGameMetadata } from "@/generated/retrom/models/metadata";
+import { Checkbox } from "../ui/checkbox";
+import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
+import { useUpdateGames } from "@/mutations/useUpdateGames";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
@@ -43,6 +46,7 @@ export function IgdbTab() {
 
   const { toast } = useToast();
   const [selectedMatch, setSelectedMatch] = useState<string | undefined>();
+  const [renameDirectory, setRenameDirectory] = useState(false);
   const retromClient = useRetromClient();
   const queryClient = useQueryClient();
 
@@ -71,32 +75,10 @@ export function IgdbTab() {
     select: (data) => data.metadata,
   });
 
-  const { mutate, isPending: updatePending } = useMutation({
-    onError: (error) => {
-      console.error(error);
-      toast({
-        title: "Error updating metadata",
-        description: "Check the console for details",
-        variant: "destructive",
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        predicate: (query) =>
-          ["games", "game-metadata", game.id].some((key) =>
-            query.queryKey.includes(key),
-          ),
-      });
-
-      toast({
-        title: "Metadata updated",
-        description: "Game metadata has been updated successfully",
-      });
-    },
-    mutationFn: async (req: UpdateGameMetadataRequest) => {
-      return await retromClient.metadataClient.updateGameMetadata(req);
-    },
-  });
+  const { mutate: updateGames, isPending: updateGamePending } =
+    useUpdateGames();
+  const { mutateAsync: updateMetadata, isPending: updatePending } =
+    useUpdateGameMetadata();
 
   const loading = searchPending || updatePending;
 
@@ -135,7 +117,7 @@ export function IgdbTab() {
     [game, platformMetadata],
   );
 
-  const handleUpdate = useCallback(() => {
+  const handleUpdate = useCallback(async () => {
     if (!selectedMatch || !matches) {
       return;
     }
@@ -151,10 +133,41 @@ export function IgdbTab() {
       return;
     }
 
-    mutate({
-      metadata: [UpdatedGameMetadata.create({ ...match, gameId: game.id })],
-    });
-  }, [matches, selectedMatch, game, mutate, toast]);
+    try {
+      const res = await updateMetadata({
+        metadata: [{ ...match, gameId: game.id }],
+      });
+
+      if (renameDirectory) {
+        const newName = res.metadataUpdated[0]?.name;
+
+        if (!newName) {
+          throw new Error("Failed to update metadata");
+        }
+
+        const currentFilename = getFileName(game.path);
+        const path = game.path.replace(currentFilename, newName);
+
+        updateGames({
+          games: [{ id: game.id, path }],
+        });
+      }
+    } catch {
+      toast({
+        title: "Error updating metadata",
+        description: "Something went wrong, please try again",
+        variant: "destructive",
+      });
+    }
+  }, [
+    matches,
+    selectedMatch,
+    game,
+    toast,
+    updateMetadata,
+    renameDirectory,
+    updateGames,
+  ]);
 
   return (
     <>
@@ -230,16 +243,41 @@ export function IgdbTab() {
       </div>
 
       <DialogFooter>
-        <Button
-          className="mt-4"
-          onClick={() => handleUpdate()}
-          disabled={selectedMatch === undefined}
-        >
-          <LoaderCircleIcon
-            className={cn("animate-spin absolute", !loading && "opacity-0")}
-          />
-          <p className={cn(loading && "opacity-0")}>Update Metadata</p>
-        </Button>
+        <div className="flex items-center justify-between gap-6 w-full mt-4">
+          <div className="flex items-top gap-2">
+            <Checkbox
+              id="rename-directory"
+              checked={renameDirectory}
+              onCheckedChange={(event) => setRenameDirectory(!!event)}
+            />
+
+            <div className="grid gap-1 5 leading-none">
+              <label htmlFor="rename-directory">Rename Directory</label>
+
+              <p className="text-sm text-muted-foreground">
+                This will alter the file system
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <DialogClose asChild>
+              <Button disabled={loading} variant="secondary">
+                Cancel
+              </Button>
+            </DialogClose>
+
+            <Button
+              onClick={() => handleUpdate()}
+              disabled={selectedMatch === undefined || loading}
+            >
+              <LoaderCircleIcon
+                className={cn("animate-spin absolute", !loading && "opacity-0")}
+              />
+              <p className={cn(loading && "opacity-0")}>Update Metadata</p>
+            </Button>
+          </div>
+        </div>
       </DialogFooter>
     </>
   );

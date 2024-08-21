@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "../ui/button";
 import { UseFormReturn, useForm } from "react-hook-form";
 import {
@@ -15,12 +15,14 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { LoaderCircleIcon } from "lucide-react";
-import { asOptionalString, cn, InferSchema } from "@/lib/utils";
-import { DialogFooter } from "../ui/dialog";
+import { asOptionalString, cn, getFileName, InferSchema } from "@/lib/utils";
+import { DialogClose, DialogFooter, useDialogOpen } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
 import { useGameDetail } from "@/app/games/[id]/game-details-context";
 import { GameMetadata } from "@/generated/retrom/models/metadata";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
+import { Checkbox } from "../ui/checkbox";
+import { useUpdateGames } from "@/mutations/useUpdateGames";
 
 type FormFieldRenderer = ({
   form,
@@ -72,8 +74,13 @@ const formSchema = z.object({
 
 export function ManualTab() {
   const { game, gameMetadata } = useGameDetail();
+  const { setOpen } = useDialogOpen();
+  const [renameDirectory, setRenameDirectory] = useState(false);
 
-  const { mutate, status } = useUpdateGameMetadata();
+  const { mutateAsync: updateMetadata, status: metadataStatus } =
+    useUpdateGameMetadata();
+
+  const { mutate: updateGames, status: gameStatus } = useUpdateGames();
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -93,15 +100,34 @@ export function ManualTab() {
   });
 
   const handleUpdate = useCallback(
-    (values: FormSchema) => {
+    async (values: FormSchema) => {
       const { igdbId, ...restValues } = values;
       const igdbIdNum = igdbId;
       const updated = { ...restValues, igdbId: igdbIdNum, gameId: game.id };
 
-      mutate({ metadata: [updated] });
+      const res = await updateMetadata({ metadata: [updated] });
+
+      if (renameDirectory) {
+        const newName = res.metadataUpdated[0]?.name;
+
+        if (!newName) {
+          return;
+        }
+
+        const currentFilename = getFileName(game.path);
+        const path = game.path.replace(currentFilename, newName);
+
+        updateGames({
+          games: [{ id: game.id, path }],
+        });
+
+        setOpen(false);
+      }
     },
-    [game.id, mutate],
+    [game.id, updateMetadata, updateGames, renameDirectory, game.path, setOpen],
   );
+
+  const pending = metadataStatus === "pending" || gameStatus === "pending";
 
   return (
     <>
@@ -114,22 +140,49 @@ export function ManualTab() {
               ))}
             </div>
 
+            <DialogFooter></DialogFooter>
+
             <DialogFooter>
-              <Button
-                type="submit"
-                className="mt-4"
-                disabled={!form.formState.isDirty}
-              >
-                <LoaderCircleIcon
-                  className={cn(
-                    "animate-spin absolute",
-                    status !== "pending" && "opacity-0",
-                  )}
-                />
-                <p className={cn(status === "pending" && "opacity-0")}>
-                  Update Metadata
-                </p>
-              </Button>
+              <div className="flex items-center justify-between gap-6 w-full mt-4">
+                <div className="flex items-top gap-2">
+                  <Checkbox
+                    id="rename-directory"
+                    checked={renameDirectory}
+                    onCheckedChange={(event) => setRenameDirectory(!!event)}
+                  />
+
+                  <div className="grid gap-1 5 leading-none">
+                    <label htmlFor="rename-directory">Rename Directory</label>
+
+                    <p className="text-sm text-muted-foreground">
+                      This will alter the file system
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <DialogClose asChild>
+                    <Button disabled={pending} variant="secondary">
+                      Cancel
+                    </Button>
+                  </DialogClose>
+
+                  <Button
+                    type="submit"
+                    disabled={!form.formState.isDirty || pending}
+                  >
+                    <LoaderCircleIcon
+                      className={cn(
+                        "animate-spin absolute",
+                        !pending && "opacity-0",
+                      )}
+                    />
+                    <p className={cn(pending && "opacity-0")}>
+                      Update Metadata
+                    </p>
+                  </Button>
+                </div>
+              </div>
             </DialogFooter>
           </form>
         </Form>

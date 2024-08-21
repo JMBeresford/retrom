@@ -6,7 +6,7 @@ export function useGames(request: Partial<GetGamesRequest>) {
   const retromClient = useRetromClient();
 
   return useQuery({
-    queryKey: ["games", "game-metadata", request, retromClient],
+    queryKey: ["games", "game-metadata", "game-files", request, retromClient],
     queryFn: async () => await retromClient.gameClient.getGames(request),
   });
 }

@@ -54,8 +54,12 @@ export function Image(props: JSX.IntrinsicElements["img"]) {
 export function getFileParts(path: string) {
   const filename = path.split("/").pop() ?? "";
   const parts = filename.split(".");
-  const name = parts.shift();
-  const extension = parts.shift();
+
+  // handle hidden files (starts w/ ".")
+  const name = path.startsWith(".") ? `.${parts.shift()}` : parts.shift();
+
+  // handle multi-level fnam extensions
+  const extension = parts.join(".");
 
   return { name, extension };
 }
@@ -66,7 +70,7 @@ export function getFileStub(path: string) {
 
 export function getFileName(path: string) {
   const { name, extension } = getFileParts(path);
-  return `${name}.${extension}`;
+  return name + (extension ? `.${extension}` : "");
 }
 
 export function timestampToDate(timestamp?: Timestamp): Date {

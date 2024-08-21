@@ -16,7 +16,7 @@ import {
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
 import { LoaderCircleIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getFileName } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import {
@@ -34,13 +34,16 @@ import {
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { redirect } from "next/navigation";
-import { Platform } from "@/generated/retrom/models/platforms";
+import { Platform, UpdatedPlatform } from "@/generated/retrom/models/platforms";
 import {
   GetIgdbSearchRequest_IgdbSearchType,
   UpdatePlatformMetadataRequest,
 } from "@/generated/retrom/services";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { PlatformMetadata } from "@/generated/retrom/models/metadata";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";
 
 export type PlatformAndMetadata = Platform & { metadata: PlatformMetadata };
 
@@ -102,31 +105,35 @@ export function MatchPlatformsMenuItem() {
     },
   });
 
-  const { mutate, isPending } = useMutation({
-    onError: (error) => {
-      console.error(error);
-      toast({
-        title: "Error updating metadata",
-        description: "Check the console for details",
-        variant: "destructive",
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        predicate: (query) =>
-          ["platforms", "platform-metadata"].some((key) =>
-            query.queryKey.includes(key),
-          ),
-      });
+  const { mutateAsync: updatePlatforms, isPending: platformsPending } =
+    useUpdatePlatforms();
 
-      toast({
-        title: "Successfully updated metadata",
-        description: "Updated metadata entries",
-      });
-    },
-    mutationFn: async (req: UpdatePlatformMetadataRequest) =>
-      await retromClient.metadataClient.updatePlatformMetadata(req),
-  });
+  const { mutateAsync: updateMetadata, isPending: metadataPending } =
+    useMutation({
+      onError: (error) => {
+        console.error(error);
+        toast({
+          title: "Error updating metadata",
+          description: "Check the console for details",
+          variant: "destructive",
+        });
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            ["platforms", "platform-metadata"].some((key) =>
+              query.queryKey.includes(key),
+            ),
+        });
+
+        toast({
+          title: "Successfully updated metadata",
+          description: "Updated metadata entries",
+        });
+      },
+      mutationFn: async (req: UpdatePlatformMetadataRequest) =>
+        await retromClient.metadataClient.updatePlatformMetadata(req),
+    });
 
   const defaultSelections = useMemo(() => {
     const map = new Map<number, number | undefined>();
@@ -140,10 +147,13 @@ export function MatchPlatformsMenuItem() {
   const error = igdbSearchStatus === "error" || platformStatus === "error";
 
   const loading =
-    isPending || igdbSearchStatus === "pending" || platformStatus === "pending";
+    metadataPending ||
+    igdbSearchStatus === "pending" ||
+    platformStatus === "pending";
 
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [renameDirectories, setRenameDirectories] = useState(false);
   const [selections, setSelections] = useState<Map<number, number | undefined>>(
     new Map(defaultSelections),
   );
@@ -158,10 +168,16 @@ export function MatchPlatformsMenuItem() {
     return true;
   }, [selections, defaultSelections]);
 
-  const handleUpdate = useCallback(() => {
+  const handleUpdate = useCallback(async () => {
     const req = UpdatePlatformMetadataRequest.create();
 
     for (const [platformId, igdbId] of selections.entries()) {
+      const defaultSelection = defaultSelections.get(platformId);
+
+      if (igdbId === defaultSelection) {
+        continue;
+      }
+
       const igdbMetadata = allIgdbPlatforms?.find((p) => p.igdbId === igdbId);
 
       if (!igdbId || !igdbMetadata) {
@@ -174,11 +190,49 @@ export function MatchPlatformsMenuItem() {
       });
     }
 
-    console.log({ req });
+    const res = await updateMetadata(req);
 
-    mutate(req);
-    setDialogOpen(false);
-  }, [allIgdbPlatforms, selections, mutate]);
+    if (renameDirectories) {
+      const updatedPlatforms: UpdatedPlatform[] = res.metadataUpdated.flatMap(
+        (meta) => {
+          const platform = platformData?.find((p) => p.id === meta.platformId);
+
+          if (!platform || !meta.name) return [];
+
+          const currentFilename = getFileName(platform.path);
+          const path = platform.path.replace(currentFilename, meta.name);
+
+          return [
+            {
+              id: platform.id,
+              path,
+            },
+          ];
+        },
+      );
+
+      try {
+        await updatePlatforms({ platforms: updatedPlatforms });
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Error renaming directories",
+          description: "Check the console for details",
+          variant: "destructive",
+        });
+      }
+
+      setDialogOpen(false);
+    }
+  }, [
+    allIgdbPlatforms,
+    selections,
+    updateMetadata,
+    renameDirectories,
+    toast,
+    platformData,
+    updatePlatforms,
+  ]);
 
   const findIgdbSelection = useCallback(
     (id?: number) =>
@@ -206,16 +260,16 @@ export function MatchPlatformsMenuItem() {
         </MenubarItem>
       </DialogTrigger>
 
-      <DialogOverlay>
-        <DialogContent>
-          <DialogHeader className="mb-4">
-            <DialogTitle>Match Platforms</DialogTitle>
-            <DialogDescription>
-              Match your platforms to IGDB platforms to get more accurate
-              metadata.
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent>
+        <DialogHeader className="mb-4">
+          <DialogTitle>Match Platforms</DialogTitle>
+          <DialogDescription>
+            Match your platforms to IGDB platforms to get more accurate
+            metadata.
+          </DialogDescription>
+        </DialogHeader>
 
+        <ScrollArea type="auto" className="h-[60vh] pr-4">
           {platformData.map((platform) => {
             const selection = selections.get(platform.id);
             const unchanged = defaultSelections.get(platform.id) === selection;
@@ -303,8 +357,27 @@ export function MatchPlatformsMenuItem() {
               </div>
             );
           })}
-          <DialogFooter>
-            <div className="flex justify-end gap-2 mt-4">
+        </ScrollArea>
+
+        <DialogFooter>
+          <div className="flex justify-between gap-6 mt-4 pr-4 w-full">
+            <div className="flex items-top gap-2">
+              <Checkbox
+                id="rename-directories"
+                checked={renameDirectories}
+                onCheckedChange={(event) => setRenameDirectories(!!event)}
+              />
+
+              <div className="grid gap-1 5 leading-none">
+                <label htmlFor="rename-directories">Rename Directories</label>
+
+                <p className="text-sm text-muted-foreground">
+                  This will alter the file system
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 items-top">
               <DialogClose asChild>
                 <Button variant="secondary">Cancel</Button>
               </DialogClose>
@@ -323,9 +396,9 @@ export function MatchPlatformsMenuItem() {
                 <p>Update</p>
               </Button>
             </div>
-          </DialogFooter>
-        </DialogContent>
-      </DialogOverlay>
+          </div>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }

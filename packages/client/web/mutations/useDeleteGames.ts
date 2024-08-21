@@ -1,25 +1,21 @@
-import { Game } from "@/generated/retrom/models/games";
+import { DeleteGamesRequest } from "@/generated/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export function useDeleteGames(games: Game[]) {
+export function useDeleteGames() {
   const retromClient = useRetromClient();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: ["deleteGames", games],
-    mutationFn: async () =>
-      retromClient.gameClient.deleteGames({
-        ids: games.map((game) => game.id),
-      }),
+    mutationKey: ["delete-games"],
+    mutationFn: async (request: DeleteGamesRequest) =>
+      retromClient.gameClient.deleteGames(request),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [
-          "games",
-          "game-metadata",
-          "library",
-          ...games.map((g) => g.id),
-        ],
+        predicate: (query) =>
+          ["game", "games", "game-metadata", "game-files"].some((k) =>
+            query.queryKey.includes(k),
+          ),
       });
     },
   });

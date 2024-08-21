@@ -51,6 +51,8 @@ diesel::table! {
         game_id -> Int4,
         created_at -> Nullable<Timestamptz>,
         updated_at -> Nullable<Timestamptz>,
+        deleted_at -> Nullable<Timestamptz>,
+        is_deleted -> Bool,
     }
 }
 
@@ -101,6 +103,9 @@ diesel::table! {
         platform_id -> Nullable<Int4>,
         created_at -> Nullable<Timestamptz>,
         updated_at -> Nullable<Timestamptz>,
+        deleted_at -> Nullable<Timestamptz>,
+        is_deleted -> Bool,
+        default_file_id -> Nullable<Int4>,
     }
 }
 
@@ -123,6 +128,8 @@ diesel::table! {
         path -> Text,
         created_at -> Nullable<Timestamptz>,
         updated_at -> Nullable<Timestamptz>,
+        deleted_at -> Nullable<Timestamptz>,
+        is_deleted -> Bool,
     }
 }
 
@@ -139,7 +146,6 @@ diesel::joinable!(default_emulator_profiles -> emulator_profiles (emulator_profi
 diesel::joinable!(default_emulator_profiles -> platforms (platform_id));
 diesel::joinable!(emulator_profiles -> emulators (emulator_id));
 diesel::joinable!(emulators -> clients (client_id));
-diesel::joinable!(game_files -> games (game_id));
 diesel::joinable!(game_genre_maps -> game_genres (genre_id));
 diesel::joinable!(game_genre_maps -> games (game_id));
 diesel::joinable!(game_metadata -> games (game_id));

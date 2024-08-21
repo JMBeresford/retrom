@@ -19,11 +19,16 @@ service LibraryService {
 service PlatformService {
   rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse);
   rpc DeletePlatforms(DeletePlatformsRequest) returns (DeletePlatformsResponse);
+  rpc UpdatePlatforms(UpdatePlatformsRequest) returns (UpdatePlatformsResponse);
 }
 
 service GameService {
   rpc GetGames(GetGamesRequest) returns (GetGamesResponse);
   rpc DeleteGames(DeleteGamesRequest) returns (DeleteGamesResponse);
+  rpc UpdateGames(UpdateGamesRequest) returns (UpdateGamesResponse);
+
+  rpc DeleteGameFiles(DeleteGameFilesRequest) returns (DeleteGameFilesResponse);
+  rpc UpdateGameFiles(UpdateGameFilesRequest) returns (UpdateGameFilesResponse);
 }
 
 service MetadataService {
@@ -95,6 +100,7 @@ message UpdateLibraryMetadataResponse {
 message GetPlatformsRequest {
   repeated int32 ids = 1;
   optional bool with_metadata = 2;
+  optional bool include_deleted = 3;
 }
 
 message GetPlatformsResponse {
@@ -107,6 +113,7 @@ message GetGamesRequest {
   repeated int32 ids = 2;
   optional bool with_metadata = 3;
   optional bool with_files = 4;
+  optional bool include_deleted = 5;
 }
 
 message GetGamesResponse {
@@ -208,15 +215,37 @@ message DeleteLibraryResponse {}
 
 message DeletePlatformsRequest {
   repeated int32 ids = 1;
+  bool delete_from_disk = 2;
 }
 
-message DeletePlatformsResponse {}
+message DeletePlatformsResponse {
+  repeated Platform platforms_deleted = 1;
+}
+
+message UpdatePlatformsRequest {
+  repeated UpdatedPlatform platforms = 1;
+}
+
+message UpdatePlatformsResponse {
+  repeated Platform platforms_updated = 1;
+}
 
 message DeleteGamesRequest {
   repeated int32 ids = 1;
+  bool delete_from_disk = 2;
 }
 
-message DeleteGamesResponse {}
+message DeleteGamesResponse {
+  repeated Game games_deleted = 1;
+}
+
+message UpdateGamesRequest {
+  repeated UpdatedGame games = 1;
+}
+
+message UpdateGamesResponse {
+  repeated Game games_updated = 1;
+}
 
 message CreateClientRequest {
   NewClient client = 1;
@@ -339,4 +368,21 @@ message DeleteDefaultEmulatorProfilesRequest {
 
 message DeleteDefaultEmulatorProfilesResponse {
   repeated DefaultEmulatorProfile default_profiles_deleted = 1;
+}
+
+message DeleteGameFilesRequest {
+  repeated int32 ids = 1;
+  bool delete_from_disk = 2;
+}
+
+message DeleteGameFilesResponse {
+  repeated GameFile game_files_deleted = 1;
+}
+
+message UpdateGameFilesRequest {
+  repeated UpdatedGameFile game_files = 1;
+}
+
+message UpdateGameFilesResponse {
+  repeated GameFile game_files_updated = 1;
 }

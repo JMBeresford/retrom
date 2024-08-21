@@ -20,13 +20,15 @@ import {
 import { UpdateMetadataDialog } from "@/components/update-metadata-dialog";
 import { cn, getFileStub } from "@/lib/utils";
 import { EllipsisVertical, LoaderCircleIcon } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useGameDetail } from "../game-details-context";
-import { useMutation } from "@tanstack/react-query";
 import { useUninstallGame } from "@/mutations/useUninstallGame";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { ActionButton } from "../../../../components/action-button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useDeleteGames } from "@/mutations/useDeleteGames";
+import { useToast } from "@/components/ui/use-toast";
 
 type Modal = (typeof Modal)[number];
 const Modal = ["edit", "delete", "uninstall"] as const;
@@ -142,16 +144,28 @@ function UninstallGameModal() {
 
 function DeleteGameModal() {
   const { game, gameMetadata: metadata } = useGameDetail();
+  const { toast } = useToast();
   const name = metadata?.name || getFileStub(game.path);
+  const [deleteFromDisk, setDeleteFromDisk] = useState(false);
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: async () => {
-      // await retromClient.gameClient.deleteGame(game.id);
-    },
-  });
+  const { mutateAsync: deleteGame, isPending } = useDeleteGames();
+
+  const handleDelete = useCallback(async () => {
+    try {
+      const res = await deleteGame({ ids: [game.id], deleteFromDisk });
+
+      if (!res.gamesDeleted.length) {
+        throw new Error("Failed to delete game");
+      }
+    } catch {
+      toast({
+        title: "Failed to delete game",
+      });
+    }
+  }, [deleteGame, game.id, deleteFromDisk, toast]);
 
   return (
-    <DialogContent>
+    <DialogContent className="max-w-[60ch]">
       <DialogHeader>
         <DialogTitle>Delete Game</DialogTitle>
         <DialogDescription>
@@ -159,28 +173,50 @@ function DeleteGameModal() {
         </DialogDescription>
       </DialogHeader>
 
-      <p>
-        This will remove the game from the database. This will{" "}
-        <strong>not</strong> delete the game from your filesystem.
+      <p className="pb-2">
+        You can either delete the entry from the database or delete the game
+        from the disk. Deleting only the entry will leave your file system as
+        is, but Retrom will ignore the game&apos;s directory moving forward.
       </p>
 
       <DialogFooter>
-        <DialogClose asChild>
-          <Button>Cancel</Button>
-        </DialogClose>
+        <div className="flex items-center justify-between gap-6 w-full">
+          <div className="flex items-top gap-2">
+            <Checkbox
+              id="delete-from-disk"
+              checked={deleteFromDisk}
+              onCheckedChange={(event) => setDeleteFromDisk(!!event)}
+            />
 
-        <Button
-          className="relative"
-          variant="destructive"
-          onClick={() => {
-            mutate();
-          }}
-        >
-          <LoaderCircleIcon
-            className={cn("animate-spin absolute", !isPending && "opacity-0")}
-          />
-          <p className={cn(isPending && "opacity-0")}>Delete</p>
-        </Button>
+            <div className="grid gap-1 5 leading-none">
+              <label htmlFor="delete-from-disk">Delete from disk</label>
+
+              <p className="text-sm text-muted-foreground">
+                This will alter the the file system
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <DialogClose asChild>
+              <Button>Cancel</Button>
+            </DialogClose>
+
+            <Button
+              className="relative"
+              variant="destructive"
+              onClick={handleDelete}
+            >
+              <LoaderCircleIcon
+                className={cn(
+                  "animate-spin absolute",
+                  !isPending && "opacity-0",
+                )}
+              />
+              <p className={cn(isPending && "opacity-0")}>Delete</p>
+            </Button>
+          </div>
+        </div>
       </DialogFooter>
     </DialogContent>
   );

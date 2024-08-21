@@ -1,0 +1,9 @@
+ALTER TABLE "platforms" ADD COLUMN "deleted_at" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE "platforms" ADD COLUMN "is_deleted" BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE "games" ADD COLUMN "deleted_at" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE "games" ADD COLUMN "is_deleted" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "games" ADD COLUMN "default_file_id" INTEGER REFERENCES "game_files"("id") ON DELETE SET NULL;
+
+ALTER TABLE "game_files" ADD COLUMN "deleted_at" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE "game_files" ADD COLUMN "is_deleted" BOOLEAN NOT NULL DEFAULT false;

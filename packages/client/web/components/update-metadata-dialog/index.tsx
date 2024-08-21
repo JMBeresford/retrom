@@ -1,5 +1,10 @@
 import { ComponentProps } from "react";
-import { DialogContent, DialogHeader, DialogOverlay } from "../ui/dialog";
+import {
+  DialogContent,
+  DialogHeader,
+  DialogOverlay,
+  DialogTitle,
+} from "../ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { IgdbTab } from "./igdb-tab";
 import { ManualTab } from "./manual-tab";
@@ -10,7 +15,7 @@ export function UpdateMetadataDialog(props: Props) {
   return (
     <DialogContent {...props}>
       <DialogHeader className="text-2xl font-black">
-        Update Metadata
+        <DialogTitle>Update Metadata</DialogTitle>
       </DialogHeader>
 
       <Tabs defaultValue="igdb">

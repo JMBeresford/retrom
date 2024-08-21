@@ -10,6 +10,9 @@ message Game {
   optional int32 platform_id = 4;
   google.protobuf.Timestamp created_at = 5;
   google.protobuf.Timestamp updated_at = 6;
+  google.protobuf.Timestamp deleted_at = 7;
+  bool is_deleted = 8;
+  optional int32 default_file_id = 9;
 }
 
 message NewGame {
@@ -17,6 +20,9 @@ message NewGame {
   optional int32 platform_id = 2;
   optional google.protobuf.Timestamp created_at = 3;
   optional google.protobuf.Timestamp updated_at = 4;
+  optional google.protobuf.Timestamp deleted_at = 5;
+  bool is_deleted = 6;
+  optional int32 default_file_id = 7;
 }
 
 message UpdatedGame {
@@ -25,4 +31,7 @@ message UpdatedGame {
   optional int32 platform_id = 3;
   optional google.protobuf.Timestamp created_at = 4;
   optional google.protobuf.Timestamp updated_at = 5;
+  optional google.protobuf.Timestamp deleted_at = 6;
+  optional bool is_deleted = 7;
+  optional int32 default_file_id = 8;
 }

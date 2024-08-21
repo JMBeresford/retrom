@@ -58,7 +58,6 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
   const onCreationFormSubmit = useCallback(
     (values: EmulatorSchema) => {
       const emulator = { ...values, clientId };
-      console.log(emulator);
       createEmulators({
         emulators: [emulator],
       });
@@ -250,7 +249,6 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
             type="submit"
             size="icon"
             variant="ghost"
-            onClick={() => console.log(form)}
             disabled={creationPending}
           >
             <LoaderCircleIcon

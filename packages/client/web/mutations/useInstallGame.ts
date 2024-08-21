@@ -20,7 +20,6 @@ export function useInstallGame(game: Game, files: GameFile[]) {
         "install-progress",
         (event: { payload: InstallationProgressUpdate }) => {
           const { progress, gameId } = event.payload;
-          console.log({ event: event.payload });
           if (gameId === game.id) {
             setProgress(progress);
           }

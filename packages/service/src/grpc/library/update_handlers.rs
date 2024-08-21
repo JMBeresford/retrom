@@ -80,6 +80,8 @@ async fn do_update(
             path: path.to_string(),
             created_at: None,
             updated_at: None,
+            deleted_at: None,
+            is_deleted: false,
         })
         .collect();
 
@@ -146,6 +148,9 @@ async fn do_update(
                 platform_id: Some(platform.id),
                 created_at: None,
                 updated_at: None,
+                deleted_at: None,
+                is_deleted: false,
+                default_file_id: None,
             })
             .collect();
 
@@ -223,6 +228,8 @@ async fn do_update(
                     byte_size,
                     created_at: None,
                     updated_at: None,
+                    deleted_at: None,
+                    is_deleted: false,
                 }
             })
             .collect();
