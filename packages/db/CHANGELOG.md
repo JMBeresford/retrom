@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.12](https://github.com/JMBeresford/retrom/compare/retrom-db-v0.0.11...retrom-db-v0.0.12) - 2024-08-21
+
+### Added
+- deletion + renaming of models
+
 ## [0.0.11](https://github.com/JMBeresford/retrom/compare/retrom-db-v0.0.10...retrom-db-v0.0.11) - 2024-08-18
 
 ### Added

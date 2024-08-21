@@ -3735,11 +3735,11 @@ dependencies = [
 
 [[package]]
 name = "retrom"
-version = "0.0.46"
+version = "0.0.47"
 
 [[package]]
 name = "retrom-client"
-version = "0.0.42"
+version = "0.0.43"
 dependencies = [
  "async-compression",
  "dotenvy",
@@ -3765,7 +3765,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-codegen"
-version = "0.0.13"
+version = "0.0.14"
 dependencies = [
  "diesel",
  "prost",
@@ -3784,7 +3784,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-db"
-version = "0.0.11"
+version = "0.0.12"
 dependencies = [
  "async-trait",
  "bb8",
@@ -3832,7 +3832,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service"
-version = "0.0.15"
+version = "0.0.16"
 dependencies = [
  "bb8",
  "bigdecimal",
