@@ -1,6 +1,6 @@
 [package]
 name = "retrom-codegen"
-version = "0.0.13"
+version = "0.0.14"
 description = "Code generation for Retrom"
 authors.workspace = true
 repository.workspace = true
