@@ -150,7 +150,7 @@ export function GameFiles() {
         variant: "destructive",
       });
     }
-  }, [selectedFile, renameValue, updateGameFiles, toast]);
+  }, [selectedFile, renameValue, updateGameFiles, toast, gameFiles]);
 
   const pending =
     deletionStatus === "pending" ||
@@ -164,7 +164,7 @@ export function GameFiles() {
           <CardTitle>Files</CardTitle>
         </CardHeader>
 
-        <CardContent className="grid gap-px w-full grid-flow-col grid-cols-[minmax(0,1fr)_auto]">
+        <CardContent className="grid gap-px w-full grid-flow-col grid-cols-[minmax(0,1fr)_auto] [&_*]:ring-inset">
           <Select
             value={selectedFile}
             onValueChange={setSelectedFile}

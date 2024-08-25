@@ -9,7 +9,7 @@ use retrom_codegen::{
     igdb,
     retrom::{self},
 };
-use tracing::{error, info, instrument, warn, Instrument, Level};
+use tracing::{debug, error, info, instrument, warn, Instrument, Level};
 
 use super::provider::IGDBProvider;
 
@@ -23,7 +23,7 @@ pub async fn match_platform_igdb(
     let name = &platform.path.split('/').last().unwrap_or(&platform.path);
 
     let search = deunicode(name);
-    info!("Searching for platform: {}", search);
+    debug!("Searching for platform: {}", search);
 
     let matches = match search_platforms(provider.clone(), &search).await {
         Ok(igdb_platforms) => igdb_platforms,

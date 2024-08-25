@@ -398,10 +398,7 @@ impl MetadataService for MetadataServiceHandlers {
                 _ => format!("where {};", where_clauses.join(" | ")),
             };
 
-            let limit_query = match query
-                .pagination
-                .and_then(|pagination| Some(pagination.limit))
-            {
+            let limit_query = match query.pagination.map(|pagination| pagination.limit) {
                 Some(Some(limit)) => format!("limit {limit};"),
                 _ => "".to_string(),
             };
@@ -457,7 +454,7 @@ impl MetadataService for MetadataServiceHandlers {
         let request = request.into_inner();
 
         let search_type = request.search_type();
-        let search_clause = match request.search.and_then(|search| Some(search.value)) {
+        let search_clause = match request.search.map(|search| search.value) {
             Some(value) => format!("search {value};"),
             None => "".to_string(),
         };
@@ -472,7 +469,7 @@ impl MetadataService for MetadataServiceHandlers {
             None => "".to_string(),
         };
 
-        let filters_clause = match request.filters.and_then(|filters| Some(filters.filters)) {
+        let filters_clause = match request.filters.map(|filters| filters.filters) {
             Some(filters) => format!(
                 "where {};",
                 filters
@@ -486,12 +483,12 @@ impl MetadataService for MetadataServiceHandlers {
 
         let pagination = request.pagination.as_ref();
 
-        let limit_clause = match pagination.and_then(|pagination| Some(&pagination.limit)) {
+        let limit_clause = match pagination.map(|pagination| &pagination.limit) {
             Some(Some(limit)) => format!("limit {limit};"),
             _ => "".to_string(),
         };
 
-        let offset_clause = match pagination.and_then(|pagination| Some(&pagination.offset)) {
+        let offset_clause = match pagination.map(|pagination| &pagination.offset) {
             Some(Some(offset)) => format!("offset {offset};"),
             _ => "".to_string(),
         };

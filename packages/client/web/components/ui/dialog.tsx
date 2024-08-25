@@ -31,10 +31,23 @@ const Dialog = ({
 }: DialogPrimitive.DialogProps) => {
   const [openState, setOpenState] = React.useState(open || false);
 
+  const openHandler = React.useCallback(
+    (value: boolean) => {
+      setOpenState(value);
+      onOpenChange?.(value);
+    },
+    [onOpenChange],
+  );
+
+  const openValue = React.useMemo(
+    () => (open !== undefined ? open : openState),
+    [openState, open],
+  );
+
   return (
     <DialogPrimitive.Root
-      open={openState}
-      onOpenChange={setOpenState}
+      open={openValue}
+      onOpenChange={openHandler}
       {...props}
     >
       <dialogOpenContext.Provider

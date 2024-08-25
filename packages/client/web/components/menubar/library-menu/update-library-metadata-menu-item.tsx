@@ -39,8 +39,6 @@ export function UpdateMetadataMenuItem() {
           </DialogDescription>
         </DialogHeader>
 
-        <p></p>
-
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="secondary">Cancel</Button>

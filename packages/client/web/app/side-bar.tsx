@@ -21,9 +21,11 @@ import { useGames } from "@/queries/useGames";
 import { Game } from "@/generated/retrom/models/games";
 import { Platform } from "@/generated/retrom/models/platforms";
 import { GameMetadata } from "@/generated/retrom/models/metadata";
+import { useJobProgress } from "@/queries/useJobProgress";
 
 export function SideBar() {
   const searchParams = useSearchParams();
+  const {} = useJobProgress();
 
   const { data: platformData, status: platformStatus } = usePlatforms({
     request: { withMetadata: true },

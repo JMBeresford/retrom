@@ -16,7 +16,6 @@ use tracing::{info, Instrument};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod grpc;
-// mod jobs;
 mod providers;
 mod rest;
 
@@ -41,7 +40,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
     let pool = bb8::Pool::builder()
-        .max_size(15)
+        .max_size(50)
+        .connection_timeout(std::time::Duration::from_secs(5))
         .build(config)
         .await
         .expect("Could not create pool");

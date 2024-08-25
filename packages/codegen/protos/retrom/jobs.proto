@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package retrom;
+
+enum JobStatus {
+  Running = 0;
+  Success = 1;
+  Failure = 2;
+}
+
+message JobProgress {
+  uint32 percent = 1;
+  JobStatus status = 2;
+  string name = 3;
+}

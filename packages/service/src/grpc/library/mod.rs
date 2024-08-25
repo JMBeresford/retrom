@@ -1,13 +1,12 @@
+use super::jobs::job_manager::JobManager;
 use crate::providers::igdb::provider::IGDBProvider;
-use futures::Stream;
 use retrom_codegen::retrom::{
     library_service_server::LibraryService, DeleteLibraryRequest, DeleteLibraryResponse,
     UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdateLibraryRequest,
     UpdateLibraryResponse,
 };
 use retrom_db::Pool;
-use std::{pin::Pin, sync::Arc};
-use tokio_stream::wrappers::ReceiverStream;
+use std::sync::Arc;
 use tonic::{Code, Request, Response, Result, Status};
 use tracing::instrument;
 
@@ -17,24 +16,25 @@ mod update_handlers;
 pub struct LibraryServiceHandlers {
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,
+    job_manager: Arc<JobManager>,
 }
 
 impl LibraryServiceHandlers {
-    pub fn new(db_pool: Arc<Pool>, igdb_client: Arc<IGDBProvider>) -> Self {
+    pub fn new(
+        db_pool: Arc<Pool>,
+        igdb_client: Arc<IGDBProvider>,
+        job_manager: Arc<JobManager>,
+    ) -> Self {
         Self {
             db_pool,
             igdb_client,
+            job_manager,
         }
     }
 }
 
-pub type MetadataResponseStream =
-    Pin<Box<dyn Stream<Item = Result<UpdateLibraryMetadataResponse, Status>> + Send>>;
-
 #[tonic::async_trait]
 impl LibraryService for LibraryServiceHandlers {
-    type UpdateLibraryMetadataStream = MetadataResponseStream;
-
     #[tracing::instrument(skip_all)]
     async fn update_library(
         &self,
@@ -50,15 +50,9 @@ impl LibraryService for LibraryServiceHandlers {
     async fn update_library_metadata(
         &self,
         request: Request<UpdateLibraryMetadataRequest>,
-    ) -> Result<Response<Self::UpdateLibraryMetadataStream>, Status> {
-        let (tx, rx) =
-            tokio::sync::mpsc::channel::<Result<UpdateLibraryMetadataResponse, Status>>(32);
-        let output_stream = ReceiverStream::new(rx);
-
-        match metadata_handlers::update_metadata(self, request.into_inner().overwrite(), tx).await {
-            Ok(_) => Ok(Response::new(
-                Box::pin(output_stream) as MetadataResponseStream
-            )),
+    ) -> Result<Response<UpdateLibraryMetadataResponse>, Status> {
+        match metadata_handlers::update_metadata(self, request.into_inner().overwrite()).await {
+            Ok(_) => Ok(Response::new(UpdateLibraryMetadataResponse {})),
             Err(why) => Err(Status::new(Code::Internal, why)),
         }
     }

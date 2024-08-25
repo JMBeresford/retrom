@@ -5,6 +5,7 @@ import {
   MetadataServiceDefinition,
   LibraryServiceDefinition,
   ClientServiceDefinition,
+  JobServiceDefinition,
 } from "@/generated/retrom/services";
 import { createClient, createChannel } from "nice-grpc-web";
 
@@ -16,6 +17,7 @@ export class RetromClient {
   public metadataClient;
   public libraryClient;
   public clientsClient;
+  public jobClient;
 
   constructor(host: string) {
     this.host = host;
@@ -45,5 +47,7 @@ export class RetromClient {
       ClientServiceDefinition,
       createChannel(host),
     );
+
+    this.jobClient = createClient(JobServiceDefinition, createChannel(host));
   }
 }

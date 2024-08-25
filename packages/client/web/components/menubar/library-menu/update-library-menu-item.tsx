@@ -20,7 +20,7 @@ import { useUpdateLibrary } from "@/mutations/useUpdateLibrary";
 export function UpdateLibraryMenuItem() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { mutate, isPending } = useUpdateLibrary();
+  const { mutateAsync: updateLibrary, isPending } = useUpdateLibrary();
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -46,8 +46,8 @@ export function UpdateLibraryMenuItem() {
 
           <Button
             className="relative"
-            onClick={() => {
-              mutate();
+            onClick={async () => {
+              await updateLibrary();
               setDialogOpen(false);
             }}
           >

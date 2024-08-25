@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package retrom;
 
+import 'retrom/jobs.proto';
 import 'retrom/models/clients.proto';
 import 'retrom/models/emulators.proto';
 import 'retrom/models/game-files.proto';
@@ -12,7 +13,7 @@ import 'retrom/providers/igdb.proto';
 
 service LibraryService {
   rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
-  rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (stream UpdateLibraryMetadataResponse);
+  rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
   rpc DeleteLibrary(DeleteLibraryRequest) returns (DeleteLibraryResponse);
 }
 
@@ -66,6 +67,10 @@ service EmulatorService {
   rpc DeleteDefaultEmulatorProfiles(DeleteDefaultEmulatorProfilesRequest) returns (DeleteDefaultEmulatorProfilesResponse);
 }
 
+service JobService {
+  rpc GetJobs(GetJobsRequest) returns (stream GetJobsResponse);
+}
+
 message UpdateLibraryRequest {}
 
 message UpdateLibraryResponse {
@@ -78,24 +83,7 @@ message UpdateLibraryMetadataRequest {
   optional bool overwrite = 1;
 }
 
-message UpdateLibraryMetadataResponse {
-  message GameMetadataProgress {
-    // map of game_id to metadata
-    repeated int32 game_ids_updated = 1;
-    repeated int32 game_ids_failed = 2;
-    uint32 total_games = 3;
-  }
-
-  message PlatformMetadataProgress {
-    // map of platform_id to metadata
-    repeated int32 platform_ids_updated = 1;
-    repeated int32 platform_ids_failed = 2;
-    uint32 total_platforms = 3;
-  }
-
-  GameMetadataProgress game_metadata_progress = 1;
-  PlatformMetadataProgress platform_metadata_progress = 2;
-}
+message UpdateLibraryMetadataResponse {}
 
 message GetPlatformsRequest {
   repeated int32 ids = 1;
@@ -385,4 +373,10 @@ message UpdateGameFilesRequest {
 
 message UpdateGameFilesResponse {
   repeated GameFile game_files_updated = 1;
+}
+
+message GetJobsRequest {}
+
+message GetJobsResponse {
+  repeated JobProgress jobs = 1;
 }

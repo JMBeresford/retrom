@@ -7,7 +7,7 @@ use retrom_codegen::{
     igdb,
     retrom::{self, NewGameMetadata},
 };
-use tracing::{debug, error, info, instrument, warn, Instrument, Level};
+use tracing::{debug, error, instrument, warn, Level};
 
 use super::provider::IGDBProvider;
 
@@ -56,7 +56,7 @@ pub async fn match_game_igdb(
     name = name.split_whitespace().collect::<Vec<&str>>().join(" ");
 
     let search = deunicode(&name);
-    info!("Matching game: {search}");
+    debug!("Matching game: {search}");
 
     let matches = match search_games(provider.clone(), &search).await {
         Ok(igdb_games) => igdb_games,
@@ -84,34 +84,26 @@ pub async fn match_game_igdb(
     Some(metadata)
 }
 
+#[instrument(skip_all)]
 pub async fn match_games_igdb(
     provider: Arc<IGDBProvider>,
     games: Vec<retrom::Game>,
-    progress_tx: tokio::sync::mpsc::Sender<(i32, Option<NewGameMetadata>)>,
-) {
-    futures::future::join_all(
-        games
-            .into_iter()
-            .map(|game| {
-                let provider = provider.clone();
-                let progress_tx = progress_tx.clone();
-                tokio::spawn(async move {
-                    match match_game_igdb(provider, &game).await {
-                        Some(metadata) => progress_tx
-                            .send((metadata.game_id.unwrap(), Some(metadata)))
-                            .await
-                            .expect("Could not send progress"),
-                        None => progress_tx
-                            .send((game.id, None))
-                            .await
-                            .expect("Could not send progress"),
-                    }
-                })
-            })
-            .map(|future| future.instrument(tracing::info_span!("match_games")))
-            .collect::<Vec<_>>(),
-    )
-    .await;
+) -> Vec<NewGameMetadata> {
+    let mut meta = vec![];
+    let mut join_set = tokio::task::JoinSet::new();
+
+    games.into_iter().for_each(|game| {
+        let provider = provider.clone();
+        join_set.spawn(async move { match_game_igdb(provider, &game).await });
+    });
+
+    while let Some(result) = join_set.join_next().await {
+        if let Some(metadata) = result.ok().flatten() {
+            meta.push(metadata);
+        }
+    }
+
+    meta
 }
 
 #[instrument(level = Level::DEBUG, skip(provider), fields(search_string))]

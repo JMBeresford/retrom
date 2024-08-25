@@ -61,7 +61,7 @@ pub fn get_game_files(pool: Arc<Pool>) -> BoxedFilter<(impl warp::Reply,)> {
                 })
                 .collect();
 
-            let content_length = archive_size(file_descriptors.into_iter());
+            let content_length = archive_size(file_descriptors);
 
             let (w, r) = tokio::io::duplex(4096);
             tokio::spawn(async move {

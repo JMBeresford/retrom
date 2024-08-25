@@ -6,11 +6,14 @@ import { Suspense } from "react";
 import { EmulatorsMenu } from "./emulators-menu";
 import Link from "next/link";
 import { FileMenu } from "./file-menu";
+import { JobsIndicator } from "./jobs-indicator";
 
 export function Menubar() {
   return (
-    <header className={cn("px-3 sticky top-0 z-40 bg-background border-b")}>
-      <MenubarImpl className="border-0 flex items-baseline">
+    <header
+      className={cn("px-3 sticky top-0 z-40 bg-background border-b flex ")}
+    >
+      <MenubarImpl className="border-0 items-stretch">
         <Link
           href="/"
           className="font-black grid place-items-center text-xl h-0 mr-4"
@@ -27,6 +30,10 @@ export function Menubar() {
 
         <EmulatorsMenu />
       </MenubarImpl>
+
+      <div className="ml-auto h-full grid place-items-center">
+        <JobsIndicator className="" />
+      </div>
     </header>
   );
 }
