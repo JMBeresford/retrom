@@ -3,7 +3,7 @@
 import { Image, cn, getFileStub } from "@/lib/utils";
 import { useCallback, useMemo } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Tooltip,
   TooltipContent,
@@ -25,6 +25,7 @@ import { useJobProgress } from "@/queries/useJobProgress";
 
 export function SideBar() {
   const searchParams = useSearchParams();
+  const path = usePathname();
   const {} = useJobProgress();
 
   const { data: platformData, status: platformStatus } = usePlatforms({
@@ -110,7 +111,9 @@ export function SideBar() {
                   <AccordionContent>
                     <ul>
                       {games.map((game) => {
-                        const currentGame = searchParams.get("gameId");
+                        const currentGame = path
+                          .split("games/")?.[1]
+                          ?.split("/")[0];
 
                         const isCurrentGame =
                           currentGame === game.id.toString();
