@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.16](https://github.com/JMBeresford/retrom/compare/retrom-codegen-v0.0.15...retrom-codegen-v0.0.16) - 2024-08-26
+
+### Added
+- dependent bg jobs
+
 ## [0.0.15](https://github.com/JMBeresford/retrom/compare/retrom-codegen-v0.0.14...retrom-codegen-v0.0.15) - 2024-08-25
 
 ### Added

@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.18](https://github.com/JMBeresford/retrom/compare/retrom-service-v0.0.17...retrom-service-v0.0.18) - 2024-08-26
+
+### Added
+- dependent bg jobs
+
+### Fixed
+- renaming path entries
+
 ## [0.0.17](https://github.com/JMBeresford/retrom/compare/retrom-service-v0.0.16...retrom-service-v0.0.17) - 2024-08-25
 
 ### Added
