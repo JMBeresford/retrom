@@ -107,7 +107,15 @@ impl PlatformService for PlatformServiceHandlers {
 
                 if let Ok(current_platform) = current_platform {
                     let old_path = PathBuf::from(&current_platform.path);
-                    let new_path = PathBuf::from(updated_path);
+                    let mut new_path = PathBuf::from(updated_path);
+                    let sanitized_fname = new_path
+                        .file_name()
+                        .and_then(|f| f.to_str())
+                        .map(sanitize_filename::sanitize);
+
+                    if let Some(sanitized_fname) = sanitized_fname {
+                        new_path.set_file_name(sanitized_fname);
+                    }
 
                     let is_rename = old_path != new_path;
                     let can_rename = old_path.exists() && !new_path.exists();

@@ -44,3 +44,4 @@ tokio-retry = { workspace = true }
 futures-util = "0.3.30"
 tokio-stream = { workspace = true }
 thiserror = { workspace = true }
+sanitize-filename = { workspace = true }

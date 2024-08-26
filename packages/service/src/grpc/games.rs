@@ -153,7 +153,7 @@ impl GameService for GameServiceHandlers {
         Ok(Response::new(response))
     }
 
-    #[tracing::instrument(skip(self, request), fields(request = ?request))]
+    #[tracing::instrument(skip_all)]
     async fn update_games(
         &self,
         request: Request<retrom::UpdateGamesRequest>,
@@ -177,11 +177,22 @@ impl GameService for GameServiceHandlers {
 
                 if let Ok(current_game) = current_game {
                     let old_path = PathBuf::from(current_game.path);
-                    let new_path = PathBuf::from(updated_path);
+                    let mut new_path = PathBuf::from(updated_path);
+                    let sanitized_fname = new_path
+                        .file_name()
+                        .and_then(|os_str| os_str.to_str())
+                        .map(sanitize_filename::sanitize);
+
+                    if let Some(sanitized_fname) = sanitized_fname {
+                        new_path.set_file_name(sanitized_fname);
+                    }
 
                     let is_rename = old_path.file_name() != new_path.file_name();
                     let can_rename = old_path.exists() && !new_path.exists();
                     let paths_safe = old_path.parent() == new_path.parent();
+
+                    tracing::info!("updated path {:?}", updated_path);
+                    tracing::info!("new path {:?}", new_path);
 
                     if is_rename && can_rename && paths_safe {
                         if let Err(why) = tokio::fs::rename(&old_path, &new_path).await {
