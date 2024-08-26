@@ -35,7 +35,7 @@ export function UpdateLibraryMenuItem() {
           <DialogTitle>Update Library</DialogTitle>
           <DialogDescription>
             Starts the update process to populate platforms and games that have
-            been added to the filesystem since the last update.
+            been added to the service&apos;s filesystem since the last update.
           </DialogDescription>
         </DialogHeader>
 

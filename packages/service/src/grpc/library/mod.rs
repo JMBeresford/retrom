@@ -13,6 +13,7 @@ use tracing::instrument;
 mod delete_handlers;
 mod metadata_handlers;
 mod update_handlers;
+
 pub struct LibraryServiceHandlers {
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,

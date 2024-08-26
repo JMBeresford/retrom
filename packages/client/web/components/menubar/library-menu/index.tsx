@@ -5,7 +5,7 @@ import {
   MenubarSeparator,
 } from "@/components/ui/menubar";
 import { UpdateLibraryMenuItem } from "./update-library-menu-item";
-import { UpdateMetadataMenuItem } from "./update-library-metadata-menu-item";
+import { DownloadMetadataMenuItem } from "./download-metadata-menu-item";
 import { DeleteLibraryMenuItem } from "./delete-library-menu-item";
 
 export async function LibraryMenu() {
@@ -18,7 +18,7 @@ export async function LibraryMenu() {
       <MenubarContent>
         <UpdateLibraryMenuItem />
 
-        <UpdateMetadataMenuItem />
+        <DownloadMetadataMenuItem />
 
         <MenubarSeparator />
 

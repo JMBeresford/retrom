@@ -6,6 +6,7 @@ enum JobStatus {
   Running = 0;
   Success = 1;
   Failure = 2;
+  Idle = 3;
 }
 
 message JobProgress {

@@ -17,7 +17,7 @@ import { LoaderCircleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUpdateLibraryMetadata } from "@/mutations/useUpdateLibraryMetadata";
 
-export function UpdateMetadataMenuItem() {
+export function DownloadMetadataMenuItem() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const { mutate, isPending } = useUpdateLibraryMetadata();
@@ -26,16 +26,16 @@ export function UpdateMetadataMenuItem() {
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <MenubarItem onSelect={(e) => e.preventDefault()}>
-          Update Library Metadata
+          Download Metadata
         </MenubarItem>
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Update Library Metadata</DialogTitle>
+          <DialogTitle>Download Metadata</DialogTitle>
           <DialogDescription>
             Starts the metadata update process to populate missing metadata for
-            platforms and games.
+            all platforms and games.
           </DialogDescription>
         </DialogHeader>
 

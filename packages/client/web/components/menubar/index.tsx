@@ -7,6 +7,7 @@ import { EmulatorsMenu } from "./emulators-menu";
 import Link from "next/link";
 import { FileMenu } from "./file-menu";
 import { JobsIndicator } from "./jobs-indicator";
+import { DesktopOnly } from "@/lib/env";
 
 export function Menubar() {
   return (
@@ -28,7 +29,9 @@ export function Menubar() {
           <PlatformsMenu />
         </Suspense>
 
-        <EmulatorsMenu />
+        <DesktopOnly>
+          <EmulatorsMenu />
+        </DesktopOnly>
       </MenubarImpl>
 
       <div className="ml-auto h-full grid place-items-center">
