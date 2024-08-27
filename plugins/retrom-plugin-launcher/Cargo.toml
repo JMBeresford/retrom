@@ -1,6 +1,6 @@
 [package]
 name = "retrom-plugin-launcher"
-version = "0.0.13"
+version.workspace = true
 authors.workspace = true
 repository.workspace = true
 license.workspace = true

@@ -1,6 +1,6 @@
 [package]
 name = "retrom-service"
-version = "0.0.18"
+version.workspace = true
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
