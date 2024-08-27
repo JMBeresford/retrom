@@ -3,16 +3,6 @@ resolver = "2"
 members = ["./packages/*", "./plugins/*"]
 exclude = ["**/node_modules"]
 
-# [package]
-# name = "retrom"
-# description = "Retrom is a centralized game library/collection management service with a focus on emulation."
-# version.workspace = true
-# edition.workspace = true
-# authors.workspace = true
-# license.workspace = true
-# readme.workspace = true
-# repository.workspace = true
-
 
 [workspace.package]
 edition = "2021"
