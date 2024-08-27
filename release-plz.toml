@@ -7,7 +7,7 @@ semver_check = false
 publish_no_verify = true
 
 [[package]]
-name = "retrom-server"
+name = "retrom-service"
 changelog_update = true
 changelog_path = "./CHANGELOG.md"
 changelog_include = ["retrom-client"]
