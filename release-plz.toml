@@ -1,6 +1,7 @@
 [workspace]
 changelog_update = false
 git_release_enable = false
+git_tag_enable = false
 release_always = false
 semver_check = false
 publish_no_verify = true
@@ -8,6 +9,7 @@ publish_no_verify = true
 [[package]]
 name = "retrom"
 git_release_enable = true
+git_tag_enable = true
 
 [[package]]
 name = "retrom-client"
