@@ -4,16 +4,13 @@ git_tag_enable = false
 release_always = false
 semver_check = false
 publish_no_verify = true
-changelog_path = "./CHANGELOG.md"
 changelog_update = false
 
 [[package]]
-name = "retrom-client"
-changelog_update = true
-
-[[package]]
 name = "retrom-service"
+changelog_path = "./CHANGELOG.md"
 changelog_update = true
+changelog_include = ['retrom-client']
 git_release_enable = true
 git_tag_enable = true
 git_release_name = "retrom-v{{ version }}"
