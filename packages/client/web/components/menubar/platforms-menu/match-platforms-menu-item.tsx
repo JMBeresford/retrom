@@ -10,7 +10,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogOverlay,
   DialogTitle,
   DialogTrigger,
 } from "../../ui/dialog";
@@ -226,6 +225,7 @@ export function MatchPlatformsMenuItem() {
     }
   }, [
     allIgdbPlatforms,
+    defaultSelections,
     selections,
     updateMetadata,
     renameDirectories,

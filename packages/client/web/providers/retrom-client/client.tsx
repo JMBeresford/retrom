@@ -6,18 +6,20 @@ import {
   LibraryServiceDefinition,
   ClientServiceDefinition,
   JobServiceDefinition,
+  ServerServiceDefinition,
 } from "@/generated/retrom/services";
 import { createClient, createChannel } from "nice-grpc-web";
 
 export class RetromClient {
   readonly host: string;
-  public gameClient;
-  public platformClient;
-  public emulatorClient;
-  public metadataClient;
-  public libraryClient;
-  public clientsClient;
-  public jobClient;
+  readonly gameClient;
+  readonly platformClient;
+  readonly emulatorClient;
+  readonly metadataClient;
+  readonly libraryClient;
+  readonly clientsClient;
+  readonly serverClient;
+  readonly jobClient;
 
   constructor(host: string) {
     this.host = host;
@@ -45,6 +47,11 @@ export class RetromClient {
 
     this.clientsClient = createClient(
       ClientServiceDefinition,
+      createChannel(host),
+    );
+
+    this.serverClient = createClient(
+      ServerServiceDefinition,
       createChannel(host),
     );
 

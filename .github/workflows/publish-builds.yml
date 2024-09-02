@@ -140,3 +140,4 @@ jobs:
           releaseId: ${{ github.event.release.id }}
           tagName: ${{ github.event.release.tag_name }}
           args: ${{ matrix.args }}
+          updaterJsonPreferNsis: true

@@ -10,6 +10,7 @@ import 'retrom/models/games.proto';
 import 'retrom/models/metadata.proto';
 import 'retrom/models/platforms.proto';
 import 'retrom/providers/igdb.proto';
+import 'retrom/server/server-info.proto';
 
 service LibraryService {
   rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
@@ -49,6 +50,10 @@ service ClientService {
   rpc GetClients(GetClientsRequest) returns (GetClientsResponse);
   rpc UpdateClients(UpdateClientsRequest) returns (UpdateClientsResponse);
   rpc DeleteClients(DeleteClientsRequest) returns (DeleteClientsResponse);
+}
+
+service ServerService {
+  rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
 }
 
 service EmulatorService {
@@ -266,6 +271,12 @@ message DeleteClientsRequest {
 
 message DeleteClientsResponse {
   repeated Client clients_deleted = 1;
+}
+
+message GetServerInfoRequest {}
+
+message GetServerInfoResponse {
+  ServerInfo server_info = 1;
 }
 
 message CreateEmulatorsRequest {

@@ -2,10 +2,14 @@
 
 import { PropsWithChildren, ReactNode } from "react";
 
-export const IS_DESKTOP =
+const IS_DESKTOP =
   typeof window !== "undefined"
     ? "__TAURI__" in window || "__TAURI_INTERNALS__" in window
     : undefined;
+
+export function isDesktop() {
+  return IS_DESKTOP;
+}
 
 export function DesktopOnly(props: PropsWithChildren) {
   return IS_DESKTOP ? props.children : null;

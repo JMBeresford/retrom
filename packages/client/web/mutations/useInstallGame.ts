@@ -4,7 +4,7 @@ import { GameFile } from "@/generated/retrom/models/game-files";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 import { UnlistenFn } from "@tauri-apps/api/event";
-import { getCurrent } from "@tauri-apps/api/webviewWindow";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "react";
 
 export function useInstallGame(game: Game, files: GameFile[]) {
@@ -12,7 +12,7 @@ export function useInstallGame(game: Game, files: GameFile[]) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const window = getCurrent();
+    const window = getCurrentWebviewWindow();
     let unlisten: UnlistenFn;
 
     async function listen() {

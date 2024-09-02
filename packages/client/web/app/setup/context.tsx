@@ -1,6 +1,6 @@
 "use client";
 
-import { IS_DESKTOP } from "@/lib/env";
+import { isDesktop } from "@/lib/env";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useMemo, useState } from "react";
 
@@ -26,7 +26,7 @@ export function useSetupModal() {
 }
 
 const nextStepTransitions: Record<Step, Step | undefined> = {
-  "server-host": IS_DESKTOP ? "client-name" : "confirm",
+  "server-host": isDesktop() ? "client-name" : "confirm",
   "client-name": "confirm",
   confirm: "done",
   done: undefined,
@@ -35,7 +35,7 @@ const nextStepTransitions: Record<Step, Step | undefined> = {
 const previousStepTransitions: Record<Step, Step | undefined> = {
   "server-host": undefined,
   "client-name": "server-host",
-  confirm: IS_DESKTOP ? "client-name" : "server-host",
+  confirm: isDesktop() ? "client-name" : "server-host",
   done: undefined,
 };
 

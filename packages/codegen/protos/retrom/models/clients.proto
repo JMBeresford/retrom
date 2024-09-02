@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package retrom;
 
-import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 message Client {

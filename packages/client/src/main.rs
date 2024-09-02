@@ -38,6 +38,7 @@ pub async fn main() {
         .init();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(RetromHostInfo {
             host_name,
             host,

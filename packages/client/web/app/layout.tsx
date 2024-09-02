@@ -15,6 +15,7 @@ import { RetromClientProvider } from "@/providers/retrom-client";
 import { QueryClientProvider } from "@/providers/query-client";
 import { Suspense } from "react";
 import { ConfigProvider } from "@/providers/config";
+import { Prompts } from "@/components/prompts";
 
 const exo2 = Exo_2({
   weight: "variable",
@@ -72,6 +73,8 @@ export default async function RootLayout(
                     </ResizablePanel>
                   </ResizablePanelGroup>
                 </div>
+
+                <Prompts />
                 <Toaster />
               </QueryClientProvider>
             </RetromClientProvider>

@@ -4,7 +4,7 @@ modules:
   - path: packages/codegen/protos
 lint:
   use:
-    - DEFAULT
+    - MINIMAL
   ignore:
     - packages/codegen/protos/igdb.proto
 breaking:

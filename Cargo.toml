@@ -13,7 +13,7 @@ readme = "./README.md"
 repository = "https://github.com/JMBeresford/retrom"
 
 [workspace.dependencies]
-tauri = { version = "2.0.0-beta", features = ["tracing"] }
+tauri = { version = "2.0.0-rc.8", features = ["tracing"] }
 diesel = { version = "^2.2.0", features = [
   "serde_json",
   "postgres",

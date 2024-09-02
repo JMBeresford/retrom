@@ -2,7 +2,9 @@
   "identifier": "migrated",
   "description": "permissions that were migrated from v1",
   "local": true,
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:path:default",
     "core:event:default",
@@ -40,6 +42,7 @@
     "dialog:allow-open",
     "launcher:allow-play-game",
     "launcher:allow-stop-game",
-    "launcher:allow-get-game-play-status"
+    "launcher:allow-get-game-play-status",
+    "updater:default"
   ]
 }

@@ -10,7 +10,8 @@ use retrom_codegen::retrom::{
     client_service_server::ClientServiceServer, emulator_service_server::EmulatorServiceServer,
     game_service_server::GameServiceServer, job_service_server::JobServiceServer,
     library_service_server::LibraryServiceServer, metadata_service_server::MetadataServiceServer,
-    platform_service_server::PlatformServiceServer, FILE_DESCRIPTOR_SET,
+    platform_service_server::PlatformServiceServer, server_service_server::ServerServiceServer,
+    FILE_DESCRIPTOR_SET,
 };
 use retrom_db::Pool;
 use tonic::transport::{server::Routes, Server};
@@ -24,6 +25,7 @@ pub mod jobs;
 pub mod library;
 pub mod metadata;
 pub mod platforms;
+pub mod server;
 
 pub fn grpc_service(db_pool: Arc<Pool>) -> Routes {
     let igdb_client = Arc::new(IGDBProvider::new());
@@ -52,6 +54,8 @@ pub fn grpc_service(db_pool: Arc<Pool>) -> Routes {
     let client_service =
         ClientServiceServer::new(clients::ClientServiceHandlers::new(db_pool.clone()));
 
+    let server_service = ServerServiceServer::new(server::ServerServiceHandlers::new());
+
     let emulator_service =
         EmulatorServiceServer::new(EmulatorServiceHandlers::new(db_pool.clone()));
 
@@ -66,6 +70,7 @@ pub fn grpc_service(db_pool: Arc<Pool>) -> Routes {
         .add_service(tonic_web::enable(platform_service))
         .add_service(tonic_web::enable(metadata_service))
         .add_service(tonic_web::enable(client_service))
+        .add_service(tonic_web::enable(server_service))
         .add_service(tonic_web::enable(emulator_service))
         .add_service(tonic_web::enable(job_service))
         .into_service()

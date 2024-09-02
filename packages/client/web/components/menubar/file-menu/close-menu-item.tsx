@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { getCurrent } from "@tauri-apps/api/webviewWindow";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,10 @@ export function CloseMenuItem() {
           <Button
             variant="destructive"
             onClick={() =>
-              getCurrent().close().then(console.log).catch(console.error)
+              getCurrentWebviewWindow()
+                .close()
+                .then(console.log)
+                .catch(console.error)
             }
           >
             Close

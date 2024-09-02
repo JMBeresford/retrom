@@ -108,7 +108,6 @@ impl JobManager {
             .collect::<Vec<_>>();
 
         let job_progress = self.job_progress.clone();
-        let name2 = name.clone();
         let mut maybe_wait_ids = maybe_wait_ids.clone();
 
         tokio::spawn(
