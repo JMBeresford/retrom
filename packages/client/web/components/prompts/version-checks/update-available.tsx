@@ -21,6 +21,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { ToastAction } from "@/components/ui/toast";
+import Markdown from "react-markdown";
+import classes from "./markdown.module.scss";
 
 type Progress = {
   downloaded: number;
@@ -126,13 +128,15 @@ export function UpdateAvailable() {
 
 function Changelog({ body }: { body?: string }) {
   return (
-    <ScrollArea className="h-full max-h-[65dvh]">
-      <h3 className="font-semibold text-lg">Changelog</h3>
-
-      <p className="text-muted-foreground">
-        {body || "No changelog for this release"}
-      </p>
-    </ScrollArea>
+    <div className="py-2">
+      <ScrollArea className="h-full max-h-[65dvh] p-2 border bg-muted rounded">
+        {body ? (
+          <Markdown className={classes.markdown}>{body}</Markdown>
+        ) : (
+          <p className="text-muted italic">No changelog for this release</p>
+        )}
+      </ScrollArea>
+    </div>
   );
 }
 
