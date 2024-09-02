@@ -20,6 +20,7 @@ import { versionToString } from "./utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { ToastAction } from "@/components/ui/toast";
 
 type Progress = {
   downloaded: number;
@@ -101,7 +102,7 @@ export function UpdateAvailable() {
           {progress.total === undefined ? (
             <>
               <DialogClose asChild>
-                <Button>Close</Button>
+                <Button variant="secondary">Close</Button>
               </DialogClose>
 
               <Button onClick={handleUpdate}>Update</Button>
@@ -126,9 +127,11 @@ export function UpdateAvailable() {
 function Changelog({ body }: { body?: string }) {
   return (
     <ScrollArea className="h-full max-h-[65dvh]">
-      <h3>Changelog</h3>
+      <h3 className="font-semibold text-lg">Changelog</h3>
 
-      <p>{body || "No changelog for this release"}</p>
+      <p className="text-muted-foreground">
+        {body || "No changelog for this release"}
+      </p>
     </ScrollArea>
   );
 }
@@ -146,9 +149,11 @@ function InnerToast() {
       duration: Infinity,
       description: "A new version of Retrom is available.",
       action: (
-        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-          Update
-        </Button>
+        <ToastAction asChild altText="show update dialog">
+          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+            Update
+          </Button>
+        </ToastAction>
       ),
     });
 

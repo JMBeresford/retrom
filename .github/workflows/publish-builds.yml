@@ -140,6 +140,7 @@ jobs:
           projectPath: packages/client
           tauriScript: pnpm tauri
           releaseId: ${{ github.event.release.id }}
+          releaseBody: ${{ github.event.release.body }}
           tagName: ${{ github.event.release.tag_name }}
           args: ${{ matrix.args }}
           updaterJsonPreferNsis: true

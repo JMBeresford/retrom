@@ -19,6 +19,7 @@ import { versionCompare, versionToString } from "./utils";
 import { Label } from "@/components/ui/label";
 import { Code } from "@/components/ui/code";
 import { Separator } from "@/components/ui/separator";
+import { ToastAction } from "@/components/ui/toast";
 
 export function ServerMismatch() {
   const { data: serverQuery, status: serverStatus } = useServerInfo();
@@ -89,9 +90,11 @@ function InnerToast() {
       title: "Server Version Mismatch",
       description: "The server is running a different version of Retrom.",
       action: (
-        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-          Resolve
-        </Button>
+        <ToastAction asChild altText="show version resolution dialog">
+          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+            Resolve
+          </Button>
+        </ToastAction>
       ),
     });
 
