@@ -143,6 +143,7 @@ function InnerToast() {
     dismiss && dismiss();
     const toastInfo = toast({
       title: "Update Available",
+      duration: Infinity,
       description: "A new version of Retrom is available.",
       action: (
         <Button variant="outline" size="sm" onClick={() => setOpen(true)}>

@@ -2,7 +2,7 @@
   "name": "retrom-client",
   "type": "module",
   "scripts": {
-    "dev": "tauri dev --no-watch",
+    "dev": "NEXT_PUBLIC_IS_DESKTOP=true tauri dev --no-watch",
     "prepareNode": "node ./prepare-node.js",
     "build": "tauri build --config tauri.build.conf.json"
   },

@@ -1,6 +1,6 @@
 import { parseVersion } from "@/components/prompts/version-checks/utils";
 import { Version } from "@/generated/retrom/server/server-info";
-import { isDesktop } from "@/lib/env";
+import { checkIsDesktop } from "@/lib/env";
 import { readLocalCargoToml } from "@/lib/node-utils";
 import { DefaultError, useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
@@ -13,7 +13,7 @@ export function useClientVersion<Err = DefaultError, Data = FnData>(
   const queryOpts: UseQueryOptions<FnData, Err, Data> = {
     ...opts,
     queryKey: ["client-version"],
-    queryFn: isDesktop()
+    queryFn: checkIsDesktop()
       ? async () => parseVersion(await getVersion())
       : async () => {
           if (process.env.NODE_ENV === "development") {

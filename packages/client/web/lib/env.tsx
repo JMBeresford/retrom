@@ -2,26 +2,24 @@
 
 import { PropsWithChildren, ReactNode } from "react";
 
-const IS_DESKTOP =
-  typeof window !== "undefined"
-    ? "__TAURI__" in window || "__TAURI_INTERNALS__" in window
-    : undefined;
-
-export function isDesktop() {
-  return IS_DESKTOP;
+export function checkIsDesktop() {
+  return (
+    process.env.IS_DESKTOP !== undefined ||
+    process.env.NEXT_PUBLIC_IS_DESKTOP !== undefined
+  );
 }
 
 export function DesktopOnly(props: PropsWithChildren) {
-  return IS_DESKTOP ? props.children : null;
+  return checkIsDesktop() ? props.children : <></>;
 }
 
 export function WebOnly(props: PropsWithChildren) {
-  return IS_DESKTOP ? null : props.children;
+  return !checkIsDesktop() ? props.children : <></>;
 }
 
 export function PlatformDependent(props: {
   desktop?: ReactNode;
   web?: ReactNode;
 }) {
-  return IS_DESKTOP ? props.desktop : props.web;
+  return checkIsDesktop() ? props.desktop : props.web;
 }

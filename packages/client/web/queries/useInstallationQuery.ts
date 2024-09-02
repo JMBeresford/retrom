@@ -1,6 +1,6 @@
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { Game } from "@/generated/retrom/models/games";
-import { isDesktop } from "@/lib/env";
+import { checkIsDesktop } from "@/lib/env";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 import { UnlistenFn } from "@tauri-apps/api/event";
@@ -11,7 +11,7 @@ export function useInstallationQuery(game: Game) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!isDesktop()) return;
+    if (!checkIsDesktop()) return;
 
     const window = getCurrentWebviewWindow();
     let unlisten: UnlistenFn;
@@ -39,7 +39,7 @@ export function useInstallationQuery(game: Game) {
   const query = useQuery({
     queryFn: async () => {
       try {
-        if (!isDesktop()) return InstallationStatus.UNRECOGNIZED;
+        if (!checkIsDesktop()) return InstallationStatus.UNRECOGNIZED;
 
         return await invoke<InstallationStatus>(
           "plugin:installer|get_game_installation_status",

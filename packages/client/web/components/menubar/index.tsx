@@ -25,9 +25,7 @@ export function Menubar() {
         <FileMenu />
 
         <LibraryMenu />
-        <Suspense fallback={null}>
-          <PlatformsMenu />
-        </Suspense>
+        <PlatformsMenu />
 
         <DesktopOnly>
           <EmulatorsMenu />

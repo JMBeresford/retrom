@@ -5,7 +5,6 @@ import {
 } from "@/components/ui/menubar";
 import { ManageEmulatorsMenuItem } from "./manage-emulators";
 import { ManageProfilesMenuItem } from "./manage-profiles";
-import { DesktopOnly } from "@/lib/env";
 
 export async function EmulatorsMenu() {
   return (
@@ -17,9 +16,7 @@ export async function EmulatorsMenu() {
       <MenubarContent>
         <ManageEmulatorsMenuItem />
 
-        <DesktopOnly>
-          <ManageProfilesMenuItem />
-        </DesktopOnly>
+        <ManageProfilesMenuItem />
       </MenubarContent>
     </MenubarMenu>
   );
