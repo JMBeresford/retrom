@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.61](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.60...retrom-client-v0.0.61) - 2024-09-03
+
+### Fixed
+- desktop env flag
+
 ## [0.0.59](https://github.com/JMBeresford/retrom/compare/retrom-client-v0.0.58...retrom-client-v0.0.59) - 2024-09-03
 
 ### Fixed
