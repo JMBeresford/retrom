@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:desktop": "NEXT_PUBLIC_IS_DESKTOP=true next build",
     "start": "next start",
     "lint": "next lint"
   },

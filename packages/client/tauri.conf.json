@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "NEXT_PUBLIC_IS_DESKTOP=true pnpm --filter=web build && pnpm prepareNode",
+    "beforeBuildCommand": "pnpm --shell-emulator --filter=web build:desktop && pnpm prepareNode",
     "beforeDevCommand": "pnpm --filter=web dev",
     "frontendDist": "http://localhost:3000",
     "devUrl": "http://localhost:3000"
