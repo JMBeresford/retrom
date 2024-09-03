@@ -1,5 +1,6 @@
 {
   "name": "retrom-client",
+  "description": "The tauri wrapper for the retrom client",
   "type": "module",
   "scripts": {
     "dev": "NEXT_PUBLIC_IS_DESKTOP=true tauri dev --no-watch",
