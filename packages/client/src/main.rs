@@ -53,6 +53,7 @@ pub async fn main() {
         }))
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(retrom_plugin_installer::init())
         .plugin(retrom_plugin_launcher::init().await)

@@ -21,6 +21,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { ToastAction } from "@/components/ui/toast";
 import Markdown from "react-markdown";
 import classes from "./markdown.module.scss";
+import { LoaderCircleIcon } from "lucide-react";
 
 type Progress = {
   downloaded: number;
@@ -31,32 +32,19 @@ type Progress = {
 export function UpdateAvailable() {
   const { data: clientVersion } = useClientVersion();
   const { data: update } = useUpdateCheck();
-  const [progress, setProgress] = useState<Progress>({
-    downloaded: 0,
-    total: undefined,
-    done: false,
-  });
+  const [progress, setProgress] = useState<Progress | undefined>(undefined);
 
   const handleUpdate = useCallback(async () => {
-    if (!update) {
+    if (!update?.available) {
       return;
     }
 
-    const { downloadAndInstall } = update;
-
-    await downloadAndInstall((event) => {
+    update.downloadAndInstall((event) => {
       switch (event.event) {
-        case "Started": {
-          setProgress({
-            downloaded: 0,
-            total: event.data.contentLength,
-            done: false,
-          });
-          break;
-        }
-
         case "Progress": {
           setProgress((prev) => {
+            if (!prev) return undefined;
+
             const { downloaded } = prev;
 
             return {
@@ -66,16 +54,28 @@ export function UpdateAvailable() {
           });
           break;
         }
-        case "Finished": {
-          setProgress((prev) => ({
-            ...prev,
-            done: true,
-          }));
-        }
+
+        case "Finished":
+          {
+            setProgress((prev) => {
+              if (!prev) return undefined;
+
+              return {
+                ...prev,
+                done: true,
+              };
+            });
+          }
+
+          break;
       }
     });
 
-    await relaunch();
+    setProgress({
+      downloaded: 0,
+      total: undefined,
+      done: false,
+    });
   }, [update, setProgress]);
 
   if (!update?.available || !clientVersion) {
@@ -99,7 +99,7 @@ export function UpdateAvailable() {
         <Changelog body={update.body} />
 
         <DialogFooter>
-          {progress.total === undefined ? (
+          {progress === undefined ? (
             <>
               <DialogClose asChild>
                 <Button variant="secondary">Close</Button>
@@ -113,10 +113,14 @@ export function UpdateAvailable() {
               <Button onClick={relaunch}>Restart</Button>
             </>
           ) : (
-            <div className="flex items-stretch gap-2">
-              <p>Updating</p>
-              <Progress value={progress.downloaded} max={progress.total} />
-            </div>
+            <>
+              <Button disabled variant="secondary">
+                Close
+              </Button>
+              <Button disabled>
+                <LoaderCircleIcon className="animate-spin" />
+              </Button>
+            </>
           )}
         </DialogFooter>
       </DialogContent>
