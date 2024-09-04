@@ -24,8 +24,6 @@ COPY --from=deps /app/. ./
 
 RUN corepack enable pnpm && pnpm --filter web build
 
-ENV NEXT_TELEMETRY_DISABLED=1
-
 FROM base AS runner
 WORKDIR /app
 
@@ -41,12 +39,10 @@ RUN addgroup --system --gid $GID retrom
 RUN adduser --system --uid $UID retrom
 
 
-COPY --from=builder --chown=retrom:retrom /app/packages/client/web/.next/standalone ./
-COPY --from=builder --chown=retrom:retrom /app/packages/client/web/public ./packages/client/web/public
-COPY --from=builder --chown=retrom:retrom /app/packages/client/web/.next/static ./packages/client/web/.next/static
+COPY --from=builder --chown=retrom:retrom /app/packages/client/web/dist ./dist
 
 USER retrom
 
 EXPOSE $PORT
 
-CMD HOSTNAME="0.0.0.0" node packages/client/web/server.js
+CMD npx vite preview --host --port $PORT

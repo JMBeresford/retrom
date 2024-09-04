@@ -17,7 +17,7 @@
     "@tauri-apps/api": "2.0.0-rc.4",
     "@tauri-apps/plugin-fs": "2.0.0-beta.5",
     "@tauri-apps/plugin-upload": "2.0.0-beta.6",
-    "typescript": "^5.5"
+    "typescript": "^5.5.3"
   },
   "packageManager": "pnpm@9.5.0"
 }
