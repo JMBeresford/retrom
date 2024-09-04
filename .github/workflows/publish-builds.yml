@@ -41,7 +41,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for
+      - name: Extract metadata for images
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
@@ -64,7 +64,7 @@ jobs:
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
-  build-tauri:
+  build-desktop-clients:
     permissions:
       contents: write
     strategy:
@@ -73,7 +73,7 @@ jobs:
         include:
           - platform: "macos-latest" # for Arm based macs (M1 and above).
             args: "--target aarch64-apple-darwin --config tauri.build.conf.json"
-          - platform: "macos-13" # for Intel based macs.
+          - platform: "macos-latest" # for Intel based macs.
             args: "--target x86_64-apple-darwin --config tauri.build.conf.json"
           - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
             args: "--config tauri.build.conf.json"
@@ -124,7 +124,7 @@ jobs:
           choco install -y postgresql
 
       - name: install dependencies (macos only)
-        if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-13' # This must match the platform value defined above.
+        if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
         run: |
           brew install libpq && brew link --force libpq
 
@@ -136,7 +136,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          NEXT_PUBLIC_IS_DESKTOP: true
+          VITE_IS_DESKTOP: true
         with:
           projectPath: packages/client
           tauriScript: pnpm tauri

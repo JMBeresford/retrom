@@ -1,9 +1,9 @@
 {
   "$schema": "../../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "pnpm --shell-emulator --filter=web build:desktop && pnpm prepareNode",
+    "beforeBuildCommand": "pnpm --shell-emulator --filter=web build:desktop",
     "beforeDevCommand": "pnpm --filter=web dev",
-    "frontendDist": "http://localhost:3000",
+    "frontendDist": "./web/dist",
     "devUrl": "http://localhost:3000"
   },
   "bundle": {
@@ -50,10 +50,10 @@
       {
         "label": "main",
         "fullscreen": false,
-        "height": 600,
+        "height": 720,
         "resizable": true,
         "title": "Retrom",
-        "width": 800
+        "width": 1280
       }
     ],
     "security": {

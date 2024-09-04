@@ -1,15 +1,17 @@
 {
   "name": "web",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "build:desktop": "NEXT_PUBLIC_IS_DESKTOP=true next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:desktop": "tsc -b && VITE_IS_DESKTOP=true vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
+    "protobufjs": "^7.2.6",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-collapsible": "^1.0.3",
@@ -27,6 +29,7 @@
     "@radix-ui/react-toast": "^1.1.5",
     "@radix-ui/react-tooltip": "^1.0.7",
     "@tanstack/react-query": "^5.40.0",
+    "@tanstack/react-router": "^1.52.5",
     "@tauri-apps/api": "2.0.0-beta.13",
     "@tauri-apps/plugin-dialog": "2.0.0-beta.5",
     "@tauri-apps/plugin-fs": "workspace:*",
@@ -40,13 +43,10 @@
     "embla-carousel-react": "^8.1.6",
     "long": "^5.2.3",
     "lucide-react": "^0.376.0",
-    "next": "^14.2.5",
-    "nice-grpc": "^2.1.8",
     "nice-grpc-common": "^2.0.2",
     "nice-grpc-web": "^3.3.3",
-    "protobufjs": "^7.2.6",
-    "react": "^18",
-    "react-dom": "^18",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.52.0",
     "react-markdown": "^9.0.1",
     "react-resizable-panels": "^2.0.19",
@@ -57,18 +57,24 @@
     "zustand": "^4.5.5"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^14.2.4",
+    "@eslint/js": "^9.9.0",
     "@tanstack/eslint-plugin-query": "^5.43.1",
+    "@tanstack/router-devtools": "^1.52.5",
+    "@tanstack/router-plugin": "^1.52.0",
     "@tauri-apps/cli": "2.0.0-beta.20",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "^14.2.4",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "globals": "^15.9.0",
     "grpc-tools": "^1.12.4",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "ts-proto": "^1.172.0",
-    "typescript": "^5.5"
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^8.0.1",
+    "vite": "^5.4.1"
   }
 }
