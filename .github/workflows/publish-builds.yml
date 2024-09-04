@@ -72,13 +72,13 @@ jobs:
       matrix:
         include:
           - platform: "macos-latest" # for Arm based macs (M1 and above).
-            args: "--target aarch64-apple-darwin --config tauri.build.conf.json"
+            args: "--target aarch64-apple-darwin --config tauri.build.conf.json --debug"
           - platform: "macos-latest" # for Intel based macs.
-            args: "--target x86_64-apple-darwin --config tauri.build.conf.json"
+            args: "--target x86_64-apple-darwin --config tauri.build.conf.json --debug"
           - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
-            args: "--config tauri.build.conf.json"
+            args: "--config tauri.build.conf.json --debug"
           - platform: "windows-latest"
-            args: "--config tauri.build.conf.json"
+            args: "--config tauri.build.conf.json --debug"
 
     runs-on: ${{ matrix.platform }}
     defaults:
