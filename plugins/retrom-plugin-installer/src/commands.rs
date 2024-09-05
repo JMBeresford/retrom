@@ -1,9 +1,11 @@
+use std::sync::Mutex;
+
 use futures::TryStreamExt;
-use reqwest::header::CONTENT_DISPOSITION;
-use retrom_codegen::retrom::{InstallGamePayload, RetromHostInfo, UninstallGamePayload};
+use reqwest::header::{ACCESS_CONTROL_ALLOW_ORIGIN, CONTENT_DISPOSITION};
+use retrom_codegen::retrom::{InstallGamePayload, RetromClientConfig, UninstallGamePayload};
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::io::AsyncWriteExt;
-use tracing::instrument;
+use tracing::{info, instrument};
 
 use crate::{
     desktop::{FileInstallationProgress, GameInstallationProgress},
@@ -49,16 +51,38 @@ pub async fn install_game<R: Runtime>(
         let client = client.clone();
 
         tauri::async_runtime::spawn(async move {
-            let host_info = app_handle
-                .try_state::<RetromHostInfo>()
-                .expect("Host info not found")
-                .inner();
+            let config = app_handle.try_state::<Mutex<RetromClientConfig>>();
 
-            let host = &host_info.host;
+            let host: String = match config.and_then(|config| {
+                config.lock().ok().and_then(|config| {
+                    config.server.as_ref().map(|server| {
+                        let mut host = server.hostname.to_string();
+
+                        if let Some(port) = server.port {
+                            host.push_str(&format!(":{}", port));
+                        }
+
+                        host
+                    })
+                })
+            }) {
+                Some(host) => host,
+                None => {
+                    tracing::warn!("No server configuration found");
+                    "http://localhost:5101".to_string()
+                }
+            };
 
             let download_uri = format!("{host}/rest/file/{}", file.id);
 
-            let res = client.get(download_uri).send().await?;
+            let res = client
+                .get(download_uri)
+                .header(ACCESS_CONTROL_ALLOW_ORIGIN, host)
+                .send()
+                .await?;
+
+            info!("Downloading file: {:?}", res);
+
             let filename = res
                 .headers()
                 .get(CONTENT_DISPOSITION)

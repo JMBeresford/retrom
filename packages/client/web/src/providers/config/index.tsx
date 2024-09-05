@@ -6,6 +6,8 @@ import { DeepRequired } from "@/lib/utils";
 import { defaultAPIHostname, defaultAPIPort } from "./utils";
 import { Timestamp } from "@/generated/google/protobuf/timestamp";
 import { useLocation, useNavigate } from "@tanstack/react-router";
+import { checkIsDesktop } from "@/lib/env";
+import { invoke } from "@tauri-apps/api/core";
 
 const STORAGE_KEY = "retrom-client-config";
 type LocalConfig = DeepRequired<RetromClientConfig>;
@@ -27,6 +29,10 @@ export function ConfigProvider(props: PropsWithChildren<{}>) {
 
   const initialConfig = configStore.getState();
 
+  if (checkIsDesktop()) {
+    updateTauriConfig(initialConfig);
+  }
+
   if (!initialConfig?.flowCompletions.setupComplete && pathname !== "/setup") {
     navigate({ to: "/setup" });
   }
@@ -39,6 +45,10 @@ export function useConfig() {
 
   if (!store) {
     throw new Error("useConfig must be used within a ConfigProvider");
+  }
+
+  if (checkIsDesktop()) {
+    store.subscribe((s) => updateTauriConfig(s));
   }
 
   return store;
@@ -58,3 +68,7 @@ const defaultConfig: DeepRequired<RetromClientConfig> = {
     setupComplete: false,
   },
 };
+
+function updateTauriConfig(config: RetromClientConfig) {
+  invoke("set_config", { newConfig: config }).catch(console.error);
+}

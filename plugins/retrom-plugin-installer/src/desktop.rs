@@ -1,10 +1,10 @@
 use serde::de::DeserializeOwned;
 use std::{
     collections::{HashMap, HashSet},
-    fs::create_dir_all,
+    fs::create_dir,
     path::PathBuf,
 };
-use tauri::{plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
+use tauri::{fs, plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
 use tracing::{debug, info, instrument, trace};
 
 use retrom_codegen::retrom::{InstallationProgressUpdate, InstallationStatus};
@@ -16,10 +16,16 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 ) -> crate::Result<Installer<R>> {
     let app_data = app.path().app_data_dir()?;
 
+    if !app_data.try_exists().unwrap() {
+        tracing::info!("Creating app data directory.");
+        create_dir(&app_data)?;
+    };
+
     let install_dir = app_data.join("installed");
 
     if !install_dir.try_exists().unwrap() {
-        create_dir_all(&install_dir)?;
+        tracing::info!("Creating install directory.");
+        create_dir(&install_dir)?;
     };
 
     let mut installed_games = HashSet::new();
@@ -62,10 +68,13 @@ impl<R: Runtime> Installer<R> {
     pub async fn mark_game_installing(&self, installation_progress: GameInstallationProgress) {
         info!("Installing game: {}", installation_progress.game_id);
 
+        let game_id = installation_progress.game_id;
         self.currently_installing
             .write()
             .await
-            .insert(installation_progress.game_id, installation_progress);
+            .insert(game_id, installation_progress);
+
+        debug!("Game installation started: {}", game_id);
     }
 
     #[instrument(skip(self), fields(game_id, field_id))]
