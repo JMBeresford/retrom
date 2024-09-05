@@ -30,7 +30,9 @@ export function useInstallGame(game: Game, files: GameFile[]) {
     listen();
 
     return () => {
-      unlisten && unlisten();
+      if (unlisten) {
+        unlisten();
+      }
     };
   }, [game, queryClient]);
 

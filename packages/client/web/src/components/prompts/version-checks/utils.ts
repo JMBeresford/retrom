@@ -20,8 +20,6 @@ export function versionCompare(a: Version, b: Version): number {
 }
 
 export function versionsEqual(a: Version, b: Version): boolean {
-  console.log({ a, b });
-  console.log(versionCompare(a, b) === 0);
   return versionCompare(a, b) === 0;
 }
 

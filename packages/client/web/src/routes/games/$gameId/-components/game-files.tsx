@@ -101,7 +101,7 @@ export function GameFiles() {
         title: "Game updated",
         description: "New default file has been set",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Failed to update game",
         description:

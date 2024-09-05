@@ -6,11 +6,11 @@ import tseslint from "typescript-eslint";
 import tanstackQuery from "@tanstack/eslint-plugin-query";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  { ignores: ["dist", "src/components/ui"] },
   {
     extends: [
       js.configs.recommended,
-      "plugin:@tanstack/eslint-plugin-query/recommended",
+      ...tanstackQuery.configs["flat/recommended"],
       ...tseslint.configs.recommended,
     ],
     files: ["**/*.{ts,tsx}"],

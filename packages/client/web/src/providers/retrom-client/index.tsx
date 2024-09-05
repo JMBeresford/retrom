@@ -4,7 +4,7 @@ import { useConfig } from "../config";
 
 const context = createContext<RetromClient | undefined>(undefined);
 
-export function RetromClientProvider(props: PropsWithChildren<{}>) {
+export function RetromClientProvider(props: PropsWithChildren) {
   const configStore = useConfig();
   const hostname = configStore((store) => store.server.hostname);
   const port = configStore((store) => store.server.port);
@@ -19,6 +19,7 @@ export function RetromClientProvider(props: PropsWithChildren<{}>) {
   return <context.Provider value={client}>{children}</context.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- we need to export this hook
 export function useRetromClient() {
   const client = useContext(context);
 

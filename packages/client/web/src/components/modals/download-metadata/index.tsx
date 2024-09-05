@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { MenubarItem } from "@/components/ui/menubar";
 import {
   Dialog,
   DialogClose,
@@ -8,26 +6,31 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
 import { LoaderCircleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUpdateLibraryMetadata } from "@/mutations/useUpdateLibraryMetadata";
+import { useNavigate } from "@tanstack/react-router";
+import { Route as RootRoute } from "@/routes/__root";
 
-export function DownloadMetadataMenuItem() {
-  const [dialogOpen, setDialogOpen] = useState(false);
+export function DownloadMetadataModal() {
+  const navigate = useNavigate();
+  const { downloadMetadataModal } = RootRoute.useSearch();
 
   const { mutate, isPending } = useUpdateLibraryMetadata();
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <MenubarItem onSelect={(e) => e.preventDefault()}>
-          Download Metadata
-        </MenubarItem>
-      </DialogTrigger>
-
+    <Dialog
+      open={downloadMetadataModal?.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          navigate({
+            search: { downloadMetadataModal: undefined },
+          });
+        }
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Download Metadata</DialogTitle>
@@ -46,7 +49,7 @@ export function DownloadMetadataMenuItem() {
             className="relative"
             onClick={() => {
               mutate();
-              setDialogOpen(false);
+              navigate({ search: { downloadMetadataModal: undefined } });
             }}
           >
             <LoaderCircleIcon

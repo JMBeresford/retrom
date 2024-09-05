@@ -55,8 +55,10 @@ export function Confirm() {
         return { ...prev };
       });
 
-      nextStep && nextStep();
-    } catch (e) {
+      if (nextStep) {
+        nextStep();
+      }
+    } catch {
       toast({
         title: "Failed to save config",
         description:

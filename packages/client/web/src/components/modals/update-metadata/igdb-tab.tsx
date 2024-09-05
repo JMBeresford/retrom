@@ -7,20 +7,26 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "../../ui/select";
 import { useCallback, useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
-import { Input } from "../ui/input";
-import { useToast } from "../ui/use-toast";
-import { Separator } from "../ui/separator";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "../../ui/form";
+import { Input } from "../../ui/input";
+import { useToast } from "../../ui/use-toast";
+import { Separator } from "../../ui/separator";
 import { LoaderCircleIcon } from "lucide-react";
 import { asOptionalString, cn, getFileName } from "@/lib/utils";
-import { DialogClose, DialogFooter } from "../ui/dialog";
+import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
-import { Checkbox } from "../ui/checkbox";
+import { Checkbox } from "../../ui/checkbox";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";
@@ -176,7 +182,7 @@ export function IgdbTab() {
                 <FormItem>
                   <FormLabel>Search</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} autoFocus={true} />
                   </FormControl>
                 </FormItem>
               )}

@@ -16,7 +16,7 @@ export function defaultAPIPort() {
     return Number.parseInt(
       RETROM_PORT ?? import.meta.env.VITE_RETROM_PORT ?? "5101",
     );
-  } catch (e) {
+  } catch {
     console.warn("Invalid port number found, using default port 5101");
     return 5101;
   }

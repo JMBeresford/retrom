@@ -16,10 +16,10 @@ const context = createContext<UseBoundStore<StoreApi<LocalConfig>> | undefined>(
   undefined,
 );
 
-export function ConfigProvider(props: PropsWithChildren<{}>) {
+export function ConfigProvider(props: PropsWithChildren) {
   const { children } = props;
   const navigate = useNavigate();
-  const pathname = useLocation({ select: (location) => location.pathname });
+  const search = useLocation({ select: (location) => location.search });
 
   const configStore = create<LocalConfig>()(
     subscribeWithSelector(
@@ -33,13 +33,23 @@ export function ConfigProvider(props: PropsWithChildren<{}>) {
     updateTauriConfig(initialConfig);
   }
 
-  if (!initialConfig?.flowCompletions.setupComplete && pathname !== "/setup") {
-    navigate({ to: "/setup" });
+  if (
+    !initialConfig?.flowCompletions.setupComplete &&
+    !search.setupModal?.open
+  ) {
+    navigate({
+      search: (prev) => {
+        prev.setupModal = { open: true };
+
+        return prev;
+      },
+    });
   }
 
   return <context.Provider value={configStore}>{children}</context.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- we need to export this hook
 export function useConfig() {
   const store = useContext(context);
 

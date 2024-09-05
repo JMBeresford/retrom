@@ -38,11 +38,12 @@ export function ClientName() {
   );
 
   const handleCreateClient = useCallback(async () => {
-    if (
-      name &&
-      !clientInfo.data?.clients.find((client) => client.name === name)
-    ) {
-      nextStep && nextStep();
+    const clientExists = clientInfo.data?.clients.find(
+      (client) => client.name === name,
+    );
+
+    if (name && nextStep && !clientExists) {
+      nextStep();
     }
   }, [name, nextStep, clientInfo.data?.clients]);
 
@@ -192,7 +193,9 @@ export function ClientName() {
                   return { ...prev };
                 });
 
-                nextStep && nextStep();
+                if (nextStep) {
+                  nextStep();
+                }
               }}
             >
               We Are So Back

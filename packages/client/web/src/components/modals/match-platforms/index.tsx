@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from "react";
-import { MenubarItem } from "@/components/ui/menubar";
 import { useToast } from "../../ui/use-toast";
 import {
   Dialog,
@@ -9,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
 import { AlertCircleIcon, LoaderCircleIcon } from "lucide-react";
@@ -40,12 +38,16 @@ import { PlatformMetadata } from "@/generated/retrom/models/metadata";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";
+import { useNavigate } from "@tanstack/react-router";
+import { Route as RootRoute } from "@/routes/__root";
 
 export type PlatformAndMetadata = Platform & { metadata: PlatformMetadata };
 
-export function MatchPlatformsMenuItem() {
+export function MatchPlatformsModal() {
   const retromClient = useRetromClient();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { matchPlatformsModal } = RootRoute.useSearch();
 
   const { data: allIgdbPlatforms, status: igdbSearchStatus } = useQuery({
     queryKey: ["igdb-search"],
@@ -145,7 +147,6 @@ export function MatchPlatformsMenuItem() {
     platformStatus === "pending";
 
   const { toast } = useToast();
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [renameDirectories, setRenameDirectories] = useState(false);
   const [selections, setSelections] = useState<Map<number, number | undefined>>(
     new Map(defaultSelections),
@@ -215,7 +216,7 @@ export function MatchPlatformsMenuItem() {
         });
       }
 
-      setDialogOpen(false);
+      navigate({ search: { matchPlatformsModal: { open: false } } });
     }
   }, [
     allIgdbPlatforms,
@@ -226,6 +227,7 @@ export function MatchPlatformsMenuItem() {
     toast,
     platformData,
     updatePlatforms,
+    navigate,
   ]);
 
   const findIgdbSelection = useCallback(
@@ -234,30 +236,15 @@ export function MatchPlatformsMenuItem() {
     [allIgdbPlatforms],
   );
 
-  if (error) {
-    return (
-      <MenubarItem className="text-destructive-text">
-        <AlertCircleIcon /> Match Platforms
-      </MenubarItem>
-    );
-  }
-
-  if (loading) {
-    return (
-      <MenubarItem className="text-muted-foreground/50 pointer-events-none touch-none flex gap-2">
-        <LoaderCircleIcon className="animate-spin" /> Match Platforms
-      </MenubarItem>
-    );
-  }
-
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <MenubarItem onSelect={(e) => e.preventDefault()}>
-          Match Platforms
-        </MenubarItem>
-      </DialogTrigger>
-
+    <Dialog
+      open={matchPlatformsModal?.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          navigate({ search: { matchPlatformsModal: { open } } });
+        }
+      }}
+    >
       <DialogContent>
         <DialogHeader className="mb-4">
           <DialogTitle>Match Platforms</DialogTitle>
@@ -268,7 +255,9 @@ export function MatchPlatformsMenuItem() {
         </DialogHeader>
 
         <ScrollArea type="auto" className="h-[60vh] pr-4">
-          {platformData.map((platform) => {
+          {loading ? <LoaderCircleIcon className="animate-spin" /> : null}
+          {error ? <AlertCircleIcon className="text-destructive-text" /> : null}
+          {platformData?.map((platform) => {
             const selection = selections.get(platform.id);
             const unchanged = defaultSelections.get(platform.id) === selection;
 

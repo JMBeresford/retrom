@@ -21,7 +21,6 @@ import { Link, useLocation } from "@tanstack/react-router";
 
 export function SideBar() {
   const path = useLocation({ select: (location) => location.pathname });
-  console.log({ path });
 
   const { data: platformData, status: platformStatus } = usePlatforms({
     request: { withMetadata: true },
@@ -81,14 +80,14 @@ export function SideBar() {
         <section className="w-full overflow-hidden">
           <Accordion type="single" collapsible={true} className="mt-2">
             {platformData.platforms.map((platform) => {
-              let games = gamesByPlatform[platform.id]?.sort((a, b) => {
+              const games = gamesByPlatform[platform.id]?.sort((a, b) => {
                 const aName = a.metadata?.name ?? getFileStub(a.path) ?? "";
                 const bName = b.metadata?.name ?? getFileStub(b.path) ?? "";
 
                 return aName.localeCompare(bName);
               });
 
-              let name = getPlatformName(platform);
+              const name = getPlatformName(platform);
 
               return games ? (
                 <AccordionItem

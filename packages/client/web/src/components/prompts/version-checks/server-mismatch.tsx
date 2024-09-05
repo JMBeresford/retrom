@@ -81,9 +81,6 @@ function InnerToast() {
   const { setOpen } = useDialogOpen();
 
   useEffect(() => {
-    let dismiss: (() => void) | undefined;
-
-    dismiss && dismiss();
     const toastInfo = toast({
       title: "Server Version Mismatch",
       description: "The server is running a different version of Retrom.",
@@ -96,10 +93,12 @@ function InnerToast() {
       ),
     });
 
-    dismiss = toastInfo.dismiss;
+    const dismiss = toastInfo.dismiss;
 
     return () => {
-      dismiss && dismiss();
+      if (dismiss) {
+        dismiss();
+      }
     };
   }, [toast, setOpen]);
 

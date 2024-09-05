@@ -1,8 +1,8 @@
 import { RecentlyAdded } from "@/components/recently-added";
 import { RecentlyPlayed } from "@/components/recently-played";
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createLazyFileRoute("/")({
+export const Route = createFileRoute("/")({
   component: Index,
 });
 

@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { MenubarItem } from "@/components/ui/menubar";
 import {
   Dialog,
   DialogClose,
@@ -8,26 +6,31 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
 import { LoaderCircleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUpdateLibrary } from "@/mutations/useUpdateLibrary";
+import { useNavigate } from "@tanstack/react-router";
+import { Route as RootRoute } from "@/routes/__root";
 
-export function UpdateLibraryMenuItem() {
-  const [dialogOpen, setDialogOpen] = useState(false);
+export function UpdateLibraryModal() {
+  const navigate = useNavigate();
+  const { updateLibraryModal } = RootRoute.useSearch();
 
   const { mutateAsync: updateLibrary, isPending } = useUpdateLibrary();
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <MenubarItem onSelect={(e) => e.preventDefault()}>
-          Update Library
-        </MenubarItem>
-      </DialogTrigger>
-
+    <Dialog
+      open={updateLibraryModal?.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          navigate({
+            search: { updateLibraryModal: undefined },
+          });
+        }
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Update Library</DialogTitle>
@@ -46,7 +49,6 @@ export function UpdateLibraryMenuItem() {
             className="relative"
             onClick={async () => {
               await updateLibrary();
-              setDialogOpen(false);
             }}
           >
             <LoaderCircleIcon

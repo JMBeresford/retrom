@@ -147,9 +147,6 @@ function InnerToast() {
   const { setOpen } = useDialogOpen();
 
   useEffect(() => {
-    let dismiss: (() => void) | undefined;
-
-    dismiss && dismiss();
     const toastInfo = toast({
       title: "Update Available",
       duration: Infinity,
@@ -163,10 +160,12 @@ function InnerToast() {
       ),
     });
 
-    dismiss = toastInfo.dismiss;
+    const dismiss = toastInfo.dismiss;
 
     return () => {
-      dismiss && dismiss();
+      if (dismiss) {
+        dismiss();
+      }
     };
   }, [toast, setOpen]);
 

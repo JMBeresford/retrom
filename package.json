@@ -7,6 +7,7 @@
   "pnpm": {
     "overrides": {
       "typescript": "$typescript",
+      "eslint": "$eslint",
       "@tauri-apps/cli": "$@tauri-apps/cli",
       "@tauri-apps/api": "$@tauri-apps/api",
       "@tauri-apps/plugin-fs": "$@tauri-apps/plugin-fs",
@@ -17,6 +18,7 @@
     "@tauri-apps/api": "2.0.0-rc.4",
     "@tauri-apps/plugin-fs": "2.0.0-beta.5",
     "@tauri-apps/plugin-upload": "2.0.0-beta.6",
+    "eslint": "^9.9.0",
     "typescript": "^5.5.3"
   },
   "packageManager": "pnpm@9.5.0"

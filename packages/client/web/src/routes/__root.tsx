@@ -14,17 +14,58 @@ import { Prompts } from "../components/prompts";
 import { Toaster } from "../components/ui/toaster";
 import { SideBar } from "@/components/side-bar";
 import React from "react";
+import { zodSearchValidator } from "@tanstack/router-zod-adapter";
+import { z } from "zod";
+import { SetupModal } from "@/components/modals/setup";
+import { UpdateLibraryModal } from "@/components/modals/update-library";
+import { DownloadMetadataModal } from "@/components/modals/download-metadata";
+import { DeleteLibraryModal } from "@/components/modals/delete-library";
+import { MatchPlatformsModal } from "@/components/modals/match-platforms";
+import { DefaultProfilesModal } from "@/components/modals/default-profiles";
 
 const TanStackRouterDevtools = import.meta.env.PROD
-  ? () => null // Render nothing in production
+  ? () => null
   : React.lazy(() =>
-      // Lazy load in development
       import("@tanstack/router-devtools").then((res) => ({
         default: res.TanStackRouterDevtools,
       })),
     );
 
+const modalsSearchSchema = z.object({
+  updateLibraryModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  matchPlatformsModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  defaultProfilesModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  downloadMetadataModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  deleteLibraryModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  setupModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+});
+
 export const Route = createRootRoute({
+  validateSearch: zodSearchValidator(modalsSearchSchema),
   component: () => (
     <>
       <ConfigProvider>
@@ -63,7 +104,15 @@ export const Route = createRootRoute({
               </ResizablePanelGroup>
             </div>
 
+            <SetupModal />
+            <UpdateLibraryModal />
+            <DownloadMetadataModal />
+            <DeleteLibraryModal />
+            <MatchPlatformsModal />
+            <DefaultProfilesModal />
+
             <Prompts />
+
             <Toaster />
           </QueryClientProvider>
         </RetromClientProvider>

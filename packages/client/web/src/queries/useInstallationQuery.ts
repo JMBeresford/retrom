@@ -14,7 +14,7 @@ export function useInstallationQuery(game: Game) {
     if (!checkIsDesktop()) return;
 
     const window = getCurrentWebviewWindow();
-    let unlisten: UnlistenFn;
+    let unlisten: UnlistenFn | undefined;
 
     async function listen() {
       unlisten = await window.listen(
@@ -32,7 +32,9 @@ export function useInstallationQuery(game: Game) {
     listen();
 
     return () => {
-      unlisten && unlisten();
+      if (unlisten) {
+        unlisten();
+      }
     };
   }, [game, queryClient]);
 

@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { MenubarItem } from "@/components/ui/menubar";
 import { useToast } from "../../ui/use-toast";
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogTrigger,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
 import { LoaderCircleIcon } from "lucide-react";
@@ -13,13 +13,14 @@ import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useNavigate } from "@tanstack/react-router";
+import { Route as RootRoute } from "@/routes/__root";
 
-export function DeleteLibraryMenuItem() {
+export function DeleteLibraryModal() {
   const { toast } = useToast();
-  const [dialogOpen, setDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const retromClient = useRetromClient();
   const navigate = useNavigate();
+  const { deleteLibraryModal } = RootRoute.useSearch();
 
   const { mutate, isPending } = useMutation({
     onError: (err) => {
@@ -30,10 +31,13 @@ export function DeleteLibraryMenuItem() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["library"] });
-      queryClient.invalidateQueries({ queryKey: ["games"] });
-      queryClient.invalidateQueries({ queryKey: ["platforms"] });
-      queryClient.invalidateQueries({ queryKey: ["metadata"] });
+      queryClient.invalidateQueries({
+        queryKey: ["library"],
+        predicate: ({ queryKey }) =>
+          ["library", "games", "platforms", "metadata"].some((key) =>
+            queryKey.includes(key),
+          ),
+      });
 
       toast({
         title: "Library deleted!",
@@ -46,18 +50,22 @@ export function DeleteLibraryMenuItem() {
   });
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <MenubarItem
-          className="text-destructive-text"
-          onSelect={(e) => e.preventDefault()}
-        >
-          Delete Library
-        </MenubarItem>
-      </DialogTrigger>
-
+    <Dialog
+      open={deleteLibraryModal?.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          navigate({ search: { deleteLibraryModal: undefined } });
+        }
+      }}
+    >
       <DialogContent>
-        Are you sure you want to delete the library?
+        <DialogHeader>
+          <DialogTitle>Delete Library</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete your library?
+          </DialogDescription>
+        </DialogHeader>
+
         <div className="flex justify-end gap-2 mt-4">
           <DialogClose asChild>
             <Button>Cancel</Button>
@@ -68,7 +76,7 @@ export function DeleteLibraryMenuItem() {
             variant="destructive"
             onClick={() => {
               mutate();
-              setDialogOpen(false);
+              navigate({ search: { deleteLibraryModal: undefined } });
             }}
           >
             <LoaderCircleIcon

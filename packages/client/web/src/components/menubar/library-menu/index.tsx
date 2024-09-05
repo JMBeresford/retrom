@@ -3,10 +3,9 @@ import {
   MenubarMenu,
   MenubarContent,
   MenubarSeparator,
+  MenubarItem,
 } from "@/components/ui/menubar";
-import { UpdateLibraryMenuItem } from "./update-library-menu-item";
-import { DownloadMetadataMenuItem } from "./download-metadata-menu-item";
-import { DeleteLibraryMenuItem } from "./delete-library-menu-item";
+import { Link } from "@tanstack/react-router";
 
 export function LibraryMenu() {
   return (
@@ -16,13 +15,28 @@ export function LibraryMenu() {
       </MenubarTrigger>
 
       <MenubarContent>
-        <UpdateLibraryMenuItem />
+        <MenubarItem asChild>
+          <Link search={{ updateLibraryModal: { open: true } }}>
+            Update Library
+          </Link>
+        </MenubarItem>
 
-        <DownloadMetadataMenuItem />
+        <MenubarItem asChild>
+          <Link search={{ downloadMetadataModal: { open: true } }}>
+            Download Metadata
+          </Link>
+        </MenubarItem>
 
         <MenubarSeparator />
 
-        <DeleteLibraryMenuItem />
+        <MenubarItem asChild>
+          <Link
+            className="text-destructive-text"
+            search={{ deleteLibraryModal: { open: true } }}
+          >
+            Delete Library
+          </Link>
+        </MenubarItem>
       </MenubarContent>
     </MenubarMenu>
   );

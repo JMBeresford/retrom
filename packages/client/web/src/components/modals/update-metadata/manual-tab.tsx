@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import { UseFormReturn, useForm } from "react-hook-form";
 import {
   Form,
@@ -10,15 +10,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../ui/form";
-import { Input } from "../ui/input";
+} from "../../ui/form";
+import { Input } from "../../ui/input";
 import { LoaderCircleIcon } from "lucide-react";
 import { asOptionalString, cn, getFileName, InferSchema } from "@/lib/utils";
-import { DialogClose, DialogFooter, useDialogOpen } from "../ui/dialog";
-import { Textarea } from "../ui/textarea";
+import { DialogClose, DialogFooter, useDialogOpen } from "../../ui/dialog";
+import { Textarea } from "../../ui/textarea";
 import { GameMetadata } from "@/generated/retrom/models/metadata";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
-import { Checkbox } from "../ui/checkbox";
+import { Checkbox } from "../../ui/checkbox";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";
 

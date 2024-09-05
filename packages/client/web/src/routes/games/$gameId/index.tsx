@@ -1,4 +1,4 @@
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { BackgroundImage } from "./-components/background-image";
 import { CoverImage } from "./-components/cover-image";
 import { Actions } from "./-components/actions";
@@ -12,8 +12,32 @@ import { GameFiles } from "./-components/game-files";
 import { Media } from "./-components/media";
 import { SimilarGames } from "./-components/similar_games";
 import { GameDetailProvider } from "@/providers/game-details";
+import { UpdateMetadataModal } from "@/components/modals/update-metadata";
+import { DeleteGameModal } from "@/components/modals/delete-game";
+import { UninstallGameModal } from "@/components/modals/uninstall-game";
+import { z } from "zod";
+import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 
-export const Route = createLazyFileRoute("/games/$gameId/")({
+const modalsSchema = z.object({
+  updateMetadataModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  uninstallGameModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  deleteGameModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+});
+
+export const Route = createFileRoute("/games/$gameId/")({
+  validateSearch: zodSearchValidator(modalsSchema),
   component: Game,
 });
 
@@ -54,6 +78,10 @@ function Game() {
           </div>
         </div>
       </div>
+
+      <UpdateMetadataModal />
+      <UninstallGameModal />
+      <DeleteGameModal />
     </GameDetailProvider>
   );
 }

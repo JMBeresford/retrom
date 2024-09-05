@@ -13,6 +13,7 @@ const SetupModalContext = createContext<
   | undefined
 >(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components -- we need to export this hook
 export function useSetupModal() {
   const context = useContext(SetupModalContext);
 
@@ -37,7 +38,7 @@ const previousStepTransitions: Record<Step, Step | undefined> = {
   done: undefined,
 };
 
-export function SetupModalProvider(props: React.PropsWithChildren<{}>) {
+export function SetupModalProvider(props: React.PropsWithChildren) {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("server-host");
 
@@ -47,7 +48,9 @@ export function SetupModalProvider(props: React.PropsWithChildren<{}>) {
     switch (step) {
       case "confirm": {
         return () => {
-          navigate({ to: "/" });
+          navigate({
+            search: { setupModal: undefined },
+          });
         };
       }
       default: {
@@ -56,7 +59,7 @@ export function SetupModalProvider(props: React.PropsWithChildren<{}>) {
         }
       }
     }
-  }, [step]);
+  }, [step, navigate]);
 
   const nextStep = useMemo(() => {
     if (transition) {

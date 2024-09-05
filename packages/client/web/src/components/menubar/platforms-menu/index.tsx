@@ -2,10 +2,10 @@ import {
   MenubarTrigger,
   MenubarMenu,
   MenubarContent,
+  MenubarItem,
 } from "@/components/ui/menubar";
-import { MatchPlatformsMenuItem } from "./match-platforms-menu-item";
-import { DefaultProfilesMenuItem } from "./default-profiles-menu-item";
 import { DesktopOnly } from "@/lib/env";
+import { Link } from "@tanstack/react-router";
 
 export function PlatformsMenu() {
   return (
@@ -15,9 +15,18 @@ export function PlatformsMenu() {
       </MenubarTrigger>
 
       <MenubarContent>
-        <MatchPlatformsMenuItem />
+        <MenubarItem asChild>
+          <Link search={{ matchPlatformsModal: { open: true } }}>
+            Match Platforms
+          </Link>
+        </MenubarItem>
+
         <DesktopOnly>
-          <DefaultProfilesMenuItem />
+          <MenubarItem asChild>
+            <Link search={{ defaultProfilesModal: { open: true } }}>
+              Default Emulator Profiles
+            </Link>
+          </MenubarItem>
         </DesktopOnly>
       </MenubarContent>
     </MenubarMenu>
