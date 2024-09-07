@@ -143,7 +143,7 @@ retrom:
   ports:
     - 5101:5101
   environment:
-    # IGDB API information, see [the above section](#metadata-providers) for more info
+    # IGDB API information, see the metadata-providers section above for more info
     IGDB_CLIENT_ID: ${IGDB_CLIENT_ID}
     IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET}
 
