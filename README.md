@@ -1,6 +1,6 @@
 # Retrom
 
-## A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.
+A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.
 
 > [!WARNING]  
 > UNDER HEAVY DEVELOPMENT: Expect breaking changes often, update your installation with care.
@@ -13,13 +13,14 @@ clients on any amount of other devices to (un)install/download and subsequently 
 <!--toc:start-->
 
 - [Retrom](#retrom)
-  - [A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.](#a-centralized-game-librarycollection-management-service-with-a-focus-on-emulation-configure-once-play-anywhere)
   - [Overview](#overview)
   - [Core Features](#core-features)
   - [Roadmap](#roadmap)
   - [Installation](#installation)
     - [Preparation](#preparation)
       - [Library Structure](#library-structure)
+      - [Metadata Providers](#metadata-providers)
+        - [IGDB](#igdb)
     - [Server](#server)
       - [Docker (Recommended)](#docker-recommended)
     - [Client](#client)
