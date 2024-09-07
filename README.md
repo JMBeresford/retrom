@@ -44,25 +44,18 @@ clients on any amount of other devices to (un)install/download and subsequently 
 
 ## Roadmap
 
-> [!NOTE]
-> Legend:
->
-> - [ ] Not started
-> - [-] In progress
-> - [x] Completed
-
-- [-] Basic server functionality
+- [ ] Basic server functionality
   - [x] Scan filesystem for library items
   - [x] Add/remove library items
   - [x] Edit library items
-  - [-] Download metadata
+  - [ ] Download metadata
     - [x] IGDB provider
     - [ ] SteamGridDB provider
     - [ ] The GamesDB (TGDB) provider
   - [ ] Cloud save games / states / emulator NANDs
   - [ ] (Multi-)User authentication
   - [ ] Publish server binaries, as an alternative to Docker
-- [-] Basic client functionality
+- [ ] Basic client functionality
   - [x] View library items
   - [x] Edit library metadata and artworks
   - [x] Trigger library update jobs
@@ -76,7 +69,7 @@ clients on any amount of other devices to (un)install/download and subsequently 
   - [ ] Fullscreen mode + controller support
 - [x] Web (browser) client functionality (in addition to Basic functionality)
   - [x] Download games
-- [-] Desktop client functionality (in addition to Basic functionality)
+- [ ] Desktop client functionality (in addition to Basic functionality)
   - [x] Install/uninstall games
   - [x] Configure locally available emulators
   - [x] Configure multiple profiles per-emulator
