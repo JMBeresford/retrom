@@ -15,6 +15,7 @@ clients on any amount of other devices to (un)install/download and subsequently 
 - [Retrom](#retrom)
   - [Overview](#overview)
   - [Core Features](#core-features)
+  - [Screenshots](#screenshots)
   - [Roadmap](#roadmap)
   - [Installation](#installation)
     - [Preparation](#preparation)
@@ -41,6 +42,11 @@ clients on any amount of other devices to (un)install/download and subsequently 
   pre-configured profiles from a single library interface.
 - Automatically download game metadata and artworks from supported providers
   to showcase your library with style!
+
+## Screenshots
+
+![Retrom · 7 12pm · 08-25](https://github.com/user-attachments/assets/c5b72d5f-947b-4ba4-8df5-0eb8d48e52a6)
+![Retrom](https://github.com/user-attachments/assets/31da1b2a-4460-4712-b16c-2bcf19cd5df0)
 
 ## Roadmap
 
@@ -186,13 +192,10 @@ look for an identically named file without the `-debug` suffix.
 
 The following may help you differentiate between the different versions:
 
-- "\*-setup.exe" files are for Windows (prefer this over the .msi version, unless you have good reason not to)
-- "\*.msi" files are for Windows (prefer the .exe version over this)
-- "\*-x64.dmg" files are for MacOS on Intel chips
-- "\*-aarch64.dmg" files are for MacOS on M series chips
-- "\*-x64.AppImage" files are for Linux
-- "\*-x64.deb" files are for Linux (Debian-based distros)
-- "\*-x64.rpm" files are for Linux (Red Hat-based distros)
-
-![Retrom · 7 12pm · 08-25](https://github.com/user-attachments/assets/c5b72d5f-947b-4ba4-8df5-0eb8d48e52a6)
-![Retrom](https://github.com/user-attachments/assets/31da1b2a-4460-4712-b16c-2bcf19cd5df0)
+- `*-setup.exe` files are for Windows (prefer this over the .msi version, unless you have good reason not to)
+- `*.msi` files are for Windows (prefer the .exe version over this)
+- `*-x64.dmg` files are for MacOS on Intel chips
+- `*-aarch64.dmg` files are for MacOS on M series chips
+- `*-x64.AppImage` files are for Linux
+- `*-x64.deb` files are for Linux (Debian-based distros)
+- `*-x64.rpm` files are for Linux (Red Hat-based distros)
