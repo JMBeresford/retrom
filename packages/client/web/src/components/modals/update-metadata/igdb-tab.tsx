@@ -96,7 +96,6 @@ export function IgdbTab() {
         return;
       }
 
-      const igdbIdNum = igdbId !== undefined ? parseInt(igdbId) : undefined;
       const platform = platformMetadata?.igdbId;
 
       setSearchRequest({
@@ -105,7 +104,7 @@ export function IgdbTab() {
             value: search,
           },
           fields: {
-            id: igdbIdNum,
+            id: igdbId,
             platform,
           },
           gameId: game.id,
@@ -120,7 +119,7 @@ export function IgdbTab() {
       return;
     }
 
-    const match = matches.find((m) => m.igdbId === parseInt(selectedMatch));
+    const match = matches.find((m) => m.igdbId === selectedMatch);
 
     if (!match) {
       toast({
@@ -231,7 +230,7 @@ export function IgdbTab() {
             {matches?.map((match, i) => (
               <SelectItem
                 key={`${match.gameId}-${i}`}
-                value={match.igdbId?.toString() ?? i.toString()}
+                value={match.igdbId ?? i.toString()}
               >
                 {match.name}
               </SelectItem>

@@ -24,7 +24,7 @@
       "timestampUrl": ""
     },
     "longDescription": "A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.",
-    "shortDescription": "A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.",
+    "shortDescription": "Your own self-hosted cloud game library service",
     "linux": {
       "deb": {
         "depends": []

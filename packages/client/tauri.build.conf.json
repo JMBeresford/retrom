@@ -2,7 +2,6 @@
   "$schema": "../../node_modules/@tauri-apps/cli/schema.json",
   "bundle": {
     "macOS": {
-      "signingIdentity": "-",
       "entitlements": "./entitlements.plist.xml"
     }
   }
