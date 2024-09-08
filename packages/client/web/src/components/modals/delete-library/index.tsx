@@ -32,7 +32,6 @@ export function DeleteLibraryModal() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["library"],
         predicate: ({ queryKey }) =>
           ["library", "games", "platforms", "metadata"].some((key) =>
             queryKey.includes(key),

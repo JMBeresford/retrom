@@ -53,7 +53,7 @@ impl LibraryService for LibraryServiceHandlers {
         request: Request<UpdateLibraryMetadataRequest>,
     ) -> Result<Response<UpdateLibraryMetadataResponse>, Status> {
         match metadata_handlers::update_metadata(self, request.into_inner().overwrite()).await {
-            Ok(_) => Ok(Response::new(UpdateLibraryMetadataResponse {})),
+            Ok(res) => Ok(Response::new(res)),
             Err(why) => Err(Status::new(Code::Internal, why)),
         }
     }

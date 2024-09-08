@@ -74,6 +74,7 @@ service EmulatorService {
 
 service JobService {
   rpc GetJobs(GetJobsRequest) returns (stream GetJobsResponse);
+  rpc GetJobSubscription(GetJobSubscriptionRequest) returns (stream GetJobSubscriptionResponse);
 }
 
 message UpdateLibraryRequest {}
@@ -88,7 +89,11 @@ message UpdateLibraryMetadataRequest {
   optional bool overwrite = 1;
 }
 
-message UpdateLibraryMetadataResponse {}
+message UpdateLibraryMetadataResponse {
+  uint64 platform_metadata_job_id = 1;
+  uint64 game_metadata_job_id = 2;
+  uint64 extra_metadata_job_id = 3;
+}
 
 message GetPlatformsRequest {
   repeated int32 ids = 1;
@@ -390,4 +395,12 @@ message GetJobsRequest {}
 
 message GetJobsResponse {
   repeated JobProgress jobs = 1;
+}
+
+message GetJobSubscriptionRequest {
+  uint64 job_id = 1;
+}
+
+message GetJobSubscriptionResponse {
+  JobProgress job = 1;
 }

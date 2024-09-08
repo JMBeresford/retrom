@@ -10,7 +10,10 @@ use diesel_async::RunQueryDsl;
 use prost::Message;
 use retrom_codegen::{
     igdb,
-    retrom::{self, GameGenre, GameMetadata, NewGameGenre, NewGameGenreMap, NewSimilarGameMap},
+    retrom::{
+        self, GameGenre, GameMetadata, NewGameGenre, NewGameGenreMap, NewSimilarGameMap,
+        UpdateLibraryMetadataResponse,
+    },
 };
 use retrom_db::schema;
 use tracing::instrument;
@@ -19,7 +22,7 @@ use tracing::instrument;
 pub async fn update_metadata(
     state: &LibraryServiceHandlers,
     overwrite: bool,
-) -> Result<(), String> {
+) -> Result<UpdateLibraryMetadataResponse, String> {
     let db_pool = state.db_pool.clone();
     let mut conn = match db_pool.get().await {
         Ok(conn) => conn,
@@ -294,23 +297,23 @@ pub async fn update_metadata(
     };
 
     let job_manager = state.job_manager.clone();
-    let platform_job_id = job_manager
+    let platform_metadata_job_id = job_manager
         .spawn("Downloading Platform Metadata", platform_tasks, None)
         .await;
 
     let game_job_opts = JobOptions {
-        wait_on_jobs: Some(vec![platform_job_id]),
+        wait_on_jobs: Some(vec![platform_metadata_job_id]),
     };
 
-    let game_job_id = job_manager
+    let game_metadata_job_id = job_manager
         .spawn("Downloading Game Metadata", game_tasks, Some(game_job_opts))
         .await;
 
     let extra_metadata_job_opts = JobOptions {
-        wait_on_jobs: Some(vec![game_job_id]),
+        wait_on_jobs: Some(vec![game_metadata_job_id]),
     };
 
-    job_manager
+    let extra_metadata_job_id = job_manager
         .spawn(
             "Downloading Extra Metadata",
             vec![extra_metadata_task()],
@@ -318,5 +321,9 @@ pub async fn update_metadata(
         )
         .await;
 
-    Ok(())
+    Ok(UpdateLibraryMetadataResponse {
+        platform_metadata_job_id,
+        game_metadata_job_id,
+        extra_metadata_job_id,
+    })
 }
