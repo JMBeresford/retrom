@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.71](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.70...retrom-v0.0.71) - 2024-09-08
+
+### Added
+
+- refresh data on metadata job done
+
 ## [0.0.70](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.69...retrom-v0.0.70) - 2024-09-05
 
 ### Added
