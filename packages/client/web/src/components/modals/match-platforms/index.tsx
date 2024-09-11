@@ -131,7 +131,7 @@ export function MatchPlatformsModal() {
     });
 
   const defaultSelections = useMemo(() => {
-    const map = new Map<number, string | undefined>();
+    const map = new Map<number, number | undefined>();
     platformData?.forEach((platform) =>
       map.set(platform.id, platform.metadata.igdbId),
     );
@@ -148,7 +148,7 @@ export function MatchPlatformsModal() {
 
   const { toast } = useToast();
   const [renameDirectories, setRenameDirectories] = useState(false);
-  const [selections, setSelections] = useState<Map<number, string | undefined>>(
+  const [selections, setSelections] = useState<Map<number, number | undefined>>(
     new Map(defaultSelections),
   );
 
@@ -231,7 +231,7 @@ export function MatchPlatformsModal() {
   ]);
 
   const findIgdbSelection = useCallback(
-    (id?: string) =>
+    (id?: number) =>
       id ? allIgdbPlatforms?.find((p) => p.igdbId === id) : undefined,
     [allIgdbPlatforms],
   );

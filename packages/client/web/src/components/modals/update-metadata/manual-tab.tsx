@@ -44,7 +44,7 @@ type EditableGameMetadata = Omit<
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name cannot be empty" }),
-  igdbId: z.string().optional(),
+  igdbId: z.number().optional(),
   description: asOptionalString(z.string().optional()),
   coverUrl: asOptionalString(
     z.string().url({ message: "Cover URL must be a valid URL" }).optional(),
@@ -221,6 +221,7 @@ const fields: Record<keyof EditableGameMetadata, FormFieldRenderer> = {
           <FormControl>
             <Input
               {...field}
+              onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
               type="number"
               className={cn(
                 fieldState.isDirty ? "text-unset" : "text-muted-foreground",

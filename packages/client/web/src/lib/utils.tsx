@@ -77,12 +77,5 @@ export function timestampToDate(timestamp?: Timestamp): Date {
 
   const { seconds, nanos } = timestamp;
 
-  let maybeBigIntSeconds = 0;
-  try {
-    maybeBigIntSeconds = parseInt(seconds, 10);
-  } catch {
-    console.error("Failed to parse timestamp seconds as int", seconds);
-  }
-
-  return new Date(maybeBigIntSeconds * 1000 + nanos / 1000000);
+  return new Date(seconds * 1000 + nanos / 1000000);
 }

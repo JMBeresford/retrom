@@ -22,7 +22,7 @@ import { Input } from "../../ui/input";
 import { useToast } from "../../ui/use-toast";
 import { Separator } from "../../ui/separator";
 import { LoaderCircleIcon } from "lucide-react";
-import { asOptionalString, cn, getFileName } from "@/lib/utils";
+import { cn, getFileName } from "@/lib/utils";
 import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
@@ -33,8 +33,8 @@ import { useGameDetail } from "@/providers/game-details";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
-  search: z.string().min(1).max(255),
-  igdbId: asOptionalString(z.string().min(1).max(20)),
+  search: z.string().max(255),
+  igdbId: z.coerce.number().optional(),
 });
 
 export function IgdbTab() {
@@ -84,13 +84,14 @@ export function IgdbTab() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       search: currentMetadata?.name ?? "",
-      igdbId: currentMetadata?.igdbId?.toString() ?? undefined,
+      igdbId: currentMetadata?.igdbId,
     },
   });
 
   const handleSearch = useCallback(
     (values: FormSchema) => {
       const { search, igdbId } = values;
+      console.log({ igdbId });
 
       if (!game) {
         return;
@@ -119,7 +120,7 @@ export function IgdbTab() {
       return;
     }
 
-    const match = matches.find((m) => m.igdbId === selectedMatch);
+    const match = matches.find((m) => m.igdbId?.toString() === selectedMatch);
 
     if (!match) {
       toast({
@@ -230,7 +231,7 @@ export function IgdbTab() {
             {matches?.map((match, i) => (
               <SelectItem
                 key={`${match.gameId}-${i}`}
-                value={match.igdbId ?? i.toString()}
+                value={match.igdbId?.toString() ?? i.toString()}
               >
                 {match.name}
               </SelectItem>
