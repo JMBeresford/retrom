@@ -1,15 +1,12 @@
 use futures::Future;
 use retrom_codegen::retrom::{JobProgress, JobStatus};
-use std::{
-    collections::HashMap,
-    hash::{DefaultHasher, Hash, Hasher},
-    sync::Arc,
-};
+use std::{collections::HashMap, sync::Arc};
 use tokio::{
     sync::{broadcast, RwLock},
     task::JoinSet,
 };
 use tracing::Instrument;
+use uuid::Uuid;
 
 #[derive(Debug, thiserror::Error)]
 pub enum JobError {
@@ -18,15 +15,16 @@ pub enum JobError {
 }
 
 pub type Result<T> = std::result::Result<T, JobError>;
+type JobId = Uuid;
 
 #[derive(Debug, Clone)]
 pub struct JobOptions {
-    pub wait_on_jobs: Option<Vec<u64>>,
+    pub wait_on_jobs: Option<Vec<JobId>>,
 }
 
 pub(crate) struct JobManager {
-    job_progress: Arc<RwLock<HashMap<u64, JobProgress>>>,
-    invalidation_channel: broadcast::Sender<u64>,
+    job_progress: Arc<RwLock<HashMap<JobId, JobProgress>>>,
+    invalidation_channel: broadcast::Sender<JobId>,
 }
 
 impl JobManager {
@@ -37,26 +35,20 @@ impl JobManager {
         }
     }
 
-    fn get_id(&self, name: &str) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        name.hash(&mut hasher);
-        hasher.finish()
-    }
-
     #[tracing::instrument(skip(self, tasks))]
     pub async fn spawn<T>(
         &self,
         name: &str,
         tasks: Vec<impl Future<Output = T> + Send + 'static>,
         opts: Option<JobOptions>,
-    ) -> u64
+    ) -> JobId
     where
         T: Send + 'static,
     {
         let name = name.to_string();
         let mut join_set = JoinSet::new();
         let total_tasks = tasks.len();
-        let id = self.get_id(&name);
+        let id = uuid::Uuid::new_v4();
 
         if let Some(job) = self.job_progress.read().await.get(&id) {
             match JobStatus::try_from(job.status) {
@@ -195,7 +187,7 @@ impl JobManager {
         id
     }
 
-    pub fn subscribe(&self, id: u64) -> broadcast::Receiver<JobProgress> {
+    pub fn subscribe(&self, id: JobId) -> broadcast::Receiver<JobProgress> {
         let (tx, rx) = broadcast::channel(1);
         let mut invalidation_receiver = self.invalidation_channel.subscribe();
 

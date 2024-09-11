@@ -258,7 +258,9 @@ export function MatchPlatformsModal() {
           {loading ? <LoaderCircleIcon className="animate-spin" /> : null}
           {error ? <AlertCircleIcon className="text-destructive-text" /> : null}
           {platformData?.map((platform) => {
-            const selection = selections.get(platform.id);
+            const selection =
+              selections.get(platform.id) || defaultSelections.get(platform.id);
+
             const unchanged = defaultSelections.get(platform.id) === selection;
 
             const relativePath =

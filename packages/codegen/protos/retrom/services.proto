@@ -90,9 +90,9 @@ message UpdateLibraryMetadataRequest {
 }
 
 message UpdateLibraryMetadataResponse {
-  uint64 platform_metadata_job_id = 1;
-  uint64 game_metadata_job_id = 2;
-  uint64 extra_metadata_job_id = 3;
+  string platform_metadata_job_id = 1;
+  string game_metadata_job_id = 2;
+  string extra_metadata_job_id = 3;
 }
 
 message GetPlatformsRequest {
@@ -398,7 +398,7 @@ message GetJobsResponse {
 }
 
 message GetJobSubscriptionRequest {
-  uint64 job_id = 1;
+  string job_id = 1;
 }
 
 message GetJobSubscriptionResponse {

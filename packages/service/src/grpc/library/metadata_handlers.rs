@@ -322,8 +322,8 @@ pub async fn update_metadata(
         .await;
 
     Ok(UpdateLibraryMetadataResponse {
-        platform_metadata_job_id,
-        game_metadata_job_id,
-        extra_metadata_job_id,
+        platform_metadata_job_id: platform_metadata_job_id.to_string(),
+        game_metadata_job_id: game_metadata_job_id.to_string(),
+        extra_metadata_job_id: extra_metadata_job_id.to_string(),
     })
 }

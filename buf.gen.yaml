@@ -14,4 +14,3 @@ plugins:
       - useOptionals=messages
       - useMapType=true
       - enumsAsLiterals=true
-      - forceLong=string

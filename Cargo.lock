@@ -4010,6 +4010,7 @@ dependencies = [
  "tower",
  "tracing",
  "tracing-subscriber",
+ "uuid",
  "warp",
  "zipit",
 ]

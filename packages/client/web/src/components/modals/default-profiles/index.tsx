@@ -228,10 +228,27 @@ function DefaultEmulatorProfiles(props: {
                       (e) => e.id === selectedProfile?.emulatorId,
                     );
 
-                    const displayText =
-                      selectedProfile !== undefined
+                    const validProfiles = emulatorProfiles.flatMap(
+                      (profile) => {
+                        const emulator = emulators.find(
+                          (e) => e.id === profile.emulatorId,
+                        );
+
+                        if (
+                          !emulator?.supportedPlatforms.includes(platformId)
+                        ) {
+                          return [];
+                        }
+
+                        return [profile];
+                      },
+                    );
+
+                    const displayText = validProfiles.length
+                      ? selectedProfile !== undefined
                         ? `${emulatorForSelection?.name} - ${selectedProfile.name}`
-                        : "Select a profile...";
+                        : "Select a profile..."
+                      : "No valid profiles available";
 
                     const unchanged =
                       currentDefaultProfile?.emulatorProfileId ===
@@ -247,7 +264,10 @@ function DefaultEmulatorProfiles(props: {
                               </pre>
                             </code>
                             <Popover modal={true}>
-                              <PopoverTrigger asChild>
+                              <PopoverTrigger
+                                asChild
+                                disabled={!validProfiles.length}
+                              >
                                 <Button
                                   variant="outline"
                                   role="combobox"
@@ -260,11 +280,13 @@ function DefaultEmulatorProfiles(props: {
                                 >
                                   <span>
                                     {displayText}
-                                    {unchanged && (
-                                      <span className="text-xs opacity-50">
-                                        {" (unchanged)"}
-                                      </span>
-                                    )}
+                                    {currentDefaultProfile &&
+                                      unchanged &&
+                                      validProfiles.length > 0 && (
+                                        <span className="text-xs opacity-50">
+                                          {" (unchanged)"}
+                                        </span>
+                                      )}
                                   </span>
 
                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -286,6 +308,14 @@ function DefaultEmulatorProfiles(props: {
                                             "Emulator not found for emulator profile: ",
                                             profile,
                                           );
+                                          return null;
+                                        }
+
+                                        if (
+                                          !emulator.supportedPlatforms.includes(
+                                            platformId,
+                                          )
+                                        ) {
                                           return null;
                                         }
 

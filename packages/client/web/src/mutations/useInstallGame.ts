@@ -1,4 +1,7 @@
-import { InstallationProgressUpdate } from "@/generated/retrom/client/client-utils";
+import {
+  InstallationProgressUpdate,
+  InstallGamePayload,
+} from "@/generated/retrom/client/client-utils";
 import { Game } from "@/generated/retrom/models/games";
 import { GameFile } from "@/generated/retrom/models/game-files";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -40,7 +43,7 @@ export function useInstallGame(game: Game, files: GameFile[]) {
     mutationKey: ["installation", game.path, files],
     mutationFn: () =>
       invoke<void>("plugin:installer|install_game", {
-        payload: { game, files },
+        payload: { game, files } satisfies InstallGamePayload,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({

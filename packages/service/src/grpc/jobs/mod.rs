@@ -4,6 +4,7 @@ use std::{pin::Pin, sync::Arc};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::Status;
 use tracing::Instrument;
+use uuid::Uuid;
 
 use retrom_codegen::retrom::{
     job_service_server::JobService, GetJobSubscriptionRequest, GetJobSubscriptionResponse,
@@ -60,7 +61,10 @@ impl JobService for JobServiceHandlers {
         request: tonic::Request<GetJobSubscriptionRequest>,
     ) -> Result<tonic::Response<Self::GetJobSubscriptionStream>, Status> {
         let (tx, rx) = tokio::sync::mpsc::channel(5);
-        let job_id = request.into_inner().job_id;
+        let job_id = match Uuid::try_parse(&request.into_inner().job_id) {
+            Ok(job_id) => job_id,
+            Err(_) => return Err(Status::invalid_argument("Invalid job ID")),
+        };
 
         let job_manager = self.job_manager.clone();
         let mut jobs_rx = job_manager.subscribe(job_id);
