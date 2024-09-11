@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.73](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.72...retrom-v0.0.73) - 2024-09-11
+
+### Fixed
+
+- macOS entitlements for notarization
+
 ## [0.0.72](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.71...retrom-v0.0.72) - 2024-09-08
 
 ### Fixed
