@@ -21,7 +21,7 @@ export function useEmulators<T = GetEmulatorsResponse>(
   const retromClient = useRetromClient();
 
   return useQuery({
-    queryKey: ["emulators", request, retromClient],
+    queryKey: ["emulators", request, retromClient, clientId],
     select: selectFn,
     enabled,
     queryFn: async () => {

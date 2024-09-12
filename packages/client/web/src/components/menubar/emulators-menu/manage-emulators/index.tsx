@@ -419,7 +419,7 @@ function EmulatorList(props: {
       <DialogFooter className="border-none mt-8">
         <div className="flex justify-end col-span-4 gap-4">
           <DialogClose asChild>
-            <Button variant="secondary">Cancel</Button>
+            <Button variant="secondary">Close</Button>
           </DialogClose>
 
           <Button

@@ -86,7 +86,7 @@ clients on any amount of other devices to (un)install/download and subsequently 
 ## Installation
 
 > [!TIP]
-> After installation, make sure to check out the [Quickstart guide](/docs/quick-start/doc.md) to get
+> After installation, make sure to check out the [Quickstart guide](/docs/quick-start/README.md) to get
 > up and running quickly.
 
 ### Preparation

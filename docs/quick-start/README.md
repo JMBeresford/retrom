@@ -1,7 +1,7 @@
 # Retrom Quick Start Guide
 
 > [!TIP]
-> After you have completed this guide, you may want to check out the [Emulator Config](../emulator-config/doc.md) guide to
+> After you have completed this guide, you may want to check out the [Emulator Config](../emulator-config/README.md) guide to
 > configure your emulators and profiles.
 
 <!--toc:start-->

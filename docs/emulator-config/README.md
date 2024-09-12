@@ -5,7 +5,7 @@ Additionally, for each emulator you will need to configure a launch profile. Lau
 to specify the command line arguments (if any) that the emulator should use when launching a game.
 
 > [!TIP]
-> If you haven't yet setup your library, you may want to check out the [Quick Start Guide](../quick-start/doc.md) guide to
+> If you haven't yet setup your library, you may want to check out the [Quick Start Guide](../quick-start/README.md) guide to
 > get started then come back here.
 
 <!--toc:start-->

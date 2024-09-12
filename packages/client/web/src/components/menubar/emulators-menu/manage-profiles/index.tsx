@@ -15,6 +15,7 @@ import { useEmulators } from "@/queries/useEmulators";
 import { CircleAlertIcon, LoaderCircleIcon } from "lucide-react";
 import { ProfileList } from "./profile-list";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ManageProfilesMenuItem() {
   const { data: emulators, status: emulatorsStatus } = useEmulators({
@@ -49,24 +50,29 @@ export function ManageProfilesMenuItem() {
         ) : error ? (
           <></>
         ) : (
-          <Accordion type="multiple">
-            {emulators.map((emulator) => (
-              <ProfileList
-                key={emulator.id}
-                emulator={emulator}
-                profiles={profiles.filter((p) => p.emulatorId === emulator.id)}
-              />
-            ))}
+          <ScrollArea type="auto" className="h-[65dvh] pr-4">
+            <Accordion type="multiple">
+              {emulators.map((emulator) => (
+                <ProfileList
+                  key={emulator.id}
+                  emulator={emulator}
+                  profiles={profiles.filter(
+                    (p) => p.emulatorId === emulator.id,
+                  )}
+                />
+              ))}
 
-            {emulators.length === 0 && (
-              <div className="flex justify-center items-center gap-2 text-muted-foreground mt-8">
-                <CircleAlertIcon className="w-[2rem] h-[2rem]" />
-                <p className="text-center">
-                  No emulators found. Please add an emulator to create profiles.
-                </p>
-              </div>
-            )}
-          </Accordion>
+              {emulators.length === 0 && (
+                <div className="flex justify-center items-center gap-2 text-muted-foreground mt-8">
+                  <CircleAlertIcon className="w-[2rem] h-[2rem]" />
+                  <p className="text-center">
+                    No emulators found. Please add an emulator to create
+                    profiles.
+                  </p>
+                </div>
+              )}
+            </Accordion>
+          </ScrollArea>
         )}
 
         <DialogFooter className="mt-6">

@@ -1,14 +1,22 @@
 import { checkIsDesktop } from "@/lib/env";
 import { useNavigate } from "@tanstack/react-router";
-import { createContext, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 
-export type Step = "server-host" | "client-name" | "confirm" | "done";
+export type Step = "ServerHost" | "ClientName" | "Confirm";
 
 const SetupModalContext = createContext<
   | {
       step: Step;
       nextStep?: () => void;
       previousStep?: () => void;
+      setStep: Dispatch<SetStateAction<Step>>;
     }
   | undefined
 >(undefined);
@@ -25,31 +33,31 @@ export function useSetupModal() {
 }
 
 const nextStepTransitions: Record<Step, Step | undefined> = {
-  "server-host": checkIsDesktop() ? "client-name" : "confirm",
-  "client-name": "confirm",
-  confirm: "done",
-  done: undefined,
+  ServerHost: checkIsDesktop() ? "ClientName" : "Confirm",
+  ClientName: "Confirm",
+  Confirm: "ServerHost",
 };
 
 const previousStepTransitions: Record<Step, Step | undefined> = {
-  "server-host": undefined,
-  "client-name": "server-host",
-  confirm: checkIsDesktop() ? "client-name" : "server-host",
-  done: undefined,
+  ServerHost: undefined,
+  ClientName: "ServerHost",
+  Confirm: checkIsDesktop() ? "ClientName" : "ServerHost",
 };
 
 export function SetupModalProvider(props: React.PropsWithChildren) {
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("server-host");
+  const [step, setStep] = useState<Step>("ServerHost");
 
   const transition = useMemo(() => {
     const nextStep = nextStepTransitions[step];
 
     switch (step) {
-      case "confirm": {
+      case "Confirm": {
         return () => {
           navigate({
             search: { setupModal: undefined },
+          }).then(() => {
+            setStep("ServerHost");
           });
         };
       }
@@ -84,6 +92,7 @@ export function SetupModalProvider(props: React.PropsWithChildren) {
         step,
         nextStep,
         previousStep,
+        setStep,
       }}
     >
       {props.children}

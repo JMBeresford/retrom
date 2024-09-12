@@ -4,7 +4,7 @@ use std::{
     fs::create_dir,
     path::PathBuf,
 };
-use tauri::{fs, plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
+use tauri::{plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
 use tracing::{debug, info, instrument, trace};
 
 use retrom_codegen::retrom::{InstallationProgressUpdate, InstallationStatus};

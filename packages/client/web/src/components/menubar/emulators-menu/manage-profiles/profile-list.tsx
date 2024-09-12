@@ -55,8 +55,8 @@ export function ProfileList(props: Props) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[10%]">Name</TableHead>
-              <TableHead className="w-[10%]">Extensions</TableHead>
-              <TableHead>Args</TableHead>
+              <TableHead className="w-[20%]">File Extensions</TableHead>
+              <TableHead>Custom Arguments</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>

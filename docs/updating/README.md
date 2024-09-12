@@ -8,6 +8,15 @@ through updating the server and the client(s) you use to interact with it.
 > You should **always** keep your server and client(s) versions in sync. While minor version updates will _sometimes_ be _partially_ compatible,
 > is is not guaranteed. If you are unsure, it is best to update both the server and client(s) at the same time.
 
+<!--toc:start-->
+
+- [Updating Retrom](#updating-retrom)
+  - [Updating the Server](#updating-the-server)
+    - [Docker (Recommended)](#docker-recommended)
+  - [Updating the Client](#updating-the-client)
+
+<!--toc:end-->
+
 ## Updating the Server
 
 ### Docker (Recommended)

@@ -66,7 +66,7 @@ export function ClientName() {
       <div className="space-y-4 py-4">
         <div
           className={cn(
-            "grid grid-flow-col grid-cols-[1fr_auto_1fr] gap-4",
+            "grid grid-flow-col grid-cols-[1fr_auto_1fr] gap-8",
             "[&_h3]:text-xl [&_h3]:font-bold [&_p]:text-sm [&_p]:text-muted-foreground [&_p]:max-w-[35ch]",
           )}
         >
@@ -91,8 +91,9 @@ export function ClientName() {
             />
 
             {isExistingClient(name) && (
-              <h6 className="text-sm font-medium text-destructive-text">
-                Client name is taken, please choose another.
+              <h6 className="text-sm font-medium text-destructive-text max-w-[35ch]">
+                Client name is taken, please choose another or use the existing
+                client.
               </h6>
             )}
 
@@ -114,7 +115,7 @@ export function ClientName() {
             <div>
               <TooltipProvider>
                 <h3>
-                  Clone Existing Client
+                  Use Existing Client
                   <Tooltip>
                     <TooltipTrigger>
                       <InfoIcon className="w-[1rem] h-[1rem] ml-1 text-destructive-text" />
