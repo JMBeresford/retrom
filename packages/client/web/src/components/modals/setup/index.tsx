@@ -7,12 +7,12 @@ export function SetupModal() {
   const { setupModal } = RootRoute.useSearch();
 
   return (
-    <SetupModalProvider>
-      <Dialog open={setupModal?.open}>
+    <Dialog open={setupModal?.open}>
+      <SetupModalProvider>
         <DialogContent userCanClose={false}>
           <SetupModalSteps />
         </DialogContent>
-      </Dialog>
-    </SetupModalProvider>
+      </SetupModalProvider>
+    </Dialog>
   );
 }

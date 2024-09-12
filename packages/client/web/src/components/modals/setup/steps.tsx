@@ -4,10 +4,9 @@ import { Confirm } from "./confirm";
 import { ClientName } from "./client-name";
 
 const RenderStep: Record<Step, JSX.Element> = {
-  "server-host": <ServerHostStep />,
-  "client-name": <ClientName />,
-  confirm: <Confirm />,
-  done: <></>,
+  ServerHost: <ServerHostStep />,
+  ClientName: <ClientName />,
+  Confirm: <Confirm />,
 };
 
 export function SetupModalSteps() {

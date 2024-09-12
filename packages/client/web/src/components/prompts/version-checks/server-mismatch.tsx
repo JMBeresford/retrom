@@ -58,11 +58,15 @@ export function ServerMismatch() {
         <div>
           <Label>Learn more:</Label>
           <Button variant="link">
-            <a href="#">updating the server</a>
+            <a href="https://github.com/JMBeresford/retrom/blob/main/docs/updating/README.md#updating-the-server">
+              updating the server
+            </a>
           </Button>
 
           <Button variant="link">
-            <a href="#">updating the client</a>
+            <a href="https://github.com/JMBeresford/retrom/blob/main/docs/updating/README.md#updating-the-client">
+              updating the client
+            </a>
           </Button>
         </div>
 
