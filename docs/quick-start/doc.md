@@ -1,5 +1,18 @@
 # Retrom Quick Start Guide
 
+> [!TIP]
+> After you have completed this guide, you may want to check out the [Emulator Config](../emulator-config/doc.md) guide to
+> configure your emulators and profiles.
+
+<!--toc:start-->
+
+- [Retrom Quick Start Guide](#retrom-quick-start-guide)
+  - [Installation](#installation)
+  - [First Time Setup](#first-time-setup)
+  - [Initial Library Setup](#initial-library-setup)
+
+<!--toc:end-->
+
 ## Installation
 
 Follow the instructions in the [README](../../README.md#installation) to get Retrom up and running.
@@ -43,7 +56,7 @@ restore an installation.
 > else that is client-specific. If you don't, you will run into issues when trying to launch games when one changes and
 > the other no longer matches.
 >
-> If you are unsure, it is **highly recommended** to keep each client distinct.
+> If you are unsure, it is **highly recommended** to keep each _actively used_ client distinct.
 
 After you have entered a name, click `Next` to proceed.
 
