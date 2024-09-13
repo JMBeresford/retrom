@@ -73,8 +73,10 @@ jobs:
         include:
           - platform: "macos-latest" # for Arm based macs (M1 and above).
             args: "--target aarch64-apple-darwin --config tauri.build.conf.json"
+            rustflags: "-L/opt/homebrew/opt/libpq/lib"
           - platform: "macos-latest" # for Intel based macs.
             args: "--target x86_64-apple-darwin --config tauri.build.conf.json"
+            rustflags: "-L/opt/homebrew/opt/libpq/lib"
           - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
             args: "--config tauri.build.conf.json"
           - platform: "windows-latest"
@@ -126,7 +128,7 @@ jobs:
       - name: install dependencies (macos only)
         if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
         run: |
-          brew install libpq && brew link --force libpq
+          brew install postgresql@16 libpq && brew link --force postgresql libpq
 
       - name: install frontend dependencies
         run: pnpm install && pnpm exec buf generate
@@ -145,6 +147,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          RUSTFLAGS: ${{ matrix.rustflags }}
         with:
           projectPath: packages/client
           tauriScript: pnpm tauri
