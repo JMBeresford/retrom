@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.77](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.76...retrom-v0.0.77) - 2024-09-13
+
+### Fixed
+
+- emulator modal file picker
+
 ## [0.0.76](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.75...retrom-v0.0.76) - 2024-09-13
 
 ### Fixed
