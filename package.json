@@ -16,8 +16,8 @@
   },
   "dependencies": {
     "@tauri-apps/api": "2.0.0-rc.4",
-    "@tauri-apps/plugin-fs": "2.0.0-beta.5",
-    "@tauri-apps/plugin-upload": "2.0.0-beta.6",
+    "@tauri-apps/plugin-fs": "^2.0.0-rc",
+    "@tauri-apps/plugin-upload": "^2.0.0-rc",
     "eslint": "^9.9.0",
     "typescript": "^5.5.3"
   },

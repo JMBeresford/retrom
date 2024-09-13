@@ -216,14 +216,18 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                     size="icon"
                     className="p-2 h-min w-min"
                     variant="secondary"
-                    onClick={async () => {
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+
                       const result = await open({
                         title: "Select Emulator Executable",
                         multiple: false,
+                        directory: false,
                       });
 
-                      if (result?.path) {
-                        field.onChange(`${result.path}`);
+                      if (result) {
+                        field.onChange(result);
                       }
                     }}
                   >

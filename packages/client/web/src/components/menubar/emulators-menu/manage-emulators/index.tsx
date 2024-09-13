@@ -379,14 +379,22 @@ function EmulatorList(props: {
                                 size="icon"
                                 className="p-2 h-min w-min"
                                 variant="secondary"
-                                onClick={async () => {
-                                  const result = await open({
-                                    title: "Select Emulator Executable",
-                                    multiple: false,
-                                  });
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
 
-                                  if (result?.path) {
-                                    field.onChange(`${result.path}`);
+                                  try {
+                                    const result = await open({
+                                      title: "Select Emulator Executable",
+                                      multiple: false,
+                                      directory: false,
+                                    });
+
+                                    if (result) {
+                                      field.onChange(result);
+                                    }
+                                  } catch (e) {
+                                    console.error(e);
                                   }
                                 }}
                               >
