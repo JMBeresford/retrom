@@ -128,7 +128,7 @@ jobs:
       - name: install dependencies (macos only)
         if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
         run: |
-          brew install postgresql@16 libpq && brew link --force postgresql libpq
+          brew install postgresql@16 libpq && brew link --force libpq
 
       - name: install frontend dependencies
         run: pnpm install && pnpm exec buf generate
