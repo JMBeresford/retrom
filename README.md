@@ -25,6 +25,8 @@ clients on any amount of other devices to (un)install/download and subsequently 
     - [Server](#server)
       - [Docker (Recommended)](#docker-recommended)
     - [Client](#client)
+      - [Desktop Client](#desktop-client)
+      - [Web Client](#web-client)
 
 <!--toc:end-->
 
@@ -56,7 +58,6 @@ clients on any amount of other devices to (un)install/download and subsequently 
 **Installing and launching**
 
 https://github.com/user-attachments/assets/05146df5-9a44-41d0-992f-f59c65fb3ae1
-
 
 ## Roadmap
 
@@ -191,6 +192,8 @@ retrom-db:
 
 ### Client
 
+#### Desktop Client
+
 Simply head to the [releases page](https://github.com/jmberesford/retrom/releases) and download the
 latest version for your platform. The client is available for Windows, MacOS (both Intel and M series chips),
 and Linux.
@@ -209,3 +212,23 @@ The following may help you differentiate between the different versions:
 - `*-x64.AppImage` files are for Linux
 - `*-x64.deb` files are for Linux (Debian-based distros)
 - `*-x64.rpm` files are for Linux (Red Hat-based distros)
+
+#### Web Client
+
+> [!NOTE]
+> There are plans to bundle the web client along with the service in a single container in the future,
+> for ease of use.
+
+The web client is currently only available as a Docker container. You can run it with the following
+`docker-compose.yml` file, as an example:
+
+```yaml
+retrom-web:
+  image: ghcr.io/jmberesford/retrom-web:latest
+  container_name: retrom-web
+  hostname: retrom-web
+  ports:
+    - 3000:3000
+  environment:
+    RETROM_HOST: http://retrom:5101 # the URL of your Retrom server
+```
