@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.78](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.77...retrom-v0.0.78) - 2024-09-15
+
+### Fixed
+
+- tls in launcher plugin
+
 ## [0.0.77](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.76...retrom-v0.0.77) - 2024-09-13
 
 ### Fixed
