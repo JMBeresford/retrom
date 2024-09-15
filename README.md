@@ -15,7 +15,7 @@ clients on any amount of other devices to (un)install/download and subsequently 
 - [Retrom](#retrom)
   - [Overview](#overview)
   - [Core Features](#core-features)
-  - [Screenshots](#screenshots)
+  - [Screenshots and Recordings](#screenshots-and-recordings)
   - [Roadmap](#roadmap)
   - [Installation](#installation)
     - [Preparation](#preparation)
@@ -43,10 +43,20 @@ clients on any amount of other devices to (un)install/download and subsequently 
 - Automatically download game metadata and artworks from supported providers
   to showcase your library with style!
 
-## Screenshots
+## Screenshots and Recordings
+
+**Home Screen**
 
 ![Retrom · 7 12pm · 08-25](https://github.com/user-attachments/assets/c5b72d5f-947b-4ba4-8df5-0eb8d48e52a6)
+
+**Game View**
+
 ![Retrom](https://github.com/user-attachments/assets/31da1b2a-4460-4712-b16c-2bcf19cd5df0)
+
+**Installing and launching**
+
+https://github.com/user-attachments/assets/05146df5-9a44-41d0-992f-f59c65fb3ae1
+
 
 ## Roadmap
 
