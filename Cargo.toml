@@ -49,7 +49,11 @@ reqwest = { version = "0.12.3", features = [
   "brotli",
   "deflate",
 ] }
-tonic = "0.11"
+tonic = { version = "0.11", features = [
+  "tls",
+  "tls-roots",
+  "tls-webpki-roots",
+] }
 tonic-web = "0.11"
 prost = "0.12"
 prost-types = "0.12"
@@ -61,3 +65,9 @@ tokio-retry = { version = "0.3.0" }
 tokio-stream = "0.1.15"
 thiserror = "1.0"
 sanitize-filename = "0.5.0"
+hyper-util = { version = "0.1.3", features = ["full"] }
+hyper = { version = "0.14", features = ["full", "http2", "http1"] }
+tower = { version = "0.4.13", features = ["full"] }
+tokio-rustls = "0.25.0"
+webpki-roots = "0.26.5"
+hyper-rustls = { version = "0.25.0", features = ["http2"] }

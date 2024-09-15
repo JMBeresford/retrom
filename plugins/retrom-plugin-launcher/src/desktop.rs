@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use retrom_codegen::retrom::{
-    GamePlayStatusUpdate, GetGamesRequest, PlayStatus, UpdateGameMetadataRequest,
+    GamePlayStatusUpdate, GetGameMetadataRequest, PlayStatus, UpdateGameMetadataRequest,
     UpdatedGameMetadata,
 };
 use serde::de::DeserializeOwned;
@@ -81,21 +81,21 @@ impl<R: Runtime> Launcher<R> {
             warn!("Game {} is not running", game_id);
         }
 
-        let game_client = self.app_handle.game_client();
-        let metadata_client = self.app_handle.metadata_client();
+        let mut metadata_client = self.app_handle.get_metadata_client().await;
 
-        let metadata = game_client
-            .await
-            .write()
-            .await
-            .get_games(tonic::Request::new(GetGamesRequest {
-                ids: vec![game_id],
-                with_metadata: Some(true),
-                ..Default::default()
-            }))
-            .await
-            .ok()
-            .and_then(|res| res.into_inner().metadata.into_iter().next());
+        let req = tonic::Request::new(GetGameMetadataRequest {
+            game_ids: vec![game_id],
+        });
+
+        let metadata_res = match metadata_client.get_game_metadata(req).await {
+            Ok(res) => Some(res.into_inner()),
+            Err(why) => {
+                warn!("Failed to get game metadata: {:#?}", why);
+                None
+            }
+        };
+
+        let metadata = metadata_res.and_then(|res| res.metadata.into_iter().next());
 
         if let (Some(metadata), Some(child)) = (metadata, child) {
             // Use existing array members as we cannot define them as optional in the proto
@@ -130,13 +130,7 @@ impl<R: Runtime> Launcher<R> {
                 metadata: vec![updated_metadata],
             });
 
-            if let Err(why) = metadata_client
-                .await
-                .write()
-                .await
-                .update_game_metadata(request)
-                .await
-            {
+            if let Err(why) = metadata_client.update_game_metadata(request).await {
                 warn!("Failed to update game metadata: {}", why);
             }
         }

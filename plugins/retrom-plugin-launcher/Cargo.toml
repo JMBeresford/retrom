@@ -21,6 +21,13 @@ tracing = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-plugin-installer = { workspace = true }
 retry = { workspace = true }
+hyper = { workspace = true }
+hyper-util = { workspace = true }
+tower = { workspace = true }
+tonic-web = { workspace = true }
+tokio-rustls = { workspace = true }
+webpki-roots = { workspace = true }
+hyper-rustls = { workspace = true }
 
 [build-dependencies]
 tauri-plugin = { version = "2.0.0-beta.17", features = ["build"] }

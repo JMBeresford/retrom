@@ -1,5 +1,10 @@
+use std::{str::FromStr, sync::Mutex};
+
+use hyper::{client::HttpConnector, Client, Uri};
+use hyper_rustls::HttpsConnector;
 use retrom_codegen::retrom::{
     game_service_client::GameServiceClient, metadata_service_client::MetadataServiceClient,
+    RetromClientConfig,
 };
 use tauri::{
     plugin::{Builder, TauriPlugin},
@@ -12,17 +17,23 @@ mod commands;
 mod error;
 use desktop::Launcher;
 pub use error::{Error, Result};
-use tokio::sync::RwLock;
-use tonic::transport::Channel;
+use tokio_rustls::rustls::{ClientConfig, RootCertStore};
+use tonic::{body::BoxBody, transport::Channel};
+use tonic_web::{GrpcWebCall, GrpcWebClientLayer, GrpcWebClientService};
+use tracing::info;
 
-type MetadataClient = MetadataServiceClient<Channel>;
+type MetadataClient = MetadataServiceClient<
+    GrpcWebClientService<Client<HttpsConnector<HttpConnector>, GrpcWebCall<BoxBody>>>,
+>;
+// type MetadataClient = MetadataServiceClient<Channel>;
 type GameClient = GameServiceClient<Channel>;
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the launcher APIs.
 pub trait LauncherExt<R: Runtime> {
     fn launcher(&self) -> &Launcher<R>;
-    fn metadata_client(&self) -> impl std::future::Future<Output = &RwLock<MetadataClient>>;
-    fn game_client(&self) -> impl std::future::Future<Output = &RwLock<GameClient>>;
+    fn get_service_host(&self) -> impl std::future::Future<Output = String>;
+    fn get_metadata_client(&self) -> impl std::future::Future<Output = MetadataClient>;
+    fn get_game_client(&self) -> impl std::future::Future<Output = GameClient>;
 }
 
 impl<R: Runtime, T: Manager<R>> crate::LauncherExt<R> for T {
@@ -32,66 +43,78 @@ impl<R: Runtime, T: Manager<R>> crate::LauncherExt<R> for T {
             .inner()
     }
 
-    async fn metadata_client(&self) -> &RwLock<MetadataClient> {
-        if self.try_state::<RwLock<MetadataClient>>().is_none() {
-            dotenvy::dotenv().ok();
-            let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5101".to_string());
-            let hostname =
-                std::env::var("RETROM_HOSTNAME").unwrap_or_else(|_| "http://localhost".to_string());
+    async fn get_service_host(&self) -> String {
+        let config = self.app_handle().try_state::<Mutex<RetromClientConfig>>();
+        let host: String = match config.and_then(|config| {
+            config.lock().ok().and_then(|config| {
+                config.server.as_ref().map(|server| {
+                    let mut host = server.hostname.to_string();
 
-            let host = format!("{hostname}:{port}");
-            let mut sleep = 100.0;
-
-            loop {
-                match MetadataServiceClient::connect(host.clone()).await {
-                    Ok(client) => {
-                        self.manage::<RwLock<MetadataClient>>(RwLock::new(client));
-
-                        break;
+                    if let Some(port) = server.port {
+                        host.push_str(&format!(":{}", port));
                     }
-                    Err(_) => {
-                        tracing::warn!("Failed to connect to metadata service, retring");
-                        tokio::time::sleep(std::time::Duration::from_millis(sleep as u64)).await;
-                        sleep *= 1.2;
-                    }
-                }
+
+                    info!("Server host: {}", host);
+
+                    host
+                })
+            })
+        }) {
+            Some(host) => host,
+            None => {
+                tracing::warn!("No server configuration found");
+                "http://localhost:5101".to_string()
             }
-        }
+        };
 
-        self.try_state::<RwLock<MetadataClient>>()
-            .expect("Could not get metadata client from app instance")
-            .inner()
+        host
     }
 
-    async fn game_client(&self) -> &RwLock<GameClient> {
-        if self.try_state::<RwLock<GameClient>>().is_none() {
-            dotenvy::dotenv().ok();
-            let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5101".to_string());
-            let hostname =
-                std::env::var("RETROM_HOSTNAME").unwrap_or_else(|_| "http://localhost".to_string());
+    async fn get_metadata_client(&self) -> MetadataClient {
+        let host: String = self.get_service_host().await;
 
-            let host = format!("{hostname}:{port}");
-            let mut sleep = 100.0;
+        let uri = Uri::from_str(&host).expect("Failed to parse URI");
 
-            loop {
-                match GameServiceClient::connect(host.clone()).await {
-                    Ok(client) => {
-                        self.manage::<RwLock<GameClient>>(RwLock::new(client));
+        let roots = RootCertStore {
+            roots: webpki_roots::TLS_SERVER_ROOTS.to_vec(),
+        };
 
-                        break;
-                    }
-                    Err(_) => {
-                        tracing::warn!("Failed to connect to metadata service, retring");
-                        tokio::time::sleep(std::time::Duration::from_millis(sleep as u64)).await;
-                        sleep *= 1.2;
-                    }
+        let tls = ClientConfig::builder()
+            .with_root_certificates(roots)
+            .with_no_client_auth();
+
+        let https = hyper_rustls::HttpsConnectorBuilder::new()
+            .with_tls_config(tls)
+            .https_or_http()
+            .enable_http2()
+            .build();
+
+        let client = hyper::Client::builder().build(https);
+
+        let connector = tower::ServiceBuilder::new()
+            .layer(GrpcWebClientLayer::new())
+            // .map_request(|_| uri.clone())
+            .service(client);
+
+        MetadataServiceClient::with_origin(connector, uri)
+    }
+
+    async fn get_game_client(&self) -> GameClient {
+        let host = self.get_service_host().await;
+        let mut sleep = 100.0;
+
+        loop {
+            match GameServiceClient::connect(host.clone()).await {
+                Ok(client) => {
+                    return client;
+                }
+                Err(_) => {
+                    tracing::warn!("Failed to connect to metadata service, retring");
+                    tokio::time::sleep(std::time::Duration::from_millis(sleep as u64)).await;
+                    sleep *= 1.2;
                 }
             }
         }
-
-        self.try_state::<RwLock<GameClient>>()
-            .expect("Could not get game client from app instance")
-            .inner()
     }
 }
 

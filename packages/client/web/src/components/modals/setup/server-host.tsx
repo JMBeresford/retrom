@@ -109,6 +109,7 @@ function TestButton(props: { hostname: string; port?: string }) {
   const query = useQuery({
     enabled: false,
     queryKey: ["greeting", hostname, port],
+
     queryFn: async () => {
       const host = hostname + (port ? `:${port}` : "");
       const client = new RetromClient(host);

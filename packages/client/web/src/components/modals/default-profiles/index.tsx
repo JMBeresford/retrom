@@ -304,10 +304,6 @@ function DefaultEmulatorProfiles(props: {
                                         );
 
                                         if (!emulator) {
-                                          console.warn(
-                                            "Emulator not found for emulator profile: ",
-                                            profile,
-                                          );
                                           return null;
                                         }
 

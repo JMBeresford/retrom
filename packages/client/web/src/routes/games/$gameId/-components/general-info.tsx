@@ -7,9 +7,9 @@ export function GeneralInfo() {
   const { gameMetadata, platformMetadata, game, platform } = useGameDetail();
 
   const playTime = useMemo(() => {
-    const time = gameMetadata?.minutesPlayed ?? 0;
+    const time = gameMetadata?.minutesPlayed;
 
-    if (time === 0) {
+    if (time === undefined) {
       return "Not played yet";
     }
 
