@@ -11,6 +11,10 @@ exclude = ["**/node_modules"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "Retrom"
+path = "src/main.rs"
+
 [build-dependencies]
 tauri-build = { version = "2.0.0-rc.7", features = [] }
 
