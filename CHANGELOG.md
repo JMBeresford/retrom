@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.79](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.78...retrom-v0.0.79) - 2024-09-16
+
+### Fixed
+
+- match games by igdb ID
+
 ## [0.0.78](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.77...retrom-v0.0.78) - 2024-09-15
 
 ### Fixed
