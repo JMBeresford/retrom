@@ -100,13 +100,13 @@ https://github.com/user-attachments/assets/05146df5-9a44-41d0-992f-f59c65fb3ae1
 > After installation, make sure to check out the [Quickstart guide](/docs/quick-start/README.md) to get
 > up and running quickly.
 
-### Preparation
-
-> [!CAUTION] A Note on Security
+> [!CAUTION]
 > Retrom is designed **without** any specific security measures in mind. It is intended, and **highly recommended** that you run
 > Retrom on a local network only. If you wish to expose Retrom to the internet, you should do so behind a reverse proxy
 > with **proper security measures in place**. This is not a feature that is planned to be implemented in Retrom itself, as
 > there are many variables to consider when hosting something and there is no one-size-fits-all solution.
+
+### Preparation
 
 #### Library Structure
 
