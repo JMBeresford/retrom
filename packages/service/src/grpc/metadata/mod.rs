@@ -245,7 +245,7 @@ impl MetadataService for MetadataServiceHandlers {
         })
     }
 
-    #[tracing::instrument(level = Level::DEBUG, skip_all)]
+    #[tracing::instrument(skip_all)]
     async fn get_igdb_game_search_results(
         &self,
         request: Request<GetIgdbGameSearchResultsRequest>,
@@ -294,10 +294,6 @@ impl MetadataService for MetadataServiceHandlers {
 
         let fields = query.fields.as_ref();
 
-        if let Some(igdb_id) = fields.and_then(|fields| fields.id) {
-            where_clauses.push(format!("id = {igdb_id}"));
-        }
-
         if let Some(platform) = fields.and_then(|fields| fields.platform) {
             where_clauses.push(format!("release_dates.platform = {platform}"));
         }
@@ -319,12 +315,10 @@ impl MetadataService for MetadataServiceHandlers {
         };
 
         let igdb_client = self.igdb_client.clone();
+        let request_query = format!("{search_query}{fields_query}{filter_query}{limit_query}");
 
         let res = igdb_client
-            .make_request(
-                "games.pb".into(),
-                format!("{search_query}{fields_query}{filter_query}{limit_query}"),
-            )
+            .make_request("games.pb".into(), request_query)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -336,13 +330,45 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        let search_results = match igdb::GameResult::decode(bytes) {
+        let mut search_results = match igdb::GameResult::decode(bytes) {
             Ok(search_results) => search_results,
             Err(why) => {
                 error!("Could not decode response: {:?}", why);
                 return Err(Status::internal(why.to_string()));
             }
         };
+
+        // Explicitly get game w/ IGDB ID if specified, and merge with search results
+        if let Some(igdb_id) = fields.and_then(|fields| fields.id) {
+            let res = igdb_client
+                .make_request(
+                    "games.pb".into(),
+                    format!("{fields_query}where id = {igdb_id};"),
+                )
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+
+            let bytes = match res.bytes().await {
+                Ok(bytes) => bytes,
+                Err(why) => {
+                    error!("Could not get bytes: {:?}", why);
+                    return Err(Status::internal(why.to_string()));
+                }
+            };
+
+            match igdb::GameResult::decode(bytes) {
+                Ok(result) => {
+                    if !search_results.games.iter().any(|game| game.id == igdb_id) {
+                        let all_results = result.games.into_iter().chain(search_results.games);
+                        search_results.games = all_results.collect();
+                    }
+                }
+                Err(why) => {
+                    error!("Could not decode response: {:?}", why);
+                    return Err(Status::internal(why.to_string()));
+                }
+            };
+        }
 
         let metadata = search_results
             .games
