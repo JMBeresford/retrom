@@ -2,9 +2,9 @@ import {
   MenubarTrigger,
   MenubarMenu,
   MenubarContent,
+  MenubarItem,
 } from "@/components/ui/menubar";
-import { ManageEmulatorsMenuItem } from "./manage-emulators";
-import { ManageProfilesMenuItem } from "./manage-profiles";
+import { Link } from "@tanstack/react-router";
 
 export function EmulatorsMenu() {
   return (
@@ -14,9 +14,17 @@ export function EmulatorsMenu() {
       </MenubarTrigger>
 
       <MenubarContent>
-        <ManageEmulatorsMenuItem />
+        <MenubarItem>
+          <Link search={{ manageEmulatorsModal: { open: true } }}>
+            Manage Emulators
+          </Link>
+        </MenubarItem>
 
-        <ManageProfilesMenuItem />
+        <MenubarItem>
+          <Link search={{ manageEmulatorProfilesModal: { open: true } }}>
+            Manage Profiles
+          </Link>
+        </MenubarItem>
       </MenubarContent>
     </MenubarMenu>
   );

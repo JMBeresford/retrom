@@ -22,6 +22,8 @@ import { DownloadMetadataModal } from "@/components/modals/download-metadata";
 import { DeleteLibraryModal } from "@/components/modals/delete-library";
 import { MatchPlatformsModal } from "@/components/modals/match-platforms";
 import { DefaultProfilesModal } from "@/components/modals/default-profiles";
+import { ManageEmulatorProfilesModal } from "@/components/modals/manage-profiles";
+import { ManageEmulatorsModal } from "@/components/modals/manage-emulators";
 
 const TanStackRouterDevtools = import.meta.env.PROD
   ? () => null
@@ -53,6 +55,16 @@ const modalsSearchSchema = z.object({
     })
     .optional(),
   deleteLibraryModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  manageEmulatorsModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  manageEmulatorProfilesModal: z
     .object({
       open: z.boolean().catch(false),
     })
@@ -110,6 +122,8 @@ export const Route = createRootRoute({
             <DeleteLibraryModal />
             <MatchPlatformsModal />
             <DefaultProfilesModal />
+            <ManageEmulatorsModal />
+            <ManageEmulatorProfilesModal />
 
             <Prompts />
 

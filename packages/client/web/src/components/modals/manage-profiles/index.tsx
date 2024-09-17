@@ -1,3 +1,7 @@
+import { CircleAlertIcon, LoaderCircleIcon } from "lucide-react";
+import { ProfileList } from "./profile-list";
+import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Accordion } from "@/components/ui/accordion";
 import {
   Dialog,
@@ -7,17 +11,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { MenubarItem } from "@/components/ui/menubar";
 import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
 import { useEmulators } from "@/queries/useEmulators";
-import { CircleAlertIcon, LoaderCircleIcon } from "lucide-react";
-import { ProfileList } from "./profile-list";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigate } from "@tanstack/react-router";
+import { Route as RootRoute } from "@/routes/__root";
 
-export function ManageProfilesMenuItem() {
+export function ManageEmulatorProfilesModal() {
+  const navigate = useNavigate();
+  const { manageEmulatorProfilesModal } = RootRoute.useSearch();
+
   const { data: emulators, status: emulatorsStatus } = useEmulators({
     selectFn: (res) => res.emulators,
   });
@@ -29,14 +32,18 @@ export function ManageProfilesMenuItem() {
   const error = emulatorsStatus === "error" || profilesStatus === "error";
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <MenubarItem onSelect={(e) => e.preventDefault()}>
-          Manage Profiles
-        </MenubarItem>
-      </DialogTrigger>
-
-      <DialogContent>
+    <Dialog
+      modal={true}
+      open={manageEmulatorProfilesModal?.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          navigate({
+            search: { manageEmulatorProfilesModal: undefined },
+          });
+        }
+      }}
+    >
+      <DialogContent className="w-[clamp(300px,65dvw,1000px)]">
         <DialogHeader>
           <DialogTitle>Manage Emulator Profiles</DialogTitle>
           <DialogDescription>
@@ -51,7 +58,7 @@ export function ManageProfilesMenuItem() {
           <></>
         ) : (
           <ScrollArea type="auto" className="h-[65dvh] pr-4">
-            <Accordion type="multiple">
+            <Accordion type="multiple" className="w-full max-w-full">
               {emulators.map((emulator) => (
                 <ProfileList
                   key={emulator.id}
@@ -72,6 +79,8 @@ export function ManageProfilesMenuItem() {
                 </div>
               )}
             </Accordion>
+
+            <ScrollBar orientation="horizontal" />
           </ScrollArea>
         )}
 

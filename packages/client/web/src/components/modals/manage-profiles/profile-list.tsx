@@ -51,22 +51,24 @@ export function ProfileList(props: Props) {
           <EditProfileDialog emulator={emulator} />
         </Dialog>
 
-        <Table>
+        <Table className="w-full">
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[10%]">Name</TableHead>
-              <TableHead className="w-[20%]">File Extensions</TableHead>
+            <TableRow className="*:whitespace-nowrap">
+              <TableHead>Name</TableHead>
+              <TableHead>File Extensions</TableHead>
               <TableHead>Custom Arguments</TableHead>
-              <TableHead></TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {profiles.map((profile) => (
               <TableRow key={profile.id}>
-                <TableCell>{profile.name}</TableCell>
+                <TableCell className="w-auto min-w-[100px]">
+                  {profile.name}
+                </TableCell>
                 <TableCell>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 flex-wrap">
                     {profile.supportedExtensions.map((ext) => (
                       <Badge key={ext} variant="secondary">
                         {ext}
@@ -75,7 +77,9 @@ export function ProfileList(props: Props) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <pre>{profile.customArgs.join(" ")}</pre>
+                  <pre className="w-[95%] break-all whitespace-normal">
+                    {profile.customArgs.join(" ")}
+                  </pre>
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2 justify-end">

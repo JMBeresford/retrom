@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { MenubarItem } from "@/components/ui/menubar";
+import { useCallback, useEffect } from "react";
+import { Route as RootRoute } from "@/routes/__root";
 import {
   Dialog,
   DialogClose,
@@ -8,8 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "../../../ui/dialog";
+} from "../../ui/dialog";
 import {
   Check,
   ChevronsUpDown,
@@ -60,6 +59,7 @@ import {
 import { useDeleteEmulators } from "@/mutations/useDeleteEmulators";
 import { PlatformMetadata } from "@/generated/retrom/models/metadata";
 import { open } from "@tauri-apps/plugin-dialog";
+import { useNavigate } from "@tanstack/react-router";
 
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
@@ -110,8 +110,9 @@ export const changesetSchema = z.object({
   >;
 }>;
 
-export function ManageEmulatorsMenuItem() {
-  const [dialogOpen, setDialogOpen] = useState(false);
+export function ManageEmulatorsModal() {
+  const navigate = useNavigate();
+  const { manageEmulatorsModal } = RootRoute.useSearch();
 
   const { data: emulators, status: emulatorsStatus } = useEmulators({
     selectFn: (data) => data.emulators,
@@ -127,13 +128,14 @@ export function ManageEmulatorsMenuItem() {
   });
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <MenubarItem onSelect={(e) => e.preventDefault()}>
-          Manage Emulators
-        </MenubarItem>
-      </DialogTrigger>
-
+    <Dialog
+      open={manageEmulatorsModal?.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          navigate({ search: { manageEmulatorsModal: undefined } });
+        }
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Manage Emulators</DialogTitle>
