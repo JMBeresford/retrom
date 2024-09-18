@@ -41,6 +41,7 @@ message PlayGamePayload {
   Game game = 1;
   EmulatorProfile emulator_profile = 2;
   Emulator emulator = 3;
+  GameFile file = 4;
 }
 
 message StopGamePayload {

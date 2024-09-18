@@ -11,7 +11,7 @@ import { useEmulators } from "@/queries/useEmulators";
 import { useGameDetail } from "@/providers/game-details";
 
 export function PlayGameButton(props: ComponentProps<typeof Button>) {
-  const { game, platform } = useGameDetail();
+  const { game, platform, gameFiles } = useGameDetail();
   const { mutate: playAction } = usePlayGame(game);
   const { mutate: stopAction } = useStopGame(game);
 
@@ -66,6 +66,8 @@ export function PlayGameButton(props: ComponentProps<typeof Button>) {
     ? emulators?.find((emulator) => emulator.id === defaultProfile.emulatorId)
     : emulators?.at(0);
 
+  const file = gameFiles?.find((file) => file.id === game.defaultFileId);
+
   return (
     <Button
       {...props}
@@ -77,6 +79,7 @@ export function PlayGameButton(props: ComponentProps<typeof Button>) {
           game,
           emulatorProfile: defaultProfile,
           emulator: emulator,
+          file,
         });
       }}
     >

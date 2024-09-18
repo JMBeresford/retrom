@@ -7,7 +7,7 @@ use retrom_codegen::retrom::{
 use retrom_plugin_installer::InstallerExt;
 use tauri::{command, AppHandle, Runtime};
 use tokio::sync::Mutex;
-use tracing::{info, instrument};
+use tracing::{debug, info, instrument};
 
 use crate::{desktop::GameProcess, LauncherExt, Result};
 
@@ -28,6 +28,7 @@ pub(crate) async fn play_game<R: Runtime>(
     let game_id = game.id;
     let profile = payload.emulator_profile.unwrap();
     let emulator = payload.emulator.unwrap();
+    let default_file = payload.file;
 
     if installer.get_game_installation_status(game_id).await != InstallationStatus::Installed {
         return Err(crate::Error::NotInstalled(game_id));
@@ -45,19 +46,30 @@ pub(crate) async fn play_game<R: Runtime>(
         .map(|entry| entry.path())
         .collect();
 
-    let file = files
-        .into_iter()
-        .find(|file| {
-            profile.supported_extensions.iter().any(|ext| {
-                file.file_name()
-                    .and_then(OsStr::to_str)
-                    .map(|name| name.ends_with(ext))
-                    .unwrap_or(false)
-            })
-        })
-        .ok_or_else(|| crate::Error::FileNotFound(game_id))?;
+    info!("Default file: {:?}", default_file);
 
-    let file_path = match file.canonicalize()?.to_str() {
+    let fallback_file = files.iter().find(|file| {
+        profile.supported_extensions.iter().any(|ext| {
+            file.file_name()
+                .and_then(OsStr::to_str)
+                .map(|name| name.ends_with(ext))
+                .unwrap_or(false)
+        })
+    });
+
+    let file_path = match default_file.and_then(|default_file| {
+        files
+            .iter()
+            .find(|f| f.file_name().and_then(OsStr::to_str) == Some(default_file.path.as_str()))
+    }) {
+        Some(file) => file,
+        None => match fallback_file {
+            Some(file) => file,
+            None => return Err(crate::Error::FileNotFound(game_id)),
+        },
+    };
+
+    let file_path = match file_path.canonicalize()?.to_str() {
         Some(path) => path.to_string(),
         None => return Err(crate::Error::FileNotFound(game_id)),
     };
@@ -68,11 +80,21 @@ pub(crate) async fn play_game<R: Runtime>(
         profile
             .custom_args
             .into_iter()
+            .map(|arg| match arg.starts_with("\"") && arg.ends_with("\"") {
+                false => arg,
+                true => arg[1..arg.len() - 1].to_string(),
+            })
+            .map(|arg| match arg.starts_with("'") && arg.ends_with("'") {
+                false => arg,
+                true => arg[1..arg.len() - 1].to_string(),
+            })
             .map(|arg| arg.replace("{file}", &file_path))
             .collect()
     } else {
         vec![file_path]
     };
+
+    info!("Args: {:?}", args);
 
     cmd.args(args);
 
