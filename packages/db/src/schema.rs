@@ -106,6 +106,7 @@ diesel::table! {
         deleted_at -> Nullable<Timestamptz>,
         is_deleted -> Bool,
         default_file_id -> Nullable<Int4>,
+        storage_type -> Int4,
     }
 }
 

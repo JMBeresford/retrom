@@ -80,9 +80,7 @@ service JobService {
 message UpdateLibraryRequest {}
 
 message UpdateLibraryResponse {
-  repeated Platform platforms_populated = 1;
-  repeated Game games_populated = 2;
-  repeated GameFile game_files_populated = 3;
+  string job_id = 1;
 }
 
 message UpdateLibraryMetadataRequest {

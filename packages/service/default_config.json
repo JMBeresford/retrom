@@ -1,0 +1,11 @@
+{
+  "connection": {
+    "port": 5101,
+    "db_url": "postgres://postgres:postgres@localhost:5432/retrom"
+  },
+  "content_directories": [],
+  "igdb": {
+    "client_id": "",
+    "client_secret": ""
+  }
+}

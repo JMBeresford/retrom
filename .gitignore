@@ -1,6 +1,7 @@
 /target
-mock_content
+mock_content*
 mock.db
 .env
+config_dev
 
 **/node_modules

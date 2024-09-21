@@ -1,8 +1,5 @@
-/**/*/.git
-/**/*/.gitignore
-/**/*/.dockerignore
-/**/*/Dockerfile
-
-**/*/node_modules
-**/*/.git
-**/*/target
+.git
+.gitignore
+docs
+target
+node_modules

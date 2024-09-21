@@ -16,7 +16,11 @@ export function useUpdateLibraryMetadata() {
         description: err.message,
       });
     },
-    onSuccess: () => {
+    onSuccess: async ({
+      gameMetadataJobId,
+      platformMetadataJobId,
+      extraMetadataJobId,
+    }) => {
       queryClient.invalidateQueries({
         predicate: (query) =>
           ["jobs"].some((key) => query.queryKey.includes(key)),
@@ -25,10 +29,6 @@ export function useUpdateLibraryMetadata() {
       toast({
         title: "Library Metadata Update Started",
       });
-    },
-    mutationFn: async () => {
-      const { gameMetadataJobId, platformMetadataJobId, extraMetadataJobId } =
-        await retromClient.libraryClient.updateLibraryMetadata({});
 
       const gameSubscription = retromClient.jobClient.getJobSubscription({
         jobId: gameMetadataJobId,
@@ -66,5 +66,7 @@ export function useUpdateLibraryMetadata() {
         }
       }
     },
+    mutationFn: async () =>
+      await retromClient.libraryClient.updateLibraryMetadata({}),
   });
 }

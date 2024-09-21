@@ -1,5 +1,5 @@
 import { useToast } from "@/components/ui/use-toast";
-import { UpdateLibraryResponse } from "@/generated/retrom/services";
+import { JobStatus } from "@/generated/retrom/jobs";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -16,27 +16,40 @@ export function useUpdateLibrary() {
         description: err.message,
       });
     },
-    onSuccess: (res) => {
+    onSuccess: async ({ jobId }) => {
       queryClient.invalidateQueries({
         predicate: (query) =>
-          [
-            "library",
-            "games",
-            "platforms",
-            "game-metadata",
-            "platform-metadata",
-          ].some((key) => query.queryKey.includes(key)),
+          ["jobs"].some((key) => query.queryKey.includes(key)),
       });
 
       toast({
-        title: "Library updated!",
-        description: updateLibrarySuccessMessage(res),
+        title: "Library update started!",
       });
+
+      const subscription = retromClient.jobClient.getJobSubscription({
+        jobId,
+      });
+
+      function invalidate() {
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            [
+              "library",
+              "games",
+              "platforms",
+              "game-metadata",
+              "platform-metadata",
+            ].some((key) => query.queryKey.includes(key)),
+        });
+      }
+
+      for await (const progress of subscription) {
+        console.log({ progress });
+        if (progress.job?.status === JobStatus.Success) {
+          invalidate();
+        }
+      }
     },
     mutationFn: async () => await retromClient.libraryClient.updateLibrary({}),
   });
-}
-
-function updateLibrarySuccessMessage(response: UpdateLibraryResponse) {
-  return `Updated: ${response.platformsPopulated.length} platforms, ${response.gamesPopulated.length} games and ${response.gameFilesPopulated.length} game files`;
 }

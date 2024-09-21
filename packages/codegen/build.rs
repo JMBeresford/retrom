@@ -2,13 +2,19 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 
 // Derives that are used for structs representing existing rows in db
-const DIESEL_ROW_DERIVES: [&str; 4] = ["Queryable", "Selectable", "Identifiable", "Insertable"];
+const DIESEL_ROW_DERIVES: [&str; 5] = [
+    "Queryable",
+    "Selectable",
+    "Identifiable",
+    "Insertable",
+    "AsChangeset",
+];
 
 // Derives that are used for structs representing new rows to be inserted into db
 const DIESEL_INSERTABLE_DERIVES: [&str; 1] = ["Insertable"];
 
 // Derives that are used for structs representing changesets, or to-be-updated rows
-const DIESEL_UPDATE_DERIVES: [&str; 2] = ["AsChangeset", "Insertable"];
+const DIESEL_UPDATE_DERIVES: [&str; 3] = ["AsChangeset", "Insertable", "Identifiable"];
 
 const OTHER_DERIVES: [&str; 2] = ["Hash", "Eq"];
 
@@ -136,7 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "retrom.UpdatedGameMetadata",
             format!(
                 "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
-                get_diesel_macro("game_metadata", None)
+                get_diesel_macro("game_metadata", "game_id".into())
             ),
         )
         .type_attribute(
@@ -157,7 +163,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "retrom.UpdatedPlatformMetadata",
             format!(
                 "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
-                get_diesel_macro("platform_metadata", None)
+                get_diesel_macro("platform_metadata", "platform_id".into())
             ),
         )
         .type_attribute(
@@ -241,7 +247,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "retrom.UpdatedDefaultEmulatorProfile",
             format!(
                 "#[derive({diesel_update_derivations},{other_derivations})]\n{}",
-                get_diesel_macro("default_emulator_profiles", None)
+                get_diesel_macro("default_emulator_profiles", "platform_id".into())
             ),
         )
         .type_attribute(

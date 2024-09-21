@@ -94,14 +94,16 @@ export const Route = createRootRoute({
                   maxSize={40}
                   className="bg-muted"
                 >
-                  <ScrollArea
-                    className={cn(
-                      "h-full max-h-full w-full max-w-full",
-                      "bg-gradient-to-b from-primary/5 to-background",
-                    )}
-                  >
-                    <SideBar />
-                  </ScrollArea>
+                  <div className="w-full h-full @container/sidebar">
+                    <ScrollArea
+                      className={cn(
+                        "h-full max-h-full w-full max-w-full",
+                        "bg-gradient-to-b from-primary/5 to-background",
+                      )}
+                    >
+                      <SideBar />
+                    </ScrollArea>
+                  </div>
                 </ResizablePanel>
 
                 <ResizableHandle />

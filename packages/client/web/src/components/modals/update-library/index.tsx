@@ -13,21 +13,28 @@ import { cn } from "@/lib/utils";
 import { useUpdateLibrary } from "@/mutations/useUpdateLibrary";
 import { useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
+import { useCallback } from "react";
 
 export function UpdateLibraryModal() {
   const navigate = useNavigate();
   const { updateLibraryModal } = RootRoute.useSearch();
 
-  const { mutateAsync: updateLibrary, isPending } = useUpdateLibrary();
+  const { mutate: updateLibrary, isPending } = useUpdateLibrary();
+
+  const close = useCallback(
+    () =>
+      navigate({
+        search: { updateLibraryModal: undefined },
+      }),
+    [navigate],
+  );
 
   return (
     <Dialog
       open={updateLibraryModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({
-            search: { updateLibraryModal: undefined },
-          });
+          close();
         }
       }}
     >
@@ -47,8 +54,9 @@ export function UpdateLibraryModal() {
 
           <Button
             className="relative"
-            onClick={async () => {
-              await updateLibrary();
+            onClick={() => {
+              updateLibrary();
+              close();
             }}
           >
             <LoaderCircleIcon

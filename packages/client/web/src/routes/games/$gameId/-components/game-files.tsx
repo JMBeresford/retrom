@@ -268,13 +268,15 @@ export function GameFiles() {
                           </Button>
                         </DialogClose>
 
-                        <Button onClick={handleRename} disabled={pending}>
-                          {pending ? (
-                            <LoaderCircleIcon className="animate-spin" />
-                          ) : (
-                            "Save"
-                          )}
-                        </Button>
+                        <DialogClose asChild>
+                          <Button onClick={handleRename} disabled={pending}>
+                            {pending ? (
+                              <LoaderCircleIcon className="animate-spin" />
+                            ) : (
+                              "Save"
+                            )}
+                          </Button>
+                        </DialogClose>
                       </div>
                     </DialogFooter>
                   </DialogContent>

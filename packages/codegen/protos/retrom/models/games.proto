@@ -4,6 +4,11 @@ package retrom;
 
 import "google/protobuf/timestamp.proto";
 
+enum StorageType {
+  SINGLE_FILE_GAME = 0;
+  MULTI_FILE_GAME = 1;
+}
+
 message Game {
   int32 id = 1;
   string path = 3;
@@ -13,6 +18,7 @@ message Game {
   google.protobuf.Timestamp deleted_at = 7;
   bool is_deleted = 8;
   optional int32 default_file_id = 9;
+  StorageType storage_type = 10;
 }
 
 message NewGame {
@@ -23,6 +29,7 @@ message NewGame {
   optional google.protobuf.Timestamp deleted_at = 5;
   bool is_deleted = 6;
   optional int32 default_file_id = 7;
+  optional StorageType storage_type = 8;
 }
 
 message UpdatedGame {
@@ -34,4 +41,5 @@ message UpdatedGame {
   optional google.protobuf.Timestamp deleted_at = 6;
   optional bool is_deleted = 7;
   optional int32 default_file_id = 8;
+  optional StorageType storage_type = 9;
 }

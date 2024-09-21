@@ -1,8 +1,7 @@
 use diesel::{migration::MigrationVersion, prelude::*};
 use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use dotenvy::dotenv;
-use std::{env, fmt::Debug};
+use std::fmt::Debug;
 
 pub mod schema;
 
@@ -25,15 +24,10 @@ pub type DBConnection<'a> =
 
 pub type DBConnectionSync = diesel::pg::PgConnection;
 
-pub fn get_db_url() -> String {
-    dotenv().ok();
-
-    env::var("DATABASE_URL").expect("DATABASE_URL must be set")
-}
-
-pub fn get_db_connection_sync() -> std::result::Result<DBConnectionSync, diesel::ConnectionError> {
-    let db_url = get_db_url();
-    diesel::pg::PgConnection::establish(&db_url)
+pub fn get_db_connection_sync(
+    db_url: &str,
+) -> std::result::Result<DBConnectionSync, diesel::ConnectionError> {
+    diesel::pg::PgConnection::establish(db_url)
 }
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();

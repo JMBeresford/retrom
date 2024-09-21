@@ -22,7 +22,7 @@ import { Input } from "../../ui/input";
 import { useToast } from "../../ui/use-toast";
 import { Separator } from "../../ui/separator";
 import { LoaderCircleIcon } from "lucide-react";
-import { cn, getFileName } from "@/lib/utils";
+import { cn, getFileStub } from "@/lib/utils";
 import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
@@ -138,12 +138,12 @@ export function IgdbTab() {
 
       if (renameDirectory) {
         const newName = res.metadataUpdated[0]?.name;
+        const currentFilename = getFileStub(game.path);
 
-        if (!newName) {
+        if (!newName || !currentFilename) {
           throw new Error("Failed to update metadata");
         }
 
-        const currentFilename = getFileName(game.path);
         const path = game.path.replace(currentFilename, newName);
 
         updateGames({

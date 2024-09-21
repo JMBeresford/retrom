@@ -2,19 +2,21 @@ use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
-use retrom_db::{get_db_url, run_migrations};
+use retrom_db::run_migrations;
 use retry::retry;
 use std::{
     convert::Infallible,
     net::SocketAddr,
     pin::Pin,
+    process::exit,
     sync::Arc,
     task::{Context, Poll},
 };
 use tower::Service;
-use tracing::{info, Instrument};
+use tracing::{error, info, Instrument};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+mod config;
 mod grpc;
 mod providers;
 mod rest;
@@ -31,24 +33,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    dotenvy::dotenv().ok();
+    let server_config = match crate::config::ServerConfig::new() {
+        Ok(config) => config,
+        Err(err) => {
+            error!("Could not load configuration: {}", err);
+            exit(1)
+        }
+    };
 
-    let port = std::env::var("RETROM_PORT").unwrap_or_else(|_| "5101".to_string());
+    let port = server_config.connection.port;
+    let db_url = server_config.connection.db_url.clone();
     let addr: SocketAddr = format!("0.0.0.0:{port}").parse().unwrap();
 
-    let db_url = get_db_url();
-
-    let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
+    let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(&db_url);
     let pool = bb8::Pool::builder()
         .max_size(50)
         .connection_timeout(std::time::Duration::from_secs(5))
-        .build(config)
+        .build(pool_config)
         .await
         .expect("Could not create pool");
 
-    tokio::task::spawn_blocking(|| {
+    tokio::task::spawn_blocking(move || {
         let mut conn = retry(retry::delay::Exponential::from_millis(100), || {
-            match retrom_db::get_db_connection_sync() {
+            match retrom_db::get_db_connection_sync(&db_url) {
                 Ok(conn) => retry::OperationResult::Ok(conn),
                 Err(diesel::ConnectionError::BadConnection(err)) => {
                     info!("Error connecting to database, is the server running and accessible? Retrying...");
@@ -71,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool_state = Arc::new(pool);
 
     let rest_service = warp::service(rest::rest_service(pool_state.clone()));
-    let grpc_service = grpc::grpc_service(pool_state.clone());
+    let grpc_service = grpc::grpc_service(pool_state.clone(), Arc::new(server_config));
 
     info!("Starting server at: {}", addr.to_string());
     Server::bind(&addr)
