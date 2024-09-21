@@ -2,7 +2,10 @@ use futures::Future;
 use retrom_codegen::retrom::{JobProgress, JobStatus};
 use std::{collections::HashMap, sync::Arc};
 use tokio::{
-    sync::{broadcast, RwLock},
+    sync::{
+        broadcast::{self, error::RecvError},
+        RwLock,
+    },
     task::JoinSet,
 };
 use tracing::Instrument;
@@ -188,7 +191,7 @@ impl JobManager {
     }
 
     pub fn subscribe(&self, id: JobId) -> broadcast::Receiver<JobProgress> {
-        let (tx, rx) = broadcast::channel(1);
+        let (tx, rx) = broadcast::channel(100);
         let mut invalidation_receiver = self.invalidation_channel.subscribe();
 
         let job_progress = self.job_progress.clone();
@@ -199,8 +202,13 @@ impl JobManager {
                     let job = progress.get(&id).cloned();
 
                     if let Some(job) = job {
+                        let status = JobStatus::try_from(job.status);
                         if tx.send(job).is_err() {
                             tracing::debug!("Job progress reciever closed");
+                            break;
+                        }
+
+                        if status == Ok(JobStatus::Success) || status == Ok(JobStatus::Failure) {
                             break;
                         }
                     }
@@ -218,7 +226,7 @@ impl JobManager {
     }
 
     pub fn subscribe_all(&self) -> broadcast::Receiver<Vec<JobProgress>> {
-        let (tx, rx) = broadcast::channel(10);
+        let (tx, rx) = broadcast::channel(100);
         let mut invalidation_receiver = self.invalidation_channel.subscribe();
 
         let job_progress = self.job_progress.clone();
@@ -228,16 +236,29 @@ impl JobManager {
                     let progress = job_progress.read().await;
                     let all_progress = progress.iter().map(|(_, v)| v.clone()).collect::<Vec<_>>();
 
+                    let no_running_jobs = all_progress
+                        .iter()
+                        .filter_map(|job| JobStatus::try_from(job.status).ok())
+                        .all(|status| status != JobStatus::Running && status != JobStatus::Idle);
+
                     if tx.send(all_progress).is_err() {
                         tracing::debug!("Bulk job progress reciever closed");
                         break;
                     }
+
+                    if no_running_jobs {
+                        break;
+                    }
                 }
 
-                let _ = invalidation_receiver.recv().await;
-            }
+                if let Err(why) = invalidation_receiver.recv().await {
+                    if why == RecvError::Closed {
+                        tracing::debug!("Invalidation channel closed: {:?}", why);
+                    }
 
-            tracing::debug!("Invalidation channel closed");
+                    break;
+                }
+            }
         });
 
         rx

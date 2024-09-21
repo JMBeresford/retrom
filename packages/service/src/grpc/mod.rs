@@ -16,7 +16,7 @@ use retrom_codegen::retrom::{
 use retrom_db::Pool;
 use tonic::transport::{server::Routes, Server};
 
-use crate::providers::igdb::provider::IGDBProvider;
+use crate::{config::ServerConfig, providers::igdb::provider::IGDBProvider};
 
 pub mod clients;
 pub mod emulators;
@@ -27,8 +27,8 @@ pub mod metadata;
 pub mod platforms;
 pub mod server;
 
-pub fn grpc_service(db_pool: Arc<Pool>) -> Routes {
-    let igdb_client = Arc::new(IGDBProvider::new());
+pub fn grpc_service(db_pool: Arc<Pool>, config: Arc<ServerConfig>) -> Routes {
+    let igdb_client = Arc::new(IGDBProvider::new(config.igdb.clone()));
     let job_manager = Arc::new(JobManager::new());
 
     let reflection_service = tonic_reflection::server::Builder::configure()
@@ -40,6 +40,7 @@ pub fn grpc_service(db_pool: Arc<Pool>) -> Routes {
         db_pool.clone(),
         igdb_client.clone(),
         job_manager.clone(),
+        config.clone(),
     ));
 
     let metadata_service = MetadataServiceServer::new(MetadataServiceHandlers::new(

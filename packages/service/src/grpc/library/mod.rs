@@ -1,5 +1,5 @@
 use super::jobs::job_manager::JobManager;
-use crate::providers::igdb::provider::IGDBProvider;
+use crate::{config::ServerConfig, providers::igdb::provider::IGDBProvider};
 use retrom_codegen::retrom::{
     library_service_server::LibraryService, DeleteLibraryRequest, DeleteLibraryResponse,
     UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdateLibraryRequest,
@@ -10,14 +10,18 @@ use std::sync::Arc;
 use tonic::{Code, Request, Response, Result, Status};
 use tracing::instrument;
 
+mod content_resolver;
 mod delete_handlers;
+mod game_resolver;
 mod metadata_handlers;
+mod platform_resolver;
 mod update_handlers;
 
 pub struct LibraryServiceHandlers {
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,
     job_manager: Arc<JobManager>,
+    config: Arc<ServerConfig>,
 }
 
 impl LibraryServiceHandlers {
@@ -25,11 +29,13 @@ impl LibraryServiceHandlers {
         db_pool: Arc<Pool>,
         igdb_client: Arc<IGDBProvider>,
         job_manager: Arc<JobManager>,
+        config: Arc<ServerConfig>,
     ) -> Self {
         Self {
             db_pool,
             igdb_client,
             job_manager,
+            config,
         }
     }
 }

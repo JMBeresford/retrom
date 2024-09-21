@@ -68,6 +68,7 @@ jobs:
           push-to-registry: true
 
   build-desktop-clients:
+    if: github.event_name == 'release'
     permissions:
       contents: write
     strategy:

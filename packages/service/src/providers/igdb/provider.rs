@@ -7,6 +7,8 @@ use tokio::sync::{mpsc, oneshot, RwLock};
 use tower::{retry::Policy, Service, ServiceExt};
 use tracing::{debug, error, instrument, Instrument, Level};
 
+use crate::config::IGDBConfig;
+
 const IGDB_CONCURRENT_REQUESTS_LIMIT: usize = 8;
 
 #[derive(Debug, serde::Deserialize)]
@@ -28,6 +30,7 @@ type IGDBSenderMsg = (
 
 pub struct IGDBProvider {
     auth: RwLock<IGDBAuth>,
+    user: IGDBConfig,
     request_tx: mpsc::Sender<IGDBSenderMsg>,
 }
 
@@ -78,7 +81,7 @@ impl Policy<reqwest::Request, reqwest::Response, reqwest::Error> for RetryAttemp
 }
 
 impl IGDBProvider {
-    pub fn new() -> Self {
+    pub fn new(config: IGDBConfig) -> Self {
         let http_client = reqwest::Client::new();
 
         let (tx, mut rx) = mpsc::channel::<IGDBSenderMsg>(IGDB_CONCURRENT_REQUESTS_LIMIT);
@@ -124,6 +127,7 @@ impl IGDBProvider {
 
         Self {
             auth: RwLock::new(IGDBAuth::new(None, Duration::from_secs(0))),
+            user: config,
             request_tx: tx,
         }
     }
@@ -146,9 +150,9 @@ impl IGDBProvider {
         let url = reqwest::Url::parse_with_params(
             &oauth2_url(),
             &[
-                ("client_id", client_id()),
-                ("client_secret", client_secret()),
-                ("grant_type", "client_credentials".to_string()),
+                ("client_id", &self.user.client_id),
+                ("client_secret", &self.user.client_secret),
+                ("grant_type", &"client_credentials".to_string()),
             ],
         )
         .expect("Could not parse URL");
@@ -210,7 +214,7 @@ impl IGDBProvider {
         let mut req = reqwest::Request::new(reqwest::Method::POST, url);
 
         req.headers_mut()
-            .insert("Client-ID", client_id().parse().unwrap());
+            .insert("Client-ID", self.user.client_id.parse().unwrap());
 
         req.headers_mut().insert(
             "Authorization",
@@ -237,14 +241,6 @@ impl IGDBProvider {
             }
         }
     }
-}
-
-fn client_id() -> String {
-    env::var("IGDB_CLIENT_ID").expect("IGDB_CLIENT_ID not set")
-}
-
-fn client_secret() -> String {
-    env::var("IGDB_CLIENT_SECRET").expect("IGDB_CLIENT_SECRET not set")
 }
 
 fn base_url() -> String {

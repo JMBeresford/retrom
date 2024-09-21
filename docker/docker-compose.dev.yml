@@ -3,6 +3,7 @@ services:
     image: postgres
     container_name: retrom-db
     hostname: retrom-db
+    env_file: ./.env
     restart: always
     # set shared memory limit when using docker-compose
     shm_size: 128mb
@@ -27,15 +28,13 @@ services:
       dockerfile: docker/service.Dockerfile
     container_name: retrom
     hostname: retrom
+    env_file: ./.env
     ports:
       - 5101:${RETROM_PORT:-5101}
-    environment:
-      RETROM_PORT: ${RETROM_PORT:-5101}
-      IGDB_CLIENT_ID: ${IGDB_CLIENT_ID}
-      IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET}
-      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASS:-password}@retrom-db/${DB_NAME:-retrom-dev}
     volumes:
-      - ${CONTENT_DIR:?Content directory not set}:/app/library
+      - ${CONTENT_DIR1:-./mock_content/}/:/lib1
+      - ${CONTENT_DIR2:-./mock_content_single}:/lib2
+      - ${CONFIG_DIR:-./config-dev/}:/config
     depends_on:
       - retrom-db
 
@@ -45,6 +44,7 @@ services:
       dockerfile: docker/web.Dockerfile
     container_name: retrom-web
     hostname: retrom-web
+    env_file: ./.env
     ports:
       - 3000:${RETROM_WEB_PORT:-3000}
     environment:

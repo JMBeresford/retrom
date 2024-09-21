@@ -20,6 +20,8 @@ clients on any amount of other devices to (un)install/download and subsequently 
   - [Installation](#installation)
     - [Preparation](#preparation)
       - [Library Structure](#library-structure)
+        - [Multi-File Games (recommended)](#multi-file-games-recommended)
+        - [Single-File Games](#single-file-games)
       - [Metadata Providers](#metadata-providers)
         - [IGDB](#igdb)
     - [Server](#server)
@@ -110,12 +112,28 @@ https://github.com/user-attachments/assets/05146df5-9a44-41d0-992f-f59c65fb3ae1
 
 #### Library Structure
 
-Retrom requires a game library that is organized in a specific fashion. Each game should be
+Retrom currently supports libraries with the following structures:
+
+##### Multi-File Games (recommended)
+
+Each game should be
 represented by a directory containing the game files (even for single-file games/platforms).
 Each game should similarly be contained within a directory representing the platform it is played
 on, and the platform directories should live at the root of your `library` directory.
 
 Example:
+
+Assume you have the games:
+
+- Plumber Dude
+- Plumber Dude 2
+
+For the Game Guy platform, and the games:
+
+- Plumber Dude World
+- Plumber Dude and Plumber Dude's Brother
+
+For the Game Guy Advance platform. Your library should look like this:
 
 ```devicetree
 library/
@@ -130,6 +148,26 @@ library/
       plumber_dude_world.gga
     plumber_dude_and_plumber_dudes_brother/
       plumber_dude_and_plumber_dudes_brother.gga
+```
+
+##### Single-File Games
+
+Rather than each game being represented by a directory, you may have a library in which each game
+is simple a single file in the respective platform directory.
+
+Example:
+
+Assume the same games and platforms as the example in [Multi-File Games](#multi-file-games-recommended).
+Your library should look like this:
+
+```devicetree
+library/
+  game_guy/
+    plumber_dude.gg
+    plumber_dude_2.gg
+  game_guy_advance/
+    plumber_dude_world.gga
+    plumber_dude_and_plumber_dudes_brother.gga
 ```
 
 #### Metadata Providers
@@ -154,47 +192,105 @@ instructions [here](https://api-docs.igdb.com/#account-creation).
 > - A game library that is organized in [a way that Retrom can understand](#library-structure)
 > - API keys for [metadata providers](#metadata-providers)
 
+The server is configured via a config file. Here is an example config file:
+
+```json
+{
+  "connection": {
+    "port": 5101,
+
+    // for the example retrom-db container below
+    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
+
+    // or, bring your own database:
+    // "db_url": "postgres://{db_user}:{db_password}@{db_host}/{db_name}"
+  },
+  "content_directories": [
+    {
+      "path": "path/to/my/library/",
+      "storage_type": "MultiFileGame"
+    },
+    {
+      "path": "path/to/my/library/with/single_file_games/",
+      "storage_type": "SingleFileGame"
+    }
+  ],
+  "igdb": {
+    "client_secret": "super_secret_client_secret!!!1",
+    "client_id": "my_IGDB_ID_1234"
+  }
+}
+```
+
 #### Docker (Recommended)
 
 The currently recommended way to run the server is via Docker, ideally with `docker compose`.
 
-This example `docker-compose.yml` file will get you started:
+> [!TIP]
+> If you are not familiar with Docker Compose, you can read the documentation [here](https://docs.docker.com/compose/).
+
+Let's adjust the above example `config.json` for our docker container, and save it somewhere safe. In this
+example, we'll assume it is saved to `/home/minecraft_steve/config_dir/config.json`. Note that we need a
+config _directory_ to mount into the container, not just the file itself.
+
+Let's also assume we have libraries at `/home/minecraft_steve/library1/` and at `/home/minecraft_steve/library2/`.
+
+Here is the example config file:
+
+```json
+{
+  "connection": {
+    "port": 5101,
+    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
+  },
+  "content_directories": [
+    {
+      "path": "/library1", // this path is **inside the container**
+      "storage_type": "MultiFileGame"
+    },
+    {
+      "path": "/library2", // this path is **inside the container**
+      "storage_type": "SingleFileGame"
+    }
+  ],
+  "igdb": {
+    "client_secret": "super_secret_client_secret!!!1",
+    "client_id": "my_IGDB_ID_1234"
+  }
+}
+```
+
+Then, this example `docker-compose.yml` file will get you started:
 
 ```yaml
 retrom:
   image: ghcr.io/jmberesford/retrom-service:latest
   ports:
     - 5101:5101
-  environment:
-    # IGDB API information, see the metadata-providers section above for more info
-    IGDB_CLIENT_ID: ${IGDB_CLIENT_ID}
-    IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET}
-
-    # using the below example postgres container
-    DATABASE_URL: postgres://minecraft_steve:super_secret_password@retrom-db/retrom
-
-    # or, bring your own database:
-    # DATABASE_URL: postgres://{db_user}:{db_password}@{db_host}/{db_name}
   volumes:
-    - /path/to/library:/app/library
+    - /home/minecraft_steve/config_dir:/config/ # directory containing your config file
+    - /home/minecraft_steve/library1:/library1 # directory containing your first library
+    - /home/minecraft_steve/library2:/library2 # directory containing your second library
 
-# OPTIONAL: spin up a postgres container to use as the database. Or,
-# you can use your own postgres instance by setting DATABASE_URL above
+# OPTIONAL: spin up a postgres container to use as the database, if you
+# don't have one already.
 #
 # read the docs here: https://hub.docker.com/_/postgres
 retrom-db:
   container_name: retrom-db
-  hostname: retrom-db
+  hostname: retrom-db # this should match the db_url in your config file
   image: postgres:16
   restart: unless-stopped
   volumes:
-    # to store the DB data on the host
-    - /path/to/pg_data:/var/lib/postgresql/data
+    # to store the DB data on the host, change this path to any directory you like
+    - /home/minecraft_steve/retrom_data/:/var/lib/postgresql/data
   environment:
-    POSTGRES_USER: minecraft_steve # db user, used to connect to the db
-    POSTGRES_PASSWORD: super_secret_password # db password for above user
-    POSTGRES_DB: retrom # db name
+    POSTGRES_USER: minecraft_steve # db user, used to connect to the db, should match the db_user in your config file
+    POSTGRES_PASSWORD: super_secret_password # db password for above user, should match the db_password in your config file
+    POSTGRES_DB: retrom # db name, should match the db_name in your config file
 ```
+
+You can then run `docker-compose up` in the directory containing your `docker-compose.yml` file to start the service.
 
 ### Client
 
@@ -235,6 +331,7 @@ retrom-web:
   hostname: retrom-web
   ports:
     - 3000:3000
-  environment:
-    RETROM_HOST: http://retrom:5101 # the URL of your Retrom server
 ```
+
+Then, you can run `docker-compose up` in the directory containing your `docker-compose.yml` file to start the service.
+You can then reach the web client at `http://localhost:3000` in your browser, if running locally.

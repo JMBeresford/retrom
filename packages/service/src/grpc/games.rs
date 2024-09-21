@@ -2,7 +2,7 @@ use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::{
     self, game_service_server::GameService, DeleteGamesRequest, DeleteGamesResponse, Game,
-    GameFile, GetGamesRequest, GetGamesResponse,
+    GameFile, GetGamesRequest, GetGamesResponse, StorageType,
 };
 use retrom_db::{schema, Pool};
 use std::{path::PathBuf, sync::Arc};
@@ -168,34 +168,32 @@ impl GameService for GameServiceHandlers {
         let to_update = request.games;
         let mut games_updated = Vec::new();
 
-        for game in to_update {
+        for mut game in to_update {
             let id = game.id;
 
-            if let Some(updated_path) = &game.path {
+            if let Some(updated_path) = game.path.clone() {
                 let current_game: Result<Game, _> =
                     schema::games::table.find(id).first(&mut conn).await;
 
                 if let Ok(current_game) = current_game {
                     let old_path = PathBuf::from(current_game.path);
-                    let mut new_path = PathBuf::from(updated_path);
-                    let sanitized_fname = new_path
+                    let mut new_game_path = PathBuf::from(updated_path);
+                    let sanitized_fname = new_game_path
                         .file_name()
                         .and_then(|os_str| os_str.to_str())
                         .map(sanitize_filename::sanitize);
 
                     if let Some(sanitized_fname) = sanitized_fname {
-                        new_path.set_file_name(sanitized_fname);
+                        new_game_path.set_file_name(&sanitized_fname);
+                        game.path = Some(new_game_path.to_str().unwrap().to_string());
                     }
 
-                    let is_rename = old_path.file_name() != new_path.file_name();
-                    let can_rename = old_path.exists() && !new_path.exists();
-                    let paths_safe = old_path.parent() == new_path.parent();
-
-                    tracing::info!("updated path {:?}", updated_path);
-                    tracing::info!("new path {:?}", new_path);
+                    let is_rename = old_path.file_name() != new_game_path.file_name();
+                    let can_rename = old_path.exists() && !new_game_path.exists();
+                    let paths_safe = old_path.parent() == new_game_path.parent();
 
                     if is_rename && can_rename && paths_safe {
-                        if let Err(why) = tokio::fs::rename(&old_path, &new_path).await {
+                        if let Err(why) = tokio::fs::rename(&old_path, &new_game_path).await {
                             tracing::error!("Failed to rename file: {}", why);
 
                             continue;
@@ -207,9 +205,21 @@ impl GameService for GameServiceHandlers {
                             .await
                             .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
 
+                        let storage_type = StorageType::try_from(current_game.storage_type).ok();
+
                         for game_file in game_files {
                             let old_file_path = PathBuf::from(game_file.path);
-                            let new_file_path = new_path.join(old_file_path.file_name().unwrap());
+                            let new_file_path = match storage_type {
+                                Some(StorageType::SingleFileGame) => new_game_path.clone(),
+                                Some(StorageType::MultiFileGame) => {
+                                    new_game_path.join(old_file_path.file_name().unwrap())
+                                }
+                                None => {
+                                    tracing::error!("Storage type not found for game {}", game.id);
+
+                                    break;
+                                }
+                            };
 
                             if !new_file_path.exists() {
                                 tracing::error!(
@@ -326,23 +336,33 @@ impl GameService for GameServiceHandlers {
         let to_update = request.game_files;
         let mut game_files_updated = Vec::new();
 
-        for game_file in to_update {
+        for mut game_file in to_update {
             let id = game_file.id;
 
-            if let Some(updated_path) = &game_file.path {
+            if let Some(updated_path) = game_file.path.clone() {
                 let current_file: Result<GameFile, _> =
                     schema::game_files::table.find(id).first(&mut conn).await;
 
+                let mut new_file_path = PathBuf::from(updated_path);
+                let sanitized_fname = new_file_path
+                    .file_name()
+                    .and_then(|os_str| os_str.to_str())
+                    .map(sanitize_filename::sanitize);
+
+                if let Some(sanitized_fname) = sanitized_fname {
+                    new_file_path.set_file_name(&sanitized_fname);
+                    game_file.path = Some(new_file_path.to_str().unwrap().to_string());
+                }
+
                 if let Ok(current_file) = current_file {
                     let old_path = PathBuf::from(current_file.path);
-                    let new_path = PathBuf::from(updated_path);
 
-                    let is_rename = old_path.file_name() != new_path.file_name();
-                    let can_rename = old_path.exists() && !new_path.exists();
-                    let paths_safe = old_path.parent() == new_path.parent();
+                    let is_rename = old_path.file_name() != new_file_path.file_name();
+                    let can_rename = old_path.exists() && !new_file_path.exists();
+                    let paths_safe = old_path.parent() == new_file_path.parent();
 
                     if is_rename && can_rename && paths_safe {
-                        if let Err(why) = tokio::fs::rename(&old_path, &new_path).await {
+                        if let Err(why) = tokio::fs::rename(&old_path, &new_file_path).await {
                             tracing::error!("Failed to rename file: {}", why);
 
                             continue;
@@ -355,12 +375,28 @@ impl GameService for GameServiceHandlers {
                 }
             }
 
-            let updated_game_file =
+            let updated_game_file: GameFile =
                 diesel::update(schema::game_files::table.filter(schema::game_files::id.eq(id)))
                     .set(game_file)
                     .get_result(&mut conn)
                     .await
                     .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
+
+            let game_id = updated_game_file.game_id;
+
+            let game: Game = schema::games::table
+                .find(&game_id)
+                .first(&mut conn)
+                .await
+                .expect("Could not find game entry for game file");
+
+            if let Ok(StorageType::SingleFileGame) = StorageType::try_from(game.storage_type) {
+                diesel::update(&game)
+                    .set(schema::games::path.eq(&updated_game_file.path))
+                    .execute(&mut conn)
+                    .await
+                    .expect("Could not update game path");
+            }
 
             game_files_updated.push(updated_game_file);
         }
