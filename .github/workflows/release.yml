@@ -24,6 +24,8 @@ jobs:
       - name: Run release-plz
         id: release
         uses: MarcoIeni/release-plz-action@v0.5
+        with:
+          version: 0.3.91
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_GH_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
