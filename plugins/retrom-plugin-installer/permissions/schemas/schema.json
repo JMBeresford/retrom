@@ -295,46 +295,34 @@
       "type": "string",
       "oneOf": [
         {
-          "description": "allow-get-game-installation-status -> Enables the get_game_installation_status command without any pre-configured scope.",
+          "description": "Enables the get_game_installation_status command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-get-game-installation-status"
-          ]
+          "const": "allow-get-game-installation-status"
         },
         {
-          "description": "deny-get-game-installation-status -> Denies the get_game_installation_status command without any pre-configured scope.",
+          "description": "Denies the get_game_installation_status command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-get-game-installation-status"
-          ]
+          "const": "deny-get-game-installation-status"
         },
         {
-          "description": "allow-install-game -> Enables the install_game command without any pre-configured scope.",
+          "description": "Enables the install_game command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-install-game"
-          ]
+          "const": "allow-install-game"
         },
         {
-          "description": "deny-install-game -> Denies the install_game command without any pre-configured scope.",
+          "description": "Denies the install_game command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-install-game"
-          ]
+          "const": "deny-install-game"
         },
         {
-          "description": "allow-uninstall-game -> Enables the uninstall_game command without any pre-configured scope.",
+          "description": "Enables the uninstall_game command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-uninstall-game"
-          ]
+          "const": "allow-uninstall-game"
         },
         {
-          "description": "deny-uninstall-game -> Denies the uninstall_game command without any pre-configured scope.",
+          "description": "Denies the uninstall_game command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-uninstall-game"
-          ]
+          "const": "deny-uninstall-game"
         }
       ]
     }

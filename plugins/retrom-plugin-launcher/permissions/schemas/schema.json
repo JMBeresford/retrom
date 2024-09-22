@@ -295,74 +295,54 @@
       "type": "string",
       "oneOf": [
         {
-          "description": "allow-execute -> Enables the execute command without any pre-configured scope.",
+          "description": "Enables the execute command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-execute"
-          ]
+          "const": "allow-execute"
         },
         {
-          "description": "deny-execute -> Denies the execute command without any pre-configured scope.",
+          "description": "Denies the execute command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-execute"
-          ]
+          "const": "deny-execute"
         },
         {
-          "description": "allow-get-game-play-status -> Enables the get_game_play_status command without any pre-configured scope.",
+          "description": "Enables the get_game_play_status command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-get-game-play-status"
-          ]
+          "const": "allow-get-game-play-status"
         },
         {
-          "description": "deny-get-game-play-status -> Denies the get_game_play_status command without any pre-configured scope.",
+          "description": "Denies the get_game_play_status command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-get-game-play-status"
-          ]
+          "const": "deny-get-game-play-status"
         },
         {
-          "description": "allow-ping -> Enables the ping command without any pre-configured scope.",
+          "description": "Enables the ping command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-ping"
-          ]
+          "const": "allow-ping"
         },
         {
-          "description": "deny-ping -> Denies the ping command without any pre-configured scope.",
+          "description": "Denies the ping command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-ping"
-          ]
+          "const": "deny-ping"
         },
         {
-          "description": "allow-play-game -> Enables the play_game command without any pre-configured scope.",
+          "description": "Enables the play_game command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-play-game"
-          ]
+          "const": "allow-play-game"
         },
         {
-          "description": "deny-play-game -> Denies the play_game command without any pre-configured scope.",
+          "description": "Denies the play_game command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-play-game"
-          ]
+          "const": "deny-play-game"
         },
         {
-          "description": "allow-stop-game -> Enables the stop_game command without any pre-configured scope.",
+          "description": "Enables the stop_game command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-stop-game"
-          ]
+          "const": "allow-stop-game"
         },
         {
-          "description": "deny-stop-game -> Denies the stop_game command without any pre-configured scope.",
+          "description": "Denies the stop_game command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-stop-game"
-          ]
+          "const": "deny-stop-game"
         }
       ]
     }
