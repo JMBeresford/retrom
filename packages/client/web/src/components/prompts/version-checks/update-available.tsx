@@ -14,14 +14,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useUpdateCheck } from "@/queries/useUpdateCheck";
 import { useClientVersion } from "@/queries/useClientVersion";
 import { Code } from "@/components/ui/code";
-import { versionToString } from "./utils";
+import { isBreakingChange, parseVersion, versionToString } from "./utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { ToastAction } from "@/components/ui/toast";
 import Markdown from "react-markdown";
 import classes from "./markdown.module.scss";
-import { LoaderCircleIcon } from "lucide-react";
+import { AlertCircle, LoaderCircleIcon } from "lucide-react";
 
 type Progress = {
   downloaded: number;
@@ -30,8 +30,10 @@ type Progress = {
 };
 
 export function UpdateAvailable() {
-  const { data: clientVersion } = useClientVersion();
-  const { data: update } = useUpdateCheck();
+  const { data: update, status: updateCheckStatus } = useUpdateCheck();
+  const { data: clientVersion, status: clientVersionStatus } =
+    useClientVersion();
+
   const [progress, setProgress] = useState<Progress | undefined>(undefined);
 
   const handleUpdate = useCallback(async () => {
@@ -78,10 +80,15 @@ export function UpdateAvailable() {
     });
   }, [update, setProgress]);
 
-  if (!update?.available || !clientVersion) {
+  const pending =
+    updateCheckStatus === "pending" || clientVersionStatus === "pending";
+
+  if (!update?.available || pending || !clientVersion) {
     return null;
   }
 
+  const newVersion = parseVersion(update.version);
+  const breakingChange = isBreakingChange(newVersion, clientVersion);
   const { version } = update;
 
   return (
@@ -97,6 +104,19 @@ export function UpdateAvailable() {
         </DialogHeader>
 
         <Changelog body={update.body} />
+
+        {breakingChange ? (
+          <div className="flex gap-2 my-2">
+            <AlertCircle className="text-destructive-text" />
+            <p className="text-muted-fo">
+              This is a breaking change. Please ensure your server is also
+              up-to-date once you update the client or you will encounter
+              issues.
+            </p>
+          </div>
+        ) : (
+          <></>
+        )}
 
         <DialogFooter>
           {progress === undefined ? (

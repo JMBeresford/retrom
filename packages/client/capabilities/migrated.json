@@ -45,6 +45,7 @@
     "launcher:allow-stop-game",
     "launcher:allow-get-game-play-status",
     "updater:default",
+    "shell:allow-open",
     "process:default"
   ]
 }
