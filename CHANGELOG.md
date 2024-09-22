@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.81](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.80...retrom-v0.0.81) - 2024-09-22
+
+### Added
+
+- warn on breaking changes
+
 ## [0.0.80](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.79...retrom-v0.0.80) - 2024-09-18
 
 ### Fixed
