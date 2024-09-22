@@ -5,7 +5,6 @@ release_always = false
 semver_check = false
 publish_no_verify = true
 changelog_update = false
-release_commits = "^(feat|fix)"
 
 [[package]]
 name = "retrom-service"
