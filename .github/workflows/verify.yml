@@ -124,5 +124,11 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install && pnpm exec buf generate
 
+      - name: Set environment variables
+        run: |
+          echo "export TAURI_SIGNING_PRIVATE_KEY=${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}"
+          echo "export TAURI_SIGNING_KEY_PASSWORD=\"\""
+          echo "export VITE_IS_DESKTOP=true"
+
       - name: build client
         run: cd packages/client && pnpm exec tauri build ${{ matrix.args }}
