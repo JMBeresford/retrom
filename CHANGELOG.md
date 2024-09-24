@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.1...retrom-v0.1.2) - 2024-09-24
+
+### Fixed
+
+- fallback to deprecated CONTENT_DIR envvar
+- sidebar sorting
+
 ## [0.1.1](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.0...retrom-v0.1.1) - 2024-09-24
 
 ### Added
