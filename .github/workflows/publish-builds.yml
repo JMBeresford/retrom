@@ -159,5 +159,4 @@ jobs:
           releaseBody: ${{ github.event.release.body }}
           tagName: ${{ github.event.release.tag_name }}
           args: ${{ matrix.args }}
-          includeDebug: true
           updaterJsonPreferNsis: true
