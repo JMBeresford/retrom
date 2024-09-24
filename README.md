@@ -194,7 +194,7 @@ instructions [here](https://api-docs.igdb.com/#account-creation).
 
 The server is configured via a config file. Here is an example config file:
 
-```json
+```json5
 {
   "connection": {
     "port": 5101,
@@ -237,7 +237,7 @@ Let's also assume we have libraries at `/home/minecraft_steve/library1/` and at 
 
 Here is the example config file:
 
-```json
+```json5
 {
   "connection": {
     "port": 5101,
@@ -263,31 +263,33 @@ Here is the example config file:
 Then, this example `docker-compose.yml` file will get you started:
 
 ```yaml
-retrom:
-  image: ghcr.io/jmberesford/retrom-service:latest
-  ports:
-    - 5101:5101
-  volumes:
-    - /home/minecraft_steve/config_dir:/config/ # directory containing your config file
-    - /home/minecraft_steve/library1:/library1 # directory containing your first library
-    - /home/minecraft_steve/library2:/library2 # directory containing your second library
+services:
+  retrom:
+    image: ghcr.io/jmberesford/retrom-service:latest
+    ports:
+      - 5101:5101
+    volumes:
+      - /home/minecraft_steve/config_dir:/config/ # directory containing your config file
+      - /home/minecraft_steve/library1:/library1 # directory containing your first library
+      - /home/minecraft_steve/library2:/library2 # directory containing your second library
 
-# OPTIONAL: spin up a postgres container to use as the database, if you
-# don't have one already.
-#
-# read the docs here: https://hub.docker.com/_/postgres
-retrom-db:
-  container_name: retrom-db
-  hostname: retrom-db # this should match the db_url in your config file
-  image: postgres:16
-  restart: unless-stopped
-  volumes:
-    # to store the DB data on the host, change this path to any directory you like
-    - /home/minecraft_steve/retrom_data/:/var/lib/postgresql/data
-  environment:
-    POSTGRES_USER: minecraft_steve # db user, used to connect to the db, should match the db_user in your config file
-    POSTGRES_PASSWORD: super_secret_password # db password for above user, should match the db_password in your config file
-    POSTGRES_DB: retrom # db name, should match the db_name in your config file
+  # OPTIONAL: spin up a postgres container to use as the database, if you
+  # don't have one already.
+  #
+  # read the docs here: https://hub.docker.com/_/postgres
+  retrom-db:
+    container_name: retrom-db
+    hostname: retrom-db # this should match the db_url in your config file
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      # to store the DB data on the host, change this path to any directory you like
+      - /home/minecraft_steve/retrom_data/:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: minecraft_steve # db user, used to connect to the db, should match the db_user in your config file
+      POSTGRES_PASSWORD: super_secret_password # db password for above user, should match the db_password in your config file
+      POSTGRES_DB: retrom # db name, should match the db_name in your config file
+
 ```
 
 You can then run `docker-compose up` in the directory containing your `docker-compose.yml` file to start the service.
