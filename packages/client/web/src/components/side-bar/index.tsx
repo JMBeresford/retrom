@@ -53,8 +53,8 @@ export function SideBar() {
   const loading = platformStatus === "pending" || gameStatus === "pending";
   const error = platformStatus === "error" || gameStatus === "error";
 
-  const platformsWithMetadata = useMemo(
-    () =>
+  const platformsWithMetadata = useMemo(() => {
+    const platforms =
       platformData?.platforms
         .map((platform) => {
           const platformMetadata = platformData.metadata.find(
@@ -66,11 +66,14 @@ export function SideBar() {
             metadata: platformMetadata,
           };
         })
-        .sort((a, b) =>
-          sortPlatforms(a, b, platformSortKey, platformSortDirection),
-        ) ?? [],
-    [platformData, platformSortKey, platformSortDirection],
-  );
+        .sort((a, b) => sortPlatforms(a, b, platformSortKey)) ?? [];
+
+    if (platformSortDirection === "desc") {
+      platforms.reverse();
+    }
+
+    return platforms;
+  }, [platformData, platformSortKey, platformSortDirection]);
 
   const gamesByPlatform = useMemo(() => {
     if (!gameData || !platformData) return {};
@@ -117,8 +120,12 @@ export function SideBar() {
         >
           {platformsWithMetadata.map((platform) => {
             const games = gamesByPlatform[platform.id]?.sort((a, b) =>
-              sortGames(a, b, gameSortKey, gameSortDirection),
+              sortGames(a, b, gameSortKey),
             );
+
+            if (gameSortDirection === "desc") {
+              games.reverse();
+            }
 
             const name = platform.metadata?.name || getFileStub(platform.path);
 
@@ -142,9 +149,7 @@ export function SideBar() {
                     {games.map((game) => {
                       const isCurrentGame = currentGame?.id === game.id;
 
-                      const gameMetadata = gameData.metadata.find(
-                        (m) => m.gameId === game.id,
-                      );
+                      const gameMetadata = game.metadata;
 
                       const iconUrl = gameMetadata?.iconUrl;
                       const gameName =

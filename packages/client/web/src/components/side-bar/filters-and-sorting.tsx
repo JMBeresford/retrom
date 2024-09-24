@@ -164,5 +164,6 @@ const PlatformSortKeysReadable: Record<PlatformSortKey, string> = {
 const GameSortKeysReadable: Record<GameSortKey, string> = {
   createdAt: "Date Added",
   updatedAt: "Date Updated",
+  lastPlayed: "Last Played",
   name: "Name",
 };
