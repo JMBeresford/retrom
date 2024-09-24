@@ -70,6 +70,7 @@ impl PlatformResolver {
         }
     }
 
+    #[tracing::instrument(skip_all)]
     pub async fn resolve(mut self, db_pool: Arc<Pool>) -> Result<ResolvedPlatform> {
         let mut conn = db_pool.get().await.expect("Could not get db connection");
         let insertable = self.as_insertable();
@@ -83,15 +84,11 @@ impl PlatformResolver {
 
         self.row = match row {
             Some(row) => Some(row),
-            None => {
-                let row = schema::platforms::table
-                    .filter(schema::platforms::path.eq(&insertable.path))
-                    .get_result(&mut conn)
-                    .await
-                    .optional()?;
-
-                row
-            }
+            None => schema::platforms::table
+                .filter(schema::platforms::path.eq(&insertable.path))
+                .get_result(&mut conn)
+                .await
+                .optional()?,
         };
 
         self.try_into()

@@ -150,6 +150,7 @@ impl GameResolver {
         }
     }
 
+    #[tracing::instrument(skip_all)]
     pub async fn resolve(mut self, db_pool: Arc<Pool>) -> Result<ResolvedGame> {
         let mut conn = db_pool.get().await.expect("Could not get db connection");
         let insertable = self.as_insertable();

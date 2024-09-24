@@ -34,7 +34,7 @@ impl ContentResolver {
         let content_dir_path = PathBuf::from_str(&self.content_directory.path)
             .expect("Could not resolve platform directory");
 
-        let platform_resolvers = content_dir_path
+        content_dir_path
             .read_dir()
             .expect("Could not read content directory")
             .filter_map(|entry| match entry {
@@ -46,8 +46,6 @@ impl ContentResolver {
             })
             .filter(|path| path.is_dir())
             .map(|dir| PlatformResolver::new(dir, self.clone()))
-            .collect();
-
-        platform_resolvers
+            .collect()
     }
 }

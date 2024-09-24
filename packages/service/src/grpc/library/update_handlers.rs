@@ -1,12 +1,12 @@
 use retrom_codegen::retrom::{UpdateLibraryRequest, UpdateLibraryResponse};
 use tonic::{Request, Status};
-use tracing::{warn, Level};
+use tracing::warn;
 
 use super::{
     content_resolver::ContentResolver, game_resolver::ResolvedGame, LibraryServiceHandlers,
 };
 
-#[tracing::instrument(level = Level::DEBUG, skip_all)]
+#[tracing::instrument(skip_all)]
 pub(super) async fn update_library(
     state: &LibraryServiceHandlers,
     _request: Request<UpdateLibraryRequest>,
@@ -14,7 +14,7 @@ pub(super) async fn update_library(
     let content_dirs = state.config.content_directories.clone();
     let db_pool = state.db_pool.clone();
 
-    let tasks = content_dirs
+    let tasks: Vec<_> = content_dirs
         .into_iter()
         .map(ContentResolver::from_content_dir)
         .flat_map(|content_dir| {
@@ -72,6 +72,10 @@ pub(super) async fn update_library(
                 })
         })
         .collect();
+
+    if tasks.is_empty() {
+        return Err(Status::internal("No content directories found"));
+    }
 
     let job_id = state
         .job_manager

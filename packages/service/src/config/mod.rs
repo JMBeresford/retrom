@@ -65,6 +65,16 @@ impl ServerConfig {
             .add_source(File::with_name(&config_file).required(false))
             .build()?;
 
-        s.try_deserialize()
+        let mut config: Self = s.try_deserialize()?;
+
+        if let Ok(content_dir) = std::env::var("CONTENT_DIR") {
+            tracing::warn!("CONTENT_DIR env var is deprecated, use a config file instead.");
+            config.content_directories.push(ContentDirectory {
+                path: content_dir,
+                storage_type: StorageType::MultiFileGame,
+            });
+        }
+
+        Ok(config)
     }
 }
