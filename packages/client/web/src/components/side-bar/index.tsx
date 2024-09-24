@@ -188,7 +188,7 @@ export function SideBar() {
                               </Link>
                             </li>
                           </TooltipTrigger>
-                          <TooltipContent>
+                          <TooltipContent className="pointer-events-none touch-none">
                             <p>{gameName}</p>
                           </TooltipContent>
                         </Tooltip>
