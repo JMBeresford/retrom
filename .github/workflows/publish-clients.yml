@@ -1,0 +1,104 @@
+name: Publish Clients Applications
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-desktop-clients:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-latest" # for Arm based macs (M1 and above).
+            args: "--target aarch64-apple-darwin --config tauri.build.conf.json"
+            rustflags: "-L/opt/homebrew/opt/libpq/lib"
+          - platform: "macos-latest" # for Intel based macs.
+            args: "--target x86_64-apple-darwin --config tauri.build.conf.json"
+            rustflags: "-L/opt/homebrew/opt/libpq/lib"
+          - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
+            args: "--config tauri.build.conf.json"
+          - platform: "windows-latest"
+            args: "--config tauri.build.conf.json"
+
+    runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: install Rust stable
+        id: rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: install dependencies (windows only)
+        if: matrix.platform == 'windows-latest' # This must match the platform value defined above.
+        run: |
+          choco install -y postgresql
+
+      - name: install dependencies (macos only)
+        if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
+        run: |
+          brew install postgresql@16 libpq && brew link --force libpq
+
+      - name: install frontend dependencies
+        run: pnpm install && pnpm exec buf generate
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          VITE_IS_DESKTOP: true
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          RUSTFLAGS: ${{ matrix.rustflags }}
+        with:
+          projectPath: packages/client
+          tauriScript: pnpm tauri
+          releaseId: ${{ github.event.release.id }}
+          releaseBody: ${{ github.event.release.body }}
+          tagName: ${{ github.event.release.tag_name }}
+          args: ${{ matrix.args }}
+          updaterJsonPreferNsis: true
