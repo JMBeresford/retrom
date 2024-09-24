@@ -1,5 +1,5 @@
 import { Image, cn, getFileStub } from "@/lib/utils";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -15,11 +15,22 @@ import {
 import { usePlatforms } from "@/queries/usePlatforms";
 import { useGames } from "@/queries/useGames";
 import { Game } from "@/generated/retrom/models/games";
-import { Platform } from "@/generated/retrom/models/platforms";
 import { GameMetadata } from "@/generated/retrom/models/metadata";
 import { Link, useLocation } from "@tanstack/react-router";
+import { useFilterAndSort } from "./filter-sort-context";
+import { FiltersAndSorting } from "./filters-and-sorting";
+import { Separator } from "../ui/separator";
+import { filterName, sortGames, sortPlatforms } from "./utils";
 
 export function SideBar() {
+  const {
+    gameSortKey,
+    filters,
+    gameSortDirection,
+    platformSortKey,
+    platformSortDirection,
+  } = useFilterAndSort();
+
   const path = useLocation({ select: (location) => location.pathname });
 
   const { data: platformData, status: platformStatus } = usePlatforms({
@@ -42,20 +53,41 @@ export function SideBar() {
   const loading = platformStatus === "pending" || gameStatus === "pending";
   const error = platformStatus === "error" || gameStatus === "error";
 
+  const platformsWithMetadata = useMemo(
+    () =>
+      platformData?.platforms
+        .map((platform) => {
+          const platformMetadata = platformData.metadata.find(
+            (md) => md.platformId === platform.id,
+          );
+
+          return {
+            ...platform,
+            metadata: platformMetadata,
+          };
+        })
+        .sort((a, b) =>
+          sortPlatforms(a, b, platformSortKey, platformSortDirection),
+        ) ?? [],
+    [platformData, platformSortKey, platformSortDirection],
+  );
+
   const gamesByPlatform = useMemo(() => {
     if (!gameData || !platformData) return {};
     const ret: Record<string, Array<Game & { metadata?: GameMetadata }>> = {};
 
-    const { platforms } = platformData;
+    const platforms = platformData.platforms;
     const { games, metadata } = gameData;
 
-    const gamesWithMetadata = games.map((game) => {
-      const gameMetadata = metadata.find((m) => m.gameId === game.id);
-      return {
-        ...game,
-        metadata: gameMetadata,
-      };
-    });
+    const gamesWithMetadata = games
+      .map((game) => {
+        const gameMetadata = metadata.find((m) => m.gameId === game.id);
+        return {
+          ...game,
+          metadata: gameMetadata,
+        };
+      })
+      .filter((game) => filterName(game, filters.name));
 
     return platforms.reduce((acc, platform) => {
       acc[platform.id] = gamesWithMetadata.filter(
@@ -63,17 +95,7 @@ export function SideBar() {
       );
       return acc;
     }, ret);
-  }, [gameData, platformData]);
-
-  const getPlatformName = useCallback(
-    (platform: Platform) => {
-      return (
-        platformData?.metadata.find((md) => md.platformId === platform.id)
-          ?.name ?? platform.path.split("/").pop()
-      );
-    },
-    [platformData],
-  );
+  }, [gameData, platformData, filters]);
 
   if (loading) {
     return <span>Loading...</span>;
@@ -85,33 +107,29 @@ export function SideBar() {
 
   return (
     <TooltipProvider>
-      <aside className={cn("min-h-full h-full w-[100cqw] min-w-0")}>
+      <aside className={cn("min-h-full h-full w-[100cqw] min-w-0 px-3")}>
+        <FiltersAndSorting />
+        <Separator className="mb-4" />
         <Accordion
           type="single"
           collapsible={true}
-          className="mt-2 w-full max-w-full"
           defaultValue={currentGame?.platformId?.toString()}
         >
-          {platformData.platforms.map((platform) => {
-            const games = gamesByPlatform[platform.id]?.sort((a, b) => {
-              const aName = a.metadata?.name ?? getFileStub(a.path) ?? "";
-              const bName = b.metadata?.name ?? getFileStub(b.path) ?? "";
+          {platformsWithMetadata.map((platform) => {
+            const games = gamesByPlatform[platform.id]?.sort((a, b) =>
+              sortGames(a, b, gameSortKey, gameSortDirection),
+            );
 
-              return aName.localeCompare(bName);
-            });
+            const name = platform.metadata?.name || getFileStub(platform.path);
 
-            const name = getPlatformName(platform);
-
-            return games ? (
+            return games?.length ? (
               <AccordionItem
                 key={platform.id}
                 value={platform.id.toString()}
                 className={cn("border-b-0 w-full max-w-full")}
               >
                 <AccordionTrigger
-                  className={cn(
-                    "px-3 py-2 font-medium overflow-hidden relative",
-                  )}
+                  className={cn("py-2 font-medium overflow-hidden relative")}
                 >
                   <h3 className="text-left whitespace-nowrap overflow-ellipsis overflow-hidden">
                     {name}

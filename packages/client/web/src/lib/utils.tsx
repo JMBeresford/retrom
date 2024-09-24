@@ -79,3 +79,18 @@ export function timestampToDate(timestamp?: Timestamp): Date {
 
   return new Date(seconds * 1000 + nanos / 1000000);
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function debounce<Fn extends (...args: any[]) => any>(
+  fn: Fn,
+  ms: number = 300,
+): (...args: Parameters<Fn>) => void {
+  let timeout: NodeJS.Timeout | undefined;
+
+  return (...args: Parameters<Fn>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      fn(...args);
+    }, ms);
+  };
+}

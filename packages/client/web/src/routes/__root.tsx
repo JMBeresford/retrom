@@ -24,6 +24,7 @@ import { MatchPlatformsModal } from "@/components/modals/match-platforms";
 import { DefaultProfilesModal } from "@/components/modals/default-profiles";
 import { ManageEmulatorProfilesModal } from "@/components/modals/manage-profiles";
 import { ManageEmulatorsModal } from "@/components/modals/manage-emulators";
+import { FilterAndSortContext } from "@/components/side-bar/filter-sort-context";
 
 const TanStackRouterDevtools = import.meta.env.PROD
   ? () => null
@@ -101,7 +102,9 @@ export const Route = createRootRoute({
                         "bg-gradient-to-b from-primary/5 to-background",
                       )}
                     >
-                      <SideBar />
+                      <FilterAndSortContext>
+                        <SideBar />
+                      </FilterAndSortContext>
                     </ScrollArea>
                   </div>
                 </ResizablePanel>
