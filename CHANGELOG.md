@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.0...retrom-v0.1.1) - 2024-09-24
+
+### Added
+
+- search and sort sidebar entries
+
 ## [0.1.0](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.81...retrom-v0.1.0) - 2024-09-22
 
 ### Added
