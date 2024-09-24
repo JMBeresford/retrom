@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.2...retrom-v0.1.3) - 2024-09-24
+
+### Fixed
+
+- sidebar tooltips no longer block cursor
+
 ## [0.1.2](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.1...retrom-v0.1.2) - 2024-09-24
 
 ### Fixed
