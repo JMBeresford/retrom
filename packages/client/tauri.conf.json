@@ -6,45 +6,8 @@
     "frontendDist": "./web/dist",
     "devUrl": "http://localhost:3000"
   },
-  "bundle": {
-    "active": true,
-    "category": "Utility",
-    "copyright": "",
-    "targets": "all",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
-    "windows": {
-      "certificateThumbprint": null,
-      "digestAlgorithm": "sha256",
-      "timestampUrl": ""
-    },
-    "longDescription": "A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.",
-    "shortDescription": "Your own self-hosted cloud game library service",
-    "linux": {
-      "deb": {
-        "depends": []
-      }
-    },
-    "createUpdaterArtifacts": true
-  },
   "productName": "Retrom",
   "identifier": "com.retrom.client",
-  "plugins": {
-    "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDIwRjYzMzY2NDc1MzIyQkQKUldTOUlsTkhaalAySURKUGRjWlBhY0JnYys5b3JPRGQrTllrSDZnNFhHdENMZkdWYURkc2NyYXMK",
-      "endpoints": [
-        "https://github.com/JMBeresford/retrom/releases/latest/download/latest.json"
-      ],
-      "windows": {
-        "installMode": "passive"
-      }
-    }
-  },
   "app": {
     "windows": [
       {
