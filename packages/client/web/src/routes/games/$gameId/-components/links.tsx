@@ -28,16 +28,17 @@ export function Links() {
         >
           <div className="flex gap-3 w-max pb-4 pr-8">
             {gameMetadata?.links.map((link, idx) => (
-              <Link
+              <a
                 key={idx}
                 href={link}
+                target="_blank"
                 className={cn(
                   "underline text-muted-foreground hover:text-card-foreground transition-colors flex items-baseline gap-1",
                 )}
               >
                 {new URL(link).hostname.split(".").at(-2)}
                 <ExternalLinkIcon className="h-[0.8rem] w-[0.8rem]" />
-              </Link>
+              </a>
             ))}
           </div>
 

@@ -122,6 +122,7 @@ pub(crate) async fn search_games(
         "websites.trusted".to_string(),
         "videos.name".to_string(),
         "videos.video_id".to_string(),
+        "url".to_string(),
     ]
     .join(",");
 
@@ -202,12 +203,14 @@ pub fn igdb_game_to_metadata(
             .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")),
     };
 
-    let links = igdb_match
+    let mut links: Vec<String> = igdb_match
         .websites
         .into_iter()
         .filter(|website| website.trusted)
         .map(|website| website.url)
         .collect();
+
+    links.push(igdb_match.url);
 
     let artwork_urls: Vec<String> = igdb_match
         .artworks
