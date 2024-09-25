@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ExternalLinkIcon } from "lucide-react";
 import { useGameDetail } from "@/providers/game-details";
-import { Link } from "@tanstack/react-router";
 
 export function Links() {
   const { gameMetadata } = useGameDetail();
