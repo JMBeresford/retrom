@@ -124,5 +124,11 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install && pnpm exec buf generate
 
+      - name: Set Perl environment variables
+        if: matrix.platform == 'windows-latest'
+        run: |
+          echo "PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          echo "OPENSSL_SRC_PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: build client
         run: cd packages/client && pnpm exec tauri build ${{ matrix.args }}
