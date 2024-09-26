@@ -52,7 +52,6 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          tags: ${{ inputs.tags }}
           images: ${{ env.REGISTRY }}/JMBeresford/retrom-${{ matrix.image }}
 
       - name: Build and Push Image
@@ -63,7 +62,7 @@ jobs:
           platforms: ${{ env.platforms }}
           file: docker/${{ matrix.image }}.Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ github.event_name == 'workflow_dispatch' && inputs.tags || steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
