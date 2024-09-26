@@ -1,4 +1,4 @@
-import { Image, cn, getFileStub } from "@/lib/utils";
+import { Image, cn, getFileName, getFileStub } from "@/lib/utils";
 import { useMemo } from "react";
 import {
   Tooltip,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/accordion";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { useGames } from "@/queries/useGames";
-import { Game } from "@/generated/retrom/models/games";
+import { Game, StorageType } from "@/generated/retrom/models/games";
 import { GameMetadata } from "@/generated/retrom/models/metadata";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useFilterAndSort } from "./filter-sort-context";
@@ -153,7 +153,10 @@ export function SideBar() {
 
                       const iconUrl = gameMetadata?.iconUrl;
                       const gameName =
-                        gameMetadata?.name ?? getFileStub(game.path);
+                        (gameMetadata?.name ??
+                        game.storageType === StorageType.SINGLE_FILE_GAME)
+                          ? getFileStub(game.path)
+                          : getFileName(game.path);
 
                       return (
                         <Tooltip key={game.id}>
