@@ -2,6 +2,11 @@ name: Publish Images
 
 on:
   workflow_dispatch:
+    inputs:
+      tags:
+        description: "Tags for the image"
+        required: true
+        default: "debug"
   release:
     types: [published]
 
@@ -47,6 +52,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
+          tags: ${{ inputs.tags }}
           images: ${{ env.REGISTRY }}/JMBeresford/retrom-${{ matrix.image }}
 
       - name: Build and Push Image
