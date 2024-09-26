@@ -52,11 +52,12 @@ export function getFileParts(path: string) {
   const filename = path.split("/").pop() ?? "";
   const parts = filename.split(".");
 
-  // handle hidden files (starts w/ ".")
-  const name = path.startsWith(".") ? `.${parts.shift()}` : parts.shift();
+  if (parts.length < 2) {
+    return { name: filename, extension: "" };
+  }
 
-  // handle multi-level fnam extensions
-  const extension = parts.join(".");
+  const extension = parts.pop();
+  const name = parts.join(".");
 
   return { name, extension };
 }
