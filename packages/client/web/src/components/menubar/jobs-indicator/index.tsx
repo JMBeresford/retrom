@@ -35,7 +35,7 @@ export function JobsIndicator(props: JSX.IntrinsicElements["button"]) {
               <h5
                 className={cn(
                   "font-semibold text-sm leading-none",
-                  job.status === JobStatus.Idle && "text-destructive-text",
+                  job.status === JobStatus.Failure && "text-destructive-text",
                 )}
               >
                 {job.name}
