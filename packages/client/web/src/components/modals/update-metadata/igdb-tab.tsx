@@ -14,6 +14,7 @@ import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -30,11 +31,13 @@ import { Checkbox } from "../../ui/checkbox";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";
+import { useNavigate } from "@tanstack/react-router";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
   search: z.string().max(255),
   igdbId: z.coerce.number().optional(),
+  restrictToCurrentPlatform: z.boolean(),
 });
 
 export function IgdbTab() {
@@ -47,6 +50,7 @@ export function IgdbTab() {
   const { toast } = useToast();
   const [selectedMatch, setSelectedMatch] = useState<string | undefined>();
   const [renameDirectory, setRenameDirectory] = useState(false);
+  const navigate = useNavigate();
   const retromClient = useRetromClient();
 
   const [searchRequest, setSearchRequest] =
@@ -74,7 +78,7 @@ export function IgdbTab() {
     select: (data) => data.metadata,
   });
 
-  const { mutate: updateGames } = useUpdateGames();
+  const { mutateAsync: updateGames } = useUpdateGames();
   const { mutateAsync: updateMetadata, isPending: updatePending } =
     useUpdateGameMetadata();
 
@@ -85,19 +89,21 @@ export function IgdbTab() {
     defaultValues: {
       search: currentMetadata?.name ?? "",
       igdbId: currentMetadata?.igdbId,
+      restrictToCurrentPlatform: platformMetadata?.igdbId !== undefined,
     },
   });
 
   const handleSearch = useCallback(
     (values: FormSchema) => {
-      const { search, igdbId } = values;
-      console.log({ igdbId });
+      const { search, igdbId, restrictToCurrentPlatform } = values;
 
       if (!game) {
         return;
       }
 
-      const platform = platformMetadata?.igdbId;
+      const platform = restrictToCurrentPlatform
+        ? platformMetadata?.igdbId
+        : undefined;
 
       setSearchRequest({
         query: {
@@ -146,7 +152,7 @@ export function IgdbTab() {
 
         const path = game.path.replace(currentFilename, newName);
 
-        updateGames({
+        await updateGames({
           games: [{ id: game.id, path }],
         });
       }
@@ -156,6 +162,8 @@ export function IgdbTab() {
         description: "Something went wrong, please try again",
         variant: "destructive",
       });
+    } finally {
+      navigate({ search: { updateMetadataModal: undefined } });
     }
   }, [
     matches,
@@ -165,6 +173,7 @@ export function IgdbTab() {
     updateMetadata,
     renameDirectory,
     updateGames,
+    navigate,
   ]);
 
   return (
@@ -200,6 +209,34 @@ export function IgdbTab() {
                 </FormItem>
               )}
             />
+
+            {platformMetadata?.igdbId !== undefined ? (
+              <FormField
+                control={form.control}
+                name="restrictToCurrentPlatform"
+                render={({ field }) => (
+                  <FormItem className="flex items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Restrict to currently matched platform
+                      </FormLabel>
+                      <FormDescription className="max-w-[50ch]">
+                        This will only search the games for{" "}
+                        <strong>({platformMetadata?.name})</strong>
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <></>
+            )}
 
             <Button type="submit">
               <LoaderCircleIcon
