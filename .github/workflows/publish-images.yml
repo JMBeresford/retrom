@@ -10,7 +10,7 @@ on:
       images:
         description: "Images to build and push"
         required: true
-        default: "service, web"
+        default: '"service", "web"'
 
   release:
     types: [published]
