@@ -157,7 +157,7 @@ export function GameFiles() {
 
   return (
     <>
-      <Card className="col-span-2 ring-inset relative">
+      <Card className="col-span-2 row-span-2 ring-inset relative">
         <CardHeader>
           <CardTitle>Files</CardTitle>
         </CardHeader>

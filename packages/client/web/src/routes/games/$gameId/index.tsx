@@ -58,7 +58,7 @@ function Game() {
           <Genres />
         </div>
 
-        <div id="right" className="pr-5">
+        <div id="right" className="pr-5 max-w-[1250px]">
           <div className="pb-5">
             <Title />
             <Description />

@@ -39,7 +39,7 @@ export function Media() {
         : "none";
 
   return (
-    <Card className="col-span-5 row-span-2">
+    <Card className="col-span-6 row-span-4">
       <CardHeader>
         <CardTitle>Media</CardTitle>
       </CardHeader>

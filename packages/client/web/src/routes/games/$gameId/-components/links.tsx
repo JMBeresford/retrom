@@ -12,7 +12,8 @@ export function Links() {
     () =>
       gameMetadata?.links?.flatMap((link) => {
         try {
-          return [new URL(link).hostname.split(".").at(-2)];
+          const hostname = new URL(link).hostname.split(".").at(-2);
+          return [{ hostname, link }];
         } catch {
           return [];
         }
@@ -25,7 +26,7 @@ export function Links() {
   }
 
   return (
-    <Card className={`col-span-3`}>
+    <Card className={`col-span-4 row-span-2`}>
       <CardHeader>
         <CardTitle>External Links</CardTitle>
       </CardHeader>
@@ -39,7 +40,7 @@ export function Links() {
           )}
         >
           <div className="flex gap-3 w-max pb-4 pr-8">
-            {links.map((link, idx) => (
+            {links.map(({ link, hostname }, idx) => (
               <a
                 key={idx}
                 href={link}
@@ -48,7 +49,7 @@ export function Links() {
                   "underline text-muted-foreground hover:text-card-foreground transition-colors flex items-baseline gap-1",
                 )}
               >
-                {link}
+                {hostname}
                 <ExternalLinkIcon className="h-[0.8rem] w-[0.8rem]" />
               </a>
             ))}

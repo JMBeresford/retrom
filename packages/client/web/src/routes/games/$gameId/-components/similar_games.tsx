@@ -20,21 +20,27 @@ export function SimilarGames() {
   }
 
   return (
-    <Card className="col-span-4">
+    <Card className="col-span-6 row-span-3">
       <CardHeader>
         <CardTitle>Similar Games</CardTitle>
       </CardHeader>
 
       <CardContent>
-        <ScrollArea>
-          <div className="flex gap-5 pb-4">
+        <ScrollArea
+          className={cn(
+            "after:absolute after:inset-y-0 after:right-0 after:w-[120px]",
+            "after:bg-gradient-to-l after:from-background after:to-transparent z-10",
+            "after:pointer-events-none after:touch-none",
+          )}
+        >
+          <div className="flex gap-5 pb-4 pr-[60px]">
             {similarGamesMetadata?.map((metadata) => (
               <Link
                 key={metadata.gameId}
                 to={"/games/$gameId"}
                 params={{ gameId: metadata.gameId.toString() }}
               >
-                <div className="aspect-[3/4] relative rounded-lg overflow-hidden w-[150px]">
+                <div className="aspect-[3/4] relative rounded-lg overflow-hidden min-w-[120px]">
                   <Image src={metadata.coverUrl} alt="" className="w-[150px]" />
 
                   <div
