@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.6...retrom-v0.1.7) - 2024-09-26
+
+### Added
+
+- *(client)* opt-out of platform filtering in IGDB searching
+
+### Fixed
+
+- *(service)* no longer relies on default config file
+- *(client)* render single-file game names with dots
+- *(client)* render multi-file game names with dots
+
 ## [0.1.6](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.5...retrom-v0.1.6) - 2024-09-26
 
 ### Fixed
