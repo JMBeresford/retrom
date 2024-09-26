@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { JobStatus } from "@/generated/retrom/jobs";
 import { cn } from "@/lib/utils";
 import { useJobProgress } from "@/queries/useJobProgress";
 import { LoaderCircleIcon } from "lucide-react";
@@ -31,10 +32,17 @@ export function JobsIndicator(props: JSX.IntrinsicElements["button"]) {
             {idx !== 0 ? <Separator className="my-3" /> : null}
 
             <div>
-              <h5 className="font-semibold text-sm leading-none">{job.name}</h5>
+              <h5
+                className={cn(
+                  "font-semibold text-sm leading-none",
+                  job.status === JobStatus.Idle && "text-destructive-text",
+                )}
+              >
+                {job.name}
+              </h5>
 
               <div className="flex gap-2 items-stretch mt-1">
-                <Progress value={job.percent} className="h-1 mt-2" />
+                <Progress value={job.percent} className={cn("h-1 mt-2")} />
                 <p className="text-xs font-semibold text-muted-foreground">
                   {job.percent}%
                 </p>

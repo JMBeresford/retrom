@@ -31,8 +31,7 @@ pub(super) async fn update_library(
                             match platform_resolver.resolve(db_pool.clone()).await {
                                 Ok(platform) => platform,
                                 Err(why) => {
-                                    warn!("Failed to resolve platform: {}", why);
-                                    return;
+                                    return Err(why.to_string());
                                 }
                             };
 
@@ -68,6 +67,8 @@ pub(super) async fn update_library(
                         });
 
                         file_join_set.join_all().await;
+
+                        Ok(())
                     }
                 })
         })

@@ -46,11 +46,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr: SocketAddr = format!("0.0.0.0:{port}").parse().unwrap();
 
     let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(&db_url);
-    let pool = bb8::Pool::builder()
-        .max_size(50)
-        .connection_timeout(std::time::Duration::from_secs(5))
-        .build(pool_config)
-        .await
+    let pool = deadpool::managed::Pool::builder(pool_config)
+        .build()
         .expect("Could not create pool");
 
     tokio::task::spawn_blocking(move || {

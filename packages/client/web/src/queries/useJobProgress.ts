@@ -14,8 +14,7 @@ export function useJobProgress() {
 
       for await (const res of stream) {
         const runningJobs = res.jobs.filter(
-          (job) =>
-            job.status === JobStatus.Running || job.status === JobStatus.Idle,
+          (job) => job.status !== JobStatus.Success,
         );
 
         setJobs(runningJobs);

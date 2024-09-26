@@ -3,9 +3,22 @@ import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ExternalLinkIcon } from "lucide-react";
 import { useGameDetail } from "@/providers/game-details";
+import { useMemo } from "react";
 
 export function Links() {
   const { gameMetadata } = useGameDetail();
+
+  const links = useMemo(
+    () =>
+      gameMetadata?.links?.flatMap((link) => {
+        try {
+          return [new URL(link).hostname.split(".").at(-2)];
+        } catch {
+          return [];
+        }
+      }) ?? [],
+    [gameMetadata?.links],
+  );
 
   if (!gameMetadata?.links?.length) {
     return null;
@@ -26,7 +39,7 @@ export function Links() {
           )}
         >
           <div className="flex gap-3 w-max pb-4 pr-8">
-            {gameMetadata?.links.map((link, idx) => (
+            {links.map((link, idx) => (
               <a
                 key={idx}
                 href={link}
@@ -35,7 +48,7 @@ export function Links() {
                   "underline text-muted-foreground hover:text-card-foreground transition-colors flex items-baseline gap-1",
                 )}
               >
-                {new URL(link).hostname.split(".").at(-2)}
+                {link}
                 <ExternalLinkIcon className="h-[0.8rem] w-[0.8rem]" />
               </a>
             ))}

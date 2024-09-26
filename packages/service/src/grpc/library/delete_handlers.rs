@@ -27,7 +27,7 @@ pub async fn delete_library(
     }
 }
 
-async fn do_delete(conn: &mut DBConnection<'_>) -> Result<(), diesel::result::Error> {
+async fn do_delete(conn: &mut DBConnection) -> Result<(), diesel::result::Error> {
     diesel::delete(retrom_db::schema::platforms::table)
         .execute(conn)
         .await?;

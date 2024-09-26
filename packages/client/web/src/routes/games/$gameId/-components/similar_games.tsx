@@ -27,14 +27,14 @@ export function SimilarGames() {
 
       <CardContent>
         <ScrollArea>
-          <div className="flex gap-5">
+          <div className="flex gap-5 pb-4">
             {similarGamesMetadata?.map((metadata) => (
               <Link
                 key={metadata.gameId}
                 to={"/games/$gameId"}
                 params={{ gameId: metadata.gameId.toString() }}
               >
-                <div className="aspect-[3/4] relative rounded-lg overflow-hidden">
+                <div className="aspect-[3/4] relative rounded-lg overflow-hidden w-[150px]">
                   <Image src={metadata.coverUrl} alt="" className="w-[150px]" />
 
                   <div

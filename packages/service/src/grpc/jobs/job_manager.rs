@@ -39,14 +39,15 @@ impl JobManager {
     }
 
     #[tracing::instrument(skip(self, tasks))]
-    pub async fn spawn<T>(
+    pub async fn spawn<T, E>(
         &self,
         name: &str,
-        tasks: Vec<impl Future<Output = T> + Send + 'static>,
+        tasks: Vec<impl Future<Output = std::result::Result<T, E>> + Send + 'static>,
         opts: Option<JobOptions>,
     ) -> JobId
     where
         T: Send + 'static,
+        E: Send + 'static + std::fmt::Debug,
     {
         let name = name.to_string();
         let mut join_set = JoinSet::new();
@@ -79,7 +80,7 @@ impl JobManager {
         }
 
         if invalidate_sender.send(id).is_err() {
-            tracing::warn!("No recievers for new job: {:?}", name);
+            tracing::debug!("No recievers for new job: {:?}", name);
         }
 
         let mut maybe_wait_ids = opts.and_then(|opts| opts.wait_on_jobs).unwrap_or_default();
@@ -145,11 +146,21 @@ impl JobManager {
                         let tasks_completed = total_tasks - join_set.len();
                         let percent = (tasks_completed as f64 / total_tasks as f64 * 100.0) as u32;
 
-                        if let Err(e) = res {
-                            tracing::error!("Task failed: {:?}", e);
+                        match res {
+                            Ok(Ok(_)) => {}
+                            Ok(Err(e)) => {
+                                tracing::error!("Task failed: {:?}", e);
 
-                            if let Some(job) = job_progress.get_mut(&id) {
-                                job.status = JobStatus::Failure.into();
+                                if let Some(job) = job_progress.get_mut(&id) {
+                                    job.status = JobStatus::Failure.into();
+                                }
+                            }
+                            Err(e) => {
+                                tracing::error!("Join failed: {:?}", e);
+
+                                if let Some(job) = job_progress.get_mut(&id) {
+                                    job.status = JobStatus::Failure.into();
+                                }
                             }
                         }
 
@@ -160,7 +171,9 @@ impl JobManager {
                         tracing::debug!("Job progress written: {:?}", percent);
                     }
 
-                    let _ = invalidate_sender.send(id);
+                    if let Err(why) = invalidate_sender.send(id) {
+                        tracing::debug!("Invalidation channel closed: {:?}", why);
+                    }
                 }
 
                 {

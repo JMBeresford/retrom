@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Arc};
+use std::collections::HashSet;
 
 use crate::{
     grpc::jobs::job_manager::JobOptions,
@@ -18,7 +18,7 @@ use retrom_codegen::{
     },
 };
 use retrom_db::schema;
-use tracing::instrument;
+use tracing::{info, info_span, instrument, Instrument};
 
 #[instrument(skip(state))]
 pub async fn update_metadata(
@@ -75,6 +75,7 @@ pub async fn update_metadata(
 
                 Ok(())
             }
+            .instrument(info_span!("Platform Metadata Task"))
         })
         .collect();
 
@@ -84,6 +85,7 @@ pub async fn update_metadata(
     })?;
 
     let game_tasks = games
+        .clone()
         .into_iter()
         .map(|game| {
             let igdb_provider = state.igdb_client.clone();
@@ -95,7 +97,6 @@ pub async fn update_metadata(
                 let mut conn = match db_pool.get().await {
                     Ok(conn) => conn,
                     Err(why) => {
-                        tracing::error!("Failed to get connection: {}", why);
                         return Err(why.to_string());
                     }
                 };
@@ -108,7 +109,7 @@ pub async fn update_metadata(
                         .await
                         .optional()
                     {
-                        tracing::error!("Failed to insert metadata: {}", e);
+                        return Err(e.to_string());
                     };
                 };
 
@@ -117,63 +118,76 @@ pub async fn update_metadata(
         })
         .collect();
 
-    let all_game_metadata: Vec<GameMetadata> = match schema::game_metadata::table
-        .load::<retrom::GameMetadata>(&mut conn)
-        .await
-    {
-        Ok(metadata) => metadata,
-        Err(e) => {
-            tracing::error!("Failed to load metadata: {}", e);
-            vec![]
-        }
-    };
-
-    // keep a reference to a copy to read across all tasks
-    // needed because the tasks are built from an iterator
-    // of the original data
-    let all_game_metadata_ref = Arc::new(all_game_metadata.clone());
-
-    let extra_metadata_tasks = all_game_metadata
+    let extra_metadata_tasks = games
         .into_iter()
-        .map(|game_meta| {
+        .map(|game| {
             let igdb_provider = state.igdb_client.clone();
             let db_pool = db_pool.clone();
-            let all_game_metadata_clone = all_game_metadata_ref.clone();
 
             async move {
                 let mut conn = match db_pool.get().await {
                     Ok(conn) => conn,
                     Err(why) => {
-                        tracing::error!("Failed to get connection: {}", why);
                         return Err(why.to_string());
+                    }
+                };
+
+                let all_game_metadata: Vec<GameMetadata> = match schema::game_metadata::table
+                    .load::<retrom::GameMetadata>(&mut conn)
+                    .await
+                {
+                    Ok(metadata) => metadata,
+                    Err(e) => {
+                        return Err(format!("Failed to load metadata: {}", e));
+                    }
+                };
+
+                let game_meta = match all_game_metadata
+                    .iter()
+                    .find(|metadata| metadata.game_id == game.id)
+                {
+                    Some(meta) => meta,
+                    None => {
+                        tracing::debug!("Game does not have metadata");
+                        return Ok(());
                     }
                 };
 
                 let game_igdb_id = match game_meta.igdb_id {
                     Some(id) => id,
-                    None => return Err("Game has no IGDB ID".to_string()),
+                    None => {
+                        tracing::debug!("Game does not have an IGDB ID");
+                        return Ok(());
+                    }
                 };
 
-                let query = format!(
-                    "fields genres.*, similar_games.id, franchise.games.id, franchises.games.id; \
-                    where id = {game_igdb_id};",
-                );
+                let query_fields = "fields genres.*, \
+                        similar_games.id, \
+                        franchise.games.id, \
+                        franchises.games.id;";
+
+                let query_where = format!("where id = {};", game_igdb_id);
+
+                let query = format!("{} {}", query_fields, query_where);
 
                 let res = match igdb_provider.make_request("games.pb".into(), query).await {
                     Ok(res) => res,
-                    Err(e) => return Err(e.to_string()),
+                    Err(e) => {
+                        return Err(format!("Failed to make IGDB request: {}", e));
+                    }
                 };
 
                 let bytes = match res.bytes().await {
                     Ok(bytes) => bytes,
-                    Err(e) => return Err(e.to_string()),
+                    Err(e) => {
+                        return Err(format!("Failed to get IGDB response: {}", e));
+                    }
                 };
 
                 let extra_metadata = match igdb::GameResult::decode(bytes) {
                     Ok(metadata) => metadata,
                     Err(e) => {
-                        tracing::error!("Failed to parse IGDB response: {}", e);
-                        return Ok(());
+                        return Err(format!("Failed to parse IGDB response: {}", e));
                     }
                 };
 
@@ -200,10 +214,14 @@ pub async fn update_metadata(
                 let new_similar_game_maps = similar_game_ids
                     .into_iter()
                     .filter_map(|id| {
-                        let similar_game_id = all_game_metadata_clone
+                        let similar_game_id = match all_game_metadata
                             .iter()
                             .find(|metadata| metadata.igdb_id == id.to_i64())
-                            .map(|metadata| metadata.game_id)?;
+                            .map(|metadata| metadata.game_id)
+                        {
+                            Some(id) => id,
+                            None => return None,
+                        };
 
                         if similar_game_id == game_meta.game_id {
                             return None;
@@ -217,16 +235,6 @@ pub async fn update_metadata(
                     })
                     .collect::<Vec<_>>();
 
-                diesel::insert_into(schema::similar_game_maps::table)
-                    .values(&new_similar_game_maps)
-                    .on_conflict_do_nothing()
-                    .execute(&mut conn)
-                    .await
-                    .map_err(|e| {
-                        tracing::error!("Failed to insert similar games: {}", e);
-                        e.to_string()
-                    })?;
-
                 let new_genres = extra_metadata
                     .games
                     .iter()
@@ -239,15 +247,23 @@ pub async fn update_metadata(
                     })
                     .collect::<Vec<_>>();
 
-                diesel::insert_into(schema::game_genres::table)
+                if let Err(why) = diesel::insert_into(schema::similar_game_maps::table)
+                    .values(&new_similar_game_maps)
+                    .on_conflict_do_nothing()
+                    .execute(&mut conn)
+                    .await
+                {
+                    tracing::error!("Failed to insert similar games: {}", why);
+                }
+
+                if let Err(why) = diesel::insert_into(schema::game_genres::table)
                     .values(&new_genres)
                     .on_conflict_do_nothing()
                     .execute(&mut conn)
                     .await
-                    .map_err(|e| {
-                        tracing::error!("Failed to insert genres: {}", e);
-                        e.to_string()
-                    })?;
+                {
+                    tracing::error!("Failed to insert genres: {}", why);
+                }
 
                 let genres: Vec<GameGenre> = schema::game_genres::table
                     .filter(
@@ -256,10 +272,7 @@ pub async fn update_metadata(
                     )
                     .load(&mut conn)
                     .await
-                    .map_err(|e| {
-                        tracing::error!("Failed to load genres: {}", e);
-                        e.to_string()
-                    })?;
+                    .unwrap_or_default();
 
                 let new_genre_maps = genres
                     .into_iter()
@@ -270,15 +283,14 @@ pub async fn update_metadata(
                     })
                     .collect::<Vec<_>>();
 
-                diesel::insert_into(schema::game_genre_maps::table)
+                if let Err(why) = diesel::insert_into(schema::game_genre_maps::table)
                     .values(&new_genre_maps)
                     .on_conflict_do_nothing()
                     .execute(&mut conn)
                     .await
-                    .map_err(|e| {
-                        tracing::error!("Failed to insert genre maps: {}", e);
-                        e.to_string()
-                    })?;
+                {
+                    tracing::error!("Failed to insert genre maps: {}", why);
+                }
 
                 Ok(())
             }

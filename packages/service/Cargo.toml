@@ -18,7 +18,7 @@ tracing-subscriber = { workspace = true }
 diesel = { workspace = true }
 diesel_migrations = { workspace = true }
 diesel-async = { workspace = true }
-bb8 = { workspace = true }
+deadpool = { workspace = true }
 retrom-db = { workspace = true }
 retrom-codegen = { workspace = true }
 bytes = { workspace = true }

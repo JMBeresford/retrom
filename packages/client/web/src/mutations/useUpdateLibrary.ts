@@ -44,11 +44,13 @@ export function useUpdateLibrary() {
       }
 
       for await (const progress of subscription) {
-        console.log({ progress });
         if (progress.job?.status === JobStatus.Success) {
           invalidate();
+          return;
         }
       }
+
+      invalidate();
     },
     mutationFn: async () => await retromClient.libraryClient.updateLibrary({}),
   });

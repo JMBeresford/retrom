@@ -18,9 +18,9 @@ impl std::fmt::Display for DbError {
 
 pub type Result<T> = std::result::Result<T, DbError>;
 
-pub type Pool = bb8::Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
-pub type DBConnection<'a> =
-    bb8::PooledConnection<'a, AsyncDieselConnectionManager<AsyncPgConnection>>;
+pub type PoolConfig = AsyncDieselConnectionManager<AsyncPgConnection>;
+pub type Pool = deadpool::managed::Pool<PoolConfig>;
+pub type DBConnection = deadpool::managed::Object<PoolConfig>;
 
 pub type DBConnectionSync = diesel::pg::PgConnection;
 

@@ -9,7 +9,7 @@ use retrom_db::{schema, Pool};
 use std::{path::PathBuf, sync::Arc};
 use tonic::{Code, Request, Response, Status};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PlatformServiceHandlers {
     pub db_pool: Arc<Pool>,
 }
