@@ -30,13 +30,12 @@ impl ContentResolver {
         Self { content_directory }
     }
 
-    pub fn resolve_platforms(&self) -> Vec<PlatformResolver> {
-        let content_dir_path = PathBuf::from_str(&self.content_directory.path)
-            .expect("Could not resolve platform directory");
+    pub fn resolve_platforms(&self) -> Result<Vec<PlatformResolver>> {
+        let content_dir_path =
+            PathBuf::from_str(&self.content_directory.path).expect("Invalid path");
 
-        content_dir_path
-            .read_dir()
-            .expect("Could not read content directory")
+        let platform_resolvers = content_dir_path
+            .read_dir()?
             .filter_map(|entry| match entry {
                 Ok(entry) => Some(entry.path()),
                 Err(why) => {
@@ -46,6 +45,8 @@ impl ContentResolver {
             })
             .filter(|path| path.is_dir())
             .map(|dir| PlatformResolver::new(dir, self.clone()))
-            .collect()
+            .collect();
+
+        Ok(platform_resolvers)
     }
 }

@@ -1,26 +1,27 @@
 use config::{Config, ConfigError, File};
 use retrom_codegen::retrom::StorageType;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ConnectionConfig {
     pub port: i32,
     pub db_url: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ContentDirectory {
     pub path: String,
     pub storage_type: StorageType,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct IGDBConfig {
     pub client_id: String,
     pub client_secret: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ServerConfig {
     pub connection: ConnectionConfig,
     pub content_directories: Vec<ContentDirectory>,
@@ -31,8 +32,23 @@ impl ServerConfig {
     pub fn new() -> Result<Self, ConfigError> {
         dotenvy::dotenv().ok();
 
-        let mut default_config =
-            Config::builder().add_source(File::with_name("default_config.json"));
+        let config_file = std::env::var("RETROM_CONFIG").unwrap_or_else(|_| {
+            tracing::info!("No config file specified, using default config.");
+
+            "".into()
+        });
+
+        let config = Config::builder().add_source(File::with_name(&config_file).required(false));
+
+        let mut default_config = Config::builder()
+            .set_default("connection.port", "5101")?
+            .set_default(
+                "connection.db_url",
+                "postgres://postgres:postgres@localhost:5432/retrom",
+            )?
+            .set_default("content_directories", config::ValueKind::Array(vec![]))?
+            .set_default("igdb.client_id", "")?
+            .set_default("igdb.client_secret", "")?;
 
         if let Ok(port) = std::env::var("RETROM_PORT") {
             tracing::warn!("RETROM_PORT env var is deprecated, use a config file instead.");
@@ -55,26 +71,19 @@ impl ServerConfig {
                 default_config.set_override("igdb.client_secret", igdb_client_secret)?;
         }
 
-        let config_file = std::env::var("RETROM_CONFIG").unwrap_or_else(|_| {
-            tracing::info!("No config file specified, using default config.");
-
-            "".into()
-        });
-
-        let s = default_config
-            .add_source(File::with_name(&config_file).required(false))
-            .build()?;
-
-        let mut config: Self = s.try_deserialize()?;
+        let mut s: Self = config
+            .build()
+            .unwrap_or(default_config.build()?)
+            .try_deserialize()?;
 
         if let Ok(content_dir) = std::env::var("CONTENT_DIR") {
             tracing::warn!("CONTENT_DIR env var is deprecated, use a config file instead.");
-            config.content_directories.push(ContentDirectory {
+            s.content_directories.push(ContentDirectory {
                 path: content_dir,
                 storage_type: StorageType::MultiFileGame,
             });
         }
 
-        Ok(config)
+        Ok(s)
     }
 }

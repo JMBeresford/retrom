@@ -20,8 +20,15 @@ pub(super) async fn update_library(
         .flat_map(|content_dir| {
             let db_pool = db_pool.clone();
 
-            content_dir
-                .resolve_platforms()
+            let platform_resolvers = match content_dir.resolve_platforms() {
+                Ok(platform_resolvers) => platform_resolvers,
+                Err(why) => {
+                    warn!("Failed to resolve platforms: {}", why);
+                    Vec::new()
+                }
+            };
+
+            platform_resolvers
                 .into_iter()
                 .map(move |platform_resolver| {
                     let db_pool = db_pool.clone();
