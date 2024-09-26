@@ -2,6 +2,16 @@ name: Publish Images
 
 on:
   workflow_dispatch:
+    inputs:
+      tags:
+        description: "Tags for the image"
+        required: true
+        default: "debug"
+      images:
+        description: "Images to build and push"
+        required: true
+        default: "service, web"
+
   release:
     types: [published]
 
@@ -16,7 +26,7 @@ jobs:
   build-and-push-images:
     strategy:
       matrix:
-        image: [service, web]
+        image: ${{ fromJSON(format('[{0}]', inputs.images || '"service","web"')) }}
         platforms: [linux/amd64, linux/arm64]
 
     runs-on: ubuntu-latest
@@ -57,7 +67,7 @@ jobs:
           platforms: ${{ env.platforms }}
           file: docker/${{ matrix.image }}.Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ github.event_name == 'workflow_dispatch' && inputs.tags || steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation

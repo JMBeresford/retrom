@@ -17,7 +17,6 @@ RUN addgroup --system --gid $GID retrom
 RUN adduser --system --uid $UID retrom
 
 COPY --from=builder  /usr/local/cargo/bin/retrom-service /app/retrom-service
-COPY --from=builder  /usr/src/retrom/packages/service/default_config.json /app/default_config.json
 
 WORKDIR /app
 USER retrom
