@@ -32,21 +32,21 @@ impl ServerConfig {
     pub fn new() -> Result<Self, ConfigError> {
         dotenvy::dotenv().ok();
 
-        let config_file = std::env::var("RETROM_CONFIG").unwrap_or_else(|_| {
-            tracing::info!("No config file specified, using default config.");
+        let mut default_connection = config::Map::<String, String>::new();
+        default_connection.insert("port".into(), "5101".into());
+        default_connection.insert(
+            "db_url".into(),
+            "postgres://postgres:postgres@localhost:5432/retrom".into(),
+        );
 
-            "".into()
-        });
-
-        let config = Config::builder().add_source(File::with_name(&config_file).required(false));
+        let mut legacy_content_dir = config::Map::<String, String>::new();
+        legacy_content_dir.insert("path".into(), "/app/library".into());
+        legacy_content_dir.insert("storage_type".into(), "MultiFileGame".into());
+        let default_content_directories = config::ValueKind::Array(vec![legacy_content_dir.into()]);
 
         let mut default_config = Config::builder()
-            .set_default("connection.port", "5101")?
-            .set_default(
-                "connection.db_url",
-                "postgres://postgres:postgres@localhost:5432/retrom",
-            )?
-            .set_default("content_directories", config::ValueKind::Array(vec![]))?
+            .set_default("connection", default_connection)?
+            .set_default("content_directories", default_content_directories)?
             .set_default("igdb.client_id", "")?
             .set_default("igdb.client_secret", "")?;
 
@@ -71,10 +71,16 @@ impl ServerConfig {
                 default_config.set_override("igdb.client_secret", igdb_client_secret)?;
         }
 
-        let mut s: Self = config
-            .build()
-            .unwrap_or(default_config.build()?)
-            .try_deserialize()?;
+        let config_file = std::env::var("RETROM_CONFIG").ok();
+
+        let config = config_file.map(|config_file| {
+            Config::builder().add_source(File::with_name(&config_file).required(false))
+        });
+
+        let mut s: Self = match config {
+            Some(config) => config.build()?.try_deserialize()?,
+            None => default_config.build()?.try_deserialize()?,
+        };
 
         if let Ok(content_dir) = std::env::var("CONTENT_DIR") {
             tracing::warn!("CONTENT_DIR env var is deprecated, use a config file instead.");
