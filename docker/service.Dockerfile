@@ -30,6 +30,12 @@ RUN cargo install --path ./packages/service
 FROM web-base
 RUN apt-get update && apt-get install openssl libssl-dev libpq-dev ca-certificates -y && rm -rf /var/lib/apt/lists/*
 
+ENV UID=1505
+ENV GID=1505
+
+RUN addgroup --gid $GID retrom
+RUN adduser --gid $GID --uid $UID retrom
+
 ### Service env
 ENV RUST_LOG=info
 ENV RETROM_CONFIG=/config/config.json
@@ -45,10 +51,14 @@ COPY docker/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 WORKDIR /app/www
-COPY --from=deps /app/. ./
+COPY --from=deps --chown=retrom:node /app/. ./
 
 RUN corepack enable pnpm && pnpm --filter web build
+RUN chmod -R 755 /app/www
+RUN chown -R retrom:node /app/www
 
 WORKDIR /app
+
+USER retrom
 
 CMD ["sh", "-c", "/app/start.sh"]
