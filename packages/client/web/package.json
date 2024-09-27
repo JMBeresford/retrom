@@ -2,6 +2,7 @@
   "name": "web",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9.5.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

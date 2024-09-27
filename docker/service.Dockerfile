@@ -1,40 +1,43 @@
-### WEB CLIENT
-FROM node:bookworm-slim AS web-base
+FROM node:20-bookworm-slim AS common
 
-FROM web-base AS deps
+COPY . ./app
+
+### WEB CLIENT
+FROM node:20-bookworm-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+FROM base AS web-builder
 RUN apt-get update && apt-get install protobuf-compiler ca-certificates -y
+
+COPY --from=common /app /app
 WORKDIR /app
 
-# top level deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-
-# package deps
-RUN mkdir -p packages/client/ && mkdir -p packages/codegen/
-COPY buf*.yaml ./
-COPY packages/codegen/protos/ ./packages/codegen/protos/
-COPY packages/client/package.json ./packages/client/
-COPY packages/client/web/ ./packages/client/web/
-
-RUN corepack enable pnpm && pnpm i
-
+RUN pnpm install --frozen-lockfile
 RUN pnpm exec buf generate
+RUN pnpm --filter=web build
+RUN pnpm deploy --filter=web /web
+RUN mv /app/packages/client/web/dist /web/dist
 
-FROM rust:slim-bookworm as service-builder
+### SERVICE BINARY
+FROM rust:slim-bookworm AS service-builder
 
+COPY --from=common /app /usr/src/retrom
 WORKDIR /usr/src/retrom
-COPY . .
 
 RUN apt-get update && apt-get install protobuf-compiler openssl pkg-config libssl-dev libpq-dev -y
 RUN cargo install --path ./packages/service
 
-FROM web-base
-RUN apt-get update && apt-get install openssl libssl-dev libpq-dev ca-certificates -y && rm -rf /var/lib/apt/lists/*
-
+FROM base AS runner
 ENV UID=1505
 ENV GID=1505
+ENV USER=retrom
 
-RUN addgroup --gid $GID retrom
-RUN adduser --gid $GID --uid $UID retrom
+RUN addgroup --gid $GID ${USER}
+RUN adduser --gid $GID --uid $UID ${USER}
+
+RUN apt-get update && apt-get install openssl libssl-dev libpq-dev ca-certificates -y
 
 ### Service env
 ENV RUST_LOG=info
@@ -46,19 +49,14 @@ ENV NODE_ENV=production
 ENV RETROM_LOCAL_SERVICE_HOST=http://localhost:5101
 EXPOSE 3000 
 
-COPY --from=service-builder  /usr/local/cargo/bin/retrom-service /app/retrom-service
-COPY docker/start.sh /app/start.sh
+COPY --from=service-builder /usr/local/cargo/bin/retrom-service /app/retrom-service
+COPY --chown=${USER}:${USER} docker/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-WORKDIR /app/www
-COPY --from=deps --chown=retrom:node /app/. ./
-
-RUN corepack enable pnpm && pnpm --filter web build
-RUN chmod -R 755 /app/www
-RUN chown -R retrom:node /app/www
+COPY --from=web-builder --chown=${USER}:${USER} /web /app/web
 
 WORKDIR /app
 
-USER retrom
+USER ${USER}
 
-CMD ["sh", "-c", "/app/start.sh"]
+CMD ./start.sh

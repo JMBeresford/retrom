@@ -3,10 +3,14 @@
 set -e
 
 # Start the web server
-cd /app/www
-pnpm --filter web preview &
+cd /app/web
+pnpm preview &
 
 # Start the API server
 cd /app
 
-./retrom-service
+./retrom-service &
+
+wait -n
+
+exit $?
