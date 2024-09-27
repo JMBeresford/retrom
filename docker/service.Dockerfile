@@ -32,6 +32,7 @@ RUN cargo install --path ./packages/service
 FROM base AS runner
 ENV UID=1505
 ENV GID=1505
+ENV UMASK=000
 ENV USER=retrom
 
 RUN addgroup --gid $GID ${USER}
@@ -50,13 +51,17 @@ ENV RETROM_LOCAL_SERVICE_HOST=http://localhost:5101
 EXPOSE 3000 
 
 COPY --from=service-builder /usr/local/cargo/bin/retrom-service /app/retrom-service
-COPY --chown=${USER}:${USER} docker/start.sh /app/start.sh
+COPY docker/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-COPY --from=web-builder --chown=${USER}:${USER} /web /app/web
+COPY --from=web-builder /web /app/web
+
+RUN chmod -R 777 /app/web
 
 WORKDIR /app
 
 USER ${USER}
+
+RUN umask ${UMASK}
 
 CMD ./start.sh
