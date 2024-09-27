@@ -6,7 +6,7 @@ on:
       tags:
         description: "Tags for the image"
         required: true
-        default: "debug"
+        default: "type=raw,debug"
       images:
         description: "Images to build and push"
         required: true
