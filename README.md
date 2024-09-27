@@ -196,29 +196,29 @@ The server is configured via a config file. Here is an example config file:
 
 ```json5
 {
-  "connection": {
-    "port": 5101,
+  connection: {
+    port: 5101,
 
     // for the example retrom-db container below
-    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
+    db_url: "postgres://minecraft_steve:super_secret_password@retrom-db/retrom",
 
     // or, bring your own database:
     // "db_url": "postgres://{db_user}:{db_password}@{db_host}/{db_name}"
   },
-  "content_directories": [
+  content_directories: [
     {
-      "path": "path/to/my/library/",
-      "storage_type": "MultiFileGame"
+      path: "path/to/my/library/",
+      storage_type: "MultiFileGame",
     },
     {
-      "path": "path/to/my/library/with/single_file_games/",
-      "storage_type": "SingleFileGame"
-    }
+      path: "path/to/my/library/with/single_file_games/",
+      storage_type: "SingleFileGame",
+    },
   ],
-  "igdb": {
-    "client_secret": "super_secret_client_secret!!!1",
-    "client_id": "my_IGDB_ID_1234"
-  }
+  igdb: {
+    client_secret: "super_secret_client_secret!!!1",
+    client_id: "my_IGDB_ID_1234",
+  },
 }
 ```
 
@@ -239,24 +239,24 @@ Here is the example config file:
 
 ```json5
 {
-  "connection": {
-    "port": 5101,
-    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
+  connection: {
+    port: 5101,
+    db_url: "postgres://minecraft_steve:super_secret_password@retrom-db/retrom",
   },
-  "content_directories": [
+  content_directories: [
     {
-      "path": "/library1", // this path is **inside the container**
-      "storage_type": "MultiFileGame"
+      path: "/library1", // this path is **inside the container**
+      storage_type: "MultiFileGame",
     },
     {
-      "path": "/library2", // this path is **inside the container**
-      "storage_type": "SingleFileGame"
-    }
+      path: "/library2", // this path is **inside the container**
+      storage_type: "SingleFileGame",
+    },
   ],
-  "igdb": {
-    "client_secret": "super_secret_client_secret!!!1",
-    "client_id": "my_IGDB_ID_1234"
-  }
+  igdb: {
+    client_secret: "super_secret_client_secret!!!1",
+    client_id: "my_IGDB_ID_1234",
+  },
 }
 ```
 
@@ -268,6 +268,7 @@ services:
     image: ghcr.io/jmberesford/retrom-service:latest
     ports:
       - 5101:5101
+      - 3000:3000 # to access the web client
     volumes:
       - /home/minecraft_steve/config_dir:/config/ # directory containing your config file
       - /home/minecraft_steve/library1:/library1 # directory containing your first library
@@ -289,10 +290,11 @@ services:
       POSTGRES_USER: minecraft_steve # db user, used to connect to the db, should match the db_user in your config file
       POSTGRES_PASSWORD: super_secret_password # db password for above user, should match the db_password in your config file
       POSTGRES_DB: retrom # db name, should match the db_name in your config file
-
 ```
 
 You can then run `docker-compose up` in the directory containing your `docker-compose.yml` file to start the service.
+
+The web client will be accessible at port 3000, and the service itself on port 5101 -- which can be accessed by any desktop clients.
 
 ### Client
 
@@ -319,21 +321,5 @@ The following may help you differentiate between the different versions:
 
 #### Web Client
 
-> [!NOTE]
-> There are plans to bundle the web client along with the service in a single container in the future,
-> for ease of use.
-
-The web client is currently only available as a Docker container. You can run it with the following
-`docker-compose.yml` file, as an example:
-
-```yaml
-retrom-web:
-  image: ghcr.io/jmberesford/retrom-web:latest
-  container_name: retrom-web
-  hostname: retrom-web
-  ports:
-    - 3000:3000
-```
-
-Then, you can run `docker-compose up` in the directory containing your `docker-compose.yml` file to start the service.
-You can then reach the web client at `http://localhost:3000` in your browser, if running locally.
+> [!WARNING]
+> The web client image has been deprecated. Use the web client bundled with the service image instead.

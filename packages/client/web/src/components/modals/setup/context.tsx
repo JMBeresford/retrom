@@ -1,4 +1,3 @@
-import { checkIsDesktop } from "@/lib/env";
 import { useNavigate } from "@tanstack/react-router";
 import {
   createContext,
@@ -33,7 +32,7 @@ export function useSetupModal() {
 }
 
 const nextStepTransitions: Record<Step, Step | undefined> = {
-  ServerHost: checkIsDesktop() ? "ClientName" : "Confirm",
+  ServerHost: "ClientName",
   ClientName: "Confirm",
   Confirm: "ServerHost",
 };
@@ -41,7 +40,7 @@ const nextStepTransitions: Record<Step, Step | undefined> = {
 const previousStepTransitions: Record<Step, Step | undefined> = {
   ServerHost: undefined,
   ClientName: "ServerHost",
-  Confirm: checkIsDesktop() ? "ClientName" : "ServerHost",
+  Confirm: "ClientName",
 };
 
 export function SetupModalProvider(props: React.PropsWithChildren) {
