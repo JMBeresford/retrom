@@ -5,8 +5,7 @@ on:
     inputs:
       tags:
         description: "Tags for the image"
-        required: true
-        default: "debug"
+        required: false
       images:
         description: "Images to build and push"
         required: true

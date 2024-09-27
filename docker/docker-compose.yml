@@ -30,25 +30,11 @@ services:
     hostname: retrom
     env_file: ./.env
     ports:
-      - 5101:${RETROM_PORT:-5101}
+      - 5101:5101
+      - 3000:3000
     volumes:
       - ${CONTENT_DIR1:-./mock_content/}/:/lib1
       - ${CONTENT_DIR2:-./mock_content_single}:/lib2
-      - ${CONFIG_DIR:-./config-dev/}:/config
+      - ${CONFIG_DIR:-./config_dev/}:/config
     depends_on:
       - retrom-db
-
-  retrom-web:
-    build:
-      context: ../
-      dockerfile: docker/web.Dockerfile
-    container_name: retrom-web
-    hostname: retrom-web
-    env_file: ./.env
-    ports:
-      - 3000:${RETROM_WEB_PORT:-3000}
-    environment:
-      VITE_RETROM_WEB_PORT: ${RETROM_WEB_PORT:-3000}
-      VITE_RETROM_HOST: ${RETROM_HOST:-retrom:5101}
-    depends_on:
-      - retrom

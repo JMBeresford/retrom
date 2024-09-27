@@ -5,7 +5,6 @@ import {
   MenubarSeparator,
 } from "@/components/ui/menubar";
 import { ConfigMenuItem } from "./config-menu-item";
-import { DesktopOnly } from "@/lib/env";
 import { CloseMenuItem } from "./close-menu-item";
 
 export function FileMenu() {
@@ -18,11 +17,9 @@ export function FileMenu() {
       <MenubarContent>
         <ConfigMenuItem />
 
-        <DesktopOnly>
-          <MenubarSeparator className="bg-border/50 w-[95%] px-2 mx-auto" />
+        <MenubarSeparator className="bg-border/50 w-[95%] px-2 mx-auto" />
 
-          <CloseMenuItem />
-        </DesktopOnly>
+        <CloseMenuItem />
       </MenubarContent>
     </MenubarMenu>
   );
