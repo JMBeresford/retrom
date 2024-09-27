@@ -152,11 +152,12 @@ export function SideBar() {
                       const gameMetadata = game.metadata;
 
                       const iconUrl = gameMetadata?.iconUrl;
-                      const gameName =
-                        (gameMetadata?.name ??
-                        game.storageType === StorageType.SINGLE_FILE_GAME)
+                      const fallbackName =
+                        game.storageType === StorageType.SINGLE_FILE_GAME
                           ? getFileStub(game.path)
                           : getFileName(game.path);
+
+                      const gameName = gameMetadata?.name ?? fallbackName;
 
                       return (
                         <Tooltip key={game.id}>
