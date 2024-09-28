@@ -12,7 +12,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: JMBeresford/retrom-service
+  IMAGE_NAME: jmberesford/retrom-service
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
