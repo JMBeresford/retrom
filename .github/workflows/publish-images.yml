@@ -39,7 +39,7 @@ jobs:
     steps:
       - name: Prepare
         run: |
-          platform = ${{ matrix.platform }}
+          platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
 
       - name: Checkout repository
