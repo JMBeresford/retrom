@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.9...retrom-v0.1.10) - 2024-09-27
+
+### Added
+
+- web client bundled with service docker image ([#134](https://github.com/JMBeresford/retrom/pull/134))
+
+## [0.1.9](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.8...retrom-v0.1.9) - 2024-09-27
+
+### Fixed
+
+- game name rendering
+
 ## [0.1.8](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.7...retrom-v0.1.8) - 2024-09-27
 
 ### Fixed
