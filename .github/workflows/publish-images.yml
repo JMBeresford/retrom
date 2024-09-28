@@ -71,7 +71,6 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
           file: docker/service.Dockerfile
-          tags: ${{ github.event_name == 'workflow_dispatch' && inputs.tags || steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
 
