@@ -25,7 +25,7 @@ jobs:
   build-and-push-images:
     strategy:
       matrix:
-        image: ${{ fromJSON(format('[{0}]', inputs.images || '"service","web"')) }}
+        image: ${{ fromJSON(format('[{0}]', inputs.images || '"service"')) }}
         platforms: [linux/amd64, linux/arm64]
 
     runs-on: ubuntu-latest
