@@ -196,28 +196,28 @@ The server is configured via a config file. Here is an example config file:
 
 ```json5
 {
-  connection: {
-    port: 5101,
+  "connection": {
+    "port": 5101,
 
     // for the example retrom-db container below
-    db_url: "postgres://minecraft_steve:super_secret_password@retrom-db/retrom",
+    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom",
 
     // or, bring your own database:
     // "db_url": "postgres://{db_user}:{db_password}@{db_host}/{db_name}"
   },
-  content_directories: [
+  "content_directories": [
     {
-      path: "path/to/my/library/",
-      storage_type: "MultiFileGame",
+      "path": "path/to/my/library/",
+      "storage_type": "MultiFileGame",
     },
     {
-      path: "path/to/my/library/with/single_file_games/",
-      storage_type: "SingleFileGame",
+      "path": "path/to/my/library/with/single_file_games/",
+      "storage_type": "SingleFileGame",
     },
   ],
-  igdb: {
-    client_secret: "super_secret_client_secret!!!1",
-    client_id: "my_IGDB_ID_1234",
+  "igdb": {
+    "client_secret": "super_secret_client_secret!!!1",
+    "client_id": "my_IGDB_ID_1234",
   },
 }
 ```
@@ -239,23 +239,23 @@ Here is the example config file:
 
 ```json5
 {
-  connection: {
-    port: 5101,
-    db_url: "postgres://minecraft_steve:super_secret_password@retrom-db/retrom",
+  "connection": {
+    "port": 5101,
+    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom",
   },
-  content_directories: [
+  "content_directories": [
     {
-      path: "/library1", // this path is **inside the container**
-      storage_type: "MultiFileGame",
+      "path": "/library1", // this path is **inside the container**
+      "storage_type": "MultiFileGame",
     },
     {
-      path: "/library2", // this path is **inside the container**
-      storage_type: "SingleFileGame",
+      "path": "/library2", // this path is **inside the container**
+      "storage_type": "SingleFileGame",
     },
   ],
-  igdb: {
-    client_secret: "super_secret_client_secret!!!1",
-    client_id: "my_IGDB_ID_1234",
+  "igdb": {
+    "client_secret": "super_secret_client_secret!!!1",
+    "client_id": "my_IGDB_ID_1234",
   },
 }
 ```
@@ -295,6 +295,34 @@ services:
 You can then run `docker-compose up` in the directory containing your `docker-compose.yml` file to start the service.
 
 The web client will be accessible at port 3000, and the service itself on port 5101 -- which can be accessed by any desktop clients.
+
+#### Cargo
+
+The Retrom Service is also available via Cargo. Installing via cargo will build the binary on your system, so you will need
+to have the Rust toolchain installed.
+
+It is suggested to use [rustup](https://rustup.rs/) to install the Rust toolchain. You will also need to make sure you have
+some dependencies installed on your system:
+
+- `libssl-dev` (or equivalent for your system)
+- `libpq-dev` (or equivalent for your system)
+
+> [!CAUTION]
+> You will not find support for these dependencies in this guide, as they are system-specific. Please refer to your
+> system's package manager or the internet for help with installing these dependencies. If you do not know how
+> to install these dependencies, you should use the [Docker](#docker-recommended) method instead.
+
+If the pre-requisites are met, you can install Retrom via Cargo with the following command:
+
+```sh
+cargo install retrom-service
+```
+
+You can then run the service with the following command:
+
+```sh
+RETROM_CONFIG=/path/to/your/config.json retrom-service
+```
 
 ### Client
 

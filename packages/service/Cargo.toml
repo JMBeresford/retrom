@@ -46,4 +46,4 @@ tokio-stream = { workspace = true }
 thiserror = { workspace = true }
 sanitize-filename = { workspace = true }
 uuid = { version = "1.10.0", features = ["v4"] }
-config = "0.14.0"
+config = { version = "0.14.0", features = ["json5"] }

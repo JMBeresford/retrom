@@ -1,0 +1,10 @@
+{
+  "overrides": [
+    {
+      "files": ["./README.md"],
+      "options": {
+        "quoteProps": "preserve"
+      }
+    }
+  ]
+}

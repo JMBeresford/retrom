@@ -3,5 +3,6 @@ mock_content*
 mock.db
 .env
 config_dev
+config.dev.*
 
 **/node_modules
