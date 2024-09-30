@@ -3,7 +3,7 @@
   "description": "The tauri wrapper for the retrom client",
   "type": "module",
   "scripts": {
-    "dev": "VITE_IS_DESKTOP=true tauri dev --no-watch",
+    "dev": "VITE_IS_DESKTOP=true tauri dev --no-watch --config tauri.dev.conf.json",
     "build": "tauri build --config tauri.build.conf.json"
   },
   "devDependencies": {

@@ -22,7 +22,7 @@ export function useUpdateLibrary() {
           ["jobs"].some((key) => query.queryKey.includes(key)),
       });
 
-      toast({
+      const { dismiss } = toast({
         title: "Library update started!",
       });
 
@@ -46,6 +46,13 @@ export function useUpdateLibrary() {
       for await (const progress of subscription) {
         if (progress.job?.status === JobStatus.Success) {
           invalidate();
+
+          dismiss();
+
+          toast({
+            title: "Library update complete!",
+          });
+
           return;
         }
       }

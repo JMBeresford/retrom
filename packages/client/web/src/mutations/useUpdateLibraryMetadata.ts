@@ -65,6 +65,10 @@ export function useUpdateLibraryMetadata() {
           invalidate();
         }
       }
+
+      toast({
+        title: "Library Metadata Update Complete",
+      });
     },
     mutationFn: async () =>
       await retromClient.libraryClient.updateLibraryMetadata({}),

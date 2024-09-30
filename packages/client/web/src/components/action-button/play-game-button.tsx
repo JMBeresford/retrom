@@ -6,14 +6,16 @@ import { PlayStatus } from "@/generated/retrom/client/client-utils";
 import { useStopGame } from "@/mutations/useStopGame";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
 import { ComponentProps } from "react";
-import { LoaderCircleIcon, PlayIcon, Square } from "lucide-react";
+import { LoaderCircleIcon, PlayIcon, PlusIcon, Square } from "lucide-react";
 import { useEmulators } from "@/queries/useEmulators";
 import { useGameDetail } from "@/providers/game-details";
+import { useNavigate } from "@tanstack/react-router";
 
 export function PlayGameButton(props: ComponentProps<typeof Button>) {
   const { game, platform, gameFiles } = useGameDetail();
   const { mutate: playAction } = usePlayGame(game);
   const { mutate: stopAction } = useStopGame(game);
+  const navigate = useNavigate();
 
   const { data: playStatusUpdate, status: queryStatus } =
     usePlayStatusQuery(game);
@@ -66,14 +68,29 @@ export function PlayGameButton(props: ComponentProps<typeof Button>) {
     ? emulators?.find((emulator) => emulator.id === defaultProfile.emulatorId)
     : emulators?.at(0);
 
+  if (!emulator) {
+    return (
+      <Button
+        {...props}
+        onClick={() =>
+          navigate({ search: { manageEmulatorsModal: { open: true } } })
+        }
+      >
+        <PlusIcon className="h-[1.2rem] w-[1.2rem] stroke-[3] stroke-current fill-current" />
+        Add Emulator
+      </Button>
+    );
+  }
+
   const file = gameFiles?.find((file) => file.id === game.defaultFileId);
+  const disabled = !defaultProfile || !emulator;
 
   return (
     <Button
       {...props}
-      disabled={!defaultProfile || !emulator}
+      disabled={disabled}
       onClick={() => {
-        if (!defaultProfile || !emulator) return;
+        if (disabled) return;
 
         playAction({
           game,

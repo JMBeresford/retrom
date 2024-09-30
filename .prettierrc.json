@@ -1,7 +1,7 @@
 {
   "overrides": [
     {
-      "files": ["./README.md"],
+      "files": ["./README.md", "**/*eslint.config.js"],
       "options": {
         "quoteProps": "preserve"
       }

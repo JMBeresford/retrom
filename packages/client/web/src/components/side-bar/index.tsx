@@ -39,7 +39,7 @@ export function SideBar() {
   });
 
   const { data: gameData, status: gameStatus } = useGames({
-    withMetadata: true,
+    request: { withMetadata: true },
   });
 
   const currentGame = useMemo(() => {

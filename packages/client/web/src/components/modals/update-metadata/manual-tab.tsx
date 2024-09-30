@@ -14,7 +14,7 @@ import {
 import { Input } from "../../ui/input";
 import { LoaderCircleIcon } from "lucide-react";
 import { asOptionalString, cn, getFileName, InferSchema } from "@/lib/utils";
-import { DialogClose, DialogFooter, useDialogOpen } from "../../ui/dialog";
+import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { Textarea } from "../../ui/textarea";
 import { GameMetadata } from "@/generated/retrom/models/metadata";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";

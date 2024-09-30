@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { GameList, GameWithMetadata } from "./game-list";
 
 export function RecentlyAdded() {
-  const { data, status } = useGames({ withMetadata: true });
+  const { data, status } = useGames({ request: { withMetadata: true } });
 
   const gamesByDate: GameWithMetadata[] =
     useMemo(
