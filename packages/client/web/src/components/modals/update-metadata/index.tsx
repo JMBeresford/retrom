@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog";
@@ -16,6 +17,7 @@ export function UpdateMetadataModal() {
 
   return (
     <Dialog
+      modal
       open={updateMetadataModal?.open}
       onOpenChange={(open) => {
         if (!open) {
@@ -23,9 +25,13 @@ export function UpdateMetadataModal() {
         }
       }}
     >
-      <DialogContent>
-        <DialogHeader className="text-2xl font-black">
+      <DialogContent handleScroll={false}>
+        <DialogHeader>
           <DialogTitle>Update Metadata</DialogTitle>
+          <DialogDescription>
+            Update the metadata entries for this game, either by searching IGDB
+            or manually.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="igdb">

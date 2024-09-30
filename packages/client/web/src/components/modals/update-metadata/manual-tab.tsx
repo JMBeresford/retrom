@@ -21,6 +21,8 @@ import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 import { Checkbox } from "../../ui/checkbox";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigate } from "@tanstack/react-router";
 
 type FormFieldRenderer = ({
   form,
@@ -31,6 +33,7 @@ type FormFieldRenderer = ({
 type EditableGameMetadata = Omit<
   GameMetadata,
   | "gameId"
+  | "igdbId"
   | "createdAt"
   | "updatedAt"
   | "releaseDate"
@@ -44,7 +47,6 @@ type EditableGameMetadata = Omit<
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name cannot be empty" }),
-  igdbId: z.number().optional(),
   description: asOptionalString(z.string().optional()),
   coverUrl: asOptionalString(
     z.string().url({ message: "Cover URL must be a valid URL" }).optional(),
@@ -72,20 +74,19 @@ const formSchema = z.object({
 
 export function ManualTab() {
   const { game, gameMetadata } = useGameDetail();
-  const { setOpen } = useDialogOpen();
+  const navigate = useNavigate();
   const [renameDirectory, setRenameDirectory] = useState(false);
 
   const { mutateAsync: updateMetadata, status: metadataStatus } =
     useUpdateGameMetadata();
 
-  const { mutate: updateGames, status: gameStatus } = useUpdateGames();
+  const { mutateAsync: updateGames, status: gameStatus } = useUpdateGames();
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
       name: gameMetadata?.name ?? "",
-      igdbId: gameMetadata?.igdbId,
       description: gameMetadata?.description ?? "",
       coverUrl: gameMetadata?.coverUrl ?? "",
       backgroundUrl: gameMetadata?.backgroundUrl ?? "",
@@ -99,30 +100,34 @@ export function ManualTab() {
 
   const handleUpdate = useCallback(
     async (values: FormSchema) => {
-      const { igdbId, ...restValues } = values;
-      const igdbIdNum = igdbId;
-      const updated = { ...restValues, igdbId: igdbIdNum, gameId: game.id };
+      const { ...restValues } = values;
+      const updated = { ...restValues, gameId: game.id };
 
       const res = await updateMetadata({ metadata: [updated] });
 
       if (renameDirectory) {
         const newName = res.metadataUpdated[0]?.name;
 
-        if (!newName) {
-          return;
+        if (newName) {
+          const currentFilename = getFileName(game.path);
+          const path = game.path.replace(currentFilename, newName);
+
+          await updateGames({
+            games: [{ id: game.id, path }],
+          });
         }
-
-        const currentFilename = getFileName(game.path);
-        const path = game.path.replace(currentFilename, newName);
-
-        updateGames({
-          games: [{ id: game.id, path }],
-        });
-
-        setOpen(false);
       }
+
+      navigate({ search: { updateMetadataModal: undefined } });
     },
-    [game.id, updateMetadata, updateGames, renameDirectory, game.path, setOpen],
+    [
+      game.id,
+      updateMetadata,
+      updateGames,
+      renameDirectory,
+      game.path,
+      navigate,
+    ],
   );
 
   const pending = metadataStatus === "pending" || gameStatus === "pending";
@@ -132,13 +137,14 @@ export function ManualTab() {
       <div className="space-y-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleUpdate)}>
-            <div className="my-4 grid grid-cols-2 gap-4">
-              {Object.entries(fields).map(([key, FormFieldRenderer]) => (
-                <FormFieldRenderer form={form} key={key} />
-              ))}
-            </div>
-
-            <DialogFooter></DialogFooter>
+            <ScrollArea className={cn("h-[60dvh] pr-4 relative")}>
+              <div className="my-4 flex flex-col gap-4 pb-8">
+                {Object.entries(fields).map(([key, FormFieldRenderer]) => (
+                  <FormFieldRenderer form={form} key={key} />
+                ))}
+              </div>
+              <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-background z-10" />
+            </ScrollArea>
 
             <DialogFooter>
               <div className="flex items-center justify-between gap-6 w-full mt-4">
@@ -175,9 +181,7 @@ export function ManualTab() {
                         !pending && "opacity-0",
                       )}
                     />
-                    <p className={cn(pending && "opacity-0")}>
-                      Update Metadata
-                    </p>
+                    <p className={cn(pending && "opacity-0")}>Confirm</p>
                   </Button>
                 </div>
               </div>
@@ -195,7 +199,7 @@ const fields: Record<keyof EditableGameMetadata, FormFieldRenderer> = {
       name="name"
       control={form.control}
       render={({ field, fieldState }) => (
-        <FormItem>
+        <FormItem className="col-span-2">
           <FormLabel>Name</FormLabel>
           <FormControl>
             <Input
@@ -211,18 +215,16 @@ const fields: Record<keyof EditableGameMetadata, FormFieldRenderer> = {
       )}
     />
   ),
-  igdbId: ({ form }) => (
+  description: ({ form }) => (
     <FormField
-      name="igdbId"
+      name="description"
       control={form.control}
       render={({ field, fieldState }) => (
-        <FormItem>
-          <FormLabel>IGDB ID</FormLabel>
+        <FormItem className="col-span-2">
+          <FormLabel>Description</FormLabel>
           <FormControl>
-            <Input
+            <Textarea
               {...field}
-              onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-              type="number"
               className={cn(
                 fieldState.isDirty ? "text-unset" : "text-muted-foreground",
                 "transition-colors",
@@ -233,29 +235,6 @@ const fields: Record<keyof EditableGameMetadata, FormFieldRenderer> = {
         </FormItem>
       )}
     />
-  ),
-  description: ({ form }) => (
-    <div className="col-span-2 relative">
-      <FormField
-        name="description"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <FormItem>
-            <FormLabel>Description</FormLabel>
-            <FormControl>
-              <Textarea
-                {...field}
-                className={cn(
-                  fieldState.isDirty ? "text-unset" : "text-muted-foreground",
-                  "transition-colors",
-                )}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </div>
   ),
   coverUrl: ({ form }) => (
     <FormField
