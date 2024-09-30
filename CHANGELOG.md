@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.11...retrom-v0.1.12) - 2024-09-30
+
+### Added
+
+- UI tweaks
+- sort by time played + sort fixes
+
+### Fixed
+
+- *(web client)* download button
+
 ## [0.1.10](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.9...retrom-v0.1.10) - 2024-09-27
 
 ### Added
