@@ -45,7 +45,7 @@ export function FiltersAndSorting() {
       type="single"
       collapsible
       defaultValue="filters-and-sorting"
-      className="my-4"
+      className="p-4 h-fit"
     >
       <AccordionItem value="filters-and-sorting" className="border-none">
         <AccordionContent>
@@ -165,5 +165,6 @@ const GameSortKeysReadable: Record<GameSortKey, string> = {
   createdAt: "Date Added",
   updatedAt: "Date Updated",
   lastPlayed: "Last Played",
+  minutesPlayed: "Time Played",
   name: "Name",
 };

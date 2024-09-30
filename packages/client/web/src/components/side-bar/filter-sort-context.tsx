@@ -14,7 +14,7 @@ export type FilterKey =
 
 export type GameSortKey =
   | keyof Pick<Game, "createdAt" | "updatedAt">
-  | keyof Pick<GameMetadata, "name" | "lastPlayed">;
+  | keyof Pick<GameMetadata, "name" | "lastPlayed" | "minutesPlayed">;
 
 export type PlatformSortKey =
   | keyof Pick<Platform, "createdAt" | "updatedAt">

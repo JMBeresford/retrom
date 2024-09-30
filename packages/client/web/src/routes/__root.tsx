@@ -9,11 +9,9 @@ import {
   ResizablePanelGroup,
 } from "../components/ui/resizable";
 import { ScrollArea } from "../components/ui/scroll-area";
-import { cn } from "../lib/utils";
 import { Prompts } from "../components/prompts";
 import { Toaster } from "../components/ui/toaster";
 import { SideBar } from "@/components/side-bar";
-import React from "react";
 import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import { z } from "zod";
 import { SetupModal } from "@/components/modals/setup";
@@ -25,14 +23,6 @@ import { DefaultProfilesModal } from "@/components/modals/default-profiles";
 import { ManageEmulatorProfilesModal } from "@/components/modals/manage-profiles";
 import { ManageEmulatorsModal } from "@/components/modals/manage-emulators";
 import { FilterAndSortContext } from "@/components/side-bar/filter-sort-context";
-
-const TanStackRouterDevtools = import.meta.env.PROD
-  ? () => null
-  : React.lazy(() =>
-      import("@tanstack/router-devtools").then((res) => ({
-        default: res.TanStackRouterDevtools,
-      })),
-    );
 
 const modalsSearchSchema = z.object({
   updateLibraryModal: z
@@ -96,16 +86,9 @@ export const Route = createRootRoute({
                   className="bg-muted"
                 >
                   <div className="w-full h-full @container/sidebar">
-                    <ScrollArea
-                      className={cn(
-                        "h-full max-h-full w-full max-w-full",
-                        "bg-gradient-to-b from-primary/5 to-background",
-                      )}
-                    >
-                      <FilterAndSortContext>
-                        <SideBar />
-                      </FilterAndSortContext>
-                    </ScrollArea>
+                    <FilterAndSortContext>
+                      <SideBar />
+                    </FilterAndSortContext>
                   </div>
                 </ResizablePanel>
 
@@ -136,7 +119,6 @@ export const Route = createRootRoute({
           </QueryClientProvider>
         </RetromClientProvider>
       </ConfigProvider>
-      <TanStackRouterDevtools />
     </>
   ),
   errorComponent: (opts) => <div>Error: {JSON.stringify(opts.error)}</div>,
