@@ -41,12 +41,7 @@ export function FiltersAndSorting() {
   const labelStyles = cn("pl-1 font-medium text-muted-foreground text-sm");
 
   return (
-    <Accordion
-      type="single"
-      collapsible
-      defaultValue="filters-and-sorting"
-      className="p-4 h-fit"
-    >
+    <Accordion type="single" collapsible className="p-4 h-fit">
       <AccordionItem value="filters-and-sorting" className="border-none">
         <AccordionContent>
           <div className="flex flex-col gap-2 items-stretch">
@@ -142,7 +137,7 @@ export function FiltersAndSorting() {
             size="sm"
             className="w-full py-2 min-h-0 h-fit px-auto block leading-none"
           >
-            Show / Hide Filters
+            Toggle Filters
           </Button>
         </AccordionTrigger>
       </AccordionItem>

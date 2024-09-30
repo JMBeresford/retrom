@@ -82,7 +82,10 @@ export function GameList(props: { games: GameWithMetadata[] }) {
                     <Image
                       src={image}
                       alt=""
-                      className="object-cover h-full w-full rounded-lg mx-auto z-[-1] bg-transparent"
+                      className={cn(
+                        "object-cover h-full w-full rounded-lg mx-auto z-[-1] bg-transparent",
+                        "scale-100 group-hover:scale-[110%] transition-transform",
+                      )}
                     />
                   ) : null}
                 </div>
