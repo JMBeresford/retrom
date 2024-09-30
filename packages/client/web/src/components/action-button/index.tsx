@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { Game } from "@/generated/retrom/models/games";
-import { PlatformDependent } from "@/lib/env";
+import { checkIsDesktop, PlatformDependent } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
@@ -35,7 +35,9 @@ export function ActionButton(
     return null;
   }
 
-  const restHost = `${server.hostname}:${server.port}/rest`;
+  const restHost = checkIsDesktop()
+    ? `${server.hostname}:${server.port}/rest`
+    : "/api/rest";
 
   return (
     <PlatformDependent

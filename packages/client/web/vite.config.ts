@@ -4,7 +4,9 @@ import path from "path";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 
 const localServiceHost =
-  process.env.RETROM_LOCAL_SERVICE_HOST || "http://localhost:5101";
+  process.env.VITE_RETROM_LOCAL_SERVICE_HOST ||
+  process.env.RETROM_LOCAL_SERVICE_HOST ||
+  "http://localhost:5101";
 
 // https://vitejs.dev/config/
 export default defineConfig({
