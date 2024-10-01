@@ -6,7 +6,7 @@ import { readLocalCargoToml } from "./src/lib/node-utils";
 
 let localVersion = "0.0.0";
 try {
-  localVersion = readLocalCargoToml();
+  localVersion = await readLocalCargoToml();
 } catch (e) {
   console.error("Failed to read local Cargo.toml:", e);
 }

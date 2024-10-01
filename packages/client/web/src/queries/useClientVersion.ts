@@ -1,7 +1,6 @@
 import { parseVersion } from "@/lib/version-utils";
 import { Version } from "@/generated/retrom/server/server-info";
 import { checkIsDesktop } from "@/lib/env";
-import { readLocalCargoToml } from "@/lib/node-utils";
 import { DefaultError, useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
 
@@ -15,6 +14,8 @@ export function useClientVersion<Err = DefaultError, Data = FnData>(
     queryKey: ["client-version"],
     queryFn: async () => {
       if (import.meta.env.SSR) {
+        const { readLocalCargoToml } = await import("@/lib/node-utils");
+
         return (
           parseVersion(readLocalCargoToml()) ?? {
             major: 0,
