@@ -21,9 +21,7 @@ export function Menubar() {
           Retrom
         </Link>
 
-        <DesktopOnly>
-          <FileMenu />
-        </DesktopOnly>
+        <FileMenu />
 
         <LibraryMenu />
         <PlatformsMenu />

@@ -135,6 +135,7 @@ export function FiltersAndSorting() {
         <AccordionTrigger asChild>
           <Button
             size="sm"
+            variant="accent"
             className="w-full py-2 min-h-0 h-fit px-auto block leading-none"
           >
             Toggle Filters

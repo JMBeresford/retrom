@@ -3,7 +3,13 @@
 
   "plugins": {
     "updater": {
-      "pubkey": ""
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDIwRjYzMzY2NDc1MzIyQkQKUldTOUlsTkhaalAySURKUGRjWlBhY0JnYys5b3JPRGQrTllrSDZnNFhHdENMZkdWYURkc2NyYXMK",
+      "endpoints": [
+        "https://github.com/JMBeresford/retrom/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

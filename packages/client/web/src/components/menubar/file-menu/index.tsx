@@ -6,6 +6,9 @@ import {
 } from "@/components/ui/menubar";
 import { ConfigMenuItem } from "./config-menu-item";
 import { CloseMenuItem } from "./close-menu-item";
+import { CheckForUpdateMenuItem } from "./check-for-update-menu-item";
+import { DesktopOnly } from "@/lib/env";
+import { VersionInfoMenuItem } from "./version-info-menu-item";
 
 export function FileMenu() {
   return (
@@ -15,11 +18,18 @@ export function FileMenu() {
       </MenubarTrigger>
 
       <MenubarContent>
-        <ConfigMenuItem />
+        <DesktopOnly>
+          <ConfigMenuItem />
+        </DesktopOnly>
 
-        <MenubarSeparator className="bg-border/50 w-[95%] px-2 mx-auto" />
+        <CheckForUpdateMenuItem />
+        <VersionInfoMenuItem />
 
-        <CloseMenuItem />
+        <DesktopOnly>
+          <MenubarSeparator className="bg-border/50 w-[95%] px-2 mx-auto" />
+
+          <CloseMenuItem />
+        </DesktopOnly>
       </MenubarContent>
     </MenubarMenu>
   );

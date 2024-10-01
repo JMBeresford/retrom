@@ -22,6 +22,7 @@ import { FiltersAndSorting } from "./filters-and-sorting";
 import { Separator } from "../ui/separator";
 import { filterName, sortGames, sortPlatforms } from "./utils";
 import { ScrollArea } from "../ui/scroll-area";
+import { TooltipPortal } from "@radix-ui/react-tooltip";
 
 export function SideBar() {
   const {
@@ -109,7 +110,7 @@ export function SideBar() {
     <aside
       className={cn(
         "min-h-full h-full w-[100cqw] min-w-0 flex flex-col",
-        "bg-gradient-to-b from-primary/5 to-background",
+        "bg-gradient-to-b from-primary/10 to-background",
       )}
     >
       <FiltersAndSorting />
@@ -179,7 +180,7 @@ export function SideBar() {
                                   !isCurrentGame &&
                                     "hover:text-muted-foreground",
                                   isCurrentGame &&
-                                    "bg-gradient-to-r from-primary text-primary-foreground",
+                                    "bg-gradient-to-r from-accent/80 text-primary-foreground",
                                   "max-w-full w-full overflow-hidden overflow-ellipsis py-1 px-3",
                                 )}
                               >
@@ -204,16 +205,14 @@ export function SideBar() {
                                 </Link>
                               </li>
                             </TooltipTrigger>
-                            <TooltipContent
-                              side="right"
-                              align="center"
-                              sideOffset={0}
-                              alignOffset={0}
-                              avoidCollisions={false}
-                              className="pointer-events-none touch-none z-20"
-                            >
-                              {gameName}
-                            </TooltipContent>
+                            <TooltipPortal>
+                              <TooltipContent
+                                side="right"
+                                className="pointer-events-none touch-none"
+                              >
+                                {gameName}
+                              </TooltipContent>
+                            </TooltipPortal>
                           </Tooltip>
                         );
                       })}

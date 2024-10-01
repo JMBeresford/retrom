@@ -23,6 +23,8 @@ import { DefaultProfilesModal } from "@/components/modals/default-profiles";
 import { ManageEmulatorProfilesModal } from "@/components/modals/manage-profiles";
 import { ManageEmulatorsModal } from "@/components/modals/manage-emulators";
 import { FilterAndSortContext } from "@/components/side-bar/filter-sort-context";
+import { CheckForUpdateModal } from "@/components/modals/check-for-update";
+import { VersionInfoModal } from "@/components/modals/version-info";
 
 const modalsSearchSchema = z.object({
   updateLibraryModal: z
@@ -61,6 +63,16 @@ const modalsSearchSchema = z.object({
     })
     .optional(),
   setupModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  checkForUpdateModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
+  versionInfoModal: z
     .object({
       open: z.boolean().catch(false),
     })
@@ -112,6 +124,8 @@ export const Route = createRootRoute({
             <DefaultProfilesModal />
             <ManageEmulatorsModal />
             <ManageEmulatorProfilesModal />
+            <CheckForUpdateModal />
+            <VersionInfoModal />
 
             <Prompts />
 

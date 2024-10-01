@@ -5,7 +5,7 @@ export function CoverImage() {
   const { game, gameMetadata } = useGameDetail();
 
   const name = gameMetadata?.name || getFileStub(game.path);
-  //
+
   return (
     <div
       className={cn(

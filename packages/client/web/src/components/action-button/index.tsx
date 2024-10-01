@@ -25,7 +25,7 @@ export function ActionButton(
 
   if (status === "pending") {
     return (
-      <Button disabled {...rest} className={cn(buttonClasses)}>
+      <Button variant="accent" disabled {...rest} className={cn(buttonClasses)}>
         <LoaderCircleIcon />
       </Button>
     );
@@ -43,9 +43,17 @@ export function ActionButton(
     <PlatformDependent
       desktop={
         installationState === InstallationStatus.INSTALLED ? (
-          <PlayGameButton {...rest} className={cn(buttonClasses)} />
+          <PlayGameButton
+            {...rest}
+            className={cn(buttonClasses)}
+            variant="accent"
+          />
         ) : (
-          <InstallGameButton {...rest} className={cn(buttonClasses)} />
+          <InstallGameButton
+            {...rest}
+            className={cn(buttonClasses)}
+            variant="accent"
+          />
         )
       }
       web={
@@ -54,6 +62,7 @@ export function ActionButton(
             type="submit"
             {...rest}
             className={cn(buttonClasses, "w-full")}
+            variant="accent"
           >
             <DownloadIcon className="h-[1.2rem] w-[1.2rem]" />
             Download

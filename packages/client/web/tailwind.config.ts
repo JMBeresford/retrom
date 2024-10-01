@@ -40,6 +40,7 @@ const config = {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+          muted: "hsl(var(--destructive-muted))",
           text: "hsl(var(--destructive-text))",
         },
         muted: {
@@ -49,6 +50,7 @@ const config = {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          text: "hsl(var(--accent-text))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",

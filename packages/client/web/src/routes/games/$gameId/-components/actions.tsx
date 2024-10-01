@@ -35,6 +35,7 @@ export function Actions() {
         <DropdownMenuTrigger asChild>
           <Button
             size="icon"
+            variant="accent"
             className="rounded-none rounded-br-lg overflow-hidden ring-inset"
           >
             <EllipsisVertical />

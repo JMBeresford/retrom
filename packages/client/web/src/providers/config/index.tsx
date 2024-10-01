@@ -2,7 +2,7 @@ import { create, StoreApi, UseBoundStore } from "zustand";
 import { persist, subscribeWithSelector } from "zustand/middleware";
 import { RetromClientConfig } from "@/generated/retrom/client/client-config";
 import { createContext, PropsWithChildren, useContext } from "react";
-import { DeepRequired } from "@/lib/utils";
+import { DeepRequired } from "@/lib/version-utils";
 import { defaultAPIHostname, defaultAPIPort } from "./utils";
 import { Timestamp } from "@/generated/google/protobuf/timestamp";
 import { useLocation, useNavigate } from "@tanstack/react-router";

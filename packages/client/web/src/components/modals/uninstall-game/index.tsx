@@ -24,7 +24,7 @@ export function UninstallGameModal() {
   const { uninstallGameModal } = Route.useSearch();
   const navigate = useNavigate();
 
-  const { mutate: uninstall, isPending } = useUninstallGame(game);
+  const { mutateAsync: uninstall, isPending } = useUninstallGame(game);
 
   return (
     <Dialog
@@ -64,7 +64,9 @@ export function UninstallGameModal() {
             className="relative"
             variant="destructive"
             onClick={() => {
-              uninstall();
+              uninstall().then(() =>
+                navigate({ search: { uninstallGameModal: undefined } }),
+              );
             }}
           >
             <LoaderCircleIcon

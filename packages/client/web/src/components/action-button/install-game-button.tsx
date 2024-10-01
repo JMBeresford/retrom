@@ -55,7 +55,7 @@ export function InstallGameButton(props: ComponentProps<typeof Button>) {
       <div
         className={cn(
           className,
-          "h-full min-w-[100px] grid place-items-center",
+          "h-full min-w-[100px] grid place-items-center bg-accent",
         )}
       >
         <Progress value={installProgress} className="h-2" />
