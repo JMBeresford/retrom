@@ -15,7 +15,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { LoaderCircleIcon } from "lucide-react";
-import { Route } from "@/routes/games/$gameId/index";
+import { Route } from "@/routes/(windowed)/_layout.games/$gameId/index";
 import { useNavigate } from "@tanstack/react-router";
 
 export function DeleteGameModal() {

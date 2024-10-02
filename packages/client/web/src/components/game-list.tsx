@@ -61,7 +61,11 @@ export function GameList(props: { games: GameWithMetadata[] }) {
 
                   <GameDetailProvider gameId={game.id}>
                     <div className="rounded-md overflow-hidden w-fit pointer-events-auto touch-auto z-50">
-                      <ActionButton size="sm" className="text-md" game={game} />
+                      <ActionButton
+                        size="sm"
+                        className="text-md min-w-[100px]"
+                        game={game}
+                      />
                     </div>
                   </GameDetailProvider>
                 </div>

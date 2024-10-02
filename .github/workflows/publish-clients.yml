@@ -2,6 +2,7 @@ name: Publish Clients Applications
 
 on:
   workflow_dispatch:
+  pull_request:
   release:
     types: [published]
 
@@ -18,15 +19,17 @@ jobs:
       matrix:
         include:
           - platform: "macos-latest" # for Arm based macs (M1 and above).
-            args: "--target aarch64-apple-darwin --config tauri.build.conf.json"
+            config: "--config tauri.build.conf.json"
+            target: "--target aarch64-apple-darwin"
             rustflags: "-L/opt/homebrew/opt/libpq/lib"
           - platform: "macos-latest" # for Intel based macs.
-            args: "--target x86_64-apple-darwin --config tauri.build.conf.json"
+            config: "--config tauri.build.conf.json"
+            target: "--target x86_64-apple-darwin"
             rustflags: "-L/opt/homebrew/opt/libpq/lib"
           - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
-            args: "--config tauri.build.conf.json"
+            config: "--config tauri.build.conf.json"
           - platform: "windows-latest"
-            args: "--config tauri.build.conf.json"
+            config: "--config tauri.build.conf.json"
 
     runs-on: ${{ matrix.platform }}
     defaults:
@@ -79,7 +82,9 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install && pnpm exec buf generate
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: build release binary
+        if: ${{ github.event_name == 'release' }}
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
@@ -100,5 +105,19 @@ jobs:
           releaseId: ${{ github.event.release.id }}
           releaseBody: ${{ github.event.release.body }}
           tagName: ${{ github.event.release.tag_name }}
-          args: ${{ matrix.args }}
+          args: ${{ matrix.config }} ${{ matrix.target }}
           updaterJsonPreferNsis: true
+
+      - name: build pre-release binary
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_IS_DESKTOP: true
+          RUSTFLAGS: ${{ matrix.rustflags }}
+        with:
+          includeDebug: true
+          projectPath: packages/client
+          tauriScript: pnpm tauri
+          args: ${{ matrix.target }}
+          prerelease: true

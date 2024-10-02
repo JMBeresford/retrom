@@ -1,6 +1,9 @@
 import { create, StoreApi, UseBoundStore } from "zustand";
 import { persist, subscribeWithSelector } from "zustand/middleware";
-import { RetromClientConfig } from "@/generated/retrom/client/client-config";
+import {
+  InterfaceConfig_GameListEntryImage,
+  RetromClientConfig,
+} from "@/generated/retrom/client/client-config";
 import { createContext, PropsWithChildren, useContext } from "react";
 import { DeepRequired } from "@/lib/utils";
 import { defaultAPIHostname, defaultAPIPort } from "./utils";
@@ -8,9 +11,10 @@ import { Timestamp } from "@/generated/google/protobuf/timestamp";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { checkIsDesktop } from "@/lib/env";
 import { invoke } from "@tauri-apps/api/core";
+import { migrate } from "./migrations";
 
 const STORAGE_KEY = "retrom-client-config";
-type LocalConfig = DeepRequired<RetromClientConfig>;
+export type LocalConfig = DeepRequired<RetromClientConfig>;
 
 const context = createContext<UseBoundStore<StoreApi<LocalConfig>> | undefined>(
   undefined,
@@ -23,7 +27,11 @@ export function ConfigProvider(props: PropsWithChildren) {
 
   const configStore = create<LocalConfig>()(
     subscribeWithSelector(
-      persist(() => defaultConfig, { name: STORAGE_KEY, version: 1 }),
+      persist(() => defaultConfig, {
+        name: STORAGE_KEY,
+        version: 2,
+        migrate,
+      }),
     ),
   );
 
@@ -31,11 +39,13 @@ export function ConfigProvider(props: PropsWithChildren) {
 
   if (checkIsDesktop()) {
     updateTauriConfig(initialConfig);
+    configStore.subscribe((s) => updateTauriConfig(s));
   }
 
   if (
     !initialConfig?.flowCompletions.setupComplete &&
-    !search.setupModal?.open
+    !search.setupModal?.open &&
+    checkIsDesktop()
   ) {
     navigate({
       search: (prev) => {
@@ -44,27 +54,28 @@ export function ConfigProvider(props: PropsWithChildren) {
         return prev;
       },
     });
+
+    return null;
   }
 
   return <context.Provider value={configStore}>{children}</context.Provider>;
 }
 
- 
-export function useConfig() {
+export function useConfigStore() {
   const store = useContext(context);
 
   if (!store) {
     throw new Error("useConfig must be used within a ConfigProvider");
   }
 
-  if (checkIsDesktop()) {
-    store.subscribe((s) => updateTauriConfig(s));
-  }
-
   return store;
 }
 
-const defaultConfig: DeepRequired<RetromClientConfig> = {
+export function useConfig<U>(selector: (state: LocalConfig) => U) {
+  return useConfigStore()(selector);
+}
+
+export const defaultConfig: DeepRequired<RetromClientConfig> = {
   server: { hostname: defaultAPIHostname(), port: defaultAPIPort() },
   config: {
     clientInfo: {
@@ -72,6 +83,16 @@ const defaultConfig: DeepRequired<RetromClientConfig> = {
       id: -1,
       createdAt: Timestamp.create(),
       updatedAt: Timestamp.create(),
+    },
+    interface: {
+      fullscreenByDefault: false,
+      fullscreenConfig: {
+        gridList: {
+          columns: 4,
+          gap: 20,
+          imageType: InterfaceConfig_GameListEntryImage.COVER,
+        },
+      },
     },
   },
   flowCompletions: {

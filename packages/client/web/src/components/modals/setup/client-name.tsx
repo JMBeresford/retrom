@@ -25,13 +25,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useClientInfo } from "@/queries/useClientInfo";
-import { useConfig } from "@/providers/config";
+import { useConfigStore } from "@/providers/config";
 import { Timestamp } from "@/generated/google/protobuf/timestamp";
 
 export function ClientName() {
   const { previousStep, nextStep } = useSetupModal();
   const clientInfo = useClientInfo();
-  const configStore = useConfig();
+  const configStore = useConfigStore();
   const name = configStore((store) => store.config.clientInfo.name);
   const [selectedClient, setSelectedClient] = useState<string | undefined>(
     undefined,

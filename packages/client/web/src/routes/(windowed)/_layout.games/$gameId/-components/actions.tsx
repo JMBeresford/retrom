@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { EllipsisVertical } from "lucide-react";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
-import { ActionButton } from "../../../../components/action-button";
+import { ActionButton } from "../../../../../components/action-button";
 import { useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
 

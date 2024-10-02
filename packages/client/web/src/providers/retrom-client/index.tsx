@@ -1,12 +1,12 @@
 import { PropsWithChildren, createContext, useContext, useMemo } from "react";
 import { RetromClient } from "./client";
-import { useConfig } from "../config";
+import { useConfigStore } from "../config";
 import { checkIsDesktop } from "@/lib/env";
 
 const context = createContext<RetromClient | undefined>(undefined);
 
 export function RetromClientProvider(props: PropsWithChildren) {
-  const configStore = useConfig();
+  const configStore = useConfigStore();
   const hostname = configStore((store) => store.server.hostname);
   const port = configStore((store) => store.server.port);
   const { children } = props;
