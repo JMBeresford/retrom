@@ -7,7 +7,7 @@ use retrom_codegen::retrom::{
 use retrom_plugin_installer::InstallerExt;
 use tauri::{command, AppHandle, Runtime};
 use tokio::sync::Mutex;
-use tracing::{debug, info, instrument};
+use tracing::{info, instrument};
 
 use crate::{desktop::GameProcess, LauncherExt, Result};
 
@@ -28,7 +28,17 @@ pub(crate) async fn play_game<R: Runtime>(
     let game_id = game.id;
     let profile = payload.emulator_profile.unwrap();
     let emulator = payload.emulator.unwrap();
-    let default_file = payload.file;
+    let maybe_default_file = payload.file;
+
+    let default_file_path = maybe_default_file
+        .clone()
+        .map(|file| file.path)
+        .map(PathBuf::from)
+        .map(|path| {
+            path.file_name()
+                .expect("Could not get file name")
+                .to_owned()
+        });
 
     if installer.get_game_installation_status(game_id).await != InstallationStatus::Installed {
         return Err(crate::Error::NotInstalled(game_id));
@@ -39,14 +49,17 @@ pub(crate) async fn play_game<R: Runtime>(
         None => return Err(crate::Error::NotInstalled(game_id)),
     };
 
-    let files: Vec<PathBuf> = install_dir
+    let mut files: Vec<PathBuf> = install_dir
         .as_path()
         .read_dir()?
         .filter_map(|entry| entry.ok())
         .map(|entry| entry.path())
         .collect();
 
-    info!("Default file: {:?}", default_file);
+    files.sort();
+
+    tracing::debug!("Files: {:?}", files);
+    tracing::debug!("Default file: {:?}", maybe_default_file);
 
     let fallback_file = files.iter().find(|file| {
         profile.supported_extensions.iter().any(|ext| {
@@ -57,17 +70,20 @@ pub(crate) async fn play_game<R: Runtime>(
         })
     });
 
-    let file_path = match default_file.and_then(|default_file| {
-        files
-            .iter()
-            .find(|f| f.file_name().and_then(OsStr::to_str) == Some(default_file.path.as_str()))
-    }) {
+    tracing::debug!("Fallback file: {:?}", fallback_file);
+
+    let file_path = match files
+        .iter()
+        .find(|f| f.file_name() == default_file_path.as_deref())
+    {
         Some(file) => file,
         None => match fallback_file {
             Some(file) => file,
             None => return Err(crate::Error::FileNotFound(game_id)),
         },
     };
+
+    tracing::debug!("File path: {:?}", file_path);
 
     let file_path = match file_path.canonicalize()?.to_str() {
         Some(path) => path.to_string(),
