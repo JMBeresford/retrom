@@ -51,15 +51,11 @@ clients on any amount of other devices to (un)install/download and subsequently 
 
 **Home Screen**
 
-![Retrom · 7 12pm · 08-25](https://github.com/user-attachments/assets/c5b72d5f-947b-4ba4-8df5-0eb8d48e52a6)
+![Screenshot 2024-10-10 at 10 49 08 AM](https://github.com/user-attachments/assets/f33a6530-e616-41c4-90d7-1273e0586439)
 
 **Game View**
 
-![Retrom](https://github.com/user-attachments/assets/31da1b2a-4460-4712-b16c-2bcf19cd5df0)
-
-**Installing and launching**
-
-https://github.com/user-attachments/assets/05146df5-9a44-41d0-992f-f59c65fb3ae1
+![Screenshot 2024-10-10 at 12 03 15 PM](https://github.com/user-attachments/assets/f22ced99-f9a6-43e4-a1ab-ef111b4be44a)
 
 ## Roadmap
 
