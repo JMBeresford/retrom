@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.13...retrom-v0.1.14) - 2024-10-10
+
+### Fixed
+
+- per-client default emulator profiles
+- default profiles modal UI tweaks
+
 ## [0.1.13](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.12...retrom-v0.1.13) - 2024-10-01
 
 ### Added
