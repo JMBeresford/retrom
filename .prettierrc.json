@@ -3,7 +3,8 @@
     {
       "files": ["./README.md", "**/*eslint.config.js"],
       "options": {
-        "quoteProps": "preserve"
+        "quoteProps": "preserve",
+        "trailingComma": "none"
       }
     }
   ]

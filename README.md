@@ -190,31 +190,33 @@ instructions [here](https://api-docs.igdb.com/#account-creation).
 
 The server is configured via a config file. Here is an example config file:
 
-```json5
+> [!TIP]
+> You can replace the `db_url` with your own database URL
+
+> [!CAUTION]
+> The `path` in `content_directories` should be the path **inside the container**. If you are using Docker, you should
+> mount your library directories to these paths. See the [Docker](#docker-recommended) section for more information.
+
+```json
 {
   "connection": {
     "port": 5101,
-
-    // for the example retrom-db container below
-    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom",
-
-    // or, bring your own database:
-    // "db_url": "postgres://{db_user}:{db_password}@{db_host}/{db_name}"
+    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
   },
   "content_directories": [
     {
       "path": "path/to/my/library/",
-      "storage_type": "MultiFileGame",
+      "storage_type": "MultiFileGame"
     },
     {
       "path": "path/to/my/library/with/single_file_games/",
-      "storage_type": "SingleFileGame",
-    },
+      "storage_type": "SingleFileGame"
+    }
   ],
   "igdb": {
     "client_secret": "super_secret_client_secret!!!1",
-    "client_id": "my_IGDB_ID_1234",
-  },
+    "client_id": "my_IGDB_ID_1234"
+  }
 }
 ```
 
@@ -233,26 +235,26 @@ Let's also assume we have libraries at `/home/minecraft_steve/library1/` and at 
 
 Here is the example config file:
 
-```json5
+```json
 {
   "connection": {
     "port": 5101,
-    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom",
+    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
   },
   "content_directories": [
     {
-      "path": "/library1", // this path is **inside the container**
-      "storage_type": "MultiFileGame",
+      "path": "/library1",
+      "storage_type": "MultiFileGame"
     },
     {
-      "path": "/library2", // this path is **inside the container**
-      "storage_type": "SingleFileGame",
-    },
+      "path": "/library2",
+      "storage_type": "SingleFileGame"
+    }
   ],
   "igdb": {
     "client_secret": "super_secret_client_secret!!!1",
-    "client_id": "my_IGDB_ID_1234",
-  },
+    "client_id": "my_IGDB_ID_1234"
+  }
 }
 ```
 
