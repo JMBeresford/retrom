@@ -99,10 +99,11 @@ clients on any amount of other devices to (un)install/download and subsequently 
 > up and running quickly.
 
 > [!CAUTION]
-> Retrom is designed **without** any specific security measures in mind. It is intended, and **highly recommended** that you run
-> Retrom on a local network only. If you wish to expose Retrom to the internet, you should do so behind a reverse proxy
-> with **proper security measures in place**. This is not a feature that is planned to be implemented in Retrom itself, as
-> there are many variables to consider when hosting something and there is no one-size-fits-all solution.
+> Retrom is designed **without** any specific security measures in mind. It is **highly recommended** that you run Retrom on a
+> _local network only_ unless you know what you are doing. If you wish to expose Retrom to the internet, you should do
+> so behind a reverse proxy with **proper security measures in place**. This is not a feature that is planned to be
+> implemented in Retrom itself, as there are many variables to consider when hosting something and there is no
+> one-size-fits-all solution.
 
 ### Preparation
 
