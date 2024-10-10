@@ -29,7 +29,7 @@ import {
   EmulatorProfile,
   UpdatedDefaultEmulatorProfile,
 } from "@/generated/retrom/models/emulators";
-import { cn, InferSchema } from "@/lib/utils";
+import { cn, getFileStub, InferSchema } from "@/lib/utils";
 import { useUpdateDefaultEmulatorProfiles } from "@/mutations/useUpdateDefaultEmulatorProfiles";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
 import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
@@ -49,13 +49,25 @@ import { useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useConfig } from "@/providers/config";
+import { Label } from "@/components/ui/label";
+import { PlatformWithMetadata } from "../manage-emulators";
 
 export function DefaultProfilesModal() {
   const navigate = useNavigate();
   const { defaultProfilesModal } = RootRoute.useSearch();
   const { data: platforms, status: platformStatus } = usePlatforms({
     request: { withMetadata: true },
-    selectFn: (data) => data.platforms,
+    selectFn: (data) =>
+      data.platforms.map((platform) => {
+        const metadata = data.metadata.find(
+          (m) => m.platformId === platform.id,
+        );
+
+        return {
+          ...platform,
+          metadata,
+        };
+      }),
   });
 
   const { data: emulatorProfiles, status: profilesStatus } =
@@ -128,7 +140,7 @@ const formSchema = z.object({
 });
 
 function DefaultEmulatorProfiles(props: {
-  platforms: Platform[];
+  platforms: PlatformWithMetadata[];
   emulators: Emulator[];
   defaultProfiles: DefaultEmulatorProfile[];
   emulatorProfiles: EmulatorProfile[];
@@ -199,9 +211,13 @@ function DefaultEmulatorProfiles(props: {
         </DialogDescription>
       </DialogHeader>
 
-      <ScrollArea className="h-[65dvh] pr-4">
+      <ScrollArea className="h-[65dvh] pr-4 mt-8">
         <Form {...form}>
-          <form className="mb-2">
+          <form className="mb-2 flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-2 *:pl-2">
+              <Label>Platform Directory</Label>
+              <Label>Default Profile</Label>
+            </div>
             {defaults.map((field, index) => {
               const platform = platforms.find((p) => p.id === field.platformId);
 
@@ -209,8 +225,8 @@ function DefaultEmulatorProfiles(props: {
                 return null;
               }
 
-              const relativePath =
-                ".../" + (platform.path.split("/").pop() ?? platform.path);
+              const platformName =
+                platform.metadata?.name ?? getFileStub(platform.path);
 
               return (
                 <FormField
@@ -248,50 +264,61 @@ function DefaultEmulatorProfiles(props: {
                       },
                     );
 
-                    const displayText = validProfiles.length
-                      ? selectedProfile !== undefined
-                        ? `${emulatorForSelection?.name} - ${selectedProfile.name}`
-                        : "Select a profile..."
-                      : "No valid profiles available";
-
                     const unchanged =
-                      currentDefaultProfile?.emulatorProfileId ===
-                        emulatorProfileId && !fieldState.isDirty;
+                      currentDefaultProfile &&
+                      currentDefaultProfile.emulatorProfileId ===
+                        emulatorProfileId &&
+                      !fieldState.isDirty;
+
+                    const DisplayValue = () =>
+                      emulatorForSelection && selectedProfile ? (
+                        <div className="flex flex-col items-start">
+                          <p className="font-semibold text-sm text-muted-foreground">
+                            {emulatorForSelection?.name}
+                          </p>
+                          <p className={cn("font-medium text-foreground")}>
+                            {selectedProfile?.name}
+                            {unchanged ? (
+                              <span className="text-sm text-muted-foreground/50">
+                                {" "}
+                                (current)
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="text-muted-foreground">
+                          Select a profile...
+                        </div>
+                      );
 
                     return (
                       <FormItem>
                         <FormControl>
-                          <div className="grid grid-cols-2">
-                            <code className="relative px-2 border-l border-y bg-muted grid place-items-center">
-                              <pre className="h-min w-full text-muted-foreground font-mono text-sm font-semibold">
-                                {relativePath}
-                              </pre>
-                            </code>
+                          <div className="grid grid-cols-2 gap-2 border-b py-1">
+                            <div className="relative px-2 flex items-center">
+                              <p>{platformName}</p>
+                            </div>
                             <Popover modal={true}>
                               <PopoverTrigger
                                 asChild
                                 disabled={!validProfiles.length}
                               >
                                 <Button
-                                  variant="outline"
+                                  variant="ghost"
+                                  size="lg"
                                   role="combobox"
-                                  className={cn(
-                                    (field.value === undefined ||
-                                      !fieldState.isDirty) &&
-                                      "text-muted-foreground",
-                                    "justify-between z-10",
-                                  )}
+                                  className={cn("justify-between z-10 px-2")}
                                 >
-                                  <span>
-                                    {displayText}
-                                    {currentDefaultProfile &&
-                                      unchanged &&
-                                      validProfiles.length > 0 && (
-                                        <span className="text-xs opacity-50">
-                                          {" (unchanged)"}
-                                        </span>
-                                      )}
-                                  </span>
+                                  {validProfiles?.length ? (
+                                    <DisplayValue />
+                                  ) : (
+                                    <span className="text-muted-foreground">
+                                      No valid profiles available
+                                    </span>
+                                  )}
 
                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -301,60 +328,62 @@ function DefaultEmulatorProfiles(props: {
                                 <Command>
                                   <CommandInput placeholder="Search platforms..." />
                                   <CommandList>
-                                    <CommandGroup>
-                                      {emulatorProfiles.map((profile) => {
-                                        const emulator = emulators.find(
-                                          (e) => e.id === profile.emulatorId,
-                                        );
+                                    {emulators.map((emulator) => {
+                                      const profiles = validProfiles.filter(
+                                        (p) => p.emulatorId === emulator.id,
+                                      );
 
-                                        if (!emulator) {
-                                          return null;
-                                        }
+                                      if (!profiles.length) {
+                                        return null;
+                                      }
 
-                                        if (
-                                          !emulator.supportedPlatforms.includes(
-                                            platformId,
-                                          )
-                                        ) {
-                                          return null;
-                                        }
+                                      return (
+                                        <CommandGroup
+                                          key={emulator.id}
+                                          heading={emulator.name}
+                                        >
+                                          {profiles.map((profile) => {
+                                            if (!emulator) {
+                                              return null;
+                                            }
 
-                                        const displayName = `${emulator.name} - ${profile.name}`;
-
-                                        return (
-                                          <CommandItem
-                                            key={profile.id}
-                                            value={displayName}
-                                            onSelect={() => {
-                                              field.onChange({
-                                                ...field.value,
-                                                emulatorProfileId: profile.id,
-                                              });
-                                            }}
-                                          >
-                                            <Check
-                                              className={cn(
-                                                "mr-2 h-4 w-4",
-                                                field.value
-                                                  .emulatorProfileId ===
-                                                  profile.id
-                                                  ? "opacity-100"
-                                                  : "opacity-0",
-                                              )}
-                                            />
-                                            <div>
-                                              {displayName}
-                                              {profile.id ===
-                                                currentDefaultProfile?.emulatorProfileId && (
-                                                <span className="text-xs opacity-50">
-                                                  {" (current)"}
-                                                </span>
-                                              )}
-                                            </div>
-                                          </CommandItem>
-                                        );
-                                      })}
-                                    </CommandGroup>
+                                            return (
+                                              <CommandItem
+                                                key={profile.id}
+                                                value={profile.name}
+                                                onSelect={() => {
+                                                  field.onChange({
+                                                    ...field.value,
+                                                    emulatorProfileId:
+                                                      profile.id,
+                                                  });
+                                                }}
+                                              >
+                                                <Check
+                                                  className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    field.value
+                                                      .emulatorProfileId ===
+                                                      profile.id
+                                                      ? "opacity-100"
+                                                      : "opacity-0",
+                                                  )}
+                                                />
+                                                <div>
+                                                  {profile.name}
+                                                  {profile.id ===
+                                                    currentDefaultProfile?.emulatorProfileId && (
+                                                    <span className="text-xs opacity-50">
+                                                      {" (current)"}
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              </CommandItem>
+                                            );
+                                          })}
+                                        </CommandGroup>
+                                      );
+                                    })}
                                   </CommandList>
                                 </Command>
                               </PopoverContent>
