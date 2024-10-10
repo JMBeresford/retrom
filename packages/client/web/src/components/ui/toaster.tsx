@@ -38,7 +38,7 @@ export function Toaster() {
           <Toast key={id} {...props}>
             <div className="flex gap-2">
               <div className="text-xs">
-                <Icon size="1.35rem" className="p-0 m-0" />
+                <Icon className="p-0 m-0 w-[1.35rem] h-[1.35rem]" />
               </div>
               <div className={cn("grid gap-1")}>
                 {title && (

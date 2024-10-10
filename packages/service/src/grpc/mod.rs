@@ -1,7 +1,8 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use emulators::EmulatorServiceHandlers;
 use games::GameServiceHandlers;
+use http::HeaderName;
 use jobs::{job_manager::JobManager, JobServiceHandlers};
 use library::LibraryServiceHandlers;
 use metadata::MetadataServiceHandlers;
@@ -15,6 +16,7 @@ use retrom_codegen::retrom::{
 };
 use retrom_db::Pool;
 use tonic::transport::{server::Routes, Server};
+use tower_http::cors::{AllowOrigin, Cors, CorsLayer};
 
 use crate::{config::ServerConfig, providers::igdb::provider::IGDBProvider};
 
@@ -27,7 +29,21 @@ pub mod metadata;
 pub mod platforms;
 pub mod server;
 
-pub fn grpc_service(db_pool: Arc<Pool>, config: Arc<ServerConfig>) -> Routes {
+const DEFAULT_MAX_AGE: Duration = Duration::from_secs(24 * 60 * 60);
+const DEFAULT_EXPOSED_HEADERS: [HeaderName; 3] = [
+    HeaderName::from_static("grpc-status"),
+    HeaderName::from_static("grpc-message"),
+    HeaderName::from_static("grpc-status-details-bin"),
+];
+const DEFAULT_ALLOW_HEADERS: [HeaderName; 5] = [
+    HeaderName::from_static("x-grpc-web"),
+    http::header::CONTENT_TYPE,
+    HeaderName::from_static("x-user-agent"),
+    HeaderName::from_static("grpc-timeout"),
+    HeaderName::from_static("x-client-id"),
+];
+
+pub fn grpc_service(db_pool: Arc<Pool>, config: Arc<ServerConfig>) -> Cors<Routes> {
     let igdb_client = Arc::new(IGDBProvider::new(config.igdb.clone()));
     let job_manager = Arc::new(JobManager::new());
 
@@ -65,6 +81,14 @@ pub fn grpc_service(db_pool: Arc<Pool>, config: Arc<ServerConfig>) -> Routes {
     Server::builder()
         .trace_fn(|_| tracing::info_span!("service"))
         .accept_http1(true)
+        .layer(
+            CorsLayer::new()
+                .allow_origin(AllowOrigin::mirror_request())
+                .allow_credentials(true)
+                .expose_headers(DEFAULT_EXPOSED_HEADERS.to_vec())
+                .allow_headers(DEFAULT_ALLOW_HEADERS.to_vec())
+                .max_age(DEFAULT_MAX_AGE),
+        )
         .add_service(reflection_service)
         .add_service(tonic_web::enable(library_service))
         .add_service(tonic_web::enable(game_service))

@@ -246,6 +246,15 @@ impl EmulatorService for EmulatorServiceHandlers {
         &self,
         request: Request<retrom::GetDefaultEmulatorProfilesRequest>,
     ) -> Result<Response<retrom::GetDefaultEmulatorProfilesResponse>, Status> {
+        let client_id = match request.metadata().get("x-client-id") {
+            Some(client_id) => client_id
+                .to_str()
+                .unwrap()
+                .parse::<i32>()
+                .expect("malformed client_id"),
+            None => return Err(Status::unauthenticated("Client ID not found")),
+        };
+
         let platform_ids = request.into_inner().platform_ids;
 
         let mut conn = self
@@ -264,6 +273,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         }
 
         let default_profiles = default_profiles
+            .filter(schema::default_emulator_profiles::client_id.eq(client_id))
             .get_results::<retrom::DefaultEmulatorProfile>(&mut conn)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
@@ -288,7 +298,10 @@ impl EmulatorService for EmulatorServiceHandlers {
         let default_profiles_updated =
             diesel::insert_into(schema::default_emulator_profiles::table)
                 .values(&default_profiles)
-                .on_conflict(schema::default_emulator_profiles::platform_id)
+                .on_conflict((
+                    schema::default_emulator_profiles::platform_id,
+                    schema::default_emulator_profiles::client_id,
+                ))
                 .do_update()
                 .set(
                     schema::default_emulator_profiles::emulator_profile_id.eq(excluded(

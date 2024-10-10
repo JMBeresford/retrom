@@ -48,6 +48,7 @@ import { z } from "zod";
 import { useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useConfig } from "@/providers/config";
 
 export function DefaultProfilesModal() {
   const navigate = useNavigate();
@@ -132,6 +133,8 @@ function DefaultEmulatorProfiles(props: {
   defaultProfiles: DefaultEmulatorProfile[];
   emulatorProfiles: EmulatorProfile[];
 }) {
+  const configStore = useConfig();
+  const clientId = configStore((s) => s.config.clientInfo.id);
   const { platforms, defaultProfiles, emulatorProfiles, emulators } = props;
   const { setOpen } = useDialogOpen();
   const { mutate: updateDefaultEmulatorProfiles } =
@@ -172,6 +175,7 @@ function DefaultEmulatorProfiles(props: {
           defaultProfiles.push({
             platformId,
             emulatorProfileId,
+            clientId,
           });
         }
       }
@@ -182,7 +186,7 @@ function DefaultEmulatorProfiles(props: {
 
       setOpen(false);
     },
-    [updateDefaultEmulatorProfiles, setOpen],
+    [updateDefaultEmulatorProfiles, setOpen, clientId],
   );
 
   return (

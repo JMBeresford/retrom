@@ -76,6 +76,7 @@ message DefaultEmulatorProfile {
   int32 emulator_profile_id = 2;
   google.protobuf.Timestamp created_at = 3;
   google.protobuf.Timestamp updated_at = 4;
+  int32 client_id = 5;
 }
 
 message NewDefaultEmulatorProfile {
@@ -83,6 +84,7 @@ message NewDefaultEmulatorProfile {
   int32 emulator_profile_id = 2;
   optional google.protobuf.Timestamp created_at = 3;
   optional google.protobuf.Timestamp updated_at = 4;
+  optional int32 client_id = 5;
 }
 
 message UpdatedDefaultEmulatorProfile {
@@ -90,4 +92,5 @@ message UpdatedDefaultEmulatorProfile {
   int32 emulator_profile_id = 2;
   optional google.protobuf.Timestamp created_at = 3;
   optional google.protobuf.Timestamp updated_at = 4;
+  optional int32 client_id = 5;
 }

@@ -10,11 +10,12 @@ diesel::table! {
 }
 
 diesel::table! {
-    default_emulator_profiles (platform_id) {
+    default_emulator_profiles (platform_id, client_id) {
         platform_id -> Int4,
         emulator_profile_id -> Int4,
         created_at -> Nullable<Timestamptz>,
         updated_at -> Nullable<Timestamptz>,
+        client_id -> Int4,
     }
 }
 
@@ -143,6 +144,7 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(default_emulator_profiles -> clients (client_id));
 diesel::joinable!(default_emulator_profiles -> emulator_profiles (emulator_profile_id));
 diesel::joinable!(default_emulator_profiles -> platforms (platform_id));
 diesel::joinable!(emulator_profiles -> emulators (emulator_id));

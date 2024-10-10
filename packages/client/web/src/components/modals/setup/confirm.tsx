@@ -13,6 +13,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useClientInfo } from "@/queries/useClientInfo";
 import { useConfig } from "@/providers/config";
 import { Timestamp } from "@/generated/google/protobuf/timestamp";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 export function Confirm() {
   const { toast } = useToast();
@@ -54,6 +55,8 @@ export function Confirm() {
         prev.flowCompletions.setupComplete = true;
         return { ...prev };
       });
+
+      await relaunch();
 
       if (nextStep) {
         nextStep();
@@ -107,7 +110,7 @@ export function Confirm() {
           </Button>
         ) : error ? (
           <Button onClick={save} variant="destructive">
-            Save
+            Save and Relaunch
           </Button>
         ) : (
           <Button onClick={save}>Save</Button>
