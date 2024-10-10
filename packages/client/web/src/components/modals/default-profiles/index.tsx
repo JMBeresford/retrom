@@ -22,7 +22,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Platform } from "@/generated/retrom/models/platforms";
 import {
   DefaultEmulatorProfile,
   Emulator,
