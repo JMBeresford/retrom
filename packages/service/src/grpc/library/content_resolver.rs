@@ -11,10 +11,10 @@ pub enum ResolverError {
     #[error("No row found in DB")]
     NoRowFound,
 
-    #[error("Could not insert new row")]
+    #[error("Could not insert new row: {0}")]
     InsertError(#[from] diesel::result::Error),
 
-    #[error("Could not read directory")]
+    #[error("Could not read directory or file: {0}")]
     IoError(#[from] io::Error),
 }
 
