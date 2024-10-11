@@ -2,24 +2,43 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
-import { readLocalCargoToml } from "./src/lib/node-utils";
+import { readConfigFile, readLocalCargoToml } from "./src/lib/node-utils";
 
 let localVersion = "0.0.0";
 try {
-  localVersion = await readLocalCargoToml();
+  const cargoTomlVersion = readLocalCargoToml();
+  localVersion = cargoTomlVersion;
 } catch (e) {
-  console.error("Failed to read local Cargo.toml:", e);
+  if (process.env.NODE_ENV === "development") {
+    console.error("Failed to read local Cargo.toml:", e);
+  }
+}
+
+let localServicePort = "5101";
+let localServiceHostname = "http://localhost";
+
+const config = readConfigFile();
+if (config?.connection?.port) {
+  localServicePort = config.connection.port.toString();
+}
+
+if (config?.connection?.hostname) {
+  localServiceHostname = config.connection.hostname;
 }
 
 const localServiceHost =
   process.env.VITE_RETROM_LOCAL_SERVICE_HOST ||
   process.env.RETROM_LOCAL_SERVICE_HOST ||
-  "http://localhost:5101";
+  `${localServiceHostname}:${localServicePort}`;
 
 // https://vitejs.dev/config/
 export default defineConfig({
   define: {
     "import.meta.env.VITE_RETROM_VERSION": JSON.stringify(localVersion),
+    "import.meta.env.VITE_RETROM_LOCAL_SERVICE_HOST":
+      JSON.stringify(localServiceHost),
+    "import.meta.env.VITE_RETROM_LOCAL_SERVICE_PORT":
+      JSON.stringify(localServicePort),
   },
   server: {
     port: 3000,

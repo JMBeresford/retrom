@@ -47,7 +47,6 @@ EXPOSE 5101
 
 ### Web env
 ENV NODE_ENV=production
-ENV RETROM_LOCAL_SERVICE_HOST=http://localhost:5101
 EXPOSE 3000 
 
 COPY --from=service-builder /usr/local/cargo/bin/retrom-service /app/retrom-service
