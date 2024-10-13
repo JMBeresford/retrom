@@ -8,7 +8,7 @@
   }
 
   h3 {
-    font-size: 1.17em;
+    font-size: 1.25em;
   }
 
   h4 {
@@ -29,12 +29,21 @@
   h4,
   h5,
   h6 {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
+    @apply font-black mb-2;
   }
 
   ul {
     list-style: disc;
     list-style-position: inside;
+
+    li {
+      *:first-child {
+        @apply font-bold mb-1;
+      }
+
+      *:not(:first-child) {
+        @apply pl-4;
+      }
+    }
   }
 }
