@@ -149,7 +149,7 @@ function InnerContent(props: { clientVersion: Version; update?: Update }) {
       <>
         <h3>
           A new version of Retrom is available.{" "}
-          <Code>{`${versionToString(clientVersion)} -> ${newVersion}`}</Code>
+          <Code>{`${versionToString(clientVersion)} -> ${versionToString(newVersion)}`}</Code>
         </h3>
 
         <Changelog update={update} />
