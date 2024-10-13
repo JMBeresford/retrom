@@ -22,8 +22,7 @@ commit_parsers = [
   { message = "^fix", group = "fixed" },
 ]
 body = """
-
-## `{{ package }}` - [{{ version | trim_start_matches(pat="v") }}]{%- if release_link -%}({{ release_link }}){% endif %} - {{ timestamp | date(format="%Y-%m-%d") }}
+## [{{ version | trim_start_matches(pat="v") }}]{%- if release_link -%}({{ release_link }}){% endif %} - {{ timestamp | date(format="%Y-%m-%d") }}
 {% for group, commits in commits | group_by(attribute="group") %}
 ### {{ group | upper_first }}
 {% for commit in commits %}
@@ -31,9 +30,9 @@ body = """
 - *({{commit.scope}})* {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}{%- if commit.links %} ({% for link in commit.links %}[{{link.text}}]({{link.href}}) {% endfor -%}){% endif %}
 {% else -%}
 - {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}
-{% endif %}
+{% endif -%}
 {% if commit.body %}
-{{ commit.body | indent }}
+{{ commit.body | indent(first=true) }}
 {% endif -%}
 {% endfor -%}
 {% endfor -%}
