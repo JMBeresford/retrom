@@ -166,7 +166,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
           render={({ field, fieldState: { error } }) => (
             <FormItem>
               <Select
-                defaultValue={field.value?.toString()}
+                defaultValue={field.value?.toString() ?? ""}
                 onValueChange={(value) => {
                   const valueNum = parseInt(value);
                   const saveStrategy = Object.values(SaveStrategy).find(
@@ -187,15 +187,18 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                       field.value === undefined && "text-muted-foreground",
                     )}
                   >
-                    <SelectValue placeholder="Select save strategy" />
+                    <SelectValue placeholder="Select save strategy">
+                      {field.value !== undefined
+                        ? saveStrategyDisplayMap[field.value]
+                        : "Select save strategy"}
+                    </SelectValue>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {Object.values(SaveStrategy)
-                    .filter((value) => typeof value !== "string")
-                    .filter((value) => value !== SaveStrategy.UNRECOGNIZED)
-                    .map((value) => (
-                      <SelectItem key={value} value={value.toString()}>
+                  {Object.entries(SaveStrategy)
+                    .filter(([_, value]) => value !== SaveStrategy.UNRECOGNIZED)
+                    .map(([key, value]) => (
+                      <SelectItem key={key} value={value.toString()}>
                         {saveStrategyDisplayMap[value]}
                       </SelectItem>
                     ))}
