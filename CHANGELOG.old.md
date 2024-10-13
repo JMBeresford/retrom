@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -10,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- *(service)* better error logs
-- *(web client)* use service port defined in config file
+- _(service)_ better error logs
+- _(web client)_ use service port defined in config file
 
 ## [0.2.0](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.13...retrom-v0.2.0) - 2024-10-10
 
@@ -40,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- *(web client)* download button
+- _(web client)_ download button
 
 ## [0.1.10](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.9...retrom-v0.1.10) - 2024-09-27
 
@@ -64,13 +65,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- *(client)* opt-out of platform filtering in IGDB searching
+- _(client)_ opt-out of platform filtering in IGDB searching
 
 ### Fixed
 
-- *(service)* no longer relies on default config file
-- *(client)* render single-file game names with dots
-- *(client)* render multi-file game names with dots
+- _(service)_ no longer relies on default config file
+- _(client)_ render single-file game names with dots
+- _(client)_ render multi-file game names with dots
 
 ## [0.1.6](https://github.com/JMBeresford/retrom/compare/retrom-v0.1.5...retrom-v0.1.6) - 2024-09-26
 
@@ -187,29 +188,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.70](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.69...retrom-v0.0.70) - 2024-09-05
 
 ### Added
+
 - modal refactor
 
 ## [0.0.69](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.68...retrom-v0.0.69) - 2024-09-05
 
 ### Fixed
+
 - sync config on desktop app
 
 ## [0.0.65](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.64...retrom-v0.0.65) - 2024-09-04
 
 ### Fixed
+
 - updating -> relaunching
 
 ## [0.0.64](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.63...retrom-v0.0.64) - 2024-09-04
 
 ### Fixed
-- *(macOS)* app identifier
+
+- _(macOS)_ app identifier
 
 ## [0.0.63](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.62...retrom-v0.0.63) - 2024-09-04
 
 ### Fixed
+
 - no more node server
 
 ## [0.0.62](https://github.com/JMBeresford/retrom/compare/retrom-v0.0.61...retrom-v0.0.62) - 2024-09-03
 
 ### Fixed
+
 - nothing

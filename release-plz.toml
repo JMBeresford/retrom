@@ -32,9 +32,9 @@ body = """
 {% else -%}
 - {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}
 {% endif -%}
-{%- if commit.body -%}
+{% if commit.body %}
   {{ commit.body | indent(width=2) }}
-{%- endif %}
+{% endif -%}
 {% endfor -%}
 {% endfor -%}
 """
