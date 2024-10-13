@@ -5,10 +5,10 @@ release_always = false
 semver_check = false
 publish_no_verify = true
 changelog_update = false
+changelog_path = "./CHANGELOG.md"
 
 [[package]]
 name = "retrom-service"
-changelog_path = "./CHANGELOG.md"
 changelog_update = true
 changelog_include = ['retrom-client']
 git_release_enable = true
@@ -31,9 +31,9 @@ body = """
 - *({{commit.scope}})* {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}{%- if commit.links %} ({% for link in commit.links %}[{{link.text}}]({{link.href}}) {% endfor -%}){% endif %}
 {% else -%}
 - {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}
-{% endif -%}
+{% endif %}
 {% if commit.body %}
-  {{ commit.body | indent(width=2) }}
+{{ commit.body | indent }}
 {% endif -%}
 {% endfor -%}
 {% endfor -%}
