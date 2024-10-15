@@ -29,14 +29,22 @@ pub fn get_game_files(pool: Arc<Pool>) -> BoxedFilter<(impl warp::Reply,)> {
                 Err(_) => return Err(warp::reject::not_found()),
             };
 
-            let game_dir = PathBuf::from(game.path);
+            let game_path = PathBuf::from(game.path);
 
-            let file_name = game_dir
-                .file_name()
-                .unwrap()
-                .to_str()
-                .unwrap_or("unknown")
-                .to_string();
+            let file_name = match game_path.is_dir() {
+                true => game_path
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap_or("unknown")
+                    .to_string(),
+                false => game_path
+                    .file_stem()
+                    .unwrap()
+                    .to_str()
+                    .unwrap_or("unknown")
+                    .to_string(),
+            };
 
             let files: Vec<retrom::GameFile> = match retrom::GameFile::table()
                 .filter(schema::game_files::game_id.eq(game_id))
@@ -72,13 +80,17 @@ pub fn get_game_files(pool: Arc<Pool>) -> BoxedFilter<(impl warp::Reply,)> {
                     let mut file = tokio::fs::File::open(path).await.unwrap();
                     match archive
                         .append(file_name.to_string(), FileDateTime::now(), &mut file)
-                        .await {
+                        .await
+                    {
                         Ok(_) => (),
-                            Err(e) => {
-                                eprintln!("Failed to append file to archive. Was the download interrupted?: {:?}", e);
-                                return;
-                            }
-                        };
+                        Err(e) => {
+                            let msg = "Failed to append file to archive,".to_string()
+                                + "was the download interrupted?";
+
+                            tracing::error!("{msg}: {:?}", e);
+                            return;
+                        }
+                    };
                 }
 
                 archive
@@ -99,7 +111,9 @@ pub fn get_game_files(pool: Arc<Pool>) -> BoxedFilter<(impl warp::Reply,)> {
 
             headers.insert(
                 header::CONTENT_DISPOSITION,
-                format!("attachment; filename={file_name}.zip").parse().unwrap(),
+                format!("attachment; filename=\"{file_name}.zip\"")
+                    .parse()
+                    .unwrap(),
             );
 
             Ok(response)
