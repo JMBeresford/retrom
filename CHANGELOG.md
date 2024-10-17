@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.2.6](https://github.com/JMBeresford/retrom/compare/retrom-v0.2.5...retrom-v0.2.6) - 2024-10-17
+
+### Fixed
+- creating log file
+
+    Retrom now checks to make sure the log directory exists before
+    trying to create a log file. It also places the log file in the
+    OS-specific idiomatic location for log files.
 ## [0.2.5](https://github.com/JMBeresford/retrom/compare/retrom-v0.2.4...retrom-v0.2.5) - 2024-10-17
 
 ### Added
