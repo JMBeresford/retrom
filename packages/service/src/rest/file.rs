@@ -28,20 +28,12 @@ pub fn get_file(pool: Arc<Pool>) -> BoxedFilter<(impl warp::Reply,)> {
                 Err(_) => return Err(warp::reject::not_found()),
             };
 
-            let file_name = match file.is_dir() {
-                true => file
-                    .file_name()
-                    .unwrap()
-                    .to_str()
-                    .unwrap_or("unknown")
-                    .to_string(),
-                false => file
-                    .file_stem()
-                    .unwrap()
-                    .to_str()
-                    .unwrap_or("unknown")
-                    .to_string(),
-            };
+            let file_name = file
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap_or("unknown")
+                .to_string();
 
             let file = match tokio::fs::File::open(file).await {
                 Ok(file) => file,

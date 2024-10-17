@@ -90,7 +90,8 @@ pub async fn install_game<R: Runtime>(
                 .to_str()?
                 .split("filename=")
                 .last()
-                .unwrap_or("unknown");
+                .unwrap_or("unknown")
+                .replace("\"", "");
 
             let installer = app_handle.installer();
             let mut outfile = tokio::fs::File::create(output_directory.join(filename)).await?;
