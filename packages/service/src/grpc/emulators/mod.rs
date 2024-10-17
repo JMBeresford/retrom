@@ -37,7 +37,7 @@ impl EmulatorService for EmulatorServiceHandlers {
 
         let emulators_created = diesel::insert_into(schema::emulators::table)
             .values(&emulators)
-            .get_results::<Emulator>(&mut conn)
+            .get_results(&mut conn)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
@@ -342,5 +342,115 @@ impl EmulatorService for EmulatorServiceHandlers {
                 default_profiles_deleted,
             },
         ))
+    }
+
+    async fn create_local_emulator_configs(
+        &self,
+        request: Request<retrom::CreateLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<retrom::CreateLocalEmulatorConfigsResponse>, Status> {
+        let configs = request.into_inner().configs;
+
+        let mut conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let configs_created = diesel::insert_into(schema::local_emulator_configs::table)
+            .values(&configs)
+            .get_results::<retrom::LocalEmulatorConfig>(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(retrom::CreateLocalEmulatorConfigsResponse {
+            configs_created,
+        }))
+    }
+
+    async fn get_local_emulator_configs(
+        &self,
+        request: Request<retrom::GetLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<retrom::GetLocalEmulatorConfigsResponse>, Status> {
+        let request = request.into_inner();
+        let emulator_ids = request.emulator_ids;
+        let client_id = request.client_id;
+
+        let mut conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let mut query = schema::local_emulator_configs::table
+            .into_boxed()
+            .select(retrom::LocalEmulatorConfig::as_select());
+
+        if !emulator_ids.is_empty() {
+            query = query.filter(schema::local_emulator_configs::emulator_id.eq_any(emulator_ids));
+        }
+
+        query = query.filter(schema::local_emulator_configs::client_id.eq(client_id));
+
+        let local_emulator_configs = query
+            .get_results::<retrom::LocalEmulatorConfig>(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(retrom::GetLocalEmulatorConfigsResponse {
+            configs: local_emulator_configs,
+        }))
+    }
+
+    async fn update_local_emulator_configs(
+        &self,
+        request: Request<retrom::UpdateLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<retrom::UpdateLocalEmulatorConfigsResponse>, Status> {
+        let configs = request.into_inner().configs;
+
+        let mut conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let mut configs_updated = vec![];
+
+        for config in configs {
+            let updated_config = diesel::update(schema::local_emulator_configs::table)
+                .filter(schema::local_emulator_configs::id.eq(config.id))
+                .set(&config)
+                .get_result::<retrom::LocalEmulatorConfig>(&mut conn)
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
+
+            configs_updated.push(updated_config);
+        }
+
+        Ok(Response::new(retrom::UpdateLocalEmulatorConfigsResponse {
+            configs_updated,
+        }))
+    }
+
+    async fn delete_local_emulator_configs(
+        &self,
+        request: Request<retrom::DeleteLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<retrom::DeleteLocalEmulatorConfigsResponse>, Status> {
+        let ids = request.into_inner().ids;
+
+        let mut conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let configs_deleted = diesel::delete(schema::local_emulator_configs::table)
+            .filter(schema::local_emulator_configs::id.eq_any(ids))
+            .get_results::<retrom::LocalEmulatorConfig>(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(retrom::DeleteLocalEmulatorConfigsResponse {
+            configs_deleted,
+        }))
     }
 }

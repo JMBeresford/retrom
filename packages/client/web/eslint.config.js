@@ -11,23 +11,23 @@ export default tseslint.config(
     extends: [
       js.configs.recommended,
       ...tanstackQuery.configs["flat/recommended"],
-      ...tseslint.configs.recommended,
+      ...tseslint.configs.recommended
     ],
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
+      globals: globals.browser
     },
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
-      "@tanstack/query": tanstackQuery,
+      "@tanstack/query": tanstackQuery
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": [
         "warn",
-        { allowConstantExport: true },
+        { allowConstantExport: true }
       ],
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -35,9 +35,10 @@ export default tseslint.config(
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
           caughtErrorsIgnorePattern: "^_",
-          destructuredArrayIgnorePattern: "^_",
-        },
+          destructuredArrayIgnorePattern: "^_"
+        }
       ],
-    },
-  },
+      "react-refresh/only-export-components": "off"
+    }
+  }
 );

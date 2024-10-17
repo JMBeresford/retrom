@@ -20,7 +20,7 @@ const SetupModalContext = createContext<
   | undefined
 >(undefined);
 
-// eslint-disable-next-line react-refresh/only-export-components -- we need to export this hook
+ 
 export function useSetupModal() {
   const context = useContext(SetupModalContext);
 

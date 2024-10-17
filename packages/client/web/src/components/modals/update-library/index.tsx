@@ -41,7 +41,7 @@ export function UpdateLibraryModal() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Update Library</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="max-w-[65ch]">
             Starts the update process to populate platforms and games that have
             been added to the service&apos;s filesystem since the last update.
           </DialogDescription>

@@ -1,11 +1,11 @@
 use std::{ffi::OsStr, path::PathBuf};
 
 use retrom_codegen::retrom::{
-    GamePlayStatusUpdate, GetGamePlayStatusPayload, InstallationStatus, PlayGamePayload,
-    PlayStatus, StopGamePayload,
+    GamePlayStatusUpdate, GetGamePlayStatusPayload, GetLocalEmulatorConfigsRequest,
+    InstallationStatus, PlayGamePayload, PlayStatus, RetromClientConfig, StopGamePayload,
 };
 use retrom_plugin_installer::InstallerExt;
-use tauri::{command, AppHandle, Runtime};
+use tauri::{command, AppHandle, Manager, Runtime};
 use tokio::sync::Mutex;
 use tracing::{info, instrument};
 
@@ -99,7 +99,36 @@ pub(crate) async fn play_game<R: Runtime>(
         None => return Err(crate::Error::FileNotFound(game_id)),
     };
 
-    let mut cmd = launcher.get_open_cmd(&emulator.executable_path);
+    let client_id: i32;
+
+    {
+        let config_state = app
+            .try_state::<std::sync::Mutex<RetromClientConfig>>()
+            .expect("Config not found");
+
+        let lock = config_state.lock().expect("Failed to lock config");
+
+        client_id = lock
+            .config
+            .as_ref()
+            .and_then(|c| c.client_info.as_ref())
+            .map(|c| c.id)
+            .unwrap_or(0);
+    }
+
+    let mut emulator_client = app.get_emulator_client().await;
+    let res = emulator_client
+        .get_local_emulator_configs(GetLocalEmulatorConfigsRequest {
+            client_id,
+            emulator_ids: vec![emulator.id],
+        })
+        .await
+        .expect("Failed to get local emulator configs")
+        .into_inner();
+
+    let local_config = res.configs.first().expect("No emulator config found");
+
+    let mut cmd = launcher.get_open_cmd(&local_config.executable_path);
 
     let args = if !profile.custom_args.is_empty() {
         profile

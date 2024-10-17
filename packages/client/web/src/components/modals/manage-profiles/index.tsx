@@ -57,7 +57,7 @@ export function ManageEmulatorProfilesModal() {
         ) : error ? (
           <></>
         ) : (
-          <ScrollArea type="auto" className="h-[65dvh] pr-4">
+          <ScrollArea type="auto">
             <Accordion type="multiple" className="w-full max-w-full">
               {emulators.map((emulator) => (
                 <ProfileList

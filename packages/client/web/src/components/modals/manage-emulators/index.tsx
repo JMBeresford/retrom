@@ -13,9 +13,9 @@ import {
   Check,
   ChevronsUpDown,
   Circle,
-  FolderOpenIcon,
+  InfoIcon,
   LoaderCircleIcon,
-  XCircleIcon,
+  TrashIcon,
 } from "lucide-react";
 import { cn, getFileStub } from "@/lib/utils";
 import { useEmulators } from "@/queries/useEmulators";
@@ -36,7 +36,6 @@ import {
 } from "@/generated/retrom/models/emulators";
 import { z } from "zod";
 import { CreateEmulator } from "./create-emulator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useUpdateEmulators } from "@/mutations/useUpdateEmulators";
@@ -58,8 +57,10 @@ import {
 } from "@/components/ui/select";
 import { useDeleteEmulators } from "@/mutations/useDeleteEmulators";
 import { PlatformMetadata } from "@/generated/retrom/models/metadata";
-import { open } from "@tauri-apps/plugin-dialog";
 import { useNavigate } from "@tanstack/react-router";
+import { useLocalEmulatorConfigs } from "@/queries/useLocalEmulatorConfigs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LocalConfigs } from "./local-configs";
 
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
@@ -82,11 +83,6 @@ export const emulatorSchema = z.object({
   saveStrategy: z.nativeEnum(SaveStrategy, {
     message: "Select a save strategy",
   }),
-  executablePath: z
-    .string()
-    .min(1, "Executable path must not be empty")
-    .max(256, "Executable path must not exceed 256 characters"),
-  clientId: z.number(),
 }) satisfies z.ZodObject<
   Record<keyof Omit<NewEmulator, "createdAt" | "updatedAt">, z.ZodTypeAny>
 >;
@@ -118,6 +114,9 @@ export function ManageEmulatorsModal() {
     selectFn: (data) => data.emulators,
   });
 
+  const { data: emulatorConfigs, status: emulatorConfigsStatus } =
+    useLocalEmulatorConfigs({ selectFn: (data) => data.configs });
+
   const { data: platforms, status: platformsStatus } = usePlatforms({
     request: { withMetadata: true },
     selectFn: (data) =>
@@ -127,8 +126,19 @@ export function ManageEmulatorsModal() {
       })),
   });
 
+  const pending =
+    emulatorsStatus === "pending" ||
+    platformsStatus === "pending" ||
+    emulatorConfigsStatus === "pending";
+
+  const error =
+    emulatorsStatus === "error" ||
+    platformsStatus === "error" ||
+    emulatorConfigsStatus === "error";
+
   return (
     <Dialog
+      modal
       open={manageEmulatorsModal?.open}
       onOpenChange={(open) => {
         if (!open) {
@@ -139,19 +149,49 @@ export function ManageEmulatorsModal() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Manage Emulators</DialogTitle>
-          <DialogDescription>
-            Manage existing emulator configurations and/or create new ones.
+          <DialogDescription className="max-w-[70ch]">
+            Manage existing emulator definitions and/or create new ones.
+            Configure paths to your local emulators in the Configuration tab.
           </DialogDescription>
         </DialogHeader>
 
-        {emulatorsStatus === "pending" || platformsStatus === "pending" ? (
+        {pending ? (
           <LoaderCircleIcon className="animate-spin h-8 w-8" />
-        ) : emulatorsStatus === "error" || platformsStatus === "error" ? (
+        ) : error ? (
           <p className="text-red-500">
             An error occurred while fetching data. Please try again.
           </p>
         ) : (
-          <EmulatorList platforms={platforms} emulators={emulators} />
+          <Tabs defaultValue="emulators">
+            <div className="w-full mb-6">
+              <TabsList>
+                <TabsTrigger value="emulators">All Emulators</TabsTrigger>
+                <TabsTrigger value="local-configs">Configuration</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="emulators" className={cn("h-fit", "")}>
+              <div
+                className={cn(
+                  "bg-muted text-muted-foreground p-2 rounded mt-2 mb-4",
+                  "flex gap-2 text-sm",
+                )}
+              >
+                <InfoIcon className="w-[1rem] h-[1rem] text-primary" />
+                <p className="max-w-[60ch] text-pretty">
+                  This is a list of all of the emulators that Retrom is
+                  tracking. In order to use these emulators locally, you will
+                  need to configure them in the Configuration tab.
+                </p>
+              </div>
+
+              <EmulatorList platforms={platforms} emulators={emulators} />
+            </TabsContent>
+
+            <TabsContent value="local-configs">
+              <LocalConfigs emulators={emulators} configs={emulatorConfigs} />
+            </TabsContent>
+          </Tabs>
         )}
       </DialogContent>
     </Dialog>
@@ -166,25 +206,28 @@ function EmulatorList(props: {
 
   const form = useForm<ChangesetSchema>({
     resolver: zodResolver(changesetSchema),
-    mode: "onBlur",
+    mode: "all",
     defaultValues: {
       emulators,
     },
   });
 
-  const { mutate: updateEmulators, isPending: updatePending } =
+  const { mutateAsync: updateEmulators, isPending: updatePending } =
     useUpdateEmulators();
 
   const handleSubmit = useCallback(
-    (values: ChangesetSchema) => {
-      updateEmulators(values);
+    async (values: ChangesetSchema) => {
+      const emulators = values.emulators;
+
+      updateEmulators({ emulators });
     },
     [updateEmulators],
   );
 
-  const formState = form.formState;
-  const loading = formState?.isValidating || updatePending;
-  const canSubmit = formState?.isValid && formState?.isDirty && !loading;
+  const { isValidating, isDirty } = form.formState;
+
+  const loading = isValidating || updatePending;
+  const canSubmit = isDirty && !loading;
 
   useEffect(() => {
     form.reset({ emulators });
@@ -198,238 +241,197 @@ function EmulatorList(props: {
 
   return (
     <>
-      <ScrollArea className="h-[60vh]">
-        <main className="grid grid-cols-[10px_1fr_1fr_1fr_1fr_min-content] pr-2 pb-4">
-          <div
+      <main
+        className={cn(
+          "grid grid-cols-[10px_repeat(3,1fr)_min-content] pr-2 pb-4",
+          "gap-y-2",
+        )}
+      >
+        <div
+          className={cn(
+            "grid grid-cols-subgrid col-span-full",
+            "text-sm font-bold pb-2 *:px-3",
+          )}
+        >
+          <p></p>
+          <p>Name</p>
+          <p>Platforms</p>
+          <p>Save Strategy</p>
+          <p></p>
+        </div>
+
+        <CreateEmulator platforms={platforms} />
+        <Form {...form}>
+          <form
             className={cn(
-              "grid grid-cols-subgrid col-span-6",
-              "text-sm font-bold border-b pb-2 *:px-3",
+              "grid grid-cols-subgrid col-span-full grid-flow-row auto-rows-max",
+              "[&_*]:ring-inset gap-y-2",
             )}
           >
-            <p></p>
-            <p>Name</p>
-            <p>Platforms</p>
-            <p>Save Strategy</p>
-            <p>Executable</p>
-            <p></p>
-          </div>
+            {changesetItems.map((change, index) => {
+              const isDirty = form.formState.dirtyFields.emulators?.at(index);
 
-          <CreateEmulator platforms={platforms} />
-          <Form {...form}>
-            <form
-              className={cn(
-                "grid grid-cols-subgrid col-span-6 grid-flow-row auto-rows-max",
-                "*:grid *:grid-flow-col *:grid-cols-subgrid *:col-span-6",
-                "*:border-b [&_*]:ring-inset",
-              )}
-            >
-              {changesetItems.map((change, index) => {
-                const isDirty = form.formState.dirtyFields.emulators?.[index];
+              return (
+                <div
+                  key={change.id}
+                  className={cn(
+                    !isDirty && "text-muted-foreground",
+                    "grid grid-flow-col grid-cols-subgrid col-span-full border-b",
+                    "items-center",
+                  )}
+                >
+                  <Circle
+                    className={cn(
+                      isDirty ? "opacity-100" : "opacity-0",
+                      "w-[8px] h-[8px] place-self-center fill-foreground text-foreground transition-colors",
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`emulators.${index}.name` as const}
+                    render={({ field, fieldState: { error } }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            className={cn(
+                              error
+                                ? "border-solid border-2 border-destructive"
+                                : "border-none",
+                            )}
+                            placeholder="Enter emulator name"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                return (
-                  <div
-                    key={change.id}
-                    className={cn(!isDirty && "text-muted-foreground")}
-                  >
-                    <Circle
-                      className={cn(
-                        isDirty ? "opacity-100" : "opacity-0",
-                        "w-[8px] h-[8px] place-self-center fill-foreground text-foreground transition-colors",
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`emulators.${index}.name` as const}
-                      render={({ field, fieldState: { error } }) => (
-                        <FormItem>
+                  <FormField
+                    control={form.control}
+                    name={`emulators.${index}.supportedPlatforms` as const}
+                    render={({ field, fieldState: { error } }) => (
+                      <FormItem>
+                        <Popover modal={true}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="ghost"
+                                role="combobox"
+                                className={cn(
+                                  "justify-between w-full hover:bg-transparent",
+                                  error &&
+                                    "border-solid border-2 border-destructive",
+                                  field.value.length === 0 &&
+                                    "text-muted-foreground",
+                                )}
+                              >
+                                {field.value.length
+                                  ? `${field.value.length} platforms`
+                                  : "Select platforms"}
+
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent>
+                            <PlatformsDropdown
+                              selections={field.value}
+                              platforms={platforms ?? []}
+                              onChange={(id) => {
+                                const value = [...field.value];
+                                if (value.includes(id)) {
+                                  value.splice(value.indexOf(id), 1);
+                                } else {
+                                  value.push(id);
+                                }
+
+                                field.onChange(value);
+                              }}
+                            />
+
+                            <div className="flex justify-between gap-2 *:w-full">
+                              <PopoverClose asChild>
+                                <Button variant="secondary">Close</Button>
+                              </PopoverClose>
+
+                              <Button
+                                onClick={() => {
+                                  field.onChange([]);
+                                }}
+                              >
+                                Clear
+                              </Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name={`emulators.${index}.saveStrategy` as const}
+                    render={({ field, fieldState: { error } }) => (
+                      <FormItem>
+                        <Select
+                          defaultValue={field.value?.toString()}
+                          onValueChange={(value) => {
+                            const valueNum = parseInt(value);
+                            const saveStrategy = Object.values(
+                              SaveStrategy,
+                            ).find((v) => v === valueNum);
+
+                            if (saveStrategy === undefined) return;
+
+                            field.onChange(saveStrategy);
+                          }}
+                        >
                           <FormControl>
-                            <Input
-                              {...field}
+                            <SelectTrigger
                               className={cn(
+                                "hover:bg-transparent",
                                 error
                                   ? "border-solid border-2 border-destructive"
                                   : "border-none",
                               )}
-                              placeholder="Enter emulator name"
-                            />
+                            >
+                              <SelectValue placeholder="Select save strategy" />
+                            </SelectTrigger>
                           </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`emulators.${index}.supportedPlatforms` as const}
-                      render={({ field, fieldState: { error } }) => (
-                        <FormItem>
-                          <Popover modal={true}>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="ghost"
-                                  role="combobox"
-                                  className={cn(
-                                    "justify-between w-full hover:bg-transparent",
-                                    error &&
-                                      "border-solid border-2 border-destructive",
-                                    field.value.length === 0 &&
-                                      "text-muted-foreground",
-                                  )}
+                          <SelectContent>
+                            {Object.values(SaveStrategy)
+                              .filter((value) => typeof value !== "string")
+                              .filter(
+                                (value) => value !== SaveStrategy.UNRECOGNIZED,
+                              )
+                              .map((value) => (
+                                <SelectItem
+                                  key={value}
+                                  value={value.toString()}
                                 >
-                                  {field.value.length
-                                    ? `${field.value.length} platforms`
-                                    : "Select platforms"}
+                                  {saveStrategyDisplayMap[value]}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
 
-                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent>
-                              <PlatformsDropdown
-                                selections={field.value}
-                                platforms={platforms ?? []}
-                                onChange={(id) => {
-                                  const value = [...field.value];
-                                  if (value.includes(id)) {
-                                    value.splice(value.indexOf(id), 1);
-                                  } else {
-                                    value.push(id);
-                                  }
-
-                                  field.onChange(value);
-                                }}
-                              />
-
-                              <div className="flex justify-between gap-2 *:w-full">
-                                <PopoverClose asChild>
-                                  <Button variant="secondary">Close</Button>
-                                </PopoverClose>
-
-                                <Button
-                                  onClick={() => {
-                                    field.onChange([]);
-                                  }}
-                                >
-                                  Clear
-                                </Button>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`emulators.${index}.saveStrategy` as const}
-                      render={({ field, fieldState: { error } }) => (
-                        <FormItem>
-                          <Select
-                            defaultValue={field.value?.toString()}
-                            onValueChange={(value) => {
-                              const valueNum = parseInt(value);
-                              const saveStrategy = Object.values(
-                                SaveStrategy,
-                              ).find((v) => v === valueNum);
-
-                              if (saveStrategy === undefined) return;
-
-                              field.onChange(saveStrategy);
-                            }}
-                          >
-                            <FormControl>
-                              <SelectTrigger
-                                className={cn(
-                                  "hover:bg-transparent",
-                                  error
-                                    ? "border-solid border-2 border-destructive"
-                                    : "border-none",
-                                )}
-                              >
-                                <SelectValue placeholder="Select save strategy" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {Object.values(SaveStrategy)
-                                .filter((value) => typeof value !== "string")
-                                .filter(
-                                  (value) =>
-                                    value !== SaveStrategy.UNRECOGNIZED,
-                                )
-                                .map((value) => (
-                                  <SelectItem
-                                    key={value}
-                                    value={value.toString()}
-                                  >
-                                    {saveStrategyDisplayMap[value]}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`emulators.${index}.executablePath` as const}
-                      render={({ field, fieldState: { error } }) => (
-                        <FormItem>
-                          <FormControl>
-                            <div className="flex items-center pl-3">
-                              <Button
-                                size="icon"
-                                className="p-2 h-min w-min"
-                                variant="secondary"
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-
-                                  try {
-                                    const result = await open({
-                                      title: "Select Emulator Executable",
-                                      multiple: false,
-                                      directory: false,
-                                    });
-
-                                    if (result) {
-                                      field.onChange(result);
-                                    }
-                                  } catch (e) {
-                                    console.error(e);
-                                  }
-                                }}
-                              >
-                                <FolderOpenIcon className="w-[1rem] h-[1rem]" />
-                              </Button>
-                              <Input
-                                {...field}
-                                placeholder="Enter path to executable"
-                                className={cn(
-                                  error
-                                    ? "border-solid border-2 border-destructive"
-                                    : "border-none",
-                                )}
-                              />
-                            </div>
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <DeleteButton emulator={change} />
-                  </div>
-                );
-              })}
-            </form>
-          </Form>
-        </main>
-      </ScrollArea>
+                  <DeleteButton emulator={change} />
+                </div>
+              );
+            })}
+          </form>
+        </Form>
+      </main>
 
       <DialogFooter className="border-none mt-8">
         <div className="flex justify-end col-span-4 gap-4">
           <DialogClose asChild>
-            <Button variant="secondary">Close</Button>
+            <Button variant="secondary" onClick={() => form.reset()}>
+              Close
+            </Button>
           </DialogClose>
 
           <Button
@@ -509,16 +511,16 @@ function DeleteButton(props: { emulator: Emulator }) {
   return (
     <Button
       size="icon"
-      className="text-destructive-text"
-      variant="ghost"
+      className="p-2 w-min h-min"
+      variant="destructive"
       disabled={isPending}
       type="button"
       onClick={() => {
         deleteEmulator({ ids: [emulator.id] });
       }}
     >
-      <XCircleIcon
-        className={cn("w-[1.2rem] h-[1.2rem]", isPending && "opacity-0")}
+      <TrashIcon
+        className={cn("w-[1rem] h-[1rem]", isPending && "opacity-0")}
       />
       <LoaderCircleIcon
         className={cn(

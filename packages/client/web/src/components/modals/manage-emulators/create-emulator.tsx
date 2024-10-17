@@ -18,12 +18,7 @@ import { useCreateEmulators } from "@/mutations/useCreateEmulators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import {
-  ChevronsUpDown,
-  FolderOpenIcon,
-  LoaderCircleIcon,
-  PlusCircleIcon,
-} from "lucide-react";
+import { ChevronsUpDown, LoaderCircleIcon, PlusCircleIcon } from "lucide-react";
 import {
   emulatorSchema,
   EmulatorSchema,
@@ -33,13 +28,9 @@ import {
 } from ".";
 import { useCallback } from "react";
 import { SaveStrategy } from "@/generated/retrom/models/emulators";
-import { useConfig } from "@/providers/config";
-import { open } from "@tauri-apps/plugin-dialog";
 
 export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
   const { platforms } = props;
-  const configStore = useConfig();
-  const clientId = configStore((store) => store.config.clientInfo.id);
   const form = useForm<EmulatorSchema>({
     reValidateMode: "onChange",
     resolver: zodResolver(emulatorSchema),
@@ -47,34 +38,33 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
       name: "",
       supportedPlatforms: [],
       saveStrategy: undefined,
-      executablePath: "",
-      clientId,
     },
   });
 
-  const { mutate: createEmulators, isPending: creationPending } =
+  const { mutateAsync: createEmulators, isPending: createEmulatorsPending } =
     useCreateEmulators();
 
   const onCreationFormSubmit = useCallback(
-    (values: EmulatorSchema) => {
-      const emulator = { ...values, clientId };
-      createEmulators({
-        emulators: [emulator],
+    async (values: EmulatorSchema) => {
+      await createEmulators({
+        emulators: [values],
       });
 
       form.reset();
     },
-    [createEmulators, form, clientId],
+    [createEmulators, form],
   );
+
+  const pending = createEmulatorsPending;
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onCreationFormSubmit)}
         className={cn(
-          "grid col-span-6 grid-flow-col grid-cols-subgrid w-full",
+          "grid col-span-full grid-flow-col grid-cols-subgrid w-full",
           "[&_*]:ring-inset *:grid *:grid-rows-[auto_auto_1fr] *:grid-flow-row",
-          "*:space-y-0 [&_label]:p-2 *:border-b pb-1 border-b",
+          "border-b items-center",
         )}
       >
         <div></div>
@@ -208,68 +198,22 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="executablePath"
-          render={({ field, fieldState: { error } }) => (
-            <FormItem>
-              <FormControl>
-                <div className="flex items-center pl-3">
-                  <Button
-                    size="icon"
-                    className="p-2 h-min w-min"
-                    variant="secondary"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-
-                      const result = await open({
-                        title: "Select Emulator Executable",
-                        multiple: false,
-                        directory: false,
-                      });
-
-                      if (result) {
-                        field.onChange(result);
-                      }
-                    }}
-                  >
-                    <FolderOpenIcon className="w-[1rem] h-[1rem]" />
-                  </Button>
-                  <Input
-                    {...field}
-                    placeholder="Enter path to executable"
-                    className={cn(
-                      error
-                        ? "border-solid border-2 border-destructive"
-                        : "border-none",
-                    )}
-                  />
-                </div>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
         <div>
           <Button
             type="submit"
             size="icon"
-            variant="ghost"
-            disabled={creationPending}
+            className="p-2 w-min h-min"
+            disabled={pending}
           >
             <LoaderCircleIcon
               className={cn(
                 "animate-spin absolute",
-                !creationPending && "opacity-0",
+                !pending && "opacity-0",
                 "w-[1rem] h-[1rem]",
               )}
             />
             <PlusCircleIcon
-              className={cn(
-                creationPending && "opacity-0",
-                "w-[1.2rem] h-[1.2rem] text-gray-300",
-              )}
+              className={cn(pending && "opacity-0", "w-[1rem] h-[1rem]")}
             />
           </Button>
         </div>

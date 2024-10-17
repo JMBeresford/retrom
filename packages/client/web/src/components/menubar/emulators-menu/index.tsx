@@ -14,13 +14,13 @@ export function EmulatorsMenu() {
       </MenubarTrigger>
 
       <MenubarContent>
-        <MenubarItem>
+        <MenubarItem asChild>
           <Link search={{ manageEmulatorsModal: { open: true } }}>
             Manage Emulators
           </Link>
         </MenubarItem>
 
-        <MenubarItem>
+        <MenubarItem asChild>
           <Link search={{ manageEmulatorProfilesModal: { open: true } }}>
             Manage Profiles
           </Link>
