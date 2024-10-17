@@ -21,7 +21,6 @@ import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 import { Checkbox } from "../../ui/checkbox";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "@tanstack/react-router";
 
 type FormFieldRenderer = ({
@@ -137,14 +136,12 @@ export function ManualTab() {
       <div className="space-y-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleUpdate)}>
-            <ScrollArea className={cn("h-[60dvh] pr-4 relative")}>
-              <div className="my-4 flex flex-col gap-4 pb-8">
-                {Object.entries(fields).map(([key, FormFieldRenderer]) => (
-                  <FormFieldRenderer form={form} key={key} />
-                ))}
-              </div>
-              <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-background z-10" />
-            </ScrollArea>
+            <div className="my-4 flex flex-col gap-4 pb-8">
+              {Object.entries(fields).map(([key, FormFieldRenderer]) => (
+                <FormFieldRenderer form={form} key={key} />
+              ))}
+            </div>
+            <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-background z-10" />
 
             <DialogFooter>
               <div className="flex items-center justify-between gap-6 w-full mt-4">

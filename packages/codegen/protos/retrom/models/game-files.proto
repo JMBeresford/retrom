@@ -5,6 +5,8 @@ package retrom;
 import "google/protobuf/timestamp.proto";
 
 message GameFile {
+  reserved 2, 5;
+
   int32 id = 1;
   int64 byte_size = 3;
   string path = 4;

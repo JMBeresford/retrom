@@ -3,8 +3,8 @@ use std::{str::FromStr, sync::Mutex};
 use hyper::{client::HttpConnector, Client, Uri};
 use hyper_rustls::HttpsConnector;
 use retrom_codegen::retrom::{
-    game_service_client::GameServiceClient, metadata_service_client::MetadataServiceClient,
-    RetromClientConfig,
+    emulator_service_client::EmulatorServiceClient, game_service_client::GameServiceClient,
+    metadata_service_client::MetadataServiceClient, RetromClientConfig,
 };
 use tauri::{
     plugin::{Builder, TauriPlugin},
@@ -27,6 +27,7 @@ type MetadataClient = MetadataServiceClient<
 >;
 // type MetadataClient = MetadataServiceClient<Channel>;
 type GameClient = GameServiceClient<Channel>;
+type EmulatorClient = EmulatorServiceClient<Channel>;
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the launcher APIs.
 pub trait LauncherExt<R: Runtime> {
@@ -34,6 +35,7 @@ pub trait LauncherExt<R: Runtime> {
     fn get_service_host(&self) -> impl std::future::Future<Output = String>;
     fn get_metadata_client(&self) -> impl std::future::Future<Output = MetadataClient>;
     fn get_game_client(&self) -> impl std::future::Future<Output = GameClient>;
+    fn get_emulator_client(&self) -> impl std::future::Future<Output = EmulatorClient>;
 }
 
 impl<R: Runtime, T: Manager<R>> crate::LauncherExt<R> for T {
@@ -105,6 +107,24 @@ impl<R: Runtime, T: Manager<R>> crate::LauncherExt<R> for T {
 
         loop {
             match GameServiceClient::connect(host.clone()).await {
+                Ok(client) => {
+                    return client;
+                }
+                Err(_) => {
+                    tracing::warn!("Failed to connect to metadata service, retring");
+                    tokio::time::sleep(std::time::Duration::from_millis(sleep as u64)).await;
+                    sleep *= 1.2;
+                }
+            }
+        }
+    }
+
+    async fn get_emulator_client(&self) -> EmulatorClient {
+        let host = self.get_service_host().await;
+        let mut sleep = 100.0;
+
+        loop {
+            match EmulatorServiceClient::connect(host.clone()).await {
                 Ok(client) => {
                     return client;
                 }

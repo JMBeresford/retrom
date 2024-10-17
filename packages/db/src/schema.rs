@@ -39,8 +39,6 @@ diesel::table! {
         save_strategy -> Int4,
         created_at -> Nullable<Timestamptz>,
         updated_at -> Nullable<Timestamptz>,
-        client_id -> Int4,
-        executable_path -> Text,
     }
 }
 
@@ -112,6 +110,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    local_emulator_configs (id) {
+        id -> Int4,
+        emulator_id -> Int4,
+        client_id -> Int4,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
+        executable_path -> Text,
+        nickname -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
     platform_metadata (platform_id) {
         platform_id -> Int4,
         name -> Nullable<Text>,
@@ -148,11 +158,12 @@ diesel::joinable!(default_emulator_profiles -> clients (client_id));
 diesel::joinable!(default_emulator_profiles -> emulator_profiles (emulator_profile_id));
 diesel::joinable!(default_emulator_profiles -> platforms (platform_id));
 diesel::joinable!(emulator_profiles -> emulators (emulator_id));
-diesel::joinable!(emulators -> clients (client_id));
 diesel::joinable!(game_genre_maps -> game_genres (genre_id));
 diesel::joinable!(game_genre_maps -> games (game_id));
 diesel::joinable!(game_metadata -> games (game_id));
 diesel::joinable!(games -> platforms (platform_id));
+diesel::joinable!(local_emulator_configs -> clients (client_id));
+diesel::joinable!(local_emulator_configs -> emulators (emulator_id));
 diesel::joinable!(platform_metadata -> platforms (platform_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
@@ -165,6 +176,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     game_genres,
     game_metadata,
     games,
+    local_emulator_configs,
     platform_metadata,
     platforms,
     similar_game_maps,

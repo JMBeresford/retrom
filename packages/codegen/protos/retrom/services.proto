@@ -70,6 +70,11 @@ service EmulatorService {
   rpc GetDefaultEmulatorProfiles(GetDefaultEmulatorProfilesRequest) returns (GetDefaultEmulatorProfilesResponse);
   rpc UpdateDefaultEmulatorProfiles(UpdateDefaultEmulatorProfilesRequest) returns (UpdateDefaultEmulatorProfilesResponse);
   rpc DeleteDefaultEmulatorProfiles(DeleteDefaultEmulatorProfilesRequest) returns (DeleteDefaultEmulatorProfilesResponse);
+
+  rpc CreateLocalEmulatorConfigs(CreateLocalEmulatorConfigsRequest) returns (CreateLocalEmulatorConfigsResponse);
+  rpc GetLocalEmulatorConfigs(GetLocalEmulatorConfigsRequest) returns (GetLocalEmulatorConfigsResponse);
+  rpc UpdateLocalEmulatorConfigs(UpdateLocalEmulatorConfigsRequest) returns (UpdateLocalEmulatorConfigsResponse);
+  rpc DeleteLocalEmulatorConfigs(DeleteLocalEmulatorConfigsRequest) returns (DeleteLocalEmulatorConfigsResponse);
 }
 
 service JobService {
@@ -401,4 +406,37 @@ message GetJobSubscriptionRequest {
 
 message GetJobSubscriptionResponse {
   JobProgress job = 1;
+}
+
+message CreateLocalEmulatorConfigsRequest {
+  repeated NewLocalEmulatorConfig configs = 1;
+}
+
+message CreateLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs_created = 1;
+}
+
+message GetLocalEmulatorConfigsRequest {
+  repeated int32 emulator_ids = 1;
+  int32 client_id = 2;
+}
+
+message GetLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs = 1;
+}
+
+message UpdateLocalEmulatorConfigsRequest {
+  repeated UpdatedLocalEmulatorConfig configs = 1;
+}
+
+message UpdateLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs_updated = 1;
+}
+
+message DeleteLocalEmulatorConfigsRequest {
+  repeated int32 ids = 1;
+}
+
+message DeleteLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs_deleted = 1;
 }

@@ -49,7 +49,7 @@ export function ConfigProvider(props: PropsWithChildren) {
   return <context.Provider value={configStore}>{children}</context.Provider>;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components -- we need to export this hook
+ 
 export function useConfig() {
   const store = useContext(context);
 

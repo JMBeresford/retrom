@@ -22,7 +22,7 @@ export function RetromClientProvider(props: PropsWithChildren) {
   return <context.Provider value={client}>{children}</context.Provider>;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components -- we need to export this hook
+ 
 export function useRetromClient() {
   const client = useContext(context);
 
