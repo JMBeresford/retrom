@@ -40,23 +40,33 @@ pub async fn main() {
         .with_target(false)
         .with_ansi(true);
 
-    let log_file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open("retrom.log")
-        .unwrap();
-
-    let file_layer = tracing_subscriber::fmt::layer()
-        .json()
-        .with_writer(log_file);
-
-    tracing_subscriber::registry()
+    let registry = tracing_subscriber::registry()
         .with(env_filter)
-        .with(fmt_layer)
-        .with(file_layer)
-        .init();
+        .with(fmt_layer);
 
     tauri::Builder::default()
+        .setup(|app| {
+            let log_dir = app.path().app_log_dir().expect("failed to get log dir");
+
+            if !log_dir.exists() {
+                std::fs::create_dir_all(&log_dir).unwrap();
+            }
+
+            let log_file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(log_dir.join("retrom.log"))
+                .expect("failed to open log file");
+
+            let file_layer = tracing_subscriber::fmt::layer()
+                .json()
+                .with_writer(log_file);
+
+            registry.with(file_layer).init();
+
+            Ok(())
+        })
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             app.webview_windows()
