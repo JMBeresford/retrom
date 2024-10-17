@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use retrom_codegen::retrom::RetromClientConfig;
-use std::{str, sync::Mutex};
+use std::{fs::OpenOptions, str, sync::Mutex};
 use tauri::{AppHandle, Manager};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -40,9 +40,20 @@ pub async fn main() {
         .with_target(false)
         .with_ansi(true);
 
+    let log_file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open("retrom.log")
+        .unwrap();
+
+    let file_layer = tracing_subscriber::fmt::layer()
+        .json()
+        .with_writer(log_file);
+
     tracing_subscriber::registry()
         .with(env_filter)
         .with(fmt_layer)
+        .with(file_layer)
         .init();
 
     tauri::Builder::default()

@@ -1,3 +1,4 @@
 **/node_modules/**
 tauri.local.conf.json
+retrom.log
 
