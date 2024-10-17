@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.2.7](https://github.com/JMBeresford/retrom/compare/retrom-v0.2.6...retrom-v0.2.7) - 2024-10-17
+
+### Fixed
+- installed games filenames
+
+    Installing games now properly omit's any quotes that wrap the filename,
+    fixing the issue where games could not be installed on windows.
+
+    Additionally, filenames now no longer strip the file extension.
 ## [0.2.6](https://github.com/JMBeresford/retrom/compare/retrom-v0.2.5...retrom-v0.2.6) - 2024-10-17
 
 ### Fixed
