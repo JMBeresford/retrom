@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.3.0](https://github.com/JMBeresford/retrom/compare/retrom-v0.2.8...retrom-v0.3.0) - 2024-10-21
+
+### Added
+- [**breaking**] shared emulator profiles
+
+    Emulators are no longer scoped to a single client. Any per-client
+    configuration is now distinct from the emulators -- and, by extension,
+    their profiles -- themselves. This means that profiles can now be used
+    across clients!
 ## [0.2.8](https://github.com/JMBeresford/retrom/compare/retrom-v0.2.7...retrom-v0.2.8) - 2024-10-21
 
 ### Added
