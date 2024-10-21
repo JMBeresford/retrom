@@ -12,7 +12,9 @@ use tracing::{info, instrument};
 use crate::{desktop::GameProcess, LauncherExt, Result};
 
 #[command]
-#[instrument(skip_all)]
+#[instrument(skip_all, fields(
+    game_id = payload.game.as_ref().map(|game| game.id),
+    emulator_profile_id = payload.emulator_profile.as_ref().map(|profile| profile.id)))]
 pub(crate) async fn play_game<R: Runtime>(
     app: AppHandle<R>,
     payload: PlayGamePayload,
@@ -26,8 +28,10 @@ pub(crate) async fn play_game<R: Runtime>(
     };
 
     let game_id = game.id;
-    let profile = payload.emulator_profile.unwrap();
-    let emulator = payload.emulator.unwrap();
+    let profile = payload
+        .emulator_profile
+        .expect("No emulator profile provided");
+    let emulator = payload.emulator.expect("No emulator provided");
     let maybe_default_file = payload.file;
 
     let default_file_path = maybe_default_file
@@ -90,6 +94,11 @@ pub(crate) async fn play_game<R: Runtime>(
         None => return Err(crate::Error::FileNotFound(game_id)),
     };
 
+    let install_dir = match install_dir.canonicalize()?.to_str() {
+        Some(path) => path.to_string(),
+        None => return Err(crate::Error::FileNotFound(game_id)),
+    };
+
     let mut cmd = launcher.get_open_cmd(&emulator.executable_path);
 
     let args = if !profile.custom_args.is_empty() {
@@ -105,12 +114,13 @@ pub(crate) async fn play_game<R: Runtime>(
                 true => arg[1..arg.len() - 1].to_string(),
             })
             .map(|arg| arg.replace("{file}", &file_path))
+            .map(|arg| arg.replace("{install_dir}", &install_dir))
             .collect()
     } else {
         vec![file_path]
     };
 
-    info!("Args: {:?}", args);
+    info!("Args Constructed: {:?}", args);
 
     cmd.args(args);
 
@@ -152,7 +162,7 @@ pub(crate) async fn play_game<R: Runtime>(
 }
 
 #[command]
-#[instrument(skip_all)]
+#[instrument(skip_all, fields(game_id = payload.game.as_ref().map(|game| game.id)))]
 pub(crate) async fn stop_game<R: Runtime>(
     app: AppHandle<R>,
     payload: StopGamePayload,

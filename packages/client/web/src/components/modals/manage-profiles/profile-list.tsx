@@ -63,7 +63,10 @@ export function ProfileList(props: Props) {
 
           <TableBody>
             {profiles.map((profile) => (
-              <TableRow key={profile.id}>
+              <TableRow
+                key={profile.id}
+                className="border-none even:bg-secondary/20"
+              >
                 <TableCell className="w-auto min-w-[100px]">
                   {profile.name}
                 </TableCell>

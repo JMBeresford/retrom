@@ -51,9 +51,11 @@ const formSchema = z.object({
       (args) =>
         args.length === 0 ||
         args.includes("{file}") ||
-        args.includes('"{file}"'),
+        args.includes('"{file}"') ||
+        args.includes("{install_dir}") ||
+        args.includes('"{install_dir}"'),
       {
-        message: "Custom arguments must include {file}",
+        message: "Custom arguments must include {file} or {install_dir}",
       },
     ),
 }) satisfies InferSchema<Omit<NewEmulatorProfile, "emulatorId">>;
@@ -78,8 +80,8 @@ export function EditProfileDialog(props: Props) {
     useUpdateEmulatorProfiles();
 
   const pending = creationStatus === "pending" || updateStatus === "pending";
-  const canSubmit =
-    form.formState.isDirty && form.formState.isValid && !pending;
+  const { isDirty } = form.formState;
+  const canSubmit = isDirty && !pending;
 
   const handleSubmit = useCallback(
     (values: FormSchema) => {
