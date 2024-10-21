@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.2.8](https://github.com/JMBeresford/retrom/compare/retrom-v0.2.7...retrom-v0.2.8) - 2024-10-21
+
+### Added
+- `install_dir` macro for custom args
+
+    Now you can use the `install_dir` macro in your profile's custom args to
+    specify the installation directory for the game. This will allow you
+    launch multi-file games with emulators that require a directory of
+    files ( e.g. RPCS3 ).
 ## [0.2.7](https://github.com/JMBeresford/retrom/compare/retrom-v0.2.6...retrom-v0.2.7) - 2024-10-17
 
 ### Fixed
