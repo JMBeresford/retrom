@@ -104,9 +104,9 @@ jobs:
       matrix:
         include:
           - registry: ghcr.io
-            image_name: ghcr.io/${{ env.IMAGE_NAME }}
+            image_name: ghcr.io/jmberesford/retrom-service
           - registry: docker.io
-            image_name: ${{ env.IMAGE_NAME }}
+            image_name: jmberesford/retrom-service
       
     needs:
       - build-images
