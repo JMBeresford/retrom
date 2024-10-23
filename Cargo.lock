@@ -280,6 +280,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "async_zip"
+version = "0.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00b9f7252833d5ed4b00aa9604b563529dd5e11de9c23615de2dcdf91eb87b52"
+dependencies = [
+ "async-compression",
+ "chrono",
+ "crc32fast",
+ "futures-lite",
+ "pin-project",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
 name = "atk"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -645,10 +661,8 @@ checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
- "js-sys",
  "num-traits",
  "serde",
- "wasm-bindgen",
  "windows-targets 0.52.6",
 ]
 
@@ -4170,6 +4184,7 @@ dependencies = [
 name = "retrom-service"
 version = "0.3.0"
 dependencies = [
+ "async_zip",
  "bigdecimal",
  "bytes",
  "config",
@@ -4208,8 +4223,8 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid",
+ "walkdir",
  "warp",
- "zipit",
 ]
 
 [[package]]
@@ -7024,17 +7039,6 @@ dependencies = [
  "indexmap 2.5.0",
  "memchr",
  "thiserror",
-]
-
-[[package]]
-name = "zipit"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f5715147b4b196369cbe37539dfc2f200c48195d4f20113e013950f381976a9"
-dependencies = [
- "chrono",
- "crc32fast",
- "tokio",
 ]
 
 [[package]]

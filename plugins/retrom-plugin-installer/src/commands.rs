@@ -1,7 +1,7 @@
-use std::sync::Mutex;
+use std::{path::PathBuf, sync::Mutex};
 
 use futures::TryStreamExt;
-use reqwest::header::{ACCESS_CONTROL_ALLOW_ORIGIN, CONTENT_DISPOSITION};
+use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{InstallGamePayload, RetromClientConfig, UninstallGamePayload};
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::io::AsyncWriteExt;
@@ -83,19 +83,22 @@ pub async fn install_game<R: Runtime>(
 
             info!("Downloading file: {:?}", res);
 
-            let filename = res
-                .headers()
-                .get(CONTENT_DISPOSITION)
-                .unwrap()
-                .to_str()?
-                .split("filename=")
-                .last()
-                .unwrap_or("unknown")
-                .replace("\"", "");
+            let game_path = PathBuf::from(game.path);
+            let prefix = match game_path.is_dir() {
+                true => game_path.clone(),
+                false => game_path.clone().parent().unwrap().to_path_buf(),
+            };
+
+            let file_path = PathBuf::from(file.path);
+            let relative_file = file_path
+                .strip_prefix(prefix)
+                .expect("could not strip file prefix");
+
+            let absolute_file = output_directory.join(relative_file);
+            std::fs::create_dir_all(absolute_file.parent().unwrap())?;
 
             let installer = app_handle.installer();
-            let mut outfile = tokio::fs::File::create(output_directory.join(filename)).await?;
-
+            let mut outfile = tokio::fs::File::create(absolute_file).await?;
             let mut stream = res.bytes_stream();
 
             loop {
