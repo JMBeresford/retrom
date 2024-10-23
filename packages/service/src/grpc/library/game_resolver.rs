@@ -6,6 +6,7 @@ use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::{Game, GameFile, NewGame, NewGameFile, StorageType};
 use retrom_db::{schema, Pool};
 use tracing::warn;
+use walkdir::WalkDir;
 
 use super::{
     content_resolver::{ResolverError, Result},
@@ -60,13 +61,19 @@ impl ResolvedGame {
         let path = PathBuf::from(&self.row.path);
         let game_id = Some(self.row.id);
 
-        let dir_nodes = path.read_dir()?.filter_map(|entry| match entry {
-            Ok(entry) => Some(entry.path()),
-            Err(why) => {
-                warn!("Could not read game file node: {:?}", why);
-                None
-            }
-        });
+        let dir_nodes = WalkDir::new(path)
+            .into_iter()
+            .filter_map(|entry| match entry {
+                Ok(entry) => {
+                    let path = entry.path();
+                    if path.is_file() {
+                        Some(path.to_path_buf())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            });
 
         let new_game_files: Vec<NewGameFile> = dir_nodes
             .map(|p| {

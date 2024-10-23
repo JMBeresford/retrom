@@ -203,7 +203,7 @@ export function GameFiles() {
                     <div className="flex items-center">
                       <span className="overflow-ellipsis overflow-hidden relative">
                         <span className="whitespace-nowrap">
-                          {getFileName(file.path)}
+                          {file.path.replace(game.path + "/", "")}
                         </span>
                       </span>
                       {file.id === game.defaultFileId ? (
