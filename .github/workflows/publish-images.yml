@@ -104,12 +104,8 @@ jobs:
       matrix:
         include:
           - registry: ghcr.io
-            username: ${{ github.actor }}
-            password: ${{ secrets.GITHUB_TOKEN }}
             image_name: ghcr.io/${{ env.IMAGE_NAME }}
           - registry: docker.io
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_PASSWORD }}
             image_name: ${{ env.IMAGE_NAME }}
       
     needs:
@@ -138,8 +134,8 @@ jobs:
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
           registry: ${{ matrix.registry }}
-          username: ${{ matrix.username }}
-          password: ${{ matrix.password }}
+          username: ${{ matrix.registry == ghcr.io && github.actor || secrets.DOCKERHUB_USERNAME }}
+          password: ${{ matrix.registry == ghcr.io && secrets.GITHUB_TOKEN || secrets.DOCKERHUB_PASSWORD }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
