@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.3.1](https://github.com/JMBeresford/retrom/compare/retrom-v0.3.0...retrom-v0.3.1) - 2024-10-24
+
+### Fixes
+- sub-directories in game files
+
+    Any sub-directories in a MultiFileGame's directory is now properly
+    scanned and added to the game's file list. Installing such games from
+    the desktop client now works as expected, as does downloading them from
+    the web client.
+- UI Tweaks
+
+    Updated changlog to look _more prettier_
+
+### New
+- allow deleted games to be re-imported
+
+    Now when deleting a game, blacklisting it from future library scans is
+    optional. This is useful for games that have malformed data and need to
+    be reset completely.
 ## [0.3.0](https://github.com/JMBeresford/retrom/compare/retrom-v0.2.8...retrom-v0.3.0) - 2024-10-21
 
 ### Added
