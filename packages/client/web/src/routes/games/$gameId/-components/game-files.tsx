@@ -48,6 +48,7 @@ export function GameFiles() {
     useUpdateGameFiles();
 
   const [deleteFromDisk, setDeleteFromDisk] = useState(false);
+  const [blacklistEntries, setBlacklistEntries] = useState(false);
   const [selectedFile, setSelectedFile] = useState("");
   const [renameValue, setRenameValue] = useState("");
 
@@ -61,6 +62,7 @@ export function GameFiles() {
     try {
       const res = await deleteGameFiles({
         ids: [file.id],
+        blacklistEntries,
         deleteFromDisk,
       });
 
@@ -82,7 +84,14 @@ export function GameFiles() {
         variant: "destructive",
       });
     }
-  }, [deleteGameFiles, toast, selectedFile, gameFiles, deleteFromDisk]);
+  }, [
+    deleteGameFiles,
+    toast,
+    selectedFile,
+    gameFiles,
+    deleteFromDisk,
+    blacklistEntries,
+  ]);
 
   const handleMakeDefault = useCallback(async () => {
     if (!selectedFile) return;
@@ -224,7 +233,7 @@ export function GameFiles() {
               </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent>
+            <DropdownMenuContent className="z-[10]">
               <DropdownMenuGroup>
                 <DropdownMenuItem onClick={handleMakeDefault}>
                   Set as default
@@ -312,41 +321,62 @@ export function GameFiles() {
                       the file moving forward.
                     </p>
 
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-top gap-2">
+                        <Checkbox
+                          id="delete-from-disk"
+                          checked={deleteFromDisk}
+                          onCheckedChange={(event) =>
+                            setDeleteFromDisk(!!event)
+                          }
+                        />
+
+                        <div className="grid gap-1 5 leading-none">
+                          <label htmlFor="delete-from-disk">
+                            Delete from disk
+                          </label>
+
+                          <p className="text-sm text-muted-foreground">
+                            This will alter the file system
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-top gap-2">
+                        <Checkbox
+                          id="blacklist-entries"
+                          checked={blacklistEntries}
+                          onCheckedChange={(event) =>
+                            setBlacklistEntries(!!event)
+                          }
+                        />
+
+                        <div className="grid gap-1 5 leading-none">
+                          <label htmlFor="blacklist-entries">
+                            Blacklist entry
+                          </label>
+
+                          <p className="text-sm text-muted-foreground max-w-[45ch]">
+                            Enabling this will prevent the file from being
+                            re-imported in any future library scans
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
                     <DialogFooter>
-                      <div className="flex items-center justify-between gap-6 w-full">
-                        <div className="flex items-top gap-2">
-                          <Checkbox
-                            id="delete-from-disk"
-                            checked={deleteFromDisk}
-                            onCheckedChange={(event) =>
-                              setDeleteFromDisk(!!event)
-                            }
-                          />
+                      <div className="flex gap-2">
+                        <DialogClose asChild>
+                          <Button disabled={pending}>Cancel</Button>
+                        </DialogClose>
 
-                          <div className="grid gap-1 5 leading-none">
-                            <label htmlFor="delete-from-disk">
-                              Delete from disk
-                            </label>
-
-                            <p className="text-sm text-muted-foreground">
-                              This will alter the file system
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <DialogClose asChild>
-                            <Button disabled={pending}>Cancel</Button>
-                          </DialogClose>
-
-                          <Button
-                            onClick={handleDelete}
-                            variant="destructive"
-                            disabled={pending}
-                          >
-                            Delete
-                          </Button>
-                        </div>
+                        <Button
+                          onClick={handleDelete}
+                          variant="destructive"
+                          disabled={pending}
+                        >
+                          Delete
+                        </Button>
                       </div>
                     </DialogFooter>
                   </DialogContent>
