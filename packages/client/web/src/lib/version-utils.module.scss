@@ -29,20 +29,19 @@
   h4,
   h5,
   h6 {
-    @apply font-black mb-2;
+    @apply font-black text-2xl mb-2 uppercase text-muted-foreground/50;
   }
 
   ul {
-    list-style: disc;
-    list-style-position: inside;
+    list-style: none;
 
     li {
-      *:first-child {
-        @apply font-bold mb-1;
+      > *:first-child {
+        @apply font-bold mb-1 relative w-fit;
       }
 
-      *:not(:first-child) {
-        @apply pl-4;
+      > *:not(:first-child) {
+        @apply text-sm;
       }
     }
   }
