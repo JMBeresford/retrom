@@ -105,14 +105,27 @@ impl GameService for GameServiceHandlers {
     ) -> Result<Response<DeleteGamesResponse>, Status> {
         let request = request.into_inner();
         let delete_from_disk = request.delete_from_disk;
+        let blacklist_entries = request.blacklist_entries;
 
         let mut conn = match self.db_pool.get().await {
             Ok(conn) => conn,
             Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
         };
 
-        let games_deleted: Vec<Game> = match delete_from_disk {
-            false => {
+        let games_deleted: Vec<Game> = match blacklist_entries {
+            true => {
+                diesel::update(
+                    schema::game_files::table
+                        .filter(schema::game_files::game_id.eq_any(&request.ids)),
+                )
+                .set((
+                    schema::game_files::is_deleted.eq(true),
+                    schema::game_files::deleted_at.eq(diesel::dsl::now),
+                ))
+                .execute(&mut conn)
+                .await
+                .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
+
                 diesel::update(schema::games::table.filter(schema::games::id.eq_any(&request.ids)))
                     .set((
                         schema::games::is_deleted.eq(true),
@@ -122,31 +135,42 @@ impl GameService for GameServiceHandlers {
                     .await
                     .map_err(|why| Status::new(Code::Internal, why.to_string()))?
             }
-            true => {
-                let id = request.ids.as_slice().first();
-
-                if let Some(id) = id {
-                    let game: Game = schema::games::table
-                        .find(id)
-                        .first(&mut conn)
-                        .await
-                        .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-                    let path = PathBuf::from(&game.path);
-
-                    if path.exists() {
-                        if let Err(why) = tokio::fs::remove_dir_all(&path).await {
-                            tracing::error!("Failed to delete game {} from disk: {}", id, why);
-                        }
-                    }
-                }
-
+            false => {
                 diesel::delete(schema::games::table.filter(schema::games::id.eq_any(&request.ids)))
                     .get_results(&mut conn)
                     .await
                     .map_err(|why| Status::new(Code::Internal, why.to_string()))?
             }
         };
+
+        if delete_from_disk {
+            for game in &games_deleted {
+                let path = PathBuf::from(&game.path);
+
+                if path.exists() {
+                    match path.is_dir() {
+                        true => {
+                            if let Err(why) = tokio::fs::remove_dir_all(&path).await {
+                                tracing::error!(
+                                    "Failed to delete game {} from disk: {}",
+                                    game.id,
+                                    why
+                                );
+                            }
+                        }
+                        false => {
+                            if let Err(why) = tokio::fs::remove_file(&path).await {
+                                tracing::error!(
+                                    "Failed to delete game {} from disk: {}",
+                                    game.id,
+                                    why
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         let response = DeleteGamesResponse { games_deleted };
 
@@ -176,7 +200,7 @@ impl GameService for GameServiceHandlers {
                     schema::games::table.find(id).first(&mut conn).await;
 
                 if let Ok(current_game) = current_game {
-                    let old_path = PathBuf::from(current_game.path);
+                    let old_game_path = PathBuf::from(current_game.path);
                     let mut new_game_path = PathBuf::from(updated_path);
                     let sanitized_fname = new_game_path
                         .file_name()
@@ -188,12 +212,12 @@ impl GameService for GameServiceHandlers {
                         game.path = Some(new_game_path.to_str().unwrap().to_string());
                     }
 
-                    let is_rename = old_path.file_name() != new_game_path.file_name();
-                    let can_rename = old_path.exists() && !new_game_path.exists();
-                    let paths_safe = old_path.parent() == new_game_path.parent();
+                    let is_rename = old_game_path.file_name() != new_game_path.file_name();
+                    let can_rename = old_game_path.exists() && !new_game_path.exists();
+                    let paths_safe = old_game_path.parent() == new_game_path.parent();
 
                     if is_rename && can_rename && paths_safe {
-                        if let Err(why) = tokio::fs::rename(&old_path, &new_game_path).await {
+                        if let Err(why) = tokio::fs::rename(&old_game_path, &new_game_path).await {
                             tracing::error!("Failed to rename file: {}", why);
 
                             continue;
@@ -208,12 +232,12 @@ impl GameService for GameServiceHandlers {
                         let storage_type = StorageType::try_from(current_game.storage_type).ok();
 
                         for game_file in game_files {
+                            let old_game_path = old_game_path.clone();
                             let old_file_path = PathBuf::from(game_file.path);
                             let new_file_path = match storage_type {
                                 Some(StorageType::SingleFileGame) => new_game_path.clone(),
-                                Some(StorageType::MultiFileGame) => {
-                                    new_game_path.join(old_file_path.file_name().unwrap())
-                                }
+                                Some(StorageType::MultiFileGame) => new_game_path
+                                    .join(old_file_path.strip_prefix(old_game_path).unwrap()),
                                 None => {
                                     tracing::error!("Storage type not found for game {}", game.id);
 
@@ -273,39 +297,15 @@ impl GameService for GameServiceHandlers {
     ) -> Result<Response<retrom::DeleteGameFilesResponse>, Status> {
         let request = request.into_inner();
         let delete_from_disk = request.delete_from_disk;
+        let blacklist_entries = request.blacklist_entries;
 
         let mut conn = match self.db_pool.get().await {
             Ok(conn) => conn,
             Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
         };
 
-        let game_files_deleted: Vec<GameFile> = match delete_from_disk {
-            true => {
-                let current_files: Vec<(String, i32)> = schema::game_files::table
-                    .filter(schema::game_files::id.eq_any(&request.ids))
-                    .select((schema::game_files::path, schema::game_files::id))
-                    .load::<(String, i32)>(&mut conn)
-                    .await
-                    .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-                for (path, id) in current_files {
-                    let path = PathBuf::from(path);
-
-                    if path.exists() {
-                        if let Err(why) = tokio::fs::remove_file(&path).await {
-                            tracing::error!("Failed to delete file {} from disk: {}", id, why);
-                        }
-                    }
-                }
-
-                diesel::delete(
-                    schema::game_files::table.filter(schema::game_files::id.eq_any(&request.ids)),
-                )
-                .get_results(&mut conn)
-                .await
-                .map_err(|why| Status::new(Code::Internal, why.to_string()))?
-            }
-            false => diesel::update(schema::game_files::table)
+        let game_files_deleted: Vec<GameFile> = match blacklist_entries {
+            true => diesel::update(schema::game_files::table)
                 .filter(schema::game_files::id.eq_any(&request.ids))
                 .set((
                     schema::game_files::is_deleted.eq(true),
@@ -314,7 +314,42 @@ impl GameService for GameServiceHandlers {
                 .get_results(&mut conn)
                 .await
                 .map_err(|why| Status::new(Code::Internal, why.to_string()))?,
+            false => diesel::delete(
+                schema::game_files::table.filter(schema::game_files::id.eq_any(&request.ids)),
+            )
+            .get_results(&mut conn)
+            .await
+            .map_err(|why| Status::new(Code::Internal, why.to_string()))?,
         };
+
+        if delete_from_disk {
+            for game_file in &game_files_deleted {
+                let path = PathBuf::from(&game_file.path);
+
+                if path.exists() {
+                    match path.is_dir() {
+                        true => {
+                            if let Err(why) = tokio::fs::remove_dir_all(&path).await {
+                                tracing::error!(
+                                    "Failed to delete game sub-directory {} from disk: {}",
+                                    game_file.id,
+                                    why
+                                );
+                            }
+                        }
+                        false => {
+                            if let Err(why) = tokio::fs::remove_file(&path).await {
+                                tracing::error!(
+                                    "Failed to delete game file {} from disk: {}",
+                                    game_file.id,
+                                    why
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         let response = retrom::DeleteGameFilesResponse { game_files_deleted };
 

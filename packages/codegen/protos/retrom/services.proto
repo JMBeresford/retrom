@@ -217,6 +217,7 @@ message DeleteLibraryResponse {}
 message DeletePlatformsRequest {
   repeated int32 ids = 1;
   bool delete_from_disk = 2;
+  bool blacklist_entries = 3;
 }
 
 message DeletePlatformsResponse {
@@ -234,6 +235,7 @@ message UpdatePlatformsResponse {
 message DeleteGamesRequest {
   repeated int32 ids = 1;
   bool delete_from_disk = 2;
+  bool blacklist_entries = 3;
 }
 
 message DeleteGamesResponse {
@@ -380,6 +382,7 @@ message DeleteDefaultEmulatorProfilesResponse {
 message DeleteGameFilesRequest {
   repeated int32 ids = 1;
   bool delete_from_disk = 2;
+  bool blacklist_entries = 3;
 }
 
 message DeleteGameFilesResponse {

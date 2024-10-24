@@ -23,6 +23,7 @@ export function DeleteGameModal() {
   const { toast } = useToast();
   const name = metadata?.name || getFileStub(game.path);
   const [deleteFromDisk, setDeleteFromDisk] = useState(false);
+  const [blacklistEntries, setBlacklistEntries] = useState(false);
   const { deleteGameModal } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
@@ -30,7 +31,11 @@ export function DeleteGameModal() {
 
   const handleDelete = useCallback(async () => {
     try {
-      const res = await deleteGame({ ids: [game.id], deleteFromDisk });
+      const res = await deleteGame({
+        ids: [game.id],
+        deleteFromDisk,
+        blacklistEntries,
+      });
 
       if (!res.gamesDeleted.length) {
         throw new Error("Failed to delete game");
@@ -40,7 +45,7 @@ export function DeleteGameModal() {
         title: "Failed to delete game",
       });
     }
-  }, [deleteGame, game.id, deleteFromDisk, toast]);
+  }, [deleteGame, game.id, deleteFromDisk, blacklistEntries, toast]);
 
   return (
     <Dialog
@@ -67,43 +72,60 @@ export function DeleteGameModal() {
           is, but Retrom will ignore the game&apos;s directory moving forward.
         </p>
 
+        <div className="flex flex-col gap-4">
+          <div className="flex items-top gap-2">
+            <Checkbox
+              id="delete-from-disk"
+              checked={deleteFromDisk}
+              onCheckedChange={(event) => setDeleteFromDisk(!!event)}
+            />
+
+            <div className="grid gap-1 5 leading-none">
+              <label htmlFor="delete-from-disk">Delete from disk</label>
+
+              <p className="text-sm text-muted-foreground">
+                This will alter the the file system
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-top gap-2">
+            <Checkbox
+              id="blacklist-entries"
+              checked={blacklistEntries}
+              onCheckedChange={(event) => setBlacklistEntries(!!event)}
+            />
+
+            <div className="grid gap-1 5 leading-none">
+              <label htmlFor="blacklist-entries">Blacklist entries</label>
+
+              <p className="text-sm text-muted-foreground max-w-[45ch]">
+                Enabling this will prevent the game and its files from being
+                re-imported in any future library scans
+              </p>
+            </div>
+          </div>
+        </div>
+
         <DialogFooter>
-          <div className="flex items-center justify-between gap-6 w-full">
-            <div className="flex items-top gap-2">
-              <Checkbox
-                id="delete-from-disk"
-                checked={deleteFromDisk}
-                onCheckedChange={(event) => setDeleteFromDisk(!!event)}
+          <div className="flex gap-2">
+            <DialogClose asChild>
+              <Button>Cancel</Button>
+            </DialogClose>
+
+            <Button
+              className="relative"
+              variant="destructive"
+              onClick={handleDelete}
+            >
+              <LoaderCircleIcon
+                className={cn(
+                  "animate-spin absolute",
+                  !isPending && "opacity-0",
+                )}
               />
-
-              <div className="grid gap-1 5 leading-none">
-                <label htmlFor="delete-from-disk">Delete from disk</label>
-
-                <p className="text-sm text-muted-foreground">
-                  This will alter the the file system
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <DialogClose asChild>
-                <Button>Cancel</Button>
-              </DialogClose>
-
-              <Button
-                className="relative"
-                variant="destructive"
-                onClick={handleDelete}
-              >
-                <LoaderCircleIcon
-                  className={cn(
-                    "animate-spin absolute",
-                    !isPending && "opacity-0",
-                  )}
-                />
-                <p className={cn(isPending && "opacity-0")}>Delete</p>
-              </Button>
-            </div>
+              <p className={cn(isPending && "opacity-0")}>Delete</p>
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>

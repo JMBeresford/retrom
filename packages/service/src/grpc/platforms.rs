@@ -166,9 +166,10 @@ impl PlatformService for PlatformServiceHandlers {
                                 .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
 
                             for game_file in game_files {
+                                let old_game_path = old_game_path.clone();
                                 let old_file_path = PathBuf::from(game_file.path);
-                                let new_file_path =
-                                    new_game_path.join(old_file_path.file_name().unwrap());
+                                let new_file_path = new_game_path
+                                    .join(old_file_path.strip_prefix(old_game_path).unwrap());
 
                                 if !new_file_path.exists() {
                                     tracing::error!(
@@ -222,30 +223,67 @@ impl PlatformService for PlatformServiceHandlers {
     ) -> Result<Response<DeletePlatformsResponse>, Status> {
         let request = request.into_inner();
         let delete_from_disk = request.delete_from_disk;
+        let blacklist_entries = request.blacklist_entries;
 
         let mut conn = match self.db_pool.get().await {
             Ok(conn) => conn,
             Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
         };
 
-        let platforms_deleted: Vec<retrom::Platform> = match delete_from_disk {
-            false => diesel::update(
-                schema::platforms::table.filter(schema::platforms::id.eq_any(&request.ids)),
-            )
-            .set((
-                schema::platforms::path.eq("deleted"),
-                schema::platforms::updated_at.eq(diesel::dsl::now),
-            ))
-            .get_results(&mut conn)
-            .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?,
-            true => diesel::delete(
+        let platforms_deleted: Vec<retrom::Platform> = match blacklist_entries {
+            true => {
+                let games_deleted = diesel::update(
+                    schema::games::table.filter(schema::games::platform_id.eq_any(&request.ids)),
+                )
+                .set((
+                    schema::games::is_deleted.eq(true),
+                    schema::games::deleted_at.eq(diesel::dsl::now),
+                ))
+                .get_results::<retrom::Game>(&mut conn)
+                .await
+                .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
+
+                diesel::update(schema::game_files::table.filter(
+                    schema::game_files::game_id.eq_any(games_deleted.iter().map(|g| g.id)),
+                ))
+                .set((
+                    schema::game_files::is_deleted.eq(true),
+                    schema::game_files::deleted_at.eq(diesel::dsl::now),
+                ))
+                .execute(&mut conn)
+                .await
+                .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
+
+                diesel::update(
+                    schema::platforms::table.filter(schema::platforms::id.eq_any(&request.ids)),
+                )
+                .set((
+                    schema::platforms::is_deleted.eq(true),
+                    schema::platforms::updated_at.eq(diesel::dsl::now),
+                ))
+                .get_results(&mut conn)
+                .await
+                .map_err(|why| Status::new(Code::Internal, why.to_string()))?
+            }
+            false => diesel::delete(
                 schema::platforms::table.filter(schema::platforms::id.eq_any(&request.ids)),
             )
             .get_results(&mut conn)
             .await
             .map_err(|why| Status::new(Code::Internal, why.to_string()))?,
         };
+
+        if delete_from_disk {
+            for platform in &platforms_deleted {
+                let platform_path = PathBuf::from(&platform.path);
+
+                if platform_path.exists() {
+                    if let Err(why) = tokio::fs::remove_dir_all(&platform_path).await {
+                        tracing::error!("Failed to delete platform directory: {}", why);
+                    }
+                }
+            }
+        }
 
         let response = DeletePlatformsResponse { platforms_deleted };
 
