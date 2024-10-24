@@ -66,7 +66,7 @@ export function Changelog(props: { update: Update }) {
 
   return (
     <div className="py-2">
-      <ScrollArea className="h-full max-h-[65dvh] p-2 border bg-muted rounded">
+      <ScrollArea className="h-full max-h-[65dvh] rounded">
         {body ? (
           <Markdown className={classes.markdown}>{body}</Markdown>
         ) : (

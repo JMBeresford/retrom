@@ -25,6 +25,7 @@ import { Route as RootRoute } from "@/routes/__root";
 import { useNavigate } from "@tanstack/react-router";
 import { Version } from "@/generated/retrom/server/server-info";
 import { Update } from "@tauri-apps/plugin-updater";
+import { Separator } from "@/components/ui/separator";
 
 type Progress = {
   downloaded: number;
@@ -148,10 +149,11 @@ function InnerContent(props: { clientVersion: Version; update?: Update }) {
     newVersion && update ? (
       <>
         <h3>
-          A new version of Retrom is available.{" "}
+          A new version of Retrom is available:{" "}
           <Code>{`${versionToString(clientVersion)} -> ${versionToString(newVersion)}`}</Code>
         </h3>
 
+        <Separator />
         <Changelog update={update} />
       </>
     ) : (
@@ -165,13 +167,17 @@ function InnerContent(props: { clientVersion: Version; update?: Update }) {
       <Content />
 
       {breakingChange ? (
-        <div className="flex gap-2 my-2">
-          <AlertCircle className="text-destructive-text" />
-          <p className="text-muted-fo">
-            This is a breaking change. Please ensure your server is also
-            up-to-date once you update the client or you will encounter issues.
-          </p>
-        </div>
+        <>
+          <Separator />
+          <div className="flex gap-2 my-2">
+            <AlertCircle className="text-destructive-text" />
+            <p>
+              This is a breaking change. Please ensure your server is also
+              up-to-date once you update the client or you will encounter
+              issues.
+            </p>
+          </div>
+        </>
       ) : (
         <></>
       )}
