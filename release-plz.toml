@@ -10,7 +10,11 @@ changelog_path = "./CHANGELOG.md"
 [[package]]
 name = "retrom-service"
 changelog_update = true
-changelog_include = ['retrom-client']
+changelog_include = [
+  'retrom-client',
+  'retrom-plugin-installer',
+  'retrom-plugin-launcher',
+]
 git_release_enable = true
 git_tag_enable = true
 git_release_name = "retrom-v{{ version }}"
