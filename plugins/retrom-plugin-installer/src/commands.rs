@@ -2,7 +2,9 @@ use std::{path::PathBuf, sync::Mutex};
 
 use futures::TryStreamExt;
 use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
-use retrom_codegen::retrom::{InstallGamePayload, RetromClientConfig, UninstallGamePayload};
+use retrom_codegen::retrom::{
+    InstallGamePayload, RetromClientConfig, StorageType, UninstallGamePayload,
+};
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::io::AsyncWriteExt;
 use tracing::{info, instrument};
@@ -83,15 +85,15 @@ pub async fn install_game<R: Runtime>(
 
             info!("Downloading file: {:?}", res);
 
-            let game_path = PathBuf::from(game.path);
-            let prefix = match game_path.is_dir() {
-                true => game_path.clone(),
-                false => game_path.clone().parent().unwrap().to_path_buf(),
+            let game_path = PathBuf::from(&game.path);
+            let prefix = match game.storage_type() {
+                StorageType::MultiFileGame => game_path.clone(),
+                StorageType::SingleFileGame => game_path.clone().parent().unwrap().to_path_buf(),
             };
 
             let file_path = PathBuf::from(file.path);
             let relative_file = file_path
-                .strip_prefix(prefix)
+                .strip_prefix(&prefix)
                 .expect("could not strip file prefix");
 
             let absolute_file = output_directory.join(relative_file);
