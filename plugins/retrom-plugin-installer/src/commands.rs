@@ -1,9 +1,9 @@
-use std::{path::PathBuf, sync::Mutex};
+use std::{collections::HashMap, path::PathBuf, sync::Mutex};
 
 use futures::TryStreamExt;
 use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{
-    InstallGamePayload, RetromClientConfig, StorageType, UninstallGamePayload,
+    InstallGamePayload, InstallationState, RetromClientConfig, StorageType, UninstallGamePayload,
 };
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::io::AsyncWriteExt;
@@ -158,4 +158,41 @@ pub async fn get_game_installation_status<R: Runtime>(
 ) -> i32 {
     let installer = app_handle.installer();
     installer.get_game_installation_status(game_id).await.into()
+}
+
+#[instrument(skip(app_handle))]
+#[tauri::command]
+pub async fn get_installation_state<R: Runtime>(app_handle: AppHandle<R>) -> InstallationState {
+    let installer = app_handle.installer();
+    let mut installation_state: HashMap<i32, i32> = HashMap::new();
+
+    let mut ids = Vec::new();
+
+    installer
+        .currently_installing
+        .read()
+        .await
+        .iter()
+        .for_each(|(id, _)| {
+            ids.push(*id);
+        });
+
+    installer
+        .installed_games
+        .read()
+        .await
+        .iter()
+        .for_each(|id| {
+            if !ids.contains(id) {
+                ids.push(*id);
+            }
+        });
+
+    for game_id in ids.iter() {
+        let status = installer.get_game_installation_status(*game_id).await;
+
+        installation_state.insert(*game_id, status.into());
+    }
+
+    InstallationState { installation_state }
 }

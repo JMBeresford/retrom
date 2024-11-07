@@ -23,6 +23,8 @@ import { Separator } from "../ui/separator";
 import { filterName, sortGames, sortPlatforms } from "./utils";
 import { ScrollArea } from "../ui/scroll-area";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
+import { useInstallationStateQuery } from "@/queries/useInstallationState";
+import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 
 export function SideBar() {
   const {
@@ -31,9 +33,11 @@ export function SideBar() {
     gameSortDirection,
     platformSortKey,
     platformSortDirection,
+    groupByInstallationStatus,
   } = useFilterAndSort();
 
   const path = useLocation({ select: (location) => location.pathname });
+  const { data: installationData } = useInstallationStateQuery();
 
   const { data: platformData, status: platformStatus } = usePlatforms({
     request: { withMetadata: true },
@@ -138,6 +142,28 @@ export function SideBar() {
                 sortGames(a, b, gameSortKey, gameSortDirection),
               );
 
+              if (groupByInstallationStatus) {
+                games.sort((a, b) => {
+                  const aInstalled =
+                    installationData?.installationState.get(a.id) ===
+                    InstallationStatus.INSTALLED;
+
+                  const bInstalled =
+                    installationData?.installationState.get(b.id) ===
+                    InstallationStatus.INSTALLED;
+
+                  if (aInstalled && !bInstalled) {
+                    return -1;
+                  }
+
+                  if (!aInstalled && bInstalled) {
+                    return 1;
+                  }
+
+                  return 0;
+                });
+              }
+
               const name =
                 platform.metadata?.name || getFileStub(platform.path);
 
@@ -160,6 +186,9 @@ export function SideBar() {
                     <ul>
                       {games.map((game) => {
                         const isCurrentGame = currentGame?.id === game.id;
+                        const isInstalled =
+                          installationData?.installationState.get(game.id) ===
+                          InstallationStatus.INSTALLED;
 
                         const gameMetadata = game.metadata;
 
@@ -176,25 +205,29 @@ export function SideBar() {
                             <TooltipTrigger asChild>
                               <li
                                 className={cn(
-                                  "pb-1 text-[1rem] text-muted-foreground/40 transition-all",
+                                  "relative before:z-[-1] before:duration-200",
+                                  "before:absolute before:inset-0 before:transition-opacity",
+                                  "before:bg-gradient-to-r before:from-accent/80 before:opacity-0",
+                                  "text-[1rem] text-muted-foreground/40 transition-all",
                                   !isCurrentGame &&
-                                    "hover:text-muted-foreground",
+                                    "hover:before:opacity-60 hover:text-primary-foreground/80",
+                                  isInstalled && "text-muted-foreground",
                                   isCurrentGame &&
-                                    "bg-gradient-to-r from-accent/80 text-primary-foreground",
-                                  "max-w-full w-full overflow-hidden overflow-ellipsis py-1 px-3",
+                                    "before:opacity-100 text-primary-foreground",
+                                  "max-w-full w-full overflow-hidden overflow-ellipsis px-3 my-1",
                                 )}
                               >
                                 <Link
                                   to="/games/$gameId"
                                   params={{ gameId: game.id.toString() }}
-                                  className="grid grid-cols-[auto_1fr] items-center max-w-full"
+                                  className="grid grid-cols-[auto_1fr] items-center max-w-full h-full"
                                 >
-                                  <div className="relative min-w-[24px] min-h-[24px] mr-2">
+                                  <div className="relative min-w-[28px] min-h-[28px] mr-2 my-[2px]">
                                     {iconUrl && (
                                       <Image
                                         src={iconUrl}
-                                        width={24}
-                                        height={24}
+                                        width={28}
+                                        height={28}
                                         alt={gameName ?? ""}
                                       />
                                     )}

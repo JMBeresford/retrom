@@ -4728,6 +4728,11 @@
           "const": "installer:allow-get-game-installation-status"
         },
         {
+          "description": "Enables the get_installation_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-get-installation-state"
+        },
+        {
           "description": "Enables the install_game command without any pre-configured scope.",
           "type": "string",
           "const": "installer:allow-install-game"
@@ -4741,6 +4746,11 @@
           "description": "Denies the get_game_installation_status command without any pre-configured scope.",
           "type": "string",
           "const": "installer:deny-get-game-installation-status"
+        },
+        {
+          "description": "Denies the get_installation_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-get-installation-state"
         },
         {
           "description": "Denies the install_game command without any pre-configured scope.",

@@ -37,6 +37,32 @@ Denies the get_game_installation_status command without any pre-configured scope
 <tr>
 <td>
 
+`retrom-plugin-installer:allow-get-installation-state`
+
+</td>
+<td>
+
+Enables the get_installation_state command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-installer:deny-get-installation-state`
+
+</td>
+<td>
+
+Denies the get_installation_state command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `retrom-plugin-installer:allow-install-game`
 
 </td>

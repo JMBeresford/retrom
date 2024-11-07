@@ -47,7 +47,7 @@ export function useInstallGame(game: Game, files: GameFile[]) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["installation-status", game.path],
+        queryKey: ["installation-state"],
       });
     },
     onError: console.error,

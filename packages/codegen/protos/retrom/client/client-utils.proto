@@ -56,3 +56,7 @@ message GamePlayStatusUpdate {
   int32 game_id = 1;
   PlayStatus play_status = 2;
 }
+
+message InstallationState {
+  map<int32, InstallationStatus> installation_state = 1;
+}

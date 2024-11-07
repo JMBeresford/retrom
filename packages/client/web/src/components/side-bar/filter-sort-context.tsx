@@ -27,12 +27,14 @@ export type SortDirection = "asc" | "desc";
 export type FilterAndSortContext = {
   filters: SidebarFilters;
   gameSortKey: GameSortKey;
+  groupByInstallationStatus: boolean;
   platformSortKey: PlatformSortKey;
   gameSortDirection: SortDirection;
   platformSortDirection: SortDirection;
   setFilter: (key: FilterKey, value: string | undefined) => void;
   setGameSort: (key: GameSortKey) => void;
   setPlatformSort: (key: PlatformSortKey) => void;
+  setGroupByInstallationStatus: (val: boolean) => void;
   toggleGameSortDirection: () => void;
   togglePlatformSortDirection: () => void;
 };
@@ -54,11 +56,17 @@ export function FilterAndSortContext(props: PropsWithChildren) {
       return {
         filters: {},
         gameSortKey: "name",
+        groupByInstallationStatus: true,
         platformSortKey: "name",
         gameSortDirection: "asc",
         platformSortDirection: "asc",
         setGameSort: (gameSortKey) => set(() => ({ gameSortKey })),
         setPlatformSort: (platformSortKey) => set(() => ({ platformSortKey })),
+        setGroupByInstallationStatus: (val: boolean) => {
+          set(() => ({
+            groupByInstallationStatus: val,
+          }));
+        },
         toggleGameSortDirection: () => {
           set((state) => ({
             gameSortDirection:

@@ -2,6 +2,7 @@ const COMMANDS: &[&str] = &[
     "install_game",
     "uninstall_game",
     "get_game_installation_status",
+    "get_installation_state",
 ];
 
 fn main() {

@@ -14,7 +14,7 @@ export function useUninstallGame(game: Game) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["installation-status", game.path],
+        queryKey: ["installation-state"],
       });
     },
   });

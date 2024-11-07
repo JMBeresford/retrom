@@ -1,14 +1,16 @@
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { Game } from "@/generated/retrom/models/games";
 import { checkIsDesktop } from "@/lib/env";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { invoke } from "@tauri-apps/api/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useInstallationStateQuery } from "./useInstallationState";
 
 export function useInstallationQuery(game: Game) {
   const queryClient = useQueryClient();
+  const { data: _data, ...installationStateQuery } =
+    useInstallationStateQuery();
 
   useEffect(() => {
     if (!checkIsDesktop()) return;
@@ -22,7 +24,7 @@ export function useInstallationQuery(game: Game) {
         (event: { payload: number }) => {
           if (event.payload === game.id) {
             queryClient.invalidateQueries({
-              queryKey: ["installation-status", game.path],
+              queryKey: ["installation-state"],
             });
           }
         },
@@ -38,24 +40,15 @@ export function useInstallationQuery(game: Game) {
     };
   }, [game, queryClient]);
 
-  const query = useQuery({
-    queryFn: async () => {
-      try {
-        if (!checkIsDesktop()) return InstallationStatus.UNRECOGNIZED;
+  const data = useMemo(() => {
+    const status =
+      _data?.installationState.get(game.id) ?? InstallationStatus.UNRECOGNIZED;
 
-        return await invoke<InstallationStatus>(
-          "plugin:installer|get_game_installation_status",
-          {
-            gameId: game.id,
-          },
-        );
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    throwOnError: true,
-    queryKey: ["installation-status", game.path],
-  });
+    return status;
+  }, [_data, game.id]);
 
-  return query;
+  return {
+    ...installationStateQuery,
+    data,
+  };
 }

@@ -305,6 +305,16 @@
           "const": "deny-get-game-installation-status"
         },
         {
+          "description": "Enables the get_installation_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-installation-state"
+        },
+        {
+          "description": "Denies the get_installation_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-installation-state"
+        },
+        {
           "description": "Enables the install_game command without any pre-configured scope.",
           "type": "string",
           "const": "allow-install-game"

@@ -23,10 +23,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
+import { Checkbox } from "../ui/checkbox";
 
 export function FiltersAndSorting() {
   const {
     filters,
+    groupByInstallationStatus,
     setFilter,
     gameSortDirection,
     platformSortDirection,
@@ -34,6 +36,7 @@ export function FiltersAndSorting() {
     platformSortKey,
     setPlatformSort,
     setGameSort,
+    setGroupByInstallationStatus,
     toggleGameSortDirection,
     togglePlatformSortDirection,
   } = useFilterAndSort();
@@ -44,7 +47,7 @@ export function FiltersAndSorting() {
     <Accordion type="single" collapsible className="p-4 h-fit">
       <AccordionItem value="filters-and-sorting" className="border-none">
         <AccordionContent>
-          <div className="flex flex-col gap-2 items-stretch">
+          <div className="flex flex-col gap-3 items-stretch">
             <div>
               <Label className={labelStyles}>Search Games</Label>
               <div
@@ -127,6 +130,30 @@ export function FiltersAndSorting() {
                     </Select>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="flex items-top gap-2">
+              <Checkbox
+                id="group-by-installation-status"
+                checked={groupByInstallationStatus}
+                onCheckedChange={setGroupByInstallationStatus}
+              />
+
+              <div className="grid gap-1 leading-none">
+                <Label
+                  htmlFor="group-by-installation-status"
+                  className="font-semibold"
+                >
+                  Group by Installation Status
+                </Label>
+
+                <Label
+                  htmlFor="group-by-installation-status"
+                  className={cn(labelStyles, "pl-0")}
+                >
+                  Place installed games at the top of the list
+                </Label>
               </div>
             </div>
           </div>
