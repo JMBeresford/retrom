@@ -14,8 +14,7 @@ import {
 } from "@/components/ui/accordion";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { useGames } from "@/queries/useGames";
-import { Game, StorageType } from "@/generated/retrom/models/games";
-import { GameMetadata } from "@/generated/retrom/models/metadata";
+import { StorageType } from "@/generated/retrom/models/games";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useFilterAndSort } from "./filter-sort-context";
 import { FiltersAndSorting } from "./filters-and-sorting";
@@ -23,6 +22,7 @@ import { Separator } from "../ui/separator";
 import { filterName, sortGames, sortPlatforms } from "./utils";
 import { ScrollArea } from "../ui/scroll-area";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
+import { GameWithMetadata } from "../game-list";
 
 export function SideBar() {
   const {
@@ -74,10 +74,10 @@ export function SideBar() {
   }, [platformData, platformSortKey, platformSortDirection]);
 
   const gamesByPlatform = useMemo(() => {
-    if (!gameData || !platformData) return {};
-    const ret: Record<string, Array<Game & { metadata?: GameMetadata }>> = {};
+    if (!gameData || !platformsWithMetadata) return {};
+    const ret: Record<string, GameWithMetadata[]> = {};
 
-    const platforms = platformData.platforms;
+    const platforms = platformsWithMetadata;
     const { games, metadata } = gameData;
 
     const gamesWithMetadata = games
@@ -91,12 +91,18 @@ export function SideBar() {
       .filter((game) => filterName(game, filters.name));
 
     return platforms.reduce((acc, platform) => {
-      acc[platform.id] = gamesWithMetadata.filter(
-        (game) => game.platformId === platform.id,
-      );
+      const name = platform.metadata?.name ?? getFileStub(platform.path);
+
+      if (!acc[name]) acc[name] = [];
+      gamesWithMetadata
+        .filter((game) => game.platformId === platform.id)
+        .forEach((game) => {
+          acc[name].push(game);
+        });
+
       return acc;
     }, ret);
-  }, [gameData, platformData, filters]);
+  }, [gameData, platformsWithMetadata, filters]);
 
   if (loading) {
     return <span>Loading...</span>;
@@ -131,27 +137,22 @@ export function SideBar() {
             className="pt-4"
             defaultValue={currentGame?.platformId?.toString()}
           >
-            {platformsWithMetadata.map((platform) => {
-              const games = gamesByPlatform[platform.id] ?? [];
-
+            {Object.entries(gamesByPlatform).map(([platformName, games]) => {
               games.sort((a, b) =>
                 sortGames(a, b, gameSortKey, gameSortDirection),
               );
 
-              const name =
-                platform.metadata?.name || getFileStub(platform.path);
-
               return games?.length ? (
                 <AccordionItem
-                  key={platform.id}
-                  value={platform.id.toString()}
+                  key={platformName}
+                  value={platformName}
                   className={cn("border-b-0 w-full max-w-full")}
                 >
                   <AccordionTrigger
                     className={cn("py-2 font-medium overflow-hidden relative")}
                   >
                     <h3 className="text-left whitespace-nowrap overflow-ellipsis overflow-hidden">
-                      {name}
+                      {platformName}
                     </h3>
                     <span className="sr-only">Toggle</span>
                   </AccordionTrigger>
