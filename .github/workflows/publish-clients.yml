@@ -69,7 +69,7 @@ jobs:
       - name: install dependencies (windows only)
         if: matrix.platform == 'windows-latest' # This must match the platform value defined above.
         run: |
-          choco install -y postgresql
+          choco install -y postgresql --version=16.4.0
 
       - name: install dependencies (macos only)
         if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
