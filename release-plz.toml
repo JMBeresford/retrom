@@ -22,8 +22,8 @@ git_tag_name = "retrom-v{{ version }}"
 
 [changelog]
 commit_parsers = [
-  { message = "^feat", group = "New" },
-  { message = "^fix", group = "Fixes" },
+  { message = "^feat:", group = "New" },
+  { message = "^fix:", group = "Fixes" },
 ]
 body = """
 ## [{{ version | trim_start_matches(pat="v") }}]{%- if release_link -%}({{ release_link }}){% endif %} - {{ timestamp | date(format="%Y-%m-%d") }}
@@ -31,7 +31,7 @@ body = """
 ### {{ group | upper_first }}
 {% for commit in commits %}
 {%- if commit.scope -%}
-- *({{commit.scope}})* {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}{%- if commit.links %} ({% for link in commit.links %}[{{link.text}}]({{link.href}}) {% endfor -%}){% endif %}
+- *({{commit.scope}})* {{ commit.message }}{%- if commit.links %} ({% for link in commit.links %}[{{link.text}}]({{link.href}}) {% endfor -%}){% endif %}
 {% else -%}
 - {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}
 {% endif -%}
