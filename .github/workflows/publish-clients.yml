@@ -122,4 +122,5 @@ jobs:
           args: ${{ matrix.target }}
           prerelease: true
           releaseDraft: true
+          releaseName: ${{ github.event.pull_request.title }}
           tagName: ${{ github.event.pull_request.head.ref }}
