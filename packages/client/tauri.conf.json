@@ -1,5 +1,9 @@
 {
   "$schema": "../../node_modules/@tauri-apps/cli/schema.json",
+  "bundle": {
+    "active": true,
+    "targets": "all"
+  },
   "build": {
     "beforeBuildCommand": "pnpm --shell-emulator --filter=web build:desktop",
     "beforeDevCommand": "pnpm --filter=web dev --port 3000",

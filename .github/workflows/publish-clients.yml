@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-desktop-clients:
@@ -121,3 +121,5 @@ jobs:
           tauriScript: pnpm tauri
           args: ${{ matrix.target }}
           prerelease: true
+          releaseDraft: true
+          tagName: ${{ github.event.pull_request.head.ref }}
