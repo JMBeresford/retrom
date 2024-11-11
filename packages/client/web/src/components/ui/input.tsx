@@ -15,8 +15,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         type={type}
         className={cn(
           styles,
-          className,
           'aria-[invalid="true"]:ring-destructive-text aria-[invalid="true"]:ring-2',
+          className,
         )}
         ref={ref}
         {...props}

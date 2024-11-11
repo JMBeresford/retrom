@@ -7,6 +7,7 @@ on:
         description: "Tags for the image"
         required: false
 
+  pull_request:
   release:
     types: [published]
 

@@ -31,9 +31,9 @@ export type GameDetailContext = {
 const GameDetailContext = createContext<GameDetailContext | null>(null);
 
 export function GameDetailProvider(
-  props: PropsWithChildren<{ gameId: number }>,
+  props: PropsWithChildren<{ gameId: number; errorRedirectUrl?: string }>,
 ) {
-  const { gameId } = props;
+  const { gameId, errorRedirectUrl = "/" } = props;
   const navigate = useNavigate();
   const retromClient = useRetromClient();
 
@@ -108,7 +108,7 @@ export function GameDetailProvider(
       duration: 5000,
     });
 
-    navigate({ to: "/" });
+    navigate({ to: errorRedirectUrl });
     return <></>;
   }
 

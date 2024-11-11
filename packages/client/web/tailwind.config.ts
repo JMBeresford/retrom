@@ -2,6 +2,7 @@ import type { Config } from "tailwindcss";
 import animatePlugin from "tailwindcss-animate";
 import containerQueryPlugin from "@tailwindcss/container-queries";
 import { fontFamily } from "tailwindcss/defaultTheme";
+import plugin from "tailwindcss/plugin";
 
 const config = {
   darkMode: ["class"],
@@ -87,7 +88,13 @@ const config = {
       },
     },
   },
-  plugins: [animatePlugin, containerQueryPlugin],
+  plugins: [
+    animatePlugin,
+    containerQueryPlugin,
+    plugin(({ addVariant }) => {
+      addVariant("focus-hover", "&:is(:focus,:hover)");
+    }),
+  ],
 } satisfies Config;
 
 export default config;

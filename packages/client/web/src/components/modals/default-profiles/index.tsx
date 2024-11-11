@@ -143,8 +143,7 @@ function DefaultEmulatorProfiles(props: {
   defaultProfiles: DefaultEmulatorProfile[];
   emulatorProfiles: EmulatorProfile[];
 }) {
-  const configStore = useConfig();
-  const clientId = configStore((s) => s.config.clientInfo.id);
+  const clientId = useConfig((s) => s.config.clientInfo.id);
   const { platforms, defaultProfiles, emulatorProfiles, emulators } = props;
   const { setOpen } = useDialogOpen();
   const { mutate: updateDefaultEmulatorProfiles } =

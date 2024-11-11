@@ -7,6 +7,7 @@ import { FileMenu } from "./file-menu";
 import { JobsIndicator } from "./jobs-indicator";
 import { DesktopOnly } from "@/lib/env";
 import { Link } from "@tanstack/react-router";
+import { ViewMenu } from "./view-menu";
 
 export function Menubar() {
   return (
@@ -15,7 +16,7 @@ export function Menubar() {
     >
       <MenubarImpl className="border-0 items-stretch">
         <Link
-          to="/"
+          to="/home"
           className="font-black grid place-items-center text-xl h-0 mr-4"
         >
           Retrom
@@ -29,6 +30,8 @@ export function Menubar() {
         <DesktopOnly>
           <EmulatorsMenu />
         </DesktopOnly>
+
+        <ViewMenu />
       </MenubarImpl>
 
       <div className="ml-auto h-full grid place-items-center">

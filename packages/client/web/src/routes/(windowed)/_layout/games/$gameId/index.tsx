@@ -36,7 +36,7 @@ const modalsSchema = z.object({
     .optional(),
 });
 
-export const Route = createFileRoute("/games/$gameId/")({
+export const Route = createFileRoute("/(windowed)/_layout/games/$gameId/")({
   validateSearch: zodSearchValidator(modalsSchema),
   component: Game,
 });

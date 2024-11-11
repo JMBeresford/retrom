@@ -21,8 +21,7 @@ export function useDefaultEmulatorProfiles<
 ) {
   const { request = {}, selectFn, enabled = true } = opts;
 
-  const configStore = useConfig();
-  const clientInfo = configStore((s) => s.config.clientInfo);
+  const clientInfo = useConfig((s) => s.config.clientInfo);
   const queryClient = useQueryClient();
   const retromClient = useRetromClient();
 

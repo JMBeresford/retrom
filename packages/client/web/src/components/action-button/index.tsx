@@ -1,74 +1,56 @@
 import { Button } from "@/components/ui/button";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { Game } from "@/generated/retrom/models/games";
-import { checkIsDesktop, PlatformDependent } from "@/lib/env";
+import { PlatformDependent } from "@/lib/env";
 import { cn } from "@/lib/utils";
-import { useConfig } from "@/providers/config";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { DownloadIcon, LoaderCircleIcon } from "lucide-react";
 import { PlayGameButton } from "./play-game-button";
 import { InstallGameButton } from "./install-game-button";
-import { ComponentProps } from "react";
+import { ComponentProps, ForwardedRef, forwardRef } from "react";
+import { DownloadGameButton } from "./download-game-button";
 
-export function ActionButton(
-  props: { game: Game } & ComponentProps<typeof Button>,
-) {
-  const { game, className, ...rest } = props;
-  const configStore = useConfig();
-  const server = configStore((store) => store.server);
-  const { data: installationState, status } = useInstallationQuery(game);
+export const ActionButton = forwardRef(
+  (
+    props: { game: Game } & ComponentProps<typeof Button>,
+    forwardedRef: ForwardedRef<HTMLButtonElement>,
+  ) => {
+    const { game, className, ...rest } = props;
+    const { data: installationState, status } = useInstallationQuery(game);
 
-  const buttonClasses = cn(
-    "rounded-none font-bold text-lg tracking-wider flex gap-2 items-center",
-    className,
-  );
-
-  if (status === "pending") {
-    return (
-      <Button variant="accent" disabled {...rest} className={cn(buttonClasses)}>
-        <LoaderCircleIcon />
-      </Button>
+    const buttonClasses = cn(
+      "rounded-none font-bold text-lg tracking-wider flex gap-2 items-center",
+      className,
     );
-  }
 
-  if (status === "error") {
-    return null;
-  }
-
-  const restHost = checkIsDesktop()
-    ? `${server.hostname}:${server.port}/rest`
-    : "/api/rest";
-
-  return (
-    <PlatformDependent
-      desktop={
-        installationState === InstallationStatus.INSTALLED ? (
-          <PlayGameButton
+    return (
+      <PlatformDependent
+        desktop={
+          installationState === InstallationStatus.INSTALLED ? (
+            <PlayGameButton
+              ref={forwardedRef}
+              {...rest}
+              className={cn(buttonClasses)}
+              variant="accent"
+            />
+          ) : (
+            <InstallGameButton
+              ref={forwardedRef}
+              disabled={status !== "success"}
+              {...rest}
+              className={cn(buttonClasses)}
+              variant="accent"
+            />
+          )
+        }
+        web={
+          <DownloadGameButton
+            ref={forwardedRef}
             {...rest}
             className={cn(buttonClasses)}
-            variant="accent"
+            game={game}
           />
-        ) : (
-          <InstallGameButton
-            {...rest}
-            className={cn(buttonClasses)}
-            variant="accent"
-          />
-        )
-      }
-      web={
-        <form action={`${restHost}/game/${game.id}`} className="w-full">
-          <Button
-            type="submit"
-            {...rest}
-            className={cn(buttonClasses, "w-full")}
-            variant="accent"
-          >
-            <DownloadIcon className="h-[1.2rem] w-[1.2rem]" />
-            Download
-          </Button>
-        </form>
-      }
-    />
-  );
-}
+        }
+      />
+    );
+  },
+);

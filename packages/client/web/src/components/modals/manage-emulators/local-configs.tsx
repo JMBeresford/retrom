@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useCreateLocalEmulatorConfigs } from "@/mutations/useCreateLocalEmulatorConfig";
 import { useUpdateLocalEmulatorConfig } from "@/mutations/useUpdateLocalEmulatorConfigs";
-import { useConfig } from "@/providers/config";
+import { useConfigStore } from "@/providers/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { open } from "@tauri-apps/plugin-dialog";
 import { FolderOpenIcon, LoaderCircleIcon, SaveIcon } from "lucide-react";
@@ -79,7 +79,7 @@ function LocalConfigRow(props: {
   config?: LocalEmulatorConfig;
 }) {
   const { emulator, config } = props;
-  const clientId = useConfig().getState().config.clientInfo.id;
+  const clientId = useConfigStore().getState().config.clientInfo.id;
 
   const form = useForm<ConfigSchema>({
     defaultValues: {

@@ -1,30 +1,17 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { ConfigProvider } from "../providers/config";
+import {
+  createRootRoute,
+  Navigate,
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+} from "@tanstack/react-router";
+import { ConfigProvider, useConfigStore } from "../providers/config";
 import { RetromClientProvider } from "../providers/retrom-client";
 import { QueryClientProvider } from "../providers/query-client";
-import { Menubar } from "../components/menubar";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "../components/ui/resizable";
-import { ScrollArea } from "../components/ui/scroll-area";
 import { Prompts } from "../components/prompts";
 import { Toaster } from "../components/ui/toaster";
-import { SideBar } from "@/components/side-bar";
 import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import { z } from "zod";
-import { SetupModal } from "@/components/modals/setup";
-import { UpdateLibraryModal } from "@/components/modals/update-library";
-import { DownloadMetadataModal } from "@/components/modals/download-metadata";
-import { DeleteLibraryModal } from "@/components/modals/delete-library";
-import { MatchPlatformsModal } from "@/components/modals/match-platforms";
-import { DefaultProfilesModal } from "@/components/modals/default-profiles";
-import { ManageEmulatorProfilesModal } from "@/components/modals/manage-profiles";
-import { ManageEmulatorsModal } from "@/components/modals/manage-emulators";
-import { FilterAndSortContext } from "@/components/side-bar/filter-sort-context";
-import { CheckForUpdateModal } from "@/components/modals/check-for-update";
-import { VersionInfoModal } from "@/components/modals/version-info";
 
 const modalsSearchSchema = z.object({
   updateLibraryModal: z
@@ -81,59 +68,47 @@ const modalsSearchSchema = z.object({
 
 export const Route = createRootRoute({
   validateSearch: zodSearchValidator(modalsSearchSchema),
-  component: () => (
+  component: RootComponent,
+  errorComponent: (opts) => <div>Error: {JSON.stringify(opts.error)}</div>,
+});
+
+function RootComponent() {
+  return (
     <>
       <ConfigProvider>
         <RetromClientProvider>
           <QueryClientProvider>
-            <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
-              <Menubar />
-              <ResizablePanelGroup
-                direction="horizontal"
-                className="h-full w-full"
-              >
-                <ResizablePanel
-                  defaultSize={25}
-                  maxSize={40}
-                  className="bg-muted"
-                >
-                  <div className="w-full h-full @container/sidebar">
-                    <FilterAndSortContext>
-                      <SideBar />
-                    </FilterAndSortContext>
-                  </div>
-                </ResizablePanel>
-
-                <ResizableHandle />
-
-                <ResizablePanel defaultSize={75}>
-                  <ScrollArea className="h-full max-h-full w-full max-w-full">
-                    <main className="p-5 pb-16">
-                      <Outlet />
-                    </main>
-                  </ScrollArea>
-                </ResizablePanel>
-              </ResizablePanelGroup>
-            </div>
-
-            <SetupModal />
-            <UpdateLibraryModal />
-            <DownloadMetadataModal />
-            <DeleteLibraryModal />
-            <MatchPlatformsModal />
-            <DefaultProfilesModal />
-            <ManageEmulatorsModal />
-            <ManageEmulatorProfilesModal />
-            <CheckForUpdateModal />
-            <VersionInfoModal />
+            <HandleLayoutRedirect />
+            <Outlet />
 
             <Prompts />
-
             <Toaster />
           </QueryClientProvider>
         </RetromClientProvider>
       </ConfigProvider>
+      <ScrollRestoration />
     </>
-  ),
-  errorComponent: (opts) => <div>Error: {JSON.stringify(opts.error)}</div>,
-});
+  );
+}
+
+function HandleLayoutRedirect() {
+  const path = useLocation().pathname;
+  const fullscreenByDefault =
+    useConfigStore().getState().config.interface.fullscreenByDefault;
+
+  if (path !== "/") {
+    return <></>;
+  }
+
+  return (
+    <>
+      {fullscreenByDefault ? (
+        <Navigate to="/fullscreen" replace={true} />
+      ) : (
+        <Navigate to="/home" replace={true} />
+      )}
+
+      <Outlet />
+    </>
+  );
+}

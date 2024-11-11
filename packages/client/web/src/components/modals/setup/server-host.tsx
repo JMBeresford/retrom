@@ -18,11 +18,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { useConfig } from "@/providers/config";
+import { useConfigStore } from "@/providers/config";
 
 export function ServerHostStep() {
   const { previousStep } = useSetupModal();
-  const initialState = useConfig().getState();
+  const initialState = useConfigStore().getState();
   const [hostname, setHostname] = useState(initialState.server.hostname);
   const [port, setPort] = useState(initialState.server.port?.toString() || "");
 
@@ -104,7 +104,7 @@ export function ServerHostStep() {
 function TestButton(props: { hostname: string; port?: string }) {
   const { hostname, port } = props;
   const { nextStep } = useSetupModal();
-  const config = useConfig();
+  const config = useConfigStore();
 
   const query = useQuery({
     enabled: false,

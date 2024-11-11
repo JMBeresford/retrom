@@ -4,6 +4,26 @@ package retrom;
 
 import "retrom/models/clients.proto";
 
+message InterfaceConfig {
+  enum GameListEntryImage {
+    COVER = 0;
+    BACKGROUND = 1;
+  }
+
+  message GridListConfig {
+    int32 columns = 1;
+    int32 gap = 2;
+    GameListEntryImage image_type = 3;
+  }
+
+  message FullscreenConfig {
+    GridListConfig grid_list = 1;
+  }
+
+  bool fullscreen_by_default = 1;
+  FullscreenConfig fullscreen_config = 2;
+}
+
 message RetromClientConfig {
   message Server {
     string hostname = 1;
@@ -12,6 +32,7 @@ message RetromClientConfig {
 
   message Config {
     Client client_info = 1;
+    InterfaceConfig interface = 2;
   }
 
   message FlowCompletions {

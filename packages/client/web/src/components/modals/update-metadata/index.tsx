@@ -9,7 +9,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { IgdbTab } from "./igdb-tab";
 import { ManualTab } from "./manual-tab";
-import { Route } from "@/routes/games/$gameId";
+import { Route } from "@/routes/(windowed)/_layout/games/$gameId";
 
 export function UpdateMetadataModal() {
   const { updateMetadataModal } = Route.useSearch();

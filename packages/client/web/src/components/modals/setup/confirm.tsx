@@ -11,7 +11,7 @@ import { useCallback } from "react";
 import { LoaderCircleIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useClientInfo } from "@/queries/useClientInfo";
-import { useConfig } from "@/providers/config";
+import { useConfigStore } from "@/providers/config";
 import { Timestamp } from "@/generated/google/protobuf/timestamp";
 import { relaunch } from "@tauri-apps/plugin-process";
 
@@ -19,7 +19,7 @@ export function Confirm() {
   const { toast } = useToast();
   const { previousStep, nextStep } = useSetupModal();
   const { mutateAsync: createClient, status } = useCreateClient();
-  const configStore = useConfig();
+  const configStore = useConfigStore();
   const name = configStore((store) => store.config.clientInfo.name);
   const clientInfo = useClientInfo();
 

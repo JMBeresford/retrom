@@ -4,7 +4,37 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const Select = SelectPrimitive.Root;
+const SelectOpenContext = React.createContext<
+  [boolean, React.Dispatch<React.SetStateAction<boolean>>] | undefined
+>(undefined);
+
+function useSelectOpen() {
+  const context = React.useContext(SelectOpenContext);
+
+  if (!context) {
+    throw new Error("useSelectOpen must be used within a SelectProvider");
+  }
+
+  return context;
+}
+
+const Select = (props: React.ComponentProps<typeof SelectPrimitive.Root>) => {
+  const { open, onOpenChange } = props;
+  const openState = React.useState(props.defaultOpen ?? false);
+
+  return (
+    <SelectOpenContext.Provider value={openState}>
+      <SelectPrimitive.Root
+        {...props}
+        open={open ?? openState[0]}
+        onOpenChange={(val) => {
+          onOpenChange?.(val);
+          openState[1](val);
+        }}
+      />
+    </SelectOpenContext.Provider>
+  );
+};
 
 const SelectGroup = SelectPrimitive.Group;
 
@@ -155,4 +185,5 @@ export {
   SelectSeparator,
   SelectScrollUpButton,
   SelectScrollDownButton,
+  useSelectOpen,
 };

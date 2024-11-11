@@ -20,9 +20,9 @@ export function FileMenu() {
       <MenubarContent>
         <DesktopOnly>
           <ConfigMenuItem />
+          <CheckForUpdateMenuItem />
         </DesktopOnly>
 
-        <CheckForUpdateMenuItem />
         <VersionInfoMenuItem />
 
         <DesktopOnly>

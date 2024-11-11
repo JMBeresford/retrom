@@ -37,7 +37,7 @@
   ],
   "definitions": {
     "Capability": {
-      "description": "A grouping and boundary mechanism developers can use to isolate access to the IPC layer.\n\nIt controls application windows fine grained access to the Tauri core, application, or plugin commands. If a window is not matching any capability then it has no access to the IPC layer at all.\n\nThis can be done to create groups of windows, based on their required system access, which can reduce impact of frontend vulnerabilities in less privileged windows. Windows can be added to a capability by exact name (e.g. `main-window`) or glob patterns like `*` or `admin-*`. A Window can have none, one, or multiple associated capabilities.\n\n## Example\n\n```json { \"identifier\": \"main-user-files-write\", \"description\": \"This capability allows the `main` window on macOS and Windows access to `filesystem` write related commands and `dialog` commands to enable programatic access to files selected by the user.\", \"windows\": [ \"main\" ], \"permissions\": [ \"core:default\", \"dialog:open\", { \"identifier\": \"fs:allow-write-text-file\", \"allow\": [{ \"path\": \"$HOME/test.txt\" }] }, \"platforms\": [\"macOS\",\"windows\"] } ```",
+      "description": "A grouping and boundary mechanism developers can use to isolate access to the IPC layer.\n\nIt controls application windows fine grained access to the Tauri core, application, or plugin commands. If a window is not matching any capability then it has no access to the IPC layer at all.\n\nThis can be done to create groups of windows, based on their required system access, which can reduce impact of frontend vulnerabilities in less privileged windows. Windows can be added to a capability by exact name (e.g. `main-window`) or glob patterns like `*` or `admin-*`. A Window can have none, one, or multiple associated capabilities.\n\n## Example\n\n```json { \"identifier\": \"main-user-files-write\", \"description\": \"This capability allows the `main` window on macOS and Windows access to `filesystem` write related commands and `dialog` commands to enable programatic access to files selected by the user.\", \"windows\": [ \"main\" ], \"permissions\": [ \"core:default\", \"dialog:open\", { \"identifier\": \"fs:allow-write-text-file\", \"allow\": [{ \"path\": \"$HOME/test.txt\" }] }, ], \"platforms\": [\"macOS\",\"windows\"] } ```",
       "type": "object",
       "required": [
         "identifier",
@@ -84,7 +84,7 @@
           }
         },
         "permissions": {
-          "description": "List of permissions attached to this capability.\n\nMust include the plugin name as prefix in the form of `${plugin-name}:${permission-name}`. For commands directly implemented in the application itself only `${permission-name}` is required.\n\n## Example\n\n```json [ \"core:default\", \"shell:allow-open\", \"dialog:open\", { \"identifier\": \"fs:allow-write-text-file\", \"allow\": [{ \"path\": \"$HOME/test.txt\" }] } ```",
+          "description": "List of permissions attached to this capability.\n\nMust include the plugin name as prefix in the form of `${plugin-name}:${permission-name}`. For commands directly implemented in the application itself only `${permission-name}` is required.\n\n## Example\n\n```json [ \"core:default\", \"shell:allow-open\", \"dialog:open\", { \"identifier\": \"fs:allow-write-text-file\", \"allow\": [{ \"path\": \"$HOME/test.txt\" }] } ] ```",
           "type": "array",
           "items": {
             "$ref": "#/definitions/PermissionEntry"
@@ -1858,6 +1858,11 @@
           "const": "core:app:allow-name"
         },
         {
+          "description": "Enables the set_app_theme command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:app:allow-set-app-theme"
+        },
+        {
           "description": "Enables the tauri_version command without any pre-configured scope.",
           "type": "string",
           "const": "core:app:allow-tauri-version"
@@ -1886,6 +1891,11 @@
           "description": "Denies the name command without any pre-configured scope.",
           "type": "string",
           "const": "core:app:deny-name"
+        },
+        {
+          "description": "Denies the set_app_theme command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:app:deny-set-app-theme"
         },
         {
           "description": "Denies the tauri_version command without any pre-configured scope.",
@@ -2443,6 +2453,11 @@
           "const": "core:webview:default"
         },
         {
+          "description": "Enables the clear_all_browsing_data command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:webview:allow-clear-all-browsing-data"
+        },
+        {
           "description": "Enables the create_webview command without any pre-configured scope.",
           "type": "string",
           "const": "core:webview:allow-create-webview"
@@ -2498,14 +2513,29 @@
           "const": "core:webview:allow-webview-close"
         },
         {
+          "description": "Enables the webview_hide command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:webview:allow-webview-hide"
+        },
+        {
           "description": "Enables the webview_position command without any pre-configured scope.",
           "type": "string",
           "const": "core:webview:allow-webview-position"
         },
         {
+          "description": "Enables the webview_show command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:webview:allow-webview-show"
+        },
+        {
           "description": "Enables the webview_size command without any pre-configured scope.",
           "type": "string",
           "const": "core:webview:allow-webview-size"
+        },
+        {
+          "description": "Denies the clear_all_browsing_data command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:webview:deny-clear-all-browsing-data"
         },
         {
           "description": "Denies the create_webview command without any pre-configured scope.",
@@ -2563,9 +2593,19 @@
           "const": "core:webview:deny-webview-close"
         },
         {
+          "description": "Denies the webview_hide command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:webview:deny-webview-hide"
+        },
+        {
           "description": "Denies the webview_position command without any pre-configured scope.",
           "type": "string",
           "const": "core:webview:deny-webview-position"
+        },
+        {
+          "description": "Denies the webview_show command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:webview:deny-webview-show"
         },
         {
           "description": "Denies the webview_size command without any pre-configured scope.",
@@ -2646,6 +2686,11 @@
           "description": "Enables the is_decorated command without any pre-configured scope.",
           "type": "string",
           "const": "core:window:allow-is-decorated"
+        },
+        {
+          "description": "Enables the is_enabled command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:allow-is-enabled"
         },
         {
           "description": "Enables the is_focused command without any pre-configured scope.",
@@ -2778,6 +2823,11 @@
           "const": "core:window:allow-set-effects"
         },
         {
+          "description": "Enables the set_enabled command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:allow-set-enabled"
+        },
+        {
           "description": "Enables the set_focus command without any pre-configured scope.",
           "type": "string",
           "const": "core:window:allow-set-focus"
@@ -2851,6 +2901,11 @@
           "description": "Enables the set_skip_taskbar command without any pre-configured scope.",
           "type": "string",
           "const": "core:window:allow-set-skip-taskbar"
+        },
+        {
+          "description": "Enables the set_theme command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:allow-set-theme"
         },
         {
           "description": "Enables the set_title command without any pre-configured scope.",
@@ -2976,6 +3031,11 @@
           "description": "Denies the is_decorated command without any pre-configured scope.",
           "type": "string",
           "const": "core:window:deny-is-decorated"
+        },
+        {
+          "description": "Denies the is_enabled command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:deny-is-enabled"
         },
         {
           "description": "Denies the is_focused command without any pre-configured scope.",
@@ -3108,6 +3168,11 @@
           "const": "core:window:deny-set-effects"
         },
         {
+          "description": "Denies the set_enabled command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:deny-set-enabled"
+        },
+        {
           "description": "Denies the set_focus command without any pre-configured scope.",
           "type": "string",
           "const": "core:window:deny-set-focus"
@@ -3181,6 +3246,11 @@
           "description": "Denies the set_skip_taskbar command without any pre-configured scope.",
           "type": "string",
           "const": "core:window:deny-set-skip-taskbar"
+        },
+        {
+          "description": "Denies the set_theme command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:deny-set-theme"
         },
         {
           "description": "Denies the set_title command without any pre-configured scope.",
@@ -4891,6 +4961,261 @@
           "description": "Denies the stdin_write command without any pre-configured scope.",
           "type": "string",
           "const": "shell:deny-stdin-write"
+        },
+        {
+          "description": "This enables all permissions for system info plugin",
+          "type": "string",
+          "const": "system-info:allow-all"
+        },
+        {
+          "description": "Enables the all_sys_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-all-sys-info"
+        },
+        {
+          "description": "Enables the batteries command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-batteries"
+        },
+        {
+          "description": "Enables the components command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-components"
+        },
+        {
+          "description": "Enables the cpu_count command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-cpu-count"
+        },
+        {
+          "description": "Enables the cpu_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-cpu-info"
+        },
+        {
+          "description": "Enables the cpus command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-cpus"
+        },
+        {
+          "description": "Enables the disks command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-disks"
+        },
+        {
+          "description": "Enables the execute command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-execute"
+        },
+        {
+          "description": "Enables the hostname command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-hostname"
+        },
+        {
+          "description": "Enables the kernel_version command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-kernel-version"
+        },
+        {
+          "description": "Enables the memory_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-memory-info"
+        },
+        {
+          "description": "Enables the name command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-name"
+        },
+        {
+          "description": "Enables the networks command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-networks"
+        },
+        {
+          "description": "Enables the os_version command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-os-version"
+        },
+        {
+          "description": "Enables the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-ping"
+        },
+        {
+          "description": "Enables the processes command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-processes"
+        },
+        {
+          "description": "Enables the refresh_all command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-refresh-all"
+        },
+        {
+          "description": "Enables the refresh_cpu command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-refresh-cpu"
+        },
+        {
+          "description": "Enables the refresh_memory command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-refresh-memory"
+        },
+        {
+          "description": "Enables the refresh_processes command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-refresh-processes"
+        },
+        {
+          "description": "Enables the static_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-static-info"
+        },
+        {
+          "description": "Enables the total_memory command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-total-memory"
+        },
+        {
+          "description": "Enables the total_swap command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-total-swap"
+        },
+        {
+          "description": "Enables the used_memory command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-used-memory"
+        },
+        {
+          "description": "Enables the used_swap command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:allow-used-swap"
+        },
+        {
+          "description": "Denies the all_sys_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-all-sys-info"
+        },
+        {
+          "description": "Denies the batteries command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-batteries"
+        },
+        {
+          "description": "Denies the components command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-components"
+        },
+        {
+          "description": "Denies the cpu_count command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-cpu-count"
+        },
+        {
+          "description": "Denies the cpu_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-cpu-info"
+        },
+        {
+          "description": "Denies the cpus command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-cpus"
+        },
+        {
+          "description": "Denies the disks command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-disks"
+        },
+        {
+          "description": "Denies the execute command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-execute"
+        },
+        {
+          "description": "Denies the hostname command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-hostname"
+        },
+        {
+          "description": "Denies the kernel_version command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-kernel-version"
+        },
+        {
+          "description": "Denies the memory_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-memory-info"
+        },
+        {
+          "description": "Denies the name command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-name"
+        },
+        {
+          "description": "Denies the networks command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-networks"
+        },
+        {
+          "description": "Denies the os_version command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-os-version"
+        },
+        {
+          "description": "Denies the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-ping"
+        },
+        {
+          "description": "Denies the processes command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-processes"
+        },
+        {
+          "description": "Denies the refresh_all command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-refresh-all"
+        },
+        {
+          "description": "Denies the refresh_cpu command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-refresh-cpu"
+        },
+        {
+          "description": "Denies the refresh_memory command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-refresh-memory"
+        },
+        {
+          "description": "Denies the refresh_processes command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-refresh-processes"
+        },
+        {
+          "description": "Denies the static_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-static-info"
+        },
+        {
+          "description": "Denies the total_memory command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-total-memory"
+        },
+        {
+          "description": "Denies the total_swap command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-total-swap"
+        },
+        {
+          "description": "Denies the used_memory command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-used-memory"
+        },
+        {
+          "description": "Denies the used_swap command without any pre-configured scope.",
+          "type": "string",
+          "const": "system-info:deny-used-swap"
         },
         {
           "description": "This permission set configures which kind of\nupdater functions are exposed to the frontend.\n\n#### Granted Permissions\n\nThe full workflow from checking for updates to installing them\nis enabled.\n\n",
