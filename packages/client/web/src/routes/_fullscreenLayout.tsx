@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { Scene } from "../components/fullscreen/scene";
 import { View } from "@react-three/drei";
 import { FullscreenMenubar } from "../components/fullscreen/menubar";
@@ -11,6 +11,8 @@ import { GamepadProvider } from "@/providers/gamepad";
 import { navigateByDirection } from "@noriginmedia/norigin-spatial-navigation";
 import { useHotkeys } from "@/providers/hotkeys";
 import { InputDeviceProvider } from "@/providers/input-device";
+import { checkIsDesktop } from "@/lib/env";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 declare global {
   export interface HotkeyZones {
@@ -25,10 +27,16 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/_fullscreenLayout")({
   component: FullscreenLayout,
   validateSearch: zodSearchValidator(searchSchema),
+  loader: async () => {
+    if (checkIsDesktop()) {
+      await getCurrentWindow().setFullscreen(true);
+    }
+  },
 });
 
 function FullscreenLayout() {
   const container = useRef<HTMLDivElement>(null!);
+
   useHotkeys({
     handlers: {
       UP: {

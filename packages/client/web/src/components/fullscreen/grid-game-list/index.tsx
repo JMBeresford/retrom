@@ -2,7 +2,7 @@ import { GameWithMetadata } from "@/components/game-list";
 import { InterfaceConfig_GameListEntryImage } from "@/generated/retrom/client/client-config";
 import { cn, getFileStub } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect } from "react";
 import { FocusContainer } from "../focus-container";
 import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
@@ -85,7 +85,7 @@ function GameListItem(props: { game: GameWithMetadata; id: string }) {
     <div
       className={cn(
         "group scale-95 focus-within:scale-100 hover:scale-100 transition-all",
-        "shadow-lg shadow-background relative",
+        "shadow-lg shadow-background relative cursor-pointer",
         "ring-ring focus-within:ring-4 rounded h-full w-full",
         // focused && "ring-4 scale-100",
       )}

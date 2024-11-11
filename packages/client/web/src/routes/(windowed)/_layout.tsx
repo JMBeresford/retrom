@@ -18,9 +18,13 @@ import { ManageEmulatorProfilesModal } from "@/components/modals/manage-profiles
 import { ManageEmulatorsModal } from "@/components/modals/manage-emulators";
 import { MatchPlatformsModal } from "@/components/modals/match-platforms";
 import { VersionInfoModal } from "@/components/modals/version-info";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
+  loader: async () => {
+    await getCurrentWindow().setFullscreen(false);
+  },
 });
 
 function LayoutComponent() {

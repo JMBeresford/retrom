@@ -48,6 +48,7 @@
     "updater:default",
     "shell:allow-open",
     "process:default",
-    "system-info:allow-all-sys-info"
+    "system-info:allow-all-sys-info",
+    "core:window:allow-set-fullscreen"
   ]
 }

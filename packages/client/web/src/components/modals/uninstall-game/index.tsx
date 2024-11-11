@@ -15,7 +15,7 @@ import { useGameDetail } from "@/providers/game-details";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { LoaderCircleIcon } from "lucide-react";
-import { Route } from "@/routes/(windowed)/_layout.games/$gameId";
+import { Route } from "@/routes/(windowed)/_layout/games/$gameId";
 
 export function UninstallGameModal() {
   const { game, gameMetadata: metadata } = useGameDetail();

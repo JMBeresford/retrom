@@ -15,7 +15,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as FullscreenLayoutImport } from './routes/_fullscreenLayout'
 import { Route as windowedLayoutImport } from './routes/(windowed)/_layout'
-import { Route as windowedLayoutGamesGameIdIndexImport } from './routes/(windowed)/_layout.games/$gameId/index'
+import { Route as windowedLayoutGamesGameIdIndexImport } from './routes/(windowed)/_layout/games/$gameId/index'
 
 // Create Virtual Routes
 
@@ -66,7 +66,7 @@ const windowedLayoutHomeLazyRoute = windowedLayoutHomeLazyImport
     getParentRoute: () => windowedLayoutRoute,
   } as any)
   .lazy(() =>
-    import('./routes/(windowed)/_layout.home.lazy').then((d) => d.Route),
+    import('./routes/(windowed)/_layout/home.lazy').then((d) => d.Route),
   )
 
 const FullscreenLayoutFullscreenGamesIndexLazyRoute =
@@ -209,7 +209,7 @@ export const routeTree = rootRoute.addChildren({
       ]
     },
     "/_layout/home": {
-      "filePath": "(windowed)/_layout.home.lazy.tsx",
+      "filePath": "(windowed)/_layout/home.lazy.tsx",
       "parent": "/_layout"
     },
     "/_fullscreenLayout/fullscreen/": {
@@ -225,7 +225,7 @@ export const routeTree = rootRoute.addChildren({
       "parent": "/_fullscreenLayout"
     },
     "/_layout/games/$gameId/": {
-      "filePath": "(windowed)/_layout.games/$gameId/index.tsx",
+      "filePath": "(windowed)/_layout/games/$gameId/index.tsx",
       "parent": "/_layout"
     }
   }
