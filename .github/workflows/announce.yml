@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Announce
-        uses: SethCohen/github-releases-to-discord@v1
+        uses: SethCohen/github-releases-to-discord@v1.16.2
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           content: "||@announcements|| A new version of Retrom has been released, beep boop! :tada: :rocket: :tada:"
