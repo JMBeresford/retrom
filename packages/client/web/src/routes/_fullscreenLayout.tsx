@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useLayoutEffect, useRef } from "react";
+import { useRef } from "react";
 import { Scene } from "../components/fullscreen/scene";
 import { View } from "@react-three/drei";
 import { FullscreenMenubar } from "../components/fullscreen/menubar";

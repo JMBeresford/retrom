@@ -61,6 +61,7 @@ export const PlayGameButton = forwardRef(
 
     const file = gameFiles?.find((file) => file.id === game.defaultFileId);
     const disabled = queryStatus !== "success";
+    const shouldAddEmulator = !emulator && !fullscreenMatch;
 
     const onClick = useCallback(() => {
       if (disabled) return;
@@ -70,7 +71,7 @@ export const PlayGameButton = forwardRef(
         return;
       }
 
-      if (!emulator) {
+      if (shouldAddEmulator) {
         navigate({ search: { manageEmulatorsModal: { open: true } } });
         return;
       }
@@ -91,6 +92,7 @@ export const PlayGameButton = forwardRef(
       playAction,
       playStatusUpdate,
       stopAction,
+      shouldAddEmulator,
     ]);
 
     const Content = () => {
@@ -112,7 +114,7 @@ export const PlayGameButton = forwardRef(
         );
       }
 
-      if (!emulator) {
+      if (shouldAddEmulator) {
         return (
           <>
             <PlusIcon className="h-[1.2rem] w-[1.2rem] stroke-[3] stroke-current fill-current" />

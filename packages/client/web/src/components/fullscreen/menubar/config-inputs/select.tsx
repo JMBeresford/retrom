@@ -1,5 +1,5 @@
 import { ButtonProps } from "@/components/ui/button";
-import { FormControl, FormLabel, useFormField } from "@/components/ui/form";
+import { FormControl, FormLabel } from "@/components/ui/form";
 import {
   Select,
   SelectTrigger,
@@ -24,7 +24,6 @@ import {
 } from "react";
 import { FocusableElement, FocusContainer } from "../../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { useFormContext } from "react-hook-form";
 import {
   FocusContext,
   useFocusable,

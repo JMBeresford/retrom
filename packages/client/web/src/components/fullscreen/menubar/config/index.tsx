@@ -107,11 +107,7 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
         </FocusableElement>
       </SheetTrigger>
 
-      <SheetContent
-        onOpenAutoFocus={(e) => {
-          // e.preventDefault();
-        }}
-      >
+      <SheetContent>
         <HotkeyLayer
           id="config-menu"
           handlers={{
