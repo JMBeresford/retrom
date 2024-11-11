@@ -2,7 +2,7 @@ import { Button, ButtonProps } from "@/components/ui/button";
 import { Code } from "@/components/ui/code";
 import { cn } from "@/lib/utils";
 import { useGamepadContext } from "@/providers/gamepad";
-import { getButtonMapValue, getHotkeyMap } from "@/providers/gamepad/maps";
+import { getButtonMapValue } from "@/providers/gamepad/maps";
 import {
   Hotkey,
   HotkeyToGamepadButton,

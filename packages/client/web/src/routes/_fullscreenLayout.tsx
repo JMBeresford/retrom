@@ -40,8 +40,7 @@ function FullscreenLayout() {
         zone: "root-navigation",
       },
       LEFT: {
-        handler: (e) =>
-          navigateByDirection("left", { event: e, nativeEvent: e.nativeEvent }),
+        handler: () => navigateByDirection("left", {}),
         zone: "root-navigation",
       },
       RIGHT: {
