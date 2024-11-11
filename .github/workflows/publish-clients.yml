@@ -117,6 +117,7 @@ jobs:
           RUSTFLAGS: ${{ matrix.rustflags }}
         with:
           includeDebug: true
+          includeRelease: false
           projectPath: packages/client
           tauriScript: pnpm tauri
           args: ${{ matrix.target }}
