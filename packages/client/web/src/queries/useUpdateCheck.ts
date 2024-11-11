@@ -1,6 +1,6 @@
 import { checkIsDesktop } from "@/lib/env";
 import { useQuery } from "@tanstack/react-query";
-import { check } from "@tauri-apps/plugin-updater";
+import { check, Update } from "@tauri-apps/plugin-updater";
 
 export function useUpdateCheck() {
   return useQuery({
@@ -9,7 +9,12 @@ export function useUpdateCheck() {
       if (checkIsDesktop()) {
         check().then((update) => update);
       } else {
-        return false;
+        return new Update({
+          rid: -1,
+          version: "0.0.0",
+          available: false,
+          currentVersion: "0.0.0",
+        });
       }
     },
   });

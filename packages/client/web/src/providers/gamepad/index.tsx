@@ -12,7 +12,7 @@ import { ControllerMapping, getControllerMapping } from "./controller-ids";
 
 export type GamepadContext = {
   controllerType: ControllerMapping;
-  gamepad: Gamepad | undefined;
+  gamepads: Gamepad[] | undefined;
 };
 
 const context = createContext<GamepadContext | undefined>(undefined);
@@ -118,7 +118,7 @@ export function GamepadProvider(props: PropsWithChildren) {
 
   return (
     <context.Provider
-      value={{ gamepad: gamepads, controllerType: controllerMapping }}
+      value={{ gamepads, controllerType: controllerMapping }}
       {...props}
     />
   );
