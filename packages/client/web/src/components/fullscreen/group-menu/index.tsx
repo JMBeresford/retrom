@@ -121,7 +121,6 @@ function GroupEntry(props: { group: Group }) {
 
   useEffect(() => {
     if (active) {
-      console.log("scrolling into view", group.id);
       setTimeout(() => {
         ref.current?.scrollIntoView({
           behavior: "smooth",

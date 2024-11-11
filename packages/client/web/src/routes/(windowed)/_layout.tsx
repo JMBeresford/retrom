@@ -19,11 +19,14 @@ import { ManageEmulatorsModal } from "@/components/modals/manage-emulators";
 import { MatchPlatformsModal } from "@/components/modals/match-platforms";
 import { VersionInfoModal } from "@/components/modals/version-info";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { checkIsDesktop } from "@/lib/env";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
   loader: async () => {
-    await getCurrentWindow().setFullscreen(false);
+    if (checkIsDesktop()) {
+      await getCurrentWindow().setFullscreen(false);
+    }
   },
 });
 

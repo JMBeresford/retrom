@@ -8,76 +8,93 @@ import {
   useState,
 } from "react";
 import { GamepadButtonEvent } from "./event";
+import { ControllerMapping, getControllerMapping } from "./controller-ids";
 
 export type GamepadContext = {
-  controllerType: "xbox" | "dualshock" | "unknown";
+  controllerType: ControllerMapping;
   gamepad: Gamepad | undefined;
 };
 
 const context = createContext<GamepadContext | undefined>(undefined);
 
 export function GamepadProvider(props: PropsWithChildren) {
-  const [gamepad, setGamepad] = useState<Gamepad | undefined>(undefined);
-  const [inputCache, setInputCache] = useState<boolean[]>([]);
+  const [gamepads, setGamepads] = useState<Gamepad[]>([]);
+  const [inputCache, setInputCache] = useState<Map<number, boolean[]>>(
+    new Map(),
+  );
+
   const { toast } = useToast();
-  const [controllerType, setControllerType] =
-    useState<GamepadContext["controllerType"]>("unknown");
+  const [controllerMapping, setControllerMapping] =
+    useState<ControllerMapping>("xbox");
 
   const onDisconnect = useCallback(
     (e: GamepadEvent) => {
-      if (gamepad && gamepad.id === e.gamepad.id) {
-        setGamepad(undefined);
+      if (gamepads.some((pad) => pad.id === e.gamepad.id)) {
+        setGamepads((prev) => prev.filter((pad) => pad.id !== e.gamepad.id));
+
+        const mapping = getControllerMapping(e.gamepad);
+
         toast({
-          title: "Gamepad disconnected!",
+          title: "Gamepad disconnected",
+          description: `Your ${mapping} controller has been disconnected`,
         });
       }
     },
-    [gamepad, toast],
+    [gamepads, toast],
   );
 
   const onConnect = useCallback(
     (e: GamepadEvent) => {
-      const { buttons } = e.gamepad;
-      setControllerType(getControllerType(e.gamepad));
-      setGamepad(e.gamepad);
-      setInputCache(buttons.map((b) => b.pressed));
+      const { buttons, index } = e.gamepad;
+      const mapping = getControllerMapping(e.gamepad);
+      setControllerMapping(mapping);
+      setGamepads((prev) => [...prev, e.gamepad]);
+      const inputs = buttons.map((b) => b.pressed);
+      setInputCache((map) => map.set(index, inputs));
 
       console.log(`Gamepad connected: ${e.gamepad.id}`);
 
       toast({
-        title: "Gamepad connected!",
+        title: "Gamepad connected",
+        description: `Now using your ${mapping} controller`,
       });
     },
     [toast],
   );
 
   const pollGamepad = useCallback(() => {
-    const pad = navigator.getGamepads()[gamepad?.index ?? 0];
     const node = document.activeElement;
 
-    if (pad) {
-      const { buttons } = pad;
-      let changed = false;
+    for (const connectedPad of gamepads) {
+      const pad = navigator.getGamepads().at(connectedPad.index);
 
-      for (let i = 0; i < buttons.length; i++) {
-        if (buttons.at(i)?.pressed !== inputCache.at(i)) {
-          console.log(i);
-          changed = true;
+      if (pad) {
+        const { buttons, index } = pad;
+        const currentInputs = inputCache.get(index);
+        let changed = false;
 
-          node?.dispatchEvent(
-            new GamepadButtonEvent({
-              gamepad: pad,
-              button: i,
-            }),
-          );
+        for (let i = 0; i < buttons.length; i++) {
+          if (buttons.at(i)?.pressed !== currentInputs?.at(i)) {
+            changed = true;
+
+            node?.dispatchEvent(
+              new GamepadButtonEvent({
+                gamepad: pad,
+                button: i,
+              }),
+            );
+          }
+        }
+
+        if (changed) {
+          const inputs = buttons.map((b) => b.pressed);
+          setInputCache((map) => map.set(index, inputs));
+          const mapping = getControllerMapping(pad);
+          setControllerMapping(mapping);
         }
       }
-
-      if (changed) {
-        setInputCache(buttons.map((b) => b.pressed));
-      }
     }
-  }, [inputCache, gamepad]);
+  }, [inputCache, gamepads]);
 
   useEffect(() => {
     let frame: number;
@@ -99,7 +116,12 @@ export function GamepadProvider(props: PropsWithChildren) {
     };
   }, [onDisconnect, onConnect, pollGamepad]);
 
-  return <context.Provider value={{ gamepad, controllerType }} {...props} />;
+  return (
+    <context.Provider
+      value={{ gamepad: gamepads, controllerType: controllerMapping }}
+      {...props}
+    />
+  );
 }
 
 export function useGamepadContext() {
@@ -110,18 +132,4 @@ export function useGamepadContext() {
   }
 
   return ctx;
-}
-
-function getControllerType(gamepad: Gamepad): GamepadContext["controllerType"] {
-  const id = gamepad.id.toLowerCase();
-
-  if (id.includes("xbox")) {
-    return "xbox";
-  }
-
-  if (id.includes("dualshock")) {
-    return "dualshock";
-  }
-
-  return "unknown";
 }

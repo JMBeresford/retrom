@@ -129,6 +129,7 @@ function Inner() {
                   className={cn(
                     "uppercase rounded",
                     '[&_div[role="progressbar"]]:w-[85%] [&_div[role="progressbar"]_>_*]:bg-primary-foreground',
+                    "opacity-80 focus-hover:opacity-100 transition-all",
                   )}
                 />
               </HotkeyLayer>
@@ -152,7 +153,10 @@ function Inner() {
                   <Button
                     size="lg"
                     variant="secondary"
-                    className="font-bold text-lg tracking-wider uppercase"
+                    className={cn(
+                      "font-bold text-lg tracking-wider uppercase",
+                      "opacity-80 focus-hover:opacity-100 transition-all",
+                    )}
                     onClick={() =>
                       navigate({ to: "/fullscreen", resetScroll: false })
                     }
