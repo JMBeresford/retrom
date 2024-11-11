@@ -1,0 +1,21 @@
+name: Announcements
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  announce-to-discord:
+    name: Announce to Discord
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Announce
+        uses: SethCohen/github-releases-to-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          content: "||@announcements|| A new version of Retrom has been released, beep boop! :tada: :rocket: :tada:"
+          footer_timestamp: true
+          avatar_url: "https://raw.githubusercontent.com/JMBeresford/retrom/refs/heads/main/packages/client/icons/icon.png"
+          username: "Retrom Release Bot"
