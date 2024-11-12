@@ -17,7 +17,7 @@ jobs:
         uses: SethCohen/github-releases-to-discord@v1.16.2
         with:
           webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
-          content: "||@announcements|| A new version of Retrom has been released, beep boop! :tada: :rocket: :tada:"
+          content: "<@&1290835052309119060> A new version of Retrom has been released, beep boop! :tada: :rocket: :tada:"
           footer_timestamp: true
           avatar_url: "https://raw.githubusercontent.com/JMBeresford/retrom/refs/heads/main/packages/client/icons/icon.png"
           username: "Retrom Release Bot"
