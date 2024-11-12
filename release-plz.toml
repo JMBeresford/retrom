@@ -37,7 +37,7 @@ body = """
 {% endif -%}
 {% if commit.body %}
 {{ commit.body | indent(first=true) }}
-{% endif -%}
+{% endif %}
 {% endfor -%}
 {% endfor -%}
 """
