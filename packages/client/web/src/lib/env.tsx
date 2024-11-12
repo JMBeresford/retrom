@@ -19,5 +19,5 @@ export function PlatformDependent(props: {
   desktop?: ReactNode;
   web?: ReactNode;
 }) {
-  return <> {checkIsDesktop() ? props.desktop : props.web} </>;
+  return checkIsDesktop() ? props.desktop : props.web;
 }
