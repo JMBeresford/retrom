@@ -36,9 +36,8 @@ body = """
 - {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}
 {% endif -%}
 {% if commit.body %}
-{{ commit.body | indent(first=true) }}\n
+{{ commit.body | indent(first=true) }}\n\n
 {% endif %}
----
 {% endfor %}
 {% endfor -%}
 """
