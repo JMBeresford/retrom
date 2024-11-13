@@ -6,7 +6,7 @@ exclude = ["**/node_modules"]
 
 [workspace.package]
 edition = "2021"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["John Beresford <jberesford@volcaus.com>"]
 license = "GPL-3.0"
 readme = "./README.md"
@@ -34,12 +34,12 @@ tracing-futures = { version = "0.2.5", features = ["tokio", "futures"] }
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-util = { version = "0.7.11", features = ["io", "compat"] }
 dotenvy = "0.15.7"
-retrom-db = { path = "./packages/db", version = "^0.4.0" }
-retrom-client = { path = "./packages/client", version = "^0.4.0" }
-retrom-service = { path = "./packages/service", version = "^0.4.0" }
-retrom-codegen = { path = "./packages/codegen", version = "^0.4.0" }
-retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "^0.4.0" }
-retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "^0.4.0" }
+retrom-db = { path = "./packages/db", version = "^0.4.1" }
+retrom-client = { path = "./packages/client", version = "^0.4.1" }
+retrom-service = { path = "./packages/service", version = "^0.4.1" }
+retrom-codegen = { path = "./packages/codegen", version = "^0.4.1" }
+retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "^0.4.1" }
+retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "^0.4.1" }
 futures = "0.3.30"
 bytes = "1.6.0"
 reqwest = { version = "0.12.3", features = [
