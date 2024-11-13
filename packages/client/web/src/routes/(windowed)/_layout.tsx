@@ -20,10 +20,12 @@ import { MatchPlatformsModal } from "@/components/modals/match-platforms";
 import { VersionInfoModal } from "@/components/modals/version-info";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { checkIsDesktop } from "@/lib/env";
+import { destroy } from "@noriginmedia/norigin-spatial-navigation";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
   loader: async () => {
+    destroy();
     if (checkIsDesktop()) {
       await getCurrentWindow().setFullscreen(false);
     }

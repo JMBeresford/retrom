@@ -20,9 +20,7 @@ export function UpdateLibrary() {
   const [open, setOpen] = useState(false);
 
   const handleUpdate = useCallback(async () => {
-    console.log("start");
     await updateLibrary();
-    console.log("end");
     setOpen(false);
   }, [updateLibrary, setOpen]);
 

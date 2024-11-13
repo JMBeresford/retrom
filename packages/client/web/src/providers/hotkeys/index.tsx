@@ -91,8 +91,6 @@ export function useHotkeys(opts: {
 
       const { handler, zone } = handlerInfo;
 
-      console.log({ hotkey, handler, zone, layerContext, event });
-
       const zoneActive = layerContext?.isZoneActive(zone) ?? true;
       if (!zoneActive || !handler) {
         return;

@@ -232,7 +232,6 @@ function Description(props: { description: string }) {
       handlers={{
         UP: {
           handler: (event) => {
-            console.log(event);
             ref.current?.scrollBy({ top: -100, behavior: "smooth" });
             event?.stopPropagation();
             event?.preventDefault();
@@ -240,7 +239,6 @@ function Description(props: { description: string }) {
         },
         DOWN: {
           handler: (event) => {
-            console.log(event);
             ref.current?.scrollBy({ top: 100, behavior: "smooth" });
             event?.stopPropagation();
             event?.preventDefault();

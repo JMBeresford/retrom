@@ -257,8 +257,6 @@ function parseArgs(argsString: string): string[] {
   const quoteChars = ['"', "'", "`"];
   const quoteStack: string[] = [];
 
-  console.log(argsString);
-
   for (const char of argsString) {
     if (quoteChars.includes(char)) {
       if (quoteStack[quoteStack.length - 1] === char) {
@@ -281,6 +279,5 @@ function parseArgs(argsString: string): string[] {
 
   args.push(current);
 
-  console.log({ args });
   return args;
 }

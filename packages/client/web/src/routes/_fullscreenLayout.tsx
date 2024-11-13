@@ -8,7 +8,11 @@ import { z } from "zod";
 import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import { GroupContextProvider } from "@/providers/fullscreen/group-context";
 import { GamepadProvider } from "@/providers/gamepad";
-import { navigateByDirection } from "@noriginmedia/norigin-spatial-navigation";
+import {
+  init,
+  navigateByDirection,
+  setKeyMap,
+} from "@noriginmedia/norigin-spatial-navigation";
 import { useHotkeys } from "@/providers/hotkeys";
 import { InputDeviceProvider } from "@/providers/input-device";
 import { checkIsDesktop } from "@/lib/env";
@@ -31,6 +35,21 @@ export const Route = createFileRoute("/_fullscreenLayout")({
     if (checkIsDesktop()) {
       await getCurrentWindow().setFullscreen(true);
     }
+
+    init({
+      // debug: import.meta.env.DEV,
+      shouldUseNativeEvents: true,
+      // visualDebug: true,
+    });
+
+    // ununsed, setting to invalid keycode to keep vanilla arrow key behavior
+    setKeyMap({
+      up: 1000,
+      down: 1000,
+      left: 1000,
+      right: 1000,
+      enter: 1000,
+    });
   },
 });
 

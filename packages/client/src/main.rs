@@ -15,7 +15,7 @@ type ManagedConfig = Mutex<RetromClientConfig>;
 
 #[tauri::command]
 fn set_config(app: AppHandle, new_config: RetromClientConfig) {
-    tracing::info!("Setting new config: {:?}", new_config);
+    tracing::debug!("Setting new config: {:?}", new_config);
     match app.try_state::<ManagedConfig>() {
         Some(config) => {
             *config.lock().unwrap() = new_config;

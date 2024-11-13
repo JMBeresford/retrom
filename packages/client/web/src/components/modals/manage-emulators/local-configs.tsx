@@ -182,7 +182,6 @@ function LocalConfigRow(props: {
           disabled={pending || !isDirty}
           type="submit"
           size="icon"
-          onClick={() => console.log(form.formState)}
           className="p-2 w-min h-min"
         >
           {pending ? (
