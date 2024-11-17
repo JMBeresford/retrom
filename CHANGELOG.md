@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.4.2](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.1...retrom-v0.4.2) - 2024-11-17
+
+### Fixes
+- auto-updating
+
+
+
+### New
+- announcement system
+
+    Retrom now has an announcement system that can be used to display
+    important messages without requiring a new release. This is useful for
+    getting notified about breakages in current versions or new features
+    that are available.
+
+
+
+- fullscreen game page overhaul
+
+    The game page in fullscreen mode was unfortunately prone to bugs and
+    inconsistencies on various screen sizes. This overhaul cleans up the UI
+    to make it more compatible with different screen sizes and resolutions,
+    and to make it more intuitive to use.
+
+
+
+
 ## [0.4.1](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.0...retrom-v0.4.1) - 2024-11-13
 
 ### Fixes
