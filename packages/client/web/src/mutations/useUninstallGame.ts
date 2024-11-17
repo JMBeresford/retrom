@@ -1,9 +1,11 @@
+import { useToast } from "@/components/ui/use-toast";
 import { Game } from "@/generated/retrom/models/games";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 
 export function useUninstallGame(game: Game) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationKey: ["uninstall", game.path],
@@ -13,6 +15,11 @@ export function useUninstallGame(game: Game) {
       });
     },
     onSuccess: () => {
+      toast({
+        title: "Game uninstalled",
+        description: `Game was successfully uninstalled`,
+      });
+
       queryClient.invalidateQueries({
         queryKey: ["installation-state"],
       });

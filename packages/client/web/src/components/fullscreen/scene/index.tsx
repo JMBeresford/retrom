@@ -1,23 +1,28 @@
-import { ComponentProps, useRef } from "react";
+import { ComponentProps, ReactNode, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   BackgroundMaterialKey,
   BackgroundMaterialProps,
 } from "./background-material";
 import { ACESFilmicToneMapping, BufferGeometry, Mesh } from "three";
+import { View } from "@react-three/drei";
 
-export function Scene(props: ComponentProps<typeof Canvas>) {
-  const { children, ...rest } = props;
+export const Scene = (
+  props: Omit<ComponentProps<typeof Canvas>, "children"> & {
+    children?: ReactNode;
+  },
+) => {
+  const { children = null, ...rest } = props;
 
   return (
     <Canvas {...rest} gl={{ toneMapping: ACESFilmicToneMapping }}>
-      <Background />
+      <View.Port />
       {children}
     </Canvas>
   );
-}
+};
 
-function Background() {
+export function Background() {
   const ref = useRef<Mesh<BufferGeometry, BackgroundMaterialProps>>(null);
   const size = useThree((s) => s.size);
 

@@ -27,7 +27,7 @@ export function Actions() {
       >
         <ActionButton
           game={game}
-          className='[&_div[role="progressbar"]]:w-[85%] [&_div[role="progressbar"]_>_*]:bg-primary-foreground'
+          className='[&_div[role="progressbar"]]:w-[85%] [&_div[role="progressbar"]_>_*]:bg-primary-foreground w-full'
         />
       </div>
 

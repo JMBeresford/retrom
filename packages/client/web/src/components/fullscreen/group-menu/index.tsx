@@ -124,7 +124,6 @@ function GroupEntry(props: { group: Group }) {
       setTimeout(() => {
         ref.current?.scrollIntoView({
           behavior: "smooth",
-          block: "center",
           inline: "center",
         });
       }, 200);
