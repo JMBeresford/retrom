@@ -16,27 +16,43 @@ import { LoaderCircle } from "lucide-react";
 import { useState } from "react";
 import { FocusableElement, FocusContainer } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
+import { useInstallationQuery } from "@/queries/useInstallationQuery";
+import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 
 export function UninstallGameAction() {
   const [open, setOpen] = useState(false);
   const { game } = useGameDetail();
 
-  const { mutateAsync: uninstall, status } = useUninstallGame(game);
-  const disabled = status === "pending";
+  const { data: installationStatus } = useInstallationQuery(game);
+  const { mutate: uninstall, status } = useUninstallGame(game);
+  const disabled =
+    status === "pending" || installationStatus !== InstallationStatus.INSTALLED;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <FocusableElement opts={{ focusKey: "uninstall-game-action-open" }}>
-          <MenuEntryButton>Uninstall Game</MenuEntryButton>
+          <MenuEntryButton
+            disabled={installationStatus !== InstallationStatus.INSTALLED}
+          >
+            Uninstall Game
+          </MenuEntryButton>
         </FocusableElement>
       </SheetTrigger>
 
-      <SheetContent>
+      <SheetContent
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
         <HotkeyLayer
+          allowBubbling="never"
           handlers={{
             BACK: { handler: () => setOpen(false) },
-            MENU: { handler: () => uninstall() },
+            MENU: {
+              handler: () => uninstall(),
+            },
           }}
         >
           <FocusContainer
@@ -55,9 +71,7 @@ export function UninstallGameAction() {
                 <FocusableElement
                   opts={{ focusKey: "uninstall-game-action-close" }}
                 >
-                  <HotkeyButton disabled={disabled} hotkey="BACK">
-                    Cancel
-                  </HotkeyButton>
+                  <HotkeyButton hotkey="BACK">Back</HotkeyButton>
                 </FocusableElement>
               </SheetClose>
 
@@ -67,10 +81,7 @@ export function UninstallGameAction() {
                 <HotkeyButton
                   disabled={disabled}
                   hotkey="MENU"
-                  onClick={async () => {
-                    await uninstall();
-                    setOpen(false);
-                  }}
+                  onClick={() => uninstall()}
                 >
                   {status === "pending" ? (
                     <LoaderCircle className="animate-spin" />

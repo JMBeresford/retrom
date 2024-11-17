@@ -9,15 +9,16 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { UninstallGameAction } from "./uninstall-game";
-import { useGameDetail } from "@/providers/game-details";
-import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { DeleteGameAction } from "./delete-game";
 import { HotkeyButton } from "../hotkey-button";
 import { useState } from "react";
 import { useHotkeys } from "@/providers/hotkeys";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { FocusableElement, FocusContainer } from "../focus-container";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { EllipsisVerticalIcon } from "lucide-react";
+import { DesktopOnly } from "@/lib/env";
 
 declare global {
   export interface HotkeyZones {
@@ -28,8 +29,6 @@ declare global {
 
 export function GameActions() {
   const [open, setOpen] = useState(false);
-  const { game } = useGameDetail();
-  const { data: installationState } = useInstallationQuery(game);
 
   useHotkeys({
     handlers: {
@@ -42,11 +41,24 @@ export function GameActions() {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <FocusableElement opts={{ focusKey: "game-actions-open" }}>
-          <HotkeyButton hotkey="PAGE_LEFT">game actions</HotkeyButton>
-        </FocusableElement>
-      </SheetTrigger>
+      <HotkeyLayer
+        id="game-actions"
+        handlers={{ ACCEPT: { handler: () => setOpen(true) } }}
+      >
+        <SheetTrigger asChild>
+          <FocusableElement opts={{ focusKey: "game-actions-open" }}>
+            <Button
+              variant="accent"
+              className={cn(
+                "h-full rounded-none px-2",
+                "opacity-80 focus-hover:opacity-100 transition-all",
+              )}
+            >
+              <EllipsisVerticalIcon height="2rem" width="2rem" />
+            </Button>
+          </FocusableElement>
+        </SheetTrigger>
+      </HotkeyLayer>
 
       <SheetContent>
         <HotkeyLayer
@@ -59,7 +71,14 @@ export function GameActions() {
             },
           }}
         >
-          <FocusContainer initialFocus opts={{ focusKey: "game-actions" }}>
+          <FocusContainer
+            initialFocus
+            opts={{
+              focusKey: "game-actions",
+              isFocusBoundary: true,
+              forceFocus: true,
+            }}
+          >
             <SheetHeader>
               <SheetTitle>Game Actions</SheetTitle>
               <SheetDescription>
@@ -68,11 +87,9 @@ export function GameActions() {
             </SheetHeader>
 
             <div className="flex flex-col gap-2 h-full">
-              {installationState === InstallationStatus.INSTALLED ? (
+              <DesktopOnly>
                 <UninstallGameAction />
-              ) : (
-                <></>
-              )}
+              </DesktopOnly>
 
               <DeleteGameAction />
             </div>

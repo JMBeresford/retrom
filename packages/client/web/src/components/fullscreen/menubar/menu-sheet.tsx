@@ -36,14 +36,17 @@ export function MenuSheet(props: JSX.IntrinsicElements["button"]) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <FocusableElement opts={{ focusKey: "menu-root-open" }}>
-          <HotkeyButton {...props} hotkey="MENU">
-            menu
-          </HotkeyButton>
-        </FocusableElement>
+        <HotkeyButton {...props} hotkey="MENU">
+          menu
+        </HotkeyButton>
       </SheetTrigger>
 
-      <SheetContent>
+      <SheetContent
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
         <FocusContainer
           initialFocus
           opts={{ focusKey: "menu-root", isFocusBoundary: true }}

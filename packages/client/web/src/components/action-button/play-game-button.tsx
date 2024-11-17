@@ -135,7 +135,7 @@ export const PlayGameButton = forwardRef(
       <FocusableElement
         ref={forwardedRef}
         initialFocus
-        opts={{ focusKey: "play-game-button" }}
+        opts={{ focusKey: "play-game-button", forceFocus: true }}
       >
         <Button {...props} disabled={disabled} onClick={onClick}>
           <Content />

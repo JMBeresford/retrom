@@ -6,6 +6,7 @@ import { Scrollbar } from "@radix-ui/react-scroll-area";
 import { GroupMenu } from "@/components/fullscreen/group-menu";
 import { ActionBar } from "@/components/fullscreen/action-bar";
 import { Fragment } from "react/jsx-runtime";
+import { Background, Scene } from "@/components/fullscreen/scene";
 
 export const Route = createLazyFileRoute("/_fullscreenLayout/fullscreen/")({
   component: FullscreenComponent,
@@ -15,8 +16,14 @@ function FullscreenComponent() {
   const { activeGroup, allGroups } = useGroupContext();
 
   return (
-    <>
-      <ScrollArea className="h-full">
+    <div className="max-h-full h-fit flex flex-col overflow-hidden">
+      <ScrollArea className="h-full relative">
+        <div className="absolute inset-0 z-[-1]">
+          <Scene>
+            <Background />
+          </Scene>
+        </div>
+
         <div className="relative">
           {allGroups.map((group) =>
             activeGroup?.id === group.id ? (
@@ -30,9 +37,9 @@ function FullscreenComponent() {
         <Scrollbar orientation="vertical" className="z-[100]" />
       </ScrollArea>
 
-      <ActionBar className="overflow-hidden max-w-screen">
+      <ActionBar className="fixed bottom-0 inset-x-0 overflow-hidden max-w-screen">
         <GroupMenu className="w-full" />
       </ActionBar>
-    </>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef } from "react";
+import { ForwardedRef, forwardRef, useImperativeHandle, useRef } from "react";
 import { Button, ButtonProps } from "../ui/button";
 import { Game } from "@/generated/retrom/models/games";
 import { checkIsDesktop } from "@/lib/env";
@@ -12,6 +12,9 @@ export const DownloadGameButton = forwardRef(
     props: ButtonProps & { game: Game },
     forwardedRef: ForwardedRef<HTMLButtonElement>,
   ) => {
+    const ref = useRef<HTMLButtonElement>(null!);
+    useImperativeHandle(forwardedRef, () => ref.current);
+
     const { game, className, ...rest } = props;
     const configStore = useConfigStore();
     const server = configStore((store) => store.server);
@@ -24,7 +27,8 @@ export const DownloadGameButton = forwardRef(
       <form action={`${restHost}/game/${game.id}`} className="w-full">
         <FocusableElement
           initialFocus
-          opts={{ focusKey: "download-game-button" }}
+          ref={ref}
+          opts={{ focusKey: "download-game-button", forceFocus: true }}
         >
           <Button
             ref={forwardedRef}

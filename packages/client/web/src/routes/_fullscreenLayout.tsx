@@ -1,7 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useRef } from "react";
-import { Scene } from "../components/fullscreen/scene";
-import { View } from "@react-three/drei";
 import { FullscreenMenubar } from "../components/fullscreen/menubar";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
@@ -37,7 +35,7 @@ export const Route = createFileRoute("/_fullscreenLayout")({
     }
 
     init({
-      // debug: import.meta.env.DEV,
+      debug: import.meta.env.DEV,
       shouldUseNativeEvents: true,
       // visualDebug: true,
     });
@@ -83,20 +81,11 @@ function FullscreenLayout() {
         <GroupContextProvider>
           <div
             ref={container}
-            className={cn(
-              "h-[100dvh] max-h-[100dvh] w-screen relative",
-              "grid grid-rows-[auto_1fr]",
-            )}
+            className={cn("h-[100dvh] w-screen relative", "flex flex-col")}
           >
-            <div className="absolute inset-0 z-[-1]">
-              <Scene eventSource={container}>
-                <View.Port />
-              </Scene>
-            </div>
-
             <FullscreenMenubar className="w-full border-b z-[50] bg-background" />
 
-            <div className="flex flex-col overflow-hidden w-full *:overflow-y-auto">
+            <div className="flex flex-col h-full max-h-full overflow-hidden w-full *:overflow-y-auto">
               <Outlet />
             </div>
           </div>

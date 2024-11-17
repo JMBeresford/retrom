@@ -76,7 +76,7 @@ export const InstallGameButton = forwardRef(
       <FocusableElement
         ref={forwardedRef}
         initialFocus
-        opts={{ focusKey: "install-game-button" }}
+        opts={{ focusKey: "install-game-button", forceFocus: true }}
       >
         <Button
           {...rest}
