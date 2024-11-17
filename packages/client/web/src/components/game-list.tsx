@@ -63,7 +63,7 @@ export function GameList(props: { games: GameWithMetadata[] }) {
                     <div className="rounded-md overflow-hidden w-fit pointer-events-auto touch-auto z-50">
                       <ActionButton
                         size="sm"
-                        className="text-md min-w-[100px]"
+                        className='text-md min-w-[100px] [&_div[role="progressbar"]_>_*]:bg-primary-foreground'
                         game={game}
                       />
                     </div>

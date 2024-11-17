@@ -57,11 +57,7 @@ export const InstallGameButton = forwardRef(
       }
 
       if (installState === InstallationStatus.INSTALLING) {
-        return (
-          <div className="absolute inset-0 grid place-items-center px-2">
-            <Progress value={installProgress} className="h-2" />
-          </div>
-        );
+        return <Progress value={installProgress} className="h-2" />;
       }
 
       return (
