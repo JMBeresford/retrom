@@ -25,16 +25,21 @@ export function UninstallGameAction() {
 
   const { data: installationStatus } = useInstallationQuery(game);
   const { mutate: uninstall, status } = useUninstallGame(game);
+  const openDisabled = installationStatus !== InstallationStatus.INSTALLED;
+
   const disabled =
     status === "pending" || installationStatus !== InstallationStatus.INSTALLED;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <FocusableElement opts={{ focusKey: "uninstall-game-action-open" }}>
-          <MenuEntryButton
-            disabled={installationStatus !== InstallationStatus.INSTALLED}
-          >
+        <FocusableElement
+          opts={{
+            focusKey: "uninstall-game-action-open",
+            focusable: !openDisabled,
+          }}
+        >
+          <MenuEntryButton disabled={openDisabled}>
             Uninstall Game
           </MenuEntryButton>
         </FocusableElement>
