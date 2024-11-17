@@ -3,7 +3,7 @@
     {
       "versions": ["0.3.3", "0.4.0", "0.4.1"],
       "level": "warning",
-      "announcement": "The auto-update feature of Retrom is broken in this release. Please update to version 0.4.2 manually."
+      "message": "The auto-update feature of Retrom is broken in this release. Please update to version 0.4.2 manually."
     }
   ]
 }
