@@ -88,8 +88,9 @@ function Inner() {
                       }}
                       game={game}
                       className={cn(
-                        "w-auto text-5xl h-[unset] *:first:hidden uppercase px-8 py-4",
-                        "opacity-80 focus-hover:opacity-100 transition-all",
+                        "w-auto text-5xl h-[unset] [&_svg]:hidden uppercase px-8 py-4",
+                        "opacity-80 focus-hover:opacity-100 transition-all h-full",
+                        '[&_div[role="progressbar"]]:w-[6ch] [&_div[role="progressbar"]_>_*]:bg-primary-foreground',
                       )}
                     />
                   </HotkeyLayer>
