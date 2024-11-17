@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package retrom;
+
+message VersionAnnouncement {
+  repeated string versions = 1;
+  string level = 2;
+  string message = 3;
+  optional string url = 4;
+}
+
+message VersionAnnouncementsPayload {
+  repeated VersionAnnouncement announcements = 1;
+}
