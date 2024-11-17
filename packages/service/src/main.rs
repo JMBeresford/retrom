@@ -13,13 +13,15 @@ use std::{
     task::{Context, Poll},
 };
 use tower::Service;
-use tracing::{error, info, Instrument};
+use tracing::{debug, error, info, warn, Instrument};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod config;
 mod grpc;
 mod providers;
 mod rest;
+
+const CARGO_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -77,7 +79,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rest_service = warp::service(rest::rest_service(pool_state.clone()));
     let grpc_service = grpc::grpc_service(pool_state.clone(), Arc::new(server_config));
 
-    info!("Starting server at: {}", addr.to_string());
+    info!(
+        "Starting Retrom {} service at: {}",
+        CARGO_VERSION,
+        addr.to_string()
+    );
+
+    check_version_announcements().await;
+
     Server::bind(&addr)
         .serve(make_service_fn(move |_| {
             let mut rest_service = rest_service.clone();
@@ -176,4 +185,45 @@ fn is_grpc_request(req: &hyper::Request<hyper::Body>) -> bool {
             .is_some();
 
     is_grpc || is_grpc_preflight
+}
+
+async fn check_version_announcements() {
+    let url = "https://raw.githubusercontent.com/JMBeresford/retrom/refs/heads/main/version-announcements.json";
+
+    let res = match reqwest::get(url).await {
+        Ok(res) => res,
+        Err(err) => {
+            error!("Could not fetch version announcements: {}", err);
+            return;
+        }
+    };
+
+    if !res.status().is_success() {
+        error!("Could not fetch version announcements: {}", res.status());
+        return;
+    }
+
+    let json = match res
+        .json::<retrom_codegen::retrom::VersionAnnouncementsPayload>()
+        .await
+    {
+        Ok(json) => json,
+        Err(err) => {
+            error!("Could not parse version announcements: {}", err);
+            return;
+        }
+    };
+
+    json.announcements.iter().for_each(|announcement| {
+        announcement.versions.iter().for_each(|version| {
+            if version == CARGO_VERSION {
+                match announcement.level.as_str() {
+                    "info" => info!("Version announcement: {}", announcement.message),
+                    "warn" | "warning" => warn!("Version announcement: {}", announcement.message),
+                    "error" => error!("Version announcement: {}", announcement.message),
+                    _ => debug!("Skipping version announcement: {}", announcement.message),
+                }
+            }
+        });
+    });
 }
