@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.4.3](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.2...retrom-v0.4.3) - 2024-11-19
+
+### Fixes
+- UI Tweaks
+
+    Fullscreen mode menus now work properly on smaller screen sizes.
+    Navigation via gamepad/hotkeys in fullscreen mode is now more intuitive.
+    Fullscreen mode now sorts platforms alphabetically.
+
+
+
+
 ## [0.4.2](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.1...retrom-v0.4.2) - 2024-11-17
 
 ### Fixes
