@@ -1,0 +1,29 @@
+[package]
+name = "retrom-plugin-service-client"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Retrom plugin to facilitate accessing the Retrom api within tauri."
+rust-version = "1.80"
+exclude = ["./examples", "./webview-dist", "./webview-src", "**/node_modules"]
+links = "tauri-plugin-retrom-service-client"
+
+[dependencies]
+tauri = { version = "2.0.0-rc.6" }
+serde = "1.0"
+thiserror = "1.0"
+tracing = { workspace = true }
+tokio = { workspace = true }
+retrom-codegen = { workspace = true }
+hyper = { workspace = true }
+tokio-rustls = { workspace = true }
+webpki-roots = { workspace = true }
+hyper-rustls = { workspace = true }
+tower = { workspace = true }
+tonic-web = { workspace = true }
+tonic = { workspace = true }
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0-rc.6", features = ["build"] }

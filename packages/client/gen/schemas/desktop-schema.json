@@ -4908,6 +4908,21 @@
           "const": "process:deny-restart"
         },
         {
+          "description": "Default permissions for the plugin",
+          "type": "string",
+          "const": "retrom-service-client:default"
+        },
+        {
+          "description": "Enables the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "retrom-service-client:allow-ping"
+        },
+        {
+          "description": "Denies the ping command without any pre-configured scope.",
+          "type": "string",
+          "const": "retrom-service-client:deny-ping"
+        },
+        {
           "description": "This permission set configures which\nshell functionality is exposed by default.\n\n#### Granted Permissions\n\nIt allows to use the `open` functionality without any specific\nscope pre-configured. It will allow opening `http(s)://`,\n`tel:` and `mailto:` links.\n",
           "type": "string",
           "const": "shell:default"

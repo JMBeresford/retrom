@@ -5,6 +5,7 @@ use retrom_codegen::retrom::{
     InstallationStatus, PlayGamePayload, PlayStatus, RetromClientConfig, StopGamePayload,
 };
 use retrom_plugin_installer::InstallerExt;
+use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use tauri::{command, AppHandle, Manager, Runtime};
 use tokio::sync::Mutex;
 use tracing::{info, instrument};

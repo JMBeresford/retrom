@@ -205,7 +205,7 @@ export function SideBar() {
                             <TooltipTrigger asChild>
                               <li
                                 className={cn(
-                                  "relative before:z-[-1] before:duration-200",
+                                  "relative z-10 before:z-[-1] before:duration-200",
                                   "before:absolute before:inset-0 before:transition-opacity",
                                   "before:bg-gradient-to-r before:from-accent/80 before:opacity-0",
                                   "text-[1rem] text-muted-foreground/40 transition-all",

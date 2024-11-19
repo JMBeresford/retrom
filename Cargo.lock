@@ -4263,6 +4263,7 @@ dependencies = [
  "retrom-codegen",
  "retrom-plugin-installer",
  "retrom-plugin-launcher",
+ "retrom-plugin-service-client",
  "serde",
  "serde_json",
  "tauri",
@@ -4341,7 +4342,28 @@ dependencies = [
  "hyper-util",
  "retrom-codegen",
  "retrom-plugin-installer",
+ "retrom-plugin-service-client",
  "retry",
+ "serde",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 1.0.63",
+ "tokio",
+ "tokio-rustls 0.25.0",
+ "tonic",
+ "tonic-web",
+ "tower",
+ "tracing",
+ "webpki-roots",
+]
+
+[[package]]
+name = "retrom-plugin-service-client"
+version = "0.4.3"
+dependencies = [
+ "hyper 0.14.30",
+ "hyper-rustls 0.25.0",
+ "retrom-codegen",
  "serde",
  "tauri",
  "tauri-plugin",

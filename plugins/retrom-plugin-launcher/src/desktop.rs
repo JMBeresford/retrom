@@ -4,6 +4,7 @@ use retrom_codegen::retrom::{
     GamePlayStatusUpdate, GetGameMetadataRequest, PlayStatus, UpdateGameMetadataRequest,
     UpdatedGameMetadata,
 };
+use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Emitter, Runtime};
 use tokio::{
@@ -11,8 +12,6 @@ use tokio::{
     sync::{Mutex, RwLock},
 };
 use tracing::{info, instrument, warn};
-
-use crate::LauncherExt;
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
     app: &AppHandle<R>,

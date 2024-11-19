@@ -81,6 +81,7 @@ pub async fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(retrom_plugin_service_client::init())
         .plugin(retrom_plugin_installer::init())
         .plugin(retrom_plugin_launcher::init().await)
         .invoke_handler(tauri::generate_handler![greet, set_config])
