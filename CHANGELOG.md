@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.4.4](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.3...retrom-v0.4.4) - 2024-11-19
+
+### Fixes
+- better handle certain networking configs
+
+    Networking configurations that do not support the GRPC protocol are now
+    supported.
+
+
+
+
 ## [0.4.3](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.2...retrom-v0.4.3) - 2024-11-19
 
 ### Fixes
