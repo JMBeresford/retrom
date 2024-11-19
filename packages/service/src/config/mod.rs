@@ -1,7 +1,6 @@
 use config::{Config, ConfigError, File};
 use retrom_codegen::retrom::StorageType;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ConnectionConfig {

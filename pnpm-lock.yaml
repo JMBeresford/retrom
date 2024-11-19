@@ -333,6 +333,25 @@ importers:
         specifier: ^5.5.3
         version: 5.5.4
 
+  plugins/retrom-plugin-service-client:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: 2.0.0-rc.4
+        version: 2.0.0-rc.4
+    devDependencies:
+      '@rollup/plugin-typescript':
+        specifier: ^11.1.6
+        version: 11.1.6(rollup@4.21.2)(tslib@2.7.0)(typescript@5.5.4)
+      rollup:
+        specifier: ^4.9.6
+        version: 4.21.2
+      tslib:
+        specifier: ^2.6.2
+        version: 2.7.0
+      typescript:
+        specifier: ^5.5.3
+        version: 5.5.4
+
 packages:
 
   '@alloc/quick-lru@5.2.0':

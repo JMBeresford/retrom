@@ -9,7 +9,7 @@ use retrom_codegen::{
     igdb,
     retrom::{self},
 };
-use tracing::{debug, error, info, instrument, warn, Instrument, Level};
+use tracing::{debug, error, instrument, warn, Instrument, Level};
 
 use super::provider::IGDBProvider;
 

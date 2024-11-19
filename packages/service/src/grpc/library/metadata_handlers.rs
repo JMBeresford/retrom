@@ -18,7 +18,7 @@ use retrom_codegen::{
     },
 };
 use retrom_db::schema;
-use tracing::{info, info_span, instrument, Instrument};
+use tracing::{info_span, instrument, Instrument};
 
 #[instrument(skip(state))]
 pub async fn update_metadata(
