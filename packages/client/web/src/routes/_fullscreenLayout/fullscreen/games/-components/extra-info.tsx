@@ -53,7 +53,7 @@ export function ExtraInfo() {
   return (
     <div
       className={cn(
-        "flex gap-8 p-8 justify-center *:basis-0",
+        "flex gap-8 py-8 justify-between *:basis-0",
         "text-center border-secondary",
         "outline-none focus:border-accent",
       )}

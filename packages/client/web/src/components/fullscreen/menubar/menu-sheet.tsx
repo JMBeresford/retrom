@@ -15,7 +15,8 @@ import { Library } from "./library";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useState } from "react";
 import { useHotkeys } from "@/providers/hotkeys";
-import { FocusableElement, FocusContainer } from "../focus-container";
+import { FocusContainer } from "../focus-container";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 declare global {
   export interface HotkeyZones {
@@ -65,17 +66,17 @@ export function MenuSheet(props: JSX.IntrinsicElements["button"]) {
               </SheetDescription>
             </SheetHeader>
 
-            <div className="flex flex-col gap-4 h-full">
-              <Library />
-              <Config />
-              <ExitFullscreen />
-            </div>
+            <ScrollArea className="h-full w-full">
+              <div className="flex flex-col gap-4 h-full">
+                <Library />
+                <Config />
+                <ExitFullscreen />
+              </div>
+            </ScrollArea>
 
             <SheetFooter>
               <SheetClose asChild>
-                <FocusableElement opts={{ focusKey: "menu-root-close" }}>
-                  <HotkeyButton hotkey="BACK">close</HotkeyButton>
-                </FocusableElement>
+                <HotkeyButton hotkey="BACK">close</HotkeyButton>
               </SheetClose>
             </SheetFooter>
           </HotkeyLayer>

@@ -60,9 +60,7 @@ export function Description(props: { description: string }) {
           focused && "bg-muted/80 border-accent",
         )}
       >
-        <h3 className="text-3xl font-black uppercase text-muted-foreground mb-2">
-          Description
-        </h3>
+        <h3 className="text-3xl font-black uppercase mb-2">Description</h3>
 
         <ScrollArea
           ref={ref}

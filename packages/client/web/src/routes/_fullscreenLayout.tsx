@@ -30,13 +30,14 @@ export const Route = createFileRoute("/_fullscreenLayout")({
   component: FullscreenLayout,
   validateSearch: zodSearchValidator(searchSchema),
   loader: async () => {
-    if (checkIsDesktop()) {
+    if (checkIsDesktop() && !import.meta.env.DEV) {
       await getCurrentWindow().setFullscreen(true);
     }
 
     init({
-      debug: import.meta.env.DEV,
+      // debug: import.meta.env.DEV,
       shouldUseNativeEvents: true,
+      useGetBoundingClientRect: true,
       // visualDebug: true,
     });
 

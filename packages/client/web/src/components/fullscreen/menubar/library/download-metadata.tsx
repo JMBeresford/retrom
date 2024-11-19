@@ -29,7 +29,6 @@ export function DownloadMetadata(props: ComponentProps<typeof SheetTrigger>) {
 
       <SheetContent>
         <FocusContainer
-          initialFocus
           opts={{
             focusKey: "download-metadata-menu",
             isFocusBoundary: true,
@@ -54,26 +53,27 @@ export function DownloadMetadata(props: ComponentProps<typeof SheetTrigger>) {
               <SheetDescription>Update your library metadata</SheetDescription>
             </SheetHeader>
 
-            <SheetFooter>
-              <FocusableElement opts={{ focusKey: "download-metadata-close" }}>
-                <SheetClose asChild>
-                  <HotkeyButton hotkey="BACK">close</HotkeyButton>
-                </SheetClose>
-              </FocusableElement>
+            <FocusableElement
+              initialFocus
+              opts={{ focusKey: "download-metadata-trap" }}
+            >
+              <button className="opacity-0"></button>
+            </FocusableElement>
 
-              <FocusableElement
-                opts={{ focusKey: "download-metadata-download" }}
+            <SheetFooter>
+              <SheetClose asChild>
+                <HotkeyButton hotkey="BACK">back</HotkeyButton>
+              </SheetClose>
+
+              <HotkeyButton
+                hotkey="MENU"
+                onClick={() => {
+                  downloadMetadata();
+                  setOpen(false);
+                }}
               >
-                <HotkeyButton
-                  hotkey="MENU"
-                  onClick={() => {
-                    downloadMetadata();
-                    setOpen(false);
-                  }}
-                >
-                  Download
-                </HotkeyButton>
-              </FocusableElement>
+                Download
+              </HotkeyButton>
             </SheetFooter>
           </HotkeyLayer>
         </FocusContainer>

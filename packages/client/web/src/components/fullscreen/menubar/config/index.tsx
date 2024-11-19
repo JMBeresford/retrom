@@ -129,39 +129,30 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
               </SheetDescription>
             </SheetHeader>
 
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="flex flex-col justify-between h-full"
-              >
-                <ScrollArea className="max-h-fit">
+            <ScrollArea className="h-full w-full">
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="flex flex-col justify-between h-full"
+                >
                   <ConfigForm />
-                </ScrollArea>
+                </form>
+              </Form>
+            </ScrollArea>
 
-                <SheetFooter>
-                  <SheetClose asChild>
-                    <FocusableElement opts={{ focusKey: "config-menu-close" }}>
-                      <HotkeyButton hotkey="BACK">close</HotkeyButton>
-                    </FocusableElement>
-                  </SheetClose>
+            <SheetFooter>
+              <SheetClose asChild>
+                <HotkeyButton hotkey="BACK">back</HotkeyButton>
+              </SheetClose>
 
-                  <FocusableElement
-                    opts={{
-                      focusKey: "config-menu-confirm",
-                      focusable: !disabled,
-                    }}
-                  >
-                    <HotkeyButton
-                      disabled={disabled}
-                      type="submit"
-                      hotkey="MENU"
-                    >
-                      confirm
-                    </HotkeyButton>
-                  </FocusableElement>
-                </SheetFooter>
-              </form>
-            </Form>
+              <HotkeyButton
+                disabled={disabled}
+                onClick={form.handleSubmit(handleSubmit)}
+                hotkey="MENU"
+              >
+                confirm
+              </HotkeyButton>
+            </SheetFooter>
           </FocusContainer>
         </HotkeyLayer>
       </SheetContent>

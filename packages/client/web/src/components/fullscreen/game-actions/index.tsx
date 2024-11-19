@@ -96,9 +96,7 @@ export function GameActions() {
 
             <SheetFooter>
               <SheetClose asChild>
-                <FocusableElement opts={{ focusKey: "game-actions-close" }}>
-                  <HotkeyButton hotkey="BACK">close</HotkeyButton>
-                </FocusableElement>
+                <HotkeyButton hotkey="BACK">close</HotkeyButton>
               </SheetClose>
             </SheetFooter>
           </FocusContainer>

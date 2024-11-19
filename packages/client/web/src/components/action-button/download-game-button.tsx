@@ -5,7 +5,6 @@ import { checkIsDesktop } from "@/lib/env";
 import { useConfigStore } from "@/providers/config";
 import { cn } from "@/lib/utils";
 import { DownloadIcon } from "lucide-react";
-import { FocusableElement } from "../fullscreen/focus-container";
 
 export const DownloadGameButton = forwardRef(
   (
@@ -25,22 +24,16 @@ export const DownloadGameButton = forwardRef(
 
     return (
       <form action={`${restHost}/game/${game.id}`} className="w-full">
-        <FocusableElement
-          initialFocus
+        <Button
           ref={ref}
-          opts={{ focusKey: "download-game-button", forceFocus: true }}
+          type="submit"
+          {...rest}
+          className={cn(className)}
+          variant="accent"
         >
-          <Button
-            ref={forwardedRef}
-            type="submit"
-            {...rest}
-            className={cn(className)}
-            variant="accent"
-          >
-            <DownloadIcon className="h-[1.2rem] w-[1.2rem]" />
-            Download
-          </Button>
-        </FocusableElement>
+          <DownloadIcon className="h-[1.2rem] w-[1.2rem]" />
+          Download
+        </Button>
       </form>
     );
   },

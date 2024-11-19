@@ -61,7 +61,6 @@ export function UninstallGameAction() {
           }}
         >
           <FocusContainer
-            initialFocus
             opts={{ focusKey: "uninstall-game-action", isFocusBoundary: true }}
           >
             <SheetHeader>
@@ -71,30 +70,29 @@ export function UninstallGameAction() {
               </SheetDescription>
             </SheetHeader>
 
+            <FocusableElement
+              initialFocus
+              opts={{ focusKey: "uninstall-game-action-trap" }}
+            >
+              <button className="opacity-0"></button>
+            </FocusableElement>
+
             <SheetFooter>
               <SheetClose asChild>
-                <FocusableElement
-                  opts={{ focusKey: "uninstall-game-action-close" }}
-                >
-                  <HotkeyButton hotkey="BACK">Back</HotkeyButton>
-                </FocusableElement>
+                <HotkeyButton hotkey="BACK">Back</HotkeyButton>
               </SheetClose>
 
-              <FocusableElement
-                opts={{ focusKey: "uninstall-game-action-confirm" }}
+              <HotkeyButton
+                disabled={disabled}
+                hotkey="MENU"
+                onClick={() => uninstall()}
               >
-                <HotkeyButton
-                  disabled={disabled}
-                  hotkey="MENU"
-                  onClick={() => uninstall()}
-                >
-                  {status === "pending" ? (
-                    <LoaderCircle className="animate-spin" />
-                  ) : (
-                    "Confirm"
-                  )}
-                </HotkeyButton>
-              </FocusableElement>
+                {status === "pending" ? (
+                  <LoaderCircle className="animate-spin" />
+                ) : (
+                  "Confirm"
+                )}
+              </HotkeyButton>
             </SheetFooter>
           </FocusContainer>
         </HotkeyLayer>

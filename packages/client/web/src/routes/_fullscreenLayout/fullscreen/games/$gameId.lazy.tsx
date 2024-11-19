@@ -1,5 +1,7 @@
-import { ActionButton } from "@/components/action-button";
-import { FocusContainer } from "@/components/fullscreen/focus-container";
+import {
+  FocusableElement,
+  FocusContainer,
+} from "@/components/fullscreen/focus-container";
 import { Scene } from "@/components/fullscreen/scene";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn, getFileStub } from "@/lib/utils";
@@ -7,12 +9,19 @@ import { GameDetailProvider, useGameDetail } from "@/providers/game-details";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
 import { Background } from "./-components/background";
-import { Name } from "./-components/name";
 import { Description } from "./-components/description";
 import { ExtraInfo } from "./-components/extra-info";
 import { SimilarGames } from "./-components/similar-games";
 import { GameActions } from "@/components/fullscreen/game-actions";
-import { useRef } from "react";
+import { FocusEvent } from "react";
+import { checkIsDesktop } from "@/lib/env";
+import { DownloadGameButton } from "@/components/action-button/download-game-button";
+import { useInstallationQuery } from "@/queries/useInstallationQuery";
+import { InstallationStatus } from "@/generated/retrom/client/client-utils";
+import { PlayGameButton } from "@/components/action-button/play-game-button";
+import { InstallGameButton } from "@/components/action-button/install-game-button";
+import { buttonVariants } from "@/components/ui/button";
+import { Name } from "./-components/name";
 
 export const Route = createLazyFileRoute(
   "/_fullscreenLayout/fullscreen/games/$gameId",
@@ -32,12 +41,27 @@ function GameComponent() {
   );
 }
 
+const buttonStyles = cn(
+  buttonVariants({ variant: "accent", size: "lg" }),
+  "font-bold w-auto text-5xl h-[unset] [&_svg]:hidden uppercase px-8 py-4",
+  "focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "opacity-80 focus-hover:opacity-100 transition-all h-full rounded-none",
+);
+
+function onFocus(e: FocusEvent<HTMLButtonElement>) {
+  e.target.scrollIntoView({ block: "end" });
+}
+
 function Inner() {
   const { gameMetadata, game } = useGameDetail();
+  const { data: installationStatus, status } = useInstallationQuery(game);
   const navigate = useNavigate();
-  const actionButton = useRef<HTMLButtonElement>(null);
 
   const name = gameMetadata?.name || getFileStub(game.path);
+
+  if (status !== "success") {
+    return null;
+  }
 
   return (
     <HotkeyLayer
@@ -50,8 +74,11 @@ function Inner() {
     >
       <ScrollArea className="h-full w-full">
         <FocusContainer
-          opts={{ focusKey: "game-details", forceFocus: true }}
-          className="flex-grow flex justify-center items-center w-full animate-in fade-in"
+          opts={{
+            focusKey: "game-details",
+            forceFocus: true,
+          }}
+          className="flex-grow flex justify-center items-center w-full animate-in fade-in pb-32"
         >
           <div className={cn("flex flex-col w-full h-full relative")}>
             <div
@@ -72,28 +99,17 @@ function Inner() {
 
               <div className="row-start-2 row-end-4 flex justify-center gap-1">
                 <div className="w-min">
-                  <HotkeyLayer
-                    id="action-button"
-                    handlers={{
-                      ACCEPT: { handler: () => actionButton.current?.click() },
-                    }}
-                  >
-                    <ActionButton
-                      ref={actionButton}
-                      onFocus={(event) => {
-                        event.target?.scrollIntoView({
-                          block: "end",
-                          behavior: "smooth",
-                        });
-                      }}
-                      game={game}
-                      className={cn(
-                        "w-auto text-5xl h-[unset] [&_svg]:hidden uppercase px-8 py-4",
-                        "opacity-80 focus-hover:opacity-100 transition-all h-full",
-                        '[&_div[role="progressbar"]]:w-[6ch] [&_div[role="progressbar"]_>_*]:bg-primary-foreground',
-                      )}
-                    />
-                  </HotkeyLayer>
+                  {status === "success" ? (
+                    installationStatus === InstallationStatus.INSTALLED ? (
+                      <PlayButton />
+                    ) : checkIsDesktop() ? (
+                      <InstallButton />
+                    ) : (
+                      <DownloadButton />
+                    )
+                  ) : (
+                    <></>
+                  )}
                 </div>
 
                 <GameActions />
@@ -109,5 +125,65 @@ function Inner() {
         </FocusContainer>
       </ScrollArea>
     </HotkeyLayer>
+  );
+}
+
+function PlayButton() {
+  return (
+    <FocusableElement
+      initialFocus
+      opts={{
+        focusKey: "fullscreen-play-button",
+        onFocus: ({ node }) => {
+          node?.focus({ preventScroll: true });
+        },
+      }}
+    >
+      <PlayGameButton onFocus={onFocus} className={buttonStyles} />
+    </FocusableElement>
+  );
+}
+
+function InstallButton() {
+  return (
+    <FocusableElement
+      initialFocus
+      opts={{
+        focusKey: "fullscreen-install-button",
+        onFocus: ({ node }) => {
+          node?.focus({ preventScroll: true });
+        },
+      }}
+    >
+      <InstallGameButton
+        onFocus={onFocus}
+        className={cn(
+          buttonStyles,
+          '[&_div[role="progressbar"]]:w-[6ch] [&_div[role="progressbar"]_>_*]:bg-primary-foreground',
+        )}
+      />
+    </FocusableElement>
+  );
+}
+
+function DownloadButton() {
+  const { game } = useGameDetail();
+
+  return (
+    <FocusableElement
+      initialFocus
+      opts={{
+        focusKey: "fullscreen-download-button",
+        onFocus: ({ node }) => {
+          node?.focus({ preventScroll: true });
+        },
+      }}
+    >
+      <DownloadGameButton
+        onFocus={onFocus}
+        game={game}
+        className={buttonStyles}
+      />
+    </FocusableElement>
   );
 }

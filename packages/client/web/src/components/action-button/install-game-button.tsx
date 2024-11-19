@@ -11,7 +11,6 @@ import { Progress } from "../ui/progress";
 import { ComponentProps, ForwardedRef, forwardRef } from "react";
 import { cn } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
-import { FocusableElement } from "../fullscreen/focus-container";
 
 export const InstallGameButton = forwardRef(
   (
@@ -69,20 +68,15 @@ export const InstallGameButton = forwardRef(
     };
 
     return (
-      <FocusableElement
+      <Button
         ref={forwardedRef}
-        initialFocus
-        opts={{ focusKey: "install-game-button", forceFocus: true }}
+        {...rest}
+        disabled={disabled || rest.disabled}
+        className={cn(className, "relative")}
+        onClick={async () => void install(undefined)}
       >
-        <Button
-          {...rest}
-          disabled={disabled || rest.disabled}
-          className={cn(className, "relative")}
-          onClick={async () => void install(undefined)}
-        >
-          <Content />
-        </Button>
-      </FocusableElement>
+        <Content />
+      </Button>
     );
   },
 );

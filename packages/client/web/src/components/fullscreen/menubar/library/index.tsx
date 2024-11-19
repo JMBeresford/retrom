@@ -15,6 +15,7 @@ import { UpdateLibrary } from "./update-libary";
 import { DownloadMetadata } from "./download-metadata";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { FocusableElement, FocusContainer } from "../../focus-container";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function Library(props: JSX.IntrinsicElements["button"]) {
   const [open, setOpen] = useState(false);
@@ -46,16 +47,16 @@ export function Library(props: JSX.IntrinsicElements["button"]) {
               <SheetDescription>Retrom library operations</SheetDescription>
             </SheetHeader>
 
-            <div className="flex flex-col gap-4 h-full ">
-              <UpdateLibrary />
-              <DownloadMetadata />
-            </div>
+            <ScrollArea className="h-full w-full">
+              <div className="flex flex-col gap-4 h-full">
+                <UpdateLibrary />
+                <DownloadMetadata />
+              </div>
+            </ScrollArea>
 
             <SheetFooter>
               <SheetClose asChild>
-                <FocusableElement opts={{ focusKey: "library-menu-close" }}>
-                  <HotkeyButton hotkey="BACK">back</HotkeyButton>
-                </FocusableElement>
+                <HotkeyButton hotkey="BACK">back</HotkeyButton>
               </SheetClose>
             </SheetFooter>
           </HotkeyLayer>

@@ -20,10 +20,14 @@ export function SimilarGames() {
   });
 
   return (
-    <ScrollArea className="w-full bg-muted pt-6">
-      <h3 className="text-3xl uppercase font-black text-muted-foreground mb-2 ml-6">
-        Similar Games
-      </h3>
+    <ScrollArea
+      className={cn(
+        "w-full bg-transparent border-l border-secondary pt-2",
+        "focus-within:bg-muted/80 focus-within:border-accent",
+        "hover:bg-muted/80 hover:border-accent transition-all",
+      )}
+    >
+      <h3 className="text-3xl uppercase font-black mb-2 ml-4">Similar Games</h3>
 
       <FocusContainer
         opts={{
@@ -31,7 +35,7 @@ export function SimilarGames() {
           focusable: !!data?.metadata?.length,
         }}
         className={cn(
-          "flex gap-2 px-6 pb-6",
+          "flex gap-2 px-4 pb-4",
           "[&_p]:text-muted-foreground [&_p]:my-6 [&_p]:flex [&_p]:gap-2 [&_p]:mx-auto",
         )}
       >

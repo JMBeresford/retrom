@@ -10,7 +10,6 @@ import { LoaderCircleIcon, PlayIcon, PlusIcon, Square } from "lucide-react";
 import { useEmulators } from "@/queries/useEmulators";
 import { useGameDetail } from "@/providers/game-details";
 import { useMatch, useNavigate } from "@tanstack/react-router";
-import { FocusableElement } from "../fullscreen/focus-container";
 
 export const PlayGameButton = forwardRef(
   (
@@ -132,15 +131,14 @@ export const PlayGameButton = forwardRef(
     };
 
     return (
-      <FocusableElement
+      <Button
         ref={forwardedRef}
-        initialFocus
-        opts={{ focusKey: "play-game-button", forceFocus: true }}
+        {...props}
+        disabled={disabled}
+        onClick={onClick}
       >
-        <Button {...props} disabled={disabled} onClick={onClick}>
-          <Content />
-        </Button>
-      </FocusableElement>
+        <Content />
+      </Button>
     );
   },
 );

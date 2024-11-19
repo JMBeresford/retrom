@@ -34,7 +34,6 @@ export function UpdateLibrary() {
 
       <SheetContent>
         <FocusContainer
-          initialFocus
           opts={{
             focusKey: "update-library-menu",
             isFocusBoundary: true,
@@ -56,18 +55,21 @@ export function UpdateLibrary() {
               <SheetDescription>Update Retrom library</SheetDescription>
             </SheetHeader>
 
+            <FocusableElement
+              initialFocus
+              opts={{ focusKey: "update-library-trap" }}
+            >
+              <button className="opacity-0"></button>
+            </FocusableElement>
+
             <SheetFooter>
               <SheetClose asChild>
-                <FocusableElement opts={{ focusKey: "update-library-close" }}>
-                  <HotkeyButton hotkey="BACK">close</HotkeyButton>
-                </FocusableElement>
+                <HotkeyButton hotkey="BACK">back</HotkeyButton>
               </SheetClose>
 
-              <FocusableElement opts={{ focusKey: "update-library-confirm" }}>
-                <HotkeyButton hotkey="MENU" onClick={() => handleUpdate()}>
-                  Update
-                </HotkeyButton>
-              </FocusableElement>
+              <HotkeyButton hotkey="MENU" onClick={() => handleUpdate()}>
+                Update
+              </HotkeyButton>
             </SheetFooter>
           </HotkeyLayer>
         </FocusContainer>

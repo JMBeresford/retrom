@@ -55,7 +55,6 @@ export function ExitFullscreen(props: ComponentProps<typeof SheetTrigger>) {
 
       <SheetContent>
         <FocusContainer
-          initialFocus
           opts={{ focusKey: "exit-fullscreen-menu", isFocusBoundary: true }}
         >
           <HotkeyLayer id="exit-fullscreen-menu" handlers={handlers}>
@@ -66,26 +65,21 @@ export function ExitFullscreen(props: ComponentProps<typeof SheetTrigger>) {
               </SheetDescription>
             </SheetHeader>
 
+            <FocusableElement
+              initialFocus
+              opts={{ focusKey: "exit-fullscreen-trap" }}
+            >
+              <button className="opacity-0"></button>
+            </FocusableElement>
+
             <SheetFooter>
               <SheetClose asChild>
-                <FocusableElement
-                  opts={{ focusKey: "exit-fullscreen-menu-close" }}
-                >
-                  <HotkeyButton hotkey="BACK">back</HotkeyButton>
-                </FocusableElement>
+                <HotkeyButton hotkey="BACK">back</HotkeyButton>
               </SheetClose>
 
-              <FocusableElement
-                opts={{ focusKey: "exit-fullscreen-menu-confirm" }}
-              >
-                <HotkeyButton
-                  type="submit"
-                  hotkey="MENU"
-                  onClick={() => exit()}
-                >
-                  Exit
-                </HotkeyButton>
-              </FocusableElement>
+              <HotkeyButton type="submit" hotkey="MENU" onClick={() => exit()}>
+                Exit
+              </HotkeyButton>
             </SheetFooter>
           </HotkeyLayer>
         </FocusContainer>

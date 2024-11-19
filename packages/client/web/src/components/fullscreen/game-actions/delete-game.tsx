@@ -18,6 +18,8 @@ import { useGameDetail } from "@/providers/game-details";
 import { useNavigate } from "@tanstack/react-router";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { FocusableElement, FocusContainer } from "../focus-container";
+import { Info } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 declare global {
   export interface HotkeyZones {
@@ -73,55 +75,59 @@ export function DeleteGameAction() {
               </SheetDescription>
             </SheetHeader>
 
-            <div className="flex flex-col h-full gap-6">
-              <p>
-                You can either delete the entry from the database or delete the
-                game from the disk.
-              </p>
+            <ScrollArea className="h-full w-full">
+              <div className="flex flex-col h-full gap-6">
+                <div className="flex gap-2 text-sm bg-muted px-2 py-3 rounded">
+                  <Info
+                    className="text-accent-text min-w-[1rem] h-[1rem] w-[1rem]"
+                    size={36}
+                  />
 
-              <p>
-                Deleting only the entry will leave your file system as is, but
-                Retrom will ignore the game's directory moving forward.
-              </p>
+                  <div className="flex flex-col gap-2">
+                    <p>
+                      You can either delete the entry from the database or
+                      delete the game from the disk.
+                    </p>
 
-              <ConfigCheckbox
-                label="Delete from disk"
-                checked={fromDisk}
-                onCheckedChange={setFromDisk}
-              >
-                <p className="text-sm text-muted-foreground">
-                  This will alter the filesystem
-                </p>
-              </ConfigCheckbox>
+                    <p>
+                      Deleting only the entry will leave your file system as is,
+                      but Retrom will ignore the game's directory moving
+                      forward.
+                    </p>
+                  </div>
+                </div>
 
-              <ConfigCheckbox
-                label="Blacklist Entries"
-                checked={blacklistEntries}
-                onCheckedChange={setBlacklistEntries}
-              >
-                <p className="text-sm text-muted-foreground">
-                  Enabling this will prevent the game and its files from being
-                  re-imported in any future library scans
-                </p>
-              </ConfigCheckbox>
-            </div>
+                <ConfigCheckbox
+                  label="Delete from disk"
+                  checked={fromDisk}
+                  onCheckedChange={setFromDisk}
+                >
+                  <p className="text-sm text-muted-foreground">
+                    This will alter the filesystem
+                  </p>
+                </ConfigCheckbox>
+
+                <ConfigCheckbox
+                  label="Blacklist Entries"
+                  checked={blacklistEntries}
+                  onCheckedChange={setBlacklistEntries}
+                >
+                  <p className="text-sm text-muted-foreground">
+                    Enabling this will prevent the game and its files from being
+                    re-imported in any future library scans
+                  </p>
+                </ConfigCheckbox>
+              </div>
+            </ScrollArea>
 
             <SheetFooter>
               <SheetClose asChild>
-                <FocusableElement
-                  opts={{ focusKey: "delete-game-action-close" }}
-                >
-                  <HotkeyButton hotkey="BACK">Cancel</HotkeyButton>
-                </FocusableElement>
+                <HotkeyButton hotkey="BACK">Cancel</HotkeyButton>
               </SheetClose>
 
-              <FocusableElement
-                opts={{ focusKey: "delete-game-action-confirm" }}
-              >
-                <HotkeyButton hotkey="MENU" onClick={handleDelete}>
-                  Delete
-                </HotkeyButton>
-              </FocusableElement>
+              <HotkeyButton hotkey="MENU" onClick={handleDelete}>
+                Delete
+              </HotkeyButton>
             </SheetFooter>
           </FocusContainer>
         </HotkeyLayer>
