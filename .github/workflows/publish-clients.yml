@@ -66,7 +66,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: install dependencies (ubuntu 24 only)
-        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        if: matrix.platform == 'ubuntu-24.04' # This must match the platform value defined above.
         run: |
           sudo apt-get update
           sudo apt-get install -y libpq-dev \
