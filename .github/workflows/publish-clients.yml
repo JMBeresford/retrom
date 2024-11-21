@@ -143,6 +143,6 @@ jobs:
           tauriScript: pnpm tauri
           args: ${{ matrix.target }}
           prerelease: true
-          releaseDraft: ${{ !startsWith(github.event.pull_request.title, 'release-plz') }}
+          releaseDraft: ${{ !startsWith(github.event.pull_request.head.ref, 'release-plz') }}
           releaseName: ${{ github.event.pull_request.title }}-pre.${{ github.event.pull_request.head.sha }}
           tagName: ${{ github.event.pull_request.title }}-pre.${{ github.event.pull_request.head.sha }}
