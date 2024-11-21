@@ -73,7 +73,6 @@ jobs:
             libappindicator3-dev \
             librsvg2-dev \
             patchelf \
-            # pin the version of webkit2gtk to avoid EGL Bad Parameter errors w/ AppImage
             libwebkit2gtk-4.1-0=2.44.0-2 \
             libwebkit2gtk-4.1-dev=2.44.0-2 \
             libjavascriptcoregtk-4.1-0=2.44.0-2 \
