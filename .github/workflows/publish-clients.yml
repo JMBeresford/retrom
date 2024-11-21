@@ -144,5 +144,5 @@ jobs:
           args: ${{ matrix.target }}
           prerelease: true
           releaseDraft: ${{ !startsWith(github.event.pull_request.title, 'release-plz') }}
-          releaseName: ${{ github.event.pull_request.head.ref }}-pre-${{ github.event.pull_request.head.sha }}
-          tagName: ${{ github.event.pull_request.head.ref }}-pre-${{ github.event.pull_request.head.sha }}
+          releaseName: ${{ github.event.pull_request.title }}-pre.${{ github.event.pull_request.head.sha }}
+          tagName: ${{ github.event.pull_request.title }}-pre.${{ github.event.pull_request.head.sha }}

@@ -6,6 +6,7 @@ semver_check = false
 publish_no_verify = true
 changelog_update = false
 changelog_path = "./CHANGELOG.md"
+pr_name = "retrom-v{{ version }}"
 
 [[package]]
 name = "retrom-service"
