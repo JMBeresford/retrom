@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.4.5](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.4...retrom-v0.4.5) - 2024-11-22
+
+### Fixes
+- don't show empty platforms in fullscreen mode
+
+    resolves [#182](https://github.com/JMBeresford/retrom/pull/182)
+
+
+
+- EGL Bad Parameter error on some devices
+
+
 ## [0.4.4](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.3...retrom-v0.4.4) - 2024-11-19
 
 ### Fixes
