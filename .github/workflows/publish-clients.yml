@@ -26,9 +26,7 @@ jobs:
             config: "--config tauri.build.conf.json"
             target: "--target x86_64-apple-darwin"
             rustflags: "-L/opt/homebrew/opt/libpq/lib"
-          - platform: "ubuntu-24.04" # for Tauri v1 you could replace this with ubuntu-20.04.
-            config: "--config tauri.build.conf.json"
-          - platform: "ubuntu-22.04"
+          - platform: "ubuntu-24.04"
             config: "--config tauri.build.conf.json"
           - platform: "windows-latest"
             config: "--config tauri.build.conf.json"
@@ -79,16 +77,6 @@ jobs:
             libjavascriptcoregtk-4.1-dev=2.44.0-2 \
             gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
             gir1.2-webkit2-4.1=2.44.0-2
-
-      - name: install dependencies (ubuntu 22 only)
-        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libpq-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            libwebkit2gtk-4.1-dev
 
       - name: install dependencies (windows only)
         if: matrix.platform == 'windows-latest' # This must match the platform value defined above.
