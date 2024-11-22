@@ -16,7 +16,7 @@ function FullscreenComponent() {
   const { activeGroup, allGroups } = useGroupContext();
 
   return (
-    <div className="max-h-full h-fit flex flex-col overflow-hidden">
+    <div className="max-h-full h-fit flex flex-col overflow-hidden flex-grow">
       <ScrollArea className="h-full relative">
         <div className="absolute inset-0 z-[-1]">
           <Scene>

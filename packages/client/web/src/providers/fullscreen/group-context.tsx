@@ -97,7 +97,9 @@ export function GroupContextProvider(props: PropsWithChildren) {
   );
 
   const allGroups: Group[] = useMemo(() => {
-    return [allGames, recentlyPlayed].concat(platformGroups);
+    return [allGames, recentlyPlayed]
+      .concat(platformGroups)
+      .filter((group) => group.games?.length);
   }, [allGames, recentlyPlayed, platformGroups]);
 
   const { activeGroup, nextGroup, previousGroup } = useMemo(() => {
