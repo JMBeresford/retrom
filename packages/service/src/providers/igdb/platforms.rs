@@ -48,6 +48,7 @@ impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
     async fn get_platform_metadata(
         &self,
         platform: retrom::Platform,
+        query: Option<IgdbPlatformSearchQuery>,
     ) -> Option<retrom::NewPlatformMetadata> {
         let naive_name = platform.path.split('/').last().unwrap_or(&platform.path);
         let path = PathBuf::from_str(&platform.path).unwrap();
@@ -90,12 +91,18 @@ impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
         let search = deunicode(name);
         debug!("Searching for platform: {}", search);
 
-        let query = IgdbPlatformSearchQuery {
-            search: Some(IgdbSearch { value: search }),
-            ..Default::default()
+        let search_query = match query {
+            Some(mut query) => {
+                query.search = Some(IgdbSearch { value: search });
+                query
+            }
+            None => IgdbPlatformSearchQuery {
+                search: Some(IgdbSearch { value: search }),
+                ..Default::default()
+            },
         };
 
-        let matches = self.search_platform_metadata(query).await;
+        let matches = self.search_platform_metadata(search_query).await;
 
         let exact_match = matches
             .iter()

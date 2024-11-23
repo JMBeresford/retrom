@@ -6,3 +6,4 @@ config_dev
 config.dev.*
 
 **/node_modules
+**/rustc-ice*

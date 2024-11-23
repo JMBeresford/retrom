@@ -17,8 +17,10 @@ use retrom_codegen::retrom::{
     get_igdb_search_request::IgdbSearchType,
     igdb_fields::{IncludeFields, Selector},
     igdb_filters::{FilterOperator, FilterValue},
-    GameGenre, GameMetadata, GetIgdbSearchRequest, IgdbFields, IgdbFilters, NewGameGenre,
-    NewGameGenreMap, NewSimilarGameMap, UpdateLibraryMetadataResponse,
+    igdb_game_search_query::Fields,
+    GameGenre, GameMetadata, GetIgdbSearchRequest, IgdbFields, IgdbFilters, IgdbGameSearchQuery,
+    NewGameGenre, NewGameGenreMap, NewSimilarGameMap, PlatformMetadata,
+    UpdateLibraryMetadataResponse,
 };
 use retrom_db::schema;
 use tracing::{info_span, instrument, Instrument};
@@ -55,7 +57,7 @@ pub async fn update_metadata(
             let db_pool = db_pool.clone();
 
             async move {
-                let metadata = igdb_provider.get_platform_metadata(platform).await;
+                let metadata = igdb_provider.get_platform_metadata(platform, None).await;
                 let mut conn = match db_pool.get().await {
                     Ok(conn) => conn,
                     Err(why) => {
@@ -82,7 +84,7 @@ pub async fn update_metadata(
         })
         .collect();
 
-    let games = schema::games::table.load(&mut conn).await.map_err(|e| {
+    let games: Vec<retrom::Game> = schema::games::table.load(&mut conn).await.map_err(|e| {
         tracing::error!("Failed to load games: {}", e);
         e.to_string()
     })?;
@@ -95,14 +97,39 @@ pub async fn update_metadata(
             let db_pool = db_pool.clone();
 
             async move {
-                let metadata = igdb_provider.get_game_metadata(game).await;
-
                 let mut conn = match db_pool.get().await {
                     Ok(conn) => conn,
                     Err(why) => {
                         return Err(why.to_string());
                     }
                 };
+
+                let query = match game.platform_id {
+                    Some(id) => {
+                        let platform_meta: Option<PlatformMetadata> =
+                            schema::platform_metadata::table
+                                .find(id)
+                                .first(&mut conn)
+                                .await
+                                .ok();
+
+                        let platform_igdb_id = platform_meta
+                            .and_then(|meta| meta.igdb_id)
+                            .and_then(|id| id.to_u64());
+
+                        IgdbGameSearchQuery {
+                            fields: Some(Fields {
+                                platform: platform_igdb_id,
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }
+                        .into()
+                    }
+                    None => None,
+                };
+
+                let metadata = igdb_provider.get_game_metadata(game, query).await;
 
                 if let Some(metadata) = metadata {
                     if let Err(e) = diesel::insert_into(schema::game_metadata::table)

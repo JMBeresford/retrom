@@ -126,7 +126,11 @@ impl IGDBProvider {
 
 impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
     #[instrument(level = Level::DEBUG, skip_all, fields(name = game.path))]
-    async fn get_game_metadata(&self, game: retrom::Game) -> Option<NewGameMetadata> {
+    async fn get_game_metadata(
+        &self,
+        game: retrom::Game,
+        query: Option<IgdbGameSearchQuery>,
+    ) -> Option<NewGameMetadata> {
         let naive_name = game.path.split('/').last().unwrap_or(&game.path);
         let path = PathBuf::from_str(&game.path).unwrap();
         let mut name = path
@@ -168,12 +172,18 @@ impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
         let search = deunicode(name);
         debug!("Matching game: {search}");
 
-        let query = IgdbGameSearchQuery {
-            search: Some(IgdbSearch { value: search }),
-            ..Default::default()
+        let search_query = match query {
+            Some(mut query) => {
+                query.search = Some(IgdbSearch { value: search });
+                query
+            }
+            None => IgdbGameSearchQuery {
+                search: Some(IgdbSearch { value: search }),
+                ..Default::default()
+            },
         };
 
-        let matches = self.search_game_metadata(query).await;
+        let matches = self.search_game_metadata(search_query).await;
 
         let exact_match = matches
             .iter()
