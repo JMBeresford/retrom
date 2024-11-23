@@ -3,13 +3,28 @@ use std::{
     time::{Duration, Instant},
 };
 
+use crate::config::IGDBConfig;
+use crate::providers::MetadataProvider;
+use prost::Message;
+use retrom_codegen::{
+    igdb,
+    retrom::{
+        get_igdb_search_request::IgdbSearchType,
+        igdb_fields::Selector,
+        igdb_filters::{FilterOperator, FilterValue},
+        GetIgdbSearchRequest,
+    },
+};
 use tokio::sync::{mpsc, oneshot, RwLock};
 use tower::{retry::Policy, Service, ServiceExt};
 use tracing::{debug, error, instrument, Instrument, Level};
 
-use crate::config::IGDBConfig;
-
 const IGDB_CONCURRENT_REQUESTS_LIMIT: usize = 8;
+
+pub enum IgdbSearchData {
+    Game(igdb::GameResult),
+    Platform(igdb::PlatformResult),
+}
 
 #[derive(Debug, serde::Deserialize)]
 struct IGDBTokenResponse {
@@ -32,6 +47,8 @@ pub struct IGDBProvider {
     auth: RwLock<IGDBAuth>,
     user: IGDBConfig,
     request_tx: mpsc::Sender<IGDBSenderMsg>,
+    pub game_fields: Vec<String>,
+    pub platform_fields: Vec<String>,
 }
 
 impl IGDBAuth {
@@ -125,15 +142,38 @@ impl IGDBProvider {
             .instrument(tracing::info_span!("IGDBProviderService")),
         );
 
+        let game_fields = vec![
+            "name".to_string(),
+            "cover.url".to_string(),
+            "artworks.url".to_string(),
+            "artworks.height".to_string(),
+            "artworks.width".to_string(),
+            "summary".to_string(),
+            "websites.url".to_string(),
+            "websites.trusted".to_string(),
+            "videos.name".to_string(),
+            "videos.video_id".to_string(),
+        ];
+
+        let platform_fields = vec![
+            "name".to_string(),
+            "summary".to_string(),
+            "platform_logo.url".to_string(),
+            "websites.url".to_string(),
+            "websites.trusted".to_string(),
+        ];
+
         Self {
             auth: RwLock::new(IGDBAuth::new(None, Duration::from_secs(0))),
             user: config,
             request_tx: tx,
+            game_fields,
+            platform_fields,
         }
     }
 
     #[instrument(level = Level::DEBUG, skip_all)]
-    pub async fn token_is_expired(&self) -> bool {
+    async fn token_is_expired(&self) -> bool {
         let auth = self.auth.read().await;
 
         match &auth.token {
@@ -188,7 +228,7 @@ impl IGDBProvider {
     }
 
     #[instrument(level = Level::DEBUG, skip_all)]
-    pub async fn maybe_refresh_token(&self) {
+    async fn maybe_refresh_token(&self) {
         if self.token_is_expired().await {
             debug!("Token expired, refreshing.");
             match self.refresh_token().await {
@@ -199,7 +239,7 @@ impl IGDBProvider {
     }
 
     #[instrument(level = Level::DEBUG, skip_all, fields(query = query.clone()))]
-    pub async fn make_request(
+    async fn make_request(
         &self,
         path: String,
         query: String,
@@ -249,4 +289,145 @@ fn base_url() -> String {
 
 fn oauth2_url() -> String {
     env::var("IGDB_OAUTH2_URL").unwrap_or("https://id.twitch.tv/oauth2/token".into())
+}
+
+impl MetadataProvider<GetIgdbSearchRequest, IgdbSearchData> for IGDBProvider {
+    #[instrument(level = Level::DEBUG, skip_all)]
+    async fn search_metadata(&self, request: GetIgdbSearchRequest) -> Option<IgdbSearchData> {
+        let search_type = request.search_type();
+
+        let search_clause = match request.search.map(|search| search.value) {
+            Some(value) => {
+                if value.is_empty() {
+                    "".into()
+                } else {
+                    format!("search \"{value}\";")
+                }
+            }
+            None => "".to_string(),
+        };
+
+        let fields = request.fields.as_ref();
+
+        let fields_clause = match fields.and_then(|fields| fields.selector.as_ref()) {
+            Some(Selector::Include(fields)) => {
+                if fields.value.is_empty() {
+                    "".into()
+                } else {
+                    format!("fields {};", fields.value.join(", "))
+                }
+            }
+            Some(Selector::Exclude(fields)) => {
+                if fields.value.is_empty() {
+                    "".into()
+                } else {
+                    format!("fields *; exclude {};", fields.value.join(", "))
+                }
+            }
+            None => "".to_string(),
+        };
+
+        let filters_clause = match request.filters.map(|filters| filters.filters) {
+            Some(filters) => {
+                if filters.is_empty() {
+                    "".into()
+                } else {
+                    format!(
+                        "where {};",
+                        filters
+                            .into_iter()
+                            .map(render_filter_operation)
+                            .collect::<Vec<String>>()
+                            .join(" | ")
+                    )
+                }
+            }
+            None => "".to_string(),
+        };
+
+        let pagination = request.pagination.as_ref();
+
+        let limit_clause = match pagination.map(|pagination| &pagination.limit) {
+            Some(Some(limit)) => format!("limit {limit};"),
+            _ => "".to_string(),
+        };
+
+        let offset_clause = match pagination.map(|pagination| &pagination.offset) {
+            Some(Some(offset)) => format!("offset {offset};"),
+            _ => "".to_string(),
+        };
+
+        let query =
+            format!("{search_clause}{fields_clause}{filters_clause}{limit_clause}{offset_clause}",);
+
+        let target = match search_type {
+            IgdbSearchType::Game => "games.pb".into(),
+            IgdbSearchType::Platform => "platforms.pb".into(),
+        };
+
+        let res = match self.make_request(target, query).await {
+            Ok(res) => res,
+            Err(why) => {
+                error!("Could not make request: {:?}", why);
+                return None;
+            }
+        };
+
+        let bytes = match res.bytes().await {
+            Ok(bytes) => bytes,
+            Err(why) => {
+                error!("Could not get bytes: {:?}", why);
+                return None;
+            }
+        };
+
+        match search_type {
+            IgdbSearchType::Game => {
+                let matches = match igdb::GameResult::decode(bytes) {
+                    Ok(matches) => matches,
+                    Err(why) => {
+                        error!("Could not decode response: {:?}", why);
+                        return None;
+                    }
+                };
+
+                IgdbSearchData::Game(matches).into()
+            }
+            IgdbSearchType::Platform => {
+                let matches = match igdb::PlatformResult::decode(bytes) {
+                    Ok(matches) => matches,
+                    Err(why) => {
+                        error!("Could not decode response: {:?}", why);
+                        return None;
+                    }
+                };
+
+                IgdbSearchData::Platform(matches).into()
+            }
+        }
+    }
+}
+
+fn render_filter_operation(igdb_filter: (String, FilterValue)) -> String {
+    let (field, filter) = igdb_filter;
+
+    let value = &filter.value;
+    let operator = filter.operator();
+
+    match operator {
+        FilterOperator::Equal => format!("{field} = {value}"),
+        FilterOperator::NotEqual => format!("{field} != {value}"),
+        FilterOperator::LessThan => format!("{field} < {value}"),
+        FilterOperator::LessThanOrEqual => format!("{field} <= {value}"),
+        FilterOperator::GreaterThan => format!("{field} > {value}"),
+        FilterOperator::GreaterThanOrEqual => format!("{field} >= {value}"),
+        FilterOperator::PrefixMatch => format!("{field} ~ {value}*"),
+        FilterOperator::SuffixMatch => format!("{field} ~ *{value}"),
+        FilterOperator::InfixMatch => format!("{field} ~ *{value}*"),
+        FilterOperator::All => format!("{field} = [{value}]"),
+        FilterOperator::Any => format!("{field} = ({value})"),
+        FilterOperator::NotAll => format!("{field} = ![{value}]"),
+        FilterOperator::None => format!("{field} = !({value})"),
+        FilterOperator::Exact => format!("{field} = {{{value}}}"),
+    }
 }

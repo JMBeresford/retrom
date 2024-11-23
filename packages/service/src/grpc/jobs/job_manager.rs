@@ -17,7 +17,6 @@ pub enum JobError {
     Io(#[from] std::io::Error),
 }
 
-pub type Result<T> = std::result::Result<T, JobError>;
 type JobId = Uuid;
 
 #[derive(Debug, Clone)]

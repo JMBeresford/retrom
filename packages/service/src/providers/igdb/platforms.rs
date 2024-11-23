@@ -1,139 +1,173 @@
-use core::panic;
-use std::sync::Arc;
+use std::{collections::HashMap, path::PathBuf, str::FromStr};
 
+use crate::providers::{MetadataProvider, PlatformMetadataProvider};
+
+use super::provider::{IGDBProvider, IgdbSearchData};
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use deunicode::deunicode;
-use futures::TryFutureExt;
-use prost::Message;
 use retrom_codegen::{
     igdb,
-    retrom::{self},
+    retrom::{
+        self,
+        get_igdb_search_request::IgdbSearchType,
+        igdb_fields::{IncludeFields, Selector},
+        igdb_filters::{FilterOperator, FilterValue},
+        GetIgdbSearchRequest, IgdbFields, IgdbFilters, IgdbPlatformSearchQuery, IgdbSearch,
+    },
 };
-use tracing::{debug, error, instrument, warn, Instrument, Level};
+use tracing::{debug, instrument, Level};
 
-use super::provider::IGDBProvider;
+impl IGDBProvider {
+    pub fn igdb_platform_to_metadata(
+        &self,
+        igdb_match: igdb::Platform,
+    ) -> retrom::NewPlatformMetadata {
+        let description = Some(igdb_match.summary);
+        let name = Some(igdb_match.name);
+        let igdb_id = match BigDecimal::from_u64(igdb_match.id) {
+            Some(id) => id.to_i64(),
+            None => None,
+        };
 
-#[instrument(level = Level::DEBUG, skip_all, fields(name = platform.path))]
-pub async fn match_platform_igdb(
-    provider: Arc<IGDBProvider>,
-    platform: &retrom::Platform,
-) -> Option<retrom::NewPlatformMetadata> {
-    provider.maybe_refresh_token().await;
+        let logo_url = igdb_match
+            .platform_logo
+            .map(|logo| logo.url.to_string().replace("//", "https://"));
 
-    let name = &platform.path.split('/').last().unwrap_or(&platform.path);
-
-    let search = deunicode(name);
-    debug!("Searching for platform: {}", search);
-
-    let matches = match search_platforms(provider.clone(), &search).await {
-        Ok(igdb_platforms) => igdb_platforms,
-        Err(e) => {
-            error!("Could not get IGDB platform: {:?}", e);
-            return None;
-        }
-    };
-
-    let igdb_match = matches.platforms.into_iter().next();
-
-    let metadata = match igdb_match {
-        Some(igdb_match) => igdb_platform_to_metadata(igdb_match, Some(platform)),
-        None => retrom::NewPlatformMetadata {
-            platform_id: Some(platform.id),
+        retrom::NewPlatformMetadata {
+            igdb_id,
+            name,
+            description,
+            logo_url,
             ..Default::default()
-        },
-    };
-
-    Some(metadata)
+        }
+    }
 }
 
-pub async fn match_platforms_igdb(
-    provider: Arc<IGDBProvider>,
-    platforms: Vec<retrom::Platform>,
-) -> Vec<retrom::NewPlatformMetadata> {
-    let all_metadata = futures::future::join_all(
-        platforms
-            .into_iter()
-            .map(|platform| {
-                let provider = provider.clone();
-                let path = platform.path.clone();
-                tokio::spawn(async move { match_platform_igdb(provider, &platform).await }).map_err(
-                    move |e| {
-                        warn!("Could not match platform {path}: {e:?}");
-                        e
-                    },
-                )
+impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
+    #[instrument(level = Level::DEBUG, skip_all, fields(name = platform.path))]
+    async fn get_platform_metadata(
+        &self,
+        platform: retrom::Platform,
+    ) -> Option<retrom::NewPlatformMetadata> {
+        let naive_name = platform.path.split('/').last().unwrap_or(&platform.path);
+        let path = PathBuf::from_str(&platform.path).unwrap();
+        let mut name = path
+            .file_stem()
+            .and_then(|stem| stem.to_str())
+            .unwrap_or(naive_name)
+            .to_string();
+
+        // normalize name, remove anything in braces and coallesce spaces
+        while let Some(begin) = name.find('(') {
+            let end = name.find(')').unwrap_or(name.len() - 1);
+
+            name.replace_range(begin..=end, "");
+        }
+
+        while let Some(begin) = name.find('[') {
+            let end = name.find(']').unwrap_or(name.len() - 1);
+
+            name.replace_range(begin..=end, "");
+        }
+
+        while let Some(begin) = name.find('{') {
+            let end = name.find('}').unwrap_or(name.len() - 1);
+
+            name.replace_range(begin..=end, "");
+        }
+
+        name = name
+            .chars()
+            .map(|c| match c {
+                ':' | '-' | '_' | '.' => ' ',
+                _ => c,
             })
-            .map(|future| future.instrument(tracing::info_span!("match_platforms"))),
-    )
-    .await;
+            .collect();
 
-    all_metadata
-        .into_iter()
-        .filter_map(|future| future.ok())
-        .flatten()
-        .collect()
-}
+        name = name.split_whitespace().collect::<Vec<&str>>().join(" ");
+        let name = name.as_str();
 
-#[instrument(skip(provider))]
-pub(crate) async fn search_platforms(
-    provider: Arc<IGDBProvider>,
-    search_string: &str,
-) -> Result<igdb::PlatformResult, reqwest::StatusCode> {
-    let query = format!("fields name, summary; search \"{search_string}\"; limit 10;");
+        let search = deunicode(name);
+        debug!("Searching for platform: {}", search);
 
-    let res = match provider.make_request("platforms.pb".into(), query).await {
-        Ok(res) => res,
-        Err(e) => {
-            error!("Could not get IGDB platform: {:?}", e);
-            return Err(e);
+        let query = IgdbPlatformSearchQuery {
+            search: Some(IgdbSearch { value: search }),
+            ..Default::default()
+        };
+
+        let matches = self.search_platform_metadata(query).await;
+
+        let exact_match = matches
+            .iter()
+            .find(|meta| meta.name == Some(name.to_string()));
+
+        let first_match = matches.first();
+
+        let igdb_match = exact_match.or(first_match).map(|meta| meta.to_owned());
+
+        if let Some(mut igdb_match) = igdb_match {
+            igdb_match.platform_id = Some(platform.id);
+            return Some(igdb_match);
+        };
+
+        None
+    }
+
+    #[instrument(level = Level::DEBUG, skip_all)]
+    async fn search_platform_metadata(
+        &self,
+        query: IgdbPlatformSearchQuery,
+    ) -> Vec<retrom::NewPlatformMetadata> {
+        let fields = IgdbFields {
+            selector: Some(Selector::Include(IncludeFields {
+                value: self.platform_fields.clone(),
+            })),
         }
-    };
+        .into();
 
-    let bytes = match res.bytes().await {
-        Ok(bytes) => bytes,
-        Err(e) => {
-            error!(
-                "Could not parse IGDB response for query {search_string}: {:?}",
-                e
+        let mut filters = HashMap::<String, FilterValue>::new();
+
+        let filter_fields = query.fields.as_ref();
+        let igdb_id = filter_fields.and_then(|fields| fields.id);
+        let name = filter_fields.and_then(|fields| fields.name.as_ref().cloned());
+
+        if let Some(id) = igdb_id {
+            filters.insert(
+                "id".to_string(),
+                FilterValue {
+                    operator: Some(FilterOperator::Equal.into()),
+                    value: id.to_string(),
+                },
             );
-            return Err(reqwest::StatusCode::INTERNAL_SERVER_ERROR);
-        }
-    };
+        };
 
-    let result = match igdb::PlatformResult::decode(bytes) {
-        Ok(result) => result,
-        Err(e) => {
-            panic!(
-                "Could not parse IGDB response for query {search_string}: {:?}",
-                e
+        if let Some(name) = name {
+            filters.insert(
+                "name".to_string(),
+                FilterValue {
+                    operator: Some(FilterOperator::Equal.into()),
+                    value: name,
+                },
             );
+        };
+
+        let query = GetIgdbSearchRequest {
+            fields,
+            search: query.search,
+            pagination: None,
+            search_type: IgdbSearchType::Platform.into(),
+            filters: IgdbFilters { filters }.into(),
+        };
+
+        match self.search_metadata(query).await {
+            Some(IgdbSearchData::Platform(matches)) => matches
+                .platforms
+                .into_iter()
+                .map(|platform| self.igdb_platform_to_metadata(platform))
+                .collect(),
+            _ => {
+                vec![]
+            }
         }
-    };
-
-    Ok(result)
-}
-
-pub fn igdb_platform_to_metadata(
-    igdb_match: igdb::Platform,
-    platform: Option<&retrom::Platform>,
-) -> retrom::NewPlatformMetadata {
-    let description = Some(igdb_match.summary);
-    let name = Some(igdb_match.name);
-    let igdb_id = match BigDecimal::from_u64(igdb_match.id) {
-        Some(id) => id.to_i64(),
-        None => None,
-    };
-
-    let logo_url = igdb_match
-        .platform_logo
-        .map(|logo| logo.url.to_string().replace("//", "https://"));
-
-    retrom::NewPlatformMetadata {
-        platform_id: platform.map(|platform| platform.id),
-        igdb_id,
-        name,
-        description,
-        logo_url,
-        ..Default::default()
     }
 }
