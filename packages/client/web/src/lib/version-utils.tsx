@@ -3,7 +3,6 @@ import { Version } from "@/generated/retrom/server/server-info";
 import { Update } from "@tauri-apps/plugin-updater";
 import Markdown from "react-markdown";
 import classes from "./version-utils.module.scss";
-import { Link } from "@tanstack/react-router";
 import { cn } from "./utils";
 
 export function versionCompare(a: Version, b: Version): number {
