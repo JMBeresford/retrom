@@ -3,6 +3,8 @@ import { Version } from "@/generated/retrom/server/server-info";
 import { Update } from "@tauri-apps/plugin-updater";
 import Markdown from "react-markdown";
 import classes from "./version-utils.module.scss";
+import { Link } from "@tanstack/react-router";
+import { cn } from "./utils";
 
 export function versionCompare(a: Version, b: Version): number {
   const { major: aMajor, minor: aMinor } = a;
@@ -68,7 +70,20 @@ export function Changelog(props: { update: Update }) {
     <div className="py-2">
       <ScrollArea className="h-full max-h-[65dvh] rounded">
         {body ? (
-          <Markdown className={classes.markdown}>{body}</Markdown>
+          <Markdown
+            components={{
+              a: (props) => (
+                <a
+                  {...props}
+                  className={cn(props.className, "text-accent-text")}
+                  target="_blank"
+                />
+              ),
+            }}
+            className={classes.markdown}
+          >
+            {body}
+          </Markdown>
         ) : (
           <p className="text-muted italic">No changelog for this release</p>
         )}

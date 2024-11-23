@@ -29,13 +29,15 @@
   h4,
   h5,
   h6 {
-    @apply font-black text-2xl mb-2 uppercase text-muted-foreground/50;
+    @apply font-black text-2xl mb-2 uppercase text-primary;
   }
 
   ul {
     list-style: none;
 
     li {
+      margin-bottom: 1rem;
+
       > *:first-child {
         @apply font-bold mb-1 relative w-fit;
       }
