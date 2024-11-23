@@ -34,11 +34,15 @@ import { useGameDetail } from "@/providers/game-details";
 import { useNavigate } from "@tanstack/react-router";
 
 type FormSchema = z.infer<typeof formSchema>;
-const formSchema = z.object({
-  search: z.string().max(255),
-  igdbId: z.coerce.number().optional(),
-  restrictToCurrentPlatform: z.boolean(),
-});
+const formSchema = z
+  .object({
+    search: z.string().max(255),
+    igdbId: z.coerce.number().optional(),
+    restrictToCurrentPlatform: z.boolean(),
+  })
+  .refine((data) => data.igdbId || data.search, {
+    message: "You must provide either a search term or an IGDB ID",
+  });
 
 export function IgdbTab() {
   const {
@@ -71,11 +75,18 @@ export function IgdbTab() {
     enabled: !!searchRequest,
     queryKey: ["games", "igdb-search", searchRequest],
     queryFn: async () => {
+      if (
+        !searchRequest.query?.search?.value &&
+        !searchRequest.query?.fields?.id
+      ) {
+        return null;
+      }
+
       return await retromClient.metadataClient.getIgdbGameSearchResults(
         searchRequest,
       );
     },
-    select: (data) => data.metadata,
+    select: (data) => data?.metadata ?? [],
   });
 
   const { mutateAsync: updateGames } = useUpdateGames();

@@ -1,33 +1,27 @@
 use std::{collections::HashMap, sync::Arc};
 
-use crate::providers::igdb::{
-    games::igdb_game_to_metadata, platforms::igdb_platform_to_metadata, provider::IGDBProvider,
+use crate::providers::{
+    igdb::provider::{IGDBProvider, IgdbSearchData},
+    GameMetadataProvider, MetadataProvider, PlatformMetadataProvider,
 };
-use deunicode::deunicode;
 use diesel::prelude::*;
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use prost::Message;
-use retrom_codegen::{
-    igdb,
-    retrom::{
-        self,
-        get_game_metadata_response::{GameGenres, SimilarGames},
-        get_igdb_search_request::IgdbSearchType,
-        get_igdb_search_response::SearchResults,
-        igdb_fields::Selector,
-        igdb_filters::{FilterOperator, FilterValue},
-        metadata_service_server::MetadataService,
-        Game, GameGenre, GameGenreMap, GetGameMetadataRequest, GetGameMetadataResponse,
-        GetIgdbGameSearchResultsRequest, GetIgdbGameSearchResultsResponse,
-        GetIgdbPlatformSearchResultsRequest, GetIgdbPlatformSearchResultsResponse,
-        GetIgdbSearchRequest, GetIgdbSearchResponse, GetPlatformMetadataRequest,
-        GetPlatformMetadataResponse, SimilarGameMap, UpdateGameMetadataRequest,
-        UpdateGameMetadataResponse, UpdatePlatformMetadataRequest, UpdatePlatformMetadataResponse,
-    },
+use retrom_codegen::retrom::{
+    self,
+    get_game_metadata_response::{GameGenres, SimilarGames},
+    get_igdb_search_response::SearchResults,
+    metadata_service_server::MetadataService,
+    Game, GameGenre, GameGenreMap, GetGameMetadataRequest, GetGameMetadataResponse,
+    GetIgdbGameSearchResultsRequest, GetIgdbGameSearchResultsResponse,
+    GetIgdbPlatformSearchResultsRequest, GetIgdbPlatformSearchResultsResponse,
+    GetIgdbSearchRequest, GetIgdbSearchResponse, GetPlatformMetadataRequest,
+    GetPlatformMetadataResponse, IgdbSearchGameResponse, IgdbSearchPlatformResponse,
+    SimilarGameMap, UpdateGameMetadataRequest, UpdateGameMetadataResponse,
+    UpdatePlatformMetadataRequest, UpdatePlatformMetadataResponse,
 };
 use retrom_db::{schema, Pool};
 use tonic::{Request, Response, Status};
-use tracing::{error, info, Level};
+use tracing::{error, Level};
 
 pub struct MetadataServiceHandlers {
     db_pool: Arc<Pool>,
@@ -275,105 +269,15 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        let fields = vec![
-            "name".to_string(),
-            "cover.url".to_string(),
-            "artworks.url".to_string(),
-            "artworks.height".to_string(),
-            "artworks.width".to_string(),
-            "summary".to_string(),
-            "websites.url".to_string(),
-            "websites.trusted".to_string(),
-            "videos.name".to_string(),
-            "videos.video_id".to_string(),
-        ]
-        .join(",");
-
-        let fields_query = format!("fields {fields};");
-        let mut where_clauses = vec![];
-
-        let fields = query.fields.as_ref();
-
-        if let Some(platform) = fields.and_then(|fields| fields.platform) {
-            where_clauses.push(format!("release_dates.platform = {platform}"));
-        }
-
-        let filter_query = match where_clauses.len() {
-            0 => "".to_string(),
-            1 => format!("where {};", where_clauses[0]),
-            _ => format!("where {};", where_clauses.join(" | ")),
-        };
-
-        let limit_query = match query.pagination.map(|pagination| pagination.limit) {
-            Some(Some(limit)) => format!("limit {limit};"),
-            _ => "limit 15;".to_string(),
-        };
-
-        let search_query = match query.search {
-            Some(search) => format!("search \"{}\";", deunicode(&search.value)),
-            None => "".to_string(),
-        };
-
         let igdb_client = self.igdb_client.clone();
-        let request_query = format!("{search_query}{fields_query}{filter_query}{limit_query}");
-
-        let res = igdb_client
-            .make_request("games.pb".into(), request_query)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-
-        let bytes = match res.bytes().await {
-            Ok(bytes) => bytes,
-            Err(why) => {
-                error!("Could not get bytes: {:?}", why);
-                return Err(Status::internal(why.to_string()));
-            }
-        };
-
-        let mut search_results = match igdb::GameResult::decode(bytes) {
-            Ok(search_results) => search_results,
-            Err(why) => {
-                error!("Could not decode response: {:?}", why);
-                return Err(Status::internal(why.to_string()));
-            }
-        };
-
-        // Explicitly get game w/ IGDB ID if specified, and merge with search results
-        if let Some(igdb_id) = fields.and_then(|fields| fields.id) {
-            let res = igdb_client
-                .make_request(
-                    "games.pb".into(),
-                    format!("{fields_query}where id = {igdb_id};"),
-                )
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?;
-
-            let bytes = match res.bytes().await {
-                Ok(bytes) => bytes,
-                Err(why) => {
-                    error!("Could not get bytes: {:?}", why);
-                    return Err(Status::internal(why.to_string()));
-                }
-            };
-
-            match igdb::GameResult::decode(bytes) {
-                Ok(result) => {
-                    if !search_results.games.iter().any(|game| game.id == igdb_id) {
-                        let all_results = result.games.into_iter().chain(search_results.games);
-                        search_results.games = all_results.collect();
-                    }
-                }
-                Err(why) => {
-                    error!("Could not decode response: {:?}", why);
-                    return Err(Status::internal(why.to_string()));
-                }
-            };
-        }
+        let search_results = igdb_client.search_game_metadata(query).await;
 
         let metadata = search_results
-            .games
             .into_iter()
-            .map(|igdb_game| igdb_game_to_metadata(igdb_game, Some(&game)))
+            .map(|mut meta| {
+                meta.game_id = Some(game.id);
+                meta
+            })
             .collect();
 
         Ok(Response::new(GetIgdbGameSearchResultsResponse { metadata }))
@@ -410,60 +314,16 @@ impl MetadataService for MetadataServiceHandlers {
                 }
             };
 
-            let fields_query = "fields name, logo.url, summary;";
-            let mut where_clauses = vec![];
+            let igdb_provider = self.igdb_client.clone();
 
-            if let Some(igdb_id) = query.fields.and_then(|fields| fields.id) {
-                info!("IGDB ID: {igdb_id}");
-                where_clauses.push(format!("id = {igdb_id}"));
-            }
-
-            let filter_query = match where_clauses.len() {
-                0 => "".to_string(),
-                1 => format!("where {};", where_clauses[0]),
-                _ => format!("where {};", where_clauses.join(" | ")),
-            };
-
-            let limit_query = match query.pagination.map(|pagination| pagination.limit) {
-                Some(Some(limit)) => format!("limit {limit};"),
-                _ => "".to_string(),
-            };
-
-            let search_query = match query.search {
-                Some(search) => format!("search \"{}\";", deunicode(&search.value)),
-                None => "".to_string(),
-            };
-
-            let igdb_client = self.igdb_client.clone();
-
-            let res = igdb_client
-                .make_request(
-                    "platforms.pb".into(),
-                    format!("{search_query}{fields_query}{filter_query}{limit_query}"),
-                )
+            let metadata = igdb_provider
+                .search_platform_metadata(query)
                 .await
-                .map_err(|e| Status::internal(e.to_string()))?;
-
-            let bytes = match res.bytes().await {
-                Ok(bytes) => bytes,
-                Err(why) => {
-                    error!("Could not get bytes: {:?}", why);
-                    return Err(Status::internal(why.to_string()));
-                }
-            };
-
-            let search_results = match igdb::PlatformResult::decode(bytes) {
-                Ok(search_results) => search_results,
-                Err(why) => {
-                    error!("Could not decode response: {:?}", why);
-                    return Err(Status::internal(why.to_string()));
-                }
-            };
-
-            let metadata = search_results
-                .platforms
                 .into_iter()
-                .map(|igdb_platform| igdb_platform_to_metadata(igdb_platform, Some(&platform)))
+                .map(|mut meta| {
+                    meta.platform_id = Some(platform.id);
+                    meta
+                })
                 .collect();
 
             Ok(Response::new(GetIgdbPlatformSearchResultsResponse {
@@ -478,138 +338,35 @@ impl MetadataService for MetadataServiceHandlers {
         request: Request<GetIgdbSearchRequest>,
     ) -> Result<Response<GetIgdbSearchResponse>, Status> {
         let request = request.into_inner();
+        let igdb_provider = self.igdb_client.clone();
 
-        let search_type = request.search_type();
-        let search_clause = match request.search.map(|search| search.value) {
-            Some(value) => format!("search {value};"),
-            None => "".to_string(),
-        };
+        let data = igdb_provider.search_metadata(request).await;
 
-        let fields = request.fields.as_ref();
-
-        let fields_clause = match fields.and_then(|fields| fields.selector.as_ref()) {
-            Some(Selector::Include(fields)) => format!("fields {};", fields.value.join(", ")),
-            Some(Selector::Exclude(fields)) => {
-                format!("fields *; exclude {};", fields.value.join(", "))
-            }
-            None => "".to_string(),
-        };
-
-        let filters_clause = match request.filters.map(|filters| filters.filters) {
-            Some(filters) => format!(
-                "where {};",
-                filters
-                    .into_iter()
-                    .map(render_filter_operation)
-                    .collect::<Vec<String>>()
-                    .join(" | ")
-            ),
-            None => "".to_string(),
-        };
-
-        let pagination = request.pagination.as_ref();
-
-        let limit_clause = match pagination.map(|pagination| &pagination.limit) {
-            Some(Some(limit)) => format!("limit {limit};"),
-            _ => "".to_string(),
-        };
-
-        let offset_clause = match pagination.map(|pagination| &pagination.offset) {
-            Some(Some(offset)) => format!("offset {offset};"),
-            _ => "".to_string(),
-        };
-
-        let query =
-            format!("{search_clause}{fields_clause}{filters_clause}{limit_clause}{offset_clause}",);
-
-        let target = match search_type {
-            IgdbSearchType::Game => "games.pb".into(),
-            IgdbSearchType::Platform => "platforms.pb".into(),
-        };
-
-        let igdb_client = self.igdb_client.clone();
-
-        let res = igdb_client
-            .make_request(target, query)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-
-        let bytes = match res.bytes().await {
-            Ok(bytes) => bytes,
-            Err(why) => {
-                error!("Could not get bytes: {:?}", why);
-                return Err(Status::internal(why.to_string()));
-            }
-        };
-
-        match search_type {
-            IgdbSearchType::Game => {
-                let matches = match igdb::GameResult::decode(bytes) {
-                    Ok(matches) => matches,
-                    Err(why) => {
-                        error!("Could not decode response: {:?}", why);
-                        return Err(Status::internal(why.to_string()));
-                    }
-                };
-
+        let search_results = match data {
+            Some(IgdbSearchData::Game(matches)) => {
                 let games = matches
                     .games
                     .into_iter()
-                    .map(|game| igdb_game_to_metadata(game, None))
+                    .map(|game| igdb_provider.igdb_game_to_metadata(game))
                     .collect();
 
-                let search_results =
-                    Some(SearchResults::GameMatches(retrom::IgdbSearchGameResponse {
-                        games,
-                    }));
-
-                Ok(Response::new(GetIgdbSearchResponse { search_results }))
+                SearchResults::GameMatches(IgdbSearchGameResponse { games })
             }
-            IgdbSearchType::Platform => {
-                let matches = match igdb::PlatformResult::decode(bytes) {
-                    Ok(matches) => matches,
-                    Err(why) => {
-                        error!("Could not decode response: {:?}", why);
-                        return Err(Status::internal(why.to_string()));
-                    }
-                };
-
+            Some(IgdbSearchData::Platform(matches)) => {
                 let platforms = matches
                     .platforms
                     .into_iter()
-                    .map(|platform| igdb_platform_to_metadata(platform, None))
+                    .map(|platform| igdb_provider.igdb_platform_to_metadata(platform))
                     .collect();
 
-                let search_results = Some(SearchResults::PlatformMatches(
-                    retrom::IgdbSearchPlatformResponse { platforms },
-                ));
-
-                Ok(Response::new(GetIgdbSearchResponse { search_results }))
+                SearchResults::PlatformMatches(IgdbSearchPlatformResponse { platforms })
+            }
+            None => {
+                return Err(Status::not_found("No results"));
             }
         }
-    }
-}
+        .into();
 
-fn render_filter_operation(igdb_filter: (String, FilterValue)) -> String {
-    let (field, filter) = igdb_filter;
-
-    let value = &filter.value;
-    let operator = filter.operator();
-
-    match operator {
-        FilterOperator::Equal => format!("{field} ~ {value}"),
-        FilterOperator::NotEqual => format!("{field} !~ {value}"),
-        FilterOperator::LessThan => format!("{field} < {value}"),
-        FilterOperator::LessThanOrEqual => format!("{field} <= {value}"),
-        FilterOperator::GreaterThan => format!("{field} > {value}"),
-        FilterOperator::GreaterThanOrEqual => format!("{field} >= {value}"),
-        FilterOperator::PrefixMatch => format!("{field} ~ {value}*"),
-        FilterOperator::SuffixMatch => format!("{field} ~ *{value}"),
-        FilterOperator::InfixMatch => format!("{field} ~ *{value}*"),
-        FilterOperator::All => format!("{field} = [{value}]"),
-        FilterOperator::Any => format!("{field} = ({value})"),
-        FilterOperator::NotAll => format!("{field} = ![{value}]"),
-        FilterOperator::None => format!("{field} = !({value})"),
-        FilterOperator::Exact => format!("{field} = {{{value}}}"),
+        Ok(Response::new(GetIgdbSearchResponse { search_results }))
     }
 }
