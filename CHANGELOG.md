@@ -6,6 +6,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.4.6](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.5...retrom-v0.4.6) - 2024-12-01
+
+### Fixes
+- Fullscreen action button
+
+    The Play/Install/Download button in the fullscreen layout
+    now correctly responds to gamepad input.
+
+
+
+- link rendering in changelog
+
+
+
+### New
+- steam integration
+
+    You can now opt-in to populate your library with your Steam games. This is
+    done by adding your Steam config to the service config file.
+
+
+
+- scanned games are matched by platform
+
+    Library scans will now take a games platform into account when matching
+    via IGDB.
+
+
+
+- prioritize exact matches in IGDB search by default
+
+    fixes [#168](https://github.com/JMBeresford/retrom/pull/168)
+
+
+
+- Fullscreen game list names
+
+    Fullscreen mode now shows the names of the games in the grid view,
+    where applicable.
+
+
+
+
 ## [0.4.5](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.4...retrom-v0.4.5) - 2024-11-22
 
 ### Fixes
