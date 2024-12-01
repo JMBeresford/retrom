@@ -7,7 +7,7 @@ license.workspace = true
 edition.workspace = true
 description = "Retrom plugin that facilitates the installation of games locally."
 rust-version = "1.80"
-exclude = ["./examples", "./webview-dist", "./webview-src", "**/node_modules"]
+exclude = ["./examples", "./webview-dist", "./webview-src", "./node_modules"]
 links = "tauri-plugin-installer"
 
 [dependencies]
@@ -15,8 +15,11 @@ tauri = { workspace = true }
 serde = "1.0"
 thiserror = { workspace = true }
 retrom-codegen = { workspace = true }
+retrom-plugin-steam = { workspace = true }
+retrom-plugin-service-client = { workspace = true }
 futures = { workspace = true }
 tokio = { workspace = true }
+tonic = { workspace = true }
 tokio-util = { workspace = true }
 reqwest = { workspace = true }
 tracing = { workspace = true }

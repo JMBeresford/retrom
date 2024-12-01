@@ -10,10 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { IgdbTab } from "./igdb-tab";
 import { ManualTab } from "./manual-tab";
 import { Route } from "@/routes/(windowed)/_layout/games/$gameId";
+import { useGameDetail } from "@/providers/game-details";
 
 export function UpdateMetadataModal() {
   const { updateMetadataModal } = Route.useSearch();
   const navigate = useNavigate();
+  const { game } = useGameDetail();
 
   return (
     <Dialog
@@ -34,15 +36,19 @@ export function UpdateMetadataModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="igdb">
+        <Tabs defaultValue={game.thirdParty ? "manual" : "igdb"}>
           <TabsList>
-            <TabsTrigger value="igdb">Search IGDB</TabsTrigger>
+            <TabsTrigger disabled={game.thirdParty} value="igdb">
+              Search IGDB
+            </TabsTrigger>
             <TabsTrigger value="manual">Manual</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="igdb">
-            <IgdbTab />
-          </TabsContent>
+          {!game.thirdParty && (
+            <TabsContent value="igdb">
+              <IgdbTab />
+            </TabsContent>
+          )}
           <TabsContent value="manual">
             <ManualTab />
           </TabsContent>

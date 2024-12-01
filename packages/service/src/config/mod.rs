@@ -20,11 +20,18 @@ pub struct IGDBConfig {
     pub client_secret: String,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct SteamConfig {
+    pub api_key: Option<String>,
+    pub user_id: Option<String>,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ServerConfig {
     pub connection: ConnectionConfig,
     pub content_directories: Vec<ContentDirectory>,
     pub igdb: IGDBConfig,
+    pub steam: Option<SteamConfig>,
 }
 
 impl ServerConfig {

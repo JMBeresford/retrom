@@ -18,7 +18,10 @@ use retrom_db::Pool;
 use tonic::transport::{server::Routes, Server};
 use tower_http::cors::{AllowOrigin, Cors, CorsLayer};
 
-use crate::{config::ServerConfig, providers::igdb::provider::IGDBProvider};
+use crate::{
+    config::ServerConfig,
+    providers::{igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider},
+};
 
 pub mod clients;
 pub mod emulators;
@@ -45,6 +48,13 @@ const DEFAULT_ALLOW_HEADERS: [HeaderName; 5] = [
 
 pub fn grpc_service(db_pool: Arc<Pool>, config: Arc<ServerConfig>) -> Cors<Routes> {
     let igdb_client = Arc::new(IGDBProvider::new(config.igdb.clone()));
+    let steam_web_api_client = Arc::new(
+        config
+            .steam
+            .as_ref()
+            .map(|steam| SteamWebApiProvider::new(steam.clone())),
+    );
+
     let job_manager = Arc::new(JobManager::new());
 
     let reflection_service = tonic_reflection::server::Builder::configure()
@@ -55,6 +65,7 @@ pub fn grpc_service(db_pool: Arc<Pool>, config: Arc<ServerConfig>) -> Cors<Route
     let library_service = LibraryServiceServer::new(LibraryServiceHandlers::new(
         db_pool.clone(),
         igdb_client.clone(),
+        steam_web_api_client.clone(),
         job_manager.clone(),
         config.clone(),
     ));

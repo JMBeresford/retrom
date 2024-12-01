@@ -24,6 +24,7 @@ impl<R: Runtime, T: Manager<R>> crate::InstallerExt<R> for T {
 }
 
 /// Initializes the plugin.
+#[tracing::instrument]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::<R>::new("installer")
         .invoke_handler(tauri::generate_handler![
@@ -33,7 +34,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::get_installation_state,
         ])
         .setup(|app, api| {
-            #[cfg(desktop)]
             let installer = desktop::init(app, api)?;
             app.manage(installer);
 

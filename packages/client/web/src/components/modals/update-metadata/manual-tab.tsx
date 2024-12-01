@@ -22,6 +22,7 @@ import { Checkbox } from "../../ui/checkbox";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";
 import { useNavigate } from "@tanstack/react-router";
+import { StorageType } from "@/generated/retrom/models/games";
 
 type FormFieldRenderer = ({
   form,
@@ -33,6 +34,7 @@ type EditableGameMetadata = Omit<
   GameMetadata,
   | "gameId"
   | "igdbId"
+  | "steamId"
   | "createdAt"
   | "updatedAt"
   | "releaseDate"
@@ -148,12 +150,22 @@ export function ManualTab() {
                 <div className="flex items-top gap-2">
                   <Checkbox
                     id="rename-directory"
+                    disabled={game.thirdParty}
                     checked={renameDirectory}
                     onCheckedChange={(event) => setRenameDirectory(!!event)}
                   />
 
-                  <div className="grid gap-1 5 leading-none">
-                    <label htmlFor="rename-directory">Rename Directory</label>
+                  <div
+                    className={cn(
+                      "grid gap-1 5 leading-none",
+                      game.thirdParty && "opacity-50",
+                    )}
+                  >
+                    <label htmlFor="rename-directory">
+                      {game.storageType === StorageType.MULTI_FILE_GAME
+                        ? "Rename Directory"
+                        : "Rename File"}
+                    </label>
 
                     <p className="text-sm text-muted-foreground">
                       This will alter the file system

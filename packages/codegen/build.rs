@@ -126,7 +126,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("NewPlatform", "platforms", None, vec![]),
         ("NewGame", "games", None, vec![]),
         ("NewGameFile", "game_files", None, vec![]),
-        ("NewGameMetadata", "game_metadata", None, vec![]),
+        ("NewGameMetadata", "game_metadata", Some("game_id"), vec![]),
         ("NewPlatformMetadata", "platform_metadata", None, vec![]),
         ("NewClient", "clients", None, vec![]),
         ("NewEmulator", "emulators", None, vec![]),

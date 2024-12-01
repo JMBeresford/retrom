@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2021",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noImplicitAny": true,
+    "noEmit": true
+  },
+  "include": ["../retrom-plugin-steam/guest-js/*.ts"],
+  "exclude": ["../retrom-plugin-steam/dist-js", "../retrom-plugin-steam/node_modules"]
+}

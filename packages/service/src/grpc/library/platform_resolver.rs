@@ -108,6 +108,7 @@ impl PlatformResolver {
             updated_at: None,
             deleted_at: None,
             is_deleted: false,
+            third_party: false,
         }
     }
 }

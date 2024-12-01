@@ -166,8 +166,6 @@ impl JobManager {
                         if let Some(job) = job_progress.get_mut(&id) {
                             job.percent = percent;
                         };
-
-                        tracing::debug!("Job progress written: {:?}", percent);
                     }
 
                     if let Err(why) = invalidate_sender.send(id) {

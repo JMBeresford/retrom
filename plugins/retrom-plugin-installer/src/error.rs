@@ -17,6 +17,12 @@ pub enum Error {
     ToStr(#[from] ToStrError),
     #[error(transparent)]
     ParseInt(#[from] ParseIntError),
+    #[error(transparent)]
+    Tonic(#[from] tonic::Status),
+    #[error("No third party data found")]
+    ThirdPartyNotFound,
+    #[error(transparent)]
+    SteamError(#[from] retrom_plugin_steam::Error),
 }
 
 impl Serialize for Error {

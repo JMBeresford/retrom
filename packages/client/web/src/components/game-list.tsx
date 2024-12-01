@@ -28,9 +28,10 @@ export function GameList(props: { games: GameWithMetadata[] }) {
           <div
             key={game.id}
             className={cn(
-              "aspect-video h-[12rem] p-2",
-              image === coverUrl && "row-span-2 h-full aspect-[3/4]",
-              "first:row-span-2 first:h-[24rem] first:pl-0",
+              "aspect-video h-[12rem] max-h-[12rem] p-2",
+              image === coverUrl &&
+                "row-span-2 h-[24rem] max-h-[24rem] aspect-[3/4]",
+              "first:row-span-2 first:h-[24rem] first:max-h-[24rem] first:pl-0",
             )}
           >
             <div

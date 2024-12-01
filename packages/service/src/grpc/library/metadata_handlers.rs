@@ -1,4 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    convert::Infallible,
+    sync::Arc,
+};
 
 use crate::{
     grpc::jobs::job_manager::JobOptions,
@@ -40,6 +44,7 @@ pub async fn update_metadata(
     };
 
     let platforms = match schema::platforms::table
+        .filter(schema::platforms::third_party.eq(false))
         .load::<retrom::Platform>(&mut conn)
         .await
     {
@@ -78,16 +83,22 @@ pub async fn update_metadata(
                         })?;
                 };
 
+                tracing::info!("Platform metadata task completed");
+
                 Ok(())
             }
             .instrument(info_span!("Platform Metadata Task"))
         })
         .collect();
 
-    let games: Vec<retrom::Game> = schema::games::table.load(&mut conn).await.map_err(|e| {
-        tracing::error!("Failed to load games: {}", e);
-        e.to_string()
-    })?;
+    let games: Vec<retrom::Game> = schema::games::table
+        .filter(schema::games::third_party.eq(false))
+        .load(&mut conn)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to load games: {}", e);
+            e.to_string()
+        })?;
 
     let game_tasks = games
         .clone()
@@ -341,6 +352,79 @@ pub async fn update_metadata(
         })
         .collect();
 
+    let steam_provider = state.steam_web_api_client.clone();
+    let all_steam_apps = if let Some(steam_provider) = steam_provider.as_ref() {
+        match steam_provider.get_owned_games().await {
+            Ok(res) => res.response.games,
+            Err(e) => {
+                tracing::error!("Failed to get owned games: {}", e);
+                vec![]
+            }
+        }
+    } else {
+        vec![]
+    };
+
+    let steam_games: Arc<Vec<retrom::Game>> = Arc::new(
+        schema::games::table
+            .filter(schema::games::steam_app_id.is_not_null())
+            .load::<retrom::Game>(&mut conn)
+            .await
+            .unwrap_or_default(),
+    );
+
+    let steam_tasks: Vec<_> = all_steam_apps
+        .into_iter()
+        .map(|app| {
+            let steam_provider = steam_provider.clone();
+            let db_pool = db_pool.clone();
+            let steam_games = steam_games.clone();
+
+            let steam_appid = app.appid;
+
+            let game = steam_games
+                .iter()
+                .find(|game| game.steam_app_id == steam_appid.to_i64())
+                .cloned()
+                .expect("Game not found");
+
+            async move {
+                let steam_provider = match steam_provider.as_ref() {
+                    Some(provider) => provider,
+                    None => return Ok::<(), Infallible>(()),
+                };
+
+                let mut conn = db_pool.get().await.expect("Failed to get connection");
+
+                let existing = schema::game_metadata::table
+                    .find(game.id)
+                    .first::<retrom::GameMetadata>(&mut conn)
+                    .await;
+
+                if existing.is_ok() && !overwrite {
+                    tracing::info!("Metadata already exists for game {}", game.path);
+                    return Ok(());
+                }
+
+                let metadata = steam_provider
+                    .get_game_metadata(game, Some(app))
+                    .await
+                    .expect("Could not get metadata");
+
+                if let Err(why) = diesel::insert_into(schema::game_metadata::table)
+                    .values(&metadata)
+                    .on_conflict_do_nothing()
+                    .execute(&mut conn)
+                    .await
+                {
+                    tracing::error!("Failed to update metadata: {}", why);
+                }
+
+                Ok::<(), Infallible>(())
+            }
+        })
+        .collect();
+
     let job_manager = state.job_manager.clone();
     let platform_metadata_job_id = job_manager
         .spawn("Downloading Platform Metadata", platform_tasks, None)
@@ -348,6 +432,16 @@ pub async fn update_metadata(
 
     let game_job_opts = JobOptions {
         wait_on_jobs: Some(vec![platform_metadata_job_id]),
+    };
+
+    let steam_metadata_job_id = if steam_provider.is_some() {
+        let id = job_manager
+            .spawn("Downloading Steam Metadata", steam_tasks, None)
+            .await;
+
+        Some(id.to_string())
+    } else {
+        None
     };
 
     let game_metadata_job_id = job_manager
@@ -370,5 +464,6 @@ pub async fn update_metadata(
         platform_metadata_job_id: platform_metadata_job_id.to_string(),
         game_metadata_job_id: game_metadata_job_id.to_string(),
         extra_metadata_job_id: extra_metadata_job_id.to_string(),
+        steam_metadata_job_id,
     })
 }

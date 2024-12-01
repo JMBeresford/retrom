@@ -1,5 +1,6 @@
 import { useToast } from "@/components/ui/use-toast";
 import { JobStatus } from "@/generated/retrom/jobs";
+import { GetJobSubscriptionResponse } from "@/generated/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -16,19 +17,21 @@ export function useUpdateLibrary() {
         description: err.message,
       });
     },
-    onSuccess: async ({ jobId }) => {
+    onSuccess: async ({ jobIds }) => {
       queryClient.invalidateQueries({
         predicate: (query) =>
           ["jobs"].some((key) => query.queryKey.includes(key)),
       });
 
-      const { dismiss } = toast({
+      toast({
         title: "Library update started!",
       });
 
-      const subscription = retromClient.jobClient.getJobSubscription({
-        jobId,
-      });
+      const subscriptions = jobIds.map((jobId) =>
+        retromClient.jobClient.getJobSubscription({
+          jobId,
+        }),
+      );
 
       function invalidate() {
         queryClient.invalidateQueries({
@@ -43,18 +46,25 @@ export function useUpdateLibrary() {
         });
       }
 
-      for await (const progress of subscription) {
-        if (progress.job?.status === JobStatus.Success) {
-          invalidate();
+      async function waitForJobCompletion(
+        sub: AsyncIterable<GetJobSubscriptionResponse>,
+      ) {
+        for await (const progress of sub) {
+          console.log(progress);
+          if (progress.job?.status === JobStatus.Success) {
+            invalidate();
 
-          dismiss();
+            toast({
+              title: `Job complete: ${progress.job?.name}!`,
+            });
 
-          toast({
-            title: "Library update complete!",
-          });
-
-          return;
+            return;
+          }
         }
+      }
+
+      for (const subscription of subscriptions) {
+        void waitForJobCompletion(subscription);
       }
 
       invalidate();

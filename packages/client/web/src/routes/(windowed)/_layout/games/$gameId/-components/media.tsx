@@ -64,7 +64,9 @@ export function Media() {
             <ImageCarousel images={gameMetadata!.artworkUrls} />
           </TabsContent>
 
-          <TabsContent value="screenshots">Screenshots</TabsContent>
+          <TabsContent value="screenshots">
+            <ImageCarousel images={gameMetadata!.screenshotUrls} />
+          </TabsContent>
 
           <TabsContent value="videos">
             <VideoCarousel videos={gameMetadata!.videoUrls} />
@@ -87,7 +89,7 @@ function ImageCarousel(props: { images: string[] }) {
   const { images } = props;
 
   return (
-    <Carousel>
+    <Carousel className="group">
       <CarouselContent className="h-max">
         {images.map((img, idx) => (
           <CarouselItem key={idx}>
@@ -134,8 +136,8 @@ function VideoCarousel(props: { videos: string[] }) {
 function Controls() {
   return (
     <div className="group-hover:opacity-100 opacity-0 transition-opacity">
-      <CarouselPrevious className="ml-8" />
-      <CarouselNext className="mr-8" />
+      <CarouselPrevious variant="accent" className="ml-8" />
+      <CarouselNext variant="accent" className="mr-8" />
     </div>
   );
 }

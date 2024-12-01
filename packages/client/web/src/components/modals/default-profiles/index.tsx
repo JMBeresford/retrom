@@ -56,16 +56,18 @@ export function DefaultProfilesModal() {
   const { data: platforms, status: platformStatus } = usePlatforms({
     request: { withMetadata: true },
     selectFn: (data) =>
-      data.platforms.map((platform) => {
-        const metadata = data.metadata.find(
-          (m) => m.platformId === platform.id,
-        );
+      data.platforms
+        .filter((platform) => !platform.thirdParty)
+        .map((platform) => {
+          const metadata = data.metadata.find(
+            (m) => m.platformId === platform.id,
+          );
 
-        return {
-          ...platform,
-          metadata,
-        };
-      }),
+          return {
+            ...platform,
+            metadata,
+          };
+        }),
   });
 
   const { data: emulatorProfiles, status: profilesStatus } =

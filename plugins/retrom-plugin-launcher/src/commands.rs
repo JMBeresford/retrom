@@ -6,6 +6,7 @@ use retrom_codegen::retrom::{
 };
 use retrom_plugin_installer::InstallerExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
+use retrom_plugin_steam::SteamExt;
 use tauri::{command, AppHandle, Manager, Runtime};
 use tokio::sync::Mutex;
 use tracing::{info, instrument};
@@ -27,6 +28,15 @@ pub(crate) async fn play_game<R: Runtime>(
         Some(game) => game,
         None => return Err(crate::Error::GameNotFound(None)),
     };
+
+    if game.third_party {
+        let steam = app.steam();
+
+        if let Some(Ok(app_id)) = game.steam_app_id.map(u32::try_from) {
+            steam.launch_game(app_id).await?;
+            return Ok(());
+        }
+    }
 
     let game_id = game.id;
     let profile = payload

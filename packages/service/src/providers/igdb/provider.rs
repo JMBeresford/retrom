@@ -3,8 +3,8 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::config::IGDBConfig;
 use crate::providers::MetadataProvider;
+use crate::{config::IGDBConfig, providers::RetryAttempts};
 use prost::Message;
 use retrom_codegen::{
     igdb,
@@ -16,7 +16,7 @@ use retrom_codegen::{
     },
 };
 use tokio::sync::{mpsc, oneshot, RwLock};
-use tower::{retry::Policy, Service, ServiceExt};
+use tower::{Service, ServiceExt};
 use tracing::{debug, error, instrument, Instrument, Level};
 
 const IGDB_CONCURRENT_REQUESTS_LIMIT: usize = 8;
@@ -61,52 +61,13 @@ impl IGDBAuth {
     }
 }
 
-#[derive(Clone)]
-struct RetryAttempts {
-    attempts_left: usize,
-    wait: u64,
-}
-
-impl Policy<reqwest::Request, reqwest::Response, reqwest::Error> for RetryAttempts {
-    type Future = futures_util::future::Ready<Self>;
-
-    fn retry(
-        &self,
-        _req: &reqwest::Request,
-        result: Result<&reqwest::Response, &reqwest::Error>,
-    ) -> Option<Self::Future> {
-        match result.is_ok_and(|res| res.status().is_success()) {
-            true => None,
-            false => {
-                if self.attempts_left > 0 {
-                    std::thread::sleep(Duration::from_millis(self.wait));
-
-                    Some(futures_util::future::ready(RetryAttempts {
-                        attempts_left: self.attempts_left - 1,
-                        wait: self.wait * 2,
-                    }))
-                } else {
-                    None
-                }
-            }
-        }
-    }
-
-    fn clone_request(&self, req: &reqwest::Request) -> Option<reqwest::Request> {
-        req.try_clone()
-    }
-}
-
 impl IGDBProvider {
     pub fn new(config: IGDBConfig) -> Self {
         let http_client = reqwest::Client::new();
 
         let (tx, mut rx) = mpsc::channel::<IGDBSenderMsg>(IGDB_CONCURRENT_REQUESTS_LIMIT);
 
-        let retries = RetryAttempts {
-            attempts_left: 5,
-            wait: 1000,
-        };
+        let retries = RetryAttempts::new(5);
 
         let svc = tower::ServiceBuilder::new()
             .buffer(IGDB_CONCURRENT_REQUESTS_LIMIT)
