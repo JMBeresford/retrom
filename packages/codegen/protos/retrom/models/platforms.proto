@@ -11,6 +11,7 @@ message Platform {
   google.protobuf.Timestamp updated_at = 4;
   google.protobuf.Timestamp deleted_at = 5;
   bool is_deleted = 6;
+  bool third_party = 7;
 }
 
 message NewPlatform {
@@ -19,6 +20,7 @@ message NewPlatform {
   optional google.protobuf.Timestamp updated_at = 3;
   optional google.protobuf.Timestamp deleted_at = 4;
   bool is_deleted = 5;
+  bool third_party = 6;
 }
 
 message UpdatedPlatform {
@@ -28,4 +30,5 @@ message UpdatedPlatform {
   optional google.protobuf.Timestamp updated_at = 4;
   optional google.protobuf.Timestamp deleted_at = 5;
   optional bool is_deleted = 6;
+  optional bool third_party = 7;
 }

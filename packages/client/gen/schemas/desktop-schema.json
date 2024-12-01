@@ -4978,6 +4978,11 @@
           "const": "shell:deny-stdin-write"
         },
         {
+          "description": "Default permissions for the plugin",
+          "type": "string",
+          "const": "steam:default"
+        },
+        {
           "description": "This enables all permissions for system info plugin",
           "type": "string",
           "const": "system-info:allow-all"

@@ -17,6 +17,10 @@ pub enum Error {
     FileNotFound(i32),
     #[error("Cannot find game with id `{0:?}`")]
     GameNotFound(Option<i32>),
+    #[error(transparent)]
+    Steam(#[from] retrom_plugin_steam::Error),
+    #[error(transparent)]
+    Tonic(#[from] tonic::Status),
 }
 
 impl Serialize for Error {

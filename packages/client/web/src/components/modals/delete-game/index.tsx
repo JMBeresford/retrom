@@ -77,10 +77,16 @@ export function DeleteGameModal() {
             <Checkbox
               id="delete-from-disk"
               checked={deleteFromDisk}
+              disabled={game.thirdParty}
               onCheckedChange={(event) => setDeleteFromDisk(!!event)}
             />
 
-            <div className="grid gap-1 5 leading-none">
+            <div
+              className={cn(
+                "grid gap-1 5 leading-none",
+                game.thirdParty && "opacity-50",
+              )}
+            >
               <label htmlFor="delete-from-disk">Delete from disk</label>
 
               <p className="text-sm text-muted-foreground">

@@ -120,10 +120,12 @@ export function ManageEmulatorsModal() {
   const { data: platforms, status: platformsStatus } = usePlatforms({
     request: { withMetadata: true },
     selectFn: (data) =>
-      data.platforms.map((p) => ({
-        ...p,
-        metadata: data.metadata.find((m) => m.platformId === p.id),
-      })),
+      data.platforms
+        .filter((platform) => !platform.thirdParty)
+        .map((p) => ({
+          ...p,
+          metadata: data.metadata.find((m) => m.platformId === p.id),
+        })),
   });
 
   const pending =

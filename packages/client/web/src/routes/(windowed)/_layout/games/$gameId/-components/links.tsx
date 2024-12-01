@@ -12,7 +12,12 @@ export function Links() {
     () =>
       gameMetadata?.links?.flatMap((link) => {
         try {
-          const hostname = new URL(link).hostname.split(".").at(-2);
+          const hostname = new URL(link).hostname
+            .split(".")
+            .filter((part) => part !== "www")
+            .slice(0, -1)
+            .join(".");
+
           return [{ hostname, link }];
         } catch {
           return [];

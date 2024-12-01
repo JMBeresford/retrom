@@ -1,0 +1,25 @@
+[package]
+name = "retrom-plugin-steam"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Retrom plugin to facilitate steam apps integration."
+rust-version = "1.80"
+exclude = ["./examples", "./webview-dist", "./webview-src", "**/node_modules"]
+links = "tauri-plugin-steam"
+
+[dependencies]
+tauri = { workspace = true }
+serde = "1.0"
+thiserror = "1.0"
+tracing = { workspace = true }
+retrom-codegen = { workspace = true }
+tokio = { workspace = true }
+tauri-plugin-shell = "2.0.0-rc"
+steamlocate = "2.0.0"
+notify = "7.0.0"
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0-rc.6", features = ["build"] }

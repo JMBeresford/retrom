@@ -57,7 +57,7 @@ export function Name(props: { name?: string }) {
       ref.current.outlineOpacity = -1.5;
       ref.current.scale.addScalar(factor);
     } else {
-      const scale = lineCount > 1 ? 1.25 : 2;
+      const scale = name.length < 7 ? 3 : lineCount > 1 ? 1.25 : 2;
       ref.current.scale.y = damp(ref.current.scale.y, scale, 1, dt);
 
       ref.current.fillOpacity = damp(ref.current.fillOpacity ?? 0, 1, 0.7, dt);

@@ -60,7 +60,7 @@ export const PlayGameButton = forwardRef(
 
     const file = gameFiles?.find((file) => file.id === game.defaultFileId);
     const disabled = queryStatus !== "success";
-    const shouldAddEmulator = !emulator && !fullscreenMatch;
+    const shouldAddEmulator = !emulator && !fullscreenMatch && !game.thirdParty;
 
     const onClick = useCallback(() => {
       if (disabled) return;
@@ -122,10 +122,12 @@ export const PlayGameButton = forwardRef(
         );
       }
 
+      const text = game.thirdParty ? "Launch In Steam" : "Play";
+
       return (
         <>
           <PlayIcon className="h-[1.2rem] w-[1.2rem] fill-current" />
-          Play
+          {text}
         </>
       );
     };

@@ -1,3 +1,4 @@
+use diesel::ExpressionMethods;
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use retrom_codegen::retrom::{DeleteLibraryRequest, DeleteLibraryResponse};
 use retrom_db::DBConnection;
@@ -29,6 +30,12 @@ pub async fn delete_library(
 
 async fn do_delete(conn: &mut DBConnection) -> Result<(), diesel::result::Error> {
     diesel::delete(retrom_db::schema::platforms::table)
+        .filter(retrom_db::schema::platforms::third_party.eq(false))
+        .execute(conn)
+        .await?;
+
+    // Delete orphaned games ( games not associated with any platform )
+    diesel::delete(retrom_db::schema::games::table)
         .execute(conn)
         .await?;
 

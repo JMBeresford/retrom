@@ -19,6 +19,8 @@ message Game {
   bool is_deleted = 8;
   optional int32 default_file_id = 9;
   StorageType storage_type = 10;
+  bool third_party = 11;
+  optional int64 steam_app_id = 12;
 }
 
 message NewGame {
@@ -30,6 +32,8 @@ message NewGame {
   bool is_deleted = 6;
   optional int32 default_file_id = 7;
   optional StorageType storage_type = 8;
+  optional bool third_party = 9;
+  optional int64 steam_app_id = 10;
 }
 
 message UpdatedGame {
@@ -42,4 +46,6 @@ message UpdatedGame {
   optional bool is_deleted = 7;
   optional int32 default_file_id = 8;
   optional StorageType storage_type = 9;
+  optional bool third_party = 10;
+  optional int64 steam_app_id = 11;
 }

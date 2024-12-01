@@ -1,5 +1,8 @@
 use super::jobs::job_manager::JobManager;
-use crate::{config::ServerConfig, providers::igdb::provider::IGDBProvider};
+use crate::{
+    config::ServerConfig,
+    providers::{igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider},
+};
 use retrom_codegen::retrom::{
     library_service_server::LibraryService, DeleteLibraryRequest, DeleteLibraryResponse,
     UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdateLibraryRequest,
@@ -20,6 +23,7 @@ mod update_handlers;
 pub struct LibraryServiceHandlers {
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,
+    steam_web_api_client: Arc<Option<SteamWebApiProvider>>,
     job_manager: Arc<JobManager>,
     config: Arc<ServerConfig>,
 }
@@ -28,12 +32,14 @@ impl LibraryServiceHandlers {
     pub fn new(
         db_pool: Arc<Pool>,
         igdb_client: Arc<IGDBProvider>,
+        steam_web_api_client: Arc<Option<SteamWebApiProvider>>,
         job_manager: Arc<JobManager>,
         config: Arc<ServerConfig>,
     ) -> Self {
         Self {
             db_pool,
             igdb_client,
+            steam_web_api_client,
             job_manager,
             config,
         }

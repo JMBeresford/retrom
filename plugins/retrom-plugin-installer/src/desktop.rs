@@ -10,6 +10,7 @@ use tracing::{debug, info, instrument, trace};
 use retrom_codegen::retrom::{InstallationProgressUpdate, InstallationStatus};
 use tokio::sync::RwLock;
 
+#[instrument(skip(app, _api))]
 pub fn init<R: Runtime, C: DeserializeOwned>(
     app: &AppHandle<R>,
     _api: PluginApi<R, C>,

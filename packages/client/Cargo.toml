@@ -36,6 +36,7 @@ futures = { workspace = true }
 retrom-plugin-installer = { workspace = true }
 retrom-plugin-launcher = { workspace = true }
 retrom-plugin-service-client = { workspace = true }
+retrom-plugin-steam = { workspace = true }
 tauri-plugin-dialog = "2.0.0-rc"
 tauri-plugin-shell = "2.0.0-rc"
 tauri-plugin-process = "2.0.0-rc"

@@ -3,8 +3,11 @@ use std::{collections::HashMap, path::PathBuf, sync::Mutex};
 use futures::TryStreamExt;
 use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{
-    InstallGamePayload, InstallationState, RetromClientConfig, StorageType, UninstallGamePayload,
+    GetGamesRequest, GetPlatformsRequest, InstallGamePayload, InstallationState,
+    RetromClientConfig, StorageType, UninstallGamePayload,
 };
+use retrom_plugin_service_client::RetromPluginServiceClientExt;
+use retrom_plugin_steam::SteamExt;
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::io::AsyncWriteExt;
 use tracing::{info, instrument};
@@ -29,6 +32,42 @@ pub async fn install_game<R: Runtime>(
 
     if !(output_directory.try_exists()?) {
         std::fs::create_dir_all(&output_directory)?;
+    }
+
+    if game.third_party {
+        let mut platform_svc_client = app_handle.get_platform_client().await;
+
+        let steam_id = u32::try_from(game.steam_app_id()).expect("Could not convert steam id");
+
+        let platform_res = platform_svc_client
+            .get_platforms(GetPlatformsRequest {
+                ids: vec![game.platform_id()],
+                ..Default::default()
+            })
+            .await?
+            .into_inner();
+
+        let platform = platform_res.platforms.into_iter().next();
+
+        let platform_path = match platform {
+            Some(platform) => platform.path.clone(),
+            None => {
+                tracing::error!("No third party platform found for game: {:?}", game);
+                return Err(crate::error::Error::ThirdPartyNotFound);
+            }
+        };
+
+        match platform_path.as_str() {
+            "__RETROM_RESERVED__/Steam" => {
+                let steam_client = app_handle.steam();
+
+                return Ok(steam_client.install_game(steam_id).await?);
+            }
+            _ => {
+                tracing::error!("No third party platform found for game: {:?}", game);
+                return Err(crate::error::Error::ThirdPartyNotFound);
+            }
+        }
     }
 
     let installation = GameInstallationProgress {
@@ -137,6 +176,14 @@ pub async fn uninstall_game<R: Runtime>(
     payload: UninstallGamePayload,
 ) -> crate::Result<()> {
     let game = payload.game.unwrap();
+
+    if game.third_party {
+        if let Some(Ok(steam_id)) = game.steam_app_id.map(u32::try_from) {
+            let steam_client = app_handle.steam();
+            return Ok(steam_client.uninstall_game(steam_id).await?);
+        }
+    }
+
     let installer = app_handle.installer();
     let install_dir = installer.installation_directory.read().await;
     let output_directory = install_dir.join(game.id.to_string());
@@ -165,33 +212,34 @@ pub async fn get_game_installation_status<R: Runtime>(
 pub async fn get_installation_state<R: Runtime>(app_handle: AppHandle<R>) -> InstallationState {
     let installer = app_handle.installer();
     let mut installation_state: HashMap<i32, i32> = HashMap::new();
+    let mut game_svc_client = app_handle.get_game_client().await;
 
-    let mut ids = Vec::new();
-
-    installer
-        .currently_installing
-        .read()
+    let game_res = game_svc_client
+        .get_games(GetGamesRequest {
+            ..Default::default()
+        })
         .await
-        .iter()
-        .for_each(|(id, _)| {
-            ids.push(*id);
-        });
+        .expect("Could not get games")
+        .into_inner();
 
-    installer
-        .installed_games
-        .read()
-        .await
-        .iter()
-        .for_each(|id| {
-            if !ids.contains(id) {
-                ids.push(*id);
-            }
-        });
+    let ids: Vec<i32> = game_res.games.iter().map(|game| game.id).collect();
 
     for game_id in ids.iter() {
         let status = installer.get_game_installation_status(*game_id).await;
 
         installation_state.insert(*game_id, status.into());
+    }
+
+    for game in game_res.games.into_iter() {
+        let game_id = game.id;
+        let steam_id = game.steam_app_id;
+
+        if let Some(Ok(steam_id)) = steam_id.map(u32::try_from) {
+            let steam_client = app_handle.steam();
+            if let Ok(status) = steam_client.get_installation_status(steam_id).await {
+                installation_state.insert(game_id, status.into());
+            }
+        }
     }
 
     InstallationState { installation_state }

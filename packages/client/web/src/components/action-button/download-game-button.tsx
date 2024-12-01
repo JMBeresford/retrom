@@ -28,6 +28,7 @@ export const DownloadGameButton = forwardRef(
           ref={ref}
           type="submit"
           {...rest}
+          disabled={game.thirdParty || rest.disabled}
           className={cn(className)}
           variant="accent"
         >

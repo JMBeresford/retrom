@@ -82,7 +82,9 @@ export function MatchPlatformsModal() {
   const { data: platformData, status: platformStatus } = usePlatforms({
     request: { withMetadata: true },
     selectFn: (data) => {
-      const platforms = data.platforms;
+      const platforms = data.platforms.filter(
+        (platform) => !platform.thirdParty,
+      );
       const metadata = data.metadata;
 
       const platformsWithMetadata: PlatformAndMetadata[] = [];

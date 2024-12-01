@@ -20,6 +20,7 @@ export function useUpdateLibraryMetadata() {
       gameMetadataJobId,
       platformMetadataJobId,
       extraMetadataJobId,
+      steamMetadataJobId,
     }) => {
       queryClient.invalidateQueries({
         predicate: (query) =>
@@ -42,6 +43,12 @@ export function useUpdateLibraryMetadata() {
         jobId: extraMetadataJobId,
       });
 
+      const steamSubscription = steamMetadataJobId
+        ? retromClient.jobClient.getJobSubscription({
+            jobId: steamMetadataJobId,
+          })
+        : undefined;
+
       function invalidate(key: string = "game-metadata") {
         queryClient.invalidateQueries({
           predicate: ({ queryKey }) => queryKey.includes(key),
@@ -63,6 +70,14 @@ export function useUpdateLibraryMetadata() {
       for await (const progress of extraSubscription) {
         if (progress.job?.status === JobStatus.Success) {
           invalidate();
+        }
+      }
+
+      if (steamSubscription !== undefined) {
+        for await (const progress of steamSubscription) {
+          if (progress.job?.status === JobStatus.Success) {
+            invalidate();
+          }
         }
       }
 

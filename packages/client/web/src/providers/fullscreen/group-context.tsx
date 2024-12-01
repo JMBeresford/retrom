@@ -61,7 +61,7 @@ export function GroupContextProvider(props: PropsWithChildren) {
       kind: "metadataProperty",
       id: -1,
       name: "All Games",
-      games,
+      games: games?.slice(0, 50),
     }),
     [games],
   );
@@ -71,12 +71,14 @@ export function GroupContextProvider(props: PropsWithChildren) {
       kind: "metadataProperty",
       id: -2,
       name: "Recently Played",
-      games: games?.sort((a, b) => {
-        const aLastPlayed = timestampToDate(a.metadata?.lastPlayed).getTime();
-        const bLastPlayed = timestampToDate(b.metadata?.lastPlayed).getTime();
+      games: games
+        ?.sort((a, b) => {
+          const aLastPlayed = timestampToDate(a.metadata?.lastPlayed).getTime();
+          const bLastPlayed = timestampToDate(b.metadata?.lastPlayed).getTime();
 
-        return bLastPlayed - aLastPlayed;
-      }),
+          return bLastPlayed - aLastPlayed;
+        })
+        .slice(0, 50),
     }),
     [games],
   );

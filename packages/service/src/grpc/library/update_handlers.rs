@@ -1,4 +1,8 @@
-use retrom_codegen::retrom::{UpdateLibraryRequest, UpdateLibraryResponse};
+use bigdecimal::ToPrimitive;
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
+use retrom_codegen::retrom::{NewGame, StorageType, UpdateLibraryRequest, UpdateLibraryResponse};
+use retrom_db::schema::{self};
 use tonic::{Request, Status};
 use tracing::warn;
 
@@ -81,15 +85,87 @@ pub(super) async fn update_library(
         })
         .collect();
 
-    if tasks.is_empty() {
-        return Err(Status::internal("No content directories found"));
+    let steam_provider = state.steam_web_api_client.clone();
+    let steam_library_res = if let Some(steam_provider) = steam_provider.as_ref() {
+        Some(steam_provider.get_owned_games().await.ok()).flatten()
+    } else {
+        None
+    };
+
+    let steam_tasks: Vec<_> = if let Some(steam_library_res) = steam_library_res {
+        let db_pool = db_pool.clone();
+        let mut conn = db_pool.get().await.unwrap();
+
+        let steam_platform_id: i32 = schema::platforms::table
+            .select(schema::platforms::id)
+            .filter(schema::platforms::path.eq("__RETROM_RESERVED__/Steam"))
+            .first(&mut conn)
+            .await
+            .expect("Could not fetch Steam platform ID");
+
+        steam_library_res
+            .response
+            .games
+            .into_iter()
+            .map(|game| {
+                let db_pool = db_pool.clone();
+
+                async move {
+                    let mut conn = db_pool.get().await.unwrap();
+
+                    let new_game = NewGame {
+                        platform_id: Some(steam_platform_id),
+                        path: game.name,
+                        third_party: Some(true),
+                        steam_app_id: game.appid.to_i64(),
+                        storage_type: Some(StorageType::SingleFileGame.into()),
+                        ..Default::default()
+                    };
+
+                    if new_game.steam_app_id.is_none() {
+                        tracing::warn!("Game {} has no parsable Steam App ID", new_game.path);
+                        return Ok(());
+                    }
+
+                    diesel::insert_into(schema::games::table)
+                        .values(&new_game)
+                        .on_conflict_do_nothing()
+                        .execute(&mut conn)
+                        .await?;
+
+                    Ok::<(), diesel::result::Error>(())
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    let mut job_ids = vec![];
+
+    if !tasks.is_empty() {
+        let job_id = state
+            .job_manager
+            .spawn("Update Library", tasks, None)
+            .await
+            .into();
+
+        job_ids.push(job_id);
     }
 
-    let job_id = state
-        .job_manager
-        .spawn("Update Library", tasks, None)
-        .await
-        .into();
+    if !steam_tasks.is_empty() {
+        let job_id = state
+            .job_manager
+            .spawn("Update Steam Library", steam_tasks, None)
+            .await
+            .into();
 
-    Ok(UpdateLibraryResponse { job_id })
+        job_ids.push(job_id);
+    }
+
+    if job_ids.is_empty() {
+        return Err(Status::internal("No library content found"));
+    }
+
+    Ok(UpdateLibraryResponse { job_ids })
 }

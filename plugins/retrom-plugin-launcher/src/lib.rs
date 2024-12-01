@@ -28,7 +28,6 @@ pub async fn init<R: Runtime>() -> TauriPlugin<R> {
         .setup(|app, api| {
             let launcher = desktop::init(app, api)?;
             app.manage(launcher);
-
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

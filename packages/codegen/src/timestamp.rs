@@ -67,9 +67,10 @@ impl From<std::time::SystemTime> for Timestamp {
 
 impl ToSql<sql_types::Timestamp, diesel::pg::Pg> for Timestamp {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, diesel::pg::Pg>) -> diesel::serialize::Result {
-        let micros = self.seconds * 1_000_000 + self.nanos as i64 / 1_000;
+        let thirty_years_seconds = 946_684_800;
+        let micros = (self.seconds - thirty_years_seconds) * 1_000_000 + self.nanos as i64 / 1_000;
 
-        ToSql::<sql_types::BigInt, diesel::pg::Pg>::to_sql(&i64::from(micros), &mut out.reborrow())
+        ToSql::<sql_types::BigInt, diesel::pg::Pg>::to_sql(&micros, &mut out.reborrow())
     }
 }
 

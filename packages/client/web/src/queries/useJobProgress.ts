@@ -1,4 +1,4 @@
-import { JobProgress, JobStatus } from "@/generated/retrom/jobs";
+import { JobProgress } from "@/generated/retrom/jobs";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -13,9 +13,7 @@ export function useJobProgress() {
       const stream = retromClient.jobClient.getJobs({});
 
       for await (const res of stream) {
-        const runningJobs = res.jobs.filter(
-          (job) => job.status !== JobStatus.Success,
-        );
+        const runningJobs = res.jobs.filter((job) => job.percent < 100);
 
         setJobs(runningJobs);
       }

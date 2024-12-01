@@ -106,6 +106,8 @@ diesel::table! {
         is_deleted -> Bool,
         default_file_id -> Nullable<Int4>,
         storage_type -> Int4,
+        third_party -> Bool,
+        steam_app_id -> Nullable<Int8>,
     }
 }
 
@@ -142,6 +144,7 @@ diesel::table! {
         updated_at -> Nullable<Timestamptz>,
         deleted_at -> Nullable<Timestamptz>,
         is_deleted -> Bool,
+        third_party -> Bool,
     }
 }
 

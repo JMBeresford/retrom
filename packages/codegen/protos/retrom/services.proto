@@ -85,7 +85,7 @@ service JobService {
 message UpdateLibraryRequest {}
 
 message UpdateLibraryResponse {
-  string job_id = 1;
+  repeated string job_ids = 1;
 }
 
 message UpdateLibraryMetadataRequest {
@@ -96,6 +96,7 @@ message UpdateLibraryMetadataResponse {
   string platform_metadata_job_id = 1;
   string game_metadata_job_id = 2;
   string extra_metadata_job_id = 3;
+  optional string steam_metadata_job_id = 4;
 }
 
 message GetPlatformsRequest {

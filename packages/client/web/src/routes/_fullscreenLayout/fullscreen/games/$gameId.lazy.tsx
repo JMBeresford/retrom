@@ -112,7 +112,7 @@ function Inner() {
                   )}
                 </div>
 
-                <GameActions />
+                {!game.thirdParty && <GameActions />}
               </div>
 
               <div className="row-start-4 my-8 flex flex-col gap-12 w-max max-w-[85ch] mx-auto items-stretch">
