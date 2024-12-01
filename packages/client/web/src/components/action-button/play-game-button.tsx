@@ -10,12 +10,14 @@ import { LoaderCircleIcon, PlayIcon, PlusIcon, Square } from "lucide-react";
 import { useEmulators } from "@/queries/useEmulators";
 import { useGameDetail } from "@/providers/game-details";
 import { useMatch, useNavigate } from "@tanstack/react-router";
+import { useToast } from "../ui/use-toast";
 
 export const PlayGameButton = forwardRef(
   (
     props: ComponentProps<typeof Button>,
     forwardedRef: ForwardedRef<HTMLButtonElement>,
   ) => {
+    const { toast } = useToast();
     const { game, platform, gameFiles } = useGameDetail();
     const { mutate: playAction } = usePlayGame(game);
     const { mutate: stopAction } = useStopGame(game);
@@ -75,6 +77,12 @@ export const PlayGameButton = forwardRef(
         return;
       }
 
+      toast({
+        title: game.thirdParty ? "Launching External Game" : "Launching Game",
+        description: "Launching the game, this may take a few seconds.",
+        duration: 3000,
+      });
+
       playAction({
         game,
         emulatorProfile: defaultProfile,
@@ -82,6 +90,7 @@ export const PlayGameButton = forwardRef(
         file,
       });
     }, [
+      toast,
       navigate,
       disabled,
       defaultProfile,

@@ -32,7 +32,6 @@ export function SimilarGames() {
       <FocusContainer
         opts={{
           focusKey: "similar-games",
-          focusable: !!data?.metadata?.length,
         }}
         className={cn(
           "flex gap-2 px-4 pb-4",
@@ -50,7 +49,23 @@ export function SimilarGames() {
             Error loading similar games
           </p>
         ) : data.metadata.length === 0 ? (
-          <p>No similar games found for this game.</p>
+          <FocusableElement
+            opts={{
+              focusKey: `empty-similar-games`,
+              onFocus: ({ node }) => {
+                node?.focus({ preventScroll: true });
+                node?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                  inline: "center",
+                });
+              },
+            }}
+          >
+            <p tabIndex={-1} className="outline-none">
+              No similar games found for this game.
+            </p>
+          </FocusableElement>
         ) : (
           data.metadata
             .slice(0, 20)
