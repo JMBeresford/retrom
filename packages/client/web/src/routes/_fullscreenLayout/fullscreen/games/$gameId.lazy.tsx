@@ -13,7 +13,7 @@ import { Description } from "./-components/description";
 import { ExtraInfo } from "./-components/extra-info";
 import { SimilarGames } from "./-components/similar-games";
 import { GameActions } from "@/components/fullscreen/game-actions";
-import { FocusEvent } from "react";
+import { FocusEvent, useRef } from "react";
 import { checkIsDesktop } from "@/lib/env";
 import { DownloadGameButton } from "@/components/action-button/download-game-button";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
@@ -129,61 +129,84 @@ function Inner() {
 }
 
 function PlayButton() {
+  const ref = useRef<HTMLButtonElement>(null!);
+
   return (
-    <FocusableElement
-      initialFocus
-      opts={{
-        focusKey: "fullscreen-play-button",
-        onFocus: ({ node }) => {
-          node?.focus({ preventScroll: true });
-        },
-      }}
+    <HotkeyLayer
+      id="play-button"
+      handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
     >
-      <PlayGameButton onFocus={onFocus} className={buttonStyles} />
-    </FocusableElement>
+      <FocusableElement
+        ref={ref}
+        initialFocus
+        opts={{
+          focusKey: "fullscreen-play-button",
+          onFocus: ({ node }) => {
+            node?.focus({ preventScroll: true });
+          },
+        }}
+      >
+        <PlayGameButton onFocus={onFocus} className={buttonStyles} />
+      </FocusableElement>
+    </HotkeyLayer>
   );
 }
 
 function InstallButton() {
+  const ref = useRef<HTMLButtonElement>(null!);
+
   return (
-    <FocusableElement
-      initialFocus
-      opts={{
-        focusKey: "fullscreen-install-button",
-        onFocus: ({ node }) => {
-          node?.focus({ preventScroll: true });
-        },
-      }}
+    <HotkeyLayer
+      id="install-button"
+      handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
     >
-      <InstallGameButton
-        onFocus={onFocus}
-        className={cn(
-          buttonStyles,
-          '[&_div[role="progressbar"]]:w-[6ch] [&_div[role="progressbar"]_>_*]:bg-primary-foreground',
-        )}
-      />
-    </FocusableElement>
+      <FocusableElement
+        ref={ref}
+        initialFocus
+        opts={{
+          focusKey: "fullscreen-install-button",
+          onFocus: ({ node }) => {
+            node?.focus({ preventScroll: true });
+          },
+        }}
+      >
+        <InstallGameButton
+          onFocus={onFocus}
+          className={cn(
+            buttonStyles,
+            '[&_div[role="progressbar"]]:w-[6ch] [&_div[role="progressbar"]_>_*]:bg-primary-foreground',
+          )}
+        />
+      </FocusableElement>
+    </HotkeyLayer>
   );
 }
 
 function DownloadButton() {
+  const ref = useRef<HTMLButtonElement>(null!);
   const { game } = useGameDetail();
 
   return (
-    <FocusableElement
-      initialFocus
-      opts={{
-        focusKey: "fullscreen-download-button",
-        onFocus: ({ node }) => {
-          node?.focus({ preventScroll: true });
-        },
-      }}
+    <HotkeyLayer
+      id="download-button"
+      handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
     >
-      <DownloadGameButton
-        onFocus={onFocus}
-        game={game}
-        className={buttonStyles}
-      />
-    </FocusableElement>
+      <FocusableElement
+        ref={ref}
+        initialFocus
+        opts={{
+          focusKey: "fullscreen-download-button",
+          onFocus: ({ node }) => {
+            node?.focus({ preventScroll: true });
+          },
+        }}
+      >
+        <DownloadGameButton
+          onFocus={onFocus}
+          game={game}
+          className={buttonStyles}
+        />
+      </FocusableElement>
+    </HotkeyLayer>
   );
 }
