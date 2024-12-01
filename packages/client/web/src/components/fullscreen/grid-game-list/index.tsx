@@ -3,13 +3,13 @@ import { InterfaceConfig_GameListEntryImage } from "@/generated/retrom/client/cl
 import { cn, getFileStub } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FocusContainer } from "../focus-container";
 import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useGroupContext } from "@/providers/fullscreen/group-context";
 
-const { COVER } = InterfaceConfig_GameListEntryImage;
+const { BACKGROUND } = InterfaceConfig_GameListEntryImage;
 
 export function GridGameList(props: { games?: GameWithMetadata[] }) {
   const { games } = props;
@@ -105,40 +105,24 @@ function GameListItem(props: { game: GameWithMetadata; id: string }) {
             })
           }
         >
-          {imageType === COVER ? (
-            <CoverImage game={game} />
-          ) : (
-            <BackgroundImage game={game} />
-          )}
+          <GameImage game={game} kind={imageType} />
         </div>
       </HotkeyLayer>
     </div>
   );
 }
 
-function CoverImage(props: { game: GameWithMetadata }) {
+function GameImage(props: {
+  game: GameWithMetadata;
+  kind: InterfaceConfig_GameListEntryImage;
+}) {
   const { game } = props;
+  const imageSrc =
+    props.kind === BACKGROUND
+      ? game.metadata?.backgroundUrl
+      : game.metadata?.coverUrl;
 
-  return (
-    <div
-      key={game.id}
-      className="aspect-[3/4] rounded overflow-hidden relative outline-none"
-    >
-      {game.metadata?.coverUrl ? (
-        <img
-          loading="lazy"
-          src={game.metadata.coverUrl}
-          className="object-cover w-full"
-        />
-      ) : (
-        <div className="w-full h-full border"></div>
-      )}
-    </div>
-  );
-}
-
-function BackgroundImage(props: { game: GameWithMetadata }) {
-  const { game } = props;
+  const [noImage, setNoImage] = useState(!imageSrc);
 
   const gameName = game.metadata?.name ?? getFileStub(game.path);
 
@@ -146,21 +130,37 @@ function BackgroundImage(props: { game: GameWithMetadata }) {
     <div
       key={game.id}
       className={cn(
-        "aspect-video rounded overflow-hidden relative",
-        game.metadata?.backgroundUrl ? "h-fit w-fit" : "h-full w-full",
+        props.kind === BACKGROUND ? "aspect-video" : "aspect-[3/4]",
+        "rounded overflow-hidden relative",
+        "h-fit w-fit min-w-full min-h-full",
       )}
     >
-      {game.metadata?.backgroundUrl ? (
+      {imageSrc && (
         <img
           loading="lazy"
-          src={game.metadata.backgroundUrl}
-          className="object-cover w-full h-full"
+          src={imageSrc}
+          onError={() => {
+            setNoImage(true);
+          }}
+          className={cn(
+            "absolute object-cover min-w-full min-h-full",
+            noImage && "hidden",
+          )}
         />
-      ) : (
-        <div className="w-full h-full bg-secondary/50 grid place-items-center text-center text-lg font-black">
-          {gameName}
-        </div>
       )}
+
+      <div
+        className={cn(
+          !noImage && "opacity-0 translate-y-2 transition-all",
+          "group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0",
+          "absolute inset-0",
+          "bg-gradient-to-t from-card",
+          props.kind === BACKGROUND ? "text-lg py-2 px-4" : "text-2xl p-4",
+          "flex items-end font-black",
+        )}
+      >
+        <p className="text-pretty">{gameName}</p>
+      </div>
     </div>
   );
 }
