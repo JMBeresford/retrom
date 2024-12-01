@@ -22,10 +22,13 @@ clients on any amount of other devices to (un)install/download and subsequently 
       - [Library Structure](#library-structure)
         - [Multi-File Games (recommended)](#multi-file-games-recommended)
         - [Single-File Games](#single-file-games)
+      - [Third Party Libraries](#third-party-libraries)
+        - [Steam](#steam)
       - [Metadata Providers](#metadata-providers)
         - [IGDB](#igdb)
     - [Server](#server)
-      - [Docker (Recommended)](#docker-recommended)
+      - [Docker](#docker)
+      - [Cargo](#cargo)
     - [Client](#client)
       - [Desktop Client](#desktop-client)
       - [Web Client](#web-client)
@@ -167,6 +170,39 @@ library/
     plumber_dude_and_plumber_dudes_brother.gga
 ```
 
+#### Third Party Libraries
+
+Retrom supports importing games from third-party libraries. Currently, the only supported third-party
+library is Steam. Support for more third-party libraries is planned.
+
+##### Steam
+
+To import games from Steam, you will need to create a Steam API key. You can do this by following the
+instructions [here](https://steamcommunity.com/dev/apikey).
+
+You will also need your Steam ID. You can find your Steam ID by going to your
+[Account Details](https://store.steampowered.com/account/) page on Steam ( you must be logged in to
+view this page ).
+
+You will see your Steam ID displayed below your profile name, as shown in the following image:
+
+![Steam ID](docs/imgs/steam-id.png)
+
+With these two pieces of information, you can import your Steam games into Retrom.
+Add the following to the root of your `config.json` file:
+
+```json
+{
+  "steam": {
+    "api_key": "your_steam_api_key",
+    "steam_id": "your_steam_id"
+  }
+}
+```
+
+Now, when you update your library and download metadata, your Steam games will be included and usable
+from within Retrom!
+
 #### Metadata Providers
 
 Retrom uses metadata providers to download metadata for your games. Currently, the only supported
@@ -221,9 +257,12 @@ The server is configured via a config file. Here is an example config file:
 }
 ```
 
-#### Docker (Recommended)
+#### Docker
 
-The currently recommended way to run the server is via Docker, ideally with `docker compose`.
+The currently recommended way to run the server is via Docker, ideally with `docker compose`. This
+way is recommended because it is the easiest way to get started for those w/o a lot of experience
+with setting up services and/or databases. There is no inherent reason that you cannot run the
+service without Docker.
 
 > [!TIP]
 > If you are not familiar with Docker Compose, you can read the documentation [here](https://docs.docker.com/compose/).
@@ -298,7 +337,8 @@ The web client will be accessible at port 3000, and the service itself on port 5
 #### Cargo
 
 The Retrom Service is also available via Cargo. Installing via cargo will build the binary on your system, so you will need
-to have the Rust toolchain installed.
+to have the Rust toolchain installed. This means you can run the service without Docker, and you can run it on any platform
+that Rust ( and Retrom's dependency list ) supports.
 
 It is suggested to use [rustup](https://rustup.rs/) to install the Rust toolchain. You will also need to make sure you have
 some dependencies installed on your system:
