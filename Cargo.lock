@@ -4378,7 +4378,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-client"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "async-compression",
  "dotenvy",
@@ -4411,7 +4411,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-codegen"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "diesel",
  "prost",
@@ -4430,7 +4430,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-db"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "async-trait",
  "deadpool",
@@ -4444,7 +4444,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-installer"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "dotenvy",
  "futures",
@@ -4464,7 +4464,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-launcher"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "dotenvy",
  "hyper 0.14.30",
@@ -4490,7 +4490,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-service-client"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "hyper 0.14.30",
  "hyper-rustls 0.25.0",
@@ -4510,7 +4510,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-steam"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "notify",
  "retrom-codegen",
@@ -4526,7 +4526,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "async_zip",
  "bigdecimal",
