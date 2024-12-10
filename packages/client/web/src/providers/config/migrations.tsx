@@ -1,17 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- This rule is disabled because the file is a migration file */
-import { InterfaceConfig_GameListEntryImage } from "@/generated/retrom/client/client-config";
+import {
+  InterfaceConfig_GameListEntryImage,
+  RetromClientConfig,
+} from "@/generated/retrom/client/client-config";
 import { LocalConfig } from ".";
 
-export function migrate(oldConfig: unknown, oldVersion: number) {
+export function migrate(
+  oldConfig: unknown,
+  oldVersion: number,
+): RetromClientConfig {
   let newConfig = oldConfig;
-  switch (oldVersion) {
-    case 1: {
-      newConfig = migrateV1toV2(oldConfig);
-    }
+
+  let migrationFn = migrationFns[oldVersion];
+  while (migrationFn) {
+    newConfig = migrationFn(newConfig);
+    oldVersion++;
+    console.log(`Migrated to version ${oldVersion}`);
+    migrationFn = migrationFns[oldVersion];
   }
 
-  return newConfig;
+  return RetromClientConfig.create(newConfig as any);
 }
+
+const migrationFns: Record<number, (config: unknown) => unknown> = {
+  1: migrateV1toV2,
+  2: migrateV2toV3,
+};
 
 function migrateV1toV2(oldConfig: unknown) {
   const newConfig = oldConfig as any;
@@ -29,6 +43,17 @@ function migrateV1toV2(oldConfig: unknown) {
         },
       },
     },
+  };
+
+  return oldConfig as LocalConfig;
+}
+
+function migrateV2toV3(oldConfig: unknown) {
+  const newConfig = oldConfig as any;
+
+  newConfig.config = {
+    ...newConfig.config,
+    standalone: false,
   };
 
   return oldConfig as LocalConfig;

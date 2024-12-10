@@ -8,7 +8,7 @@ plugins:
       - oneof=unions
       - outputServices=nice-grpc
       - outputServices=generic-definitions
-      - outputJsonMethods=false
+      - outputJsonMethods=true
       - useExactTypes=false
       - esModuleInterop=true
       - useOptionals=messages

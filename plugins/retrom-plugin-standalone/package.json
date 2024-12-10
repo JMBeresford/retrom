@@ -1,0 +1,22 @@
+{
+  "name": "retrom-plugin-standalone-api",
+  "version": "0.1.0",
+  "author": "You",
+  "description": "",
+  "type": "module",
+  "exports": {
+    "types": "./guest-js/index.ts",
+    "import": "./guest-js/index.ts"
+  },
+  "files": [
+    "guest-js",
+    "README.md"
+  ],
+  "dependencies": {
+    "@tauri-apps/api": ">=2.0.0-beta.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "tslib": "^2.6.2"
+  }
+}

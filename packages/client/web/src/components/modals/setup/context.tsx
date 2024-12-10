@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 
-export type Step = "ServerHost" | "ClientName" | "Confirm";
+export type Step = "Mode" | "ServerHost" | "ClientName" | "Confirm";
 
 const SetupModalContext = createContext<
   | {
@@ -20,7 +20,6 @@ const SetupModalContext = createContext<
   | undefined
 >(undefined);
 
- 
 export function useSetupModal() {
   const context = useContext(SetupModalContext);
 
@@ -32,20 +31,22 @@ export function useSetupModal() {
 }
 
 const nextStepTransitions: Record<Step, Step | undefined> = {
+  Mode: undefined,
   ServerHost: "ClientName",
   ClientName: "Confirm",
-  Confirm: "ServerHost",
+  Confirm: "Mode",
 };
 
 const previousStepTransitions: Record<Step, Step | undefined> = {
-  ServerHost: undefined,
-  ClientName: "ServerHost",
+  Mode: undefined,
+  ServerHost: "Mode",
+  ClientName: "Mode",
   Confirm: "ClientName",
 };
 
 export function SetupModalProvider(props: React.PropsWithChildren) {
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("ServerHost");
+  const [step, setStep] = useState<Step>("Mode");
 
   const transition = useMemo(() => {
     const nextStep = nextStepTransitions[step];
@@ -53,10 +54,11 @@ export function SetupModalProvider(props: React.PropsWithChildren) {
     switch (step) {
       case "Confirm": {
         return () => {
+          console.log("setup complete");
           navigate({
             search: { setupModal: undefined },
           }).then(() => {
-            setStep("ServerHost");
+            setStep("Mode");
           });
         };
       }

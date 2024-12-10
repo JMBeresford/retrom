@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -32,27 +32,33 @@ export function ClientName() {
   const { previousStep, nextStep } = useSetupModal();
   const clientInfo = useClientInfo();
   const configStore = useConfigStore();
-  const name = configStore((store) => store.config.clientInfo.name);
+  // const name = configStore((store) => store.config.clientInfo.name);
+  const [newClient, setNewClient] = useState("");
   const [selectedClient, setSelectedClient] = useState<string | undefined>(
     undefined,
   );
 
   const handleCreateClient = useCallback(async () => {
     const clientExists = clientInfo.data?.clients.find(
-      (client) => client.name === name,
+      (client) => client.name === newClient,
     );
 
-    if (name && nextStep && !clientExists) {
+    if (newClient && nextStep && !clientExists) {
+      configStore.setState((store) => {
+        store.config.clientInfo.name = newClient;
+        return store;
+      });
+
       nextStep();
     }
-  }, [name, nextStep, clientInfo.data?.clients]);
+  }, [newClient, nextStep, clientInfo.data?.clients, configStore]);
 
-  function isExistingClient(clientName: string = "") {
+  const isExistingClient = useMemo(() => {
     return (
-      clientInfo.data?.clients.find((client) => client.name === clientName) !==
+      clientInfo.data?.clients.find((client) => client.name === newClient) !==
       undefined
     );
-  }
+  }, [clientInfo.data?.clients, newClient]);
 
   return (
     <div>
@@ -79,18 +85,13 @@ export function ClientName() {
             </div>
 
             <Input
-              className={cn(isExistingClient(name) && "border-destructive")}
+              className={cn(isExistingClient && "border-destructive")}
               placeholder="Enter client name"
-              value={name}
-              onChange={({ target: { value } }) =>
-                configStore.setState((prev) => {
-                  prev.config.clientInfo.name = value;
-                  return { ...prev };
-                })
-              }
+              value={newClient}
+              onChange={({ target: { value } }) => setNewClient(value)}
             />
 
-            {isExistingClient(name) && (
+            {isExistingClient && (
               <h6 className="text-sm font-medium text-destructive-text max-w-[35ch]">
                 Client name is taken, please choose another or use the existing
                 client.
@@ -98,7 +99,7 @@ export function ClientName() {
             )}
 
             <Button
-              disabled={!name.length || isExistingClient(name)}
+              disabled={!newClient.length || isExistingClient}
               onClick={handleCreateClient}
             >
               Start Fresh

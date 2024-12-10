@@ -1,0 +1,25 @@
+[package]
+name = "retrom-plugin-standalone"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Retrom plugin to facilitate standlone mode features."
+rust-version = "1.80"
+exclude = ["./examples", "./webview-dist", "./webview-src", "**/node_modules"]
+links = "tauri-plugin-standalone"
+
+[dependencies]
+tauri = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+retrom-codegen = { workspace = true }
+retrom-service = { workspace = true, features = ["embedded_db"] }
+retrom-plugin-config = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+urlencoding = "2.1.3"
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0-rc.6", features = ["build"] }

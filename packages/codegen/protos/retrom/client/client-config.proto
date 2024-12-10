@@ -33,6 +33,7 @@ message RetromClientConfig {
   message Config {
     Client client_info = 1;
     InterfaceConfig interface = 2;
+    bool standalone = 3;
   }
 
   message FlowCompletions {

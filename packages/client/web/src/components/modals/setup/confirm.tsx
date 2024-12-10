@@ -13,7 +13,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useClientInfo } from "@/queries/useClientInfo";
 import { useConfigStore } from "@/providers/config";
 import { Timestamp } from "@/generated/google/protobuf/timestamp";
-import { relaunch } from "@tauri-apps/plugin-process";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function Confirm() {
   const { toast } = useToast();
@@ -22,6 +22,7 @@ export function Confirm() {
   const configStore = useConfigStore();
   const name = configStore((store) => store.config.clientInfo.name);
   const clientInfo = useClientInfo();
+  const queryClient = useQueryClient();
 
   const save = useCallback(async () => {
     try {
@@ -56,7 +57,7 @@ export function Confirm() {
         return { ...prev };
       });
 
-      await relaunch();
+      queryClient.invalidateQueries();
 
       if (nextStep) {
         nextStep();
@@ -70,6 +71,7 @@ export function Confirm() {
       });
     }
   }, [
+    queryClient,
     createClient,
     configStore,
     toast,

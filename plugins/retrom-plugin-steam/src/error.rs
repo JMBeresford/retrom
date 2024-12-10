@@ -13,7 +13,7 @@ pub enum Error {
     NotInstalled(u32),
 
     #[error(transparent)]
-    OpenError(#[from] tauri_plugin_shell::Error),
+    OpenError(#[from] tauri_plugin_opener::Error),
 
     #[error(transparent)]
     NotifyError(#[from] notify::Error),

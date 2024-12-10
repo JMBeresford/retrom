@@ -1,0 +1,123 @@
+import {
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useSetupModal } from "./context";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { AlertCircle, Cloud, LoaderCircle, Server } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useEnableStandaloneMode } from "@/mutations/useEnableStandaloneMode";
+import { useDisableStandaloneMode } from "@/mutations/useDisableStandaloneMode";
+
+export function ModeSelection() {
+  const { setStep } = useSetupModal();
+  const { mutateAsync: enableStandaloneMode, status: enableStatus } =
+    useEnableStandaloneMode();
+
+  const { mutateAsync: disableStandaloneMode, status: disableStatus } =
+    useDisableStandaloneMode();
+
+  const pending = enableStatus === "pending" || disableStatus === "pending";
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>Use Standalone Mode?</DialogTitle>
+        <DialogDescription className="max-w-[65ch]">
+          Retrom uses a server to synchronize your data across devices. Retrom
+          can handle this server for you on this device, or you can connect to
+          an existing server.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div
+        className={cn(
+          "flex flex-col w-full gap-4 mt-6",
+          "*:w-full *:justify-start *:gap-2 *:h-auto *:max-h-none",
+        )}
+      >
+        <Button
+          onClick={async () => {
+            await enableStandaloneMode(undefined);
+            setStep("ClientName");
+          }}
+          variant="outline"
+          disabled={pending}
+          className={cn(enableStatus === "error" && "border-destructive")}
+        >
+          <Server className="text-accent-text" />
+
+          <div className="flex flex-col justify-start w-full">
+            <h1 className="text-regular font-semibold w-fit">
+              Use Standalone Mode
+            </h1>
+            <p className="text-muted-foreground text-sm w-fit">
+              Retrom will spin up a server locally
+            </p>
+          </div>
+
+          {enableStatus === "pending" && (
+            <LoaderCircle className="animate-spin" />
+          )}
+          {enableStatus === "error" && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertCircle className="text-destructive-text" />
+                </TooltipTrigger>
+
+                <TooltipContent>
+                  Something went wrong, please restart and try again
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </Button>
+
+        <Button
+          variant="outline"
+          disabled={pending}
+          onClick={async () => {
+            await disableStandaloneMode(undefined);
+            setStep("ServerHost");
+          }}
+        >
+          <Cloud className="text-accent-text" />
+
+          <div className="flex flex-col justify-start w-full">
+            <h1 className="text-regular font-semibold w-fit">
+              Connect To Server
+            </h1>
+            <p className="text-muted-foreground text-sm w-fit">
+              Connect to an existing Retrom server
+            </p>
+          </div>
+
+          {disableStatus === "pending" && (
+            <LoaderCircle className="animate-spin" />
+          )}
+          {disableStatus === "error" && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertCircle className="text-destructive-text" />
+                </TooltipTrigger>
+
+                <TooltipContent>
+                  Something went wrong, please restart and try again
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </Button>
+      </div>
+    </>
+  );
+}

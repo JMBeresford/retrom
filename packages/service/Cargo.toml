@@ -1,5 +1,6 @@
 [package]
 name = "retrom-service"
+resolver = "2"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -46,8 +47,20 @@ tokio-stream = { workspace = true }
 thiserror = { workspace = true }
 sanitize-filename = { workspace = true }
 uuid = { version = "1.10.0", features = ["v4"] }
-config = { version = "0.13.4", features = ["json5"] }
-async_zip = { version = "0.0.17", features = ["full"] }
+config = { workspace = true }
+
+# opt out of lzma an xz to avoid linking twice (postrgres_embedded and async_zip)
+async_zip = { version = "^0.0.17", default-features = false, features = [
+  "chrono",
+  "tokio-fs",
+  "deflate",
+  "bzip2",
+  "zstd",
+  "deflate64",
+] }
 walkdir = "2.5.0"
 chrono = "0.4.38"
 notify = { workspace = true }
+
+[features]
+embedded_db = ["retrom-db/embedded"]

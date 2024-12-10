@@ -1,10 +1,9 @@
-use std::{os::unix::fs::MetadataExt, path::PathBuf, sync::Arc};
-
 use bigdecimal::ToPrimitive;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::{Game, GameFile, NewGame, NewGameFile, StorageType};
 use retrom_db::{schema, Pool};
+use std::{path::PathBuf, sync::Arc};
 use tracing::warn;
 use walkdir::WalkDir;
 
@@ -83,7 +82,7 @@ impl ResolvedGame {
         let new_game_files: Vec<NewGameFile> = dir_nodes
             .map(|p| {
                 let byte_size = match p.metadata() {
-                    Ok(metadata) => metadata.size().to_i64().unwrap_or(0),
+                    Ok(metadata) => metadata.len().to_i64().unwrap_or(0),
                     Err(why) => {
                         warn!("Could not get file metadata: {:?}", why);
                         0
@@ -125,7 +124,7 @@ impl ResolvedGame {
         let game_id = Some(self.row.id);
 
         let byte_size = match path.metadata() {
-            Ok(metadata) => metadata.size().to_i64().unwrap_or(0),
+            Ok(metadata) => metadata.len().to_i64().unwrap_or(0),
             Err(why) => {
                 warn!("Could not get file metadata: {:?}", why);
                 0

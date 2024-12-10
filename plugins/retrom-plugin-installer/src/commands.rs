@@ -1,14 +1,15 @@
-use std::{collections::HashMap, path::PathBuf, sync::Mutex};
+use std::{collections::HashMap, path::PathBuf};
 
 use futures::TryStreamExt;
 use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{
-    GetGamesRequest, GetPlatformsRequest, InstallGamePayload, InstallationState,
-    RetromClientConfig, StorageType, UninstallGamePayload,
+    GetGamesRequest, GetPlatformsRequest, InstallGamePayload, InstallationState, StorageType,
+    UninstallGamePayload,
 };
+use retrom_plugin_config::ConfigExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
-use tauri::{AppHandle, Manager, Runtime};
+use tauri::{AppHandle, Runtime};
 use tokio::io::AsyncWriteExt;
 use tracing::{info, instrument};
 
@@ -92,20 +93,16 @@ pub async fn install_game<R: Runtime>(
         let client = client.clone();
 
         tauri::async_runtime::spawn(async move {
-            let config = app_handle.try_state::<Mutex<RetromClientConfig>>();
+            let client_config = app_handle.config_manager().get_config().await;
 
-            let host: String = match config.and_then(|config| {
-                config.lock().ok().and_then(|config| {
-                    config.server.as_ref().map(|server| {
-                        let mut host = server.hostname.to_string();
+            let host: String = match client_config.server.map(|server| {
+                let mut host = server.hostname.to_string();
 
-                        if let Some(port) = server.port {
-                            host.push_str(&format!(":{}", port));
-                        }
+                if let Some(port) = server.port {
+                    host.push_str(&format!(":{}", port));
+                }
 
-                        host
-                    })
-                })
+                host
             }) {
                 Some(host) => host,
                 None => {

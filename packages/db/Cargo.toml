@@ -1,5 +1,6 @@
 [package]
 name = "retrom-db"
+resolver = "2"
 description = "Database layer for Retrom"
 version.workspace = true
 authors.workspace = true
@@ -16,3 +17,13 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 dotenvy = { workspace = true }
 async-trait = { workspace = true }
+postgresql_embedded = { optional = true, version = "^0.17.3", features = [
+  "tokio",
+  "bundled",
+] }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+
+[features]
+embedded = ["dep:postgresql_embedded"]
