@@ -1,7 +1,7 @@
 use retrom_codegen::retrom::InstallationStatus;
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Runtime};
-use tauri_plugin_shell::ShellExt;
+use tauri_plugin_opener::OpenerExt;
 use tracing::instrument;
 
 #[instrument(skip_all)]
@@ -35,22 +35,22 @@ impl<R: Runtime> Steam<R> {
     }
 
     pub async fn install_game(&self, app_id: u32) -> crate::Result<()> {
-        let shell = self.app_handle.shell();
-        shell.open(format!("steam://install/{app_id}"), None)?;
+        let opener = self.app_handle.opener();
+        opener.open_url(format!("steam://install/{app_id}"), None::<&str>)?;
 
         Ok(())
     }
 
     pub async fn uninstall_game(&self, app_id: u32) -> crate::Result<()> {
-        let shell = self.app_handle.shell();
-        shell.open(format!("steam://uninstall/{app_id}"), None)?;
+        let opener = self.app_handle.opener();
+        opener.open_url(format!("steam://uninstall/{app_id}"), None::<&str>)?;
 
         Ok(())
     }
 
     pub async fn launch_game(&self, app_id: u32) -> crate::Result<()> {
-        let shell = self.app_handle.shell();
-        shell.open(format!("steam://rungameid/{app_id}"), None)?;
+        let opener = self.app_handle.opener();
+        opener.open_url(format!("steam://rungameid/{app_id}"), None::<&str>)?;
 
         Ok(())
     }

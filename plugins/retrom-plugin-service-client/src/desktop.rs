@@ -1,7 +1,7 @@
 use crate::GrpcWebClient;
-use retrom_codegen::retrom::RetromClientConfig;
+use retrom_plugin_config::ConfigExt;
 use serde::de::DeserializeOwned;
-use tauri::{plugin::PluginApi, AppHandle, Manager, Runtime};
+use tauri::{plugin::PluginApi, AppHandle, Runtime};
 use tokio_rustls::rustls::{ClientConfig, RootCertStore};
 use tonic_web::GrpcWebClientLayer;
 
@@ -45,23 +45,16 @@ impl<R: Runtime> RetromPluginServiceClient<R> {
     }
 
     pub async fn get_service_host(&self) -> String {
-        let config = self
-            .app_handle
-            .try_state::<std::sync::Mutex<RetromClientConfig>>();
-        let host: String = match config.and_then(|config| {
-            config.lock().ok().and_then(|config| {
-                config.server.as_ref().map(|server| {
-                    let mut host = server.hostname.to_string();
+        let client_config = self.app_handle.config_manager().get_config().await;
 
-                    if let Some(port) = server.port {
-                        host.push_str(&format!(":{}", port));
-                    }
+        let host: String = match client_config.server.map(|server| {
+            let mut host = server.hostname.to_string();
 
-                    tracing::info!("Server host: {}", host);
+            if let Some(port) = server.port {
+                host.push_str(&format!(":{}", port));
+            }
 
-                    host
-                })
-            })
+            host
         }) {
             Some(host) => host,
             None => {

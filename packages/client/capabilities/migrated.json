@@ -50,6 +50,10 @@
     "process:default",
     "system-info:allow-all-sys-info",
     "core:window:allow-set-fullscreen",
-    "window-state:default"
+    "window-state:default",
+    "standalone:allow-enable-standalone-mode",
+    "standalone:allow-disable-standalone-mode",
+    "config:allow-get-config",
+    "config:allow-set-config"
   ]
 }

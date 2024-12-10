@@ -5,18 +5,23 @@ use std::fmt::Debug;
 
 pub mod schema;
 
-#[derive(Debug)]
-pub struct DbError {
-    pub message: String,
+#[cfg(feature = "embedded")]
+pub mod embedded;
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("Error running migrations: {0}")]
+    MigrationError(String),
+
+    #[cfg(feature = "embedded")]
+    #[error("Embedded DB error")]
+    EmbeddedError(#[from] postgresql_embedded::Error),
+
+    #[error("Could not create embedded database")]
+    NotExists,
 }
 
-impl std::fmt::Display for DbError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "DbError: {}", self.message)
-    }
-}
-
-pub type Result<T> = std::result::Result<T, DbError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 pub type PoolConfig = AsyncDieselConnectionManager<AsyncPgConnection>;
 pub type Pool = deadpool::managed::Pool<PoolConfig>;
@@ -36,7 +41,5 @@ pub fn run_migrations(
     conn: &mut impl MigrationHarness<diesel::pg::Pg>,
 ) -> Result<Vec<MigrationVersion>> {
     conn.run_pending_migrations(MIGRATIONS)
-        .map_err(|e| DbError {
-            message: format!("Error running migrations: {:?}", e),
-        })
+        .map_err(|e| Error::MigrationError(e.to_string()))
 }

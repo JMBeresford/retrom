@@ -75,6 +75,8 @@
     "unified": "^11.0.5",
     "uuid": "^10.0.0",
     "zod": "^3.23.8",
+    "retrom-plugin-standalone-api": "workspace:*",
+    "retrom-plugin-config-api": "workspace:*",
     "zustand": "^4.5.5"
   },
   "devDependencies": {

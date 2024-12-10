@@ -1,0 +1,24 @@
+[package]
+name = "retrom-plugin-config"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Retrom plugin to facilitate client config management."
+rust-version = "1.80"
+exclude = ["./examples", "./webview-dist", "./webview-src", "**/node_modules"]
+links = "tauri-plugin-config"
+
+[dependencies]
+tauri = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+retrom-codegen = { workspace = true }
+serde = { workspace = true }
+config = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0-rc.6", features = ["build"] }

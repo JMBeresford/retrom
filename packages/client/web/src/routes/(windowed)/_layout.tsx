@@ -28,6 +28,7 @@ import {
   StateFlags,
 } from "@tauri-apps/plugin-window-state";
 import { useEffect } from "react";
+import { useConfig } from "@/providers/config";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
@@ -42,6 +43,10 @@ export const Route = createFileRoute("/(windowed)/_layout")({
 });
 
 function LayoutComponent() {
+  const setupComplete = useConfig(
+    (store) => store.flowCompletions.setupComplete,
+  );
+
   useEffect(() => {
     async function onResize() {
       if (checkIsDesktop()) {
@@ -58,40 +63,52 @@ function LayoutComponent() {
 
   return (
     <>
-      <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
-        <Menubar />
-        <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-          <ResizablePanel defaultSize={25} maxSize={40} className="bg-muted">
-            <div className="w-full h-full @container/sidebar">
-              <FilterAndSortContext>
-                <SideBar />
-              </FilterAndSortContext>
-            </div>
-          </ResizablePanel>
+      {setupComplete && (
+        <>
+          <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
+            <Menubar />
+            <ResizablePanelGroup
+              direction="horizontal"
+              className="h-full w-full"
+            >
+              <ResizablePanel
+                defaultSize={25}
+                maxSize={40}
+                className="bg-muted"
+              >
+                <div className="w-full h-full @container/sidebar">
+                  <FilterAndSortContext>
+                    <SideBar />
+                  </FilterAndSortContext>
+                </div>
+              </ResizablePanel>
 
-          <ResizableHandle />
+              <ResizableHandle />
 
-          <ResizablePanel defaultSize={75}>
-            <ScrollArea className="h-full max-h-full w-full max-w-full">
-              <main className="p-5 pb-16">
-                <Outlet />
-              </main>
-            </ScrollArea>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
+              <ResizablePanel defaultSize={75}>
+                <ScrollArea className="h-full max-h-full w-full max-w-full">
+                  <main className="p-5 pb-16">
+                    <Outlet />
+                  </main>
+                </ScrollArea>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </div>
+
+          <UpdateLibraryModal />
+          <DownloadMetadataModal />
+          <DeleteLibraryModal />
+          <MatchPlatformsModal />
+          <DefaultProfilesModal />
+          <ManageEmulatorsModal />
+          <ManageEmulatorProfilesModal />
+          <CheckForUpdateModal />
+          <VersionInfoModal />
+          <ConfigModal />
+        </>
+      )}
 
       <SetupModal />
-      <UpdateLibraryModal />
-      <DownloadMetadataModal />
-      <DeleteLibraryModal />
-      <MatchPlatformsModal />
-      <DefaultProfilesModal />
-      <ManageEmulatorsModal />
-      <ManageEmulatorProfilesModal />
-      <CheckForUpdateModal />
-      <VersionInfoModal />
-      <ConfigModal />
     </>
   );
 }

@@ -1,5 +1,5 @@
 use config::{Config, ConfigError, File};
-use retrom_codegen::retrom::{ConnectionConfig, ContentDirectory, ServerConfig, StorageType};
+use retrom_codegen::retrom::{ContentDirectory, ServerConfig, StorageType};
 use std::path::PathBuf;
 use tokio::sync::RwLock;
 
@@ -25,8 +25,23 @@ pub struct ServerConfigManager {
 impl ServerConfigManager {
     pub fn new() -> Result<Self> {
         dotenvy::dotenv().ok();
-        let config_path = std::env::var("RETROM_CONFIG")?.into();
-        let config = RwLock::new(Self::read_config_file()?);
+        let config_path_str = std::env::var("RETROM_CONFIG").unwrap_or("./config.json".into());
+        let config_path = PathBuf::from(&config_path_str);
+
+        if !config_path.exists() {
+            let default_config = ServerConfig {
+                content_directories: vec![ContentDirectory {
+                    path: "/app/library".into(),
+                    storage_type: Some(i32::from(StorageType::MultiFileGame)),
+                }],
+                ..Default::default()
+            };
+
+            let data = serde_json::to_vec_pretty(&default_config)?;
+            std::fs::write(&config_path, data)?;
+        }
+
+        let config = RwLock::new(Self::read_config_file(&config_path_str)?);
 
         Ok(Self {
             config,
@@ -46,20 +61,8 @@ impl ServerConfigManager {
         Ok(())
     }
 
-    fn read_config_file() -> Result<ServerConfig> {
+    fn read_config_file(path: &str) -> Result<ServerConfig> {
         dotenvy::dotenv().ok();
-
-        let default_config = ServerConfig {
-            connection: Some(ConnectionConfig {
-                port: 5101,
-                db_url: "postgres://postgres:postgres@localhost:5432/retrom".into(),
-            }),
-            content_directories: vec![ContentDirectory {
-                path: "/app/library".into(),
-                storage_type: Some(i32::from(StorageType::MultiFileGame)),
-            }],
-            ..Default::default()
-        };
 
         if std::env::var("RETROM_PORT").is_ok() {
             tracing::error!("RETROM_PORT env var is deprecated, use a config file instead.");
@@ -77,16 +80,9 @@ impl ServerConfigManager {
             tracing::error!("IGDB_CLIENT_SECRET env var is deprecated, use a config file instead.");
         }
 
-        let config_file = std::env::var("RETROM_CONFIG").ok();
+        let config = Config::builder().add_source(File::with_name(path));
 
-        let config = config_file.map(|config_file| {
-            Config::builder().add_source(File::with_name(&config_file).required(false))
-        });
-
-        let mut s: ServerConfig = match config {
-            Some(config) => config.build()?.try_deserialize()?,
-            None => default_config,
-        };
+        let mut s: ServerConfig = config.build()?.try_deserialize()?;
 
         if let Ok(content_dir) = std::env::var("CONTENT_DIR") {
             tracing::warn!("CONTENT_DIR env var is deprecated, use a config file instead.");

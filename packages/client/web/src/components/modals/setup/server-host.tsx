@@ -73,11 +73,6 @@ export function ServerHostStep() {
             <TooltipContent>
               <div className="flex flex-col gap-2 text-sm max-w-[60ch]">
                 <p>
-                  If you are running the server locally, you can use the default
-                  values.
-                </p>
-
-                <p>
                   If you are hosting the server at a domain (e.g.
                   https://my-retrom-domain.com), then you can leave the port
                   empty and it will be inferred based on the protocol used.

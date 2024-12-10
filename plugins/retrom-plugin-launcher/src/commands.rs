@@ -2,12 +2,13 @@ use std::{ffi::OsStr, path::PathBuf};
 
 use retrom_codegen::retrom::{
     GamePlayStatusUpdate, GetGamePlayStatusPayload, GetLocalEmulatorConfigsRequest,
-    InstallationStatus, PlayGamePayload, PlayStatus, RetromClientConfig, StopGamePayload,
+    InstallationStatus, PlayGamePayload, PlayStatus, StopGamePayload,
 };
+use retrom_plugin_config::ConfigExt;
 use retrom_plugin_installer::InstallerExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
-use tauri::{command, AppHandle, Manager, Runtime};
+use tauri::{command, AppHandle, Runtime};
 use tokio::sync::Mutex;
 use tracing::{info, instrument};
 
@@ -110,22 +111,12 @@ pub(crate) async fn play_game<R: Runtime>(
         None => return Err(crate::Error::FileNotFound(game_id)),
     };
 
-    let client_id: i32;
+    let client_config = app.config_manager().get_config().await;
 
-    {
-        let config_state = app
-            .try_state::<std::sync::Mutex<RetromClientConfig>>()
-            .expect("Config not found");
-
-        let lock = config_state.lock().expect("Failed to lock config");
-
-        client_id = lock
-            .config
-            .as_ref()
-            .and_then(|c| c.client_info.as_ref())
-            .map(|c| c.id)
-            .unwrap_or(0);
-    }
+    let client_id = client_config
+        .config
+        .and_then(|c| c.client_info.map(|info| info.id))
+        .expect("Client ID not found");
 
     let mut emulator_client = app.get_emulator_client().await;
     let res = emulator_client

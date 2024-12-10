@@ -1,29 +1,13 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use retrom_codegen::retrom::RetromClientConfig;
-use std::{fs::OpenOptions, str, sync::Mutex};
-use tauri::{AppHandle, Manager};
+use std::{fs::OpenOptions, str};
+use tauri::Manager;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}!! You've been greeted from Rust!", name)
-}
-
-type ManagedConfig = Mutex<RetromClientConfig>;
-
-#[tauri::command]
-fn set_config(app: AppHandle, new_config: RetromClientConfig) {
-    tracing::debug!("Setting new config: {:?}", new_config);
-    match app.try_state::<ManagedConfig>() {
-        Some(config) => {
-            *config.lock().unwrap() = new_config;
-        }
-        None => {
-            app.manage::<ManagedConfig>(Mutex::new(new_config));
-        }
-    }
 }
 
 #[tokio::main]
@@ -65,7 +49,6 @@ pub async fn main() {
 
             registry.with(file_layer).init();
 
-            #[cfg(desktop)]
             if let Err(why) = app
                 .handle()
                 .plugin(tauri_plugin_window_state::Builder::default().build())
@@ -73,9 +56,20 @@ pub async fn main() {
                 tracing::error!("Failed to initialize window state plugin: {}", why);
             }
 
+            let app_handle = app.handle().clone();
+            tokio::spawn(async move {
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("Failed to listen for ctrl-c");
+
+                app_handle.exit(0);
+            });
+
             Ok(())
         })
+        .plugin(retrom_plugin_config::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(retrom_plugin_standalone::init())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             app.webview_windows()
                 .values()
@@ -84,6 +78,7 @@ pub async fn main() {
                 .set_focus()
                 .expect("failed to set focus");
         }))
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_system_info::init())
         .plugin(tauri_plugin_dialog::init())
@@ -93,7 +88,7 @@ pub async fn main() {
         .plugin(retrom_plugin_steam::init())
         .plugin(retrom_plugin_installer::init())
         .plugin(retrom_plugin_launcher::init().await)
-        .invoke_handler(tauri::generate_handler![greet, set_config])
+        .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

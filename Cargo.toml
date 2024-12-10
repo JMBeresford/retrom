@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["./packages/*", "./plugins/*"]
-exclude = ["**/node_modules"]
+exclude = ["**/node_modules", "./packages/client/web"]
 
 
 [workspace.package]
@@ -42,6 +42,9 @@ retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version 
 retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "^0.4.10" }
 retrom-plugin-service-client = { path = "./plugins/retrom-plugin-service-client", version = "^0.4.10" }
 retrom-plugin-steam = { path = "./plugins/retrom-plugin-steam", version = "^0.4.10" }
+retrom-plugin-config = { path = "./plugins/retrom-plugin-config", version = "^0.4.10" }
+retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone", version = "^0.4.10" }
+config = { version = "0.13.4", features = ["json5"] }
 futures = "0.3.30"
 bytes = "1.6.0"
 reqwest = { version = "0.12.3", features = [
