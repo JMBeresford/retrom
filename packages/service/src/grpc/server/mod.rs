@@ -1,16 +1,16 @@
 use retrom_codegen::retrom::{
-    server_service_server::ServerService, version::Pre, GetServerInfoRequest,
-    GetServerInfoResponse, ServerInfo, Version,
+    server_service_server::ServerService, version::Pre, GetServerConfigRequest,
+    GetServerConfigResponse, GetServerInfoRequest, GetServerInfoResponse, ServerInfo,
+    UpdateServerConfigRequest, UpdateServerConfigResponse, Version,
 };
+use std::sync::Arc;
+
+use crate::config::ServerConfigManager;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub struct ServerServiceHandlers {}
-
-impl ServerServiceHandlers {
-    pub fn new() -> Self {
-        Self {}
-    }
+pub struct ServerServiceHandlers {
+    pub config: Arc<ServerConfigManager>,
 }
 
 fn parse_version() -> Option<Version> {
@@ -62,6 +62,32 @@ impl ServerService for ServerServiceHandlers {
         let server_info = Some(ServerInfo { version });
 
         Ok(tonic::Response::new(GetServerInfoResponse { server_info }))
+    }
+
+    async fn get_server_config(
+        &self,
+        _request: tonic::Request<GetServerConfigRequest>,
+    ) -> Result<tonic::Response<GetServerConfigResponse>, tonic::Status> {
+        let config = self.config.get_config().await.into();
+
+        Ok(tonic::Response::new(GetServerConfigResponse { config }))
+    }
+
+    async fn update_server_config(
+        &self,
+        _request: tonic::Request<UpdateServerConfigRequest>,
+    ) -> Result<tonic::Response<UpdateServerConfigResponse>, tonic::Status> {
+        let new_config = _request.into_inner().config.unwrap();
+
+        if let Err(why) = self.config.update_config(new_config.clone()).await {
+            let msg = format!("Error updating config: {why}");
+            tracing::error!(msg);
+            return Err(tonic::Status::internal(msg));
+        }
+
+        Ok(tonic::Response::new(UpdateServerConfigResponse {
+            config_updated: Some(new_config),
+        }))
     }
 }
 

@@ -71,7 +71,9 @@ export function useConfigStore() {
   return store;
 }
 
-export function useConfig<U>(selector: (state: LocalConfig) => U) {
+export function useConfig<U = undefined>(
+  selector: (state: LocalConfig) => U extends undefined ? LocalConfig : U,
+) {
   return useConfigStore()(selector);
 }
 

@@ -21,6 +21,8 @@ mod grpc;
 mod providers;
 mod rest;
 
+pub const DEFAULT_PORT: i32 = 5101;
+pub const DEFAULT_DB_URL: &str = "postgres://postgres:postgres@localhost:5432/retrom";
 const CARGO_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tokio::main]
@@ -35,16 +37,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let server_config = match crate::config::ServerConfig::new() {
-        Ok(config) => config,
+    let config_manager = match crate::config::ServerConfigManager::new() {
+        Ok(config) => Arc::new(config),
         Err(err) => {
             error!("Could not load configuration: {}", err);
             exit(1)
         }
     };
 
-    let port = server_config.connection.port;
-    let db_url = server_config.connection.db_url.clone();
+    let config = config_manager.get_config().await;
+
+    let (port, db_url) = config
+        .connection
+        .map(|conn| (conn.port, conn.db_url))
+        .unwrap_or((DEFAULT_PORT, DEFAULT_DB_URL.to_string()));
+
     let addr: SocketAddr = format!("0.0.0.0:{port}").parse().unwrap();
 
     let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(&db_url);
@@ -77,7 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool_state = Arc::new(pool);
 
     let rest_service = warp::service(rest::rest_service(pool_state.clone()));
-    let grpc_service = grpc::grpc_service(pool_state.clone(), Arc::new(server_config));
+    let grpc_service = grpc::grpc_service(pool_state.clone(), config_manager.clone());
 
     info!(
         "Starting Retrom {} service at: {}",

@@ -353,16 +353,12 @@ pub async fn update_metadata(
         .collect();
 
     let steam_provider = state.steam_web_api_client.clone();
-    let all_steam_apps = if let Some(steam_provider) = steam_provider.as_ref() {
-        match steam_provider.get_owned_games().await {
-            Ok(res) => res.response.games,
-            Err(e) => {
-                tracing::error!("Failed to get owned games: {}", e);
-                vec![]
-            }
+    let all_steam_apps = match steam_provider.get_owned_games().await {
+        Ok(res) => res.response.games,
+        Err(e) => {
+            tracing::error!("Failed to get owned games: {}", e);
+            vec![]
         }
-    } else {
-        vec![]
     };
 
     let steam_games: Arc<Vec<retrom::Game>> = Arc::new(
@@ -389,11 +385,6 @@ pub async fn update_metadata(
                 .expect("Game not found");
 
             async move {
-                let steam_provider = match steam_provider.as_ref() {
-                    Some(provider) => provider,
-                    None => return Ok::<(), Infallible>(()),
-                };
-
                 let mut conn = db_pool.get().await.expect("Failed to get connection");
 
                 let existing = schema::game_metadata::table
@@ -434,7 +425,7 @@ pub async fn update_metadata(
         wait_on_jobs: Some(vec![platform_metadata_job_id]),
     };
 
-    let steam_metadata_job_id = if steam_provider.is_some() {
+    let steam_metadata_job_id = if !steam_tasks.is_empty() {
         let id = job_manager
             .spawn("Downloading Steam Metadata", steam_tasks, None)
             .await;

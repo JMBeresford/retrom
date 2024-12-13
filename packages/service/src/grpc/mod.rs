@@ -19,7 +19,7 @@ use tonic::transport::{server::Routes, Server};
 use tower_http::cors::{AllowOrigin, Cors, CorsLayer};
 
 use crate::{
-    config::ServerConfig,
+    config::ServerConfigManager,
     providers::{igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider},
 };
 
@@ -46,14 +46,9 @@ const DEFAULT_ALLOW_HEADERS: [HeaderName; 5] = [
     HeaderName::from_static("x-client-id"),
 ];
 
-pub fn grpc_service(db_pool: Arc<Pool>, config: Arc<ServerConfig>) -> Cors<Routes> {
-    let igdb_client = Arc::new(IGDBProvider::new(config.igdb.clone()));
-    let steam_web_api_client = Arc::new(
-        config
-            .steam
-            .as_ref()
-            .map(|steam| SteamWebApiProvider::new(steam.clone())),
-    );
+pub fn grpc_service(db_pool: Arc<Pool>, config_manager: Arc<ServerConfigManager>) -> Cors<Routes> {
+    let igdb_client = Arc::new(IGDBProvider::new(config_manager.clone()));
+    let steam_web_api_client = Arc::new(SteamWebApiProvider::new(config_manager.clone()));
 
     let job_manager = Arc::new(JobManager::new());
 
@@ -67,7 +62,7 @@ pub fn grpc_service(db_pool: Arc<Pool>, config: Arc<ServerConfig>) -> Cors<Route
         igdb_client.clone(),
         steam_web_api_client.clone(),
         job_manager.clone(),
-        config.clone(),
+        config_manager.clone(),
     ));
 
     let metadata_service = MetadataServiceServer::new(MetadataServiceHandlers::new(
@@ -82,7 +77,9 @@ pub fn grpc_service(db_pool: Arc<Pool>, config: Arc<ServerConfig>) -> Cors<Route
     let client_service =
         ClientServiceServer::new(clients::ClientServiceHandlers::new(db_pool.clone()));
 
-    let server_service = ServerServiceServer::new(server::ServerServiceHandlers::new());
+    let server_service = ServerServiceServer::new(server::ServerServiceHandlers {
+        config: config_manager.clone(),
+    });
 
     let emulator_service =
         EmulatorServiceServer::new(EmulatorServiceHandlers::new(db_pool.clone()));

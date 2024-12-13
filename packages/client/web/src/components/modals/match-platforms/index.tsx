@@ -257,6 +257,16 @@ export function MatchPlatformsModal() {
         </DialogHeader>
 
         <ScrollArea type="auto" className="h-[60vh] pr-4">
+          {allIgdbPlatforms?.length === 0 ? (
+            <div className="flex mb-4 text-destructive-text items-center gap-1">
+              <AlertCircleIcon className="h-4 w-4" />
+              <p className="text-sm leading-none">
+                No IGDB platform results found. Have you configured your IGDB
+                credentials yet?
+              </p>
+            </div>
+          ) : null}
+
           {loading ? <LoaderCircleIcon className="animate-spin" /> : null}
           {error ? <AlertCircleIcon className="text-destructive-text" /> : null}
           {platformData?.map((platform) => {

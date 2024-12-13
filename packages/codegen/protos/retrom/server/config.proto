@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package retrom;
+
+import 'retrom/models/games.proto';
+
+message ConnectionConfig {
+  int32 port = 1;
+  string db_url = 2;
+}
+
+message ContentDirectory {
+  string path = 1;
+  optional StorageType storage_type = 2;
+}
+
+message IGDBConfig {
+  string client_id = 1;
+  string client_secret = 2;
+}
+
+message SteamConfig {
+  string api_key = 1;
+  string user_id = 2;
+}
+
+message ServerConfig {
+  ConnectionConfig connection = 1;
+  repeated ContentDirectory content_directories = 2;
+  optional IGDBConfig igdb = 3;
+  optional SteamConfig steam = 4;
+}

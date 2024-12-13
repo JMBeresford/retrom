@@ -4,11 +4,12 @@ import {
   MenubarContent,
   MenubarSeparator,
 } from "@/components/ui/menubar";
-import { ConfigMenuItem } from "./config-menu-item";
+import { SetupMenuItem } from "./setup-menu-item";
 import { CloseMenuItem } from "./close-menu-item";
 import { CheckForUpdateMenuItem } from "./check-for-update-menu-item";
 import { DesktopOnly } from "@/lib/env";
 import { VersionInfoMenuItem } from "./version-info-menu-item";
+import { ConfigMenuItem } from "./config-menu-item";
 
 export function FileMenu() {
   return (
@@ -19,10 +20,11 @@ export function FileMenu() {
 
       <MenubarContent>
         <DesktopOnly>
-          <ConfigMenuItem />
+          <SetupMenuItem />
           <CheckForUpdateMenuItem />
         </DesktopOnly>
 
+        <ConfigMenuItem />
         <VersionInfoMenuItem />
 
         <DesktopOnly>

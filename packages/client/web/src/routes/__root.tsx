@@ -14,6 +14,12 @@ import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import { z } from "zod";
 
 const modalsSearchSchema = z.object({
+  configModal: z
+    .object({
+      open: z.boolean().catch(false),
+      tab: z.enum(["server", "client"]).catch("server"),
+    })
+    .optional(),
   updateLibraryModal: z
     .object({
       open: z.boolean().catch(false),

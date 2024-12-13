@@ -1,3 +1,4 @@
+pub mod storage_type;
 pub mod timestamp;
 
 pub mod igdb {

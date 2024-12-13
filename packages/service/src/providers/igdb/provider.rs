@@ -1,10 +1,11 @@
 use std::{
     env,
+    sync::Arc,
     time::{Duration, Instant},
 };
 
-use crate::providers::MetadataProvider;
-use crate::{config::IGDBConfig, providers::RetryAttempts};
+use crate::providers::RetryAttempts;
+use crate::{config::ServerConfigManager, providers::MetadataProvider};
 use prost::Message;
 use retrom_codegen::{
     igdb,
@@ -45,7 +46,7 @@ type IGDBSenderMsg = (
 
 pub struct IGDBProvider {
     auth: RwLock<IGDBAuth>,
-    user: IGDBConfig,
+    config_manager: Arc<ServerConfigManager>,
     request_tx: mpsc::Sender<IGDBSenderMsg>,
     pub game_fields: Vec<String>,
     pub platform_fields: Vec<String>,
@@ -62,7 +63,7 @@ impl IGDBAuth {
 }
 
 impl IGDBProvider {
-    pub fn new(config: IGDBConfig) -> Self {
+    pub fn new(config_manager: Arc<ServerConfigManager>) -> Self {
         let http_client = reqwest::Client::new();
 
         let (tx, mut rx) = mpsc::channel::<IGDBSenderMsg>(IGDB_CONCURRENT_REQUESTS_LIMIT);
@@ -126,7 +127,7 @@ impl IGDBProvider {
 
         Self {
             auth: RwLock::new(IGDBAuth::new(None, Duration::from_secs(0))),
-            user: config,
+            config_manager,
             request_tx: tx,
             game_fields,
             platform_fields,
@@ -148,11 +149,20 @@ impl IGDBProvider {
 
     #[instrument(level = Level::DEBUG, skip_all)]
     async fn refresh_token(&self) -> Result<(), reqwest::StatusCode> {
+        let config = self.config_manager.get_config().await;
+
+        let user = match config.igdb {
+            Some(user) => user,
+            None => {
+                return Err(reqwest::StatusCode::FORBIDDEN);
+            }
+        };
+
         let url = reqwest::Url::parse_with_params(
             &oauth2_url(),
             &[
-                ("client_id", &self.user.client_id),
-                ("client_secret", &self.user.client_secret),
+                ("client_id", &user.client_id),
+                ("client_secret", &user.client_secret),
                 ("grant_type", &"client_credentials".to_string()),
             ],
         )
@@ -189,14 +199,13 @@ impl IGDBProvider {
     }
 
     #[instrument(level = Level::DEBUG, skip_all)]
-    async fn maybe_refresh_token(&self) {
+    async fn maybe_refresh_token(&self) -> Result<(), reqwest::StatusCode> {
         if self.token_is_expired().await {
             debug!("Token expired, refreshing.");
-            match self.refresh_token().await {
-                Ok(_) => debug!("Token refreshed."),
-                Err(e) => error!("Could not refresh token: {:?}", e),
-            }
+            self.refresh_token().await?;
         }
+
+        Ok(())
     }
 
     #[instrument(level = Level::DEBUG, skip_all, fields(query = query.clone()))]
@@ -205,7 +214,7 @@ impl IGDBProvider {
         path: String,
         query: String,
     ) -> Result<reqwest::Response, reqwest::StatusCode> {
-        self.maybe_refresh_token().await;
+        self.maybe_refresh_token().await?;
         let auth = self.auth.read().await;
         let token = auth.token.clone().expect("No token found");
 
@@ -214,8 +223,16 @@ impl IGDBProvider {
 
         let mut req = reqwest::Request::new(reqwest::Method::POST, url);
 
+        let config = self.config_manager.get_config().await;
+        let user = match config.igdb {
+            Some(user) => user,
+            None => {
+                return Err(reqwest::StatusCode::FORBIDDEN);
+            }
+        };
+
         req.headers_mut()
-            .insert("Client-ID", self.user.client_id.parse().unwrap());
+            .insert("Client-ID", user.client_id.parse().unwrap());
 
         req.headers_mut().insert(
             "Authorization",
@@ -328,6 +345,11 @@ impl MetadataProvider<GetIgdbSearchRequest, IgdbSearchData> for IGDBProvider {
 
         let res = match self.make_request(target, query).await {
             Ok(res) => res,
+            Err(reqwest::StatusCode::FORBIDDEN) => {
+                // fail silently in case user opts out of IGDB metadata
+                debug!("Forbidden, are your IGDB credentials correct?");
+                return None;
+            }
             Err(why) => {
                 error!("Could not make request: {:?}", why);
                 return None;

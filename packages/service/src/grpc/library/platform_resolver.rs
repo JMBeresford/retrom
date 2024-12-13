@@ -50,12 +50,18 @@ impl ResolvedPlatform {
                     None
                 }
             })
-            .filter(
-                |path| match self.content_resolver.content_directory.storage_type {
+            .filter(|path| {
+                match self
+                    .content_resolver
+                    .content_directory
+                    .storage_type
+                    .and_then(|st| StorageType::try_from(st).ok())
+                    .unwrap_or(StorageType::MultiFileGame)
+                {
                     StorageType::SingleFileGame => path.is_file(),
                     StorageType::MultiFileGame => path.is_dir(),
-                },
-            )
+                }
+            })
             .map(|path| GameResolver::new(path, self.clone()))
             .collect()
     }

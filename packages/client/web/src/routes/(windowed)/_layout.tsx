@@ -21,6 +21,7 @@ import { VersionInfoModal } from "@/components/modals/version-info";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { checkIsDesktop } from "@/lib/env";
 import { destroy } from "@noriginmedia/norigin-spatial-navigation";
+import { ConfigModal } from "@/components/modals/config";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
@@ -68,6 +69,7 @@ function LayoutComponent() {
       <ManageEmulatorProfilesModal />
       <CheckForUpdateModal />
       <VersionInfoModal />
+      <ConfigModal />
     </>
   );
 }

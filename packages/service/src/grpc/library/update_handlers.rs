@@ -15,7 +15,8 @@ pub(super) async fn update_library(
     state: &LibraryServiceHandlers,
     _request: Request<UpdateLibraryRequest>,
 ) -> Result<UpdateLibraryResponse, Status> {
-    let content_dirs = state.config.content_directories.clone();
+    let content_dirs = state.config_manager.get_config().await.content_directories;
+
     let db_pool = state.db_pool.clone();
 
     let tasks: Vec<_> = content_dirs
@@ -86,11 +87,7 @@ pub(super) async fn update_library(
         .collect();
 
     let steam_provider = state.steam_web_api_client.clone();
-    let steam_library_res = if let Some(steam_provider) = steam_provider.as_ref() {
-        Some(steam_provider.get_owned_games().await.ok()).flatten()
-    } else {
-        None
-    };
+    let steam_library_res = steam_provider.get_owned_games().await.ok();
 
     let steam_tasks: Vec<_> = if let Some(steam_library_res) = steam_library_res {
         let db_pool = db_pool.clone();

@@ -1,16 +1,16 @@
-use std::{
-    str::FromStr,
-    time::Duration,
-};
+use std::{str::FromStr, sync::Arc, time::Duration};
 
 use chrono::DateTime;
-use retrom_codegen::{retrom, timestamp::Timestamp};
+use retrom_codegen::{
+    retrom::{self},
+    timestamp::Timestamp,
+};
 use tokio::sync::{mpsc, oneshot};
 use tower::{Service, ServiceExt};
 use tracing::{instrument, Instrument};
 
 use crate::{
-    config::SteamConfig,
+    config::ServerConfigManager,
     providers::{steam::models, RetryAttempts},
 };
 
@@ -23,11 +23,11 @@ pub struct SteamWebApiProvider {
     base_url: String,
     store_base_url: String,
     request_tx: mpsc::Sender<SteamSenderMsg>,
-    user: SteamConfig,
+    config_manager: Arc<ServerConfigManager>,
 }
 
 impl SteamWebApiProvider {
-    pub fn new(user: SteamConfig) -> Self {
+    pub fn new(config_manager: Arc<ServerConfigManager>) -> Self {
         let base_url = "https://api.steampowered.com".into();
         let store_base_url = "https://store.steampowered.com/api".into();
         let http_client = reqwest::Client::new();
@@ -72,7 +72,7 @@ impl SteamWebApiProvider {
 
         Self {
             request_tx: tx,
-            user,
+            config_manager,
             base_url,
             store_base_url,
         }
@@ -216,23 +216,17 @@ impl SteamWebApiProvider {
         &self,
     ) -> Result<models::GetOwnedGamesResponse, reqwest::StatusCode> {
         let path = self.base_url.to_string() + "/IPlayerService/GetOwnedGames/v1/";
-
         let mut url = reqwest::Url::from_str(&path).expect("Invalid Base URL");
+        let config = self.config_manager.get_config().await;
 
-        if let Some(api_key) = &self.user.api_key {
-            url.query_pairs_mut().append_pair("key", api_key);
-        }
-
-        if let Some(user_id) = &self.user.user_id {
-            url.query_pairs_mut().append_pair("steamid", user_id);
-        }
-
+        let user = config.steam.expect("No Steam Config");
+        url.query_pairs_mut().append_pair("key", &user.api_key);
+        url.query_pairs_mut().append_pair("steamid", &user.user_id);
         url.query_pairs_mut()
             .append_pair("include_appinfo", "true")
             .append_pair("include_played_free_games", "true");
 
         let req = reqwest::Request::new(reqwest::Method::GET, url);
-
         let res = self.make_request(req).await?;
 
         res.json::<models::GetOwnedGamesResponse>()

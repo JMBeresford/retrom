@@ -50,3 +50,4 @@ config = { version = "0.14.0", features = ["json5"] }
 async_zip = { version = "0.0.17", features = ["full"] }
 walkdir = "2.5.0"
 chrono = "0.4.38"
+notify = { workspace = true }

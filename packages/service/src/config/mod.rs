@@ -1,41 +1,52 @@
 use config::{Config, ConfigError, File};
-use retrom_codegen::retrom::StorageType;
-use serde::{Deserialize, Serialize};
+use retrom_codegen::retrom::{ContentDirectory, ServerConfig, StorageType};
+use std::path::PathBuf;
+use tokio::sync::RwLock;
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ConnectionConfig {
-    pub port: i32,
-    pub db_url: String,
+#[derive(thiserror::Error, Debug)]
+pub enum RetromConfigError {
+    #[error("Error parsing config: {0}")]
+    ParseError(#[from] ConfigError),
+    #[error("Config path not provided: {0}")]
+    ConfigNotProvided(#[from] std::env::VarError),
+    #[error("Config file error: {0}")]
+    ConfigFileError(#[from] tokio::io::Error),
+    #[error("Could not (de)serialize config: {0}")]
+    ConfigSerializationError(#[from] serde_json::Error),
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct ContentDirectory {
-    pub path: String,
-    pub storage_type: StorageType,
+pub type Result<T> = std::result::Result<T, RetromConfigError>;
+
+pub struct ServerConfigManager {
+    config: RwLock<ServerConfig>,
+    config_path: PathBuf,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct IGDBConfig {
-    pub client_id: String,
-    pub client_secret: String,
-}
+impl ServerConfigManager {
+    pub fn new() -> Result<Self> {
+        dotenvy::dotenv().ok();
+        let config_path = std::env::var("RETROM_CONFIG")?.into();
+        let config = RwLock::new(Self::read_config_file()?);
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct SteamConfig {
-    pub api_key: Option<String>,
-    pub user_id: Option<String>,
-}
+        Ok(Self {
+            config,
+            config_path,
+        })
+    }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ServerConfig {
-    pub connection: ConnectionConfig,
-    pub content_directories: Vec<ContentDirectory>,
-    pub igdb: IGDBConfig,
-    pub steam: Option<SteamConfig>,
-}
+    pub async fn get_config(&self) -> ServerConfig {
+        self.config.read().await.clone()
+    }
 
-impl ServerConfig {
-    pub fn new() -> Result<Self, ConfigError> {
+    pub async fn update_config(&self, config: ServerConfig) -> Result<()> {
+        let data = serde_json::to_vec(&config)?;
+        tokio::fs::write(&self.config_path, data).await?;
+        *self.config.write().await = config;
+
+        Ok(())
+    }
+
+    fn read_config_file() -> Result<ServerConfig> {
         dotenvy::dotenv().ok();
 
         let mut default_connection = config::Map::<String, String>::new();
@@ -83,7 +94,7 @@ impl ServerConfig {
             Config::builder().add_source(File::with_name(&config_file).required(false))
         });
 
-        let mut s: Self = match config {
+        let mut s: ServerConfig = match config {
             Some(config) => config.build()?.try_deserialize()?,
             None => default_config.build()?.try_deserialize()?,
         };
@@ -92,7 +103,7 @@ impl ServerConfig {
             tracing::warn!("CONTENT_DIR env var is deprecated, use a config file instead.");
             s.content_directories.push(ContentDirectory {
                 path: content_dir,
-                storage_type: StorageType::MultiFileGame,
+                storage_type: Some(i32::from(StorageType::MultiFileGame)),
             });
         }
 

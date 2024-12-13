@@ -1,10 +1,10 @@
 import { MenubarItem } from "@/components/ui/menubar";
 import { Link } from "@tanstack/react-router";
 
-export function ConfigMenuItem() {
+export function SetupMenuItem() {
   return (
     <MenubarItem asChild>
-      <Link search={{ configModal: { open: true } }}>Config</Link>
+      <Link search={{ setupModal: { open: true } }}>Setup</Link>
     </MenubarItem>
   );
 }

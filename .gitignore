@@ -7,3 +7,5 @@ config.dev.*
 
 **/node_modules
 **/rustc-ice*
+
+*.bak

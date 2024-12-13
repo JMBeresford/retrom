@@ -44,11 +44,16 @@ impl ResolvedGame {
             .resolved_platform
             .content_resolver
             .content_directory
-            .storage_type;
+            .storage_type
+            .and_then(|st| StorageType::try_from(st).ok());
 
         match strategy {
-            StorageType::SingleFileGame => self.resolve_single_files(db_pool).await,
-            StorageType::MultiFileGame => self.resolve_multi_files(db_pool).await,
+            Some(StorageType::SingleFileGame) => self.resolve_single_files(db_pool).await,
+            Some(StorageType::MultiFileGame) => self.resolve_multi_files(db_pool).await,
+            _ => {
+                warn!("No storage type found for Game: {:?}", self.row);
+                Ok(vec![])
+            }
         }
     }
 
@@ -204,7 +209,7 @@ impl GameResolver {
             updated_at: None,
             deleted_at: None,
             is_deleted: false,
-            storage_type: Some(storage_type.into()),
+            storage_type,
             ..Default::default()
         }
     }

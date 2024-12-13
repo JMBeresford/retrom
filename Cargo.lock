@@ -4547,6 +4547,7 @@ dependencies = [
  "http-body-util",
  "hyper 0.14.30",
  "hyper-util",
+ "notify",
  "prost",
  "reqwest",
  "retrom-codegen",

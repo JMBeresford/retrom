@@ -9,6 +9,7 @@ use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl
 use retrom_codegen::retrom::{
     self,
     get_game_metadata_response::{GameGenres, SimilarGames},
+    get_igdb_search_request::IgdbSearchType,
     get_igdb_search_response::SearchResults,
     metadata_service_server::MetadataService,
     Game, GameGenre, GameGenreMap, GetGameMetadataRequest, GetGameMetadataResponse,
@@ -338,6 +339,9 @@ impl MetadataService for MetadataServiceHandlers {
         request: Request<GetIgdbSearchRequest>,
     ) -> Result<Response<GetIgdbSearchResponse>, Status> {
         let request = request.into_inner();
+        let search_type = IgdbSearchType::try_from(request.search_type)
+            .map_err(|_| Status::invalid_argument("Invalid search type provided"));
+
         let igdb_provider = self.igdb_client.clone();
 
         let data = igdb_provider.search_metadata(request).await;
@@ -361,9 +365,17 @@ impl MetadataService for MetadataServiceHandlers {
 
                 SearchResults::PlatformMatches(IgdbSearchPlatformResponse { platforms })
             }
-            None => {
-                return Err(Status::not_found("No results"));
-            }
+            None => match search_type {
+                Ok(IgdbSearchType::Game) => {
+                    SearchResults::GameMatches(IgdbSearchGameResponse { games: vec![] })
+                }
+                Ok(IgdbSearchType::Platform) => {
+                    SearchResults::PlatformMatches(IgdbSearchPlatformResponse { platforms: vec![] })
+                }
+                Err(why) => {
+                    return Err(why);
+                }
+            },
         }
         .into();
 

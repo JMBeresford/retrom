@@ -19,7 +19,7 @@ retrom-codegen = { workspace = true }
 tokio = { workspace = true }
 tauri-plugin-shell = "2.0.0-rc"
 steamlocate = "2.0.0"
-notify = "7.0.0"
+notify = { workspace = true }
 
 [build-dependencies]
 tauri-plugin = { version = "2.0.0-rc.6", features = ["build"] }

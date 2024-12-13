@@ -1,10 +1,8 @@
 use std::{io, path::PathBuf, str::FromStr};
 
-use tracing::warn;
-
-use crate::config::ContentDirectory;
-
 use super::platform_resolver::PlatformResolver;
+use retrom_codegen::retrom::ContentDirectory;
+use tracing::warn;
 
 #[derive(thiserror::Error, Debug)]
 pub enum ResolverError {
