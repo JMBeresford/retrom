@@ -46,7 +46,7 @@ tokio-stream = { workspace = true }
 thiserror = { workspace = true }
 sanitize-filename = { workspace = true }
 uuid = { version = "1.10.0", features = ["v4"] }
-config = { version = "0.14.0", features = ["json5"] }
+config = { version = "0.13.4", features = ["json5"] }
 async_zip = { version = "0.0.17", features = ["full"] }
 walkdir = "2.5.0"
 chrono = "0.4.38"

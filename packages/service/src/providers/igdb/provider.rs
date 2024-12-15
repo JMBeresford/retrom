@@ -182,8 +182,22 @@ impl IGDBProvider {
 
         match rx.await.expect("Failed to receive response") {
             Ok(res) => {
-                let token_res: IGDBTokenResponse =
-                    res.json().await.expect("Could not parse response");
+                let res = res.error_for_status().map_err(|e| {
+                    error!(
+                        "Failed to refresh token, are your IGDB credentials correct? {:?}",
+                        e
+                    );
+                    e.status()
+                        .unwrap_or(reqwest::StatusCode::INTERNAL_SERVER_ERROR)
+                })?;
+
+                let token_res: IGDBTokenResponse = match res.json().await {
+                    Ok(json) => json,
+                    Err(e) => {
+                        error!("Failed to parse JSON: {:?}", e);
+                        return Err(reqwest::StatusCode::INTERNAL_SERVER_ERROR);
+                    }
+                };
 
                 {
                     let mut auth = self.auth.write().await;

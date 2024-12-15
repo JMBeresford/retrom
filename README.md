@@ -84,7 +84,7 @@ clients on any amount of other devices to (un)install/download and subsequently 
     - [x] delete
     - [x] set default (for launching via emulators)
   - [ ] Grid view (as opposed to default list view)
-  - [ ] Fullscreen mode + controller support
+  - [x] Fullscreen mode + controller support
 - [x] Web (browser) client functionality (in addition to Basic functionality)
   - [x] Download games
 - [ ] Desktop client functionality (in addition to Basic functionality)
@@ -194,8 +194,8 @@ Add the following to the root of your `config.json` file:
 ```json
 {
   "steam": {
-    "api_key": "your_steam_api_key",
-    "steam_id": "your_steam_id"
+    "apiKey": "your_steam_api_key",
+    "steamId": "your_steam_id"
   }
 }
 ```
@@ -225,7 +225,7 @@ instructions [here](https://api-docs.igdb.com/#account-creation).
 > - A game library that is organized in [a way that Retrom can understand](#library-structure)
 > - API keys for [metadata providers](#metadata-providers)
 
-The server is configured via a config file. Here is an example config file:
+The server is configured via a config file. Here is a minimal example config file:
 
 > [!TIP]
 > You can replace the `db_url` with your own database URL
@@ -238,21 +238,21 @@ The server is configured via a config file. Here is an example config file:
 {
   "connection": {
     "port": 5101,
-    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
+    "dbUrl": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
   },
-  "content_directories": [
+  "contentDirectories": [
     {
       "path": "path/to/my/library/",
-      "storage_type": "MultiFileGame"
+      "storageType": "MultiFileGame"
     },
     {
       "path": "path/to/my/library/with/single_file_games/",
-      "storage_type": "SingleFileGame"
+      "storageType": "SingleFileGame"
     }
   ],
   "igdb": {
-    "client_secret": "super_secret_client_secret!!!1",
-    "client_id": "my_IGDB_ID_1234"
+    "clientSecret": "super_secret_client_secret!!!1",
+    "clientId": "my_IGDB_ID_1234"
   }
 }
 ```
@@ -279,21 +279,21 @@ Here is the example config file:
 {
   "connection": {
     "port": 5101,
-    "db_url": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
+    "dbUrl": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
   },
-  "content_directories": [
+  "contentDirectories": [
     {
       "path": "/library1",
-      "storage_type": "MultiFileGame"
+      "storageType": "MultiFileGame"
     },
     {
       "path": "/library2",
-      "storage_type": "SingleFileGame"
+      "storageType": "SingleFileGame"
     }
   ],
   "igdb": {
-    "client_secret": "super_secret_client_secret!!!1",
-    "client_id": "my_IGDB_ID_1234"
+    "clientSecret": "super_secret_client_secret!!!1",
+    "clientId": "my_IGDB_ID_1234"
   }
 }
 ```

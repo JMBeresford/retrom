@@ -211,12 +211,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .extern_path(".google.protobuf.Value", "::prost_wkt_types::Value")
         .message_attribute(
             ".retrom",
-            "#[serde(rename_all(serialize = \"camelCase\", deserialize = \"snake_case\"))]",
+            "#[serde(rename_all(serialize = \"camelCase\", deserialize = \"camelCase\"))]",
+        )
+        .field_attribute(
+            "retrom.IGDBConfig.client_id",
+            "#[serde(alias = \"client_id\", alias = \"clientId\")]",
+        )
+        .field_attribute(
+            "retrom.IGDBConfig.client_secret",
+            "#[serde(alias = \"client_secret\", alias = \"clientSecret\")]",
+        )
+        .field_attribute(
+            "retrom.SteamConfig.api_key",
+            "#[serde(alias = \"api_key\", alias = \"apiKey\")]",
+        )
+        .field_attribute(
+            "retrom.SteamConfig.user_id",
+            "#[serde(alias = \"user_id\", alias = \"userId\")]",
+        )
+        .field_attribute(
+            "retrom.ConnectionConfig.db_url",
+            "#[serde(alias = \"db_url\", alias = \"dbUrl\")]",
+        )
+        .field_attribute(
+            "retrom.ServerConfig.content_directories",
+            "#[serde(alias = \"content_directories\", alias = \"contentDirectories\")]",
         )
         .field_attribute(
             "retrom.ContentDirectory.storage_type",
             "#[serde(deserialize_with = \"crate::storage_type::deserialize\", \
-                serialize_with = \"crate::storage_type::serialize\")]",
+                serialize_with = \"crate::storage_type::serialize\", \
+                alias = \"storage_type\", alias = \"storageType\")]",
         );
 
     for (model_name, table_name, primary_key, belongs_to) in queryable_models.into_iter() {
