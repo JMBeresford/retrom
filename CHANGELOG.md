@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.4.8](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.7...retrom-v0.4.8) - 2024-12-15
+
+### Fixes
+- IPC communications
+
+    An upstream dependency used to (de)serialize JSON between various
+    layers of Retrom introduced a regression that broke certain
+    functionalities. As a consequence of this, the server config
+    file now uses camelCase as is standard for JSON. Existing configs
+    will continue to work.
+
+
+
+
 ## [0.4.7](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.6...retrom-v0.4.7) - 2024-12-13
 
 ### Fixes
