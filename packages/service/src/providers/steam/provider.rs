@@ -219,7 +219,11 @@ impl SteamWebApiProvider {
         let mut url = reqwest::Url::from_str(&path).expect("Invalid Base URL");
         let config = self.config_manager.get_config().await;
 
-        let user = config.steam.expect("No Steam Config");
+        let user = match config.steam {
+            Some(steam) => steam,
+            None => return Err(reqwest::StatusCode::UNAUTHORIZED),
+        };
+
         url.query_pairs_mut().append_pair("key", &user.api_key);
         url.query_pairs_mut().append_pair("steamid", &user.user_id);
         url.query_pairs_mut()
