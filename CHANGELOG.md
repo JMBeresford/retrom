@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.4.9](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.8...retrom-v0.4.9) - 2024-12-24
+
+### Fixes
+- make steam config optional
+
+    The update library job will no longer error when
+    the optional steam config is not specified.
+
+
+
+
 ## [0.4.8](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.7...retrom-v0.4.8) - 2024-12-15
 
 ### Fixes
