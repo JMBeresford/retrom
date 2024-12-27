@@ -180,11 +180,11 @@ library is Steam. Support for more third-party libraries is planned.
 To import games from Steam, you will need to create a Steam API key. You can do this by following the
 instructions [here](https://steamcommunity.com/dev/apikey).
 
-You will also need your Steam ID. You can find your Steam ID by going to your
+You will also need your Steam user ID. You can find your Steam user ID by going to your
 [Account Details](https://store.steampowered.com/account/) page on Steam ( you must be logged in to
 view this page ).
 
-You will see your Steam ID displayed below your profile name, as shown in the following image:
+You will see your Steam user ID displayed below your profile name, as shown in the following image:
 
 ![Steam ID](docs/imgs/steam-id.png)
 
@@ -195,7 +195,7 @@ Add the following to the root of your `config.json` file:
 {
   "steam": {
     "apiKey": "your_steam_api_key",
-    "steamId": "your_steam_id"
+    "userId": "your_steam_id"
   }
 }
 ```
