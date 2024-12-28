@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.4.10](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.9...retrom-v0.4.10) - 2024-12-28
+
+### Fixes
+- UI tweaks
+
+
+
+### New
+- persist window size and position
+
+    Retrom will now remember window state when
+    closed and re-opened.
+
+    resolves [#145](https://github.com/JMBeresford/retrom/pull/145)
+
+
+
+
 ## [0.4.9](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.8...retrom-v0.4.9) - 2024-12-24
 
 ### Fixes
