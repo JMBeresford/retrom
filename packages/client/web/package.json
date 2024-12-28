@@ -45,6 +45,7 @@
     "@tauri-apps/plugin-shell": "2.0.0-rc.1",
     "@tauri-apps/plugin-updater": "2.0.0-rc.2",
     "@tauri-apps/plugin-upload": "workspace:*",
+    "@tauri-apps/plugin-window-state": "^2.2.0",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
     "class-variance-authority": "^0.7.0",

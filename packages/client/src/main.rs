@@ -65,6 +65,14 @@ pub async fn main() {
 
             registry.with(file_layer).init();
 
+            #[cfg(desktop)]
+            if let Err(why) = app
+                .handle()
+                .plugin(tauri_plugin_window_state::Builder::default().build())
+            {
+                tracing::error!("Failed to initialize window state plugin: {}", why);
+            }
+
             Ok(())
         })
         .plugin(tauri_plugin_updater::Builder::new().build())

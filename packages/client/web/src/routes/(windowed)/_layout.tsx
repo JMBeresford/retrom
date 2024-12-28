@@ -22,6 +22,12 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { checkIsDesktop } from "@/lib/env";
 import { destroy } from "@noriginmedia/norigin-spatial-navigation";
 import { ConfigModal } from "@/components/modals/config";
+import {
+  restoreStateCurrent,
+  saveWindowState,
+  StateFlags,
+} from "@tauri-apps/plugin-window-state";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
@@ -29,11 +35,25 @@ export const Route = createFileRoute("/(windowed)/_layout")({
     destroy();
     if (checkIsDesktop()) {
       await getCurrentWindow().setFullscreen(false);
+
+      await restoreStateCurrent(StateFlags.ALL);
     }
   },
 });
 
 function LayoutComponent() {
+  useEffect(() => {
+    async function onResize() {
+      saveWindowState(StateFlags.ALL);
+    }
+
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+
   return (
     <>
       <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">

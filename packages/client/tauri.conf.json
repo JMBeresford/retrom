@@ -39,12 +39,11 @@
   "app": {
     "windows": [
       {
-        "label": "main",
         "fullscreen": false,
-        "height": 720,
+        "height": 900,
         "resizable": true,
         "title": "Retrom",
-        "width": 1280
+        "width": 1600
       }
     ],
     "security": {

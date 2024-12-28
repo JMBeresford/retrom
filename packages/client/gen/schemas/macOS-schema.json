@@ -5281,6 +5281,41 @@
           "description": "Denies the install command without any pre-configured scope.",
           "type": "string",
           "const": "updater:deny-install"
+        },
+        {
+          "description": "This permission set configures what kind of\noperations are available from the window state plugin.\n\n#### Granted Permissions\n\nAll operations are enabled by default.\n\n",
+          "type": "string",
+          "const": "window-state:default"
+        },
+        {
+          "description": "Enables the filename command without any pre-configured scope.",
+          "type": "string",
+          "const": "window-state:allow-filename"
+        },
+        {
+          "description": "Enables the restore_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "window-state:allow-restore-state"
+        },
+        {
+          "description": "Enables the save_window_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "window-state:allow-save-window-state"
+        },
+        {
+          "description": "Denies the filename command without any pre-configured scope.",
+          "type": "string",
+          "const": "window-state:deny-filename"
+        },
+        {
+          "description": "Denies the restore_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "window-state:deny-restore-state"
+        },
+        {
+          "description": "Denies the save_window_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "window-state:deny-save-window-state"
         }
       ]
     },
