@@ -36,18 +36,27 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
             let handle = app.app_handle().clone();
             std::thread::spawn(move || {
-                let steam_dir = steamlocate::SteamDir::locate().expect("Could not locate steam");
+                let steam = match steamlocate::SteamDir::locate() {
+                    Ok(steam) => steam,
+                    Err(e) => {
+                        tracing::debug!("Could not locate steam directory: {:?}", e);
+                        return;
+                    }
+                };
 
-                let libraries = steam_dir
-                    .library_paths()
-                    .expect("Could not get steam library paths");
+                let libraries = steam.library_paths().unwrap_or_default();
 
-                let mut apps_installed = steam_dir
-                    .libraries()
-                    .expect("Could not get steam libraries")
-                    .filter_map(std::result::Result::ok)
-                    .flat_map(|lib| lib.app_ids().to_vec())
-                    .collect::<HashSet<_>>();
+                let mut apps_installed = match steam.libraries() {
+                    Ok(libraries) => libraries
+                        .filter_map(std::result::Result::ok)
+                        .flat_map(|lib| lib.app_ids().to_vec())
+                        .collect::<HashSet<_>>(),
+
+                    Err(e) => {
+                        tracing::debug!("Could not get steam libraries: {:?}", e);
+                        return;
+                    }
+                };
 
                 let (tx, rx) = std::sync::mpsc::channel::<notify::Result<notify::Event>>();
 
@@ -57,14 +66,14 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                     let mut watcher = match notify::recommended_watcher(tx) {
                         Ok(watcher) => watcher,
                         Err(e) => {
-                            tracing::error!("Error creating watcher: {:?}", e);
+                            tracing::warn!("Error creating watcher: {:?}", e);
                             continue;
                         }
                     };
 
                     if let Err(why) = watcher.watch(lib.as_path(), notify::RecursiveMode::Recursive)
                     {
-                        tracing::error!("Error watching directory: {:?}", why);
+                        tracing::warn!("Error watching directory: {:?}", why);
                         continue;
                     }
 
@@ -75,9 +84,15 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                     match res {
                         Ok(event) => match event.kind {
                             EventKind::Create(_) | EventKind::Remove(_) => {
-                                let app_ids = steam_dir
-                                    .libraries()
-                                    .expect("Could not get steam libraries")
+                                let libraries = match steam.libraries() {
+                                    Ok(libraries) => libraries,
+                                    Err(e) => {
+                                        tracing::warn!("Could not get steam libraries: {:?}", e);
+                                        continue;
+                                    }
+                                };
+
+                                let app_ids = libraries
                                     .filter_map(std::result::Result::ok)
                                     .flat_map(|lib| lib.app_ids().to_vec())
                                     .collect::<HashSet<_>>();
