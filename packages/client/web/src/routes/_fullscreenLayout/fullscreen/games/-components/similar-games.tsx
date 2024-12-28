@@ -20,62 +20,65 @@ export function SimilarGames() {
   });
 
   return (
-    <ScrollArea
+    <div
       className={cn(
         "w-full bg-transparent border-l border-secondary pt-2",
         "focus-within:bg-muted/80 focus-within:border-accent",
         "hover:bg-muted/80 hover:border-accent transition-all",
       )}
     >
-      <h3 className="text-3xl uppercase font-black mb-2 ml-4">Similar Games</h3>
+      <h3 className="text-3xl uppercase font-black ml-4">Similar Games</h3>
 
-      <FocusContainer
-        opts={{
-          focusKey: "similar-games",
-        }}
-        className={cn(
-          "flex gap-2 px-4 pb-4",
-          "[&_p]:text-muted-foreground [&_p]:my-6 [&_p]:flex [&_p]:gap-2 [&_p]:mx-auto",
-        )}
-      >
-        {status === "pending" ? (
-          <p className="text-muted-foreground">
-            <LoaderCircleIcon className="animate-spin" />
-            Loading similar games...
-          </p>
-        ) : status === "error" ? (
-          <p className="text-muted-foreground">
-            <AlertCircleIcon className="text-destructive-text" />
-            Error loading similar games
-          </p>
-        ) : data.metadata.length === 0 ? (
-          <FocusableElement
-            opts={{
-              focusKey: `empty-similar-games`,
-              onFocus: ({ node }) => {
-                node?.focus({ preventScroll: true });
-                node?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                  inline: "center",
-                });
-              },
-            }}
-          >
-            <p tabIndex={-1} className="outline-none">
-              No similar games found for this game.
+      <ScrollArea className="w-full">
+        <FocusContainer
+          opts={{
+            focusKey: "similar-games",
+          }}
+          className={cn(
+            "flex gap-2 p-4",
+            "[&_p]:text-muted-foreground [&_p]:my-6 [&_p]:flex [&_p]:gap-2 [&_p]:mx-auto",
+          )}
+        >
+          {status === "pending" ? (
+            <p className="text-muted-foreground">
+              <LoaderCircleIcon className="animate-spin" />
+              Loading similar games...
             </p>
-          </FocusableElement>
-        ) : (
-          data.metadata
-            .slice(0, 20)
-            .map((metadata) => (
-              <SimilarGame key={metadata.gameId} metadata={metadata} />
-            ))
-        )}
-      </FocusContainer>
-      <ScrollBar orientation="horizontal" />
-    </ScrollArea>
+          ) : status === "error" ? (
+            <p className="text-muted-foreground">
+              <AlertCircleIcon className="text-destructive-text" />
+              Error loading similar games
+            </p>
+          ) : data.metadata.length === 0 ? (
+            <FocusableElement
+              opts={{
+                focusKey: `empty-similar-games`,
+                onFocus: ({ node }) => {
+                  node?.focus({ preventScroll: true });
+                  node?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                    inline: "center",
+                  });
+                },
+              }}
+            >
+              <p tabIndex={-1} className="outline-none">
+                No similar games found for this game.
+              </p>
+            </FocusableElement>
+          ) : (
+            data.metadata
+              .slice(0, 20)
+              .map((metadata) => (
+                <SimilarGame key={metadata.gameId} metadata={metadata} />
+              ))
+          )}
+        </FocusContainer>
+
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+    </div>
   );
 }
 

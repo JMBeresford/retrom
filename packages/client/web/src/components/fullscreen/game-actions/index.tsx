@@ -50,7 +50,7 @@ export function GameActions() {
             <Button
               variant="accent"
               className={cn(
-                "h-full rounded-none px-2",
+                "h-full rounded-none px-2 focus:ring-2 focus:ring-ring",
                 "opacity-80 focus-hover:opacity-100 transition-all",
               )}
             >

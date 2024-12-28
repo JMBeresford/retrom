@@ -13,8 +13,8 @@ import { Description } from "./-components/description";
 import { ExtraInfo } from "./-components/extra-info";
 import { SimilarGames } from "./-components/similar-games";
 import { GameActions } from "@/components/fullscreen/game-actions";
-import { FocusEvent, useRef } from "react";
-import { checkIsDesktop } from "@/lib/env";
+import { FocusEvent, memo, useRef } from "react";
+import { PlatformDependent } from "@/lib/env";
 import { DownloadGameButton } from "@/components/action-button/download-game-button";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
@@ -54,14 +54,10 @@ function onFocus(e: FocusEvent<HTMLButtonElement>) {
 
 function Inner() {
   const { gameMetadata, game } = useGameDetail();
-  const { data: installationStatus, status } = useInstallationQuery(game);
+  const { data: installationStatus } = useInstallationQuery(game);
   const navigate = useNavigate();
 
   const name = gameMetadata?.name || getFileStub(game.path);
-
-  if (status !== "success") {
-    return null;
-  }
 
   return (
     <HotkeyLayer
@@ -99,17 +95,19 @@ function Inner() {
 
               <div className="row-start-2 row-end-4 flex justify-center gap-1">
                 <div className="w-min">
-                  {status === "success" ? (
-                    installationStatus === InstallationStatus.INSTALLED ? (
-                      <PlayButton />
-                    ) : checkIsDesktop() ? (
-                      <InstallButton />
-                    ) : (
-                      <DownloadButton />
-                    )
-                  ) : (
-                    <></>
-                  )}
+                  <PlatformDependent
+                    desktop={
+                      installationStatus === InstallationStatus.INSTALLED ? (
+                        <PlayButton />
+                      ) : installationStatus ===
+                        InstallationStatus.NOT_INSTALLED ? (
+                        <InstallButton />
+                      ) : (
+                        <></>
+                      )
+                    }
+                    web={<DownloadButton />}
+                  />
                 </div>
 
                 {!game.thirdParty && <GameActions />}
@@ -128,7 +126,7 @@ function Inner() {
   );
 }
 
-function PlayButton() {
+const PlayButton = memo(() => {
   const ref = useRef<HTMLButtonElement>(null!);
 
   return (
@@ -150,9 +148,9 @@ function PlayButton() {
       </FocusableElement>
     </HotkeyLayer>
   );
-}
+});
 
-function InstallButton() {
+const InstallButton = memo(() => {
   const ref = useRef<HTMLButtonElement>(null!);
 
   return (
@@ -180,7 +178,7 @@ function InstallButton() {
       </FocusableElement>
     </HotkeyLayer>
   );
-}
+});
 
 function DownloadButton() {
   const ref = useRef<HTMLButtonElement>(null!);
