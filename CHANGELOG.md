@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.4.11](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.10...retrom-v0.4.11) - 2025-01-01
+
+### Fixes
+- don't resize window on web
+
+
 ## [0.4.10](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.9...retrom-v0.4.10) - 2024-12-28
 
 ### Fixes
