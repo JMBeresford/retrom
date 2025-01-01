@@ -29,6 +29,9 @@ import {
 } from "@tauri-apps/plugin-window-state";
 import { useEffect } from "react";
 import { useConfig } from "@/providers/config";
+import { ServerFileExplorerModal } from "@/components/modals/server-file-explorer";
+import { ModalActionProvider } from "@/providers/modal-action";
+import { ConfirmModal } from "@/components/modals/confirm";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
@@ -43,9 +46,9 @@ export const Route = createFileRoute("/(windowed)/_layout")({
 });
 
 function LayoutComponent() {
-  const setupComplete = useConfig(
-    (store) => store.flowCompletions.setupComplete,
-  );
+  const setupComplete =
+    useConfig((store) => store.flowCompletions.setupComplete) ||
+    !checkIsDesktop();
 
   useEffect(() => {
     async function onResize() {
@@ -64,7 +67,7 @@ function LayoutComponent() {
   return (
     <>
       {setupComplete && (
-        <>
+        <ModalActionProvider>
           <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
             <Menubar />
             <ResizablePanelGroup
@@ -105,7 +108,9 @@ function LayoutComponent() {
           <CheckForUpdateModal />
           <VersionInfoModal />
           <ConfigModal />
-        </>
+          <ConfirmModal />
+          <ServerFileExplorerModal />
+        </ModalActionProvider>
       )}
 
       <SetupModal />

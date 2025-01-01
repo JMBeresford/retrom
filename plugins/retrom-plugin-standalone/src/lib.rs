@@ -40,7 +40,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
                 let client_config = app.config_manager().get_config().await;
 
-                let is_standalone = client_config.config.is_some_and(|c| c.standalone);
+                let is_standalone = client_config.server.is_some_and(|c| c.standalone());
                 if is_standalone {
                     if let Err(why) = standalone.start_server().await {
                         tracing::error!("Failed to start standalone server: {}", why);

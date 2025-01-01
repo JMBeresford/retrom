@@ -31,15 +31,22 @@ export function QueryClientProvider(props: PropsWithChildren) {
                     title: "Unauthenticated",
                     description,
                   });
+
                   break;
                 }
-                case Status.INTERNAL:
-                default: {
+
+                case Status.INTERNAL: {
                   toast({
                     variant: "destructive",
                     title: "Internal server error",
                     description,
                   });
+
+                  break;
+                }
+
+                default: {
+                  break;
                 }
               }
             }

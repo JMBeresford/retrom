@@ -28,7 +28,7 @@ export function ConfigModal() {
         }
       }}
     >
-      <DialogContent>
+      <DialogContent className="pl-0 py-0 overflow-hidden">
         {/* Allow the tabs to define their own headers, visually.
         Keep this for screen readers, accessibility etc but hide it */}
         <VisuallyHidden>
@@ -41,31 +41,34 @@ export function ConfigModal() {
           </DialogDescription>
         </VisuallyHidden>
 
-        <DialogContent>
-          <Tabs
-            className="flex gap-8 relative"
-            value={configModal?.tab}
-            onValueChange={(tab) => {
-              navigate({ search: { configModal: { open: true, tab } } });
-            }}
-            orientation="vertical"
-          >
-            <TabsList className="flex-col gap-2 h-fit">
-              {Object.values(tabItems).map(({ value, name }) => (
-                <TabsTrigger
-                  key={value}
-                  value={value}
-                  className="text-md px-5 py-2"
-                >
-                  {name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+        <Tabs
+          value={configModal?.tab}
+          onValueChange={(tab) => {
+            navigate({ search: { configModal: { open: true, tab } } });
+          }}
+          orientation="vertical"
+        >
+          <div className="grid grid-cols-[min-content,1fr] w-full">
+            <div className="p-4 bg-muted mr-4">
+              <TabsList className="flex-col gap-2 h-fit w-min">
+                {Object.values(tabItems).map(({ value, name }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className="text-md px-5 py-2"
+                  >
+                    {name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
-            <ServerConfigTab />
-            <ClientConfigTab />
-          </Tabs>
-        </DialogContent>
+            <div className="py-4">
+              <ServerConfigTab />
+              <ClientConfigTab />
+            </div>
+          </div>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

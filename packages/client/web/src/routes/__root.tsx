@@ -70,6 +70,20 @@ const modalsSearchSchema = z.object({
       open: z.boolean().catch(false),
     })
     .optional(),
+  serverFileExplorerModal: z
+    .object({
+      open: z.boolean().catch(false),
+      title: z.string().optional().catch(undefined),
+      description: z.string().optional().catch(undefined),
+    })
+    .optional(),
+  confirmModal: z
+    .object({
+      open: z.boolean().catch(false),
+      title: z.string().optional().catch(undefined),
+      description: z.string().optional().catch(undefined),
+    })
+    .optional(),
 });
 
 export const Route = createRootRoute({

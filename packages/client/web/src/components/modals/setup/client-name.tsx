@@ -115,34 +115,32 @@ export function ClientName() {
           <div className="space-y-4">
             <div>
               <TooltipProvider>
-                <h3>
-                  Use Existing Client
+                <div className="flex gap-1">
+                  <h3>Use Existing Client</h3>
                   <Tooltip>
                     <TooltipTrigger>
                       <InfoIcon className="w-[1rem] h-[1rem] ml-1 text-destructive-text" />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="flex flex-col gap-2 max-w-[35ch]">
-                        <span>
-                          Certain settings and preferences will be synced if you
-                          use the same client identifier on multiple devices.
-                        </span>
-                        <span>
-                          Choose this option if you want to use emulators and
-                          emulator profiles that you have already set up on
-                          another device.
-                        </span>
-                        <span>
-                          Note that if you want to sync this client w/ a client
-                          on another device using this option, then that device
-                          must have an identical file system structure as this
-                          one (e.g. paths to emulator executables are the same)
-                          or you will likely encounter breakages.
-                        </span>
-                      </div>
+                    <TooltipContent className="flex flex-col gap-2 max-w-[35ch] text-sm">
+                      <span>
+                        Certain settings and preferences will be synced if you
+                        use the same client identifier on multiple devices.
+                      </span>
+                      <span>
+                        Choose this option if you want to use emulators and
+                        emulator profiles that you have already set up on
+                        another device.
+                      </span>
+                      <span>
+                        Note that if you want to sync this client w/ a client on
+                        another device using this option, then that device must
+                        have an identical file system structure as this one
+                        (e.g. paths to emulator executables are the same) or you
+                        will likely encounter breakages.
+                      </span>
                     </TooltipContent>
                   </Tooltip>
-                </h3>
+                </div>
                 <p>
                   Identify an existing client by name and continue where you
                   left off.

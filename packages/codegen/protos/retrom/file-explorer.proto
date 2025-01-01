@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package retrom;
+
+enum FilesystemNodeType {
+  DIRECTORY = 0;
+  FILE = 1;
+}
+
+message FilesystemNode {
+  string path = 1;
+  string name = 2;
+  FilesystemNodeType node_type = 3;
+}

@@ -1,9 +1,10 @@
 import { useConfigStore } from "@/providers/config";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { disableStandaloneMode } from "retrom-plugin-standalone-api";
 
 export function useDisableStandaloneMode() {
   const configStore = useConfigStore();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationKey: ["disable-standalone-mode"],
@@ -11,12 +12,16 @@ export function useDisableStandaloneMode() {
       await disableStandaloneMode();
 
       configStore.setState((store) => {
-        store.config.standalone = false;
+        store.server = {
+          ...store.server,
+          standalone: false,
+        };
 
-        return store;
+        return { ...store };
       });
-
-      console.log("Standalone mode disabled");
+    },
+    onSuccess: () => {
+      queryClient.resetQueries();
     },
     onError: console.error,
   });

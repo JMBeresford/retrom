@@ -36,7 +36,6 @@ export function useInstallationStateQuery() {
         console.error(error);
       }
     },
-    throwOnError: true,
     queryKey: ["installation-state"],
   });
 
