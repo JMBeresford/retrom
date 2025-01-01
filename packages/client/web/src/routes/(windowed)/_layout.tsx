@@ -44,7 +44,9 @@ export const Route = createFileRoute("/(windowed)/_layout")({
 function LayoutComponent() {
   useEffect(() => {
     async function onResize() {
-      saveWindowState(StateFlags.ALL);
+      if (checkIsDesktop()) {
+        saveWindowState(StateFlags.ALL);
+      }
     }
 
     window.addEventListener("resize", onResize);
