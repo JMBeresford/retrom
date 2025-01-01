@@ -1,14 +1,12 @@
 import { PropsWithChildren, createContext, useContext, useMemo } from "react";
 import { RetromClient } from "./client";
-import { useConfigStore } from "../config";
+import { useConfig } from "../config";
 import { checkIsDesktop } from "@/lib/env";
 
 const context = createContext<RetromClient | undefined>(undefined);
 
 export function RetromClientProvider(props: PropsWithChildren) {
-  const configStore = useConfigStore();
-  const hostname = configStore((store) => store.server.hostname);
-  const port = configStore((store) => store.server.port);
+  const { hostname, port } = useConfig((s) => s.server);
   const { children } = props;
 
   const client = useMemo(() => {
@@ -22,7 +20,6 @@ export function RetromClientProvider(props: PropsWithChildren) {
   return <context.Provider value={client}>{children}</context.Provider>;
 }
 
- 
 export function useRetromClient() {
   const client = useContext(context);
 

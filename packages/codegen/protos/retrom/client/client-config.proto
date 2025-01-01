@@ -28,12 +28,12 @@ message RetromClientConfig {
   message Server {
     string hostname = 1;
     optional int32 port = 2;
+    optional bool standalone = 3;
   }
 
   message Config {
     Client client_info = 1;
     InterfaceConfig interface = 2;
-    bool standalone = 3;
   }
 
   message FlowCompletions {

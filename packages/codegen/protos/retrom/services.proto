@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package retrom;
 
+import 'retrom/file-explorer.proto';
 import 'retrom/jobs.proto';
 import 'retrom/models/clients.proto';
 import 'retrom/models/emulators.proto';
@@ -83,6 +84,10 @@ service EmulatorService {
 service JobService {
   rpc GetJobs(GetJobsRequest) returns (stream GetJobsResponse);
   rpc GetJobSubscription(GetJobSubscriptionRequest) returns (stream GetJobSubscriptionResponse);
+}
+
+service FileExplorerService {
+  rpc GetFilesystemNode(GetFilesystemNodeRequest) returns (GetFilesystemNodeResponse);
 }
 
 message UpdateLibraryRequest {}
@@ -426,6 +431,15 @@ message GetJobSubscriptionRequest {
 
 message GetJobSubscriptionResponse {
   JobProgress job = 1;
+}
+
+message GetFilesystemNodeRequest {
+  optional string path = 1;
+}
+
+message GetFilesystemNodeResponse {
+  optional FilesystemNode node = 1;
+  repeated FilesystemNode children = 2;
 }
 
 message CreateLocalEmulatorConfigsRequest {

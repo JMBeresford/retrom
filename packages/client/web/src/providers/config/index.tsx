@@ -105,7 +105,8 @@ function WaitOnHydration(props: PropsWithChildren) {
   const { children } = props;
   const hasHydrated = useConfig((state) => state._hasHydrated);
 
-  if (!hasHydrated) {
+  if (!hasHydrated && checkIsDesktop()) {
+    console.log({ hasHydrated });
     return null;
   }
 

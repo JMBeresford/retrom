@@ -10,22 +10,24 @@ export function useEnableStandaloneMode() {
     mutationFn: async () => {
       const port = await enableStandaloneMode();
 
-      console.log({ port });
-
       if (!port) {
         return;
       }
 
       configStore.setState((store) => {
-        store.config.standalone = true;
-        store.server.port = port;
-        store.server.hostname = "http://localhost";
+        store.server = {
+          ...store.server,
+          standalone: true,
+          hostname: "http://localhost",
+          port,
+        };
 
-        return store;
+        return { ...store };
       });
 
       console.log("Standalone mode enabled on port", port);
     },
+
     onError: console.error,
   });
 }

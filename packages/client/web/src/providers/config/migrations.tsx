@@ -51,8 +51,8 @@ function migrateV1toV2(oldConfig: unknown) {
 function migrateV2toV3(oldConfig: unknown) {
   const newConfig = oldConfig as any;
 
-  newConfig.config = {
-    ...newConfig.config,
+  newConfig.server = {
+    ...newConfig.server,
     standalone: false,
   };
 

@@ -1,6 +1,7 @@
 use std::{sync::Arc, time::Duration};
 
 use emulators::EmulatorServiceHandlers;
+use file_explorer::FileExplorerServiceHandlers;
 use games::GameServiceHandlers;
 use http::HeaderName;
 use jobs::{job_manager::JobManager, JobServiceHandlers};
@@ -9,6 +10,7 @@ use metadata::MetadataServiceHandlers;
 use platforms::PlatformServiceHandlers;
 use retrom_codegen::retrom::{
     client_service_server::ClientServiceServer, emulator_service_server::EmulatorServiceServer,
+    file_explorer_service_server::FileExplorerServiceServer,
     game_service_server::GameServiceServer, job_service_server::JobServiceServer,
     library_service_server::LibraryServiceServer, metadata_service_server::MetadataServiceServer,
     platform_service_server::PlatformServiceServer, server_service_server::ServerServiceServer,
@@ -25,6 +27,7 @@ use crate::{
 
 pub mod clients;
 pub mod emulators;
+pub mod file_explorer;
 pub mod games;
 pub mod jobs;
 pub mod library;
@@ -85,6 +88,7 @@ pub fn grpc_service(db_pool: Arc<Pool>, config_manager: Arc<ServerConfigManager>
         EmulatorServiceServer::new(EmulatorServiceHandlers::new(db_pool.clone()));
 
     let job_service = JobServiceServer::new(JobServiceHandlers::new(job_manager.clone()));
+    let file_explorer_service = FileExplorerServiceServer::new(FileExplorerServiceHandlers::new());
 
     Server::builder()
         .trace_fn(|_| tracing::info_span!("service"))
@@ -106,5 +110,6 @@ pub fn grpc_service(db_pool: Arc<Pool>, config_manager: Arc<ServerConfigManager>
         .add_service(tonic_web::enable(server_service))
         .add_service(tonic_web::enable(emulator_service))
         .add_service(tonic_web::enable(job_service))
+        .add_service(tonic_web::enable(file_explorer_service))
         .into_service()
 }

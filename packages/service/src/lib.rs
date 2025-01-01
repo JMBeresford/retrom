@@ -2,10 +2,7 @@ use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
-use retrom_db::{
-    embedded::{PostgreSQL, DB_NAME},
-    run_migrations,
-};
+use retrom_db::run_migrations;
 use retry::retry;
 use std::{
     convert::Infallible,
@@ -18,6 +15,9 @@ use std::{
 use tokio::task::JoinHandle;
 use tower::Service;
 use tracing::Instrument;
+
+#[cfg(feature = "embedded_db")]
+use retrom_db::embedded::DB_NAME;
 
 pub mod config;
 mod grpc;
@@ -51,7 +51,8 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
 
     let mut addr: SocketAddr = format!("0.0.0.0:{port}").parse().unwrap();
 
-    let mut psql: Option<PostgreSQL> = None;
+    #[cfg(feature = "embedded_db")]
+    let mut psql = None;
 
     #[cfg(feature = "embedded_db")]
     {
@@ -73,7 +74,6 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
         }
     }
 
-    #[cfg(feature = "embedded_db")]
     let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(&db_url);
     let pool = deadpool::managed::Pool::builder(pool_config)
         .build()
@@ -156,6 +156,7 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
                 tracing::error!("Server error: {}", why);
             }
 
+            #[cfg(feature = "embedded_db")]
             if let Some(psql_running) = psql {
                 if let Err(why) = psql_running.stop().await {
                     tracing::error!("Could not stop embedded db: {}", why);

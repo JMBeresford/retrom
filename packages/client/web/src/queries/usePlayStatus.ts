@@ -79,7 +79,6 @@ export function usePlayStatusQuery(game: Game) {
         console.error(error);
       }
     },
-    throwOnError: true,
     queryKey: [queryKey, game.path],
   });
 

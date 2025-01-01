@@ -26,10 +26,6 @@ export function RecentlyPlayed() {
       [data],
     ) ?? [];
 
-  if (status === "error") {
-    return <div>Error</div>;
-  }
-
   return (
     <div className="w-full">
       <h1 className="font-black text-3xl mb-5">Recently Played</h1>
@@ -38,6 +34,10 @@ export function RecentlyPlayed() {
         <ScrollArea className="w-1 flex-1 pb-4 overflow-x-auto">
           {status === "pending" ? (
             <Skeleton className="h-64 w-full rounded-lg" />
+          ) : status === "error" ? (
+            <div className="h-64 w-full grid place-items-center bg-muted/50 text-muted-foreground">
+              Could not load game data
+            </div>
           ) : (
             <GameList games={gamesByPlayedDate} />
           )}

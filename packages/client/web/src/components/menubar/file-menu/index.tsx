@@ -21,14 +21,17 @@ export function FileMenu() {
       <MenubarContent>
         <DesktopOnly>
           <SetupMenuItem />
-          <CheckForUpdateMenuItem />
         </DesktopOnly>
 
         <ConfigMenuItem />
+
+        <MenubarSeparator />
+
         <VersionInfoMenuItem />
 
         <DesktopOnly>
-          <MenubarSeparator className="bg-border/50 w-[95%] px-2 mx-auto" />
+          <CheckForUpdateMenuItem />
+          <MenubarSeparator />
 
           <CloseMenuItem />
         </DesktopOnly>

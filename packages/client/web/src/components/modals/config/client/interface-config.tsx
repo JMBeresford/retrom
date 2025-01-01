@@ -1,12 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
 import { TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useConfigStore } from "@/providers/config";
@@ -21,7 +16,7 @@ const configSchema = z.object({
   fullscreenByDefault: z.boolean(),
 });
 
-export function ClientConfigTab() {
+export function InterfaceConfig() {
   const navigate = useNavigate();
   const configStore = useConfigStore();
   const config = configStore((s) => s.config);
@@ -47,19 +42,8 @@ export function ClientConfigTab() {
   );
 
   const dirty = form.formState.isDirty;
-
   return (
-    <TabsContent value="client" className="flex flex-col gap-2">
-      <DialogTitle className="text-xl font-extrabold">
-        Client Configuration
-      </DialogTitle>
-
-      <DialogDescription>
-        This is where you can configure your local Retrom client settings.
-      </DialogDescription>
-
-      <Separator className="my-2" />
-
+    <TabsContent value="interface" className="mt-4">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <FormField

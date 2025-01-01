@@ -37,9 +37,8 @@ export function CheckForUpdateModal() {
   const navigate = useNavigate();
   const { checkForUpdateModal } = RootRoute.useSearch();
   const { data: update, status: updateCheckStatus } = useUpdateCheck();
-  const { data: clientVersion, status: clientVersionStatus } = useClientVersion(
-    { throwOnError: true },
-  );
+  const { data: clientVersion, status: clientVersionStatus } =
+    useClientVersion();
 
   const pending =
     updateCheckStatus === "pending" || clientVersionStatus === "pending";

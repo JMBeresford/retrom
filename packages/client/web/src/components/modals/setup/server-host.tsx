@@ -8,7 +8,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { InfoIcon, LoaderCircleIcon, XCircleIcon } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { RetromClient } from "@/providers/retrom-client/client";
 import { cn } from "@/lib/utils";
 import {
@@ -17,8 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useConfigStore } from "@/providers/config";
+import { Label } from "@/components/ui/label";
 
 export function ServerHostStep() {
   const { previousStep } = useSetupModal();
@@ -29,46 +30,53 @@ export function ServerHostStep() {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Setup Retrom</DialogTitle>
+        <DialogTitle>Connect to Retrom Server</DialogTitle>
         <DialogDescription>
-          Let&apos;s configure your Retrom client
+          Enter the hostname and port of the Retrom server you want to connect
+          to.
         </DialogDescription>
       </DialogHeader>
 
-      <div className="space-y-2 pb-4">
+      <div className="space-y-2">
         <TooltipProvider>
           <Tooltip>
-            <div className="flex gap-2 items-center">
-              <h3>Server Host</h3>
-
-              <TooltipTrigger>
-                <InfoIcon className="w-[1rem] h-[1rem] text-muted-foreground" />
-              </TooltipTrigger>
-            </div>
-
             <div className="grid grid-cols-[400px_10ch_auto] grid-flow-col">
-              <Input
-                autoFocus={true}
-                className="rounded-none rounded-l-md"
-                placeholder="Hostname"
-                value={hostname}
-                onChange={({ target: { value } }) => setHostname(value.trim())}
-              />
+              <div>
+                <div className="flex gap-2 items-center mb-2">
+                  <Label htmlFor="hostname">Server Hostname</Label>
+                </div>
 
-              <Input
-                className="rounded-none rounded-r-md border-l-0"
-                placeholder="Port"
-                type="number"
-                value={port}
-                onChange={({ target: { value } }) => {
-                  setPort(value.trim());
-                }}
-              />
+                <Input
+                  id="hostname"
+                  autoFocus={true}
+                  className="rounded-none rounded-l-md ring-inset"
+                  placeholder="Enter hostname..."
+                  value={hostname}
+                  onChange={({ target: { value } }) =>
+                    setHostname(value.trim())
+                  }
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="port" className="flex gap-2 items-center mb-2">
+                  Port
+                  <TooltipTrigger>
+                    <InfoIcon className="w-[0.875rem] h-[0.875rem] text-muted-foreground" />
+                  </TooltipTrigger>
+                </Label>
+
+                <Input
+                  id="port"
+                  className="rounded-none rounded-r-md border-l-0 ring-inset"
+                  type="number"
+                  value={port}
+                  onChange={({ target: { value } }) => {
+                    setPort(value.trim());
+                  }}
+                />
+              </div>
             </div>
-
-            <p className="text-sm font-medium text-muted-foreground">
-              The hostname and port of the Retrom server you want to connect to.
-            </p>
 
             <TooltipContent>
               <div className="flex flex-col gap-2 text-sm max-w-[60ch]">
@@ -97,24 +105,29 @@ export function ServerHostStep() {
 }
 
 function TestButton(props: { hostname: string; port?: string }) {
-  const { hostname, port } = props;
   const { nextStep } = useSetupModal();
   const config = useConfigStore();
 
-  const query = useQuery({
-    enabled: false,
-    queryKey: ["greeting", hostname, port],
+  const { mutateAsync: checkServer, status } = useMutation({
+    mutationFn: (vars: { hostname: string; port?: string }) => {
+      const { hostname, port } = vars;
 
-    queryFn: async () => {
-      const host = hostname + (port ? `:${port}` : "");
-      const client = new RetromClient(host);
-      return client.gameClient.getGames({ ids: [] });
+      const host = new URL(hostname);
+      if (port) {
+        host.port = port;
+      }
+
+      const client = new RetromClient(host.toString());
+
+      return client.serverClient.getServerInfo({});
     },
   });
 
-  const testConnection = () =>
-    query.refetch().then((res) => {
-      if (!res.isSuccess || !nextStep) return;
+  const testConnection = useCallback(async () => {
+    try {
+      const { hostname, port } = props;
+      await checkServer({ hostname, port });
+
       const portActual = port
         ? parseInt(port)
         : hostname.startsWith("https")
@@ -122,12 +135,18 @@ function TestButton(props: { hostname: string; port?: string }) {
           : 80;
 
       config.setState({
-        server: { hostname, port: portActual },
+        server: { hostname, port: portActual, standalone: false },
       });
-      nextStep();
-    });
 
-  if (query.isFetching) {
+      if (nextStep) {
+        nextStep();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }, [checkServer, config, nextStep, props]);
+
+  if (status === "pending") {
     return (
       <Button className="flex gap-2 items-center" disabled>
         <LoaderCircleIcon className="animate-spin" /> Connecting...
@@ -135,7 +154,7 @@ function TestButton(props: { hostname: string; port?: string }) {
     );
   }
 
-  if (query.isError) {
+  if (status === "error") {
     return (
       <Button
         className="flex gap-2 items-center"
