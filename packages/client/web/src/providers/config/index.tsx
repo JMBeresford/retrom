@@ -28,9 +28,12 @@ const context = createContext<UseBoundStore<StoreApi<LocalConfig>> | undefined>(
 );
 
 const initialConfig: DeepRequired<RetromClientConfig> = {
-  server: { hostname: defaultAPIHostname(), port: defaultAPIPort() },
-  config: {
+  server: {
+    hostname: defaultAPIHostname(),
+    port: defaultAPIPort(),
     standalone: false,
+  },
+  config: {
     clientInfo: {
       name: "",
       id: -1,
@@ -106,7 +109,6 @@ function WaitOnHydration(props: PropsWithChildren) {
   const hasHydrated = useConfig((state) => state._hasHydrated);
 
   if (!hasHydrated && checkIsDesktop()) {
-    console.log({ hasHydrated });
     return null;
   }
 
