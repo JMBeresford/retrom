@@ -1,10 +1,10 @@
-# Retrom
-
-Join the discord server:
+<div align='center'>
+  <img src='' />
+  <h2>A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.</h2>
 
 [![discord-badge]][discord-link]
 
-A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.
+</div>
 
 > [!WARNING]  
 > UNDER HEAVY DEVELOPMENT: Expect breaking changes often, update your installation with care.
@@ -356,5 +356,5 @@ The following may help you differentiate between the different versions:
 
 Make sure to read the [Quickstart guide](/docs/quick-start/README.md) to get up and running quickly!
 
-[discord-badge]: https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white
+[discord-badge]: https://invidget.switchblade.xyz/tM7VgWXCdZ
 [discord-link]: https://discord.gg/tM7VgWXCdZ
