@@ -1,40 +1,44 @@
 <div align='center'>
-  <img src='' />
-  <h2>A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.</h2>
+  
+![Banner][banner-link]
+  
+  <h3>A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.</h3>
+
+---
+
+<h6>Join the Discord server: </h6>
 
 [![discord-badge]][discord-link]
 
 </div>
 
-> [!WARNING]  
-> UNDER HEAVY DEVELOPMENT: Expect breaking changes often, update your installation with care.
+<h2>Table of Contents</h2>
+
+<!--toc:start-->
+
+- [Overview](#overview)
+- [Core Features](#core-features)
+- [Screenshots and Recordings](#screenshots-and-recordings)
+- [Roadmap](#roadmap)
+- [Installation](#installation)
+  - [Preparation](#preparation)
+    - [Library Structure](#library-structure)
+      - [Multi-File Games (recommended)](#multi-file-games-recommended)
+      - [Single-File Games](#single-file-games)
+    - [Metadata Providers](#metadata-providers)
+      - [IGDB](#igdb)
+  - [Server](#server)
+    - [Standard Mode Setup](#standard-mode-setup)
+      - [Docker](#docker)
+      - [Cargo](#cargo)
+  - [Client](#client)
+
+<!--toc:end-->
 
 ## Overview
 
 Retrom is a centralized game library management service that allows you to host your games on a single device, and connect
 clients on any amount of other devices to (un)install/download and subsequently launch said games locally.
-
-<!--toc:start-->
-
-- [Retrom](#retrom)
-  - [Overview](#overview)
-  - [Core Features](#core-features)
-  - [Screenshots and Recordings](#screenshots-and-recordings)
-  - [Roadmap](#roadmap)
-  - [Installation](#installation)
-    - [Preparation](#preparation)
-      - [Library Structure](#library-structure)
-        - [Multi-File Games (recommended)](#multi-file-games-recommended)
-        - [Single-File Games](#single-file-games)
-      - [Metadata Providers](#metadata-providers)
-        - [IGDB](#igdb)
-    - [Server](#server)
-      - [Standard Mode Setup](#standard-mode-setup)
-        - [Docker](#docker)
-        - [Cargo](#cargo)
-    - [Client](#client)
-
-<!--toc:end-->
 
 ## Core Features
 
@@ -358,3 +362,4 @@ Make sure to read the [Quickstart guide](/docs/quick-start/README.md) to get up 
 
 [discord-badge]: https://invidget.switchblade.xyz/tM7VgWXCdZ
 [discord-link]: https://discord.gg/tM7VgWXCdZ
+[banner-link]: https://github.com/user-attachments/assets/f4af6a79-ce07-4605-8876-5dd2a9f94ed0
