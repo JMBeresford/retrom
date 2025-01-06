@@ -5,8 +5,8 @@ package retrom;
 import 'retrom/models/games.proto';
 
 message ConnectionConfig {
-  int32 port = 1;
-  string db_url = 2;
+  optional int32 port = 1;
+  optional string db_url = 2;
 }
 
 message ContentDirectory {

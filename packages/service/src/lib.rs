@@ -38,16 +38,18 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
         }
     };
 
-    #[cfg(not(feature = "embedded_db"))]
-    let (port, db_url) = config_manager
-        .get_config()
-        .await
-        .connection
-        .map(|conn| (conn.port, conn.db_url))
-        .unwrap_or((DEFAULT_PORT, DEFAULT_DB_URL.to_string()));
+    let (mut port, mut db_url) = (DEFAULT_PORT, DEFAULT_DB_URL.to_string());
 
-    #[cfg(feature = "embedded_db")]
-    let (port, mut db_url) = (DEFAULT_PORT, DEFAULT_DB_URL.to_string());
+    let conn_config = config_manager.get_config().await.connection;
+    if let Some(config_port) = conn_config.as_ref().and_then(|conn| conn.port) {
+        port = config_port;
+        tracing::info!("Using port from configuration: {}", port);
+    }
+
+    if let Some(config_db_url) = conn_config.as_ref().and_then(|conn| conn.db_url.clone()) {
+        db_url = config_db_url;
+        tracing::info!("Using database url from configuration: {}", db_url);
+    }
 
     let mut addr: SocketAddr = format!("0.0.0.0:{port}").parse().unwrap();
 
@@ -70,7 +72,12 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
 
         // Port may be random, so get new db_url from running instance
         if let Some(psql) = &psql {
-            db_url = psql.settings().url(DB_NAME);
+            if conn_config.and_then(|conn| conn.db_url).is_none() {
+                db_url = psql.settings().url(DB_NAME);
+            } else {
+                // If the db_url was set in the configuration, internal DB is not needed
+                let _ = psql.stop().await;
+            }
         }
     }
 
