@@ -1,5 +1,7 @@
 # Retrom
 
+Join the discord server: [![Discord](https://discord.gg/tM7VgWXCdZ)]
+
 A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.
 
 > [!WARNING]  
@@ -22,16 +24,13 @@ clients on any amount of other devices to (un)install/download and subsequently 
       - [Library Structure](#library-structure)
         - [Multi-File Games (recommended)](#multi-file-games-recommended)
         - [Single-File Games](#single-file-games)
-      - [Third Party Libraries](#third-party-libraries)
-        - [Steam](#steam)
       - [Metadata Providers](#metadata-providers)
         - [IGDB](#igdb)
     - [Server](#server)
-      - [Docker](#docker)
-      - [Cargo](#cargo)
+      - [Standard Mode Setup](#standard-mode-setup)
+        - [Docker](#docker)
+        - [Cargo](#cargo)
     - [Client](#client)
-      - [Desktop Client](#desktop-client)
-      - [Web Client](#web-client)
 
 <!--toc:end-->
 
@@ -87,6 +86,7 @@ clients on any amount of other devices to (un)install/download and subsequently 
   - [x] Fullscreen mode + controller support
 - [x] Web (browser) client functionality (in addition to Basic functionality)
   - [x] Download games
+  - [ ] In-browser emulation via [EmulatorJS](https://github.com/EmulatorJS/EmulatorJS)
 - [ ] Desktop client functionality (in addition to Basic functionality)
   - [x] Install/uninstall games
   - [x] Configure locally available emulators
@@ -170,39 +170,6 @@ library/
     plumber_dude_and_plumber_dudes_brother.gga
 ```
 
-#### Third Party Libraries
-
-Retrom supports importing games from third-party libraries. Currently, the only supported third-party
-library is Steam. Support for more third-party libraries is planned.
-
-##### Steam
-
-To import games from Steam, you will need to create a Steam API key. You can do this by following the
-instructions [here](https://steamcommunity.com/dev/apikey).
-
-You will also need your Steam user ID. You can find your Steam user ID by going to your
-[Account Details](https://store.steampowered.com/account/) page on Steam ( you must be logged in to
-view this page ).
-
-You will see your Steam user ID displayed below your profile name, as shown in the following image:
-
-![Steam ID](docs/imgs/steam-id.png)
-
-With these two pieces of information, you can import your Steam games into Retrom.
-Add the following to the root of your `config.json` file:
-
-```json
-{
-  "steam": {
-    "apiKey": "your_steam_api_key",
-    "userId": "your_steam_id"
-  }
-}
-```
-
-Now, when you update your library and download metadata, your Steam games will be included and usable
-from within Retrom!
-
 #### Metadata Providers
 
 Retrom uses metadata providers to download metadata for your games. Currently, the only supported
@@ -214,93 +181,110 @@ To use the IGDB metadata provider, you will need to create an account on the IGD
 create a new application to get your client ID and secret. You can do this by following the
 instructions [here](https://api-docs.igdb.com/#account-creation).
 
+Once you have credentials, add the following to the root of your `config.json` file:
+
+```json
+{
+  "igdb": {
+    "clientId": "your_igdb_client_id",
+    "clientSecret": "your_igdb_client_secret"
+  }
+}
+```
+
 ### Server
+
+Retrom is split into two components: the server and the client. The server is responsible for
+storing your library and metadata, as well as handling client connections. In other words, the
+server owns just about _everything_. Clients will simply connect to the server to view and interact
+with the library.
+
+There are two ways to use Retrom:
+
+1. Standalone Mode
+
+If you are not familiar with setting up services and/or databases,
+and/or you do not care to have a dedicated server to host your Retrom library
+then this is the mode for you. In this mode, you only need to download the client.
+A server will be spun up on your local machine when you start the client.
+
+> [!TIP]
+> Other clients can connect to your local server, but only when the client is running.
+
+> [!TIP]
+> You can easily switch from Standalone Mode to Standard Mode at any time, if you opt to
+> host your library on a dedicated server at a later date.
+
+If you are interested in this mode, you can skip to the [Client](#client) section.
+
+2. Standard Mode
+
+This is your typical setup. You will run the server on a dedicated machine, and clients
+will connect to it. This is the recommended mode for those who want to have a dedicated,
+centralized Retrom server to host their library.
+
+#### Standard Mode Setup
 
 > [!NOTE]
 > Requirements
 >
-> - Docker
-> - Docker Compose (optional, but recommended)
-> - A PostgreSQL database (can optionally use the example provided below)
 > - A game library that is organized in [a way that Retrom can understand](#library-structure)
-> - API keys for [metadata providers](#metadata-providers)
+> - API keys for [metadata providers](#metadata-providers) (optional, but required for metadata)
+> - Docker + Docker Compose (optional, but recommended)
+> - A PostgreSQL database (optional, if you want to bring your own)
 
-The server is configured via a config file. Here is a minimal example config file:
+The server can be optionally configured via a config file. Here is a minimal example config file:
 
-> [!TIP]
-> You can replace the `db_url` with your own database URL
+Desciption of the fields in the config file:
 
-> [!CAUTION]
-> The `path` in `content_directories` should be the path **inside the container**. If you are using Docker, you should
-> mount your library directories to these paths. See the [Docker](#docker-recommended) section for more information.
+- `connection.port`: The port the server will listen on. Optional, and defaults to `5101` if not set.
+- `connection.dbUrl`: The URL to a pre-exsiting PostgreSQL database. This is optional, for those
+  who want to bring their own database.
 
 ```json
 {
   "connection": {
     "port": 5101,
     "dbUrl": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
-  },
-  "contentDirectories": [
-    {
-      "path": "path/to/my/library/",
-      "storageType": "MultiFileGame"
-    },
-    {
-      "path": "path/to/my/library/with/single_file_games/",
-      "storageType": "SingleFileGame"
-    }
-  ],
-  "igdb": {
-    "clientSecret": "super_secret_client_secret!!!1",
-    "clientId": "my_IGDB_ID_1234"
   }
 }
 ```
 
-#### Docker
+This file is generally only needed initially if you wish to override the defaults.
 
-The currently recommended way to run the server is via Docker, ideally with `docker compose`. This
-way is recommended because it is the easiest way to get started for those w/o a lot of experience
-with setting up services and/or databases. There is no inherent reason that you cannot run the
-service without Docker.
+There are two ways to run the server:
+
+1. [Docker](#docker)
+
+The recommended way to run the server is via Docker. This ensures that everything is set up correctly
+and that you have a consistent environment. This method also comes with the added benefit of a built-in
+web client. This allows you to access and manage your library from literally any device with a browser.
+
+2. [Cargo](#cargo)
+
+Alternatively, you can run the server via Cargo. This method is only recommended for those who
+do not want to use Docker _and_ are comfortable using command-line tools.
+
+##### Docker
 
 > [!TIP]
 > If you are not familiar with Docker Compose, you can read the documentation [here](https://docs.docker.com/compose/).
 
-Let's adjust the above example `config.json` for our docker container, and save it somewhere safe. In this
-example, we'll assume it is saved to `/home/minecraft_steve/config_dir/config.json`. Note that we need a
-config _directory_ to mount into the container, not just the file itself.
+For docker to see your library, you need to provide access to the directories containing your games.
+This is done using docker volumes.
 
-Let's also assume we have libraries at `/home/minecraft_steve/library1/` and at `/home/minecraft_steve/library2/`.
+Let's assume we have libraries at `/home/minecraft_steve/library1/` and at `/home/minecraft_steve/library2/` on the host machine.
+We need to provide access to these directories in the docker container. We can provide a map from these locations to
+paths in the docker container by specifying the volumes in the `docker-compose.yml` file.
 
-Here is the example config file:
+If you want to be able to interact with the config file on your host machine, you will also need to map to the
+`/config/` directory in the container.
 
-```json
-{
-  "connection": {
-    "port": 5101,
-    "dbUrl": "postgres://minecraft_steve:super_secret_password@retrom-db/retrom"
-  },
-  "contentDirectories": [
-    {
-      "path": "/library1",
-      "storageType": "MultiFileGame"
-    },
-    {
-      "path": "/library2",
-      "storageType": "SingleFileGame"
-    }
-  ],
-  "igdb": {
-    "clientSecret": "super_secret_client_secret!!!1",
-    "clientId": "my_IGDB_ID_1234"
-  }
-}
-```
-
-Then, this example `docker-compose.yml` file will get you started:
+Here is a minimal example `docker-compose.yml` file:
 
 ```yaml
+# docker-compose.yml
+
 services:
   retrom:
     image: ghcr.io/jmberesford/retrom-service:latest
@@ -308,33 +292,16 @@ services:
       - 5101:5101
       - 3000:3000 # to access the web client
     volumes:
-      - /home/minecraft_steve/config_dir:/config/ # directory containing your config file
       - /home/minecraft_steve/library1:/library1 # directory containing your first library
       - /home/minecraft_steve/library2:/library2 # directory containing your second library
-
-  # OPTIONAL: spin up a postgres container to use as the database, if you
-  # don't have one already.
-  #
-  # read the docs here: https://hub.docker.com/_/postgres
-  retrom-db:
-    container_name: retrom-db
-    hostname: retrom-db # this should match the db_url in your config file
-    image: postgres:16
-    restart: unless-stopped
-    volumes:
-      # to store the DB data on the host, change this path to any directory you like
-      - /home/minecraft_steve/retrom_data/:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: minecraft_steve # db user, used to connect to the db, should match the db_user in your config file
-      POSTGRES_PASSWORD: super_secret_password # db password for above user, should match the db_password in your config file
-      POSTGRES_DB: retrom # db name, should match the db_name in your config file
+      - /home/minecraft_steve/config_dir:/config/ # OPTIONAL: directory containing your config file
 ```
 
 You can then run `docker-compose up` in the directory containing your `docker-compose.yml` file to start the service.
 
 The web client will be accessible at port 3000, and the service itself on port 5101 -- which can be accessed by any desktop clients.
 
-#### Cargo
+##### Cargo
 
 The Retrom Service is also available via Cargo. Installing via cargo will build the binary on your system, so you will need
 to have the Rust toolchain installed. This means you can run the service without Docker, and you can run it on any platform
@@ -354,27 +321,26 @@ some dependencies installed on your system:
 If the pre-requisites are met, you can install Retrom via Cargo with the following command:
 
 ```sh
+# If you have a config file, and are using a pre-existing database
 cargo install retrom-service
-```
 
-You can then run the service with the following command:
-
-```sh
+# You can then run the service with the following command:
 RETROM_CONFIG=/path/to/your/config.json retrom-service
+
+# OR
+
+# If you want Retrom to use it's own internal database
+cargo install retrom-service --features embedded-db
+
+# You can then run the service with the following command:
+retrom-service
 ```
 
 ### Client
 
-#### Desktop Client
-
 Simply head to the [releases page](https://github.com/jmberesford/retrom/releases) and download the
 latest version for your platform. The client is available for Windows, MacOS (both Intel and M series chips),
 and Linux.
-
-Occasionally, there may be debug builds present in a release. You should generally prefer
-the non-debug builds, unless you were instructed to use a debug build by a developer for
-debugging purposes. There will always be a non-debug version of any given release, just
-look for an identically named file without the `-debug` suffix.
 
 The following may help you differentiate between the different versions:
 
@@ -386,7 +352,4 @@ The following may help you differentiate between the different versions:
 - `*-x64.deb` files are for Linux (Debian-based distros)
 - `*-x64.rpm` files are for Linux (Red Hat-based distros)
 
-#### Web Client
-
-> [!WARNING]
-> The web client image has been deprecated. Use the web client bundled with the service image instead.
+Make sure to read the [Quickstart guide](/docs/quick-start/README.md) to get up and running quickly!
