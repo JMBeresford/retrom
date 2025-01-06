@@ -1,6 +1,8 @@
 # Retrom
 
-Join the discord server: [![Discord](https://discord.gg/tM7VgWXCdZ)]
+Join the discord server:
+
+[![discord-badge]][discord-link]
 
 A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.
 
@@ -353,3 +355,6 @@ The following may help you differentiate between the different versions:
 - `*-x64.rpm` files are for Linux (Red Hat-based distros)
 
 Make sure to read the [Quickstart guide](/docs/quick-start/README.md) to get up and running quickly!
+
+[discord-badge]: https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white
+[discord-link]: https://discord.gg/tM7VgWXCdZ
