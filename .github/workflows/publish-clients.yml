@@ -92,7 +92,7 @@ jobs:
         if: matrix.target == '--target x86_64-apple-darwin' # This must match the platform value defined above.
         run: |
           arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          arch -x86_64 /usr/local/bin/brew install postgresql libpq && arch -x86_64 /usr/local/bin/brew link --force libpq
+          arch -x86_64 /usr/local/bin/brew install postgresql libpq && arch -x86_64 /usr/local/bin/brew link --overwrite libpq
 
       - name: install frontend dependencies
         run: pnpm install && pnpm exec buf generate
