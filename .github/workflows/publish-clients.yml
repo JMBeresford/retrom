@@ -25,7 +25,7 @@ jobs:
           - platform: "macos-latest" # for Intel based macs.
             config: "--config tauri.build.conf.json"
             target: "--target x86_64-apple-darwin"
-            rustflags: "-L/opt/homebrew/opt/libpq/lib"
+            rustflags: "-L/usr/local/opt/libpq/lib"
           - platform: "ubuntu-24.04"
             config: "--config tauri.build.conf.json"
           - platform: "windows-latest"
@@ -81,12 +81,18 @@ jobs:
       - name: install dependencies (windows only)
         if: matrix.platform == 'windows-latest' # This must match the platform value defined above.
         run: |
-          choco install -y postgresql --version=16.4.0
+          choco install -y postgresql
 
-      - name: install dependencies (macos only)
-        if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
+      - name: install dependencies (macos m1 only)
+        if: matrix.target == '--target aarch64-apple-darwin' # This must match the platform value defined above.
         run: |
-          brew install postgresql@16 libpq && brew link --force libpq
+          brew link --force libpq
+
+      - name: install dependencies (macos intel only)
+        if: matrix.target == '--target x86_64-apple-darwin' # This must match the platform value defined above.
+        run: |
+          arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          arch -x86_64 /usr/local/bin/brew install postgresql libpq && arch -x86_64 /usr/local/bin/brew link --force libpq
 
       - name: install frontend dependencies
         run: pnpm install && pnpm exec buf generate
