@@ -26,8 +26,6 @@ const DIESEL_UPDATE_DERIVES: [&str; 3] = ["AsChangeset", "Insertable", "Identifi
 const OTHER_DERIVES: [&str; 2] = ["Hash", "Eq"];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    std::env::set_var("PROTOC", protobuf_src::protoc());
-
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not set"));
     let other_derivations = OTHER_DERIVES
         .iter()
