@@ -12,6 +12,8 @@ concurrency:
 
 jobs:
   build-desktop-clients:
+    env:
+      PQ_LIB_STATIC: 1
     permissions:
       contents: write
     strategy:
