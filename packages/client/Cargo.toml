@@ -40,8 +40,8 @@ tauri-plugin-dialog = "2.0.0-rc"
 tauri-plugin-shell = "2.0.0-rc"
 tauri-plugin-opener = "2.0.0"
 tauri-plugin-process = "2.0.0-rc"
-pq-sys = { version = "0.6" }
-openssl-sys = { version = "0.9.100", features = ["vendored"] }
+pq-sys = { workspace = true }
+openssl-sys = { workspace = true }
 tauri-plugin-system-info = "2.0.8"
 tauri-plugin-single-instance = "2.0.0-rc.0"
 tauri-plugin-updater = "2.0.0-rc.2"

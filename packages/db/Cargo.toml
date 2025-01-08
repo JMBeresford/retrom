@@ -23,6 +23,8 @@ postgresql_embedded = { optional = true, version = "^0.17.3", features = [
 ] }
 thiserror = { workspace = true }
 tracing = { workspace = true }
+pq-sys = { workspace = true }
+openssl-sys = { workspace = true }
 
 
 [features]

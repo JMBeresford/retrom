@@ -4332,11 +4332,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "pq-src"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28fbf44fbf1d3e50d0ca0c6e6253f65d1bf01bb004a6ea553efb32e7081948c7"
+dependencies = [
+ "cc",
+ "openssl-sys",
+]
+
+[[package]]
 name = "pq-sys"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6cc05d7ea95200187117196eee9edd0644424911821aeb28a18ce60ea0b8793"
 dependencies = [
+ "pq-src",
  "vcpkg",
 ]
 
@@ -4994,7 +5005,9 @@ dependencies = [
  "diesel-async",
  "diesel_migrations",
  "dotenvy",
+ "openssl-sys",
  "postgresql_embedded",
+ "pq-sys",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
