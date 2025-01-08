@@ -92,13 +92,13 @@ jobs:
       - name: install dependencies (macos m1 only)
         if: matrix.target == '--target aarch64-apple-darwin' # This must match the value defined above.
         run: |
-          brew link --force libpq
+          brew install postgresql libpq && brew link --force libpq
 
       - name: install dependencies (macos intel only)
         if: matrix.target == '--target x86_64-apple-darwin' # This must match the value defined above.
         run: |
           arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          arch -x86_64 /usr/local/bin/brew install postgresql libpq && arch -x86_64 /usr/local/bin/brew link --overwrite libpq
+          arch -x86_64 /usr/local/bin/brew install postgresql libpq && arch -x86_64 /usr/local/bin/brew link --force --overwrite libpq
 
       - name: install frontend dependencies
         run: pnpm install && pnpm exec buf generate
