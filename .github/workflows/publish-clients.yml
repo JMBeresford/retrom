@@ -29,7 +29,7 @@ jobs:
             config: "--config tauri.build.conf.json"
             target: "--target x86_64-apple-darwin"
             rustflags: "-L/usr/local/opt/libpq/lib"
-            shell: arch -x86_64 /bin/bash
+            shell: "arch -x86_64 /bin/bash {0}"
           - platform: "ubuntu-24.04"
             config: "--config tauri.build.conf.json"
             shell: bash
