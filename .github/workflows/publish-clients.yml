@@ -37,7 +37,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     defaults:
       run:
-        shell: ${{ matrix.shell }}
+        shell: bash
     steps:
       - uses: actions/checkout@v4
 
