@@ -24,19 +24,23 @@ jobs:
             config: "--config tauri.build.conf.json"
             target: "--target aarch64-apple-darwin"
             rustflags: "-L/opt/homebrew/opt/libpq/lib"
+            shell: bash
           - platform: "macos-latest" # for Intel based macs.
             config: "--config tauri.build.conf.json"
             target: "--target x86_64-apple-darwin"
             rustflags: "-L/usr/local/opt/libpq/lib"
+            shell: arch -x86_64 /bin/bash
           - platform: "ubuntu-24.04"
             config: "--config tauri.build.conf.json"
+            shell: bash
           - platform: "windows-latest"
             config: "--config tauri.build.conf.json"
+            shell: bash
 
     runs-on: ${{ matrix.platform }}
     defaults:
       run:
-        shell: bash
+        shell: ${{ matrix.shell }}
     steps:
       - uses: actions/checkout@v4
 
@@ -86,12 +90,12 @@ jobs:
           choco install -y postgresql
 
       - name: install dependencies (macos m1 only)
-        if: matrix.target == '--target aarch64-apple-darwin' # This must match the platform value defined above.
+        if: matrix.target == '--target aarch64-apple-darwin' # This must match the value defined above.
         run: |
           brew link --force libpq
 
       - name: install dependencies (macos intel only)
-        if: matrix.target == '--target x86_64-apple-darwin' # This must match the platform value defined above.
+        if: matrix.target == '--target x86_64-apple-darwin' # This must match the value defined above.
         run: |
           arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           arch -x86_64 /usr/local/bin/brew install postgresql libpq && arch -x86_64 /usr/local/bin/brew link --overwrite libpq
