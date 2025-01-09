@@ -22,7 +22,7 @@ export function useUpdateLibraryMetadata() {
       extraMetadataJobId,
       steamMetadataJobId,
     }) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         predicate: (query) =>
           ["jobs"].some((key) => query.queryKey.includes(key)),
       });
@@ -50,7 +50,7 @@ export function useUpdateLibraryMetadata() {
         : undefined;
 
       function invalidate(key: string = "game-metadata") {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           predicate: ({ queryKey }) => queryKey.includes(key),
         });
       }

@@ -18,7 +18,7 @@ export function useUpdateEmulators() {
         description: "Emulator(s) have been updated successfully.",
       });
 
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["emulators"].some((v) => query.queryKey.includes(v)),
       });

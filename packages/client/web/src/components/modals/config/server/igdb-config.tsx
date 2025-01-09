@@ -72,7 +72,7 @@ export function IgdbConfig(props: {
 
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(handleSubmit)}
+          onSubmit={void form.handleSubmit(handleSubmit)}
           className="flex flex-col gap-2"
         >
           <FormField
@@ -105,7 +105,11 @@ export function IgdbConfig(props: {
 
           <DialogFooter>
             <Button
-              onClick={() => navigate({ search: { configModal: undefined } })}
+              onClick={() =>
+                void navigate({
+                  search: (prev) => ({ ...prev, configModal: undefined }),
+                })
+              }
               variant="secondary"
             >
               Close

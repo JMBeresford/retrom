@@ -27,7 +27,7 @@ export function ExitFullscreen(props: ComponentProps<typeof SheetTrigger>) {
   const [open, setOpen] = useState(false);
 
   const exit = useCallback(() => {
-    navigate({ to: "/home" });
+    return navigate({ to: "/home" });
   }, [navigate]);
 
   const handlers = useMemo(
@@ -77,7 +77,7 @@ export function ExitFullscreen(props: ComponentProps<typeof SheetTrigger>) {
                 <HotkeyButton hotkey="BACK">back</HotkeyButton>
               </SheetClose>
 
-              <HotkeyButton type="submit" hotkey="MENU" onClick={() => exit()}>
+              <HotkeyButton type="submit" hotkey="MENU" onClick={void exit}>
                 Exit
               </HotkeyButton>
             </SheetFooter>

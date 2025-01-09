@@ -49,7 +49,7 @@ export function ModalActionProvider(props: React.PropsWithChildren) {
       const { title, description } = props ?? {};
       setActiveModalProps(props);
 
-      navigate({
+      void navigate({
         search: (prev) => ({
           ...prev,
           [key]: { open: true, title, description },

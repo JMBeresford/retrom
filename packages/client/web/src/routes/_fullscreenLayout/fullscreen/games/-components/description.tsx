@@ -1,7 +1,7 @@
+import { useFocusable } from "@/components/fullscreen/focus-container";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
 
 export function Description(props: { description: string }) {
   const { description } = props;
@@ -36,17 +36,24 @@ export function Description(props: { description: string }) {
         },
         DOWN: {
           handler: (event) => {
-            const scrolledToBottom =
-              ref.current?.scrollTop + ref.current?.clientHeight ===
-              ref.current?.scrollHeight;
+            const { scrollTop, clientHeight, scrollHeight } = ref.current ?? {};
 
-            if (scrolledToBottom) {
-              return;
+            if (
+              scrollTop !== undefined &&
+              clientHeight !== undefined &&
+              scrollHeight !== undefined
+            ) {
+              const scrolledToBottom =
+                scrollTop + clientHeight === scrollHeight;
+
+              if (scrolledToBottom) {
+                return;
+              }
+
+              ref.current?.scrollBy({ top: 100, behavior: "smooth" });
+              event?.stopPropagation();
+              event?.preventDefault();
             }
-
-            ref.current?.scrollBy({ top: 100, behavior: "smooth" });
-            event?.stopPropagation();
-            event?.preventDefault();
           },
         },
       }}

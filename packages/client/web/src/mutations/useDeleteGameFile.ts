@@ -12,7 +12,7 @@ export function useDeleteGameFiles() {
       retromClient.gameClient.deleteGameFiles(request),
     onError: console.error,
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["game-file", "game-files"].some((k) => query.queryKey.includes(k)),
       });

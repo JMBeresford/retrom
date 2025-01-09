@@ -19,7 +19,7 @@ export const DownloadGameButton = forwardRef(
     const server = configStore((store) => store.server);
 
     const restHost = checkIsDesktop()
-      ? `${server.hostname}:${server.port}/rest`
+      ? `${server?.hostname}:${server?.port}/rest`
       : "/api/rest";
 
     return (

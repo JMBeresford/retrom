@@ -71,12 +71,14 @@ pub async fn main() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(retrom_plugin_standalone::init())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
-            app.webview_windows()
-                .values()
-                .next()
-                .expect("no window found")
-                .set_focus()
-                .expect("failed to set focus");
+            if !cfg!(dev) {
+                app.webview_windows()
+                    .values()
+                    .next()
+                    .expect("no window found")
+                    .set_focus()
+                    .expect("failed to set focus");
+            }
         }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())

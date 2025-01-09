@@ -24,7 +24,9 @@ export function ConfigModal() {
       open={!!configModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({ search: { matchPlatformsModal: { open } } });
+          void navigate({
+            search: (prev) => ({ ...prev, matchPlatformsModal: undefined }),
+          });
         }
       }}
     >
@@ -44,7 +46,9 @@ export function ConfigModal() {
         <Tabs
           value={configModal?.tab}
           onValueChange={(tab) => {
-            navigate({ search: { configModal: { open: true, tab } } });
+            void navigate({
+              search: (prev) => ({ ...prev, configModal: { open: true, tab } }),
+            });
           }}
           orientation="vertical"
         >

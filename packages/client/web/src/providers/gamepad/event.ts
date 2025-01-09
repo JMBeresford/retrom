@@ -8,7 +8,7 @@ declare global {
   }
 }
 
-export const GAMEPAD_BUTTON_EVENT = "gamepad-button" as const;
+export const GAMEPAD_BUTTON_EVENT = "gamepad-button";
 
 export type GamepadButtonEventDetail = {
   gamepad: Gamepad;

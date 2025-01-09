@@ -101,7 +101,9 @@ export function DefaultProfilesModal() {
       open={defaultProfilesModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({ search: { defaultProfilesModal: undefined } });
+          void navigate({
+            search: (prev) => ({ ...prev, defaultProfilesModal: undefined }),
+          });
         }
       }}
     >
@@ -145,7 +147,7 @@ function DefaultEmulatorProfiles(props: {
   defaultProfiles: DefaultEmulatorProfile[];
   emulatorProfiles: EmulatorProfile[];
 }) {
-  const clientId = useConfig((s) => s.config.clientInfo.id);
+  const clientId = useConfig((s) => s.config?.clientInfo?.id);
   const { platforms, defaultProfiles, emulatorProfiles, emulators } = props;
   const { setOpen } = useDialogOpen();
   const { mutate: updateDefaultEmulatorProfiles } =
@@ -396,7 +398,7 @@ function DefaultEmulatorProfiles(props: {
         <DialogClose asChild>
           <Button variant="secondary">Close</Button>
         </DialogClose>
-        <Button onClick={form.handleSubmit(handleSubmit)}>Save</Button>
+        <Button onClick={void form.handleSubmit(handleSubmit)}>Save</Button>
       </DialogFooter>
     </DialogContent>
   );

@@ -12,7 +12,7 @@ export function useCreateClient() {
       retromClient.clientsClient.createClient({ client: newClient }),
     onError: console.error,
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["client-info", "client", "clients"].some((k) =>
             query.queryKey.includes(k),

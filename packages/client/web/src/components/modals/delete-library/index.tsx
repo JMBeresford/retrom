@@ -31,7 +31,7 @@ export function DeleteLibraryModal() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         predicate: ({ queryKey }) =>
           ["library", "games", "platforms", "metadata"].some((key) =>
             queryKey.includes(key),
@@ -43,7 +43,10 @@ export function DeleteLibraryModal() {
         description: "Library has been deleted successfully.",
       });
 
-      navigate({ to: "/" });
+      return navigate({
+        to: "/",
+        search: (prev) => ({ ...prev, deleteLibraryModal: undefined }),
+      });
     },
     mutationFn: async () => await retromClient.libraryClient.deleteLibrary({}),
   });
@@ -53,7 +56,9 @@ export function DeleteLibraryModal() {
       open={deleteLibraryModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({ search: { deleteLibraryModal: undefined } });
+          void navigate({
+            search: (prev) => ({ ...prev, deleteLibraryModal: undefined }),
+          });
         }
       }}
     >
@@ -73,10 +78,7 @@ export function DeleteLibraryModal() {
           <Button
             className="relative"
             variant="destructive"
-            onClick={() => {
-              mutate();
-              navigate({ search: { deleteLibraryModal: undefined } });
-            }}
+            onClick={() => mutate()}
           >
             <LoaderCircleIcon
               className={cn("animate-spin absolute", !isPending && "opacity-0")}

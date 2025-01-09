@@ -46,7 +46,7 @@ export function useInstallationStateQuery() {
     const unlisteners: UnlistenFn[] = [];
 
     const invalidate = () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: ["installation-state"],
       });
     };

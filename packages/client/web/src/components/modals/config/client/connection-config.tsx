@@ -34,11 +34,11 @@ export function ConnectionConfig() {
   const pending = enableStatus === "pending" || disableStatus === "pending";
 
   const toggleStandaloneMode = useCallback(() => {
-    if (serverConfig.standalone) {
+    if (serverConfig?.standalone) {
       disable(undefined);
     } else {
       enable(undefined);
-      queryClient.resetQueries();
+      void queryClient.resetQueries();
     }
   }, [disable, enable, serverConfig, queryClient]);
 
@@ -58,7 +58,7 @@ export function ConnectionConfig() {
           <div className="flex items-top gap-2">
             <Checkbox
               id="toggle-standalone-mode"
-              checked={serverConfig.standalone}
+              checked={serverConfig?.standalone}
               onCheckedChange={toggleStandaloneMode}
             />
             <div className={cn("grid gap-1 leading-none")}>
@@ -73,7 +73,7 @@ export function ConnectionConfig() {
           <Separator />
 
           <div className="max-w-[65ch]">
-            {serverConfig.standalone ? (
+            {serverConfig?.standalone ? (
               <p>
                 Standalone mode is activated! Other Retrom clients on this
                 network can also access this server:
@@ -121,8 +121,8 @@ function ServerConnectionForm() {
   const form = useForm<z.infer<typeof connectionSchema>>({
     resolver: zodResolver(connectionSchema),
     defaultValues: {
-      hostname: serverConfig.hostname,
-      port: serverConfig.port,
+      hostname: serverConfig?.hostname ?? "http://localhost",
+      port: serverConfig?.port,
     },
     mode: "all",
   });
@@ -151,14 +151,14 @@ function ServerConnectionForm() {
   );
 
   const isDirty = form.formState.isDirty;
-  const canEdit = !serverConfig.standalone && status !== "pending";
+  const canEdit = !serverConfig?.standalone && status !== "pending";
   const canSubmit =
-    !serverConfig.standalone &&
+    !serverConfig?.standalone &&
     (status === "success" || (status !== "pending" && isDirty));
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)}>
+      <form onSubmit={void form.handleSubmit(handleSubmit)}>
         <div className="grid gap-2 grid-cols-[2fr,1fr]">
           <FormField
             name="hostname"

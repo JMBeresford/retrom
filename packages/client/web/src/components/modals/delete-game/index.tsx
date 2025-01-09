@@ -52,8 +52,8 @@ export function DeleteGameModal() {
       open={deleteGameModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({
-            search: { deleteGameModal: undefined },
+          void navigate({
+            search: (prev) => ({ ...prev, deleteGameModal: undefined }),
           });
         }
       }}
@@ -122,7 +122,7 @@ export function DeleteGameModal() {
             <Button
               className="relative"
               variant="destructive"
-              onClick={handleDelete}
+              onClick={void handleDelete}
             >
               <LoaderCircleIcon
                 className={cn(

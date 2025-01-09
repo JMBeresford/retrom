@@ -9,3 +9,4 @@ config.dev.*
 **/rustc-ice*
 
 *.bak
+*.tsbuildinfo

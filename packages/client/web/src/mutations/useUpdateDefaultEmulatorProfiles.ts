@@ -26,7 +26,7 @@ export function useUpdateDefaultEmulatorProfiles() {
         description:
           "Default emulator profile(s) have been updated successfully.",
       });
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["default-emulator-profiles", "default-emulator-profile"].some((v) =>
             query.queryKey.includes(v),

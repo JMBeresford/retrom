@@ -48,7 +48,9 @@ export function CheckForUpdateModal() {
       open={checkForUpdateModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({ search: { checkForUpdateModal: undefined } });
+          void navigate({
+            search: (prev) => ({ ...prev, checkForUpdateModal: undefined }),
+          });
         }
       }}
     >
@@ -68,14 +70,9 @@ export function CheckForUpdateModal() {
             </div>
 
             <DialogFooter>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  navigate({ search: { checkForUpdateModal: undefined } })
-                }
-              >
-                Close
-              </Button>
+              <DialogClose asChild>
+                <Button variant="secondary">Close</Button>
+              </DialogClose>
 
               <Button disabled>Update</Button>
             </DialogFooter>
@@ -100,12 +97,18 @@ function InnerContent(props: { clientVersion: Version; update?: Update }) {
   const breakingChange = isBreakingChange(newVersion, clientVersion);
   const [progress, setProgress] = useState<Progress | undefined>(undefined);
 
-  const handleUpdate = useCallback(async () => {
+  const handleUpdate = useCallback(() => {
     if (!update?.available) {
       return;
     }
 
-    update.downloadAndInstall((event) => {
+    setProgress({
+      downloaded: 0,
+      total: undefined,
+      done: false,
+    });
+
+    void update.downloadAndInstall((event) => {
       switch (event.event) {
         case "Progress": {
           setProgress((prev) => {
@@ -135,12 +138,6 @@ function InnerContent(props: { clientVersion: Version; update?: Update }) {
 
           break;
       }
-    });
-
-    setProgress({
-      downloaded: 0,
-      total: undefined,
-      done: false,
     });
   }, [update, setProgress]);
 
@@ -195,7 +192,7 @@ function InnerContent(props: { clientVersion: Version; update?: Update }) {
         ) : progress.done ? (
           <>
             <Button variant="secondary">Restart Later</Button>
-            <Button onClick={relaunch}>Restart</Button>
+            <Button onClick={void relaunch}>Restart</Button>
           </>
         ) : (
           <>

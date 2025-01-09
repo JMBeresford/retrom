@@ -73,8 +73,7 @@ export const PlayGameButton = forwardRef(
       }
 
       if (shouldAddEmulator) {
-        navigate({ search: { manageEmulatorsModal: { open: true } } });
-        return;
+        return navigate({ search: { manageEmulatorsModal: { open: true } } });
       }
 
       toast({
@@ -146,7 +145,7 @@ export const PlayGameButton = forwardRef(
         ref={forwardedRef}
         {...props}
         disabled={disabled}
-        onClick={onClick}
+        onClick={() => void onClick()}
       >
         <Content />
       </Button>

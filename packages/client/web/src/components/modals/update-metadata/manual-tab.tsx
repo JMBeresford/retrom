@@ -119,7 +119,9 @@ export function ManualTab() {
         }
       }
 
-      navigate({ search: { updateMetadataModal: undefined } });
+      return navigate({
+        search: (prev) => ({ ...prev, updateMetadataModal: undefined }),
+      });
     },
     [
       game.id,
@@ -137,7 +139,7 @@ export function ManualTab() {
     <>
       <div className="space-y-4">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleUpdate)}>
+          <form onSubmit={void form.handleSubmit(handleUpdate)}>
             <div className="my-4 flex flex-col gap-4 pb-8">
               {Object.entries(fields).map(([key, FormFieldRenderer]) => (
                 <FormFieldRenderer form={form} key={key} />

@@ -43,7 +43,7 @@ export function DeleteGameAction() {
       blacklistEntries: blacklistEntries === true,
     });
 
-    navigate({
+    return navigate({
       to: "/fullscreen",
     });
   }, [game, fromDisk, deleteGame, blacklistEntries, navigate]);
@@ -125,7 +125,7 @@ export function DeleteGameAction() {
                 <HotkeyButton hotkey="BACK">Cancel</HotkeyButton>
               </SheetClose>
 
-              <HotkeyButton hotkey="MENU" onClick={handleDelete}>
+              <HotkeyButton hotkey="MENU" onClick={() => void handleDelete()}>
                 Delete
               </HotkeyButton>
             </SheetFooter>

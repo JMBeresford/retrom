@@ -21,13 +21,13 @@ export function useDefaultEmulatorProfiles<
 ) {
   const { request = {}, selectFn, enabled = true } = opts;
 
-  const clientInfo = useConfig((s) => s.config.clientInfo);
+  const clientInfo = useConfig((s) => s.config?.clientInfo);
   const queryClient = useQueryClient();
   const retromClient = useRetromClient();
 
   const metadata = useMemo(() => {
-    const clientId = clientInfo.id.toString();
-    const meta = new Metadata({ "x-client-id": clientId });
+    const clientId = clientInfo?.id.toString();
+    const meta = new Metadata({ "x-client-id": clientId ?? [] });
 
     return meta;
   }, [clientInfo]);

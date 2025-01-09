@@ -16,15 +16,11 @@ try {
 }
 
 let localServicePort = "5101";
-let localServiceHostname = "http://localhost";
+const localServiceHostname = "http://localhost";
 
 const config = readConfigFile();
 if (config?.connection?.port) {
   localServicePort = config.connection.port.toString();
-}
-
-if (config?.connection?.hostname) {
-  localServiceHostname = config.connection.hostname;
 }
 
 const localServiceHost =

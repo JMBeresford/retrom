@@ -24,8 +24,8 @@ import { Label } from "@/components/ui/label";
 export function ServerHostStep() {
   const { previousStep } = useSetupModal();
   const initialState = useConfigStore().getState();
-  const [hostname, setHostname] = useState(initialState.server.hostname);
-  const [port, setPort] = useState(initialState.server.port?.toString() || "");
+  const [hostname, setHostname] = useState(initialState.server?.hostname ?? "");
+  const [port, setPort] = useState(initialState.server?.port?.toString() ?? "");
 
   return (
     <>
@@ -159,7 +159,7 @@ function TestButton(props: { hostname: string; port?: string }) {
       <Button
         className="flex gap-2 items-center"
         variant="destructive"
-        onClick={testConnection}
+        onClick={void testConnection}
       >
         <XCircleIcon className="w-[1rem] h-[1rem]" /> Try Again
       </Button>
@@ -167,7 +167,7 @@ function TestButton(props: { hostname: string; port?: string }) {
   }
 
   return (
-    <Button className={cn("ml-2")} onClick={testConnection}>
+    <Button className={cn("ml-2")} onClick={void testConnection}>
       Next
     </Button>
   );

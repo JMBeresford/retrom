@@ -22,12 +22,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { FocusableElement, FocusContainer } from "../../focus-container";
-import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import {
-  FocusContext,
+  FocusableElement,
+  FocusContainer,
   useFocusable,
-} from "@noriginmedia/norigin-spatial-navigation";
+} from "../../focus-container";
+import { HotkeyLayer } from "@/providers/hotkeys/layers";
+import { FocusContext } from "@noriginmedia/norigin-spatial-navigation";
 
 type TriggerProps = ButtonProps & { label?: string };
 
@@ -36,14 +37,7 @@ const ConfigSelect = forwardRef<
   SelectProps & { triggerProps: TriggerProps }
 >(
   (
-    {
-      children,
-      triggerProps,
-      open: _open,
-      onOpenChange: _onOpenChange,
-      defaultOpen,
-      ...props
-    },
+    { children, triggerProps, open: _open, defaultOpen, ...props },
     forwardedRef,
   ) => {
     const { label, className, ...rest } = triggerProps;
@@ -67,7 +61,7 @@ const ConfigSelect = forwardRef<
       },
     });
 
-    useImperativeHandle(forwardedRef, () => triggerFocus.ref.current);
+    useImperativeHandle(forwardedRef, () => triggerFocus.ref.current!);
 
     const handleOpen = useCallback(() => {
       setOpen(true);
@@ -82,7 +76,7 @@ const ConfigSelect = forwardRef<
     const onOpenChange = useCallback(
       (val: boolean) => {
         setOpen(val);
-        _onOpenChange?.(val);
+        props.onOpenChange?.(val);
 
         if (val) {
           contentFocus.focusSelf();
@@ -90,7 +84,7 @@ const ConfigSelect = forwardRef<
           triggerFocus.focusSelf();
         }
       },
-      [setOpen, _onOpenChange, contentFocus, triggerFocus],
+      [setOpen, props, contentFocus, triggerFocus],
     );
 
     return (
@@ -280,7 +274,7 @@ const ConfigSelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
       },
     });
 
-    useImperativeHandle(forwardedRef, () => ref.current);
+    useImperativeHandle(forwardedRef, () => ref.current!);
     const { children, className, ...rest } = props;
 
     return (
@@ -289,7 +283,7 @@ const ConfigSelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
         handlers={{
           ACCEPT: {
             handler: () => {
-              ref.current.dispatchEvent(
+              ref.current?.dispatchEvent(
                 new KeyboardEvent("keydown", {
                   key: "Enter",
                   bubbles: true,

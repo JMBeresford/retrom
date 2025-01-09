@@ -116,7 +116,7 @@ export function MatchPlatformsModal() {
         });
       },
       onSuccess: () => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           predicate: (query) =>
             ["platforms", "platform-metadata"].some((key) =>
               query.queryKey.includes(key),
@@ -163,6 +163,12 @@ export function MatchPlatformsModal() {
 
     return true;
   }, [selections, defaultSelections]);
+
+  const close = useCallback(() => {
+    return navigate({
+      search: (prev) => ({ ...prev, matchPlatformsModal: undefined }),
+    });
+  }, [navigate]);
 
   const handleUpdate = useCallback(async () => {
     const req = UpdatePlatformMetadataRequest.create();
@@ -218,7 +224,7 @@ export function MatchPlatformsModal() {
         });
       }
 
-      navigate({ search: { matchPlatformsModal: { open: false } } });
+      return close();
     }
   }, [
     allIgdbPlatforms,
@@ -229,7 +235,7 @@ export function MatchPlatformsModal() {
     toast,
     platformData,
     updatePlatforms,
-    navigate,
+    close,
   ]);
 
   const findIgdbSelection = useCallback(
@@ -243,7 +249,7 @@ export function MatchPlatformsModal() {
       open={matchPlatformsModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({ search: { matchPlatformsModal: { open } } });
+          void close();
         }
       }}
     >
@@ -386,7 +392,7 @@ export function MatchPlatformsModal() {
               <Button
                 disabled={loading || allUnchanged}
                 className="relative"
-                onClick={() => handleUpdate()}
+                onClick={() => void handleUpdate()}
               >
                 <LoaderCircleIcon
                   className={cn(

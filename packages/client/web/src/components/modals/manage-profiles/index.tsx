@@ -37,8 +37,11 @@ export function ManageEmulatorProfilesModal() {
       open={manageEmulatorProfilesModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({
-            search: { manageEmulatorProfilesModal: undefined },
+          void navigate({
+            search: (prev) => ({
+              ...prev,
+              manageEmulatorProfilesModal: undefined,
+            }),
           });
         }
       }}

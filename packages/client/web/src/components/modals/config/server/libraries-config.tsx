@@ -113,7 +113,7 @@ export function LibrariesConfig(props: {
   return (
     <TabsContent value="contentDirectories">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <form onSubmit={void form.handleSubmit(handleSubmit)}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -224,7 +224,7 @@ export function LibrariesConfig(props: {
         </DialogClose>
 
         <Button
-          onClick={() => form.handleSubmit(handleSubmit)()}
+          onClick={void form.handleSubmit(handleSubmit)}
           disabled={!canSubmit}
         >
           Save
@@ -266,7 +266,7 @@ function CreateLibraryRow(props: {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)}>
+      <form onSubmit={void form.handleSubmit(handleSubmit)}>
         <Table>
           <TableBody>
             <TableRow className="*:py-1">
@@ -364,12 +364,13 @@ function StorageTypeSelect<T extends FieldValues>(props: {
   fieldState: ControllerFieldState;
 }) {
   const { field, fieldState } = props;
+  const value = field.value as StorageType;
 
   return (
     <FormItem>
       <Select
         disabled={field.disabled}
-        value={field.value.toString()}
+        value={value.toString()}
         onValueChange={(value) => field.onChange(parseInt(value))}
       >
         <FormControl>

@@ -12,7 +12,7 @@ export function useDeleteEmulators(opts: { key?: string | number } = {}) {
       retromClient.emulatorClient.deleteEmulators(request),
     mutationKey: ["delete-emulator", key],
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["emulators", "emulator"].some((v) => query.queryKey.includes(v)),
       });

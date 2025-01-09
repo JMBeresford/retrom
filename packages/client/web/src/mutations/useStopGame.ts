@@ -15,7 +15,7 @@ export function useStopGame(game?: Game) {
     },
     onError: console.error,
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         queryKey: ["play-status", game?.id],
       });
     },

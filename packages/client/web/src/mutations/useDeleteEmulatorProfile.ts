@@ -14,7 +14,7 @@ export function useDeleteEmulatorProfiles(
       retromClient.emulatorClient.deleteEmulatorProfiles(request),
     mutationKey: ["delete-emulator-profiles", key],
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["emulator-profiles", "emulator-profile"].some((v) =>
             query.queryKey.includes(v),

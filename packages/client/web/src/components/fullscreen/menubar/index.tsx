@@ -46,7 +46,7 @@ function SystemTime(props: JSX.IntrinsicElements["p"]) {
 }
 
 function BatteryInfo(props: JSX.IntrinsicElements["div"]) {
-  const sysInfo = useSystemInfo();
+  const { data: sysInfo } = useSystemInfo();
 
   if (!sysInfo?.batteries) {
     return null;

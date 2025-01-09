@@ -14,7 +14,7 @@ export function useCreateLocalEmulatorConfigs() {
       console.error(error);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["local-emulator-configs"].some((v) => query.queryKey.includes(v)),
       });

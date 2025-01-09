@@ -11,7 +11,7 @@ export function useDeleteGames() {
     mutationFn: async (request: DeleteGamesRequest) =>
       retromClient.gameClient.deleteGames(request),
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["game", "games", "game-metadata", "game-files"].some((k) =>
             query.queryKey.includes(k),
