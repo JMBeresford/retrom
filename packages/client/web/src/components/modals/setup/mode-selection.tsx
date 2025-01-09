@@ -44,9 +44,10 @@ export function ModeSelection() {
         )}
       >
         <Button
-          onClick={async () => {
-            await enableStandaloneMode(undefined);
-            setStep("ClientName");
+          onClick={() => {
+            enableStandaloneMode(undefined)
+              .then(() => setStep("ClientName"))
+              .catch(console.error);
           }}
           variant="outline"
           disabled={pending}
@@ -84,9 +85,10 @@ export function ModeSelection() {
         <Button
           variant="outline"
           disabled={pending}
-          onClick={async () => {
-            await disableStandaloneMode(undefined);
-            setStep("ServerHost");
+          onClick={() => {
+            disableStandaloneMode(undefined)
+              .then(() => setStep("ServerHost"))
+              .catch(console.error);
           }}
         >
           <Cloud className="text-accent-text" />

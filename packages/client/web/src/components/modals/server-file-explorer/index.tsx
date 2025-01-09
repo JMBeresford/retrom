@@ -83,7 +83,7 @@ export function ServerFileExplorerModal() {
         action(path);
       }
 
-      navigate({
+      return navigate({
         search: (prev) => ({ ...prev, serverFileExplorerModal: undefined }),
       });
     },
@@ -95,7 +95,7 @@ export function ServerFileExplorerModal() {
       open={serverFileExplorerModal?.open}
       onOpenChange={(value) => {
         if (!value) {
-          close();
+          void close();
         }
       }}
     >
@@ -210,7 +210,7 @@ export function ServerFileExplorerModal() {
           <Button
             variant="secondary"
             onClick={() => {
-              close();
+              void close();
             }}
           >
             Close
@@ -218,7 +218,7 @@ export function ServerFileExplorerModal() {
 
           <Button
             disabled={pending || error}
-            onClick={() => close(selectedPath)}
+            onClick={() => void close(selectedPath)}
           >
             Confirm
           </Button>

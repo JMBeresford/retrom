@@ -30,7 +30,7 @@ export function useInstallGame(game: Game, files: GameFile[]) {
       );
     }
 
-    listen();
+    listen().catch(console.error);
 
     return () => {
       if (unlisten) {
@@ -46,7 +46,7 @@ export function useInstallGame(game: Game, files: GameFile[]) {
         payload: { game, files } satisfies InstallGamePayload,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         queryKey: ["installation-state"],
       });
     },

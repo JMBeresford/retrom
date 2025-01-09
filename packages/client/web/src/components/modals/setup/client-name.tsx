@@ -38,14 +38,22 @@ export function ClientName() {
     undefined,
   );
 
-  const handleCreateClient = useCallback(async () => {
+  const handleCreateClient = useCallback(() => {
     const clientExists = clientInfo.data?.clients.find(
       (client) => client.name === newClient,
     );
 
     if (newClient && nextStep && !clientExists) {
       configStore.setState((store) => {
-        store.config.clientInfo.name = newClient;
+        store.config = {
+          ...store.config,
+          clientInfo: {
+            name: newClient,
+            id: -1,
+            createdAt: Timestamp.create(),
+            updatedAt: Timestamp.create(),
+          },
+        };
         return store;
       });
 
@@ -181,7 +189,7 @@ export function ClientName() {
                   const client = clientInfo.data?.clients.find(
                     (client) => client.name === selectedClient,
                   );
-                  if (selectedClient && client) {
+                  if (selectedClient && client && prev.config) {
                     prev.config.clientInfo = {
                       name: client.name,
                       id: client.id,

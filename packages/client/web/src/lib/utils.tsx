@@ -86,9 +86,11 @@ export function debounce<Fn extends (...args: any[]) => any>(
   fn: Fn,
   ms: number = 300,
 ): (...args: Parameters<Fn>) => void {
-  let timeout: NodeJS.Timeout | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- it's fine
+  let timeout: any;
 
   return (...args: Parameters<Fn>) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- it's fine
     clearTimeout(timeout);
     timeout = setTimeout(() => {
       fn(...args);

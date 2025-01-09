@@ -11,24 +11,30 @@ export default tseslint.config(
     extends: [
       js.configs.recommended,
       ...tanstackQuery.configs["flat/recommended"],
-      ...tseslint.configs.recommended
+      ...tseslint.configs.recommendedTypeChecked,
     ],
-    files: ["**/*.{ts,tsx}"],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser
+      globals: globals.browser,
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+        projectService: true,
+      },
     },
+    files: ["**/*.{ts,tsx}"],
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
-      "@tanstack/query": tanstackQuery
+      "@tanstack/query": tanstackQuery,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
       "@typescript-eslint/no-namespace": "off",
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true }
+      "@typescript-eslint/no-unused-expressions": [
+        "error",
+        {
+          allowShortCircuit: true,
+          allowTernary: true,
+        },
       ],
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -36,10 +42,10 @@ export default tseslint.config(
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
           caughtErrorsIgnorePattern: "^_",
-          destructuredArrayIgnorePattern: "^_"
-        }
+          destructuredArrayIgnorePattern: "^_",
+        },
       ],
-      "react-refresh/only-export-components": "off"
-    }
-  }
+      "react-refresh/only-export-components": "off",
+    },
+  },
 );

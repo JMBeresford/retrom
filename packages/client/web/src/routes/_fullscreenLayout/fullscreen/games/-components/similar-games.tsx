@@ -87,7 +87,7 @@ function SimilarGame(props: { metadata: GameMetadata }) {
   const navigate = useNavigate();
 
   const goToGame = () => {
-    navigate({
+    void navigate({
       to: "/fullscreen/games/$gameId",
       resetScroll: false,
       params: { gameId: metadata.gameId.toString() },

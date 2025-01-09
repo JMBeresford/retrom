@@ -13,7 +13,7 @@ export function useDisableStandaloneMode() {
 
       configStore.setState((store) => {
         store.server = {
-          ...store.server,
+          hostname: "http://localhost",
           standalone: false,
         };
 
@@ -21,7 +21,7 @@ export function useDisableStandaloneMode() {
       });
     },
     onSuccess: () => {
-      queryClient.resetQueries();
+      return queryClient.resetQueries();
     },
     onError: console.error,
   });

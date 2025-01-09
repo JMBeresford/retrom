@@ -73,7 +73,7 @@ export const InstallGameButton = forwardRef(
         {...rest}
         disabled={disabled || rest.disabled}
         className={cn(className, "relative")}
-        onClick={async () => void install(undefined)}
+        onClick={() => install(undefined)}
       >
         <Content />
       </Button>

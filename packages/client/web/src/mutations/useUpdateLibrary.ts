@@ -17,8 +17,8 @@ export function useUpdateLibrary() {
         description: err.message,
       });
     },
-    onSuccess: async ({ jobIds }) => {
-      queryClient.invalidateQueries({
+    onSuccess: ({ jobIds }) => {
+      void queryClient.invalidateQueries({
         predicate: (query) =>
           ["jobs"].some((key) => query.queryKey.includes(key)),
       });
@@ -34,7 +34,7 @@ export function useUpdateLibrary() {
       );
 
       function invalidate() {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           predicate: (query) =>
             [
               "library",

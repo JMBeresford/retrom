@@ -2,9 +2,9 @@ import { FormControl, FormLabel, useFormField } from "@/components/ui/form";
 import { Input, InputProps } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { forwardRef, useImperativeHandle, useRef } from "react";
-import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
 import { ControllerRenderProps } from "react-hook-form";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
+import { useFocusable } from "../../focus-container";
 
 type Props = InputProps & { label?: string };
 
@@ -32,7 +32,7 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
       | ControllerRenderProps["onChange"]
       | undefined;
 
-    const node = ref.current as HTMLInputElement | null;
+    const node = ref.current;
     useImperativeHandle(forwardedRef, () => ref.current!);
 
     return (

@@ -19,7 +19,7 @@ export function UpdateLibraryModal() {
   const navigate = useNavigate();
   const { updateLibraryModal } = RootRoute.useSearch();
 
-  const { mutate: updateLibrary, isPending } = useUpdateLibrary();
+  const { mutateAsync: updateLibrary, isPending } = useUpdateLibrary();
 
   const close = useCallback(
     () =>
@@ -34,7 +34,7 @@ export function UpdateLibraryModal() {
       open={updateLibraryModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          close();
+          void close();
         }
       }}
     >
@@ -55,8 +55,9 @@ export function UpdateLibraryModal() {
           <Button
             className="relative"
             onClick={() => {
-              updateLibrary();
-              close();
+              updateLibrary()
+                .then(() => void close())
+                .catch(console.error);
             }}
           >
             <LoaderCircleIcon

@@ -12,7 +12,7 @@ export function useUpdatePlatforms() {
       retromClient.platformClient.updatePlatforms(request),
     onError: console.error,
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["platform", "platforms"].some((k) => query.queryKey.includes(k)),
       });

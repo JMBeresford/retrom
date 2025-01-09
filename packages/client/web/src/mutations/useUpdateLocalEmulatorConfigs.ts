@@ -11,7 +11,7 @@ export function useUpdateLocalEmulatorConfig() {
       retromClient.emulatorClient.updateLocalEmulatorConfigs(request),
     mutationKey: ["update-local-emulator-configs"],
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["local-emulator-configs"].some((v) => query.queryKey.includes(v)),
       });

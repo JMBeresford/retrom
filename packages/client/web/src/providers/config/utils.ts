@@ -1,21 +1,22 @@
 import { RetromClientConfig } from "@/generated/retrom/client/client-config";
 import { z } from "zod";
 
-const { RETROM_PORT, RETROM_HOST, RETROM_HOSTNAME } = import.meta.env;
+const {
+  RETROM_PORT,
+  RETROM_HOST,
+  RETROM_HOSTNAME,
+  VITE_RETROM_HOSTNAME,
+  VITE_RETROM_HOST,
+  VITE_RETROM_PORT,
+} = import.meta.env;
 
 export function defaultAPIHostname() {
-  return (
-    RETROM_HOSTNAME ??
-    import.meta.env.VITE_RETROM_HOSTNAME ??
-    "http://localhost"
-  );
+  return RETROM_HOSTNAME ?? VITE_RETROM_HOSTNAME ?? "http://localhost";
 }
 
 export function defaultAPIPort() {
   try {
-    return Number.parseInt(
-      RETROM_PORT ?? import.meta.env.VITE_RETROM_PORT ?? "5101",
-    );
+    return Number.parseInt(RETROM_PORT ?? VITE_RETROM_PORT ?? "5101");
   } catch {
     console.warn("Invalid port number found, using default port 5101");
     return 5101;
@@ -25,7 +26,7 @@ export function defaultAPIPort() {
 export function defaultAPIHost() {
   return (
     RETROM_HOST ??
-    import.meta.env.VITE_RETROM_HOST ??
+    VITE_RETROM_HOST ??
     `${defaultAPIHostname()}:${defaultAPIPort()}`
   );
 }

@@ -114,7 +114,7 @@ function RootComponent() {
 function HandleLayoutRedirect() {
   const path = useLocation().pathname;
   const fullscreenByDefault =
-    useConfigStore().getState().config.interface.fullscreenByDefault;
+    useConfigStore().getState().config?.interface?.fullscreenByDefault;
 
   if (path !== "/") {
     return <></>;

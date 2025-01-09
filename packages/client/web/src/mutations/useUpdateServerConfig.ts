@@ -10,7 +10,7 @@ export function useUpdateServerConfig() {
     mutationFn: (config: ServerConfig) =>
       retromClient.serverClient.updateServerConfig({ config }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) => query.queryKey.includes("server-config"),
       });
     },

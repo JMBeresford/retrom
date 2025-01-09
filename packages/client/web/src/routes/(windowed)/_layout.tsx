@@ -46,14 +46,14 @@ export const Route = createFileRoute("/(windowed)/_layout")({
 });
 
 function LayoutComponent() {
-  const setupComplete =
-    useConfig((store) => store.flowCompletions.setupComplete) ||
-    !checkIsDesktop();
+  const setupComplete = useConfig(
+    (store) => store.flowCompletions?.setupComplete,
+  );
 
   useEffect(() => {
-    async function onResize() {
+    function onResize() {
       if (checkIsDesktop()) {
-        saveWindowState(StateFlags.ALL);
+        void saveWindowState(StateFlags.ALL);
       }
     }
 

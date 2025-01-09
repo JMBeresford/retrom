@@ -12,7 +12,7 @@ export function useUpdateGames() {
       retromClient.gameClient.updateGames(request),
     onError: console.error,
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["game", "games"].some((k) => query.queryKey.includes(k)),
       });

@@ -61,15 +61,15 @@ export function Media() {
           ) : null}
 
           <TabsContent value="images">
-            <ImageCarousel images={gameMetadata!.artworkUrls} />
+            <ImageCarousel images={gameMetadata.artworkUrls} />
           </TabsContent>
 
           <TabsContent value="screenshots">
-            <ImageCarousel images={gameMetadata!.screenshotUrls} />
+            <ImageCarousel images={gameMetadata.screenshotUrls} />
           </TabsContent>
 
           <TabsContent value="videos">
-            <VideoCarousel videos={gameMetadata!.videoUrls} />
+            <VideoCarousel videos={gameMetadata.videoUrls} />
           </TabsContent>
 
           <TabsContent value="none">

@@ -79,7 +79,11 @@ function LocalConfigRow(props: {
   config?: LocalEmulatorConfig;
 }) {
   const { emulator, config } = props;
-  const clientId = useConfigStore().getState().config.clientInfo.id;
+  const clientId = useConfigStore().getState().config?.clientInfo?.id;
+
+  if (!clientId) {
+    throw new Error("Client ID not found");
+  }
 
   const form = useForm<ConfigSchema>({
     defaultValues: {
@@ -121,7 +125,7 @@ function LocalConfigRow(props: {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleSubmit)}
+        onSubmit={void form.handleSubmit(handleSubmit)}
         key={emulator.id}
         className={cn(
           "grid grid-cols-subgrid col-span-full",
@@ -140,23 +144,23 @@ function LocalConfigRow(props: {
                   size="icon"
                   className="p-2 h-min w-min"
                   variant="secondary"
-                  onClick={async (e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
 
-                    try {
-                      const result = await open({
-                        title: "Select Emulator Executable",
-                        multiple: false,
-                        directory: false,
+                    open({
+                      title: "Select Emulator Executable",
+                      multiple: false,
+                      directory: false,
+                    })
+                      .then((result) => {
+                        if (result) {
+                          field.onChange(result);
+                        }
+                      })
+                      .catch((e) => {
+                        console.error(e);
                       });
-
-                      if (result) {
-                        field.onChange(result);
-                      }
-                    } catch (e) {
-                      console.error(e);
-                    }
                   }}
                 >
                   <FolderOpenIcon className="w-[1rem] h-[1rem]" />

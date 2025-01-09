@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import {
   FocusContext,
-  useFocusable,
+  useFocusable as useFocusableImpl,
   UseFocusableConfig,
 } from "@noriginmedia/norigin-spatial-navigation";
 import {
@@ -13,6 +13,7 @@ import {
   MouseEvent,
   PropsWithoutRef,
   ReactElement,
+  RefObject,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -42,6 +43,15 @@ export function FocusContainer(
   );
 }
 
+export function useFocusable<T extends HTMLElement = HTMLElement>(
+  ...opts: Parameters<typeof useFocusableImpl<T>>
+) {
+  const focusable = useFocusableImpl(...opts);
+  const ref = focusable.ref as RefObject<T>;
+
+  return { ...focusable, ref };
+}
+
 function FocusableElementImpl<T extends HTMLElement>(
   props: PropsWithoutRef<
     HTMLProps<T> & {
@@ -66,8 +76,9 @@ function FocusableElementImpl<T extends HTMLElement>(
   });
 
   const child = Children.only(children);
+  const childProps = child.props as typeof props;
 
-  useImperativeHandle(forwardedRef, () => ref.current);
+  useImperativeHandle(forwardedRef, () => ref.current!);
 
   useEffect(() => {
     if (initialFocus) {
@@ -78,15 +89,15 @@ function FocusableElementImpl<T extends HTMLElement>(
   const onClickHandler = useCallback(
     (e: MouseEvent<T>) => {
       focusSelf();
-      child.props.onClick?.(e);
+      childProps.onClick?.(e);
       onClick?.(e);
     },
-    [onClick, focusSelf, child.props],
+    [onClick, focusSelf, childProps],
   );
 
   return cloneElement(child, {
     ...rest,
-    ...children.props,
+    ...childProps,
     ref,
     onClick: onClickHandler,
   });

@@ -24,14 +24,20 @@ export function InterfaceConfig() {
   const form = useForm<ConfigSchema>({
     resolver: zodResolver(configSchema),
     defaultValues: {
-      fullscreenByDefault: config.interface.fullscreenByDefault,
+      fullscreenByDefault: config?.interface?.fullscreenByDefault,
     },
   });
 
   const handleSubmit = useCallback(
     (values: ConfigSchema) => {
       configStore.setState((s) => {
-        s.config.interface.fullscreenByDefault = values.fullscreenByDefault;
+        s.config = {
+          ...s.config,
+          interface: {
+            ...s.config?.interface,
+            fullscreenByDefault: values.fullscreenByDefault,
+          },
+        };
 
         return s;
       });
@@ -45,7 +51,7 @@ export function InterfaceConfig() {
   return (
     <TabsContent value="interface" className="mt-4">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <form onSubmit={void form.handleSubmit(handleSubmit)}>
           <FormField
             control={form.control}
             name="fullscreenByDefault"
@@ -76,7 +82,11 @@ export function InterfaceConfig() {
 
           <DialogFooter>
             <Button
-              onClick={() => navigate({ search: { configModal: undefined } })}
+              onClick={() =>
+                void navigate({
+                  search: (prev) => ({ ...prev, configModal: undefined }),
+                })
+              }
               variant="secondary"
             >
               Close

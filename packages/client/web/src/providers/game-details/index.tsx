@@ -108,7 +108,7 @@ export function GameDetailProvider(
       duration: 5000,
     });
 
-    navigate({ to: errorRedirectUrl });
+    void navigate({ to: errorRedirectUrl });
     return <></>;
   }
 

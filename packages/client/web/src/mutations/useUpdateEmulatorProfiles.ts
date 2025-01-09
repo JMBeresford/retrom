@@ -25,7 +25,7 @@ export function useUpdateEmulatorProfiles() {
         title: "Emulator profile(s) updated",
         description: "Emulator profile(s) have been updated successfully.",
       });
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["emulator-profiles", "emulator-profile"].some((v) =>
             query.queryKey.includes(v),

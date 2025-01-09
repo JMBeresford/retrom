@@ -20,7 +20,7 @@ export function useUninstallGame(game: Game) {
         description: `Game was successfully uninstalled`,
       });
 
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         queryKey: ["installation-state"],
       });
     },

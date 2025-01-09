@@ -25,7 +25,7 @@ export function useCreateEmulators() {
         title: "Emulator(s) created",
         description: "Emulator(s) have been created successfully.",
       });
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["emulators", "emulator"].some((v) => query.queryKey.includes(v)),
       });

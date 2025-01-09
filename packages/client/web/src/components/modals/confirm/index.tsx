@@ -34,7 +34,7 @@ export function ConfirmModal() {
         modalAction.activeModalProps.onClose();
       }
 
-      navigate({
+      return navigate({
         search: (prev) => ({ ...prev, confirmModal: undefined }),
       });
     },
@@ -46,7 +46,7 @@ export function ConfirmModal() {
       open={confirmModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          close();
+          void close();
         }
       }}
     >
@@ -67,7 +67,7 @@ export function ConfirmModal() {
             className="relative"
             variant="destructive"
             onClick={() => {
-              close(true);
+              void close(true);
             }}
           >
             Confirm

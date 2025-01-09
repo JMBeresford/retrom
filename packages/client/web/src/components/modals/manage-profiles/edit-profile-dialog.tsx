@@ -127,7 +127,7 @@ export function EditProfileDialog(props: Props) {
       <Form {...form}>
         <form
           className="space-y-2 w-full"
-          onSubmit={form.handleSubmit(handleSubmit)}
+          onSubmit={void form.handleSubmit(handleSubmit)}
         >
           <FormField
             name="name"

@@ -91,8 +91,8 @@ const config = {
   plugins: [
     animatePlugin,
     containerQueryPlugin,
-    plugin(({ addVariant }) => {
-      addVariant("focus-hover", "&:is(:focus,:hover)");
+    plugin((api) => {
+      api.addVariant("focus-hover", "&:is(:focus,:hover)");
     }),
   ],
 } satisfies Config;

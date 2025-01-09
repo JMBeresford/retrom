@@ -20,7 +20,7 @@ export function Confirm() {
   const { previousStep, nextStep } = useSetupModal();
   const { mutateAsync: createClient, status } = useCreateClient();
   const configStore = useConfigStore();
-  const name = configStore((store) => store.config.clientInfo.name);
+  const name = configStore((store) => store.config?.clientInfo?.name);
   const clientInfo = useClientInfo();
   const queryClient = useQueryClient();
 
@@ -45,19 +45,26 @@ export function Confirm() {
 
       configStore.setState((prev) => {
         if (client) {
-          prev.config.clientInfo = {
-            id: client.id,
-            name: client.name,
-            createdAt: client.createdAt ?? Timestamp.create(),
-            updatedAt: client.updatedAt ?? Timestamp.create(),
+          prev.config = {
+            ...prev.config,
+            clientInfo: {
+              id: client.id,
+              name: client.name,
+              createdAt: client.createdAt ?? Timestamp.create(),
+              updatedAt: client.updatedAt ?? Timestamp.create(),
+            },
           };
         }
 
-        prev.flowCompletions.setupComplete = true;
+        prev.flowCompletions = {
+          ...prev.flowCompletions,
+          setupComplete: true,
+        };
+
         return { ...prev };
       });
 
-      queryClient.invalidateQueries();
+      void queryClient.invalidateQueries();
 
       if (nextStep) {
         nextStep();
@@ -111,11 +118,11 @@ export function Confirm() {
             <LoaderCircleIcon className="w-[1rem] h-[1rem] animate-spin" />
           </Button>
         ) : error ? (
-          <Button onClick={save} variant="destructive">
+          <Button onClick={void save} variant="destructive">
             Save and Relaunch
           </Button>
         ) : (
-          <Button onClick={save}>Save</Button>
+          <Button onClick={void save}>Save</Button>
         )}
       </DialogFooter>
     </div>

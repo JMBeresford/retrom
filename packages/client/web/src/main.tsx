@@ -1,12 +1,12 @@
-import { StrictMode } from "react";
+import { StrictMode, CSSProperties as ReactCSSProperties } from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import "./globals.scss";
 
 declare module "react" {
   interface CSSProperties {
-    [key: `--${string}`]: string | number | CSSProperties;
-    [key: `-${string}`]: string | number | CSSProperties;
+    [key: `--${string}`]: string | number | ReactCSSProperties;
+    [key: `-${string}`]: string | number | ReactCSSProperties;
   }
 }
 

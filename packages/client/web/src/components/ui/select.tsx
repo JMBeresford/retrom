@@ -19,7 +19,7 @@ function useSelectOpen() {
 }
 
 const Select = (props: React.ComponentProps<typeof SelectPrimitive.Root>) => {
-  const { open, onOpenChange } = props;
+  const { open } = props;
   const openState = React.useState(props.defaultOpen ?? false);
 
   return (
@@ -28,7 +28,7 @@ const Select = (props: React.ComponentProps<typeof SelectPrimitive.Root>) => {
         {...props}
         open={open ?? openState[0]}
         onOpenChange={(val) => {
-          onOpenChange?.(val);
+          props.onOpenChange?.(val);
           openState[1](val);
         }}
       />

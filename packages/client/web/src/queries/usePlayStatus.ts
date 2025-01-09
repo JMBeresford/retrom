@@ -27,7 +27,7 @@ export function usePlayStatusQuery(game: Game) {
           "game-running",
           (event: { payload: GamePlayStatusUpdate }) => {
             if (event.payload.gameId === game.id) {
-              queryClient.invalidateQueries({
+              void queryClient.invalidateQueries({
                 predicate: (query) =>
                   [queryKey, game.path, "game-metadata"].some((key) =>
                     query.queryKey.includes(key),
@@ -43,7 +43,7 @@ export function usePlayStatusQuery(game: Game) {
           "game-stopped",
           (event: { payload: GamePlayStatusUpdate }) => {
             if (event.payload.gameId === game.id) {
-              queryClient.invalidateQueries({
+              void queryClient.invalidateQueries({
                 predicate: (query) =>
                   [queryKey, game.path, "game-metadata"].some((key) =>
                     query.queryKey.includes(key),
@@ -55,7 +55,7 @@ export function usePlayStatusQuery(game: Game) {
       );
     }
 
-    listen();
+    void listen();
 
     return () => {
       listeners.forEach((unlisten) => unlisten());

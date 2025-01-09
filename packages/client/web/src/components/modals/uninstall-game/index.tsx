@@ -31,7 +31,9 @@ export function UninstallGameModal() {
       open={uninstallGameModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({ search: { uninstallGameModal: undefined } });
+          void navigate({
+            search: (prev) => ({ ...prev, uninstallGameModal: undefined }),
+          });
         }
       }}
     >
@@ -64,9 +66,11 @@ export function UninstallGameModal() {
             className="relative"
             variant="destructive"
             onClick={() => {
-              uninstall().then(() =>
-                navigate({ search: { uninstallGameModal: undefined } }),
-              );
+              uninstall()
+                .then(() =>
+                  navigate({ search: { uninstallGameModal: undefined } }),
+                )
+                .catch(console.error);
             }}
           >
             <LoaderCircleIcon

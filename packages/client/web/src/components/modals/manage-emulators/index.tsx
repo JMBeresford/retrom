@@ -144,7 +144,9 @@ export function ManageEmulatorsModal() {
       open={manageEmulatorsModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({ search: { manageEmulatorsModal: undefined } });
+          void navigate({
+            search: (prev) => ({ ...prev, manageEmulatorsModal: undefined }),
+          });
         }
       }}
     >
@@ -218,10 +220,10 @@ function EmulatorList(props: {
     useUpdateEmulators();
 
   const handleSubmit = useCallback(
-    async (values: ChangesetSchema) => {
+    (values: ChangesetSchema) => {
       const emulators = values.emulators;
 
-      updateEmulators({ emulators });
+      return updateEmulators({ emulators });
     },
     [updateEmulators],
   );
@@ -439,7 +441,7 @@ function EmulatorList(props: {
           <Button
             className="relative"
             disabled={!canSubmit}
-            onClick={form.handleSubmit(handleSubmit)}
+            onClick={void form.handleSubmit(handleSubmit)}
           >
             <LoaderCircleIcon
               className={cn("animate-spin absolute", !loading && "opacity-0")}

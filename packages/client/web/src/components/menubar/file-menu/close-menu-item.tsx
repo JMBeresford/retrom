@@ -37,7 +37,7 @@ export function CloseMenuItem() {
           <Button
             variant="destructive"
             onClick={() =>
-              getCurrentWebviewWindow().close().catch(console.error)
+              void getCurrentWebviewWindow().close().catch(console.error)
             }
           >
             Close

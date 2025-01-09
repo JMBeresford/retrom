@@ -18,15 +18,15 @@ export function DownloadMetadataModal() {
   const navigate = useNavigate();
   const { downloadMetadataModal } = RootRoute.useSearch();
 
-  const { mutate, isPending } = useUpdateLibraryMetadata();
+  const { mutateAsync, isPending } = useUpdateLibraryMetadata();
 
   return (
     <Dialog
       open={downloadMetadataModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({
-            search: { downloadMetadataModal: undefined },
+          void navigate({
+            search: (prev) => ({ ...prev, downloadMetadataModal: undefined }),
           });
         }
       }}
@@ -48,8 +48,14 @@ export function DownloadMetadataModal() {
           <Button
             className="relative"
             onClick={() => {
-              mutate();
-              navigate({ search: { downloadMetadataModal: undefined } });
+              mutateAsync()
+                .then(
+                  () =>
+                    void navigate({
+                      search: { downloadMetadataModal: undefined },
+                    }),
+                )
+                .catch(console.error);
             }}
           >
             <LoaderCircleIcon

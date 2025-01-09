@@ -8,7 +8,7 @@ import { useConfig } from "@/providers/config";
 
 export function SetupModal() {
   const { setupModal } = RootRoute.useSearch();
-  const { setupComplete } = useConfig((store) => store.flowCompletions);
+  const { setupComplete } = useConfig((store) => store.flowCompletions) ?? {};
 
   if (!setupComplete && !setupModal?.open && checkIsDesktop()) {
     return <Navigate search={{ setupModal: { open: true } }} />;

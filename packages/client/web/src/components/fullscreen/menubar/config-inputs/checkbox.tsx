@@ -20,7 +20,7 @@ const ConfigCheckbox = forwardRef<
   useImperativeHandle(forwardedRef, () => ref.current);
   const { className, label, children, ...rest } = props;
 
-  const id = `${label}-${props.id}-checkbox`;
+  const id = `${props.id}-checkbox`;
 
   return (
     <div

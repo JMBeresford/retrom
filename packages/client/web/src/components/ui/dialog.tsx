@@ -21,20 +21,15 @@ export const useDialogOpen = () => {
   return context;
 };
 
-const Dialog = ({
-  open,
-  onOpenChange,
-  children,
-  ...props
-}: DialogPrimitive.DialogProps) => {
+const Dialog = ({ open, children, ...props }: DialogPrimitive.DialogProps) => {
   const [openState, setOpenState] = React.useState(open || false);
 
   const openHandler = React.useCallback(
     (value: boolean) => {
       setOpenState(value);
-      onOpenChange?.(value);
+      props.onOpenChange?.(value);
     },
-    [onOpenChange],
+    [props],
   );
 
   const openValue = React.useMemo(
@@ -45,8 +40,8 @@ const Dialog = ({
   return (
     <DialogPrimitive.Root
       open={openValue}
-      onOpenChange={openHandler}
       {...props}
+      onOpenChange={openHandler}
     >
       <dialogOpenContext.Provider
         value={{ open: openState, setOpen: setOpenState }}

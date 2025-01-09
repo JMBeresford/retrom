@@ -116,7 +116,9 @@ export function VersionInfoModal() {
       open={versionInfoModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          navigate({ search: { versionInfoModal: undefined } });
+          void navigate({
+            search: (prev) => ({ ...prev, versionInfoModal: undefined }),
+          });
         }
       }}
     >

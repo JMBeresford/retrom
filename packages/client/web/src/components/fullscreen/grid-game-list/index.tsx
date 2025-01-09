@@ -4,19 +4,18 @@ import { cn, getFileStub } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { FocusContainer } from "../focus-container";
-import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
+import { FocusContainer, useFocusable } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useGroupContext } from "@/providers/fullscreen/group-context";
 
-const { BACKGROUND } = InterfaceConfig_GameListEntryImage;
+const { BACKGROUND, COVER } = InterfaceConfig_GameListEntryImage;
 
 export function GridGameList(props: { games?: GameWithMetadata[] }) {
   const { games } = props;
   const { activeGroup } = useGroupContext();
   const { columns, gap } = useConfig(
-    (s) => s.config.interface.fullscreenConfig.gridList,
-  );
+    (s) => s.config?.interface?.fullscreenConfig?.gridList,
+  ) ?? { columns: 4, gap: 20 };
 
   const getDelay = useCallback(
     (idx: number) => {
@@ -61,7 +60,7 @@ export function GridGameList(props: { games?: GameWithMetadata[] }) {
 function GameListItem(props: { game: GameWithMetadata; id: string }) {
   const { game, id } = props;
   const navigate = useNavigate();
-  const { ref, focusSelf } = useFocusable<HTMLAnchorElement>({
+  const { ref, focusSelf } = useFocusable<HTMLDivElement>({
     focusKey: id,
     onFocus: ({ node }) => {
       node?.focus({ preventScroll: true });
@@ -74,8 +73,8 @@ function GameListItem(props: { game: GameWithMetadata; id: string }) {
   });
 
   const { imageType } = useConfig(
-    (s) => s.config.interface.fullscreenConfig.gridList,
-  );
+    (s) => s.config?.interface?.fullscreenConfig?.gridList,
+  ) ?? { imageType: COVER };
 
   useEffect(() => {
     if (id.endsWith("-0")) focusSelf();
@@ -99,7 +98,7 @@ function GameListItem(props: { game: GameWithMetadata; id: string }) {
           ref={ref}
           className="border-none outline-none"
           onClick={() =>
-            navigate({
+            void navigate({
               to: "/fullscreen/games/$gameId",
               params: { gameId: game.id.toString() },
             })

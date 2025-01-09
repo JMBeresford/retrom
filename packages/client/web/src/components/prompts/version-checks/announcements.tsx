@@ -25,7 +25,7 @@ export function Announcements() {
       const res = await fetch(url);
 
       if (res.ok) {
-        const payload: VersionAnnouncementsPayload = await res.json();
+        const payload = VersionAnnouncementsPayload.fromJSON(await res.json());
 
         for (const announcement of payload.announcements) {
           for (const versionStr of announcement.versions) {

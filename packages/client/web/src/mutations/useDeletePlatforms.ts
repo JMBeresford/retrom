@@ -13,7 +13,7 @@ export function useDeletePlatforms(platforms: Platform[]) {
         ids: platforms.map((platform) => platform.id),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         queryKey: [
           "platforms",
           "platform-metadata",

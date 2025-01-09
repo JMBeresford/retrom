@@ -36,7 +36,12 @@ export function useGames<T = GetGamesResponse>(opts: {
             <ToastAction
               altText="open update library modal"
               onClick={() =>
-                navigate({ search: { updateLibraryModal: { open: true } } })
+                void navigate({
+                  search: (prev) => ({
+                    ...prev,
+                    updateLibraryModal: { open: true },
+                  }),
+                })
               }
             >
               Update Library

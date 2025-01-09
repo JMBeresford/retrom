@@ -25,7 +25,7 @@ export function useCreateEmulatorProfiles() {
         title: "Emulator profile(s) created",
         description: "Emulator profile(s) have been created successfully.",
       });
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         predicate: (query) =>
           ["emulator-profiles", "emulator-profile"].some((v) =>
             query.queryKey.includes(v),

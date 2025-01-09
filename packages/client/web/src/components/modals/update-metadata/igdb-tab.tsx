@@ -174,7 +174,9 @@ export function IgdbTab() {
         variant: "destructive",
       });
     } finally {
-      navigate({ search: { updateMetadataModal: undefined } });
+      void navigate({
+        search: (prev) => ({ ...prev, updateMetadataModal: undefined }),
+      });
     }
   }, [
     matches,
@@ -192,7 +194,7 @@ export function IgdbTab() {
       <div className="space-y-4">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSearch)}
+            onSubmit={void form.handleSubmit(handleSearch)}
             className="space-y-4"
           >
             <FormField
@@ -314,7 +316,7 @@ export function IgdbTab() {
             </DialogClose>
 
             <Button
-              onClick={() => handleUpdate()}
+              onClick={void handleUpdate}
               disabled={selectedMatch === undefined || loading}
             >
               <LoaderCircleIcon

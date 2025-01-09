@@ -17,7 +17,7 @@ export function useLocalEmulatorConfigs<T = GetLocalEmulatorConfigsResponse>(
   } = {},
 ) {
   const { request = {}, selectFn, enabled } = opts;
-  const clientId = useConfig((store) => store.config.clientInfo.id);
+  const clientId = useConfig((store) => store.config?.clientInfo?.id);
   const retromClient = useRetromClient();
 
   const req = useMemo(

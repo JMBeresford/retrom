@@ -36,7 +36,12 @@ function InnerToast() {
             variant="outline"
             size="sm"
             onClick={() =>
-              navigate({ search: { checkForUpdateModal: { open: true } } })
+              void navigate({
+                search: (prev) => ({
+                  ...prev,
+                  checkForUpdateModal: { open: true },
+                }),
+              })
             }
           >
             Update
