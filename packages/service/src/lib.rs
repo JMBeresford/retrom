@@ -67,7 +67,7 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
             match retrom_db::embedded::start_embedded_db(&db_url_with_params).await {
                 Ok(psql) => psql,
                 Err(why) => {
-                    tracing::error!("Could not start embedded db: {}", why);
+                    tracing::error!("Could not start embedded db: {:#?}", why);
                     exit(1)
                 }
             },

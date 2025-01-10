@@ -26,7 +26,7 @@ FROM rust:slim-bookworm AS service-builder
 COPY --from=common /app /usr/src/retrom
 WORKDIR /usr/src/retrom
 
-RUN apt-get update && apt-get install protobuf-compiler openssl pkg-config libssl-dev libpq-dev -y
+RUN apt-get update && apt-get install perl protobuf-compiler openssl pkg-config libssl-dev libpq-dev -y
 RUN cargo install --path ./packages/service
 
 FROM base AS runner

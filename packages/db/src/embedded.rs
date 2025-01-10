@@ -20,7 +20,36 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<PostgreSQL> {
         psql.stop().await?;
     };
 
-    psql.start().await?;
+    if let Err(err) = psql.start().await {
+        use postgresql_embedded::Error as EmbeddedError;
+
+        match &err {
+            EmbeddedError::IoError(why) => {
+                tracing::error!("IO error: {:#?}", why);
+            }
+            EmbeddedError::ArchiveError(why) => {
+                tracing::error!("Archive error: {:#?}", why);
+            }
+            EmbeddedError::CommandError { stdout, stderr } => {
+                tracing::error!("Command error stdout: {:#?}", stdout);
+                tracing::error!("Command error stderr: {:#?}", stderr);
+            }
+            EmbeddedError::DatabaseStartError(why) => {
+                tracing::error!("Database start error: {:#?}", why);
+            }
+            EmbeddedError::DatabaseInitializationError(why) => {
+                tracing::error!("Database initialization error: {:#?}", why);
+            }
+            EmbeddedError::DatabaseStopError(why) => {
+                tracing::error!("Database stop error: {:#?}", why);
+            }
+            _ => {
+                tracing::error!("Unknown error: {:#?}", err);
+            }
+        }
+
+        return Err(crate::Error::EmbeddedError(err));
+    }
 
     if !psql.database_exists(DB_NAME).await? {
         psql.create_database(DB_NAME).await?;
