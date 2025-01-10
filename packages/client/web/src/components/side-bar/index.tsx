@@ -102,6 +102,7 @@ export function SideBar() {
       return acc;
     }, ret);
   }, [gameData, platformData, filters]);
+  console.log({ platformsWithMetadata, gamesByPlatform });
 
   return (
     <aside
@@ -131,6 +132,35 @@ export function SideBar() {
           <p className="text-muted-foreground text-lg">
             Could not load game data 😔
           </p>
+        </div>
+      ) : !platformsWithMetadata.some((p) => gamesByPlatform[p.id]?.length) ? (
+        <div className="h-full grid place-items-center">
+          <div className="flex flex-col gap-4 text-center text-muted-foreground px-6">
+            <h3 className="text-2xl font-bold">Where all the games at?</h3>
+
+            <p>
+              Make sure Retrom knows about your{" "}
+              <Link
+                className="text-accent-text"
+                search={(prev) => ({
+                  ...prev,
+                  configModal: { open: true, tab: "server" },
+                })}
+              >
+                library sources
+              </Link>{" "}
+              and then{" "}
+              <Link
+                className="text-accent-text"
+                search={(prev) => ({
+                  ...prev,
+                  updateLibraryModal: { open: true },
+                })}
+              >
+                update your library
+              </Link>
+            </p>
+          </div>
         </div>
       ) : (
         <ScrollArea

@@ -25,7 +25,7 @@ export function ConfigModal() {
       onOpenChange={(open) => {
         if (!open) {
           void navigate({
-            search: (prev) => ({ ...prev, matchPlatformsModal: undefined }),
+            search: (prev) => ({ ...prev, configModal: undefined }),
           });
         }
       }}

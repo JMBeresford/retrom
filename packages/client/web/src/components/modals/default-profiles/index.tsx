@@ -398,7 +398,9 @@ function DefaultEmulatorProfiles(props: {
         <DialogClose asChild>
           <Button variant="secondary">Close</Button>
         </DialogClose>
-        <Button onClick={void form.handleSubmit(handleSubmit)}>Save</Button>
+        <Button onClick={() => void form.handleSubmit(handleSubmit)()}>
+          Save
+        </Button>
       </DialogFooter>
     </DialogContent>
   );

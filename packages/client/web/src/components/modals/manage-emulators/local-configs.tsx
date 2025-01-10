@@ -125,7 +125,7 @@ function LocalConfigRow(props: {
   return (
     <Form {...form}>
       <form
-        onSubmit={void form.handleSubmit(handleSubmit)}
+        onSubmit={() => void form.handleSubmit(handleSubmit)()}
         key={emulator.id}
         className={cn(
           "grid grid-cols-subgrid col-span-full",

@@ -64,7 +64,7 @@ export function Confirm() {
         return { ...prev };
       });
 
-      void queryClient.invalidateQueries();
+      void queryClient.resetQueries();
 
       if (nextStep) {
         nextStep();
@@ -118,11 +118,11 @@ export function Confirm() {
             <LoaderCircleIcon className="w-[1rem] h-[1rem] animate-spin" />
           </Button>
         ) : error ? (
-          <Button onClick={void save} variant="destructive">
+          <Button onClick={() => void save()} variant="destructive">
             Save and Relaunch
           </Button>
         ) : (
-          <Button onClick={void save}>Save</Button>
+          <Button onClick={() => void save()}>Save</Button>
         )}
       </DialogFooter>
     </div>

@@ -60,14 +60,17 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
     {
         let mut db_url_with_params = db_url.clone();
         if let Some(db_params) = db_params {
-            tracing::info!("Using parameters: {}", db_params);
             db_url_with_params.push_str(db_params);
         }
 
         psql.replace(
-            retrom_db::embedded::start_embedded_db(&db_url_with_params)
-                .await
-                .expect("Could not get embedded db"),
+            match retrom_db::embedded::start_embedded_db(&db_url_with_params).await {
+                Ok(psql) => psql,
+                Err(why) => {
+                    tracing::error!("Could not start embedded db: {}", why);
+                    exit(1)
+                }
+            },
         );
 
         // Port may be random, so get new db_url from running instance

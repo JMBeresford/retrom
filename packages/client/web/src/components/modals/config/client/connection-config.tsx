@@ -158,7 +158,7 @@ function ServerConnectionForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={void form.handleSubmit(handleSubmit)}>
+      <form onSubmit={() => void form.handleSubmit(handleSubmit)()}>
         <div className="grid gap-2 grid-cols-[2fr,1fr]">
           <FormField
             name="hostname"

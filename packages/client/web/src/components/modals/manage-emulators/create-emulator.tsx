@@ -60,7 +60,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
   return (
     <Form {...form}>
       <form
-        onSubmit={void form.handleSubmit(onCreationFormSubmit)}
+        onSubmit={() => void form.handleSubmit(onCreationFormSubmit)()}
         className={cn(
           "grid col-span-full grid-flow-col grid-cols-subgrid w-full",
           "[&_*]:ring-inset *:grid *:grid-rows-[auto_auto_1fr] *:grid-flow-row",
