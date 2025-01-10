@@ -19,10 +19,6 @@ export function FileMenu() {
       </MenubarTrigger>
 
       <MenubarContent>
-        <DesktopOnly>
-          <SetupMenuItem />
-        </DesktopOnly>
-
         <ConfigMenuItem />
 
         <MenubarSeparator />
@@ -32,6 +28,8 @@ export function FileMenu() {
         <DesktopOnly>
           <CheckForUpdateMenuItem />
           <MenubarSeparator />
+
+          <SetupMenuItem />
 
           <CloseMenuItem />
         </DesktopOnly>

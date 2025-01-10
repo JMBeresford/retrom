@@ -8,7 +8,7 @@ pub const DB_NAME: &str = "retrom";
 pub async fn start_embedded_db(url: &str) -> crate::Result<PostgreSQL> {
     let mut settings = Settings::from_url(url)?;
     settings.temporary = false;
-    settings.version = VersionReq::parse("=16.4.0").expect("Could not parse version requirement");
+    settings.version = VersionReq::parse("=17.2.0").expect("Could not parse version requirement");
 
     tracing::debug!("Starting embedded database: {:#?}", settings);
 

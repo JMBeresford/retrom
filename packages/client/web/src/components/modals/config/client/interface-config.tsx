@@ -51,7 +51,7 @@ export function InterfaceConfig() {
   return (
     <TabsContent value="interface" className="mt-4">
       <Form {...form}>
-        <form onSubmit={void form.handleSubmit(handleSubmit)}>
+        <form onSubmit={() => void form.handleSubmit(handleSubmit)()}>
           <FormField
             control={form.control}
             name="fullscreenByDefault"

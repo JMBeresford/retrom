@@ -38,8 +38,12 @@ export function RecentlyPlayed() {
             <div className="h-64 w-full grid place-items-center bg-muted/50 text-muted-foreground">
               Could not load game data
             </div>
-          ) : (
+          ) : gamesByPlayedDate.length ? (
             <GameList games={gamesByPlayedDate} />
+          ) : (
+            <div className="h-64 w-full grid place-items-center bg-muted/50 text-muted-foreground">
+              No games found
+            </div>
           )}
 
           <ScrollBar orientation="horizontal" className="z-30" />

@@ -77,7 +77,11 @@ export function ExitFullscreen(props: ComponentProps<typeof SheetTrigger>) {
                 <HotkeyButton hotkey="BACK">back</HotkeyButton>
               </SheetClose>
 
-              <HotkeyButton type="submit" hotkey="MENU" onClick={void exit}>
+              <HotkeyButton
+                type="submit"
+                hotkey="MENU"
+                onClick={() => void exit()}
+              >
                 Exit
               </HotkeyButton>
             </SheetFooter>

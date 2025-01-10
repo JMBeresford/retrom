@@ -194,7 +194,7 @@ export function IgdbTab() {
       <div className="space-y-4">
         <Form {...form}>
           <form
-            onSubmit={void form.handleSubmit(handleSearch)}
+            onSubmit={() => void form.handleSubmit(handleSearch)()}
             className="space-y-4"
           >
             <FormField
@@ -316,7 +316,7 @@ export function IgdbTab() {
             </DialogClose>
 
             <Button
-              onClick={void handleUpdate}
+              onClick={() => void handleUpdate()}
               disabled={selectedMatch === undefined || loading}
             >
               <LoaderCircleIcon

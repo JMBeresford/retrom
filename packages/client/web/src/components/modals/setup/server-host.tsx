@@ -159,7 +159,7 @@ function TestButton(props: { hostname: string; port?: string }) {
       <Button
         className="flex gap-2 items-center"
         variant="destructive"
-        onClick={void testConnection}
+        onClick={() => void testConnection()}
       >
         <XCircleIcon className="w-[1rem] h-[1rem]" /> Try Again
       </Button>
@@ -167,7 +167,7 @@ function TestButton(props: { hostname: string; port?: string }) {
   }
 
   return (
-    <Button className={cn("ml-2")} onClick={void testConnection}>
+    <Button className={cn("ml-2")} onClick={() => void testConnection()}>
       Next
     </Button>
   );

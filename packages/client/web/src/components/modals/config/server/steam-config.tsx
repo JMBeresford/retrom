@@ -74,7 +74,7 @@ export function SteamConfig(props: {
 
       <Form {...form}>
         <form
-          onSubmit={void form.handleSubmit(handleSubmit)}
+          onSubmit={() => void form.handleSubmit(handleSubmit)()}
           className="flex flex-col gap-2"
         >
           <FormField

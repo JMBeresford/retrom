@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DialogClose, DialogFooter } from "@/components/ui/dialog";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { useUpdateServerConfig } from "@/mutations/useUpdateServerConfig";
 import { useModalAction } from "@/providers/modal-action";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Circle,
   FolderOpen,
@@ -72,6 +73,7 @@ const librariesSchema = z.object({
 export function LibrariesConfig(props: {
   currentConfig: NonNullable<ServerConfig>;
 }) {
+  const navigate = useNavigate();
   const { mutateAsync: save, status } = useUpdateServerConfig();
 
   const form = useForm<z.infer<typeof librariesSchema>>({
@@ -113,7 +115,7 @@ export function LibrariesConfig(props: {
   return (
     <TabsContent value="contentDirectories">
       <Form {...form}>
-        <form onSubmit={void form.handleSubmit(handleSubmit)}>
+        <form onSubmit={() => void form.handleSubmit(handleSubmit)()}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -219,12 +221,19 @@ export function LibrariesConfig(props: {
       <CreateLibraryRow {...props} append={append} />
 
       <DialogFooter>
-        <DialogClose asChild>
-          <Button variant="secondary">Close</Button>
-        </DialogClose>
+        <Button
+          onClick={() =>
+            void navigate({
+              search: (prev) => ({ ...prev, configModal: undefined }),
+            })
+          }
+          variant="secondary"
+        >
+          Close
+        </Button>
 
         <Button
-          onClick={void form.handleSubmit(handleSubmit)}
+          onClick={() => void form.handleSubmit(handleSubmit)()}
           disabled={!canSubmit}
         >
           Save
@@ -266,7 +275,7 @@ function CreateLibraryRow(props: {
 
   return (
     <Form {...form}>
-      <form onSubmit={void form.handleSubmit(handleSubmit)}>
+      <form onSubmit={() => void form.handleSubmit(handleSubmit)()}>
         <Table>
           <TableBody>
             <TableRow className="*:py-1">
