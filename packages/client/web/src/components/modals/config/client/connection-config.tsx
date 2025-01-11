@@ -19,7 +19,7 @@ import { useEnableStandaloneMode } from "@/mutations/useEnableStandaloneMode";
 import { useConfig, useConfigStore } from "@/providers/config";
 import { RetromClient } from "@/providers/retrom-client/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Check, LoaderCircle } from "lucide-react";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
@@ -27,39 +27,31 @@ import { z } from "zod";
 
 export function ConnectionConfig() {
   const serverConfig = useConfig((s) => s.server);
-  const { mutate: enable, status: enableStatus } = useEnableStandaloneMode();
-  const { mutate: disable, status: disableStatus } = useDisableStandaloneMode();
-  const queryClient = useQueryClient();
+  const { mutateAsync: enable, status: enableStatus } =
+    useEnableStandaloneMode();
+  const { mutateAsync: disable, status: disableStatus } =
+    useDisableStandaloneMode();
 
   const pending = enableStatus === "pending" || disableStatus === "pending";
 
-  const toggleStandaloneMode = useCallback(() => {
+  const toggleStandaloneMode = useCallback(async () => {
     if (serverConfig?.standalone) {
-      disable(undefined);
+      await disable(undefined);
     } else {
-      enable(undefined);
-      void queryClient.resetQueries();
+      await enable(undefined);
     }
-  }, [disable, enable, serverConfig, queryClient]);
+  }, [disable, enable, serverConfig]);
 
   return (
     <TabsContent value="connection" className="relative">
-      {pending ? (
-        <div className="grid place-items-center">
-          <LoaderCircle size={80} className="animate-spin text-primary" />
-        </div>
-      ) : (
-        <div
-          className={cn(
-            "flex flex-col gap-4",
-            pending && "pointer-events-none touch-none opacity-25",
-          )}
-        >
+      <div className={cn("flex flex-col gap-4")}>
+        <div className="flex gap-2">
           <div className="flex items-top gap-2">
             <Checkbox
               id="toggle-standalone-mode"
-              checked={serverConfig?.standalone}
-              onCheckedChange={toggleStandaloneMode}
+              disabled={pending}
+              checked={!!serverConfig?.standalone}
+              onCheckedChange={() => void toggleStandaloneMode()}
             />
             <div className={cn("grid gap-1 leading-none")}>
               <label htmlFor="toggle-standalone-mode">Standalone Mode</label>
@@ -70,8 +62,21 @@ export function ConnectionConfig() {
             </div>
           </div>
 
-          <Separator />
+          {pending ? (
+            <div className="grid place-items-center">
+              <LoaderCircle className="animate-spin text-primary h-full w-auto" />
+            </div>
+          ) : null}
+        </div>
 
+        <Separator />
+
+        <div
+          className={cn(
+            "flex flex-col gap-4",
+            pending && "pointer-events-none touch-none opacity-50",
+          )}
+        >
           <div className="max-w-[65ch]">
             {serverConfig?.standalone ? (
               <p>
@@ -88,7 +93,7 @@ export function ConnectionConfig() {
 
           <ServerConnectionForm />
         </div>
-      )}
+      </div>
     </TabsContent>
   );
 }
@@ -168,7 +173,11 @@ function ServerConnectionForm() {
               <FormItem>
                 <FormLabel>Hostname</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  {serverConfig?.standalone ? (
+                    <Input disabled value={serverConfig?.hostname} />
+                  ) : (
+                    <Input {...field} />
+                  )}
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -183,7 +192,15 @@ function ServerConnectionForm() {
               <FormItem>
                 <FormLabel>Port</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} />
+                  {serverConfig?.standalone ? (
+                    <Input
+                      type="number"
+                      disabled
+                      value={serverConfig?.port?.toString()}
+                    />
+                  ) : (
+                    <Input type="number" {...field} />
+                  )}
                 </FormControl>
                 <FormMessage />
               </FormItem>

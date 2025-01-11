@@ -3,7 +3,7 @@ use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
-use retrom_db::run_migrations;
+use retrom_db::{embedded::PgCtlFailsafeOperations, run_migrations};
 use retry::retry;
 use std::{
     convert::Infallible,
@@ -80,7 +80,7 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
                 db_url = psql.settings().url(DB_NAME);
             } else {
                 // If the db_url was set in the configuration, internal DB is not needed
-                let _ = psql.stop().await;
+                let _ = psql.failsafe_stop().await;
             }
         }
     }
@@ -169,7 +169,7 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
 
             #[cfg(feature = "embedded_db")]
             if let Some(psql_running) = psql {
-                if let Err(why) = psql_running.stop().await {
+                if let Err(why) = psql_running.failsafe_stop().await {
                     tracing::error!("Could not stop embedded db: {}", why);
                 }
 

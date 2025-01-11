@@ -1,9 +1,14 @@
 import { invoke } from "@tauri-apps/api/core";
 
-export async function enableStandaloneMode(): Promise<number | null> {
-  return await invoke<number>("plugin:standalone|enable_standalone_mode").then(
-    (value) => value ?? null,
-  );
+type Addr = {
+  ip: string;
+  port: number;
+};
+
+export async function enableStandaloneMode(): Promise<Addr | null> {
+  return await invoke<[string, number]>(
+    "plugin:standalone|enable_standalone_mode",
+  ).then((value) => (value ? { ip: value[0], port: value[1] } : null));
 }
 
 export async function disableStandaloneMode(): Promise<void> {

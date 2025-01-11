@@ -2,20 +2,25 @@ use tauri::{command, AppHandle, Runtime};
 
 use crate::Result;
 use crate::StandaloneExt;
+use local_ip_address::local_ip;
 
 #[command]
-pub(crate) async fn enable_standalone_mode<R: Runtime>(app: AppHandle<R>) -> Result<u16> {
+pub(crate) async fn enable_standalone_mode<R: Runtime>(app: AppHandle<R>) -> Result<(String, u16)> {
     if !app.standalone().is_server_running().await {
         app.standalone().start_server().await?;
     }
 
-    let addr = app
+    let mut addr = app
         .standalone()
         .get_server_addr()
         .await
         .expect("Could not get local server address");
 
-    Ok(addr.port())
+    if let Ok(local_ip) = local_ip() {
+        addr.set_ip(local_ip);
+    };
+
+    Ok((addr.ip().to_string(), addr.port()))
 }
 
 #[command]
