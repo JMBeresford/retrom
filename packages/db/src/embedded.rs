@@ -25,31 +25,17 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<PostgreSQL> {
         use postgresql_embedded::Error as EmbeddedError;
 
         match &err {
-            EmbeddedError::IoError(why) => {
-                tracing::error!("IO error: {:#?}", why);
-            }
-            EmbeddedError::ArchiveError(why) => {
-                tracing::error!("Archive error: {:#?}", why);
-            }
-            EmbeddedError::CommandError { stdout, stderr } => {
-                tracing::error!("Command error stdout: {:#?}", stdout);
-                tracing::error!("Command error stderr: {:#?}", stderr);
-            }
-            EmbeddedError::DatabaseStartError(why) => {
-                tracing::error!("Database start error: {:#?}", why);
-            }
-            EmbeddedError::DatabaseInitializationError(why) => {
-                tracing::error!("Database initialization error: {:#?}", why);
-            }
-            EmbeddedError::DatabaseStopError(why) => {
-                tracing::error!("Database stop error: {:#?}", why);
+            EmbeddedError::DatabaseStartError(_) => {
+                // occasionally the start command is not properly detected as finished
+                // so, we just check if the database is running and continue
+                if psql.status() != postgresql_embedded::Status::Started {
+                    return Err(crate::Error::EmbeddedError(err));
+                };
             }
             _ => {
-                tracing::error!("Unknown error: {:#?}", err);
+                return Err(crate::Error::EmbeddedError(err));
             }
         }
-
-        return Err(crate::Error::EmbeddedError(err));
     }
 
     if !psql.database_exists(DB_NAME).await? {
