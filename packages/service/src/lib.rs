@@ -1,3 +1,4 @@
+use core::panic;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
@@ -68,7 +69,7 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
                 Ok(psql) => psql,
                 Err(why) => {
                     tracing::error!("Could not start embedded db: {:#?}", why);
-                    exit(1)
+                    panic!("Could not start embedded db");
                 }
             },
         );

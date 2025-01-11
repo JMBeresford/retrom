@@ -9,6 +9,7 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<PostgreSQL> {
     let mut settings = Settings::from_url(url)?;
     settings.temporary = false;
     settings.version = VersionReq::parse("=17.2.0").expect("Could not parse version requirement");
+    settings.timeout = Some(std::time::Duration::from_secs(30));
 
     tracing::debug!("Starting embedded database: {:#?}", settings);
 
