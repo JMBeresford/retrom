@@ -28,6 +28,8 @@ pub async fn main() {
         .with(env_filter)
         .with(fmt_layer);
 
+    tauri::async_runtime::set(tokio::runtime::Handle::current());
+
     tauri::Builder::default()
         .setup(|app| {
             let log_dir = app.path().app_log_dir().expect("failed to get log dir");

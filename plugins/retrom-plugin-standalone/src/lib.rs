@@ -35,17 +35,20 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             app.manage(standalone);
 
             let app = app.clone();
-            tokio::spawn(async move {
-                let standalone = app.standalone();
 
-                let client_config = app.config_manager().get_config().await;
+            tauri::async_runtime::spawn_blocking(|| {
+                tauri::async_runtime::block_on(async move {
+                    let standalone = app.standalone();
 
-                let is_standalone = client_config.server.is_some_and(|c| c.standalone());
-                if is_standalone {
-                    if let Err(why) = standalone.start_server().await {
-                        tracing::error!("Failed to start standalone server: {}", why);
+                    let client_config = app.config_manager().get_config().await;
+
+                    let is_standalone = client_config.server.is_some_and(|c| c.standalone());
+                    if is_standalone {
+                        if let Err(why) = standalone.start_server().await {
+                            tracing::error!("Failed to start standalone server: {:#?}", why);
+                        }
                     }
-                }
+                })
             });
 
             Ok(())
