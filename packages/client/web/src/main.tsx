@@ -12,6 +12,11 @@ declare module "react" {
 
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
+import { checkIsDesktop } from "./lib/env";
+import {
+  restoreStateCurrent,
+  StateFlags,
+} from "@tauri-apps/plugin-window-state";
 
 // Create a new router instance
 const router = createRouter({ routeTree });
@@ -26,6 +31,10 @@ declare module "@tanstack/react-router" {
 const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
+
+  if (checkIsDesktop()) {
+    await restoreStateCurrent(StateFlags.ALL);
+  }
 
   root.render(
     <StrictMode>

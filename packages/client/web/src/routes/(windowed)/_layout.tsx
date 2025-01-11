@@ -22,11 +22,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { checkIsDesktop } from "@/lib/env";
 import { destroy } from "@noriginmedia/norigin-spatial-navigation";
 import { ConfigModal } from "@/components/modals/config";
-import {
-  restoreStateCurrent,
-  saveWindowState,
-  StateFlags,
-} from "@tauri-apps/plugin-window-state";
+import { saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useEffect } from "react";
 import { useConfig } from "@/providers/config";
 import { ServerFileExplorerModal } from "@/components/modals/server-file-explorer";
@@ -39,8 +35,6 @@ export const Route = createFileRoute("/(windowed)/_layout")({
     destroy();
     if (checkIsDesktop()) {
       await getCurrentWindow().setFullscreen(false);
-
-      await restoreStateCurrent(StateFlags.ALL);
     }
   },
 });
