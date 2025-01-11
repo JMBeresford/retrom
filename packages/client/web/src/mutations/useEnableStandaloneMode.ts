@@ -8,7 +8,8 @@ export function useEnableStandaloneMode() {
   return useMutation({
     mutationKey: ["enable-standalone-mode"],
     mutationFn: async () => {
-      const port = await enableStandaloneMode();
+      const { ip: hostname = "http://localhost", port } =
+        (await enableStandaloneMode()) ?? {};
 
       if (!port) {
         return;
@@ -18,14 +19,12 @@ export function useEnableStandaloneMode() {
         store.server = {
           ...store.server,
           standalone: true,
-          hostname: "http://localhost",
+          hostname,
           port,
         };
 
         return { ...store };
       });
-
-      console.log("Standalone mode enabled on port", port);
     },
 
     onError: console.error,
