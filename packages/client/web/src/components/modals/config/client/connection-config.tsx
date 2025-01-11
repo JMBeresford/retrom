@@ -103,7 +103,9 @@ type ConfigShape = Record<
   z.ZodTypeAny
 >;
 const connectionSchema = z.object({
-  hostname: z.string().url(),
+  hostname: z
+    .string()
+    .url("Must be a URL in the format: http(s)://some-hostname"),
   port: z.coerce.number().int().positive(),
 }) satisfies z.ZodObject<ConfigShape>;
 
@@ -126,7 +128,7 @@ function ServerConnectionForm() {
   const form = useForm<z.infer<typeof connectionSchema>>({
     resolver: zodResolver(connectionSchema),
     defaultValues: {
-      hostname: serverConfig?.hostname ?? "http://localhost",
+      hostname: serverConfig?.hostname ?? "",
       port: serverConfig?.port,
     },
     mode: "all",
