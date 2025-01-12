@@ -22,7 +22,13 @@ Follow the instructions in the [README](../../README.md#installation) to get Ret
 Once you have your retrom server running, and a client installed locally you can begin setting up your library.
 The first time you open your client, you should be greeted with a setup wizard:
 
-![Setup Wizard Step 1 Screenshot](./setup1.png)
+![Screenshot 2025-01-11 at 7 03 24 PM](https://github.com/user-attachments/assets/03c41285-d298-4826-986c-f27339f7e51a)
+
+If you are not using a dedicated server, then select Standalone Mode. Otherwise, select Connect to Server.
+
+If you selected Connect to Server, you will be prompted for it's connection details on the next page:
+
+![image](https://github.com/user-attachments/assets/23bae3df-7768-47d3-84eb-b5d1447050fe)
 
 The hostname should be either the IP address of your Retrom service, or a domain name that points to it.
 
@@ -42,7 +48,7 @@ Following the above two use-cases:
 
 After you have entered the correct values, click `Next` to proceed to the next step.
 
-![Setup Wizard Step 2 Screenshot](./setup2.png)
+![image](https://github.com/user-attachments/assets/ed16e32c-5bbf-46f2-87b5-021f689a9bbc)
 
 This is where you will enter a name for this client. This allows the service to keep track of which client is which
 when you add configs for local-specific things like emulators paths etc.
@@ -60,16 +66,23 @@ restore an installation.
 
 After you have entered a name, click `Next` to proceed.
 
-If you ever need to reconnect to your server (for example, if you change the server's IP address), you can do so by
-accessing the `File > Connect to Server` menu item at any time.
+If you ever need to go through this setup again, you can do so by accessing the `File > Setup` menu item at any time.
+You can also configure most of these options in the `File > Configuration` menu item.
 
 ## Initial Library Setup
+
+You will likely see an empty library at first. The first thing you should do is add any library sources you have in the
+configuration menu ( `File > Configuration` ):
+
+![image](https://github.com/user-attachments/assets/5df452f0-c08d-46f4-a721-9198791411d2)
+
+Check out the [README](https://github.com/JMBeresford/retrom#library-structure) to learn more about the options for the Structure option. Once your sources are added, and any invalid defaults are dealt with, you can initialize the library.
 
 To initialize your library, you can access the `Library > Update Library` menu item. This will scan the filesystem
 that your service is running on and add any games/platforms it finds to your library. Your client will then look something
 like this:
 
-![Initial Library Setup Screenshot](./new_library.png)
+![image](https://github.com/user-attachments/assets/d9f40521-8288-4022-a3b3-b5d5950735d1)
 
 Now you can start downloading metadata for your games by accessing the `Library > Download Metadata` menu item. This will
 trigger a job in the service to download metadata from supported providers for all games in your library. It will do a best
