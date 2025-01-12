@@ -19,6 +19,9 @@ pub enum Error {
 
     #[error("Could not create embedded database")]
     NotExists,
+
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

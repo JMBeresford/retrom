@@ -17,6 +17,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 dotenvy = { workspace = true }
 async-trait = { workspace = true }
+postgresql_commands = { optional = true, version = "^0.17.3", features = [
+  "tokio",
+] }
 postgresql_embedded = { optional = true, version = "^0.17.3", features = [
   "tokio",
 ] }
@@ -24,7 +27,8 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 pq-sys = { workspace = true }
 openssl-sys = { workspace = true }
+tokio = { workspace = true }
 
 
 [features]
-embedded = ["dep:postgresql_embedded"]
+embedded = ["dep:postgresql_embedded", "dep:postgresql_commands"]
