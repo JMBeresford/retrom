@@ -51,7 +51,7 @@ export function ConnectionConfig() {
               id="toggle-standalone-mode"
               disabled={pending}
               checked={!!serverConfig?.standalone}
-              onCheckedChange={() => void toggleStandaloneMode()}
+              onCheckedChange={toggleStandaloneMode}
             />
             <div className={cn("grid gap-1 leading-none")}>
               <label htmlFor="toggle-standalone-mode">Standalone Mode</label>
@@ -106,7 +106,7 @@ const connectionSchema = z.object({
   hostname: z
     .string()
     .url("Must be a URL in the format: http(s)://some-hostname"),
-  port: z.coerce.number().int().positive(),
+  port: z.coerce.number().int().positive().or(z.literal("")),
 }) satisfies z.ZodObject<ConfigShape>;
 
 function ServerConnectionForm() {
@@ -129,7 +129,7 @@ function ServerConnectionForm() {
     resolver: zodResolver(connectionSchema),
     defaultValues: {
       hostname: serverConfig?.hostname ?? "",
-      port: serverConfig?.port,
+      port: serverConfig?.port ?? "",
     },
     mode: "all",
   });
@@ -143,7 +143,8 @@ function ServerConnectionForm() {
           prev.server = {
             ...prev.server,
             hostname: values.hostname,
-            port: values.port,
+            port: values.port === "" ? undefined : values.port,
+            standalone: false,
           };
 
           return { ...prev };
@@ -165,49 +166,49 @@ function ServerConnectionForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={() => void form.handleSubmit(handleSubmit)()}>
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
         <div className="grid gap-2 grid-cols-[2fr,1fr]">
-          <FormField
-            name="hostname"
-            disabled={!canEdit}
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Hostname</FormLabel>
-                <FormControl>
-                  {serverConfig?.standalone ? (
-                    <Input disabled value={serverConfig?.hostname} />
-                  ) : (
+          {serverConfig?.standalone ? (
+            <Input disabled value={serverConfig?.hostname} />
+          ) : (
+            <FormField
+              name="hostname"
+              disabled={!canEdit}
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Hostname</FormLabel>
+                  <FormControl>
                     <Input {...field} />
-                  )}
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
-          <FormField
-            name="port"
-            disabled={!canEdit}
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Port</FormLabel>
-                <FormControl>
-                  {serverConfig?.standalone ? (
-                    <Input
-                      type="number"
-                      disabled
-                      value={serverConfig?.port?.toString()}
-                    />
-                  ) : (
+          {serverConfig?.standalone ? (
+            <Input
+              type="number"
+              disabled
+              value={serverConfig?.port?.toString()}
+            />
+          ) : (
+            <FormField
+              name="port"
+              disabled={!canEdit}
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Port</FormLabel>
+                  <FormControl>
                     <Input type="number" {...field} />
-                  )}
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
 
         {status === "error" && (

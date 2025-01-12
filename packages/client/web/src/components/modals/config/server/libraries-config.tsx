@@ -115,7 +115,7 @@ export function LibrariesConfig(props: {
   return (
     <TabsContent value="contentDirectories">
       <Form {...form}>
-        <form onSubmit={() => void form.handleSubmit(handleSubmit)()}>
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -232,10 +232,7 @@ export function LibrariesConfig(props: {
           Close
         </Button>
 
-        <Button
-          onClick={() => void form.handleSubmit(handleSubmit)()}
-          disabled={!canSubmit}
-        >
+        <Button onClick={form.handleSubmit(handleSubmit)} disabled={!canSubmit}>
           Save
         </Button>
       </DialogFooter>
@@ -275,7 +272,7 @@ function CreateLibraryRow(props: {
 
   return (
     <Form {...form}>
-      <form onSubmit={() => void form.handleSubmit(handleSubmit)()}>
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
         <Table>
           <TableBody>
             <TableRow className="*:py-1">

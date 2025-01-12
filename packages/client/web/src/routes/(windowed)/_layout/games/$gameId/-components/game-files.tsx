@@ -235,7 +235,7 @@ export function GameFiles() {
 
             <DropdownMenuContent className="z-[10]">
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => void handleMakeDefault()}>
+                <DropdownMenuItem onClick={handleMakeDefault}>
                   Set as default
                 </DropdownMenuItem>
 
@@ -278,10 +278,7 @@ export function GameFiles() {
                         </DialogClose>
 
                         <DialogClose asChild>
-                          <Button
-                            onClick={() => void handleRename()}
-                            disabled={pending}
-                          >
+                          <Button onClick={handleRename} disabled={pending}>
                             {pending ? (
                               <LoaderCircleIcon className="animate-spin" />
                             ) : (
@@ -374,7 +371,7 @@ export function GameFiles() {
                         </DialogClose>
 
                         <Button
-                          onClick={() => void handleDelete()}
+                          onClick={handleDelete}
                           variant="destructive"
                           disabled={pending}
                         >

@@ -122,7 +122,7 @@ export function DeleteGameModal() {
             <Button
               className="relative"
               variant="destructive"
-              onClick={() => void handleDelete()}
+              onClick={handleDelete}
             >
               <LoaderCircleIcon
                 className={cn(

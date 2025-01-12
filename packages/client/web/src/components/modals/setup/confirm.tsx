@@ -118,11 +118,11 @@ export function Confirm() {
             <LoaderCircleIcon className="w-[1rem] h-[1rem] animate-spin" />
           </Button>
         ) : error ? (
-          <Button onClick={() => void save()} variant="destructive">
+          <Button onClick={save} variant="destructive">
             Save and Relaunch
           </Button>
         ) : (
-          <Button onClick={() => void save()}>Save</Button>
+          <Button onClick={save}>Save</Button>
         )}
       </DialogFooter>
     </div>

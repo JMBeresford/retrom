@@ -125,7 +125,7 @@ export function DeleteGameAction() {
                 <HotkeyButton hotkey="BACK">Cancel</HotkeyButton>
               </SheetClose>
 
-              <HotkeyButton hotkey="MENU" onClick={() => void handleDelete()}>
+              <HotkeyButton hotkey="MENU" onClick={handleDelete}>
                 Delete
               </HotkeyButton>
             </SheetFooter>

@@ -441,7 +441,7 @@ function EmulatorList(props: {
           <Button
             className="relative"
             disabled={!canSubmit}
-            onClick={() => void form.handleSubmit(handleSubmit)()}
+            onClick={form.handleSubmit(handleSubmit)}
           >
             <LoaderCircleIcon
               className={cn("animate-spin absolute", !loading && "opacity-0")}

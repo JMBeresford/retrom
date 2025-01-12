@@ -192,7 +192,7 @@ function InnerContent(props: { clientVersion: Version; update?: Update }) {
         ) : progress.done ? (
           <>
             <Button variant="secondary">Restart Later</Button>
-            <Button onClick={() => void relaunch()}>Restart</Button>
+            <Button onClick={relaunch}>Restart</Button>
           </>
         ) : (
           <>

@@ -392,7 +392,7 @@ export function MatchPlatformsModal() {
               <Button
                 disabled={loading || allUnchanged}
                 className="relative"
-                onClick={() => void handleUpdate()}
+                onClick={handleUpdate}
               >
                 <LoaderCircleIcon
                   className={cn(

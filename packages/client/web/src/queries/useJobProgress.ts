@@ -9,6 +9,7 @@ export function useJobProgress() {
 
   useQuery({
     queryKey: ["jobs", "job-progress"],
+    staleTime: Infinity,
     queryFn: async () => {
       const stream = retromClient.jobClient.getJobs({});
 
