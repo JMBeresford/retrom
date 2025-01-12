@@ -63,7 +63,7 @@ export function GroupMenu(
             <HotkeyButton
               hotkey="PAGE_LEFT"
               disabled={previousGroup?.id === undefined}
-              onClick={() => void handlers.PAGE_LEFT.handler()}
+              onClick={handlers.PAGE_LEFT.handler}
             >
               <ArrowLeft className="ml-2" />
             </HotkeyButton>
@@ -101,7 +101,7 @@ export function GroupMenu(
               hotkey="PAGE_RIGHT"
               className="flex-row-reverse"
               disabled={nextGroup?.id === undefined}
-              onClick={() => void handlers.PAGE_RIGHT.handler()}
+              onClick={handlers.PAGE_RIGHT.handler}
             >
               <ArrowRight className="mr-2" />
             </HotkeyButton>

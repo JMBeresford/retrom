@@ -1,5 +1,6 @@
 import { useToast } from "@/components/ui/use-toast";
 import { JobStatus } from "@/generated/retrom/jobs";
+import { GetJobSubscriptionResponse } from "@/generated/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -49,43 +50,45 @@ export function useUpdateLibraryMetadata() {
           })
         : undefined;
 
-      function invalidate(key: string = "game-metadata") {
-        void queryClient.invalidateQueries({
-          predicate: ({ queryKey }) => queryKey.includes(key),
-        });
-      }
-
-      for await (const progress of gameSubscription) {
-        if (progress.job?.status === JobStatus.Success) {
-          invalidate();
-        }
-      }
-
-      for await (const progress of platformSubscription) {
-        if (progress.job?.status === JobStatus.Success) {
-          invalidate("platform-metadata");
-        }
-      }
-
-      for await (const progress of extraSubscription) {
-        if (progress.job?.status === JobStatus.Success) {
-          invalidate();
-        }
-      }
-
-      if (steamSubscription !== undefined) {
-        for await (const progress of steamSubscription) {
+      async function pollSub(
+        subscription: AsyncIterable<GetJobSubscriptionResponse>,
+        key: string,
+      ) {
+        for await (const progress of subscription) {
           if (progress.job?.status === JobStatus.Success) {
-            invalidate();
+            await queryClient.invalidateQueries({
+              predicate: ({ queryKey }) => queryKey.includes(key),
+            });
           }
         }
       }
 
-      toast({
-        title: "Library Metadata Update Complete",
-      });
+      const promises = [
+        { subscription: gameSubscription, key: "game-metadata" },
+        { subscription: platformSubscription, key: "platform-metadata" },
+        { subscription: extraSubscription, key: "game-metadata" },
+        { subscription: steamSubscription, key: "game-metadata" },
+      ].map(
+        ({ subscription, key }) =>
+          new Promise<void>((resolve, reject) => {
+            if (subscription !== undefined) {
+              pollSub(subscription, key)
+                .then(() => resolve())
+                .catch(reject);
+            } else {
+              resolve();
+            }
+          }),
+      );
+
+      return Promise.all(promises)
+        .then(() => {
+          toast({
+            title: "Library Metadata Update Complete",
+          });
+        })
+        .catch(console.error);
     },
-    mutationFn: async () =>
-      await retromClient.libraryClient.updateLibraryMetadata({}),
+    mutationFn: () => retromClient.libraryClient.updateLibraryMetadata({}),
   });
 }

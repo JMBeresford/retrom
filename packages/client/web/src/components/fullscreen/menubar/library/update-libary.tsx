@@ -67,7 +67,7 @@ export function UpdateLibrary() {
                 <HotkeyButton hotkey="BACK">back</HotkeyButton>
               </SheetClose>
 
-              <HotkeyButton hotkey="MENU" onClick={() => void handleUpdate()}>
+              <HotkeyButton hotkey="MENU" onClick={handleUpdate}>
                 Update
               </HotkeyButton>
             </SheetFooter>

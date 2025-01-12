@@ -132,7 +132,7 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
             <ScrollArea className="h-full w-full">
               <Form {...form}>
                 <form
-                  onSubmit={() => void form.handleSubmit(handleSubmit)()}
+                  onSubmit={form.handleSubmit(handleSubmit)}
                   className="flex flex-col justify-between h-full"
                 >
                   <ConfigForm />
@@ -147,7 +147,7 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
 
               <HotkeyButton
                 disabled={disabled}
-                onClick={() => void form.handleSubmit(handleSubmit)()}
+                onClick={form.handleSubmit(handleSubmit)}
                 hotkey="MENU"
               >
                 confirm

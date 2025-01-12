@@ -18,7 +18,7 @@ export function DownloadMetadataModal() {
   const navigate = useNavigate();
   const { downloadMetadataModal } = RootRoute.useSearch();
 
-  const { mutateAsync, isPending } = useUpdateLibraryMetadata();
+  const { mutate, isPending } = useUpdateLibraryMetadata();
 
   return (
     <Dialog
@@ -45,19 +45,7 @@ export function DownloadMetadataModal() {
             <Button variant="secondary">Cancel</Button>
           </DialogClose>
 
-          <Button
-            className="relative"
-            onClick={() => {
-              mutateAsync()
-                .then(
-                  () =>
-                    void navigate({
-                      search: { downloadMetadataModal: undefined },
-                    }),
-                )
-                .catch(console.error);
-            }}
-          >
+          <Button className="relative" onClick={() => mutate()}>
             <LoaderCircleIcon
               className={cn("animate-spin absolute", !isPending && "opacity-0")}
             />

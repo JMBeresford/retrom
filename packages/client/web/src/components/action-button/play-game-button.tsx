@@ -145,7 +145,7 @@ export const PlayGameButton = forwardRef(
         ref={forwardedRef}
         {...props}
         disabled={disabled}
-        onClick={() => void onClick()}
+        onClick={onClick}
       >
         <Content />
       </Button>
