@@ -1,3 +1,7 @@
+use postgresql_commands::{
+    pg_ctl::{Mode, PgCtlBuilder},
+    CommandBuilder,
+};
 use postgresql_embedded::{Settings, VersionReq};
 
 pub use postgresql_embedded::PostgreSQL;
@@ -39,7 +43,11 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<impl PgCtlFailsafeOpe
 pub trait PgCtlFailsafeOperations {
     fn failsafe_start(&mut self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
     fn failsafe_stop(&self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
-    fn status(&self) -> postgresql_embedded::Status;
+    fn status(
+        &self,
+    ) -> impl std::future::Future<Output = crate::Result<postgresql_embedded::Status>> + Send;
+
+    fn prune_stale_pid_file(&self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
     fn settings(&self) -> &Settings;
 }
 
@@ -82,8 +90,32 @@ impl PgCtlFailsafeOperations for PostgreSQL {
         Ok(())
     }
 
-    fn status(&self) -> postgresql_embedded::Status {
-        self.status()
+    async fn status(&self) -> crate::Result<postgresql_embedded::Status> {
+        self.prune_stale_pid_file().await?;
+        Ok(self.status())
+    }
+
+    async fn prune_stale_pid_file(&self) -> crate::Result<()> {
+        let settings = self.settings();
+        let pid_file = settings.data_dir.join("postmaster.pid");
+
+        if pid_file.exists() {
+            let pg_ctl_status = PgCtlBuilder::new()
+                .mode(Mode::Status)
+                .pgdata(&settings.data_dir)
+                .wait()
+                .build_tokio()
+                .output()
+                .await?
+                .status;
+
+            if pg_ctl_status.code() == Some(3) {
+                tracing::warn!("Found stale PID file, was Retrom not terminated correctly? Removing file: {:?}", pid_file);
+                tokio::fs::remove_file(pid_file).await?;
+            }
+        }
+
+        Ok(())
     }
 
     fn settings(&self) -> &Settings {

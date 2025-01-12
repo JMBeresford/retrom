@@ -5043,11 +5043,13 @@ dependencies = [
  "diesel_migrations",
  "dotenvy",
  "openssl-sys",
+ "postgresql_commands",
  "postgresql_embedded",
  "pq-sys",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
+ "tokio",
  "tracing",
 ]
 
