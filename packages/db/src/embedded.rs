@@ -49,7 +49,7 @@ impl PgCtlFailsafeOperations for PostgreSQL {
 
         if let Err(err) = self.start().await {
             match &err {
-                EmbeddedError::DatabaseStartError(_) => {
+                EmbeddedError::DatabaseStartError(_) | EmbeddedError::CommandError { .. } => {
                     if self.status() != postgresql_embedded::Status::Started {
                         return Err(crate::Error::EmbeddedError(err));
                     };
@@ -68,7 +68,7 @@ impl PgCtlFailsafeOperations for PostgreSQL {
 
         if let Err(err) = self.stop().await {
             match &err {
-                EmbeddedError::DatabaseStopError(_) => {
+                EmbeddedError::DatabaseStopError(_) | EmbeddedError::CommandError { .. } => {
                     if self.status() != postgresql_embedded::Status::Stopped {
                         return Err(crate::Error::EmbeddedError(err));
                     };
