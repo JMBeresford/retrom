@@ -46,7 +46,7 @@ sort of _self-hosted Steam_ for your DRM-free game library.
 - Automatically download game metadata and artworks from supported providers
   to showcase your library with style!
 
-## Screenshots and Recordings
+## Screenshots
 
 **Home Screen**
 
@@ -55,6 +55,14 @@ sort of _self-hosted Steam_ for your DRM-free game library.
 **Game View**
 
 ![Screenshot 2024-10-10 at 12 03 15 PM](https://github.com/user-attachments/assets/f22ced99-f9a6-43e4-a1ab-ef111b4be44a)
+
+**Fullscreen Mode**
+
+![image](https://github.com/user-attachments/assets/17b4458a-1698-41de-bf08-06ad7fe454ae)
+
+![image](https://github.com/user-attachments/assets/c709b935-7b59-4e6f-9432-84e4d9928931)
+
+![image](https://github.com/user-attachments/assets/da4aebb2-ac81-4783-a0fd-c9fe3e06a447)
 
 ## Roadmap
 
