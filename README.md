@@ -2,17 +2,15 @@
   
   ![Banner][banner-link]
   
-  <h3>A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.</h3>
+  ### A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.
 
----
+  ### [check out the wiki to get started](https://github.com/JMBeresford/retrom/wiki)
 
-<h6>Join the Discord server:</h6>
+  ---
 
-[![discord-badge]][discord-link]
+  <h6>Join the Discord server:</h6>
 
-<a href="https://github.com/JMBeresford/retrom/wiki">
-  <h5>Check out the Wiki to learn more!</h5>
-</a>
+  [![discord-badge]][discord-link]
 
 </div>
 
