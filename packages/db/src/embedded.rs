@@ -38,11 +38,8 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<impl PgCtlFailsafeOpe
 pub trait PgCtlFailsafeOperations {
     fn failsafe_start(&mut self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
     fn failsafe_stop(&self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
-    fn failsafe_status(
-        &self,
-    ) -> impl std::future::Future<Output = crate::Result<postgresql_embedded::Status>> + Send;
-
-    fn prune_stale_pid_file(&self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
+    fn status(&self) -> postgresql_embedded::Status;
+    fn maybe_prune_pid_file(&self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
     fn settings(&self) -> &Settings;
 }
 
@@ -50,8 +47,8 @@ impl PgCtlFailsafeOperations for PostgreSQL {
     async fn failsafe_start(&mut self) -> crate::Result<()> {
         use postgresql_embedded::Error as EmbeddedError;
 
-        let current_status = self.failsafe_status().await?;
-        if current_status == postgresql_embedded::Status::Started {
+        self.maybe_prune_pid_file().await?;
+        if self.status() == postgresql_embedded::Status::Started {
             tracing::warn!("Embedded database is already running, stopping it");
             self.failsafe_stop().await?;
         };
@@ -91,24 +88,22 @@ impl PgCtlFailsafeOperations for PostgreSQL {
         Ok(())
     }
 
-    async fn failsafe_status(&self) -> crate::Result<postgresql_embedded::Status> {
-        self.prune_stale_pid_file().await?;
-        Ok(self.status())
+    fn status(&self) -> postgresql_embedded::Status {
+        self.status()
     }
 
-    async fn prune_stale_pid_file(&self) -> crate::Result<()> {
+    async fn maybe_prune_pid_file(&self) -> crate::Result<()> {
         let settings = self.settings();
         let pid_file = settings.data_dir.join("postmaster.pid");
 
         if pid_file.exists() {
-            let pg_ctl_status = PgCtlBuilder::new()
+            let mut pg_ctl_cmd = PgCtlBuilder::from(settings)
                 .mode(Mode::Status)
                 .pgdata(&settings.data_dir)
                 .wait()
-                .build_tokio()
-                .output()
-                .await?
-                .status;
+                .build_tokio();
+
+            let pg_ctl_status = pg_ctl_cmd.status().await?;
 
             if pg_ctl_status.code() == Some(3) {
                 tracing::warn!("Found stale PID file, was Retrom not terminated correctly? Removing file: {:?}", pid_file);
