@@ -19,11 +19,6 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<impl PgCtlFailsafeOpe
     let mut psql = PostgreSQL::new(settings);
     psql.setup().await?;
 
-    if psql.status() == postgresql_embedded::Status::Started {
-        tracing::warn!("Embedded database is already running, stopping it");
-        psql.failsafe_stop().await?;
-    };
-
     psql.failsafe_start().await?;
 
     if !psql.database_exists(DB_NAME).await? {
@@ -43,7 +38,7 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<impl PgCtlFailsafeOpe
 pub trait PgCtlFailsafeOperations {
     fn failsafe_start(&mut self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
     fn failsafe_stop(&self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
-    fn status(
+    fn failsafe_status(
         &self,
     ) -> impl std::future::Future<Output = crate::Result<postgresql_embedded::Status>> + Send;
 
@@ -54,6 +49,12 @@ pub trait PgCtlFailsafeOperations {
 impl PgCtlFailsafeOperations for PostgreSQL {
     async fn failsafe_start(&mut self) -> crate::Result<()> {
         use postgresql_embedded::Error as EmbeddedError;
+
+        let current_status = self.failsafe_status().await?;
+        if current_status == postgresql_embedded::Status::Started {
+            tracing::warn!("Embedded database is already running, stopping it");
+            self.failsafe_stop().await?;
+        };
 
         if let Err(err) = self.start().await {
             match &err {
@@ -90,7 +91,7 @@ impl PgCtlFailsafeOperations for PostgreSQL {
         Ok(())
     }
 
-    async fn status(&self) -> crate::Result<postgresql_embedded::Status> {
+    async fn failsafe_status(&self) -> crate::Result<postgresql_embedded::Status> {
         self.prune_stale_pid_file().await?;
         Ok(self.status())
     }
