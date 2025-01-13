@@ -86,7 +86,7 @@ export function VersionInfoModal() {
           <Button variant="link" className="text-accent-text">
             <a
               target="_blank"
-              href="https://github.com/JMBeresford/retrom/blob/main/docs/updating/README.md#updating-the-server"
+              href="https://github.com/JMBeresford/retrom/wiki/Updating#updating-the-server"
             >
               updating the server
             </a>
@@ -95,7 +95,7 @@ export function VersionInfoModal() {
           <Button variant="link" className="text-accent-text">
             <a
               target="_blank"
-              href="https://github.com/JMBeresford/retrom/blob/main/docs/updating/README.md#updating-the-client"
+              href="https://github.com/JMBeresford/retrom/wiki/Updating#updating-the-client"
             >
               updating the client
             </a>
