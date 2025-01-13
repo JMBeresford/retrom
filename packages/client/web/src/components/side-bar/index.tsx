@@ -102,7 +102,6 @@ export function SideBar() {
       return acc;
     }, ret);
   }, [gameData, platformData, filters]);
-  console.log({ platformsWithMetadata, gamesByPlatform });
 
   return (
     <aside

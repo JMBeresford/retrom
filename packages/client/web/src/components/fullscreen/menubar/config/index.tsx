@@ -58,7 +58,21 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
     resolver: zodResolver(formSchema),
     mode: "all",
     reValidateMode: "onChange",
-    defaultValues: config,
+    defaultValues: {
+      interface: {
+        fullscreenByDefault: config?.interface?.fullscreenByDefault ?? false,
+        fullscreenConfig: {
+          gridList: {
+            columns:
+              config?.interface?.fullscreenConfig?.gridList?.columns ?? 4,
+            gap: config?.interface?.fullscreenConfig?.gridList?.gap ?? 20,
+            imageType:
+              config?.interface?.fullscreenConfig?.gridList?.imageType ??
+              InterfaceConfig_GameListEntryImage.COVER,
+          },
+        },
+      },
+    },
   });
 
   const formState = form.formState;
