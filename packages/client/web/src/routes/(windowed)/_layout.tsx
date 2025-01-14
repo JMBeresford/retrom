@@ -60,7 +60,7 @@ function LayoutComponent() {
 
   return (
     <>
-      {setupComplete && (
+      {(!checkIsDesktop() || setupComplete) && (
         <ModalActionProvider>
           <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
             <Menubar />
