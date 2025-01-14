@@ -29,12 +29,15 @@ services:
     container_name: retrom
     hostname: retrom
     env_file: ./.env
+    # environment:
+    # RUST_LOG: DEBUG
+    # RUST_BACKTRACE: 1
     ports:
       - 5111:5101
       - 3010:3000
     volumes:
       - ${CONTENT_DIR1:-./mock_content/}/:/lib1
       - ${CONTENT_DIR2:-./mock_content_single}:/lib2
-      - ${CONFIG_DIR:-./config_dev/}:/config
+      - ${CONFIG_DIR:-./config_dev/}:/app/config
     depends_on:
       - retrom-db

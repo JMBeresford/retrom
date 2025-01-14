@@ -34,7 +34,7 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
     let config_manager = match crate::config::ServerConfigManager::new() {
         Ok(config) => Arc::new(config),
         Err(err) => {
-            tracing::error!("Could not load configuration: {}", err);
+            tracing::error!("Could not load configuration: {:#?}", err);
             exit(1)
         }
     };
@@ -59,31 +59,32 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
 
     #[cfg(feature = "embedded_db")]
     {
-        use retrom_db::embedded::PgCtlFailsafeOperations;
+        let config_db_url = conn_config.and_then(|conn| conn.db_url);
 
-        let mut db_url_with_params = db_url.clone();
-        if let Some(db_params) = db_params {
-            db_url_with_params.push_str(db_params);
-        }
+        if config_db_url.is_none() {
+            use retrom_db::embedded::PgCtlFailsafeOperations;
 
-        psql.replace(
-            match retrom_db::embedded::start_embedded_db(&db_url_with_params).await {
-                Ok(psql) => psql,
-                Err(why) => {
-                    tracing::error!("Could not start embedded db: {:#?}", why);
-                    panic!("Could not start embedded db");
-                }
-            },
-        );
-
-        // Port may be random, so get new db_url from running instance
-        if let Some(psql) = &psql {
-            if conn_config.and_then(|conn| conn.db_url).is_none() {
-                db_url = psql.settings().url(DB_NAME);
-            } else {
-                // If the db_url was set in the configuration, internal DB is not needed
-                let _ = psql.failsafe_stop().await;
+            let mut db_url_with_params = db_url.clone();
+            if let Some(db_params) = db_params {
+                db_url_with_params.push_str(db_params);
             }
+
+            psql.replace(
+                match retrom_db::embedded::start_embedded_db(&db_url_with_params).await {
+                    Ok(psql) => psql,
+                    Err(why) => {
+                        tracing::error!("Could not start embedded db: {:#?}", why);
+                        panic!("Could not start embedded db");
+                    }
+                },
+            );
+
+            // Port may be random, so get new db_url from running instance
+            if let Some(psql) = &psql {
+                db_url = psql.settings().url(DB_NAME);
+            }
+        } else {
+            tracing::debug!("Opting out of embedded db");
         }
     }
 

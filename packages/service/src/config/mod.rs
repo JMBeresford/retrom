@@ -23,10 +23,13 @@ pub struct ServerConfigManager {
 }
 
 impl ServerConfigManager {
+    #[tracing::instrument]
     pub fn new() -> Result<Self> {
         dotenvy::dotenv().ok();
         let config_path_str = std::env::var("RETROM_CONFIG").unwrap_or("./config.json".into());
         let config_path = PathBuf::from(&config_path_str);
+
+        tracing::debug!("Config path: {:?}", config_path);
 
         if !config_path.exists() {
             let default_config = ServerConfig {
@@ -37,8 +40,14 @@ impl ServerConfigManager {
                 ..Default::default()
             };
 
+            tracing::info!("Config file does not exist, creating...");
+
+            std::fs::create_dir_all(config_path.parent().unwrap())?;
+
             let data = serde_json::to_vec_pretty(&default_config)?;
             std::fs::write(&config_path, data)?;
+
+            tracing::info!("Config file created at {:?}", config_path);
         }
 
         let config = RwLock::new(Self::read_config_file(&config_path_str)?);

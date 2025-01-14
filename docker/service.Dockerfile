@@ -42,7 +42,7 @@ RUN apt-get update && apt-get install openssl libssl-dev libpq-dev ca-certificat
 
 ### Service env
 ENV RUST_LOG=info
-ENV RETROM_CONFIG=/config/config.json
+ENV RETROM_CONFIG=/app/config/config.json
 EXPOSE 5101
 
 ### Web env
@@ -57,12 +57,10 @@ COPY --from=web-builder /web /app/web
 
 RUN mkdir /app/data
 RUN mkdir /app/psql
+RUN mkdir /app/config
 
-RUN chmod -R 755 /app
 RUN chown -R ${USER}:${USER} /app
-
-RUN if [-d /config ]; then chmod -R 755 /config; fi
-RUN if [-d /config ]; then chown -R ${USER}:${USER} /config; fi
+RUN chmod -R 775 /app
 
 WORKDIR /app
 
