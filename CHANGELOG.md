@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.5.0](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.10...retrom-v0.5.0) - 2025-01-14
+
+### Fixes
+- don't resize window on web
+
+
+
+### New
+- [**breaking**] standalone support
+
+    The Retrom service can now be run with its own
+    internal database, rather than relying on an
+    external one.
+
+
+
+- Configure libraries from the client
+
+    You can now modify your library configurations, such as
+    folder location and structure, directly from the client.
+
+    This means that just about the entire server config can be managed
+    from the client now. No more manually mucking around with `json`
+    files on the server!
+
+
+
+- Standalone mode
+
+    Retrom can now spin up and manage its own server
+    locally via standalone mode. No more complicated
+    server installation needed!
+
+
+
+
 ## [0.4.10](https://github.com/JMBeresford/retrom/compare/retrom-v0.4.9...retrom-v0.4.10) - 2024-12-28
 
 ### Fixes
