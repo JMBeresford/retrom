@@ -27,7 +27,7 @@ COPY --from=common /app /usr/src/retrom
 WORKDIR /usr/src/retrom
 
 RUN apt-get update && apt-get install build-essential protobuf-compiler openssl pkg-config libssl-dev libpq-dev -y
-RUN cargo install --path ./packages/service
+RUN cargo install --path ./packages/service --features embedded_db
 
 FROM base AS runner
 ENV UID=1505
@@ -38,7 +38,7 @@ ENV USER=retrom
 RUN addgroup --gid $GID ${USER}
 RUN adduser --gid $GID --uid $UID ${USER}
 
-RUN apt-get update && apt-get install openssl libssl-dev libpq-dev ca-certificates -y
+RUN apt-get update && apt-get install openssl libssl-dev libpq-dev ca-certificates libxml2 -y
 
 ### Service env
 ENV RUST_LOG=info
@@ -55,12 +55,21 @@ RUN chmod +x /app/start.sh
 
 COPY --from=web-builder /web /app/web
 
-RUN chmod -R 777 /app/web
+RUN mkdir /app/data
+RUN mkdir /app/psql
+
+RUN chmod -R 755 /app
+RUN chown -R ${USER}:${USER} /app
+
+RUN if [-d /config ]; then chmod -R 755 /config; fi
+RUN if [-d /config ]; then chown -R ${USER}:${USER} /config; fi
 
 WORKDIR /app
 
 USER ${USER}
 
 RUN umask ${UMASK}
+
+ENV EMBEDDED_DB_OPTS="?data_dir=/app/data&password_file=/app/.passwd&installation_dir=/app/psql"
 
 CMD ./start.sh

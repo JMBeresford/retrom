@@ -14,6 +14,10 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<impl PgCtlFailsafeOpe
     settings.temporary = false;
     settings.version = VersionReq::parse("=17.2.0").expect("Could not parse version requirement");
 
+    if !settings.data_dir.exists() {
+        tokio::fs::create_dir_all(&settings.data_dir).await?;
+    }
+
     tracing::debug!("Starting embedded database: {:#?}", settings);
 
     let mut psql = PostgreSQL::new(settings);

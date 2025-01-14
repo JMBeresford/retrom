@@ -30,8 +30,8 @@ services:
     hostname: retrom
     env_file: ./.env
     ports:
-      - 5101:5101
-      - 3000:3000
+      - 5111:5101
+      - 3010:3000
     volumes:
       - ${CONTENT_DIR1:-./mock_content/}/:/lib1
       - ${CONTENT_DIR2:-./mock_content_single}:/lib2

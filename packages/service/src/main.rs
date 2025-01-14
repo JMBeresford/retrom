@@ -12,7 +12,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let (server, _port) = retrom_service::get_server(None).await;
+    #[cfg(feature = "embedded_db")]
+    let db_opts = std::env::var("EMBEDDED_DB_OPTS").ok();
+    #[cfg(feature = "embedded_db")]
+    let opts: Option<&str> = db_opts.as_deref();
+
+    #[cfg(not(feature = "embedded_db"))]
+    let opts = None;
+
+    let (server, _port) = retrom_service::get_server(opts).await;
     let _ = server.await;
 
     Ok(())
