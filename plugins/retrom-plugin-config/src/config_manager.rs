@@ -22,7 +22,12 @@ pub struct ConfigManager<R: Runtime> {
 
 impl<R: Runtime> ConfigManager<R> {
     pub fn new(app: AppHandle<R>) -> crate::Result<Self> {
-        let config_path = app.path().app_config_dir()?.join("config.json");
+        let config_dir = app.path().app_config_dir()?;
+        let config_path = config_dir.join("config.json");
+
+        if !config_dir.exists() {
+            std::fs::create_dir_all(&config_dir)?;
+        }
 
         let initial_config = match config_path.exists() {
             false => {
