@@ -7,6 +7,11 @@ repository.workspace = true
 license.workspace = true
 edition.workspace = true
 description = "The Retrom video game library service"
+include = [
+  "../../docker/service.Dockerfile",
+  "../../docker/start.sh",
+  "../../docker/entrypoint.sh",
+]
 
 [dependencies]
 retry = { workspace = true }
