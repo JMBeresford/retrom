@@ -27,10 +27,8 @@ git_tag_name = "retrom-v{{ version }}"
 
 [changelog]
 commit_parsers = [
-  { message = "^feat!?:", group = "New" },
-  { message = "^feat\\(.*\\)!?:", group = "New" },
-  { message = "^fix!?:", group = "Fixes" },
-  { message = "^fix\\(.*\\)!?:", group = "Fixes" },
+  { message = "^feat.*:", group = "Newly Added" },
+  { message = "^fix.*:", group = "Bug Fixes" },
 ]
 body = """
 ## [{{ version | trim_start_matches(pat="v") }}]{%- if release_link -%}({{ release_link }}){% endif %} - {{ timestamp | date(format="%Y-%m-%d") }}
