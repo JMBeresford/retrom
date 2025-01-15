@@ -15,6 +15,10 @@ changelog_include = [
   'retrom-client',
   'retrom-plugin-installer',
   'retrom-plugin-launcher',
+  'retrom-plugin-config',
+  'retrom-plugin-service-client',
+  'retrom-plugin-standalone',
+  'retrom-plugin-steam',
 ]
 git_release_enable = true
 git_tag_enable = true
@@ -23,8 +27,8 @@ git_tag_name = "retrom-v{{ version }}"
 
 [changelog]
 commit_parsers = [
-  { message = "^feat!?:", group = "New" },
-  { message = "^fix!?:", group = "Fixes" },
+  { message = "^feat!?(\\(*\\))?:", group = "New" },
+  { message = "^fix!?(\\(*\\))?:", group = "Fixes" },
 ]
 body = """
 ## [{{ version | trim_start_matches(pat="v") }}]{%- if release_link -%}({{ release_link }}){% endif %} - {{ timestamp | date(format="%Y-%m-%d") }}
