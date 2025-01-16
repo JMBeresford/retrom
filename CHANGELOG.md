@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.5.4](https://github.com/JMBeresford/retrom/compare/retrom-v0.5.3...retrom-v0.5.4) - 2025-01-16
+
+### Bug Fixes
+- *(docker)* better default permissions
+
+
 ## [0.5.2](https://github.com/JMBeresford/retrom/compare/retrom-v0.5.1...retrom-v0.5.2) - 2025-01-15
 
 ### Bug Fixes
