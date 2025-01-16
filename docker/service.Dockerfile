@@ -41,34 +41,36 @@ RUN cargo install --path /usr/src/retrom/packages/service --features embedded_db
 
 ### RUNTIME
 FROM base AS runner
-ENV UID=1505
-ENV GID=1505
+ENV UID=1000
+ENV GID=1000
 ENV UMASK=000
-ENV USER=retrom
-ENV RETROM_PORT=5101
+ENV PORT=5101
 ENV RETROM_WEB_PORT=3000
 
-RUN addgroup --gid $GID ${USER}
-RUN adduser --gid $GID --uid $UID ${USER}
+RUN adduser retrom
+RUN usermod -o -u ${UID} retrom
+RUN groupmod -o -g ${GID} retrom
 
 ### Service env
 ENV RUST_LOG=info
 ENV RETROM_CONFIG=/app/config/config.json
-EXPOSE ${RETROM_PORT}
+EXPOSE ${RETROM_SERVER_PORT}
 
 ### Web env
 ENV NODE_ENV=production
-EXPOSE ${RETROM_WEB_PORT}
+EXPOSE ${PORT}
 
 COPY --from=service-builder /usr/local/cargo/bin/retrom-service /app/retrom-service
 COPY docker/start.sh /app/start.sh
-RUN chmod +x /app/start.sh
 
 COPY --from=web-builder /web /app/web
 
 RUN mkdir /app/data
 RUN mkdir /app/psql
 RUN mkdir /app/config
+
+RUN chmod -R 775 /app
+RUN chmod +x /app/start.sh
 
 VOLUME /app/config
 VOLUME /app/data
@@ -77,6 +79,4 @@ RUN umask ${UMASK}
 
 ENV EMBEDDED_DB_OPTS="?data_dir=/app/data&password_file=/app/.passwd&installation_dir=/app/psql"
 
-COPY docker/entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
 CMD ["/app/start.sh"]

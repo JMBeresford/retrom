@@ -17,13 +17,13 @@ use tokio::task::JoinHandle;
 use tower::Service;
 use tracing::Instrument;
 
-#[cfg(feature = "embedded_db")]
-use retrom_db::embedded::DB_NAME;
-
 pub mod config;
 mod grpc;
 mod providers;
 mod rest;
+
+#[cfg(feature = "embedded_db")]
+use retrom_db::embedded::DB_NAME;
 
 pub const DEFAULT_PORT: i32 = 5101;
 pub const DEFAULT_DB_URL: &str = "postgres://postgres:postgres@localhost/retrom";
