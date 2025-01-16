@@ -69,11 +69,14 @@ RUN mkdir /app/data
 RUN mkdir /app/psql
 RUN mkdir /app/config
 
+RUN chown -R retrom:retrom /app
 RUN chmod -R 775 /app
 RUN chmod +x /app/start.sh
 
 VOLUME /app/config
 VOLUME /app/data
+
+USER retrom
 
 RUN umask ${UMASK}
 
