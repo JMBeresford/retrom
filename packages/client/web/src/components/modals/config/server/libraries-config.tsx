@@ -223,7 +223,7 @@ export function LibrariesConfig(props: {
       <DialogFooter>
         <Button
           onClick={() =>
-            void navigate({
+            navigate({
               search: (prev) => ({ ...prev, configModal: undefined }),
             })
           }
@@ -258,7 +258,7 @@ function CreateLibraryRow(props: {
   const handleSubmit = useCallback(
     (values: z.infer<typeof createLibrarySchema>) => {
       try {
-        props.append({ ...values, newly: "added" });
+        props.append({ ...values, newly: "added" }, { shouldFocus: false });
         form.reset();
       } catch (error) {
         console.error(error);
@@ -339,6 +339,7 @@ function BrowseButton<T extends FieldValues>(props: {
           <Button
             {...field}
             size="icon"
+            type="button"
             className="min-h-0 h-min w-min p-2"
             onClick={() => browse(field.onChange)}
           >

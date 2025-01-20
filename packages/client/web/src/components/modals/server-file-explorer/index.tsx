@@ -20,7 +20,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FilesystemNodeType } from "@/generated/retrom/file-explorer";
-import { FileIcon, FolderIcon, LucideProps, Slash } from "lucide-react";
+import {
+  FileIcon,
+  FolderIcon,
+  HardDriveIcon,
+  LucideProps,
+  Slash,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Breadcrumb,
@@ -61,8 +67,10 @@ const FilesystemNodeIcon: Record<
   [FilesystemNodeType.UNRECOGNIZED]: () => <></>,
 };
 
+const MAX_CRUMBS = 3;
+
 export function ServerFileExplorerModal() {
-  const [path, setPath] = useState<string | undefined>();
+  const [path, setPath] = useState<string>("./");
   const [selectedPath, setSelectedPath] = useState<string | undefined>();
   const modalAction = useModalAction();
   const { serverFileExplorerModal } = RootRoute.useSearch();
@@ -83,9 +91,13 @@ export function ServerFileExplorerModal() {
         action(path);
       }
 
-      return navigate({
+      if (!path) {
+        setPath("./");
+      }
+
+      navigate({
         search: (prev) => ({ ...prev, serverFileExplorerModal: undefined }),
-      });
+      }).catch(console.error);
     },
     [modalAction?.activeModalProps, navigate],
   );
@@ -95,7 +107,7 @@ export function ServerFileExplorerModal() {
       open={serverFileExplorerModal?.open}
       onOpenChange={(value) => {
         if (!value) {
-          void close();
+          close();
         }
       }}
     >
@@ -120,8 +132,24 @@ export function ServerFileExplorerModal() {
               <TableHeader className="[&_tr]:border-b-0 sticky top-0">
                 <TableRow>
                   <TableHead colSpan={2} className="p-0 h-min">
-                    <Breadcrumb className="bg-muted py-2 px-4 border-b">
+                    <Breadcrumb className="bg-muted py-2 px-4 border-b select-none">
                       <BreadcrumbList>
+                        <BreadcrumbItem onClick={() => setPath(`/`)}>
+                          <HardDriveIcon
+                            className={cn(
+                              "w-[1.25rem] h-[1.25rem] stroke-muted-foreground",
+                              pathParts.length === 0 && "stroke-foreground",
+                              "cursor-pointer hover:stroke-foreground transition-colors",
+                            )}
+                          />
+                        </BreadcrumbItem>
+
+                        {pathParts.length ? (
+                          <BreadcrumbSeparator>
+                            <Slash />
+                          </BreadcrumbSeparator>
+                        ) : null}
+
                         <BreadcrumbItem
                           onClick={() => setPath(`/${pathParts.at(0)}`)}
                           className={cn(
@@ -132,7 +160,7 @@ export function ServerFileExplorerModal() {
                           {pathParts.at(0)}
                         </BreadcrumbItem>
 
-                        {pathParts.length > 4 && (
+                        {pathParts.length > MAX_CRUMBS && (
                           <>
                             <BreadcrumbSeparator>
                               <Slash />
@@ -142,14 +170,19 @@ export function ServerFileExplorerModal() {
                         )}
 
                         {pathParts
-                          .slice(pathParts.length > 4 ? -3 : 1)
+                          .slice(
+                            pathParts.length > MAX_CRUMBS
+                              ? -(MAX_CRUMBS - 1)
+                              : 1,
+                          )
                           .map((part, index, parts) => {
                             const indexFromEnd =
-                              (pathParts.length > 4
-                                ? 3
+                              (pathParts.length > MAX_CRUMBS
+                                ? MAX_CRUMBS - 1
                                 : pathParts.length - 1) -
                               index -
                               1;
+
                             const crumbPath =
                               "/" + pathParts.slice(0, -indexFromEnd).join("/");
 
@@ -185,7 +218,11 @@ export function ServerFileExplorerModal() {
                     <TableRow
                       key={child.name}
                       onClick={() => setSelectedPath(child.path)}
-                      onDoubleClick={() => setPath(child.path)}
+                      onDoubleClick={() =>
+                        child.nodeType === FilesystemNodeType.DIRECTORY
+                          ? setPath(child.path)
+                          : close(child.path)
+                      }
                       className={cn(
                         "cursor-pointer *:py-2 border-b last:border-b-0 first:border-t-0",
                         selectedPath === child.path &&
@@ -193,7 +230,7 @@ export function ServerFileExplorerModal() {
                       )}
                     >
                       <TableCell>
-                        <Icon size={"1rem"} className={cn("")} />
+                        <Icon size={"1rem"} />
                       </TableCell>
                       <TableCell className="w-full select-none">
                         {child.name}
@@ -210,7 +247,7 @@ export function ServerFileExplorerModal() {
           <Button
             variant="secondary"
             onClick={() => {
-              void close();
+              close();
             }}
           >
             Close
@@ -218,7 +255,7 @@ export function ServerFileExplorerModal() {
 
           <Button
             disabled={pending || error}
-            onClick={() => void close(selectedPath)}
+            onClick={() => close(selectedPath)}
           >
             Confirm
           </Button>

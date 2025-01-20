@@ -16,8 +16,16 @@ pub mod retrom {
         type Error = ();
 
         fn try_from(_path: PathBuf) -> Result<Self, Self::Error> {
-            let _path = _path.canonicalize().map_err(|_| ())?;
+            let _path = _path.canonicalize().or(Err(()))?;
             let path = _path.to_str().ok_or(())?.into();
+
+            if path == "/" {
+                return Ok(crate::retrom::FilesystemNode {
+                    node_type: crate::retrom::FilesystemNodeType::Directory.into(),
+                    path,
+                    name: "/".into(),
+                });
+            };
 
             let name = _path.file_name().ok_or(())?.to_str().ok_or(())?.into();
 
