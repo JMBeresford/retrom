@@ -1,6 +1,11 @@
 #!/bin/bash
 
-set -e
+function on_error() {
+    echo "Error in retrom startup script, line $1"
+    exit 1
+}
+
+trap 'on_error $LINENO' ERR
 
 # Start the web server
 cd /app/web
