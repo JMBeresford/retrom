@@ -67,11 +67,11 @@ COPY --from=web-builder /web /app/web
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/start.sh /app/start.sh
 
-RUN mkdir /app/data
-RUN mkdir /app/psql
-RUN mkdir /app/config
+RUN mkdir /app/data && \
+    mkdir /app/psql && \
+    mkdir /app/config
 
-VOLUME ["/app/config", "/app/data"]
+VOLUME ["/app/config", "/app/data", "/app/psql"]
 
 RUN chown -R retrom:retrom /app && \
     chmod -R "=rwx" /app && \
