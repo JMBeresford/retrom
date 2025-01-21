@@ -224,7 +224,7 @@ export function SideBar() {
                 const name =
                   platform.metadata?.name || getFileStub(platform.path);
 
-                return games?.length ? (
+                return (
                   <AccordionItem
                     key={platform.id}
                     value={platform.id.toString()}
@@ -253,76 +253,85 @@ export function SideBar() {
                     </div>
 
                     <AccordionContent>
-                      <ul>
-                        {games.map((game) => {
-                          const isCurrentGame = currentGame?.id === game.id;
-                          const isInstalled =
-                            installationData?.installationState.get(game.id) ===
-                            InstallationStatus.INSTALLED;
+                      {games.length ? (
+                        <ul>
+                          {games.map((game) => {
+                            const isCurrentGame = currentGame?.id === game.id;
+                            const isInstalled =
+                              installationData?.installationState.get(
+                                game.id,
+                              ) === InstallationStatus.INSTALLED;
 
-                          const gameMetadata = game.metadata;
+                            const gameMetadata = game.metadata;
 
-                          const iconUrl = gameMetadata?.iconUrl;
-                          const fallbackName =
-                            game.storageType === StorageType.SINGLE_FILE_GAME
-                              ? getFileStub(game.path)
-                              : getFileName(game.path);
+                            const iconUrl = gameMetadata?.iconUrl;
+                            const fallbackName =
+                              game.storageType === StorageType.SINGLE_FILE_GAME
+                                ? getFileStub(game.path)
+                                : getFileName(game.path);
 
-                          const gameName = gameMetadata?.name ?? fallbackName;
+                            const gameName = gameMetadata?.name ?? fallbackName;
 
-                          return (
-                            <Tooltip key={game.id}>
-                              <TooltipTrigger asChild>
-                                <li
-                                  className={cn(
-                                    "relative z-10 before:z-[-1] before:duration-200",
-                                    "before:absolute before:inset-0 before:transition-opacity",
-                                    "before:bg-gradient-to-r before:from-accent/80 before:opacity-0",
-                                    "text-[1rem] text-muted-foreground/40 transition-all",
-                                    !isCurrentGame &&
-                                      "hover:before:opacity-60 hover:text-primary-foreground/80",
-                                    isInstalled && "text-muted-foreground",
-                                    isCurrentGame &&
-                                      "before:opacity-100 text-primary-foreground",
-                                    "max-w-full w-full overflow-hidden overflow-ellipsis px-3 my-1",
-                                  )}
-                                >
-                                  <Link
-                                    to="/games/$gameId"
-                                    params={{ gameId: game.id.toString() }}
-                                    className="grid grid-cols-[auto_1fr] items-center max-w-full h-full"
+                            return (
+                              <Tooltip key={game.id}>
+                                <TooltipTrigger asChild>
+                                  <li
+                                    className={cn(
+                                      "relative z-10 before:z-[-1] before:duration-200",
+                                      "before:absolute before:inset-0 before:transition-opacity",
+                                      "before:bg-gradient-to-r before:from-accent/80 before:opacity-0",
+                                      "text-[1rem] text-muted-foreground/40 transition-all",
+                                      !isCurrentGame &&
+                                        "hover:before:opacity-60 hover:text-primary-foreground/80",
+                                      isInstalled && "text-muted-foreground",
+                                      isCurrentGame &&
+                                        "before:opacity-100 text-primary-foreground",
+                                      "max-w-full w-full overflow-hidden overflow-ellipsis px-3 my-1",
+                                    )}
                                   >
-                                    <div className="relative min-w-[28px] min-h-[28px] mr-2 my-[2px]">
-                                      {iconUrl && (
-                                        <Image
-                                          src={iconUrl}
-                                          width={28}
-                                          height={28}
-                                          alt={gameName ?? ""}
-                                        />
-                                      )}
-                                    </div>
-                                    <span className="whitespace-nowrap overflow-hidden overflow-ellipsis">
-                                      <span>{gameName}</span>
-                                    </span>
-                                  </Link>
-                                </li>
-                              </TooltipTrigger>
-                              <TooltipPortal>
-                                <TooltipContent
-                                  side="right"
-                                  className="pointer-events-none touch-none"
-                                >
-                                  {gameName}
-                                </TooltipContent>
-                              </TooltipPortal>
-                            </Tooltip>
-                          );
-                        })}
-                      </ul>
+                                    <Link
+                                      to="/games/$gameId"
+                                      params={{ gameId: game.id.toString() }}
+                                      className="grid grid-cols-[auto_1fr] items-center max-w-full h-full"
+                                    >
+                                      <div className="relative min-w-[28px] min-h-[28px] mr-2 my-[2px]">
+                                        {iconUrl && (
+                                          <Image
+                                            src={iconUrl}
+                                            width={28}
+                                            height={28}
+                                            alt={gameName ?? ""}
+                                          />
+                                        )}
+                                      </div>
+                                      <span className="whitespace-nowrap overflow-hidden overflow-ellipsis">
+                                        <span>{gameName}</span>
+                                      </span>
+                                    </Link>
+                                  </li>
+                                </TooltipTrigger>
+                                <TooltipPortal>
+                                  <TooltipContent
+                                    side="right"
+                                    className="pointer-events-none touch-none"
+                                  >
+                                    {gameName}
+                                  </TooltipContent>
+                                </TooltipPortal>
+                              </Tooltip>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <div className="grid place-items-center pt-4">
+                          <p className="font-medium text-muted-foreground italic">
+                            Theres no games here...
+                          </p>
+                        </div>
+                      )}
                     </AccordionContent>
                   </AccordionItem>
-                ) : null;
+                );
               })}
             </Accordion>
           </TooltipProvider>
