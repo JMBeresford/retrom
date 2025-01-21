@@ -29,7 +29,7 @@ export function UpdateMetadataModal() {
         }
       }}
     >
-      <DialogContent handleScroll={false}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Update Metadata</DialogTitle>
           <DialogDescription>

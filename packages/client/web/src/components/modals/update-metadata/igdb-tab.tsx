@@ -23,7 +23,7 @@ import { Input } from "../../ui/input";
 import { useToast } from "../../ui/use-toast";
 import { Separator } from "../../ui/separator";
 import { LoaderCircleIcon } from "lucide-react";
-import { cn, getFileStub } from "@/lib/utils";
+import { cn, getFileName, getFileStub } from "@/lib/utils";
 import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
@@ -61,7 +61,7 @@ export function IgdbTab() {
     useState<GetIgdbGameSearchResultsRequest>({
       query: {
         search: {
-          value: currentMetadata?.name ?? "",
+          value: currentMetadata?.name ?? getFileName(game.path),
         },
         gameId: game.id,
         fields: {
@@ -98,7 +98,7 @@ export function IgdbTab() {
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      search: currentMetadata?.name ?? "",
+      search: currentMetadata?.name ?? getFileName(game.path),
       igdbId: currentMetadata?.igdbId,
       restrictToCurrentPlatform: platformMetadata?.igdbId !== undefined,
     },
