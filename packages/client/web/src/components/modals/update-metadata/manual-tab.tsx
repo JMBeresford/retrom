@@ -13,7 +13,7 @@ import {
 } from "../../ui/form";
 import { Input } from "../../ui/input";
 import { LoaderCircleIcon } from "lucide-react";
-import { asOptionalString, cn, getFileName, InferSchema } from "@/lib/utils";
+import { cn, getFileName, InferSchema } from "@/lib/utils";
 import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { Textarea } from "../../ui/textarea";
 import { GameMetadata } from "@/generated/retrom/models/metadata";
@@ -48,29 +48,29 @@ type EditableGameMetadata = Omit<
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name cannot be empty" }),
-  description: asOptionalString(z.string().optional()),
-  coverUrl: asOptionalString(
-    z.string().url({ message: "Cover URL must be a valid URL" }).optional(),
-  ),
-  backgroundUrl: asOptionalString(
-    z
-      .string()
-      .url({ message: "Background URL must be a valid URL" })
-      .optional(),
-  ),
-  iconUrl: asOptionalString(
-    z.string().url({ message: "Icon URL must be a valid URL" }).optional(),
-  ),
-  links: z.array(z.string().url({ message: "Link must be a valid URL" })),
-  videoUrls: z.array(
-    z.string().url({ message: "Video URL must be a valid URL" }),
-  ),
-  artworkUrls: z.array(
-    z.string().url({ message: "Artwork URL must be a valid URL" }),
-  ),
-  screenshotUrls: z.array(
-    z.string().url({ message: "Screenshot URL must be a valid URL" }),
-  ),
+  description: z.string().optional(),
+  coverUrl: z
+    .literal("")
+    .or(z.string().url({ message: "Icon URL must be a valid URL" })),
+
+  backgroundUrl: z
+    .literal("")
+    .or(z.string().url({ message: "Icon URL must be a valid URL" })),
+
+  iconUrl: z
+    .literal("")
+    .or(z.string().url({ message: "Icon URL must be a valid URL" })),
+
+  // links: z.array(z.string().url({ message: "Link must be a valid URL" })),
+  // videoUrls: z.array(
+  //   z.string().url({ message: "Video URL must be a valid URL" }),
+  // ),
+  // artworkUrls: z.array(
+  //   z.string().url({ message: "Artwork URL must be a valid URL" }),
+  // ),
+  // screenshotUrls: z.array(
+  //   z.string().url({ message: "Screenshot URL must be a valid URL" }),
+  // ),
 }) satisfies InferSchema<EditableGameMetadata>;
 
 export function ManualTab() {
@@ -85,24 +85,37 @@ export function ManualTab() {
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
-    mode: "onChange",
     defaultValues: {
       name: gameMetadata?.name ?? "",
       description: gameMetadata?.description ?? "",
       coverUrl: gameMetadata?.coverUrl ?? "",
       backgroundUrl: gameMetadata?.backgroundUrl ?? "",
       iconUrl: gameMetadata?.iconUrl ?? "",
-      links: gameMetadata?.links ?? [],
-      videoUrls: gameMetadata?.videoUrls ?? [],
-      artworkUrls: gameMetadata?.artworkUrls ?? [],
-      screenshotUrls: gameMetadata?.screenshotUrls ?? [],
+      // links: gameMetadata?.links ?? [],
+      // videoUrls: gameMetadata?.videoUrls ?? [],
+      // artworkUrls: gameMetadata?.artworkUrls ?? [],
+      // screenshotUrls: gameMetadata?.screenshotUrls ?? [],
     },
   });
 
   const handleUpdate = useCallback(
     async (values: FormSchema) => {
       const { ...restValues } = values;
-      const updated = { ...restValues, gameId: game.id };
+      const {
+        links = [],
+        videoUrls = [],
+        artworkUrls = [],
+        screenshotUrls = [],
+      } = gameMetadata ?? {};
+
+      const updated = {
+        links,
+        videoUrls,
+        artworkUrls,
+        screenshotUrls,
+        ...restValues,
+        gameId: game.id,
+      };
 
       const res = await updateMetadata({ metadata: [updated] });
 
@@ -119,13 +132,17 @@ export function ManualTab() {
         }
       }
 
+      form.reset(updated);
+
       return navigate({
         search: (prev) => ({ ...prev, updateMetadataModal: undefined }),
       });
     },
     [
       game.id,
+      form,
       updateMetadata,
+      gameMetadata,
       updateGames,
       renameDirectory,
       game.path,
@@ -134,6 +151,7 @@ export function ManualTab() {
   );
 
   const pending = metadataStatus === "pending" || gameStatus === "pending";
+  const isDirty = form.formState.isDirty;
 
   return (
     <>
@@ -145,7 +163,6 @@ export function ManualTab() {
                 <FormFieldRenderer form={form} key={key} />
               ))}
             </div>
-            <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-background z-10" />
 
             <DialogFooter>
               <div className="flex items-center justify-between gap-6 w-full mt-4">
@@ -182,10 +199,7 @@ export function ManualTab() {
                     </Button>
                   </DialogClose>
 
-                  <Button
-                    type="submit"
-                    disabled={!form.formState.isDirty || pending}
-                  >
+                  <Button type="submit" disabled={!isDirty || pending}>
                     <LoaderCircleIcon
                       className={cn(
                         "animate-spin absolute",

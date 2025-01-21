@@ -20,7 +20,7 @@ export function UpdateMetadataModal() {
   return (
     <Dialog
       modal
-      open={updateMetadataModal?.open}
+      open={!!updateMetadataModal?.open}
       onOpenChange={(open) => {
         if (!open) {
           void navigate({
