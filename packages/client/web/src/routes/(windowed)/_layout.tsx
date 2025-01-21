@@ -28,6 +28,7 @@ import { useConfig } from "@/providers/config";
 import { ServerFileExplorerModal } from "@/components/modals/server-file-explorer";
 import { ModalActionProvider } from "@/providers/modal-action";
 import { ConfirmModal } from "@/components/modals/confirm";
+import { DeletePlatformModal } from "@/components/modals/delete-platform";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
@@ -104,6 +105,7 @@ function LayoutComponent() {
           <ConfigModal />
           <ConfirmModal />
           <ServerFileExplorerModal />
+          <DeletePlatformModal />
         </ModalActionProvider>
       )}
 

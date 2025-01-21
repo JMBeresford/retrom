@@ -15,7 +15,10 @@ import {
 import { usePlatforms } from "@/queries/usePlatforms";
 import { useGames } from "@/queries/useGames";
 import { Game, StorageType } from "@/generated/retrom/models/games";
-import { GameMetadata } from "@/generated/retrom/models/metadata";
+import {
+  GameMetadata,
+  PlatformMetadata,
+} from "@/generated/retrom/models/metadata";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useFilterAndSort } from "./filter-sort-context";
 import { FiltersAndSorting } from "./filters-and-sorting";
@@ -26,6 +29,18 @@ import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { useInstallationStateQuery } from "@/queries/useInstallationState";
 import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { Skeleton } from "../ui/skeleton";
+import { EllipsisVertical } from "lucide-react";
+import { Platform } from "@/generated/retrom/models/platforms";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { DropdownMenuTriggerProps } from "@radix-ui/react-dropdown-menu";
+import { Button } from "../ui/button";
+
+type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
 export function SideBar() {
   const {
@@ -60,7 +75,7 @@ export function SideBar() {
   const loading = platformStatus === "pending" || gameStatus === "pending";
   const error = platformStatus === "error" || gameStatus === "error";
 
-  const platformsWithMetadata = useMemo(() => {
+  const platformsWithMetadata: PlatformWithMetadata[] = useMemo(() => {
     const platforms =
       platformData?.platforms.map((platform) => {
         const platformMetadata = platformData.metadata.find(
@@ -215,16 +230,27 @@ export function SideBar() {
                     value={platform.id.toString()}
                     className={cn("border-b-0 w-full max-w-full")}
                   >
-                    <AccordionTrigger
+                    <div
                       className={cn(
-                        "py-2 font-medium overflow-hidden relative",
+                        "group grid grid-cols-[1fr_auto] border-b border-transparent",
+                        "hover:border-border transition-all",
                       )}
                     >
-                      <h3 className="text-left whitespace-nowrap overflow-ellipsis overflow-hidden">
-                        {name}
-                      </h3>
-                      <span className="sr-only">Toggle</span>
-                    </AccordionTrigger>
+                      <AccordionTrigger
+                        hideIcon
+                        className={cn(
+                          "group py-2 font-medium overflow-hidden relative hover:no-underline",
+                        )}
+                      >
+                        <div className="flex w-full">
+                          <h3 className="text-left whitespace-nowrap overflow-ellipsis overflow-hidden">
+                            {name}
+                          </h3>
+                          <span className="sr-only">Toggle</span>
+                        </div>
+                      </AccordionTrigger>
+                      <PlatformContextMenu platform={platform} />
+                    </div>
 
                     <AccordionContent>
                       <ul>
@@ -303,5 +329,57 @@ export function SideBar() {
         </ScrollArea>
       )}
     </aside>
+  );
+}
+
+function PlatformContextMenu(
+  props: DropdownMenuTriggerProps & { platform: PlatformWithMetadata },
+) {
+  const { platform, ...rest } = props;
+
+  const name = platform.metadata?.name || getFileStub(platform.path);
+  const { id, thirdParty } = platform;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        asChild
+        {...rest}
+        className={cn(
+          "opacity-0 transition-opacity active:opacity-100",
+          "group-hover:opacity-100 data-[state=open]:opacity-100",
+        )}
+      >
+        <Button
+          size="icon"
+          variant="ghost"
+          className="w-fit h-fit aspect-square p-2 my-auto"
+        >
+          <EllipsisVertical className={cn("w-[1rem] h-[1rem]")} />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent>
+        <DropdownMenuItem
+          asChild
+          className="text-destructive-text"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <Link
+            search={(prev) => ({
+              ...prev,
+              deletePlatformModal: {
+                open: true,
+                platform: { id, name, thirdParty },
+              },
+            })}
+          >
+            Delete
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

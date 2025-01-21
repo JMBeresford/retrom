@@ -84,6 +84,19 @@ const modalsSearchSchema = z.object({
       description: z.string().optional().catch(undefined),
     })
     .optional(),
+  deletePlatformModal: z
+    .object({
+      open: z.boolean().catch(false),
+      title: z.string().optional().catch(undefined),
+      description: z.string().optional().catch(undefined),
+      platform: z.object({
+        id: z.number(),
+        name: z.string(),
+        thirdParty: z.boolean(),
+      }),
+    })
+    .optional()
+    .catch(undefined),
 });
 
 export const Route = createRootRoute({

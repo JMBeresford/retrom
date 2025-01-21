@@ -46,15 +46,14 @@ export function ModalActionProvider(props: React.PropsWithChildren) {
 
   const openModal: ModalActionContext["openModal"] = useCallback(
     (key, props) => {
-      const { title, description } = props ?? {};
       setActiveModalProps(props);
 
-      void navigate({
+      navigate({
         search: (prev) => ({
           ...prev,
-          [key]: { open: true, title, description },
+          [key]: { open: true, ...props },
         }),
-      });
+      }).catch(console.error);
     },
     [navigate],
   );

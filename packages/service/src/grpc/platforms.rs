@@ -81,7 +81,7 @@ impl PlatformService for PlatformServiceHandlers {
         Ok(Response::new(response))
     }
 
-    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
+    #[tracing::instrument(skip(self))]
     async fn update_platforms(
         &self,
         request: Request<UpdatePlatformsRequest>,
@@ -217,6 +217,7 @@ impl PlatformService for PlatformServiceHandlers {
         Ok(Response::new(response))
     }
 
+    #[tracing::instrument(skip(self))]
     async fn delete_platforms(
         &self,
         request: Request<DeletePlatformsRequest>,
@@ -259,7 +260,7 @@ impl PlatformService for PlatformServiceHandlers {
                 )
                 .set((
                     schema::platforms::is_deleted.eq(true),
-                    schema::platforms::updated_at.eq(diesel::dsl::now),
+                    schema::platforms::deleted_at.eq(diesel::dsl::now),
                 ))
                 .get_results(&mut conn)
                 .await
