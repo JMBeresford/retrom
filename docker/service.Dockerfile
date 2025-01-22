@@ -54,7 +54,7 @@ ENV TZ=Etc/UTC
 ENV RETROM_CONFIG=/app/config/config.json
 ENV PORT=5101
 ENV RETROM_WEB_PORT=3000
-ENV EMBEDDED_DB_OPTS="?data_dir=/app/data&password_file=/app/.passwd&installation_dir=/app/psql"
+ENV EMBEDDED_DB_OPTS="?data_dir=/app/data/db&password_file=/app/data/pgpass.conf&installation_dir=/app/psql"
 # Web env
 ENV NODE_ENV=production
 

@@ -38,4 +38,7 @@ for i in "${app_dirs[@]}"; do
     fi
 done
 
+# psql db dir needs 700 or 750 permissions
+chmod 750 /app/data/db
+
 exec runuser -u retrom "$@"
