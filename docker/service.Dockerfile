@@ -67,7 +67,7 @@ COPY --from=web-builder /web /app/web
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/start.sh /app/start.sh
 
-RUN mkdir /app/data && \
+RUN mkdir -p /app/data/db && \
     mkdir /app/psql && \
     mkdir /app/config
 
