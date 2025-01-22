@@ -58,6 +58,10 @@ ENV EMBEDDED_DB_OPTS="?data_dir=/app/data/db&password_file=/app/data/pgpass.conf
 # Web env
 ENV NODE_ENV=production
 
+# remove the provided node user for clarity, as it uses 1000:1000 as well
+RUN groupmod -g 1500 node
+RUN deluser node
+
 RUN adduser retrom
 RUN usermod -o -u ${PUID} retrom
 RUN groupmod -o -g ${PGID} retrom
@@ -67,7 +71,7 @@ COPY --from=web-builder /web /app/web
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/start.sh /app/start.sh
 
-RUN mkdir /app/data && \
+RUN mkdir -p /app/data/db && \
     mkdir /app/psql && \
     mkdir /app/config
 

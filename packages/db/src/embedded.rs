@@ -21,7 +21,27 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<impl PgCtlFailsafeOpe
     tracing::debug!("Starting embedded database: {:#?}", settings);
 
     let mut psql = PostgreSQL::new(settings);
-    psql.setup().await?;
+    if let Err(err) = psql.setup().await {
+        use postgresql_commands::Error as CommandError;
+        use postgresql_embedded::Error as EmbeddedError;
+
+        match &err {
+            EmbeddedError::DatabaseInitializationError(some_err) => {
+                match some_err.downcast_ref::<CommandError>() {
+                    Some(CommandError::TimeoutError(_)) => {
+                        let status = psql.status();
+
+                        tracing::warn!(
+                            "Could not confirm embedded DB has initialized, current status: {:?}",
+                            status
+                        );
+                    }
+                    _ => return Err(crate::Error::EmbeddedError(err)),
+                }
+            }
+            _ => return Err(crate::Error::EmbeddedError(err)),
+        }
+    };
 
     psql.failsafe_start().await?;
 
