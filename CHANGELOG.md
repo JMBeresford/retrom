@@ -6,6 +6,57 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.0](https://github.com/JMBeresford/retrom/compare/retrom-v0.6.0...retrom-v0.7.0) - 2025-01-22
+
+### Bug Fixes
+- *(docker)* create DB dir
+
+    The directory for the embedded database in the retrom
+    Docker container has changed from `/app/data` to `/app/data/db`.
+
+    For those using the embedded DB ( i.e. not using an external PostgreSQL
+    DB ), you may notice that your data is missing. Follow the
+    [migration guide](https://github.com/JMBeresford/retrom/wiki/Migration-Guides#v070)
+    in order to retain your existing data
+
+
+
+- manual metadata edit
+
+    The manual metadata edit modal now properly updates
+    the game metadata with valid changes.
+
+    fixes [#230](https://github.com/JMBeresford/retrom/pull/230)
+
+
+
+- display empty platform entries
+
+- default to filename in IGDB search
+
+    fixes [#231](https://github.com/JMBeresford/retrom/pull/231)
+
+
+
+- *(file-explorer)* allow navigating to root
+
+    The file explorer will now allow you to navigate to
+    the root directory
+
+
+
+
+
+### Newly Added
+- delete platform entries
+
+    You can now delete platform entries from the client
+
+    resolves [#101](https://github.com/JMBeresford/retrom/pull/101)
+
+
+
+
 ## [0.6.0](https://github.com/JMBeresford/retrom/compare/retrom-v0.5.4...retrom-v0.6.0) - 2025-01-16
 
 ### Bug Fixes
