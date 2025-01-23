@@ -106,7 +106,7 @@ const configStore = create<LocalConfig>()(
         },
         storage: checkIsDesktop()
           ? createJSONStorage(() => desktopStorage)
-          : undefined,
+          : createJSONStorage(() => localStorage),
       },
     ),
   ),
