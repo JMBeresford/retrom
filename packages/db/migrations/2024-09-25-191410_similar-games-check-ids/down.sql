@@ -1,2 +1,1 @@
-ALTER TABLE "similar_game_maps" DROP CONSTRAINT "distinct_ids";
-
+alter table similar_game_maps drop constraint "distinct_ids";

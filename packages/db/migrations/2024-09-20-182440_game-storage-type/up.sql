@@ -1,2 +1,1 @@
-ALTER TABLE "games" ADD COLUMN "storage_type" INTEGER NOT NULL DEFAULT 1;
-
+alter table games add column storage_type integer not null default 1;

@@ -10,3 +10,4 @@ config.dev.*
 
 *.bak
 *.tsbuildinfo
+.lazy.lua

@@ -1,20 +1,20 @@
-ALTER TABLE "platforms"
-DROP COLUMN "deleted_at";
+alter table platforms
+drop column deleted_at;
 
-ALTER TABLE "platforms"
-DROP COLUMN "is_deleted";
+alter table platforms
+drop column is_deleted;
 
-ALTER TABLE "games"
-DROP COLUMN "deleted_at";
+alter table games
+drop column deleted_at;
 
-ALTER TABLE "games"
-DROP COLUMN "is_deleted";
+alter table games
+drop column is_deleted;
 
-ALTER TABLE "games"
-DROP COLUMN "default_file_id";
+alter table games
+drop column default_file_id;
 
-ALTER TABLE "game_files"
-DROP COLUMN "deleted_at";
+alter table game_files
+drop column deleted_at;
 
-ALTER TABLE "game_files"
-DROP COLUMN "is_deleted";
+alter table game_files
+drop column is_deleted;

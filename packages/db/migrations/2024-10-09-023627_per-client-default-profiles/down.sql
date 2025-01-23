@@ -1,4 +1,6 @@
-ALTER TABLE "default_emulator_profiles" DROP CONSTRAINT "default_emulator_profiles_pkey";
-ALTER TABLE "default_emulator_profiles" DROP CONSTRAINT "fk_client_id";
-ALTER TABLE "default_emulator_profiles" DROP COLUMN "client_id";
-ALTER TABLE "default_emulator_profiles" ADD CONSTRAINT "default_emulator_profiles_pkey" PRIMARY KEY ("platform_id");
+alter table default_emulator_profiles drop constraint "default_emulator_profiles_pkey";
+alter table default_emulator_profiles drop constraint "fk_client_id";
+alter table default_emulator_profiles drop column client_id;
+alter table default_emulator_profiles add constraint default_emulator_profiles_pkey primary key (
+    platform_id
+);

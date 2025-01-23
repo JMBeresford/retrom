@@ -1,41 +1,41 @@
-CREATE OR REPLACE FUNCTION update_modified_column_timestamp()
-RETURNS TRIGGER AS
+create or replace function update_modified_column_timestamp()
+returns trigger as
 $$
   BEGIN
   NEW.updated_at = clock_timestamp();
   RETURN NEW;
   END;
 $$
-language 'plpgsql';
+language plpgsql;
 
-CREATE OR REPLACE TRIGGER update_game_file_timestamp
-BEFORE UPDATE ON game_files
-FOR EACH ROW EXECUTE PROCEDURE update_modified_column_timestamp();
+create or replace trigger update_game_file_timestamp
+before update on game_files
+for each row execute procedure update_modified_column_timestamp();
 
-CREATE OR REPLACE TRIGGER update_game_timestamp
-BEFORE UPDATE ON games
-FOR EACH ROW EXECUTE PROCEDURE update_modified_column_timestamp();
+create or replace trigger update_game_timestamp
+before update on games
+for each row execute procedure update_modified_column_timestamp();
 
-CREATE OR REPLACE TRIGGER update_game_metadata_timestamp
-BEFORE UPDATE ON game_metadata
-FOR EACH ROW EXECUTE PROCEDURE update_modified_column_timestamp();
+create or replace trigger update_game_metadata_timestamp
+before update on game_metadata
+for each row execute procedure update_modified_column_timestamp();
 
-CREATE OR REPLACE TRIGGER update_platform_timestamp
-BEFORE UPDATE ON platforms 
-FOR EACH ROW EXECUTE PROCEDURE update_modified_column_timestamp();
+create or replace trigger update_platform_timestamp
+before update on platforms
+for each row execute procedure update_modified_column_timestamp();
 
-CREATE OR REPLACE TRIGGER update_platform_metadata_timestamp
-BEFORE UPDATE ON platform_metadata
-FOR EACH ROW EXECUTE PROCEDURE update_modified_column_timestamp();
+create or replace trigger update_platform_metadata_timestamp
+before update on platform_metadata
+for each row execute procedure update_modified_column_timestamp();
 
-CREATE OR REPLACE TRIGGER update_emulator_timestamp
-BEFORE UPDATE ON emulators
-FOR EACH ROW EXECUTE PROCEDURE update_modified_column_timestamp();
+create or replace trigger update_emulator_timestamp
+before update on emulators
+for each row execute procedure update_modified_column_timestamp();
 
-CREATE OR REPLACE TRIGGER update_emulator_profile_timestamp
-BEFORE UPDATE ON emulator_profiles
-FOR EACH ROW EXECUTE PROCEDURE update_modified_column_timestamp();
+create or replace trigger update_emulator_profile_timestamp
+before update on emulator_profiles
+for each row execute procedure update_modified_column_timestamp();
 
-CREATE OR REPLACE TRIGGER update_default_emulator_profile_timestamp
-BEFORE UPDATE ON default_emulator_profiles
-FOR EACH ROW EXECUTE PROCEDURE update_modified_column_timestamp();
+create or replace trigger update_default_emulator_profile_timestamp
+before update on default_emulator_profiles
+for each row execute procedure update_modified_column_timestamp();

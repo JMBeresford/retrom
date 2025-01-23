@@ -1,1 +1,1 @@
-ALTER TABLE "games" DROP COLUMN "storage_type";
+alter table games drop column storage_type;

@@ -1,33 +1,40 @@
-CREATE TABLE "local_emulator_configs" (
-  "id" INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  "emulator_id" INTEGER NOT NULL,
-  "client_id" INTEGER NOT NULL,
-  "created_at" TIMESTAMP
-  WITH
-    TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP
-  WITH
-    TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    "executable_path" TEXT NOT NULL,
-    "nickname" TEXT DEFAULT NULL,
-    CONSTRAINT "uq_local_emulator_configs_emulator_id_client_id" UNIQUE ("emulator_id", "client_id"),
-    CONSTRAINT "fk_local_emulator_configs_emulators" FOREIGN KEY ("emulator_id") REFERENCES "emulators" ("id") ON DELETE CASCADE,
-    CONSTRAINT "fk_local_emulator_configs_clients" FOREIGN KEY ("client_id") REFERENCES "clients" ("id") ON DELETE CASCADE
+create table local_emulator_configs (
+    id integer primary key generated always as identity,
+    emulator_id integer not null,
+    client_id integer not null,
+    created_at timestamp
+    with
+    time zone default current_timestamp,
+    updated_at timestamp
+    with
+    time zone default current_timestamp,
+    executable_path text not null,
+    nickname text default null,
+    constraint uq_local_emulator_configs_emulator_id_client_id unique (
+        emulator_id, client_id
+    ),
+    constraint fk_local_emulator_configs_emulators foreign key (
+        emulator_id
+    ) references emulators (id) on delete cascade,
+    constraint fk_local_emulator_configs_clients foreign key (
+        client_id
+    ) references clients (id) on delete cascade
 );
 
 -- move the executable_path column from emulators table to local_emulator_configs table
-INSERT INTO
-  "local_emulator_configs" (emulator_id, client_id, executable_path)
-SELECT
-  id,
-  client_id,
-  executable_path
-FROM
-  emulators ON CONFLICT DO NOTHING;
+insert into
+local_emulator_configs (emulator_id, client_id, executable_path)
+select
+    id,
+    client_id,
+    executable_path
+from
+    emulators
+on conflict do nothing;
 
 -- drop the columns from emulators table
-ALTER TABLE emulators
-DROP COLUMN executable_path;
+alter table emulators
+drop column executable_path;
 
-ALTER TABLE emulators
-DROP COLUMN client_id CASCADE;
+alter table emulators
+drop column client_id cascade;

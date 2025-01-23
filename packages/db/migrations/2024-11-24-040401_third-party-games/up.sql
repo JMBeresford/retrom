@@ -1,13 +1,13 @@
-ALTER TABLE "games"
-ADD COLUMN "third_party" BOOLEAN NOT NULL DEFAULT FALSE;
+alter table games
+add column third_party boolean not null default false;
 
-ALTER TABLE "platforms"
-ADD COLUMN "third_party" BOOLEAN NOT NULL DEFAULT FALSE;
+alter table platforms
+add column third_party boolean not null default false;
 
-INSERT INTO
-  "platforms" ("path", "third_party")
-VALUES
-  ('__RETROM_RESERVED__/Steam', TRUE);
+insert into
+platforms (path, third_party)
+values
+('__RETROM_RESERVED__/Steam', true);
 
-ALTER TABLE "games"
-ADD COLUMN "steam_app_id" BIGINT;
+alter table games
+add column steam_app_id bigint;

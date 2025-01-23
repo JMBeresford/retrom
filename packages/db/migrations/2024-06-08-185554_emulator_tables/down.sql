@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS "default_emulator_profiles";
-DROP TABLE IF EXISTS "emulator_profiles";
-DROP TABLE IF EXISTS "emulators";
-DROP TABLE IF EXISTS "clients";
+drop table if exists default_emulator_profiles;
+drop table if exists emulator_profiles;
+drop table if exists emulators;
+drop table if exists clients;

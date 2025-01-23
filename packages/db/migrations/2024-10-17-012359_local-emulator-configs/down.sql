@@ -1,22 +1,24 @@
 -- put the removed columns back on emulators table
-ALTER TABLE emulators
-ADD COLUMN executable_path TEXT NOT NULL;
+alter table emulators
+add column executable_path text not null;
 
-ALTER TABLE emulators
-ADD COLUMN client_id INTEGER NOT NULL;
+alter table emulators
+add column client_id integer not null;
 
-ALTER TABLE emulators ADD CONSTRAINT fk_client_id FOREIGN KEY (client_id) REFERENCES clients (id) ON DELETE CASCADE;
+alter table emulators add constraint fk_client_id foreign key (
+    client_id
+) references clients (id) on delete cascade;
 
 -- Migrate data back to the emulator table
-UPDATE emulators
-SET
-  executable_path = lec.executable_path,
-  client_id = lec.client_id
-FROM
-  local_emulator_configs lec
-WHERE
-  emulators.id = lec.emulator_id
-  AND lec.executable_path IS NOT NULL;
+update emulators
+set
+    executable_path = lec.executable_path,
+    client_id = lec.client_id
+from
+    local_emulator_configs as lec
+where
+    emulators.id = lec.emulator_id
+    and lec.executable_path is not null;
 
 -- DROP TABLE "local_emulator_configs";
-DROP TABLE "local_emulator_configs";
+drop table local_emulator_configs;

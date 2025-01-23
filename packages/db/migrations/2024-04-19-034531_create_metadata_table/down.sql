@@ -1,7 +1,7 @@
-DROP TABLE IF EXISTS "platform_metadata";
+drop table if exists platform_metadata;
 
-DROP TABLE IF EXISTS "game_genre_maps";
-DROP TABLE IF EXISTS "similar_game_maps";
+drop table if exists game_genre_maps;
+drop table if exists similar_game_maps;
 
-DROP TABLE IF EXISTS "game_metadata";
-DROP TABLE IF EXISTS "game_genres";
+drop table if exists game_metadata;
+drop table if exists game_genres;

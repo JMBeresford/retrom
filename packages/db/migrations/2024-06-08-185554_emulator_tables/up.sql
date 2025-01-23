@@ -1,39 +1,47 @@
-CREATE TABLE "clients" (
-  "id" INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  "name" TEXT NOT NULL,
-  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT "unique_name" UNIQUE ("name")
+create table clients (
+    id integer primary key generated always as identity,
+    name text not null,
+    created_at timestamp with time zone default current_timestamp,
+    updated_at timestamp with time zone default current_timestamp,
+    constraint unique_name unique (name)
 );
 
-CREATE TABLE "emulators" (
-	"id" INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  "supported_platforms" INTEGER[] NOT NULL,
-  "name" TEXT NOT NULL,
-  "save_strategy" INTEGER NOT NULL,
-  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  "client_id" INTEGER NOT NULL,
-  "executable_path" TEXT NOT NULL,
-  CONSTRAINT "fk_client_id" FOREIGN KEY ("client_id") REFERENCES "clients"("id") ON DELETE CASCADE
+create table emulators (
+    id integer primary key generated always as identity,
+    supported_platforms integer [] not null,
+    name text not null,
+    save_strategy integer not null,
+    created_at timestamp with time zone default current_timestamp,
+    updated_at timestamp with time zone default current_timestamp,
+    client_id integer not null,
+    executable_path text not null,
+    constraint fk_client_id foreign key (client_id) references clients (
+        id
+    ) on delete cascade
 );
 
-CREATE TABLE "emulator_profiles" (
-	"id" INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  "emulator_id" INTEGER NOT NULL,
-  "name" TEXT NOT NULL,
-  "supported_extensions" TEXT[] NOT NULL,
-  "custom_args" TEXT[] NOT NULL,
-  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT "fk_emulator_id" FOREIGN KEY ("emulator_id") REFERENCES "emulators"("id") ON DELETE CASCADE
+create table emulator_profiles (
+    id integer primary key generated always as identity,
+    emulator_id integer not null,
+    name text not null,
+    supported_extensions text [] not null,
+    custom_args text [] not null,
+    created_at timestamp with time zone default current_timestamp,
+    updated_at timestamp with time zone default current_timestamp,
+    constraint fk_emulator_id foreign key (
+        emulator_id
+    ) references emulators (id) on delete cascade
 );
 
-CREATE TABLE "default_emulator_profiles" (
-  "platform_id" INTEGER PRIMARY KEY,
-  "emulator_profile_id" INTEGER NOT NULL,
-  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT "fk_platform_id" FOREIGN KEY ("platform_id") REFERENCES "platforms"("id") ON DELETE CASCADE,
-  CONSTRAINT "fk_profile_id" FOREIGN KEY ("emulator_profile_id") REFERENCES "emulator_profiles"("id") ON DELETE CASCADE
+create table default_emulator_profiles (
+    platform_id integer primary key,
+    emulator_profile_id integer not null,
+    created_at timestamp with time zone default current_timestamp,
+    updated_at timestamp with time zone default current_timestamp,
+    constraint fk_platform_id foreign key (
+        platform_id
+    ) references platforms (id) on delete cascade,
+    constraint fk_profile_id foreign key (
+        emulator_profile_id
+    ) references emulator_profiles (id) on delete cascade
 )

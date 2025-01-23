@@ -1,3 +1,6 @@
-DELETE FROM "similar_game_maps" WHERE game_id = similar_game_id;
+delete from similar_game_maps
+where game_id = similar_game_id;
 
-ALTER TABLE "similar_game_maps" ADD CONSTRAINT "distinct_ids" CHECK (game_id != similar_game_id);
+alter table similar_game_maps add constraint distinct_ids check (
+    game_id != similar_game_id
+);

@@ -1,6 +1,10 @@
-ALTER TABLE "default_emulator_profiles" DROP CONSTRAINT "default_emulator_profiles_pkey";
+alter table default_emulator_profiles drop constraint "default_emulator_profiles_pkey";
 
-ALTER TABLE "default_emulator_profiles" ADD COLUMN "client_id" INTEGER DEFAULT 1;
-ALTER TABLE "default_emulator_profiles" ADD CONSTRAINT "fk_client_id" FOREIGN KEY ("client_id") REFERENCES "clients"("id") ON DELETE CASCADE;
+alter table default_emulator_profiles add column client_id integer default 1;
+alter table default_emulator_profiles add constraint fk_client_id foreign key (
+    client_id
+) references clients (id) on delete cascade;
 
-ALTER TABLE "default_emulator_profiles" ADD CONSTRAINT "default_emulator_profiles_pkey" PRIMARY KEY ("platform_id", "client_id");
+alter table default_emulator_profiles add constraint default_emulator_profiles_pkey primary key (
+    platform_id, client_id
+);

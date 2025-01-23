@@ -1,12 +1,12 @@
-ALTER TABLE "games"
-DROP COLUMN "third_party";
+alter table games
+drop column third_party;
 
-ALTER TABLE "platforms"
-DROP COLUMN "third_party";
+alter table platforms
+drop column third_party;
 
-DELETE FROM "platforms"
-WHERE
-  "path" = '__RETROM_RESERVED__/Steam';
+delete from platforms
+where
+    path = '__RETROM_RESERVED__/Steam';
 
-ALTER TABLE "games"
-DROP COLUMN "steam_app_id";
+alter table games
+drop column steam_app_id;

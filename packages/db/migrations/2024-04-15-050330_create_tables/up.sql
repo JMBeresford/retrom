@@ -1,28 +1,32 @@
-CREATE TABLE "platforms"(
-	"id" INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	"path" TEXT NOT NULL,
-  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE("path")
+create table platforms (
+    id integer primary key generated always as identity,
+    path text not null,
+    created_at timestamp with time zone default current_timestamp,
+    updated_at timestamp with time zone default current_timestamp,
+    unique (path)
 );
 
-CREATE TABLE "games"(
-	"id" INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	"path" TEXT NOT NULL,
-	"platform_id" INTEGER,
-  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-	CONSTRAINT "fk_platform_id" FOREIGN KEY ("platform_id") REFERENCES "platforms"("id") ON DELETE CASCADE,
-  UNIQUE("path")
+create table games (
+    id integer primary key generated always as identity,
+    path text not null,
+    platform_id integer,
+    created_at timestamp with time zone default current_timestamp,
+    updated_at timestamp with time zone default current_timestamp,
+    constraint fk_platform_id foreign key (
+        platform_id
+    ) references platforms (id) on delete cascade,
+    unique (path)
 );
 
-CREATE TABLE "game_files"(
-	"id" INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	"byte_size" BIGINT NOT NULL,
-	"path" TEXT NOT NULL,
-	"game_id" INTEGER NOT NULL,
-  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-	CONSTRAINT "fk_game_id" FOREIGN KEY ("game_id") REFERENCES "games"("id") ON DELETE CASCADE,
-  UNIQUE("path")
+create table game_files (
+    id integer primary key generated always as identity,
+    byte_size bigint not null,
+    path text not null,
+    game_id integer not null,
+    created_at timestamp with time zone default current_timestamp,
+    updated_at timestamp with time zone default current_timestamp,
+    constraint fk_game_id foreign key (game_id) references games (
+        id
+    ) on delete cascade,
+    unique (path)
 );
