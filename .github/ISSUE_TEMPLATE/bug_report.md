@@ -44,7 +44,7 @@ Please attach any relevant logs from docker containers, browser console etc
 
 Client logs will be in OS-dependant locations:
 
-- Windows: `$APP_DATA/roaming/com.retrom.app/logs`
+- Windows: `$APP_DATA/roaming/com.retrom.app/logs` or `$APP_DATA/local/com.retrom.app/logs`
 - MacOS: `$HOME/Library/Logs/com.retrom.app`
 - Linux: `$XDG_CONFIG_HOME/com.retrom.app/logs` or `$HOME/.config/com.retrom.app/logs`
 
