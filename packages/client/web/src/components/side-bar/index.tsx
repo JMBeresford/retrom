@@ -111,12 +111,46 @@ export function SideBar() {
       .filter((game) => filterName(game, filters.name));
 
     return platforms.reduce((acc, platform) => {
-      acc[platform.id] = gamesWithMetadata.filter(
+      const games = gamesWithMetadata.filter(
         (game) => game.platformId === platform.id,
       );
+
+      games.sort((a, b) => sortGames(a, b, gameSortKey, gameSortDirection));
+
+      if (groupByInstallationStatus) {
+        games.sort((a, b) => {
+          const aInstalled =
+            installationData?.installationState.get(a.id) ===
+            InstallationStatus.INSTALLED;
+
+          const bInstalled =
+            installationData?.installationState.get(b.id) ===
+            InstallationStatus.INSTALLED;
+
+          if (aInstalled && !bInstalled) {
+            return -1;
+          }
+
+          if (!aInstalled && bInstalled) {
+            return 1;
+          }
+
+          return 0;
+        });
+      }
+
+      acc[platform.id] = games;
       return acc;
     }, ret);
-  }, [gameData, platformData, filters]);
+  }, [
+    gameData,
+    platformData,
+    filters,
+    gameSortDirection,
+    gameSortKey,
+    groupByInstallationStatus,
+    installationData?.installationState,
+  ]);
 
   return (
     <aside
@@ -195,34 +229,12 @@ export function SideBar() {
               {platformsWithMetadata.map((platform) => {
                 const games = gamesByPlatform[platform.id] ?? [];
 
-                games.sort((a, b) =>
-                  sortGames(a, b, gameSortKey, gameSortDirection),
-                );
-
-                if (groupByInstallationStatus) {
-                  games.sort((a, b) => {
-                    const aInstalled =
-                      installationData?.installationState.get(a.id) ===
-                      InstallationStatus.INSTALLED;
-
-                    const bInstalled =
-                      installationData?.installationState.get(b.id) ===
-                      InstallationStatus.INSTALLED;
-
-                    if (aInstalled && !bInstalled) {
-                      return -1;
-                    }
-
-                    if (!aInstalled && bInstalled) {
-                      return 1;
-                    }
-
-                    return 0;
-                  });
-                }
-
                 const name =
                   platform.metadata?.name || getFileStub(platform.path);
+
+                if (platform.thirdParty && !games.length) {
+                  return null;
+                }
 
                 return (
                   <AccordionItem
