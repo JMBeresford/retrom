@@ -78,5 +78,4 @@ tokio-rustls = "0.25.0"
 webpki-roots = "0.26.5"
 hyper-rustls = { version = "0.25.0", features = ["http2"] }
 notify = "7.0.0"
-pq-sys = { version = "0.6", features = ["bundled"] }
-openssl-sys = { version = "0.9.100", features = ["vendored"] }
+pq-sys = { version = "0.6" }

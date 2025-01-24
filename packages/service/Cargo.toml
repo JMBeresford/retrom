@@ -41,7 +41,6 @@ http-body = "0.4"
 http = "0.2"
 warp = "0.3.7"
 tokio-util = { workspace = true }
-tokio-retry = { workspace = true }
 futures-util = "0.3.30"
 tokio-stream = { workspace = true }
 thiserror = { workspace = true }
@@ -49,7 +48,7 @@ sanitize-filename = { workspace = true }
 uuid = { version = "1.10.0", features = ["v4"] }
 config = { workspace = true }
 
-# opt out of lzma an xz to avoid linking twice (postrgres_embedded and async_zip)
+# opt out of lzma and xz to avoid linking twice (postgres_embedded and async_zip)
 async_zip = { version = "^0.0.17", default-features = false, features = [
   "chrono",
   "tokio-fs",
@@ -60,7 +59,6 @@ async_zip = { version = "^0.0.17", default-features = false, features = [
 ] }
 walkdir = "2.5.0"
 chrono = "0.4.38"
-notify = { workspace = true }
 
 [features]
 embedded_db = ["retrom-db/embedded"]
