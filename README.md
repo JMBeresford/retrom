@@ -4,7 +4,9 @@
   
   ### A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.
 
-  ### [check out the wiki to get started](https://github.com/JMBeresford/retrom/wiki)
+  ### [Check out the wiki to get started](https://github.com/JMBeresford/retrom/wiki)
+
+  ### [Downoad the latest Client](https://github.com/JMBeresford/retrom/releases/latest)
 
   ---
 
@@ -20,7 +22,7 @@
 
 - [Overview](#overview)
 - [Core Features](#core-features)
-- [Screenshots and Recordings](#screenshots-and-recordings)
+- [Screenshots](#screenshots)
 - [Roadmap](#roadmap)
 
 <!--toc:end-->
