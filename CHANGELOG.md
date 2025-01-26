@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.2](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.1...retrom-v0.7.2) - 2025-01-26
+
+### Bug Fixes
+- ignore missing steam dir
+
+
 ## [0.7.1](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.0...retrom-v0.7.1) - 2025-01-25
 
 ### Bug Fixes
