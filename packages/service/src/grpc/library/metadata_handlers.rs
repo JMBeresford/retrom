@@ -83,11 +83,11 @@ pub async fn update_metadata(
                         })?;
                 };
 
-                tracing::info!("Platform metadata task completed");
+                tracing::debug!("Platform metadata task completed");
 
                 Ok(())
             }
-            .instrument(info_span!("Platform Metadata Task"))
+            .instrument(info_span!("platform_metadata_task"))
         })
         .collect();
 
@@ -140,7 +140,16 @@ pub async fn update_metadata(
                     None => None,
                 };
 
+                // don't hold the db connection while we fetch metadata, as we are likely
+                // to be rate limited
+                drop(conn);
                 let metadata = igdb_provider.get_game_metadata(game, query).await;
+                let mut conn = match db_pool.get().await {
+                    Ok(conn) => conn,
+                    Err(why) => {
+                        return Err(why.to_string());
+                    }
+                };
 
                 if let Some(metadata) = metadata {
                     if let Err(e) = diesel::insert_into(schema::game_metadata::table)
@@ -154,8 +163,11 @@ pub async fn update_metadata(
                     };
                 };
 
+                tracing::debug!("Game metadata task completed");
+
                 Ok(())
             }
+            .instrument(info_span!("game_metadata_task"))
         })
         .collect();
 
@@ -182,6 +194,10 @@ pub async fn update_metadata(
                         return Err(format!("Failed to load metadata: {}", e));
                     }
                 };
+
+                // don't hold the db connection while we fetch metadata, as we are likely
+                // to be rate limited
+                drop(conn);
 
                 let game_meta = match all_game_metadata
                     .iter()
@@ -302,6 +318,13 @@ pub async fn update_metadata(
                     })
                     .collect::<Vec<_>>();
 
+                let mut conn = match db_pool.get().await {
+                    Ok(conn) => conn,
+                    Err(why) => {
+                        return Err(why.to_string());
+                    }
+                };
+
                 if let Err(why) = diesel::insert_into(schema::similar_game_maps::table)
                     .values(&new_similar_game_maps)
                     .on_conflict_do_nothing()
@@ -347,8 +370,11 @@ pub async fn update_metadata(
                     tracing::error!("Failed to insert genre maps: {}", why);
                 }
 
+                tracing::debug!("Extra metadata task completed");
+
                 Ok(())
             }
+            .instrument(info_span!("extra_metadata_task"))
         })
         .collect();
 
@@ -392,6 +418,10 @@ pub async fn update_metadata(
                     .first::<retrom::GameMetadata>(&mut conn)
                     .await;
 
+                // don't hold the db connection while we fetch metadata, as we are likely
+                // to be rate limited
+                drop(conn);
+
                 if existing.is_ok() && !overwrite {
                     tracing::info!("Metadata already exists for game {}", game.path);
                     return Ok(());
@@ -402,6 +432,8 @@ pub async fn update_metadata(
                     .await
                     .expect("Could not get metadata");
 
+                let mut conn = db_pool.get().await.expect("Failed to get connection");
+
                 if let Err(why) = diesel::insert_into(schema::game_metadata::table)
                     .values(&metadata)
                     .on_conflict_do_nothing()
@@ -411,8 +443,11 @@ pub async fn update_metadata(
                     tracing::error!("Failed to update metadata: {}", why);
                 }
 
+                tracing::debug!("Steam metadata task completed");
+
                 Ok::<(), Infallible>(())
             }
+            .instrument(info_span!("steam_metadata_task"))
         })
         .collect();
 

@@ -41,3 +41,12 @@ services:
       - ${CONFIG_DIR:-./config_dev/}:/app/config
     depends_on:
       - retrom-db
+
+  jaeger:
+    image: jaegertracing/jaeger:2.2.0
+    ports:
+      - 16686:16686 # web client
+      - 4317:4317
+      - 4318:4318
+      - 5778:5778
+      - 9411:9411

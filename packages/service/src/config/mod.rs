@@ -23,7 +23,7 @@ pub struct ServerConfigManager {
 }
 
 impl ServerConfigManager {
-    #[tracing::instrument]
+    #[tracing::instrument(name = "ServerConfigManager::new")]
     pub fn new() -> Result<Self> {
         dotenvy::dotenv().ok();
         let config_path_str = std::env::var("RETROM_CONFIG").unwrap_or("./config.json".into());
