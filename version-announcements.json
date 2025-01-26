@@ -1,6 +1,11 @@
 {
   "announcements": [
     {
+      "versions": ["0.7.0", "0.7.1"],
+      "level": "error",
+      "message": "This version of Retrom has critical functionality issues. A client with this version will fail to launch if steam is uninstalled, please update to 0.7.2."
+    },
+    {
       "versions": ["0.3.3", "0.4.0", "0.4.1"],
       "level": "warning",
       "message": "The auto-update feature of Retrom is broken in this release. Please update to version 0.4.2 manually."
