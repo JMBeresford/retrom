@@ -41,4 +41,9 @@ done
 # psql db dir needs 700 or 750 permissions
 chmod 750 /app/data/db
 
-exec runuser -u retrom "$@"
+if [ "$(id -u)" = 0 ]; then
+  exec runuser -u retrom "$@"
+else
+  exec "$@"
+fi
+
