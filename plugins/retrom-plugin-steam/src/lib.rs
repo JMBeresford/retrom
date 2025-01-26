@@ -32,7 +32,16 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("steam")
         .invoke_handler(tauri::generate_handler![])
         .setup(|app, api| {
-            let steam = desktop::init(app, api)?;
+            let steam = match desktop::init(app, api) {
+                Ok(steam) => steam,
+                Err(e) => {
+                    tracing::warn!(
+                        "Failed to initialize steam plugin, is steam installed: {:?}",
+                        e
+                    );
+                    return Ok(());
+                }
+            };
 
             let handle = app.app_handle().clone();
             std::thread::spawn(move || {
