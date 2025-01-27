@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useUpdateLibraryMetadata } from "@/mutations/useUpdateLibraryMetadata";
 import { useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
+import { useCallback } from "react";
 
 export function DownloadMetadataModal() {
   const navigate = useNavigate();
@@ -20,14 +21,18 @@ export function DownloadMetadataModal() {
 
   const { mutate, isPending } = useUpdateLibraryMetadata();
 
+  const close = useCallback(() => {
+    navigate({
+      search: (prev) => ({ ...prev, downloadMetadataModal: undefined }),
+    }).catch(console.error);
+  }, [navigate]);
+
   return (
     <Dialog
       open={downloadMetadataModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          void navigate({
-            search: (prev) => ({ ...prev, downloadMetadataModal: undefined }),
-          });
+          close();
         }
       }}
     >
@@ -45,7 +50,14 @@ export function DownloadMetadataModal() {
             <Button variant="secondary">Cancel</Button>
           </DialogClose>
 
-          <Button className="relative" onClick={() => mutate()}>
+          <Button
+            className="relative"
+            disabled={isPending}
+            onClick={() => {
+              mutate();
+              close();
+            }}
+          >
             <LoaderCircleIcon
               className={cn("animate-spin absolute", !isPending && "opacity-0")}
             />

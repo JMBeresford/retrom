@@ -1,5 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use emulators::EmulatorServiceHandlers;
 use file_explorer::FileExplorerServiceHandlers;
 use games::GameServiceHandlers;
@@ -16,7 +17,6 @@ use retrom_codegen::retrom::{
     platform_service_server::PlatformServiceServer, server_service_server::ServerServiceServer,
     FILE_DESCRIPTOR_SET,
 };
-use retrom_db::Pool;
 use tonic::transport::{server::Routes, Server};
 use tower_http::cors::{AllowOrigin, Cors, CorsLayer};
 
@@ -49,7 +49,35 @@ const DEFAULT_ALLOW_HEADERS: [HeaderName; 5] = [
     HeaderName::from_static("x-client-id"),
 ];
 
-pub fn grpc_service(db_pool: Arc<Pool>, config_manager: Arc<ServerConfigManager>) -> Cors<Routes> {
+pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> Cors<Routes> {
+    use std::num::NonZeroUsize;
+    let shared_pool_config =
+        AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
+
+    let library_pool_config =
+        AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
+
+    let num_cpus: usize = std::thread::available_parallelism()
+        .unwrap_or(NonZeroUsize::new(2_usize).unwrap())
+        .into();
+
+    // shared pool used for service endpoints w/ light usage
+    let shared_pool = Arc::new(
+        deadpool::managed::Pool::builder(shared_pool_config)
+            .max_size(num_cpus * 3)
+            .build()
+            .expect("Could not create pool"),
+    );
+
+    // The library service triggers jobs w/ many DB ops -- so we give it its own pool
+    // so as to not starve the other services
+    let library_pool = Arc::new(
+        deadpool::managed::Pool::builder(library_pool_config)
+            .max_size(num_cpus)
+            .build()
+            .expect("Could not create pool"),
+    );
+
     let igdb_client = Arc::new(IGDBProvider::new(config_manager.clone()));
     let steam_web_api_client = Arc::new(SteamWebApiProvider::new(config_manager.clone()));
 
@@ -61,7 +89,7 @@ pub fn grpc_service(db_pool: Arc<Pool>, config_manager: Arc<ServerConfigManager>
         .unwrap();
 
     let library_service = LibraryServiceServer::new(LibraryServiceHandlers::new(
-        db_pool.clone(),
+        library_pool.clone(),
         igdb_client.clone(),
         steam_web_api_client.clone(),
         job_manager.clone(),
@@ -69,23 +97,23 @@ pub fn grpc_service(db_pool: Arc<Pool>, config_manager: Arc<ServerConfigManager>
     ));
 
     let metadata_service = MetadataServiceServer::new(MetadataServiceHandlers::new(
-        db_pool.clone(),
+        shared_pool.clone(),
         igdb_client.clone(),
     ));
 
-    let game_service = GameServiceServer::new(GameServiceHandlers::new(db_pool.clone()));
+    let game_service = GameServiceServer::new(GameServiceHandlers::new(shared_pool.clone()));
     let platform_service =
-        PlatformServiceServer::new(PlatformServiceHandlers::new(db_pool.clone()));
+        PlatformServiceServer::new(PlatformServiceHandlers::new(shared_pool.clone()));
 
     let client_service =
-        ClientServiceServer::new(clients::ClientServiceHandlers::new(db_pool.clone()));
+        ClientServiceServer::new(clients::ClientServiceHandlers::new(shared_pool.clone()));
 
     let server_service = ServerServiceServer::new(server::ServerServiceHandlers {
         config: config_manager.clone(),
     });
 
     let emulator_service =
-        EmulatorServiceServer::new(EmulatorServiceHandlers::new(db_pool.clone()));
+        EmulatorServiceServer::new(EmulatorServiceHandlers::new(shared_pool.clone()));
 
     let job_service = JobServiceServer::new(JobServiceHandlers::new(job_manager.clone()));
     let file_explorer_service = FileExplorerServiceServer::new(FileExplorerServiceHandlers::new());

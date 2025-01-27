@@ -89,13 +89,21 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
     }
 
     let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(&db_url);
+
+    // pool used for REST service endpoints
     let pool = deadpool::managed::Pool::builder(pool_config)
+        .max_size(
+            std::thread::available_parallelism()
+                .unwrap_or(std::num::NonZero::new(2_usize).unwrap())
+                .into(),
+        )
         .build()
         .expect("Could not create pool");
 
+    let db_url_clone = db_url.clone();
     tokio::task::spawn_blocking(move || {
         let mut conn = retry(retry::delay::Exponential::from_millis(100), || {
-            match retrom_db::get_db_connection_sync(&db_url) {
+            match retrom_db::get_db_connection_sync(&db_url_clone) {
                 Ok(conn) => retry::OperationResult::Ok(conn),
                 Err(diesel::ConnectionError::BadConnection(err)) => {
                     tracing::info!("Error connecting to database, is the server running and accessible? Retrying...");
@@ -118,7 +126,7 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
     let pool_state = Arc::new(pool);
 
     let rest_service = warp::service(rest::rest_service(pool_state.clone()));
-    let grpc_service = grpc::grpc_service(pool_state.clone(), config_manager);
+    let grpc_service = grpc::grpc_service(&db_url, config_manager);
 
     tracing::info!(
         "Starting Retrom {} service at: {}",
