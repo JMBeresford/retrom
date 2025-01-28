@@ -5,4 +5,3 @@ export const Route = createLazyFileRoute(
 )({
   component: () => <Navigate to="/fullscreen" />,
 });
-

@@ -44,6 +44,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libpq-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          python3 -m pip install beautysh
 
       - name: install frontend dependencies
         run: pnpm install && pnpm exec buf generate
@@ -53,3 +54,6 @@ jobs:
 
       - name: run linter
         run: cargo check && pnpm --filter=web lint
+
+      - name: check formatting
+        run: cargo fmt --all -- --check && pnpm --filter=web format:check && beautysh -c docker/**/*.sh

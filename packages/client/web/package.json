@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "build:desktop": "tsc -b && VITE_IS_DESKTOP=true vite build",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "preview": "vite preview"
   },
   "dependencies": {

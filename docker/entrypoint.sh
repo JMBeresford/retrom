@@ -42,8 +42,8 @@ done
 chmod 750 /app/data/db
 
 if [ "$(id -u)" = 0 ]; then
-  exec runuser -u retrom "$@"
+    exec runuser -u retrom "$@"
 else
-  exec "$@"
+    exec "$@"
 fi
 

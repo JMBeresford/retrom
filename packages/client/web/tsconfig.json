@@ -6,6 +6,6 @@
     },
     {
       "path": "./tsconfig.node.json"
-    },
+    }
   ]
 }
