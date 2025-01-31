@@ -25,6 +25,7 @@ tokio-util = { workspace = true }
 reqwest = { workspace = true }
 tracing = { workspace = true }
 dotenvy = { workspace = true }
+tauri-plugin-opener = { workspace = true }
 
 [build-dependencies]
 tauri-plugin = { version = "2.0.0-rc", features = ["build"] }

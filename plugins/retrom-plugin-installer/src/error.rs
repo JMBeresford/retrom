@@ -23,6 +23,8 @@ pub enum Error {
     ThirdPartyNotFound,
     #[error(transparent)]
     SteamError(#[from] retrom_plugin_steam::Error),
+    #[error(transparent)]
+    OpenPathError(#[from] tauri_plugin_opener::Error),
 }
 
 impl Serialize for Error {

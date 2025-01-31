@@ -47,6 +47,7 @@
     "@tauri-apps/plugin-upload": "workspace:*",
     "@tauri-apps/plugin-window-state": "^2.2.0",
     "@types/uuid": "^10.0.0",
+    "retrom-plugin-installer-api": "workspace:*",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

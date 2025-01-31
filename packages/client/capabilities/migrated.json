@@ -41,6 +41,7 @@
     "installer:allow-uninstall-game",
     "installer:allow-get-game-installation-status",
     "installer:allow-get-installation-state",
+    "installer:allow-open-installation-dir",
     "dialog:allow-open",
     "launcher:allow-play-game",
     "launcher:allow-stop-game",

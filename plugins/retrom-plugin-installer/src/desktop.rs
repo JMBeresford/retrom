@@ -4,11 +4,35 @@ use std::{
     fs::create_dir,
     path::PathBuf,
 };
-use tauri::{plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
+use tauri::{path::BaseDirectory, plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
 use tracing::{debug, info, instrument, trace};
 
 use retrom_codegen::retrom::{InstallationProgressUpdate, InstallationStatus};
 use tokio::sync::RwLock;
+
+type GameId = i32;
+type FileId = i32;
+
+#[derive(Debug)]
+pub struct FileInstallationProgress {
+    pub file_id: FileId,
+    pub bytes_read: usize,
+    pub total_size: usize,
+}
+
+#[derive(Debug)]
+pub struct GameInstallationProgress {
+    pub game_id: GameId,
+    pub files: Vec<FileInstallationProgress>,
+}
+
+#[derive(Debug)]
+pub struct Installer<R: Runtime> {
+    app_handle: AppHandle<R>,
+    pub(crate) installation_directory: RwLock<PathBuf>,
+    pub(crate) installed_games: RwLock<HashSet<GameId>>,
+    pub(crate) currently_installing: RwLock<HashMap<GameId, GameInstallationProgress>>,
+}
 
 #[instrument(skip(app, _api))]
 pub fn init<R: Runtime, C: DeserializeOwned>(
@@ -51,17 +75,6 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
     };
 
     Ok(installer)
-}
-
-type GameId = i32;
-type FileId = i32;
-
-#[derive(Debug)]
-pub struct Installer<R: Runtime> {
-    app_handle: AppHandle<R>,
-    pub(crate) installation_directory: RwLock<PathBuf>,
-    pub(crate) installed_games: RwLock<HashSet<GameId>>,
-    pub(crate) currently_installing: RwLock<HashMap<GameId, GameInstallationProgress>>,
 }
 
 impl<R: Runtime> Installer<R> {
@@ -218,17 +231,4 @@ impl<R: Runtime> Installer<R> {
             None
         }
     }
-}
-
-#[derive(Debug)]
-pub struct FileInstallationProgress {
-    pub file_id: FileId,
-    pub bytes_read: usize,
-    pub total_size: usize,
-}
-
-#[derive(Debug)]
-pub struct GameInstallationProgress {
-    pub game_id: GameId,
-    pub files: Vec<FileInstallationProgress>,
 }

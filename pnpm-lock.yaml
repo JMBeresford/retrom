@@ -242,6 +242,9 @@ importers:
       retrom-plugin-config-api:
         specifier: workspace:*
         version: link:../../../plugins/retrom-plugin-config
+      retrom-plugin-installer-api:
+        specifier: workspace:*
+        version: link:../../../plugins/retrom-plugin-installer
       retrom-plugin-standalone-api:
         specifier: workspace:*
         version: link:../../../plugins/retrom-plugin-standalone
@@ -358,13 +361,10 @@ importers:
       '@tauri-apps/api':
         specifier: 2.0.0-rc.4
         version: 2.0.0-rc.4
+      '@tauri-apps/plugin-opener':
+        specifier: ^2.2.5
+        version: 2.2.5
     devDependencies:
-      '@rollup/plugin-typescript':
-        specifier: ^11.1.6
-        version: 11.1.6(rollup@4.21.2)(tslib@2.7.0)(typescript@5.5.4)
-      rollup:
-        specifier: ^4.9.6
-        version: 4.21.2
       tslib:
         specifier: ^2.6.2
         version: 2.7.0
@@ -1921,6 +1921,9 @@ packages:
 
   '@tauri-apps/plugin-fs@2.0.0-rc.2':
     resolution: {integrity: sha512-TFjCfso3tN4b5s2EBjqP8N2gYrPh93Ds3VNKj8pCXv4wbvnItyfG0aHO0haUsedBOHQryDwv9vDAdPX6/T0a+g==}
+
+  '@tauri-apps/plugin-opener@2.2.5':
+    resolution: {integrity: sha512-hHsJ9RPWpZvZEPVFaL+d25gABMUMOf/A6ESXnvf/ii9guTukj58WXsAE/SOysXRIhej7kseRCxnOnIMpSCdUsQ==}
 
   '@tauri-apps/plugin-process@2.0.0-rc.1':
     resolution: {integrity: sha512-Bl22xdoiu+AqEP6rzjb7DUJwdLDnejuRFukpkdrqF1/VEWJK5PuE903l+8mIOsd17zZ1Ua8y8WaBWnOXx4QHmw==}
@@ -5682,6 +5685,10 @@ snapshots:
       '@tauri-apps/api': 2.0.0-rc.4
 
   '@tauri-apps/plugin-fs@2.0.0-rc.2':
+    dependencies:
+      '@tauri-apps/api': 2.0.0-rc.4
+
+  '@tauri-apps/plugin-opener@2.2.5':
     dependencies:
       '@tauri-apps/api': 2.0.0-rc.4
 

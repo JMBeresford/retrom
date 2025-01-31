@@ -5068,6 +5068,11 @@
           "const": "installer:allow-install-game"
         },
         {
+          "description": "Enables the open_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-open-installation-dir"
+        },
+        {
           "description": "Enables the uninstall_game command without any pre-configured scope.",
           "type": "string",
           "const": "installer:allow-uninstall-game"
@@ -5086,6 +5091,11 @@
           "description": "Denies the install_game command without any pre-configured scope.",
           "type": "string",
           "const": "installer:deny-install-game"
+        },
+        {
+          "description": "Denies the open_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-open-installation-dir"
         },
         {
           "description": "Denies the uninstall_game command without any pre-configured scope.",

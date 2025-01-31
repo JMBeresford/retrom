@@ -89,6 +89,32 @@ Denies the install_game command without any pre-configured scope.
 <tr>
 <td>
 
+`retrom-plugin-installer:allow-open-installation-dir`
+
+</td>
+<td>
+
+Enables the open_installation_dir command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-installer:deny-open-installation-dir`
+
+</td>
+<td>
+
+Denies the open_installation_dir command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `retrom-plugin-installer:allow-uninstall-game`
 
 </td>

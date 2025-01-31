@@ -1,5 +1,3 @@
-use std::{collections::HashMap, path::PathBuf};
-
 use futures::TryStreamExt;
 use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{
@@ -9,7 +7,9 @@ use retrom_codegen::retrom::{
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
+use std::{collections::HashMap, path::PathBuf};
 use tauri::{AppHandle, Runtime};
+use tauri_plugin_opener::OpenerExt;
 use tokio::io::AsyncWriteExt;
 use tracing::{info, instrument};
 
@@ -240,4 +240,25 @@ pub async fn get_installation_state<R: Runtime>(app_handle: AppHandle<R>) -> Ins
     }
 
     InstallationState { installation_state }
+}
+
+#[instrument(skip(app))]
+#[tauri::command]
+pub async fn open_installation_dir<R: Runtime>(
+    app: AppHandle<R>,
+    game_id: Option<i32>,
+) -> crate::Result<()> {
+    let mut path = app.installer().installation_directory.read().await.clone();
+
+    if let Some(game_id) = game_id {
+        let game_path = path.join(game_id.to_string());
+        if game_path.is_dir() {
+            path = game_path;
+        }
+    }
+
+    app.opener()
+        .open_path(path.to_string_lossy(), None::<&str>)?;
+
+    Ok(())
 }

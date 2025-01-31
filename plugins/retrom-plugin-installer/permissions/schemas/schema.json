@@ -325,6 +325,16 @@
           "const": "deny-install-game"
         },
         {
+          "description": "Enables the open_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-open-installation-dir"
+        },
+        {
+          "description": "Denies the open_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-open-installation-dir"
+        },
+        {
           "description": "Enables the uninstall_game command without any pre-configured scope.",
           "type": "string",
           "const": "allow-uninstall-game"

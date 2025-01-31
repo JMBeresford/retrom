@@ -14,6 +14,8 @@ repository = "https://github.com/JMBeresford/retrom"
 
 [workspace.dependencies]
 tauri = { version = "2.0.0-rc.8", features = ["tracing"] }
+tauri-plugin-dialog = "2.0.0-rc"
+tauri-plugin-opener = "2.2.5"
 diesel = { version = "^2.2.0", features = [
   "serde_json",
   "postgres",

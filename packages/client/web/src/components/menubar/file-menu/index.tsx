@@ -10,6 +10,7 @@ import { CheckForUpdateMenuItem } from "./check-for-update-menu-item";
 import { DesktopOnly } from "@/lib/env";
 import { VersionInfoMenuItem } from "./version-info-menu-item";
 import { ConfigMenuItem } from "./config-menu-item";
+import { LocationsMenuItem } from "./locations-menu-item";
 
 export function FileMenu() {
   return (
@@ -20,17 +21,15 @@ export function FileMenu() {
 
       <MenubarContent>
         <ConfigMenuItem />
-
         <MenubarSeparator />
-
         <VersionInfoMenuItem />
 
         <DesktopOnly>
           <CheckForUpdateMenuItem />
           <MenubarSeparator />
-
+          <LocationsMenuItem />
+          <MenubarSeparator />
           <SetupMenuItem />
-
           <CloseMenuItem />
         </DesktopOnly>
       </MenubarContent>

@@ -7,7 +7,7 @@
     "strict": true,
     "noUnusedLocals": true,
     "noImplicitAny": true,
-    "noEmit": true
+    "composite": true,
   },
   "include": [
     "guest-js/*.ts"

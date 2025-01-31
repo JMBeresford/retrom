@@ -36,9 +36,9 @@ retrom-plugin-service-client = { workspace = true }
 retrom-plugin-steam = { workspace = true }
 retrom-plugin-standalone = { workspace = true }
 retrom-plugin-config = { workspace = true }
-tauri-plugin-dialog = "2.0.0-rc"
+tauri-plugin-dialog = { workspace = true }
+tauri-plugin-opener = { workspace = true }
 tauri-plugin-shell = "2.0.0-rc"
-tauri-plugin-opener = "2.0.0"
 tauri-plugin-process = "2.0.0-rc"
 pq-sys = { workspace = true }
 openssl-sys = { workspace = true }

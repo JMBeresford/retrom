@@ -12,6 +12,7 @@ import { InstallationStatus } from "@/generated/retrom/client/client-utils";
 import { ActionButton } from "../../../../../../components/action-button";
 import { useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
+import { openInstallationDir } from "retrom-plugin-installer-api";
 
 export function Actions() {
   const { game } = useGameDetail();
@@ -45,6 +46,13 @@ export function Actions() {
         <DropdownMenuContent>
           <DropdownMenuItem asChild>
             <Link search={{ updateMetadataModal: { open: true } }}>Edit</Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            disabled={installationState !== InstallationStatus.INSTALLED}
+            onSelect={() => openInstallationDir(game.id)}
+          >
+            Show Files
           </DropdownMenuItem>
 
           {installationState === InstallationStatus.INSTALLED && (
