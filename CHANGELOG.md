@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.5](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.4...retrom-v0.7.5) - 2025-02-01
+
+### Bug Fixes
+- open installation directory menu item
+
+
+
+### Newly Added
+- change installation directory
+
+    You can now change Retrom's installation directory
+    via the `File > Configuration` menu in the `Client`
+    tab
+
+
+
+
 ## [0.7.4](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.3...retrom-v0.7.4) - 2025-02-01
 
 ### Newly Added
