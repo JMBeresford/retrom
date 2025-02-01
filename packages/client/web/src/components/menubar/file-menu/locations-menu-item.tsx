@@ -11,7 +11,7 @@ export function LocationsMenuItem() {
     <MenubarSub>
       <MenubarSubTrigger>Locations</MenubarSubTrigger>
       <MenubarSubContent>
-        <MenubarItem onSelect={() => void openInstallationDir(2272)}>
+        <MenubarItem onSelect={() => void openInstallationDir()}>
           Open Installation Directory
         </MenubarItem>
       </MenubarSubContent>
