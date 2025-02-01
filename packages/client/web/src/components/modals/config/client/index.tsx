@@ -1,13 +1,13 @@
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { InterfaceConfig } from "./interface-config";
+import { GeneralConfig } from "./general-config";
 import { ConnectionConfig } from "./connection-config";
 import { checkIsDesktop, DesktopOnly } from "@/lib/env";
 import { cn } from "@/lib/utils";
 
 export function ClientConfigTab() {
   const tabItems = [
-    { value: "interface", name: "Interface", modes: ["desktop", "web"] },
+    { value: "general", name: "General", modes: ["desktop", "web"] },
     { value: "connection", name: "Connection", modes: ["desktop"] },
   ];
 
@@ -26,7 +26,7 @@ export function ClientConfigTab() {
         This is where you can configure your local Retrom client settings.
       </DialogDescription>
 
-      <Tabs defaultValue="interface">
+      <Tabs defaultValue="general">
         <TabsList className={cn("w-full", mode === "web" && "hidden")}>
           {tabItems.map(({ value, name, modes }) => (
             <TabsTrigger
@@ -44,7 +44,7 @@ export function ClientConfigTab() {
         </TabsList>
 
         <div className="mt-6">
-          <InterfaceConfig />
+          <GeneralConfig />
           <DesktopOnly>
             <ConnectionConfig />
           </DesktopOnly>

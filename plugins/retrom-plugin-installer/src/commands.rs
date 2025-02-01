@@ -28,7 +28,7 @@ pub async fn install_game<R: Runtime>(
     let files = payload.files;
     let installer = app_handle.installer();
 
-    let install_dir = installer.installation_directory.read().await;
+    let install_dir = installer.get_installation_dir().await?;
     let output_directory = install_dir.join(game.id.to_string());
 
     if !(output_directory.try_exists()?) {
@@ -182,7 +182,7 @@ pub async fn uninstall_game<R: Runtime>(
     }
 
     let installer = app_handle.installer();
-    let install_dir = installer.installation_directory.read().await;
+    let install_dir = installer.get_installation_dir().await?;
     let output_directory = install_dir.join(game.id.to_string());
 
     if output_directory.try_exists()? {
@@ -248,7 +248,7 @@ pub async fn open_installation_dir<R: Runtime>(
     app: AppHandle<R>,
     game_id: Option<i32>,
 ) -> crate::Result<()> {
-    let mut path = app.installer().installation_directory.read().await.clone();
+    let mut path = app.installer().get_installation_dir().await?;
 
     if let Some(game_id) = game_id {
         let game_path = path.join(game_id.to_string());
@@ -259,6 +259,39 @@ pub async fn open_installation_dir<R: Runtime>(
 
     app.opener()
         .open_path(path.to_string_lossy(), None::<&str>)?;
+
+    Ok(())
+}
+
+#[instrument(skip(app))]
+#[tauri::command]
+pub async fn migrate_installation_dir<R: Runtime>(
+    app: AppHandle<R>,
+    new_dir: &str,
+) -> crate::Result<()> {
+    let new_dir = PathBuf::from(new_dir);
+    let old_dir = app.installer().get_installation_dir().await?;
+    let installer = app.installer();
+    let installing = installer.currently_installing.read().await;
+
+    if !installing.is_empty() {
+        return Err(crate::error::Error::MigrationError(
+            "Currently installing at least one game".into(),
+        ));
+    }
+
+    if !new_dir.exists() {
+        tokio::fs::create_dir_all(&new_dir).await?;
+    }
+
+    let installed_games = installer.installed_games.read().await;
+
+    for game_id in installed_games.iter() {
+        let path = old_dir.join(game_id.to_string());
+        let new_path = new_dir.join(path.file_name().unwrap());
+
+        tokio::fs::rename(&path, &new_path).await?;
+    }
 
     Ok(())
 }

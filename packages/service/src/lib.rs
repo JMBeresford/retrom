@@ -1,4 +1,3 @@
-use core::panic;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
@@ -59,6 +58,7 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
 
     #[cfg(feature = "embedded_db")]
     {
+        use core::panic;
         let config_db_url = conn_config.and_then(|conn| conn.db_url);
 
         if config_db_url.is_none() {

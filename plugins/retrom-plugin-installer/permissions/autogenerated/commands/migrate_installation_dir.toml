@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-migrate-installation-dir"
+description = "Enables the migrate_installation_dir command without any pre-configured scope."
+commands.allow = ["migrate_installation_dir"]
+
+[[permission]]
+identifier = "deny-migrate-installation-dir"
+description = "Denies the migrate_installation_dir command without any pre-configured scope."
+commands.deny = ["migrate_installation_dir"]

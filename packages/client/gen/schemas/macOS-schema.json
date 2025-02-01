@@ -5068,6 +5068,11 @@
           "const": "installer:allow-install-game"
         },
         {
+          "description": "Enables the migrate_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-migrate-installation-dir"
+        },
+        {
           "description": "Enables the open_installation_dir command without any pre-configured scope.",
           "type": "string",
           "const": "installer:allow-open-installation-dir"
@@ -5091,6 +5096,11 @@
           "description": "Denies the install_game command without any pre-configured scope.",
           "type": "string",
           "const": "installer:deny-install-game"
+        },
+        {
+          "description": "Denies the migrate_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-migrate-installation-dir"
         },
         {
           "description": "Denies the open_installation_dir command without any pre-configured scope.",

@@ -25,6 +25,10 @@ pub enum Error {
     SteamError(#[from] retrom_plugin_steam::Error),
     #[error(transparent)]
     OpenPathError(#[from] tauri_plugin_opener::Error),
+    #[error(transparent)]
+    ConfigError(#[from] retrom_plugin_config::Error),
+    #[error("Cannot migrate installation directory: {0}")]
+    MigrationError(String),
 }
 
 impl Serialize for Error {

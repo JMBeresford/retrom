@@ -39,3 +39,7 @@ export type ConfigV3 = ConfigV2 & {
     standalone?: boolean;
   };
 };
+
+export type ConfigV4 = ConfigV3 & {
+  config?: { installationDir?: string };
+};

@@ -49,6 +49,7 @@ export const configSchema = z.object({
       name: z.string(),
       id: z.number(),
     }),
+    installationDir: z.string(),
   }),
   flowCompletions: z.object({
     setupComplete: z.boolean(),

@@ -33,10 +33,22 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::get_game_installation_status,
             commands::get_installation_state,
             commands::open_installation_dir,
+            commands::migrate_installation_dir
         ])
         .setup(|app, api| {
             let installer = desktop::init(app, api)?;
             app.manage(installer);
+
+            let app = app.clone();
+            tauri::async_runtime::spawn_blocking(|| {
+                tauri::async_runtime::block_on(async move {
+                    let installer = app.installer();
+
+                    installer.init_installation_index().await?;
+
+                    crate::Result::Ok(())
+                })
+            });
 
             Ok(())
         })

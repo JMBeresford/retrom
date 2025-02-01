@@ -325,6 +325,16 @@
           "const": "deny-install-game"
         },
         {
+          "description": "Enables the migrate_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-migrate-installation-dir"
+        },
+        {
+          "description": "Denies the migrate_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-migrate-installation-dir"
+        },
+        {
           "description": "Enables the open_installation_dir command without any pre-configured scope.",
           "type": "string",
           "const": "allow-open-installation-dir"

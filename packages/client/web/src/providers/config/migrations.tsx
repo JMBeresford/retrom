@@ -24,6 +24,7 @@ export function migrate(
 const migrationFns: Record<number, (config: object) => object> = {
   1: migrateV1toV2,
   2: migrateV2toV3,
+  3: migrateV3toV4,
 };
 
 function migrateV1toV2(oldConfig: Versions.ConfigV1): Versions.ConfigV2 {
@@ -54,6 +55,12 @@ function migrateV2toV3(oldConfig: Versions.ConfigV2): Versions.ConfigV3 {
     ...newConfig.server,
     standalone: false,
   };
+
+  return newConfig;
+}
+
+function migrateV3toV4(oldConfig: Versions.ConfigV3): Versions.ConfigV4 {
+  const newConfig: Versions.ConfigV4 = oldConfig;
 
   return newConfig;
 }

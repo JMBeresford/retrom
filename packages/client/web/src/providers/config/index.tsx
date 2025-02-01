@@ -93,7 +93,7 @@ const configStore = create<LocalConfig>()(
       }),
       {
         name: STORAGE_KEY,
-        version: 3,
+        version: 4,
         migrate,
         onRehydrateStorage: (state) => {
           return (_s, err) => {

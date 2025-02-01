@@ -1,10 +1,11 @@
+use retrom_plugin_config::ConfigExt;
 use serde::de::DeserializeOwned;
 use std::{
     collections::{HashMap, HashSet},
-    fs::create_dir,
+    fs::create_dir_all,
     path::PathBuf,
 };
-use tauri::{path::BaseDirectory, plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
+use tauri::{plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
 use tracing::{debug, info, instrument, trace};
 
 use retrom_codegen::retrom::{InstallationProgressUpdate, InstallationStatus};
@@ -29,7 +30,6 @@ pub struct GameInstallationProgress {
 #[derive(Debug)]
 pub struct Installer<R: Runtime> {
     app_handle: AppHandle<R>,
-    pub(crate) installation_directory: RwLock<PathBuf>,
     pub(crate) installed_games: RwLock<HashSet<GameId>>,
     pub(crate) currently_installing: RwLock<HashMap<GameId, GameInstallationProgress>>,
 }
@@ -39,38 +39,9 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
     app: &AppHandle<R>,
     _api: PluginApi<R, C>,
 ) -> crate::Result<Installer<R>> {
-    let app_data = app.path().app_data_dir()?;
-
-    if !app_data.try_exists().unwrap() {
-        tracing::info!("Creating app data directory.");
-        create_dir(&app_data)?;
-    };
-
-    let install_dir = app_data.join("installed");
-
-    if !install_dir.try_exists().unwrap() {
-        tracing::info!("Creating install directory.");
-        create_dir(&install_dir)?;
-    };
-
-    let mut installed_games = HashSet::new();
-    for dir in install_dir.read_dir()? {
-        let dir = dir?;
-        let game_id = dir.file_name().to_string_lossy().parse::<i32>();
-
-        if game_id.is_err() {
-            continue;
-        }
-
-        if dir.path().is_dir() {
-            installed_games.insert(game_id?);
-        }
-    }
-
     let installer = Installer {
         app_handle: app.clone(),
-        installation_directory: RwLock::new(install_dir),
-        installed_games: RwLock::new(installed_games),
+        installed_games: RwLock::new(HashSet::new()),
         currently_installing: RwLock::new(HashMap::new()),
     };
 
@@ -78,6 +49,79 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 }
 
 impl<R: Runtime> Installer<R> {
+    pub async fn get_installation_dir(&self) -> crate::Result<PathBuf> {
+        let app = self.app_handle.clone();
+        let mut client_config = app.config_manager().get_config().await;
+
+        let dir = match client_config
+            .config
+            .as_ref()
+            .and_then(|config| config.installation_dir.clone())
+        {
+            Some(dir) => PathBuf::from(dir),
+            None => {
+                let dir = app.path().app_data_dir()?.join("installed");
+
+                if !dir.try_exists().unwrap() {
+                    tracing::info!("Creating install directory.");
+                    create_dir_all(&dir)?;
+                };
+
+                let installation_dir = Some(dir.to_string_lossy().to_string());
+
+                match client_config.config.as_mut() {
+                    Some(config) => config.installation_dir = installation_dir,
+                    None => {
+                        client_config.config =
+                            Some(retrom_codegen::retrom::retrom_client_config::Config {
+                                installation_dir,
+                                ..Default::default()
+                            });
+                    }
+                };
+
+                app.config_manager().update_config(client_config).await?;
+
+                dir
+            }
+        };
+
+        match dir.try_exists() {
+            Ok(true) => Ok(dir),
+            Ok(false) => {
+                tracing::warn!(
+                    "Cannot access installation directory, 
+                    broken symlinks or permissions issues are likely"
+                );
+                create_dir_all(&dir)?;
+                Ok(dir)
+            }
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    pub(crate) async fn init_installation_index(&self) -> crate::Result<()> {
+        let install_dir = self.get_installation_dir().await?;
+
+        let mut installed_games = HashSet::new();
+        for dir in install_dir.read_dir()? {
+            let dir = dir?;
+            let game_id = dir.file_name().to_string_lossy().parse::<i32>();
+
+            if game_id.is_err() {
+                continue;
+            }
+
+            if dir.path().is_dir() {
+                installed_games.insert(game_id?);
+            }
+        }
+
+        self.installed_games.write().await.extend(installed_games);
+
+        Ok(())
+    }
+
     #[instrument(skip(self), fields(installation_progress))]
     pub async fn mark_game_installing(&self, installation_progress: GameInstallationProgress) {
         info!("Installing game: {}", installation_progress.game_id);
@@ -222,7 +266,7 @@ impl<R: Runtime> Installer<R> {
     pub async fn get_game_installation_path(&self, game_id: GameId) -> Option<PathBuf> {
         trace!("Getting game installation path: {}", game_id);
 
-        let install_dir = self.installation_directory.read().await;
+        let install_dir = self.get_installation_dir().await.ok()?;
         let game_dir = install_dir.join(game_id.to_string());
 
         if game_dir.try_exists().unwrap() {
