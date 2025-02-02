@@ -102,7 +102,7 @@ const modalsSearchSchema = z.object({
 export const Route = createRootRoute({
   validateSearch: zodSearchValidator(modalsSearchSchema),
   component: RootComponent,
-  errorComponent: (opts) => <div>Error: {JSON.stringify(opts.error)}</div>,
+  errorComponent: (opts) => <div>Error: {String(opts.error)}</div>,
 });
 
 function RootComponent() {
