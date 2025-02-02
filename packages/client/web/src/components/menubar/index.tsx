@@ -8,6 +8,7 @@ import { JobsIndicator } from "./jobs-indicator";
 import { DesktopOnly } from "@/lib/env";
 import { Link } from "@tanstack/react-router";
 import { ViewMenu } from "./view-menu";
+import { ConnectivityIndicator } from "./connectivity-indicator";
 
 export function Menubar() {
   return (
@@ -34,8 +35,9 @@ export function Menubar() {
         <ViewMenu />
       </MenubarImpl>
 
-      <div className="ml-auto h-full grid place-items-center">
+      <div className="ml-auto h-full grid place-items-center grid-flow-col gap-2">
         <JobsIndicator className="" />
+        <ConnectivityIndicator />
       </div>
     </header>
   );

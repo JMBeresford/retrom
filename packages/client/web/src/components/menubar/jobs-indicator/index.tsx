@@ -20,9 +20,9 @@ export function JobsIndicator(props: JSX.IntrinsicElements["button"]) {
 
   return (
     <Popover>
-      <PopoverTrigger {...rest} asChild className={cn("text-sm", className)}>
-        <Button variant="ghost" size="icon">
-          <LoaderCircleIcon className="animate-spin" />
+      <PopoverTrigger {...rest} asChild className={cn("", className)}>
+        <Button variant="ghost" size="icon" className="h-min w-min p-1">
+          <LoaderCircleIcon className="animate-spin text-muted-foreground h-[1.2rem] w-[1.2rem]" />
         </Button>
       </PopoverTrigger>
 
