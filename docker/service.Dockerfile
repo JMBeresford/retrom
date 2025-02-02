@@ -17,6 +17,7 @@ COPY  ./Cargo.lock \
 FROM common AS web-deps
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+RUN npm i -g corepack@latest
 RUN corepack enable
 RUN apt-get update && apt-get install protobuf-compiler ca-certificates openssl libssl-dev libpq-dev libxml2 -y
 
