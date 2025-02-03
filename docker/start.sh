@@ -9,7 +9,6 @@ trap 'on_error $LINENO' ERR
 
 # Start the web server
 cd /app/web
-npm i -g corepack@latest
 pnpm preview &
 
 # Start the API server
