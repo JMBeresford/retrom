@@ -11,6 +11,7 @@ import {
   useConnectionStatus,
 } from "@/queries/useConnectionStatus";
 import { PopoverProps } from "@radix-ui/react-popover";
+import { useQueryClient } from "@tanstack/react-query";
 import { LucideProps, Server, ServerCog, ServerOff } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -26,24 +27,27 @@ const IconMap: Record<ConnectionStatus, (props: LucideProps) => ReactNode> = {
 
 export function ConnectivityIndicator(props: PopoverProps) {
   const { connectionStatus, connectionInfo } = useConnectionStatus();
+  const queryClient = useQueryClient();
 
   const Icon = IconMap[connectionStatus];
 
   return (
     <Popover {...props}>
-      <PopoverTrigger asChild disabled={connectionStatus !== "CONNECTED"}>
+      <PopoverTrigger asChild disabled={connectionStatus === "CONNECTING"}>
         <Button variant="ghost" size="icon" className="h-min w-min p-1">
           <Icon className="text-sm text-gray-500 h-[1.2rem] w-[1.2rem]" />
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-min">
-        {connectionStatus === "CONNECTED" && connectionInfo ? (
-          <div>
-            <h4 className="font-semibold">Connection Info</h4>
+      <PopoverContent
+        hidden={connectionStatus === "CONNECTING"}
+        className="w-fit"
+      >
+        <div>
+          <h4 className="font-semibold mr-4">Connection Info</h4>
 
-            <Separator className="my-2" />
-
+          <Separator className="my-2" />
+          {connectionStatus === "CONNECTED" && connectionInfo ? (
             <div className="flex flex-col gap-2">
               <p className="font-semibold">
                 Host
@@ -59,8 +63,25 @@ export function ConnectivityIndicator(props: PopoverProps) {
                 </pre>
               </p>
             </div>
-          </div>
-        ) : null}
+          ) : connectionStatus === "NOT_CONNECTED" ? (
+            <div className="text-muted-foreground flex flex-col gap-2">
+              <p>Not connected</p>
+
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-foreground"
+                onClick={() =>
+                  queryClient.invalidateQueries({
+                    predicate: (q) => q.queryKey.includes("connectionStatus"),
+                  })
+                }
+              >
+                Attempt to reconnect
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </PopoverContent>
     </Popover>
   );
