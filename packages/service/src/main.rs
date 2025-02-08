@@ -1,3 +1,5 @@
+use std::fs::OpenOptions;
+
 use opentelemetry::{
     global::{self, ObjectSafeSpan},
     trace::{Tracer, TracerProvider as _},
@@ -42,14 +44,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn init_tracing_subscriber() {
-    let mut layers = vec![];
+    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| "info,".into())
+        .add_directive("tokio_postgres=info".parse().unwrap())
+        .add_directive("hyper=info".parse().unwrap())
+        .add_directive("hyper_util=info".parse().unwrap());
 
-    let fmt_layer = tracing_subscriber::fmt::layer().with_filter(
-        tracing_subscriber::EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| "info,".into())
-            .add_directive("tokio_postgres=info".parse().unwrap())
-            .add_directive("hyper=info".parse().unwrap()),
-    );
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .with_ansi(true)
+        .with_target(true)
+        .with_filter(env_filter)
+        .boxed();
+
+    let mut layers = vec![fmt_layer];
 
     if cfg!(debug_assertions) {
         let tracer_provider = get_tracer_provider();
@@ -69,10 +76,21 @@ fn init_tracing_subscriber() {
         layers.push(telemetry_layer);
     }
 
-    tracing_subscriber::registry()
-        .with(fmt_layer)
-        .with(layers)
-        .init();
+    let log_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open("./retrom.log")
+        .expect("failed to open log file");
+
+    let file_layer = tracing_subscriber::fmt::layer()
+        .json()
+        .with_writer(log_file)
+        .boxed();
+
+    layers.push(file_layer);
+
+    tracing_subscriber::registry().with(layers).init();
 }
 
 fn resource() -> Resource {
