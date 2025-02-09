@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { checkIsDesktop } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useConfigStore } from "@/providers/config";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,7 +28,7 @@ const configSchema = z.object({
   interface: z.object({
     fullscreenByDefault: z.boolean(),
   }),
-  installationDir: z.string(),
+  installationDir: z.string().optional(),
 });
 
 export function GeneralConfig() {
@@ -36,7 +37,6 @@ export function GeneralConfig() {
   const config = configStore((s) => s.config);
   const { toast } = useToast();
 
-  console.log(config);
   const form = useForm<ConfigSchema>({
     resolver: zodResolver(configSchema),
     defaultValues: {
@@ -49,7 +49,11 @@ export function GeneralConfig() {
 
   const handleSubmit = useCallback(
     async (values: ConfigSchema) => {
-      if (values.installationDir !== config?.installationDir) {
+      if (
+        checkIsDesktop() &&
+        values.installationDir &&
+        values.installationDir !== config?.installationDir
+      ) {
         try {
           await migrateInstallationDir(values.installationDir);
         } catch (e) {
@@ -92,6 +96,7 @@ export function GeneralConfig() {
 
   const dirty = form.formState.isDirty;
 
+  console.log({ dirty, formstate: form.formState });
   return (
     <TabsContent value="general" className="mt-4">
       <Form {...form}>
@@ -101,9 +106,10 @@ export function GeneralConfig() {
         >
           <FormField
             control={form.control}
+            disabled={!checkIsDesktop()}
             name="installationDir"
             render={({ field, fieldState: { isDirty } }) => (
-              <FormItem>
+              <FormItem className={cn(!checkIsDesktop() && "hidden")}>
                 <FormLabel>Installation Directory</FormLabel>
 
                 <div className={cn("flex items-center gap-2")}>
@@ -184,7 +190,7 @@ export function GeneralConfig() {
               Close
             </Button>
 
-            <Button type="submit" disabled={!dirty}>
+            <Button onClick={form.handleSubmit(handleSubmit)} disabled={!dirty}>
               Save
             </Button>
           </DialogFooter>

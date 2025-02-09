@@ -9,9 +9,14 @@ message ConnectionConfig {
   optional string db_url = 2;
 }
 
+message IgnorePatterns {
+  repeated string patterns = 1;
+}
+
 message ContentDirectory {
   string path = 1;
   optional StorageType storage_type = 2;
+  optional IgnorePatterns ignore_patterns = 3;
 }
 
 message IGDBConfig {

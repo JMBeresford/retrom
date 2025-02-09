@@ -1,4 +1,8 @@
-import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import {
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneralConfig } from "./general-config";
 import { ConnectionConfig } from "./connection-config";
@@ -18,13 +22,15 @@ export function ClientConfigTab() {
       value="client"
       className="flex flex-col gap-2 w-fit max-w-full  mt-0"
     >
-      <DialogTitle className="text-xl font-extrabold">
-        Client Configuration
-      </DialogTitle>
+      <DialogHeader>
+        <DialogTitle className="text-xl font-extrabold">
+          Client Configuration
+        </DialogTitle>
 
-      <DialogDescription>
-        This is where you can configure your local Retrom client settings.
-      </DialogDescription>
+        <DialogDescription>
+          This is where you can configure your local Retrom client settings.
+        </DialogDescription>
+      </DialogHeader>
 
       <Tabs defaultValue="general">
         <TabsList className={cn("w-full", mode === "web" && "hidden")}>

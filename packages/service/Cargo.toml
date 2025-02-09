@@ -53,6 +53,7 @@ opentelemetry = { workspace = true }
 opentelemetry_sdk = { workspace = true }
 opentelemetry-otlp = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }
+regex = "1.11.1"
 
 # opt out of lzma an xz to avoid linking twice (postrgres_embedded and async_zip)
 async_zip = { version = "^0.0.17", default-features = false, features = [
@@ -66,6 +67,7 @@ async_zip = { version = "^0.0.17", default-features = false, features = [
 walkdir = "2.5.0"
 chrono = "0.4.38"
 notify = { workspace = true }
+tempfile = { workspace = true }
 
 [features]
 embedded_db = ["retrom-db/embedded"]

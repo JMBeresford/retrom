@@ -56,30 +56,97 @@ impl ResolvedGame {
         }
     }
 
+    #[cfg(test)]
+    pub fn mock_resolve_files(&self) -> Vec<GameFile> {
+        let strategy = &self
+            .resolved_platform
+            .content_resolver
+            .content_directory
+            .storage_type
+            .and_then(|st| StorageType::try_from(st).ok());
+
+        match strategy {
+            Some(StorageType::SingleFileGame) => vec![GameFile {
+                id: 1,
+                path: self.row.path.clone(),
+                ..Default::default()
+            }],
+            Some(StorageType::MultiFileGame) => self
+                .get_new_multi_files()
+                .into_iter()
+                .enumerate()
+                .map(|(i, file)| GameFile {
+                    id: i as i32,
+                    path: file.path,
+                    ..Default::default()
+                })
+                .collect(),
+            _ => vec![],
+        }
+    }
+
     /*
      * For MultiFile games, i.e. games that are stored in a directory with multiple files
      * within the Platform directory.
      * */
     async fn resolve_multi_files(&self, db_pool: Arc<Pool>) -> Result<Vec<GameFile>> {
+        let new_game_files = self.get_new_multi_files();
         let mut conn = db_pool.get().await.expect("Could not get db connection");
+
+        Ok(diesel::insert_into(schema::game_files::table)
+            .values(&new_game_files)
+            .on_conflict_do_nothing()
+            .get_results(&mut conn)
+            .await?)
+    }
+
+    fn get_new_multi_files(&self) -> Vec<NewGameFile> {
         let path = PathBuf::from(&self.row.path);
         let game_id = Some(self.row.id);
+        let ignore_regex_set = &self.resolved_platform.content_resolver.ignore_regex_set;
+        let content_dir_path = PathBuf::from(
+            &self
+                .resolved_platform
+                .content_resolver
+                .content_directory
+                .path,
+        )
+        .canonicalize()
+        .expect("Could not canonicalize content directory path");
 
-        let dir_nodes = WalkDir::new(path)
+        let dir_nodes = WalkDir::new(&path)
             .into_iter()
-            .filter_map(|entry| match entry {
-                Ok(entry) => {
-                    let path = entry.path();
-                    if path.is_file() {
-                        Some(path.to_path_buf())
-                    } else {
-                        None
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| {
+                let path = match entry.path().canonicalize() {
+                    Ok(p) => p,
+                    Err(why) => {
+                        warn!("Could not canonicalize path: {:?}", why);
+                        return false;
                     }
+                };
+
+                let rel_path = path
+                    .strip_prefix(&content_dir_path)
+                    .map(|p| p.to_path_buf())
+                    .unwrap_or(path);
+
+                let rel_path = match rel_path.to_str() {
+                    Some(p) => p,
+                    None => return true,
+                };
+
+                match ignore_regex_set {
+                    Some(irs) => !irs.is_match(rel_path),
+                    None => true,
                 }
-                _ => None,
+            })
+            .filter_map(|entry| match entry.path().is_file() {
+                true => Some(entry.path().to_path_buf()),
+                false => None,
             });
 
-        let new_game_files: Vec<NewGameFile> = dir_nodes
+        dir_nodes
             .map(|p| {
                 let byte_size = match p.metadata() {
                     Ok(metadata) => metadata.len().to_i64().unwrap_or(0),
@@ -102,13 +169,7 @@ impl ResolvedGame {
                     ..Default::default()
                 }
             })
-            .collect();
-
-        Ok(diesel::insert_into(schema::game_files::table)
-            .values(&new_game_files)
-            .on_conflict_do_nothing()
-            .get_results(&mut conn)
-            .await?)
+            .collect()
     }
 
     /*
@@ -158,6 +219,20 @@ impl GameResolver {
             path,
             resolved_platform,
             row: None,
+        }
+    }
+
+    #[cfg(test)]
+    pub fn mock_resolve(self) -> ResolvedGame {
+        let path = self.as_insertable().path;
+
+        ResolvedGame {
+            resolved_platform: self.resolved_platform,
+            row: Game {
+                id: 1,
+                path,
+                ..Default::default()
+            },
         }
     }
 

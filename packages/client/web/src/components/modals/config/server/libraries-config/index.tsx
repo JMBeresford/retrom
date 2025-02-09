@@ -1,15 +1,6 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form, FormField } from "@/components/ui/form";
 import {
   Table,
   TableBody,
@@ -19,38 +10,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { StorageType } from "@/generated/retrom/models/games";
 import { ServerConfig } from "@/generated/retrom/server/config";
 import { cn } from "@/lib/utils";
 import { useUpdateServerConfig } from "@/mutations/useUpdateServerConfig";
-import { useModalAction } from "@/providers/modal-action";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  Circle,
-  FolderOpen,
-  LucideProps,
-  Plus,
-  Trash,
-  Undo,
-  X,
-} from "lucide-react";
+import { Circle, LucideProps, Plus, Trash, Undo, X } from "lucide-react";
 import { useCallback, useEffect } from "react";
-import {
-  ControllerFieldState,
-  ControllerRenderProps,
-  FieldValues,
-  useFieldArray,
-  UseFieldArrayAppend,
-  useForm,
-} from "react-hook-form";
+import { useFieldArray, UseFieldArrayAppend, useForm } from "react-hook-form";
 import { z } from "zod";
+import { BrowseButton } from "./browse";
+import { IgnorePatternsInput, IgnorePatternsTooltip } from "./ignore-patterns";
+import { StorageTypeSelect } from "./storage-type";
 
 type ContentDirectoryShape = Record<
   keyof ServerConfig["contentDirectories"][number],
@@ -66,19 +38,25 @@ const librariesSchema = z.object({
       path: z.string().min(1),
       storageType: z.nativeEnum(StorageType),
       newly: z.enum(["added", "removed"]).optional(),
+      ignorePatterns: z
+        .object({
+          patterns: z.string().array(),
+        })
+        .catch({ patterns: [] }),
     })
     .array(),
 }) satisfies LibrariesConfigShape;
 
+export type LibrariesSchema = z.infer<typeof librariesSchema>;
 export function LibrariesConfig(props: {
   currentConfig: NonNullable<ServerConfig>;
 }) {
   const navigate = useNavigate();
   const { mutateAsync: save, status } = useUpdateServerConfig();
 
-  const form = useForm<z.infer<typeof librariesSchema>>({
+  const form = useForm<LibrariesSchema>({
     resolver: zodResolver(librariesSchema),
-    defaultValues: props.currentConfig,
+    defaultValues: librariesSchema.parse(props.currentConfig),
     mode: "all",
     resetOptions: { keepDirtyValues: true },
   });
@@ -93,7 +71,7 @@ export function LibrariesConfig(props: {
   });
 
   const handleSubmit = useCallback(
-    async (values: z.infer<typeof librariesSchema>) => {
+    async (values: LibrariesSchema) => {
       const contentDirectories = values.contentDirectories.filter(
         (cd) => cd.newly !== "removed",
       );
@@ -122,6 +100,9 @@ export function LibrariesConfig(props: {
                 <TableHead />
                 <TableHead>Path</TableHead>
                 <TableHead>Structure</TableHead>
+                <TableHead>
+                  Ignore Patterns <IgnorePatternsTooltip />
+                </TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -186,6 +167,14 @@ export function LibrariesConfig(props: {
                         render={StorageTypeSelect}
                       />
                     </TableCell>
+                    <TableCell className="w-[150px]">
+                      <FormField
+                        disabled={library.newly === "removed"}
+                        control={form.control}
+                        name={`contentDirectories.${index}.ignorePatterns.patterns`}
+                        render={IgnorePatternsInput}
+                      />
+                    </TableCell>
                     <TableCell className="text-end">
                       <Button
                         type="button"
@@ -243,15 +232,25 @@ export function LibrariesConfig(props: {
 const createLibrarySchema = z.object({
   path: z.string().min(1),
   storageType: z.nativeEnum(StorageType),
+  ignorePatterns: z
+    .object({
+      patterns: z.string().array(),
+    })
+    .catch({ patterns: [] }),
 }) satisfies z.ZodObject<ContentDirectoryShape>;
 
+export type CreateLibrarySchema = z.infer<typeof createLibrarySchema>;
 function CreateLibraryRow(props: {
   currentConfig: NonNullable<ServerConfig>;
-  append: UseFieldArrayAppend<z.infer<typeof librariesSchema>>;
+  append: UseFieldArrayAppend<LibrariesSchema, "contentDirectories">;
 }) {
-  const form = useForm<z.infer<typeof createLibrarySchema>>({
+  const form = useForm<CreateLibrarySchema>({
     resolver: zodResolver(createLibrarySchema),
-    defaultValues: { path: "", storageType: StorageType.MULTI_FILE_GAME },
+    defaultValues: {
+      path: "",
+      storageType: StorageType.MULTI_FILE_GAME,
+      ignorePatterns: { patterns: [] },
+    },
     mode: "all",
   });
 
@@ -291,6 +290,13 @@ function CreateLibraryRow(props: {
                   render={StorageTypeSelect}
                 />
               </TableCell>
+              <TableCell className="w-[150px]">
+                <FormField
+                  control={form.control}
+                  name="ignorePatterns.patterns"
+                  render={IgnorePatternsInput}
+                />
+              </TableCell>
               <TableCell className="text-end">
                 <Button
                   disabled={!canSubmit}
@@ -309,112 +315,3 @@ function CreateLibraryRow(props: {
     </Form>
   );
 }
-
-function BrowseButton<T extends FieldValues>(props: {
-  field: ControllerRenderProps<T>;
-  fieldState: ControllerFieldState;
-}) {
-  const { openModal } = useModalAction();
-  const { field, fieldState } = props;
-
-  const browse = useCallback(
-    (setValueCallback: (path: string) => void) => {
-      openModal?.("serverFileExplorerModal", {
-        title: "Select Library Path",
-        description: "Select a directory for this library.",
-        onClose: (path) => {
-          if (path) {
-            setValueCallback(path);
-          }
-        },
-      });
-    },
-    [openModal],
-  );
-
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <FormItem className="flex items-center gap-2 h-min space-y-0 py-1 relative">
-          <Button
-            {...field}
-            size="icon"
-            type="button"
-            className="min-h-0 h-min w-min p-2"
-            onClick={() => browse(field.onChange)}
-          >
-            <FolderOpen className="h-[1rem] w-[1rem]" />
-          </Button>
-
-          <TooltipTrigger asChild>
-            <FormControl>
-              <Input
-                {...field}
-                placeholder="Select a directory..."
-                className={cn(
-                  "text-xs text-muted-foreground transition-colors w-[350px] overflow-hidden overflow-ellipsis",
-                  "border-none font-mono placeholder:italic bg-transparent",
-                  fieldState.isDirty && "text-foreground",
-                )}
-              />
-            </FormControl>
-          </TooltipTrigger>
-          <TooltipContent hidden={!field.value}>{field.value}</TooltipContent>
-        </FormItem>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
-
-function StorageTypeSelect<T extends FieldValues>(props: {
-  field: ControllerRenderProps<T>;
-  fieldState: ControllerFieldState;
-}) {
-  const { field, fieldState } = props;
-  const value = field.value as StorageType;
-
-  return (
-    <FormItem>
-      <Select
-        disabled={field.disabled}
-        value={value.toString()}
-        onValueChange={(value) => field.onChange(parseInt(value))}
-      >
-        <FormControl>
-          <SelectTrigger
-            className={cn(
-              "border-transparent bg-transparent hover:bg-transparent",
-              "flex justify-between gap-2 text-muted-foreground px-0",
-              fieldState.isDirty && "text-foreground",
-            )}
-          >
-            <SelectValue placeholder="Select a storage type">
-              {StorageTypeLabel[field.value]}
-            </SelectValue>
-          </SelectTrigger>
-        </FormControl>
-
-        <SelectContent>
-          {Object.values(StorageType)
-            .filter((type) => type >= 0)
-            .map((type) => (
-              <SelectItem key={type} value={type.toString()}>
-                {StorageTypeLabel[type]}
-                {type === StorageType.MULTI_FILE_GAME && (
-                  <Badge variant="outline" className="mx-2">
-                    Default
-                  </Badge>
-                )}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
-    </FormItem>
-  );
-}
-
-const StorageTypeLabel: Record<StorageType, string> = {
-  [StorageType.MULTI_FILE_GAME]: "Multi-file Games",
-  [StorageType.SINGLE_FILE_GAME]: "Single-file Games",
-  [StorageType.UNRECOGNIZED]: "Unrecognized",
-};
