@@ -1,4 +1,4 @@
-import { DialogDescription } from "@/components/ui/dialog";
+import { DialogDescription, DialogHeader } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ServerConfig } from "@/generated/retrom/server/config";
 import { useServerConfig } from "@/queries/useServerConfig";
@@ -14,7 +14,7 @@ export function ServerConfigTab() {
   const tabItems: Record<ServerTabs, { value: ServerTabs; name: string }> = {
     contentDirectories: {
       value: "contentDirectories",
-      name: "Libraries",
+      name: "Content Directories",
     },
     igdb: { value: "igdb", name: "IGDB" },
     steam: { value: "steam", name: "Steam" },
@@ -43,14 +43,16 @@ export function ServerConfigTab() {
       value="server"
       className="flex flex-col gap-2 w-fit max-w-full mt-0"
     >
-      <DialogTitle className="text-xl font-extrabold">
-        Server Configuration
-      </DialogTitle>
+      <DialogHeader>
+        <DialogTitle className="text-xl font-extrabold">
+          Server Configuration
+        </DialogTitle>
 
-      <DialogDescription className="text-pretty max-w-[60ch]">
-        This is where you can configure your Retrom server settings. Settings
-        here are shared by all clients connected to your server.
-      </DialogDescription>
+        <DialogDescription className="text-pretty max-w-[60ch]">
+          This is where you can configure your Retrom server settings. Settings
+          here are shared by all clients connected to your server.
+        </DialogDescription>
+      </DialogHeader>
 
       {status === "pending" ? (
         <LoadingState />

@@ -36,6 +36,7 @@ impl ServerConfigManager {
                 content_directories: vec![ContentDirectory {
                     path: "/app/library".into(),
                     storage_type: Some(i32::from(StorageType::MultiFileGame)),
+                    ignore_patterns: None,
                 }],
                 ..Default::default()
             };
@@ -74,19 +75,27 @@ impl ServerConfigManager {
         dotenvy::dotenv().ok();
 
         if std::env::var("RETROM_PORT").is_ok() {
-            tracing::error!("RETROM_PORT env var is deprecated, use a config file instead.");
+            tracing::error!(
+                "RETROM_PORT env var is deprecated, use a config file override instead."
+            );
         }
 
         if std::env::var("DATABASE_URL").is_ok() {
-            tracing::error!("DATABASE_URL env var is deprecated, use a config file instead.");
+            tracing::error!(
+                "DATABASE_URL env var is deprecated, use a config file override instead."
+            );
         }
 
         if std::env::var("IGDB_CLIENT_ID").is_ok() {
-            tracing::error!("IGDB_CLIENT_ID env var is deprecated, use a config file instead.");
+            tracing::error!(
+                "IGDB_CLIENT_ID env var is deprecated, use the retrom client to configure IGDB"
+            );
         }
 
         if std::env::var("IGDB_CLIENT_SECRET").is_ok() {
-            tracing::error!("IGDB_CLIENT_SECRET env var is deprecated, use a config file instead.");
+            tracing::error!(
+                "IGDB_CLIENT_SECRET env var is deprecated, use the retrom client to configure IGDB"
+            );
         }
 
         let config = Config::builder().add_source(File::with_name(path));
@@ -94,10 +103,11 @@ impl ServerConfigManager {
         let mut s: ServerConfig = config.build()?.try_deserialize()?;
 
         if let Ok(content_dir) = std::env::var("CONTENT_DIR") {
-            tracing::warn!("CONTENT_DIR env var is deprecated, use a config file instead.");
+            tracing::warn!("CONTENT_DIR env var is deprecated");
             s.content_directories.push(ContentDirectory {
                 path: content_dir,
                 storage_type: Some(i32::from(StorageType::MultiFileGame)),
+                ignore_patterns: None,
             });
         }
 

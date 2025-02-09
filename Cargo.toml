@@ -84,3 +84,4 @@ hyper-rustls = { version = "0.25.0", features = ["http2"] }
 notify = "7.0.0"
 pq-sys = { version = "0.6", features = ["bundled"] }
 openssl-sys = { version = "0.9.100", features = ["vendored"] }
+tempfile = "3.16.0"

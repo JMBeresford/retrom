@@ -15,7 +15,7 @@ use super::{
 pub struct PlatformResolver {
     pub dir: PathBuf,
     pub content_resolver: ContentResolver,
-    row: Option<Platform>,
+    pub(super) row: Option<Platform>,
 }
 
 #[derive(Debug, Clone)]
@@ -51,6 +51,23 @@ impl ResolvedPlatform {
                 }
             })
             .filter(|path| {
+                let content_dir = &self.content_resolver.content_directory;
+                let content_dir_path = content_dir.path.clone();
+                let rel_path = match path
+                    .strip_prefix(&content_dir_path)
+                    .unwrap_or(path)
+                    .to_str()
+                {
+                    Some(rp) => rp.to_string(),
+                    None => return true,
+                };
+
+                match &self.content_resolver.ignore_regex_set {
+                    None => true,
+                    Some(irs) => !irs.is_match(&rel_path),
+                }
+            })
+            .filter(|path| {
                 match self
                     .content_resolver
                     .content_directory
@@ -73,6 +90,20 @@ impl PlatformResolver {
             dir,
             content_resolver,
             row: None,
+        }
+    }
+
+    #[cfg(test)]
+    pub fn mock_resolve(self) -> ResolvedPlatform {
+        let path = self.as_insertable().path;
+
+        ResolvedPlatform {
+            content_resolver: self.content_resolver,
+            row: Platform {
+                id: 1,
+                path,
+                ..Default::default()
+            },
         }
     }
 

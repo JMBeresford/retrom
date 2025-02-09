@@ -13,7 +13,7 @@ use std::sync::Arc;
 use tonic::{Code, Request, Response, Result, Status};
 use tracing::instrument;
 
-mod content_resolver;
+pub mod content_resolver;
 mod delete_handlers;
 mod game_resolver;
 mod metadata_handlers;
