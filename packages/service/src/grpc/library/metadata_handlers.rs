@@ -185,30 +185,21 @@ pub async fn update_metadata(
                     }
                 };
 
-                let all_game_metadata: Vec<GameMetadata> = match schema::game_metadata::table
-                    .load::<retrom::GameMetadata>(&mut conn)
+                let game_meta: GameMetadata = match schema::game_metadata::table
+                    .filter(schema::game_metadata::game_id.eq(game.id))
+                    .first::<retrom::GameMetadata>(&mut conn)
                     .await
                 {
                     Ok(metadata) => metadata,
-                    Err(e) => {
-                        return Err(format!("Failed to load metadata: {}", e));
+                    Err(_) => {
+                        tracing::debug!("Game does not have metadata");
+                        return Ok(());
                     }
                 };
 
                 // don't hold the db connection while we fetch metadata, as we are likely
                 // to be rate limited
                 drop(conn);
-
-                let game_meta = match all_game_metadata
-                    .iter()
-                    .find(|metadata| metadata.game_id == game.id)
-                {
-                    Some(meta) => meta,
-                    None => {
-                        tracing::debug!("Game does not have metadata");
-                        return Ok(());
-                    }
-                };
 
                 let game_igdb_id = match game_meta.igdb_id {
                     Some(id) => id,
@@ -282,10 +273,34 @@ pub async fn update_metadata(
                     });
                 });
 
+                let mut conn = match db_pool.get().await {
+                    Ok(conn) => conn,
+                    Err(why) => {
+                        return Err(why.to_string());
+                    }
+                };
+
+                let similar_game_metas = match schema::game_metadata::table
+                    .filter(
+                        schema::game_metadata::igdb_id
+                            .eq_any(similar_game_ids.iter().map(|id| id.to_i64())),
+                    )
+                    .load::<retrom::GameMetadata>(&mut conn)
+                    .await
+                {
+                    Ok(metas) => metas,
+                    Err(why) => {
+                        tracing::error!("Failed to load similar game metadata: {}", why);
+                        return Err(why.to_string());
+                    }
+                };
+
+                drop(conn);
+
                 let new_similar_game_maps = similar_game_ids
                     .into_iter()
                     .filter_map(|id| {
-                        let similar_game_id = match all_game_metadata
+                        let similar_game_id = match similar_game_metas
                             .iter()
                             .find(|metadata| metadata.igdb_id == id.to_i64())
                             .map(|metadata| metadata.game_id)
@@ -369,6 +384,8 @@ pub async fn update_metadata(
                 {
                     tracing::error!("Failed to insert genre maps: {}", why);
                 }
+
+                drop(conn);
 
                 tracing::debug!("Extra metadata task completed");
 
