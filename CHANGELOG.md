@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.10](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.9...retrom-v0.7.10) - 2025-02-10
+
+### Bug Fixes
+- relative path ignore patterns
+
+
 ## [0.7.9](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.8...retrom-v0.7.9) - 2025-02-10
 
 ### Newly Added
