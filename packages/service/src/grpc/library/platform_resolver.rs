@@ -52,19 +52,31 @@ impl ResolvedPlatform {
             })
             .filter(|path| {
                 let content_dir = &self.content_resolver.content_directory;
-                let content_dir_path = content_dir.path.clone();
-                let rel_path = match path
-                    .strip_prefix(&content_dir_path)
-                    .unwrap_or(path)
-                    .to_str()
-                {
-                    Some(rp) => rp.to_string(),
+                let abs_path = match path.canonicalize() {
+                    Ok(p) => p,
+                    Err(why) => {
+                        warn!("Could not canonicalize path: {:?}", why);
+                        return true;
+                    }
+                };
+
+                let abs_parent = PathBuf::from(&content_dir.path)
+                    .parent()
+                    .and_then(|p| p.canonicalize().ok());
+
+                let rel_path = match abs_parent {
+                    Some(parent) => abs_path.strip_prefix(parent).unwrap_or(path),
+                    None => path,
+                };
+
+                let rel_path = match rel_path.to_str() {
+                    Some(rp) => rp,
                     None => return true,
                 };
 
                 match &self.content_resolver.ignore_regex_set {
+                    Some(irs) => !irs.is_match(rel_path),
                     None => true,
-                    Some(irs) => !irs.is_match(&rel_path),
                 }
             })
             .filter(|path| {

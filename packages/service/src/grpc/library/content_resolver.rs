@@ -63,11 +63,24 @@ impl ContentResolver {
                     None => return true,
                 };
 
-                let rel_path = match path
-                    .strip_prefix(&content_dir_path)
-                    .unwrap_or(path)
-                    .to_str()
-                {
+                let abs_path = match path.canonicalize() {
+                    Ok(p) => p,
+                    Err(why) => {
+                        warn!("Could not canonicalize path: {:?}", why);
+                        return true;
+                    }
+                };
+
+                let abs_parent = content_dir_path
+                    .parent()
+                    .and_then(|p| p.canonicalize().ok());
+
+                let rel_path = match abs_parent {
+                    Some(parent) => abs_path.strip_prefix(parent).unwrap_or(path),
+                    None => path,
+                };
+
+                let rel_path = match rel_path.to_str() {
                     Some(rp) => rp,
                     None => return true,
                 };
@@ -140,17 +153,29 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn ignores_nested_relative_path() {
+    async fn ignores_relative_path() {
         let dir = tempfile::tempdir().unwrap();
         let platform_dir = tempfile::TempDir::with_prefix_in("platform-", &dir).unwrap();
+        let _ignore_dir1 = tempfile::TempDir::with_prefix_in("ignore1-", &dir).unwrap();
+        let _ignore_dir2 = tempfile::TempDir::with_prefix_in("ignore2-", &dir).unwrap();
+
         let game_file = tempfile::NamedTempFile::with_prefix_in("game-", &platform_dir).unwrap();
         let _ignore_file =
             tempfile::NamedTempFile::with_prefix_in("ignore-", &platform_dir).unwrap();
 
+        let cdir_relative_path = dir
+            .path()
+            .file_name()
+            .and_then(|ostr| ostr.to_str())
+            .unwrap();
+
         let content_directory = ContentDirectory {
             path: dir.path().to_str().unwrap().to_string(),
             ignore_patterns: Some(IgnorePatterns {
-                patterns: vec!["platform-(.+)/ignore-".into()],
+                patterns: vec![
+                    "platform-(.+)/ignore-".into(),
+                    format!("{cdir_relative_path}/ignore"),
+                ],
             }),
             storage_type: Some(StorageType::SingleFileGame.into()),
         };
@@ -162,6 +187,15 @@ mod tests {
             .into_iter()
             .map(|r| r.mock_resolve())
             .collect::<Vec<_>>();
+
+        assert_eq!(resolved_platforms.len(), 1);
+        assert!(resolved_platforms.iter().any(|rp| rp.row.path
+            == platform_dir
+                .path()
+                .canonicalize()
+                .ok()
+                .and_then(|ref p| p.to_str().map(|s| s.to_string()))
+                .unwrap()));
 
         let game_resolvers = resolved_platforms
             .iter()

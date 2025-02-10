@@ -118,7 +118,8 @@ impl ResolvedGame {
             .into_iter()
             .filter_map(|entry| entry.ok())
             .filter(|entry| {
-                let path = match entry.path().canonicalize() {
+                let path = entry.path();
+                let abs_path = match path.canonicalize() {
                     Ok(p) => p,
                     Err(why) => {
                         warn!("Could not canonicalize path: {:?}", why);
@@ -126,10 +127,10 @@ impl ResolvedGame {
                     }
                 };
 
-                let rel_path = path
-                    .strip_prefix(&content_dir_path)
-                    .map(|p| p.to_path_buf())
-                    .unwrap_or(path);
+                let rel_path = match content_dir_path.parent() {
+                    Some(p) => abs_path.strip_prefix(p).unwrap_or(path),
+                    None => path,
+                };
 
                 let rel_path = match rel_path.to_str() {
                     Some(p) => p,
