@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.9](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.8...retrom-v0.7.9) - 2025-02-10
+
+### Newly Added
+- Ignore Patterns
+
+    You can now configure Retrom to ignore certain files and directories
+    that match a given pattern or set of patterns, using
+    *regular expressions*. This can be done in the
+    `File > Server > Content Directories` menu -- read more about this in the
+    [docs](https://github.com/JMBeresford/retrom/wiki/Configuration#ignore-patterns)
+
+
+
+
 ## [0.7.8](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.7...retrom-v0.7.8) - 2025-02-09
 
 ### Bug Fixes
