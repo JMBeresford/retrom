@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.11](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.10...retrom-v0.7.11) - 2025-02-11
+
+### Newly Added
+- UI tweaks
+
+- default profiles for newly added emulators
+
+- better default emulator visibility
+
+    The desktop client now lists the default emulator and
+    profile, where applicable, under the play button.
+
+    Additionally, you can now launch a game in any valid
+    emulator via the dropdown menu next to the play button.
+    This is useful for games that may want to opt-out of the
+    defaults.
+
+
+
+
 ## [0.7.10](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.9...retrom-v0.7.10) - 2025-02-10
 
 ### Bug Fixes
