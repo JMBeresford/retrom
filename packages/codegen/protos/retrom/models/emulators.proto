@@ -44,6 +44,7 @@ message EmulatorProfile {
   repeated string custom_args = 5;
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp updated_at = 7;
+  bool built_in = 8;
 }
 
 message NewEmulatorProfile {
@@ -53,6 +54,7 @@ message NewEmulatorProfile {
   repeated string custom_args = 4;
   optional google.protobuf.Timestamp created_at = 5;
   optional google.protobuf.Timestamp updated_at = 6;
+  optional bool built_in = 7;
 }
 
 message UpdatedEmulatorProfile {
@@ -63,6 +65,7 @@ message UpdatedEmulatorProfile {
   repeated string custom_args = 5;
   optional google.protobuf.Timestamp created_at = 6;
   optional google.protobuf.Timestamp updated_at = 7;
+  optional bool built_in = 8;
 }
 
 message DefaultEmulatorProfile {

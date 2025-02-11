@@ -61,6 +61,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useLocalEmulatorConfigs } from "@/queries/useLocalEmulatorConfigs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LocalConfigs } from "./local-configs";
+import { Separator } from "@/components/ui/separator";
 
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
@@ -168,25 +169,32 @@ export function ManageEmulatorsModal() {
         ) : (
           <Tabs defaultValue="emulators">
             <div className="w-full mb-6">
-              <TabsList>
+              <TabsList className="flex *:basis-1/2">
                 <TabsTrigger value="emulators">All Emulators</TabsTrigger>
                 <TabsTrigger value="local-configs">Configuration</TabsTrigger>
               </TabsList>
             </div>
 
             <TabsContent value="emulators" className={cn("h-fit", "")}>
-              <div
-                className={cn(
-                  "bg-muted text-muted-foreground p-2 rounded mt-2 mb-4",
-                  "flex gap-2 text-sm",
-                )}
-              >
-                <InfoIcon className="w-[1rem] h-[1rem] text-primary" />
-                <p className="max-w-[60ch] text-pretty">
-                  This is a list of all of the emulators that Retrom is
-                  tracking. In order to use these emulators locally, you will
-                  need to configure them in the Configuration tab.
-                </p>
+              <div className="grid gap-2 grid-flow-col grid-cols-[1fr,auto,1fr] items-center mb-4">
+                <Separator />
+
+                <div
+                  className={cn(
+                    "bg-muted text-muted-foreground p-2 rounded mt-2 mb-4",
+                    "flex gap-2 text-sm",
+                  )}
+                >
+                  <InfoIcon className="w-[1rem] h-[1rem] text-primary" />
+                  <p className="max-w-[60ch] text-pretty">
+                    This is a list of all of the emulators that Retrom is
+                    tracking. In order to use these emulators locally, you will
+                    need to configure them in the <strong>Configuration</strong>{" "}
+                    tab.
+                  </p>
+                </div>
+
+                <Separator />
               </div>
 
               <EmulatorList platforms={platforms} emulators={emulators} />

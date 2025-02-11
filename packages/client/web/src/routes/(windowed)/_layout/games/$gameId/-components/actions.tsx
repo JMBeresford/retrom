@@ -99,12 +99,7 @@ export function Actions() {
                       key={emulatorProfile.id}
                       onClick={() => {
                         const file = gameFiles?.find(
-                          (file) =>
-                            file.id === game.defaultFileId &&
-                            (emulatorProfile.supportedExtensions.some((ext) =>
-                              file.path.endsWith(ext),
-                            ) ||
-                              emulatorProfile.supportedExtensions.length === 0),
+                          (file) => file.id === game.defaultFileId,
                         );
 
                         playGame({ emulator, emulatorProfile, game, file });

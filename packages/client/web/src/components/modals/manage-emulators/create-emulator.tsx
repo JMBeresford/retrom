@@ -64,7 +64,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
         className={cn(
           "grid col-span-full grid-flow-col grid-cols-subgrid w-full",
           "[&_*]:ring-inset *:grid *:grid-rows-[auto_auto_1fr] *:grid-flow-row",
-          "border-b items-center",
+          "border-b items-center [&_*]:placeholder:opacity-50",
         )}
       >
         <div></div>
@@ -107,9 +107,11 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                         field.value.length === 0 && "text-muted-foreground",
                       )}
                     >
-                      {field.value.length
-                        ? `${field.value.length} platforms`
-                        : "Select platforms"}
+                      {field.value.length ? (
+                        `${field.value.length} platforms`
+                      ) : (
+                        <span className="opacity-50">Select platforms</span>
+                      )}
 
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -174,13 +176,17 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                       error
                         ? "border-solid border-2 border-destructive"
                         : "border-none",
-                      field.value === undefined && "text-muted-foreground",
+                      field.value === undefined &&
+                        "text-muted-foreground opacity-50",
                     )}
                   >
-                    <SelectValue placeholder="Select save strategy">
+                    <SelectValue
+                      placeholder="Select save strategy"
+                      className="placeholder:opacity-50"
+                    >
                       {field.value !== undefined
                         ? saveStrategyDisplayMap[field.value]
-                        : "Select save strategy"}
+                        : null}
                     </SelectValue>
                   </SelectTrigger>
                 </FormControl>

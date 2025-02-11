@@ -28,6 +28,7 @@ diesel::table! {
         custom_args -> Array<Text>,
         created_at -> Nullable<Timestamptz>,
         updated_at -> Nullable<Timestamptz>,
+        built_in -> Bool,
     }
 }
 

@@ -39,16 +39,18 @@ import {
   Check,
   ChevronsUpDown,
   CircleAlertIcon,
+  InfoIcon,
   LoaderCircleIcon,
 } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
 import { useConfig } from "@/providers/config";
 import { Label } from "@/components/ui/label";
 import { PlatformWithMetadata } from "../manage-emulators";
+import { Separator } from "@/components/ui/separator";
 
 export function DefaultProfilesModal() {
   const navigate = useNavigate();
@@ -212,6 +214,33 @@ function DefaultEmulatorProfiles(props: {
         </DialogDescription>
       </DialogHeader>
 
+      <div className="grid gap-2 grid-flow-col grid-cols-[1fr,auto,1fr] items-center mb-4">
+        <Separator />
+        <div
+          className={cn(
+            "bg-muted text-muted-foreground p-2 rounded",
+            "flex gap-2 text-sm w-max",
+          )}
+        >
+          <InfoIcon className="w-[1rem] h-[1rem] text-primary" />
+          <p className="max-w-[60ch] text-pretty">
+            If you are not seeing what you expect here, make sure you have
+            configured your{" "}
+            <Link
+              className="text-accent-text underline"
+              search={(prev) => ({
+                ...prev,
+                manageEmulatorProfilesModal: { open: true },
+              })}
+            >
+              emulator profiles
+            </Link>{" "}
+            correctly
+          </p>
+        </div>
+        <Separator />
+      </div>
+
       <Form {...form}>
         <form className="mb-2 flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2 *:pl-2">
@@ -346,7 +375,7 @@ function DefaultEmulatorProfiles(props: {
                                           return (
                                             <CommandItem
                                               key={profile.id}
-                                              value={profile.name}
+                                              value={profile.id.toString()}
                                               onSelect={() => {
                                                 field.onChange({
                                                   ...field.value,

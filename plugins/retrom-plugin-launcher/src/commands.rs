@@ -44,17 +44,18 @@ pub(crate) async fn play_game<R: Runtime>(
         .emulator_profile
         .expect("No emulator profile provided");
     let emulator = payload.emulator.expect("No emulator provided");
-    let maybe_default_file = payload.file;
+    let maybe_default_game_file = payload.file;
 
-    let default_file_path = maybe_default_file
+    let maybe_default_file = maybe_default_game_file
         .clone()
         .map(|file| file.path)
-        .map(PathBuf::from)
-        .map(|path| {
-            path.file_name()
-                .expect("Could not get file name")
-                .to_owned()
-        });
+        .map(PathBuf::from);
+
+    let default_file_path = maybe_default_file.as_ref().map(|path| {
+        path.file_name()
+            .expect("Could not get file name")
+            .to_owned()
+    });
 
     if installer.get_game_installation_status(game_id).await != InstallationStatus::Installed {
         return Err(crate::Error::NotInstalled(game_id));
@@ -75,16 +76,21 @@ pub(crate) async fn play_game<R: Runtime>(
     files.sort();
 
     tracing::debug!("Files: {:?}", files);
-    tracing::debug!("Default file: {:?}", maybe_default_file);
+    tracing::debug!("Default file: {:?}", &maybe_default_file);
 
-    let fallback_file = files.iter().find(|file| {
-        profile.supported_extensions.iter().any(|ext| {
-            file.file_name()
-                .and_then(OsStr::to_str)
-                .map(|name| name.ends_with(ext))
-                .unwrap_or(false)
-        })
-    });
+    let fallback_file = match profile.supported_extensions.is_empty() {
+        true => files
+            .iter()
+            .find(|file| Some(*file) != maybe_default_file.as_ref()),
+        false => files.iter().find(|file| {
+            profile.supported_extensions.iter().any(|ext| {
+                file.file_name()
+                    .and_then(OsStr::to_str)
+                    .map(|name| name.ends_with(ext))
+                    .unwrap_or(false)
+            })
+        }),
+    };
 
     tracing::debug!("Fallback file: {:?}", fallback_file);
 
