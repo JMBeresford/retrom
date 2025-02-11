@@ -3,6 +3,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -13,10 +18,38 @@ import { ActionButton } from "../../../../../../components/action-button";
 import { useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
 import { openInstallationDir } from "retrom-plugin-installer-api";
+import { Fragment, useMemo } from "react";
+import { Emulator, EmulatorProfile } from "@/generated/retrom/models/emulators";
+import { Badge } from "@/components/ui/badge";
+import { usePlayGame } from "@/mutations/usePlayGame";
 
 export function Actions() {
-  const { game } = useGameDetail();
+  const { game, validEmulators, validProfiles, defaultProfile, gameFiles } =
+    useGameDetail();
+
   const { data: installationState } = useInstallationQuery(game);
+  const { mutate: playGame } = usePlayGame(game);
+
+  const playWithOptions = useMemo(() => {
+    return validProfiles.reduce(
+      (map, profile) => {
+        const emulator = validEmulators?.find(
+          (e) => e.id === profile.emulatorId,
+        );
+
+        if (emulator) {
+          if (!map[emulator.id]) {
+            map[emulator.id] = { emulator, profiles: [] };
+          }
+
+          map[emulator.id].profiles.push(profile);
+        }
+
+        return map;
+      },
+      {} as Record<number, { emulator: Emulator; profiles: EmulatorProfile[] }>,
+    );
+  }, [validEmulators, validProfiles]);
 
   return (
     <div className="flex">
@@ -44,6 +77,54 @@ export function Actions() {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger
+              disabled={
+                installationState !== InstallationStatus.INSTALLED ||
+                validEmulators?.length === 0 ||
+                validProfiles.length === 0
+              }
+            >
+              Play with
+            </DropdownMenuSubTrigger>
+
+            <DropdownMenuSubContent>
+              {Object.values(playWithOptions).map(({ emulator, profiles }) => (
+                <Fragment key={emulator.id}>
+                  <DropdownMenuLabel>{emulator.name}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+
+                  {profiles.map((emulatorProfile) => (
+                    <DropdownMenuItem
+                      key={emulatorProfile.id}
+                      onClick={() => {
+                        const file = gameFiles?.find(
+                          (file) =>
+                            file.id === game.defaultFileId &&
+                            (emulatorProfile.supportedExtensions.some((ext) =>
+                              file.path.endsWith(ext),
+                            ) ||
+                              emulatorProfile.supportedExtensions.length === 0),
+                        );
+
+                        playGame({ emulator, emulatorProfile, game, file });
+                      }}
+                    >
+                      {emulatorProfile.name}{" "}
+                      {emulatorProfile.id === defaultProfile?.id ? (
+                        <Badge variant="outline" className="ml-4">
+                          default
+                        </Badge>
+                      ) : null}
+                    </DropdownMenuItem>
+                  ))}
+                </Fragment>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+
+          <DropdownMenuSeparator />
+
           <DropdownMenuItem asChild>
             <Link search={{ updateMetadataModal: { open: true } }}>Edit</Link>
           </DropdownMenuItem>
@@ -62,6 +143,8 @@ export function Actions() {
               </Link>
             </DropdownMenuItem>
           )}
+
+          <DropdownMenuSeparator />
 
           <DropdownMenuItem asChild>
             <Link

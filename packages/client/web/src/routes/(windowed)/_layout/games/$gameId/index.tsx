@@ -17,6 +17,8 @@ import { DeleteGameModal } from "@/components/modals/delete-game";
 import { UninstallGameModal } from "@/components/modals/uninstall-game";
 import { z } from "zod";
 import { zodSearchValidator } from "@tanstack/router-zod-adapter";
+import { DesktopOnly } from "@/lib/env";
+import { LaunchConfig } from "./-components/launch-config";
 
 const modalsSchema = z.object({
   updateMetadataModal: z
@@ -54,6 +56,9 @@ function Game() {
             <Actions />
           </div>
 
+          <DesktopOnly>
+            <LaunchConfig />
+          </DesktopOnly>
           <GeneralInfo />
           <Genres />
         </div>

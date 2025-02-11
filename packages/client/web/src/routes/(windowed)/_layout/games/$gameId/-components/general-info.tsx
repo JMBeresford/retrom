@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { useMemo } from "react";
+import { ReactNode, useMemo } from "react";
 import { getFileStub, timestampToDate } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
 
@@ -66,7 +66,7 @@ export function GeneralInfo() {
   );
 }
 
-function InfoItem(props: { title: string; value: string }) {
+export function InfoItem(props: { title: string; value: ReactNode }) {
   return (
     <div className="mb-2">
       <h3 className="font-extrabold">{props.title}</h3>

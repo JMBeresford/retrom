@@ -1,4 +1,5 @@
 import { toast } from "@/components/ui/use-toast";
+import { Emulator, EmulatorProfile } from "@/generated/retrom/models/emulators";
 import { GameFile } from "@/generated/retrom/models/game-files";
 import { Game } from "@/generated/retrom/models/games";
 import {
@@ -12,6 +13,9 @@ import {
   GetGameMetadataResponse_SimilarGames,
 } from "@/generated/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
+import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
+import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
+import { useEmulators } from "@/queries/useEmulators";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { PropsWithChildren, createContext, useContext } from "react";
@@ -26,6 +30,10 @@ export type GameDetailContext = {
     similarGames?: GetGameMetadataResponse_SimilarGames;
   };
   platformMetadata?: PlatformMetadata;
+  emulator?: Emulator;
+  validEmulators: Emulator[];
+  defaultProfile?: EmulatorProfile;
+  validProfiles: EmulatorProfile[];
 };
 
 const GameDetailContext = createContext<GameDetailContext | null>(null);
@@ -84,10 +92,57 @@ export function GameDetailProvider(
     },
   });
 
+  const { data: defaultProfileId, status: defaultEmulatorProfileStatus } =
+    useDefaultEmulatorProfiles({
+      enabled: platformData?.platform !== undefined,
+      request: {
+        platformIds:
+          platformData?.platform?.id !== undefined
+            ? [platformData.platform.id]
+            : [-1],
+      },
+      selectFn: (data) => data.defaultProfiles.at(0)?.emulatorProfileId,
+    });
+
+  const { data: emulators, status: emulatorsStatus } = useEmulators({
+    enabled: platformData?.platform !== undefined,
+    request: {
+      supportedPlatformIds:
+        platformData?.platform?.id !== undefined
+          ? [platformData.platform.id]
+          : [-1],
+    },
+    selectFn: (data) => data.emulators,
+  });
+
+  const { data: profiles, status: profilesStatus } = useEmulatorProfiles({
+    enabled:
+      emulatorsStatus === "success" &&
+      defaultEmulatorProfileStatus === "success",
+    selectFn: (data) => data.profiles,
+    request: {
+      ids: defaultProfileId !== undefined ? [defaultProfileId] : [],
+      emulatorIds: emulators?.length
+        ? emulators.map((emulator) => emulator.id)
+        : [-1],
+    },
+  });
+
+  const defaultProfile =
+    profiles?.find((profile) => profile.id === defaultProfileId) ??
+    profiles?.at(0);
+
+  const emulator = defaultProfile
+    ? emulators?.find((emulator) => emulator.id === defaultProfile.emulatorId)
+    : emulators?.at(0);
+
   if (
     gameStatus === "error" ||
     platformStatus === "error" ||
-    gameMetadataStatus === "error"
+    gameMetadataStatus === "error" ||
+    defaultEmulatorProfileStatus === "error" ||
+    emulatorsStatus === "error" ||
+    profilesStatus === "error"
   ) {
     return <span>Error loading game details</span>;
   }
@@ -95,7 +150,10 @@ export function GameDetailProvider(
   if (
     gameStatus === "pending" ||
     platformStatus === "pending" ||
-    gameMetadataStatus === "pending"
+    gameMetadataStatus === "pending" ||
+    defaultEmulatorProfileStatus === "pending" ||
+    emulatorsStatus === "pending" ||
+    profilesStatus === "pending"
   ) {
     return <span>Loading...</span>;
   }
@@ -122,6 +180,10 @@ export function GameDetailProvider(
       similarGames: gameMetadata.similarGames.get(gameData.game.id),
     },
     platformMetadata: platformData.platformMetadata,
+    emulator,
+    validEmulators: emulators,
+    defaultProfile,
+    validProfiles: profiles,
   };
 
   return (

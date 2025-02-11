@@ -1,13 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { usePlayGame } from "@/mutations/usePlayGame";
-import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
 import { usePlayStatusQuery } from "@/queries/usePlayStatus";
 import { PlayStatus } from "@/generated/retrom/client/client-utils";
 import { useStopGame } from "@/mutations/useStopGame";
-import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
 import { ComponentProps, ForwardedRef, forwardRef, useCallback } from "react";
 import { LoaderCircleIcon, PlayIcon, PlusIcon, Square } from "lucide-react";
-import { useEmulators } from "@/queries/useEmulators";
 import { useGameDetail } from "@/providers/game-details";
 import { useMatch, useNavigate } from "@tanstack/react-router";
 import { useToast } from "../ui/use-toast";
@@ -18,7 +15,8 @@ export const PlayGameButton = forwardRef(
     forwardedRef: ForwardedRef<HTMLButtonElement>,
   ) => {
     const { toast } = useToast();
-    const { game, platform, gameFiles } = useGameDetail();
+    const { game, gameFiles, emulator, defaultProfile } = useGameDetail();
+
     const { mutate: playAction } = usePlayGame(game);
     const { mutate: stopAction } = useStopGame(game);
     const navigate = useNavigate();
@@ -29,36 +27,6 @@ export const PlayGameButton = forwardRef(
 
     const { data: playStatusUpdate, status: queryStatus } =
       usePlayStatusQuery(game);
-
-    const { data: defaultProfileId, status: defaultEmulatorProfileStatus } =
-      useDefaultEmulatorProfiles({
-        request: { platformIds: [platform.id] },
-        selectFn: (data) => data.defaultProfiles.at(0)?.emulatorProfileId,
-      });
-
-    const { data: emulators, status: emulatorsStatus } = useEmulators({
-      request: { supportedPlatformIds: [platform.id] },
-      selectFn: (data) => data.emulators,
-    });
-
-    const { data: profiles } = useEmulatorProfiles({
-      enabled:
-        emulatorsStatus === "success" &&
-        defaultEmulatorProfileStatus === "success",
-      selectFn: (data) => data.profiles,
-      request: {
-        ids: defaultProfileId !== undefined ? [defaultProfileId] : [],
-        emulatorIds: emulators?.map((emulator) => emulator.id) ?? [],
-      },
-    });
-
-    const defaultProfile =
-      profiles?.find((profile) => profile.id === defaultProfileId) ??
-      profiles?.at(0);
-
-    const emulator = defaultProfile
-      ? emulators?.find((emulator) => emulator.id === defaultProfile.emulatorId)
-      : emulators?.at(0);
 
     const file = gameFiles?.find((file) => file.id === game.defaultFileId);
     const disabled = queryStatus !== "success";
