@@ -39,11 +39,7 @@ type Props = {
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name cannot be empty" }),
-  supportedExtensions: z
-    .string()
-    .min(1)
-    .array()
-    .min(1, { message: "At least one file extension is required" }),
+  supportedExtensions: z.string().min(1).array(),
   customArgs: z
     .array(z.string())
     .transform((args) => args.filter((arg) => arg.length > 0))
@@ -150,7 +146,13 @@ export function EditProfileDialog(props: Props) {
               return (
                 <FormItem>
                   <FormLabel>Supported Extensions</FormLabel>
-                  <div className={cn(InputStyles, "flex items-center gap-2")}>
+                  <div
+                    className={cn(
+                      InputStyles,
+                      "flex items-center",
+                      field.value.length > 0 && "gap-2",
+                    )}
+                  >
                     <div className="flex gap-1">
                       {field.value.map((ext, i) => (
                         <Badge
