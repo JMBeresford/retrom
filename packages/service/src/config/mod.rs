@@ -37,6 +37,7 @@ impl ServerConfigManager {
                     path: "/app/library".into(),
                     storage_type: Some(i32::from(StorageType::MultiFileGame)),
                     ignore_patterns: None,
+                    custom_library_definition: None,
                 }],
                 ..Default::default()
             };
@@ -108,6 +109,7 @@ impl ServerConfigManager {
                 path: content_dir,
                 storage_type: Some(i32::from(StorageType::MultiFileGame)),
                 ignore_patterns: None,
+                custom_library_definition: None,
             });
         }
 

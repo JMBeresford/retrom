@@ -139,6 +139,7 @@ pub(crate) async fn play_game<R: Runtime>(
     let mut cmd = launcher.get_open_cmd(&local_config.executable_path);
 
     let args = if !profile.custom_args.is_empty() {
+        #[allow(clippy::literal_string_with_formatting_args)]
         profile
             .custom_args
             .into_iter()

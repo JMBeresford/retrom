@@ -5,7 +5,7 @@ use serde::{
 
 struct StringifiedStorageTypeVisitor;
 
-impl<'de> Visitor<'de> for StringifiedStorageTypeVisitor {
+impl Visitor<'_> for StringifiedStorageTypeVisitor {
     type Value = Option<i32>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -44,8 +44,9 @@ where
 
     match value {
         Some(storage_type) => match storage_type {
-            StorageType::MultiFileGame => serializer.serialize_str("MultiFileGame"),
-            StorageType::SingleFileGame => serializer.serialize_str("SingleFileGame"),
+            StorageType::MultiFileGame => serializer.serialize_i32(0),
+            StorageType::SingleFileGame => serializer.serialize_i32(1),
+            StorageType::Custom => serializer.serialize_i32(2),
         },
         None => serializer.serialize_none(),
     }

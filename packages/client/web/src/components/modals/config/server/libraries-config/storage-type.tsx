@@ -1,6 +1,5 @@
-import { StorageType } from "@/generated/retrom/models/games";
 import { ControllerFieldState, ControllerRenderProps } from "react-hook-form";
-import { CreateLibrarySchema, LibrariesSchema } from ".";
+import { LibrariesSchema } from ".";
 import { FormControl, FormItem } from "@/components/ui/form";
 import {
   Select,
@@ -11,14 +10,13 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { StorageType } from "@/generated/retrom/server/config";
 
 export function StorageTypeSelect<
-  Field extends
-    | ControllerRenderProps<
-        LibrariesSchema,
-        `contentDirectories.${number}.storageType`
-      >
-    | ControllerRenderProps<CreateLibrarySchema, "storageType">,
+  Field extends ControllerRenderProps<
+    LibrariesSchema,
+    `contentDirectories.${number}.storageType`
+  >,
 >(props: { field: Field; fieldState: ControllerFieldState }) {
   const { field, fieldState } = props;
   const value = field.value;
@@ -38,8 +36,8 @@ export function StorageTypeSelect<
               fieldState.isDirty && "text-foreground",
             )}
           >
-            <SelectValue placeholder="Select a storage type">
-              {StorageTypeLabel[field.value]}
+            <SelectValue asChild placeholder="Select a storage type">
+              <p className="text-left">{StorageTypeLabel[field.value]}</p>
             </SelectValue>
           </SelectTrigger>
         </FormControl>
@@ -66,5 +64,6 @@ export function StorageTypeSelect<
 const StorageTypeLabel: Record<StorageType, string> = {
   [StorageType.MULTI_FILE_GAME]: "Multi-file Games",
   [StorageType.SINGLE_FILE_GAME]: "Single-file Games",
+  [StorageType.CUSTOM]: "Custom",
   [StorageType.UNRECOGNIZED]: "Unrecognized",
 };

@@ -15,9 +15,7 @@ use tracing::instrument;
 
 pub mod content_resolver;
 mod delete_handlers;
-mod game_resolver;
 mod metadata_handlers;
-mod platform_resolver;
 mod update_handlers;
 
 pub struct LibraryServiceHandlers {
