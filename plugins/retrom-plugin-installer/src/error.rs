@@ -29,6 +29,8 @@ pub enum Error {
     ConfigError(#[from] retrom_plugin_config::Error),
     #[error("Cannot migrate installation directory: {0}")]
     MigrationError(String),
+    #[error("Internal Error: {0}")]
+    InternalError(String),
 }
 
 impl Serialize for Error {

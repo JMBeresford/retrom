@@ -238,8 +238,11 @@ impl GameService for GameServiceHandlers {
                                 Some(StorageType::SingleFileGame) => new_game_path.clone(),
                                 Some(StorageType::MultiFileGame) => new_game_path
                                     .join(old_file_path.strip_prefix(old_game_path).unwrap()),
-                                None => {
-                                    tracing::error!("Storage type not found for game {}", game.id);
+                                _ => {
+                                    tracing::error!(
+                                        "Invalid Storage type found for game {}",
+                                        game.id
+                                    );
 
                                     break;
                                 }

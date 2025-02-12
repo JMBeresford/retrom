@@ -50,7 +50,12 @@ impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
         platform: retrom::Platform,
         query: Option<IgdbPlatformSearchQuery>,
     ) -> Option<retrom::NewPlatformMetadata> {
-        let naive_name = platform.path.split('/').last().unwrap_or(&platform.path);
+        let naive_name = platform
+            .path
+            .split('/')
+            .next_back()
+            .unwrap_or(&platform.path);
+
         let path = PathBuf::from_str(&platform.path).unwrap();
         let mut name = path
             .file_stem()

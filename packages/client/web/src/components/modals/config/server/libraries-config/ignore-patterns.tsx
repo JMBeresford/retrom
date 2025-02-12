@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FormItem } from "@/components/ui/form";
+import { FormControl, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -18,15 +18,13 @@ import { CSSProperties, useCallback, useRef } from "react";
 import { ControllerFieldState, ControllerRenderProps } from "react-hook-form";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import theme from "react-syntax-highlighter/dist/esm/styles/prism/nord";
-import { CreateLibrarySchema, LibrariesSchema } from ".";
+import { LibrariesSchema } from ".";
 
 export function IgnorePatternsInput<
-  Field extends
-    | ControllerRenderProps<
-        LibrariesSchema,
-        `contentDirectories.${number}.ignorePatterns.patterns`
-      >
-    | ControllerRenderProps<CreateLibrarySchema, "ignorePatterns.patterns">,
+  Field extends ControllerRenderProps<
+    LibrariesSchema,
+    `contentDirectories.${number}.ignorePatterns.patterns`
+  >,
 >(props: { field: Field; fieldState: ControllerFieldState }) {
   const input = useRef<HTMLInputElement>(null);
   const { field } = props;
@@ -56,7 +54,7 @@ export function IgnorePatternsInput<
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full">
+        <Button variant="outline" className="w-full" disabled={field.disabled}>
           {field.value.length
             ? `${field.value.length} ${field.value.length > 1 ? "patterns" : "pattern"}`
             : "Add pattern"}
@@ -83,37 +81,39 @@ export function IgnorePatternsInput<
         <Separator className="mt-2" />
 
         <FormItem>
-          {field.value.length ? (
-            field.value.map((pattern, i) => (
-              <div
-                key={pattern + i}
-                className="flex gap-2 items-center justify-between mt-2 py-1"
-              >
-                <SyntaxHighlighter
-                  language={"regex"}
-                  style={theme as { [key: string]: CSSProperties }}
-                  customStyle={{ background: "none", padding: 0, margin: 0 }}
-                  codeTagProps={{ className: "bg-none text-sm" }}
+          <FormControl>
+            {field.value.length ? (
+              field.value.map((pattern, i) => (
+                <div
+                  key={pattern + i}
+                  className="flex gap-2 items-center justify-between mt-2 py-1"
                 >
-                  {pattern}
-                </SyntaxHighlighter>
+                  <SyntaxHighlighter
+                    language={"regex"}
+                    style={theme as { [key: string]: CSSProperties }}
+                    customStyle={{ background: "none", padding: 0, margin: 0 }}
+                    codeTagProps={{ className: "bg-none text-sm" }}
+                  >
+                    {pattern}
+                  </SyntaxHighlighter>
 
-                <Button
-                  variant="destructive"
-                  className="w-min h-min p-2"
-                  onClick={() => removePattern(pattern)}
-                >
-                  <X size={14} />
-                </Button>
-              </div>
-            ))
-          ) : (
-            <>
-              <p className="text-muted-foreground text-sm italic text-center">
-                No ignore patterns added
-              </p>
-            </>
-          )}
+                  <Button
+                    variant="destructive"
+                    className="w-min h-min p-2"
+                    onClick={() => removePattern(pattern)}
+                  >
+                    <X size={14} />
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <>
+                <p className="text-muted-foreground text-sm italic text-center">
+                  No ignore patterns added
+                </p>
+              </>
+            )}
+          </FormControl>
         </FormItem>
       </PopoverContent>
     </Popover>

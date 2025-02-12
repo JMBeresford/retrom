@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package retrom;
 
-import 'retrom/models/games.proto';
-
 message ConnectionConfig {
   optional int32 port = 1;
   optional string db_url = 2;
@@ -13,10 +11,32 @@ message IgnorePatterns {
   repeated string patterns = 1;
 }
 
+enum StorageType {
+  // Standard library directory with single-file games
+  // e.g. /contentDir/platformX/game.rom
+  SINGLE_FILE_GAME = 0;
+
+  // Standard library directory with multi-file games
+  // e.g. /contentDir/platformX/game/game.rom
+  MULTI_FILE_GAME = 1;
+
+  // Custom, user-defined structure composed of named macros
+  // used for non-standard library directories and/or automatic
+  // tagging of scanned entries
+  //
+  // example user definition: "/some/path/{platform}/{game}/{region}/{file}"
+  CUSTOM = 2;
+}
+
+message CustomLibraryDefinition {
+  string definition = 1;
+}
+
 message ContentDirectory {
   string path = 1;
   optional StorageType storage_type = 2;
   optional IgnorePatterns ignore_patterns = 3;
+  optional CustomLibraryDefinition custom_library_definition = 4;
 }
 
 message IGDBConfig {

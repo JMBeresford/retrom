@@ -3,11 +3,7 @@ syntax = "proto3";
 package retrom;
 
 import "google/protobuf/timestamp.proto";
-
-enum StorageType {
-  SINGLE_FILE_GAME = 0;
-  MULTI_FILE_GAME = 1;
-}
+import "retrom/server/config.proto";
 
 message Game {
   int32 id = 1;

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/accordion";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { useGames } from "@/queries/useGames";
-import { Game, StorageType } from "@/generated/retrom/models/games";
+import { Game } from "@/generated/retrom/models/games";
 import {
   GameMetadata,
   PlatformMetadata,
@@ -39,6 +39,7 @@ import {
 } from "../ui/dropdown-menu";
 import { DropdownMenuTriggerProps } from "@radix-ui/react-dropdown-menu";
 import { Button } from "../ui/button";
+import { StorageType } from "@/generated/retrom/server/config";
 
 type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 

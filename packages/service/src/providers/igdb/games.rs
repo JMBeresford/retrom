@@ -131,7 +131,7 @@ impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
         game: retrom::Game,
         query: Option<IgdbGameSearchQuery>,
     ) -> Option<NewGameMetadata> {
-        let naive_name = game.path.split('/').last().unwrap_or(&game.path);
+        let naive_name = game.path.split('/').next_back().unwrap_or(&game.path);
         let path = PathBuf::from_str(&game.path).unwrap();
         let mut name = path
             .file_stem()

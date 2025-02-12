@@ -125,6 +125,11 @@ pub async fn install_game<R: Runtime>(
             let prefix = match game.storage_type() {
                 StorageType::MultiFileGame => game_path.clone(),
                 StorageType::SingleFileGame => game_path.clone().parent().unwrap().to_path_buf(),
+                _ => {
+                    return Err(crate::error::Error::InternalError(
+                        "Invalid storage type".into(),
+                    ))
+                }
             };
 
             let file_path = PathBuf::from(file.path);

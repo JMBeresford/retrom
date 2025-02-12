@@ -22,7 +22,7 @@ import { Checkbox } from "../../ui/checkbox";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";
 import { useNavigate } from "@tanstack/react-router";
-import { StorageType } from "@/generated/retrom/models/games";
+import { StorageType } from "@/generated/retrom/server/config";
 
 type FormFieldRenderer = ({
   form,

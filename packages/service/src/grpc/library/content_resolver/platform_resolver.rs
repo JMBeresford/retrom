@@ -5,10 +5,11 @@ use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::{NewPlatform, Platform, StorageType};
 use retrom_db::{schema, Pool};
 use tracing::warn;
+use walkdir::WalkDir;
 
 use super::{
-    content_resolver::{ContentResolver, ResolverError, Result},
-    game_resolver::GameResolver,
+    game_resolver::GameResolver, parser::LibraryDefinitionParser, ContentResolver, ResolverError,
+    Result,
 };
 
 #[derive(Debug, Clone)]
@@ -38,13 +39,18 @@ impl TryFrom<PlatformResolver> for ResolvedPlatform {
 }
 
 impl ResolvedPlatform {
-    pub fn get_game_resolvers(&self) -> Vec<GameResolver> {
-        let dir = PathBuf::from(&self.row.path);
-        let game_dirs = dir.read_dir().unwrap();
+    pub fn get_game_resolvers(&self) -> Result<Vec<GameResolver>> {
+        let parser = LibraryDefinitionParser::new(&self.content_resolver.library_definition)?;
+        let depth_to_platform = parser.depth_to_platforms()?;
+        let depth_to_games = parser.depth_to_games()? - depth_to_platform;
+        let storage_type = parser.game_storage_type();
 
-        game_dirs
+        let entries = WalkDir::new(&self.row.path)
+            .min_depth(depth_to_games)
+            .max_depth(depth_to_games)
+            .into_iter()
             .filter_map(|entry| match entry {
-                Ok(entry) => Some(entry.path()),
+                Ok(entry) => Some(entry.into_path()),
                 Err(why) => {
                     warn!("Could not read game directory node: {:?}", why);
                     None
@@ -80,19 +86,23 @@ impl ResolvedPlatform {
                 }
             })
             .filter(|path| {
-                match self
-                    .content_resolver
-                    .content_directory
-                    .storage_type
-                    .and_then(|st| StorageType::try_from(st).ok())
-                    .unwrap_or(StorageType::MultiFileGame)
-                {
-                    StorageType::SingleFileGame => path.is_file(),
-                    StorageType::MultiFileGame => path.is_dir(),
+                if storage_type == StorageType::SingleFileGame && !path.is_file() {
+                    tracing::debug!("Skipping non-file path for single-game library: {:?}", path);
+                    return false;
+                } else if storage_type == StorageType::MultiFileGame && !path.is_dir() {
+                    tracing::debug!(
+                        "Skipping non-directory path for multi-file game library: {:?}",
+                        path
+                    );
+                    return false;
                 }
+
+                true
             })
             .map(|path| GameResolver::new(path, self.clone()))
-            .collect()
+            .collect();
+
+        Ok(entries)
     }
 }
 

@@ -1,103 +1,8 @@
-use std::{io, path::PathBuf, str::FromStr};
+mod ignore_patterns {
+    use std::path::PathBuf;
 
-use super::platform_resolver::PlatformResolver;
-use retrom_codegen::retrom::ContentDirectory;
-use tracing::warn;
-
-#[derive(thiserror::Error, Debug)]
-pub enum ResolverError {
-    #[error("No row found in DB")]
-    NoRowFound,
-
-    #[error("Could not insert new row: {0}")]
-    InsertError(#[from] diesel::result::Error),
-
-    #[error("Could not read directory or file: {0}")]
-    IoError(#[from] io::Error),
-}
-
-pub type Result<T> = std::result::Result<T, ResolverError>;
-
-#[derive(Debug, Clone)]
-pub struct ContentResolver {
-    pub content_directory: ContentDirectory,
-    pub(super) ignore_regex_set: Option<regex::RegexSet>,
-}
-
-impl ContentResolver {
-    pub fn from_content_dir(content_directory: ContentDirectory) -> Self {
-        let ignore_patterns: Vec<String> = content_directory
-            .ignore_patterns
-            .as_ref()
-            .map(|ip| ip.patterns.clone())
-            .unwrap_or_default();
-
-        let ignore_regex_set = match ignore_patterns.len() {
-            0 => None,
-            _ => regex::RegexSet::new(ignore_patterns).ok(),
-        };
-
-        Self {
-            content_directory,
-            ignore_regex_set,
-        }
-    }
-
-    pub fn resolve_platforms(&self) -> Result<Vec<PlatformResolver>> {
-        let content_dir_path =
-            PathBuf::from_str(&self.content_directory.path).expect("Invalid path");
-
-        let platform_resolvers = content_dir_path
-            .read_dir()?
-            .filter_map(|entry| match entry {
-                Ok(entry) => Some(entry.path()),
-                Err(why) => {
-                    warn!("Could not read content directory node: {:?}", why);
-                    None
-                }
-            })
-            .filter(|path| path.is_dir())
-            .filter(|path| {
-                let ignore_regex_set = match self.ignore_regex_set.as_ref() {
-                    Some(irs) => irs,
-                    None => return true,
-                };
-
-                let abs_path = match path.canonicalize() {
-                    Ok(p) => p,
-                    Err(why) => {
-                        warn!("Could not canonicalize path: {:?}", why);
-                        return true;
-                    }
-                };
-
-                let abs_parent = content_dir_path
-                    .parent()
-                    .and_then(|p| p.canonicalize().ok());
-
-                let rel_path = match abs_parent {
-                    Some(parent) => abs_path.strip_prefix(parent).unwrap_or(path),
-                    None => path,
-                };
-
-                let rel_path = match rel_path.to_str() {
-                    Some(rp) => rp,
-                    None => return true,
-                };
-
-                !ignore_regex_set.is_match(rel_path)
-            })
-            .map(|dir| PlatformResolver::new(dir, self.clone()))
-            .collect();
-
-        Ok(platform_resolvers)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use retrom_codegen::retrom::{GameFile, IgnorePatterns, StorageType};
+    use crate::grpc::library::content_resolver::{game_resolver::GameResolver, ContentResolver};
+    use retrom_codegen::retrom::{ContentDirectory, GameFile, IgnorePatterns, StorageType};
 
     #[test]
     fn ignores_child_string() {
@@ -113,7 +18,7 @@ mod tests {
             ..Default::default()
         };
 
-        let resolver = ContentResolver::from_content_dir(content_directory);
+        let resolver = ContentResolver::from_content_dir(content_directory).unwrap();
         let platform_resolvers = resolver.resolve_platforms().unwrap();
 
         assert_eq!(platform_resolvers.len(), 1);
@@ -139,7 +44,7 @@ mod tests {
             ..Default::default()
         };
 
-        let resolver = ContentResolver::from_content_dir(content_directory);
+        let resolver = ContentResolver::from_content_dir(content_directory).unwrap();
         let platform_dirs = resolver
             .resolve_platforms()
             .unwrap()
@@ -178,9 +83,10 @@ mod tests {
                 ],
             }),
             storage_type: Some(StorageType::SingleFileGame.into()),
+            ..Default::default()
         };
 
-        let resolver = ContentResolver::from_content_dir(content_directory);
+        let resolver = ContentResolver::from_content_dir(content_directory).unwrap();
         let resolved_platforms = resolver
             .resolve_platforms()
             .unwrap()
@@ -197,9 +103,15 @@ mod tests {
                 .and_then(|ref p| p.to_str().map(|s| s.to_string()))
                 .unwrap()));
 
+        let error_logger = |why| {
+            tracing::warn!("Could not get game resolver: {:#?}", why);
+            None::<Vec<GameResolver>>
+        };
+
         let game_resolvers = resolved_platforms
             .iter()
-            .flat_map(|pr| pr.get_game_resolvers())
+            .filter_map(|pr| pr.get_game_resolvers().map_err(error_logger).ok())
+            .flatten()
             .collect::<Vec<_>>();
 
         assert_eq!(game_resolvers.len(), 1);
@@ -244,9 +156,10 @@ mod tests {
                 patterns: vec!["ignore".into(), r"\.DS_store".into()],
             }),
             storage_type: Some(StorageType::SingleFileGame.into()),
+            ..Default::default()
         };
 
-        let resolver = ContentResolver::from_content_dir(content_directory);
+        let resolver = ContentResolver::from_content_dir(content_directory).unwrap();
 
         let resolved_platforms = resolver
             .resolve_platforms()
@@ -259,7 +172,7 @@ mod tests {
 
         let game_resolvers = resolved_platforms
             .iter()
-            .flat_map(|pr| pr.get_game_resolvers())
+            .flat_map(|pr| pr.get_game_resolvers().unwrap())
             .collect::<Vec<_>>();
 
         assert_eq!(game_resolvers.len(), 6);
@@ -321,9 +234,10 @@ mod tests {
                 patterns: vec!["ignore".into(), r"\.DS_store".into()],
             }),
             storage_type: Some(StorageType::MultiFileGame.into()),
+            ..Default::default()
         };
 
-        let resolver = ContentResolver::from_content_dir(content_directory);
+        let resolver = ContentResolver::from_content_dir(content_directory).unwrap();
 
         let resolved_platforms = resolver
             .resolve_platforms()
@@ -336,7 +250,7 @@ mod tests {
 
         let game_resolvers = resolved_platforms
             .iter()
-            .flat_map(|pr| pr.get_game_resolvers())
+            .flat_map(|pr| pr.get_game_resolvers().unwrap())
             .collect::<Vec<_>>();
 
         assert_eq!(game_resolvers.len(), 6);
@@ -363,7 +277,7 @@ mod tests {
 
         let game_files: Vec<GameFile> = game_resolvers
             .into_iter()
-            .flat_map(|r| r.mock_resolve().mock_resolve_files())
+            .flat_map(|r| r.mock_resolve().unwrap().mock_resolve_files().unwrap())
             .collect();
 
         let game_file_paths = game_files
@@ -377,5 +291,149 @@ mod tests {
         assert!(game_file_paths.contains(&game_file1_2.path().canonicalize().unwrap()));
         assert!(game_file_paths.contains(&game_file2_1.path().canonicalize().unwrap()));
         assert!(game_file_paths.contains(&game_file2_2.path().canonicalize().unwrap()));
+    }
+}
+
+mod library_definitions {
+    use std::{path::PathBuf, str::FromStr};
+
+    use crate::grpc::library::content_resolver::{parser::ContentMacro, ContentResolver};
+    use retrom_codegen::retrom::{ContentDirectory, CustomLibraryDefinition, StorageType};
+
+    #[test]
+    fn single_platform_lib() {
+        let platform_dir = tempfile::TempDir::with_prefix("platform-").unwrap();
+        let game_file = tempfile::NamedTempFile::with_prefix_in("game-", &platform_dir).unwrap();
+
+        let content_directory = ContentDirectory {
+            path: platform_dir
+                .path()
+                .canonicalize()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string(),
+            storage_type: Some(StorageType::Custom.into()),
+            custom_library_definition: Some(CustomLibraryDefinition {
+                definition: format!("{}/{}", ContentMacro::Platform, ContentMacro::GameFile),
+            }),
+            ..Default::default()
+        };
+
+        let resolved_games = ContentResolver::from_content_dir(content_directory)
+            .unwrap()
+            .resolve_platforms()
+            .unwrap()
+            .into_iter()
+            .flat_map(|pr| pr.mock_resolve().get_game_resolvers().unwrap())
+            .map(|gr| gr.mock_resolve().unwrap())
+            .collect::<Vec<_>>();
+
+        assert_eq!(resolved_games.len(), 1);
+        assert_eq!(
+            PathBuf::from_str(&resolved_games[0].row.path)
+                .unwrap()
+                .canonicalize()
+                .unwrap(),
+            game_file.path().canonicalize().unwrap()
+        );
+
+        let multi_game_platform_dir = tempfile::TempDir::with_prefix("platform-").unwrap();
+        let game_dir =
+            tempfile::TempDir::with_prefix_in("game-", &multi_game_platform_dir).unwrap();
+        let game_file = tempfile::NamedTempFile::with_prefix_in("game-", &game_dir).unwrap();
+        let game_file2 = tempfile::NamedTempFile::with_prefix_in("game2-", &game_dir).unwrap();
+
+        let content_directory = ContentDirectory {
+            path: multi_game_platform_dir
+                .path()
+                .canonicalize()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string(),
+            storage_type: Some(StorageType::Custom.into()),
+            custom_library_definition: Some(CustomLibraryDefinition {
+                definition: format!("{}/{}", ContentMacro::Platform, ContentMacro::GameDir),
+            }),
+            ..Default::default()
+        };
+
+        let resolved_games = ContentResolver::from_content_dir(content_directory)
+            .unwrap()
+            .resolve_platforms()
+            .unwrap()
+            .into_iter()
+            .flat_map(|pr| pr.mock_resolve().get_game_resolvers().unwrap())
+            .map(|gr| gr.mock_resolve().unwrap())
+            .collect::<Vec<_>>();
+
+        let resolved_files = resolved_games
+            .iter()
+            .flat_map(|rg| rg.mock_resolve_files().unwrap())
+            .collect::<Vec<_>>();
+
+        assert_eq!(resolved_games.len(), 1);
+        assert_eq!(resolved_files.len(), 2);
+        assert!(
+            resolved_files
+                .iter()
+                .any(|gf| gf.path == game_file.path().canonicalize().unwrap().to_str().unwrap())
+                && resolved_files.iter().any(
+                    |gf| gf.path == game_file2.path().canonicalize().unwrap().to_str().unwrap()
+                )
+        );
+    }
+
+    #[test]
+    fn games_as_grandchildren() {
+        let library_dir = tempfile::TempDir::new().unwrap();
+        let platform_dir = tempfile::TempDir::with_prefix_in("platform-", &library_dir).unwrap();
+        let region1_dir = tempfile::TempDir::with_prefix_in("region-", &platform_dir).unwrap();
+        let region2_dir = tempfile::TempDir::with_prefix_in("region-", &platform_dir).unwrap();
+        let game1_dir = tempfile::TempDir::with_prefix_in("game-", &region1_dir).unwrap();
+        let game2_dir = tempfile::TempDir::with_prefix_in("game-", &region2_dir).unwrap();
+        let game_file1 = tempfile::NamedTempFile::with_prefix_in("game-", &game1_dir).unwrap();
+        let game_file2 = tempfile::NamedTempFile::with_prefix_in("game-", &game2_dir).unwrap();
+
+        let content_directory = ContentDirectory {
+            path: library_dir.path().to_str().unwrap().to_string(),
+            storage_type: Some(StorageType::Custom.into()),
+            custom_library_definition: Some(CustomLibraryDefinition {
+                definition: format!(
+                    "{}/{}/{}/{}",
+                    ContentMacro::Library,
+                    ContentMacro::Platform,
+                    ContentMacro::Custom("region-".into()),
+                    ContentMacro::GameDir
+                ),
+            }),
+            ..Default::default()
+        };
+
+        let resolved_games = ContentResolver::from_content_dir(content_directory)
+            .unwrap()
+            .resolve_platforms()
+            .unwrap()
+            .into_iter()
+            .flat_map(|pr| pr.mock_resolve().get_game_resolvers().unwrap())
+            .map(|gr| gr.mock_resolve().unwrap())
+            .collect::<Vec<_>>();
+
+        let resolved_files = resolved_games
+            .iter()
+            .flat_map(|rg| rg.mock_resolve_files().unwrap())
+            .collect::<Vec<_>>();
+
+        assert_eq!(resolved_games.len(), 2);
+        assert_eq!(resolved_files.len(), 2);
+        assert!(
+            resolved_files
+                .iter()
+                .any(|gf| gf.path == game_file1.path().canonicalize().unwrap().to_str().unwrap())
+                && resolved_files.iter().any(
+                    |gf| gf.path == game_file2.path().canonicalize().unwrap().to_str().unwrap()
+                )
+        );
     }
 }

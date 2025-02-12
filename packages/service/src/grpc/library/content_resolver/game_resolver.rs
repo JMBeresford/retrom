@@ -8,8 +8,7 @@ use tracing::warn;
 use walkdir::WalkDir;
 
 use super::{
-    content_resolver::{ResolverError, Result},
-    platform_resolver::ResolvedPlatform,
+    parser::LibraryDefinitionParser, platform_resolver::ResolvedPlatform, ResolverError, Result,
 };
 
 pub struct GameResolver {
@@ -39,16 +38,15 @@ impl TryFrom<GameResolver> for ResolvedGame {
 
 impl ResolvedGame {
     pub async fn resolve_files(&self, db_pool: Arc<Pool>) -> Result<Vec<GameFile>> {
-        let strategy = &self
-            .resolved_platform
-            .content_resolver
-            .content_directory
-            .storage_type
-            .and_then(|st| StorageType::try_from(st).ok());
+        let parser = LibraryDefinitionParser::new(
+            &self.resolved_platform.content_resolver.library_definition,
+        )?;
+
+        let strategy = parser.game_storage_type();
 
         match strategy {
-            Some(StorageType::SingleFileGame) => self.resolve_single_files(db_pool).await,
-            Some(StorageType::MultiFileGame) => self.resolve_multi_files(db_pool).await,
+            StorageType::SingleFileGame => self.resolve_single_files(db_pool).await,
+            StorageType::MultiFileGame => self.resolve_multi_files(db_pool).await,
             _ => {
                 warn!("No storage type found for Game: {:?}", self.row);
                 Ok(vec![])
@@ -57,21 +55,20 @@ impl ResolvedGame {
     }
 
     #[cfg(test)]
-    pub fn mock_resolve_files(&self) -> Vec<GameFile> {
-        let strategy = &self
-            .resolved_platform
-            .content_resolver
-            .content_directory
-            .storage_type
-            .and_then(|st| StorageType::try_from(st).ok());
+    pub fn mock_resolve_files(&self) -> Result<Vec<GameFile>> {
+        let parser = LibraryDefinitionParser::new(
+            &self.resolved_platform.content_resolver.library_definition,
+        )?;
 
-        match strategy {
-            Some(StorageType::SingleFileGame) => vec![GameFile {
+        let strategy = parser.game_storage_type();
+
+        let files = match strategy {
+            StorageType::SingleFileGame => vec![GameFile {
                 id: 1,
                 path: self.row.path.clone(),
                 ..Default::default()
             }],
-            Some(StorageType::MultiFileGame) => self
+            StorageType::MultiFileGame => self
                 .get_new_multi_files()
                 .into_iter()
                 .enumerate()
@@ -82,7 +79,9 @@ impl ResolvedGame {
                 })
                 .collect(),
             _ => vec![],
-        }
+        };
+
+        Ok(files)
     }
 
     /*
@@ -224,23 +223,23 @@ impl GameResolver {
     }
 
     #[cfg(test)]
-    pub fn mock_resolve(self) -> ResolvedGame {
-        let path = self.as_insertable().path;
+    pub fn mock_resolve(self) -> Result<ResolvedGame> {
+        let path = self.as_insertable()?.path;
 
-        ResolvedGame {
+        Ok(ResolvedGame {
             resolved_platform: self.resolved_platform,
             row: Game {
                 id: 1,
                 path,
                 ..Default::default()
             },
-        }
+        })
     }
 
     #[tracing::instrument(skip_all)]
     pub async fn resolve(mut self, db_pool: Arc<Pool>) -> Result<ResolvedGame> {
         let mut conn = db_pool.get().await.expect("Could not get db connection");
-        let insertable = self.as_insertable();
+        let insertable = self.as_insertable()?;
 
         let row: Option<Game> = diesel::insert_into(schema::games::table)
             .values(&insertable)
@@ -261,12 +260,12 @@ impl GameResolver {
         self.try_into()
     }
 
-    fn as_insertable(&self) -> NewGame {
-        let storage_type = self
-            .resolved_platform
-            .content_resolver
-            .content_directory
-            .storage_type;
+    fn as_insertable(&self) -> Result<NewGame> {
+        let parser = LibraryDefinitionParser::new(
+            &self.resolved_platform.content_resolver.library_definition,
+        )?;
+
+        let storage_type = Some(parser.game_storage_type() as i32);
 
         let platform_id = Some(self.resolved_platform.row.id);
 
@@ -277,7 +276,7 @@ impl GameResolver {
             .and_then(|p| p.to_str().map(|s| s.to_string()))
             .expect("Could not resolve game path");
 
-        NewGame {
+        Ok(NewGame {
             path,
             platform_id,
             created_at: None,
@@ -286,6 +285,6 @@ impl GameResolver {
             is_deleted: false,
             storage_type,
             ..Default::default()
-        }
+        })
     }
 }

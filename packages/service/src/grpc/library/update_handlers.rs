@@ -7,7 +7,8 @@ use tonic::{Request, Status};
 use tracing::warn;
 
 use super::{
-    content_resolver::ContentResolver, game_resolver::ResolvedGame, LibraryServiceHandlers,
+    content_resolver::{game_resolver::ResolvedGame, ContentResolver},
+    LibraryServiceHandlers,
 };
 
 #[tracing::instrument(skip_all)]
@@ -19,9 +20,15 @@ pub(super) async fn update_library(
 
     let db_pool = state.db_pool.clone();
 
+    let error_logger = |why| {
+        tracing::warn!("Failed to resolve content: {}", why);
+        None::<ContentResolver>
+    };
+
     let tasks: Vec<_> = content_dirs
         .into_iter()
         .map(ContentResolver::from_content_dir)
+        .filter_map(|resolver| resolver.map_err(error_logger).ok())
         .flat_map(|content_dir| {
             let db_pool = db_pool.clone();
 
@@ -47,7 +54,13 @@ pub(super) async fn update_library(
                                 }
                             };
 
-                        let game_resolvers = resolved_platform.get_game_resolvers();
+                        let game_resolvers = match resolved_platform.get_game_resolvers() {
+                            Ok(game_resolvers) => game_resolvers,
+                            Err(why) => {
+                                return Err(why.to_string());
+                            }
+                        };
+
                         let mut game_join_set = tokio::task::JoinSet::new();
 
                         game_resolvers.into_iter().for_each(|game_resolver| {
@@ -63,7 +76,7 @@ pub(super) async fn update_library(
                             .filter_map(|handle| match handle {
                                 Ok(game) => Some(game),
                                 Err(why) => {
-                                    warn!("Failed to resolve game: {}", why);
+                                    warn!("Failed to resolve game: {:#?}", why);
                                     None
                                 }
                             })
