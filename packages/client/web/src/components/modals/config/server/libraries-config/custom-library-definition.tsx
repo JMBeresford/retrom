@@ -265,6 +265,12 @@ export const CustomLibraryDefinitionSchema = z.object({
       })
       .refine((value) => !value.includes("//"), {
         message: "Cannot contain empty sections between slashes",
-      }),
+      })
+      .refine(
+        (value) => value.endsWith("{gameFile}") || value.endsWith("{gameDir}"),
+        {
+          message: "Must end with {gameFile} or {gameDir}",
+        },
+      ),
   ),
 }) satisfies InferSchema<CustomLibraryDefinition>;
