@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.12](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.11...retrom-v0.7.12) - 2025-02-16
+
+### Newly Added
+- Custom library structures
+
+    You can now define custom library structures
+    if the existing Single-File Game and Multi-File
+    Game options are not flexible enough!
+
+    resolves [#104](https://github.com/JMBeresford/retrom/pull/104)
+
+
+
+
 ## [0.7.11](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.10...retrom-v0.7.11) - 2025-02-11
 
 ### Newly Added
