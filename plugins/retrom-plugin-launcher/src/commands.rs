@@ -59,12 +59,6 @@ pub(crate) async fn play_game<R: Runtime>(
         .map(|file| file.path)
         .map(PathBuf::from);
 
-    let default_file_path = maybe_default_file.as_ref().map(|path| {
-        path.file_name()
-            .expect("Could not get file name")
-            .to_owned()
-    });
-
     if !standalone
         && installer.get_game_installation_status(game_id).await != InstallationStatus::Installed
     {
@@ -83,6 +77,7 @@ pub(crate) async fn play_game<R: Runtime>(
         .into_iter()
         .filter_map(|entry| entry.ok())
         .map(|entry| entry.into_path())
+        .filter(|p| p.is_file())
         .collect();
 
     files.sort();
