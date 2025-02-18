@@ -4,64 +4,78 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ControllerFieldState, ControllerRenderProps } from "react-hook-form";
+import {
+  ControllerFieldState,
+  ControllerRenderProps,
+  useWatch,
+} from "react-hook-form";
 import { LibrariesSchema } from ".";
 import { Button } from "@/components/ui/button";
 import { Settings2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FormControl, FormItem, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
-import { CustomLibraryDefinition } from "@/generated/retrom/server/config";
-import { cn, InferSchema } from "@/lib/utils";
-import { useMemo } from "react";
+import { cn } from "@/lib/utils";
+import { useLayoutEffect, useMemo } from "react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { StorageType } from "@/generated/retrom/server/config";
 
 export function CustomLibraryDefinitionInput<
   Field extends ControllerRenderProps<
     LibrariesSchema,
     `contentDirectories.${number}.customLibraryDefinition.definition`
   >,
->(props: { field: Field; fieldState: ControllerFieldState }) {
-  const { field, fieldState } = props;
+>(props: { field: Field; fieldState: ControllerFieldState; index: number }) {
+  const { field, fieldState, index } = props;
+
+  const storageType = useWatch<LibrariesSchema>({
+    name: `contentDirectories.${index}.storageType`,
+  });
+
+  useLayoutEffect(() => {
+    if (storageType !== StorageType.CUSTOM && field.value) {
+      field.onChange("");
+    }
+  }, [storageType, index, field]);
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="secondary"
-          size="icon"
-          className={cn(
-            "min-h-0 h-min w-min p-2",
-            fieldState.error && "ring-2 ring-destructive",
-          )}
-          disabled={field.disabled}
-        >
-          <Settings2 className="h-[1rem] w-[1rem]" />
-        </Button>
-      </PopoverTrigger>
-
-      <PopoverContent
-        className="w-auto max-w-[60ch] max-h-[80dvh] flex flex-col relative"
-        side="left"
-        avoidCollisions
-        collisionPadding={4}
-      >
-        <h3 className="text-lg font-extrabold">Library Structure</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          This describes how your library is structured, allowing Retrom to
-          automatically scan for content. Read the{" "}
-          <a
-            className="text-accent-text underline"
-            href="https://github.com/JMBeresford/retrom/wiki/Library-Structure#custom"
-            target="_blank"
+      <FormItem>
+        <PopoverTrigger asChild>
+          <Button
+            variant="secondary"
+            size="icon"
+            className={cn(
+              "min-h-0 h-min w-min p-2",
+              !field.disabled && fieldState.error && "ring-2 ring-destructive",
+            )}
+            disabled={field.disabled}
           >
-            documentation
-          </a>{" "}
-          to learn more.
-        </p>
+            <Settings2 className="h-[1rem] w-[1rem]" />
+          </Button>
+        </PopoverTrigger>
 
-        <FormItem>
+        <PopoverContent
+          className="w-auto max-w-[60ch] max-h-[80dvh] flex flex-col relative"
+          side="left"
+          avoidCollisions
+          collisionPadding={4}
+        >
+          <h3 className="text-lg font-extrabold">Library Structure</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            This describes how your library is structured, allowing Retrom to
+            automatically scan for content. Read the{" "}
+            <a
+              className="text-accent-text underline"
+              href="https://github.com/JMBeresford/retrom/wiki/Library-Structure#custom"
+              target="_blank"
+            >
+              documentation
+            </a>{" "}
+            to learn more.
+          </p>
+
           <div className="flex gap-2">
             <FormControl>
               <Input
@@ -76,12 +90,12 @@ export function CustomLibraryDefinitionInput<
             </PopoverClose>
           </div>
           <FormMessage />
-        </FormItem>
 
-        {field.value && fieldState.error === undefined ? (
-          <ExampleStructure value={field.value} />
-        ) : null}
-      </PopoverContent>
+          {field.value && fieldState.error === undefined ? (
+            <ExampleStructure value={field.value} />
+          ) : null}
+        </PopoverContent>
+      </FormItem>
     </Popover>
   );
 }
@@ -191,7 +205,7 @@ function ExampleStructure(props: { value: string }) {
   );
 }
 
-export const CustomLibraryDefinitionSchema = z.object({
+export const libraryDefinitionValidator = z.object({
   definition: z.literal("").or(
     z
       .string()
@@ -273,4 +287,4 @@ export const CustomLibraryDefinitionSchema = z.object({
         },
       ),
   ),
-}) satisfies InferSchema<CustomLibraryDefinition>;
+});

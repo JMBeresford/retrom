@@ -240,7 +240,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .field_attribute(
             "retrom.ContentDirectory.storage_type",
             "#[serde(deserialize_with = \"crate::storage_type::deserialize\", \
-                serialize_with = \"crate::storage_type::serialize\", \
                 alias = \"storage_type\", alias = \"storageType\")]",
         );
 

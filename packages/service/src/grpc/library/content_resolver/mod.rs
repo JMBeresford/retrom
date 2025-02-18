@@ -53,36 +53,41 @@ impl ContentResolver {
             _ => regex::RegexSet::new(ignore_patterns).ok(),
         };
 
-        let library_definition =
-            match content_directory.custom_library_definition.as_ref() {
-                Some(ld) => ld.clone(),
-                None => match content_directory
-                    .storage_type
-                    .and_then(|st| StorageType::try_from(st).ok())
-                    .unwrap_or(StorageType::MultiFileGame)
-                {
-                    StorageType::SingleFileGame => CustomLibraryDefinition {
-                        definition: format!(
-                            "{}/{}/{}",
-                            ContentMacro::Library,
-                            ContentMacro::Platform,
-                            ContentMacro::GameFile
-                        ),
-                    },
-                    StorageType::MultiFileGame => CustomLibraryDefinition {
-                        definition: format!(
-                            "{}/{}/{}",
-                            ContentMacro::Library,
-                            ContentMacro::Platform,
-                            ContentMacro::GameDir,
-                        ),
-                    },
-                    StorageType::Custom => return Err(ResolverError::ContentDirectoryError(
+        let library_definition = match content_directory
+            .storage_type
+            .and_then(|st| StorageType::try_from(st).ok())
+        {
+            Some(StorageType::SingleFileGame) => CustomLibraryDefinition {
+                definition: format!(
+                    "{}/{}/{}",
+                    ContentMacro::Library,
+                    ContentMacro::Platform,
+                    ContentMacro::GameFile
+                ),
+            },
+            Some(StorageType::MultiFileGame) => CustomLibraryDefinition {
+                definition: format!(
+                    "{}/{}/{}",
+                    ContentMacro::Library,
+                    ContentMacro::Platform,
+                    ContentMacro::GameDir,
+                ),
+            },
+            Some(StorageType::Custom) => {
+                match content_directory.custom_library_definition.as_ref() {
+                    Some(cld) => cld.clone(),
+                    None => return Err(ResolverError::ContentDirectoryError(
                         "Content directory declared as custom, but no custom definition was found"
                             .into(),
                     )),
-                },
-            };
+                }
+            }
+            None => {
+                return Err(ResolverError::ContentDirectoryError(
+                    "Content directory has no storage type".into(),
+                ))
+            }
+        };
 
         Ok(Self {
             content_directory,

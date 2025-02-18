@@ -25,13 +25,20 @@ impl Visitor<'_> for StringifiedStorageTypeVisitor {
             )),
         }
     }
+
+    fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        Ok(Some(v as i32))
+    }
 }
 
 pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<i32>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    deserializer.deserialize_str(StringifiedStorageTypeVisitor)
+    deserializer.deserialize_any(StringifiedStorageTypeVisitor)
 }
 
 pub fn serialize<S>(value: &Option<i32>, serializer: S) -> Result<S::Ok, S::Error>

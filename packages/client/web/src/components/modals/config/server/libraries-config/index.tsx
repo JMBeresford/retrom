@@ -23,34 +23,39 @@ import { IgnorePatternsInput, IgnorePatternsTooltip } from "./ignore-patterns";
 import { StorageTypeSelect } from "./storage-type";
 import {
   CustomLibraryDefinitionInput,
-  CustomLibraryDefinitionSchema,
+  libraryDefinitionValidator,
 } from "./custom-library-definition";
+import { InferSchema } from "@/lib/utils";
 
-type ContentDirectoryShape = Record<
-  keyof ServerConfig["contentDirectories"][number],
-  z.ZodTypeAny
->;
-type LibrariesConfigShape = z.ZodObject<{
-  contentDirectories: z.ZodArray<z.ZodObject<ContentDirectoryShape>>;
-}>;
+export const contentDirectorySchema = z.object({
+  path: z.string().min(1),
+  storageType: z.nativeEnum(StorageType),
+  customLibraryDefinition: libraryDefinitionValidator.default({
+    definition: "",
+  }),
+  newly: z.enum(["added", "removed"]).optional(),
+  ignorePatterns: z
+    .object({
+      patterns: z.string().array(),
+    })
+    .default({ patterns: [] }),
+}) satisfies InferSchema<ServerConfig["contentDirectories"][number]>;
 
 const librariesSchema = z.object({
-  contentDirectories: z
-    .object({
-      path: z.string().min(1),
-      storageType: z.nativeEnum(StorageType),
-      customLibraryDefinition: CustomLibraryDefinitionSchema.default({
-        definition: "",
-      }),
-      newly: z.enum(["added", "removed"]).optional(),
-      ignorePatterns: z
-        .object({
-          patterns: z.string().array(),
-        })
-        .default({ patterns: [] }),
-    })
-    .array(),
-}) satisfies LibrariesConfigShape;
+  contentDirectories: z.array(
+    contentDirectorySchema.refine(
+      (value) =>
+        !(
+          value.storageType === StorageType.CUSTOM &&
+          value.customLibraryDefinition.definition === ""
+        ),
+      {
+        message: "Custom library definition cannot be empty",
+        path: ["customLibraryDefinition", "definition"],
+      },
+    ),
+  ),
+}) satisfies InferSchema<Pick<ServerConfig, "contentDirectories">>;
 
 export type LibrariesSchema = z.infer<typeof librariesSchema>;
 export function LibrariesConfig(props: {
@@ -61,12 +66,12 @@ export function LibrariesConfig(props: {
 
   const form = useForm<LibrariesSchema>({
     resolver: zodResolver(librariesSchema),
-    defaultValues: props.currentConfig,
+    defaultValues: librariesSchema.parse(props.currentConfig),
     mode: "all",
     reValidateMode: "onChange",
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { append, remove, update } = useFieldArray({
     control: form.control,
     name: "contentDirectories",
   });
@@ -91,6 +96,7 @@ export function LibrariesConfig(props: {
   const isDirty = form.formState.isDirty;
   const isValid = form.formState.isValid;
   const canSubmit = isDirty && isValid && status !== "pending";
+  const contentDirectories = form.watch("contentDirectories");
 
   return (
     <TabsContent value="contentDirectories">
@@ -110,9 +116,9 @@ export function LibrariesConfig(props: {
             </TableHeader>
 
             <TableBody>
-              {fields.map((library, index) => {
+              {contentDirectories.map((library, index) => {
                 return (
-                  <TableRow key={library.id} className="*:py-1">
+                  <TableRow key={index} className="*:py-1">
                     <TableCell>
                       <FormField
                         disabled={library.newly === "removed"}
@@ -147,7 +153,12 @@ export function LibrariesConfig(props: {
                         }
                         control={form.control}
                         name={`contentDirectories.${index}.customLibraryDefinition.definition`}
-                        render={CustomLibraryDefinitionInput}
+                        render={(props) => (
+                          <CustomLibraryDefinitionInput
+                            {...props}
+                            index={index}
+                          />
+                        )}
                       />
                     </TableCell>
                     <TableCell className="text-end">

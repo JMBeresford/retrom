@@ -12,6 +12,7 @@ mod ignore_patterns {
 
         let content_directory = ContentDirectory {
             path: dir.path().to_str().unwrap().to_string(),
+            storage_type: Some(StorageType::MultiFileGame.into()),
             ignore_patterns: Some(IgnorePatterns {
                 patterns: vec!["ignore-".into()],
             }),
@@ -38,6 +39,7 @@ mod ignore_patterns {
 
         let content_directory = ContentDirectory {
             path: dir.path().to_str().unwrap().to_string(),
+            storage_type: Some(StorageType::MultiFileGame.into()),
             ignore_patterns: Some(IgnorePatterns {
                 patterns: vec!["bad_string".into()],
             }),

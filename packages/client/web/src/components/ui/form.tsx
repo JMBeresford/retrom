@@ -178,4 +178,5 @@ export {
   FormDescription,
   FormMessage,
   FormField,
+  FormFieldContext,
 };

@@ -53,13 +53,19 @@ export function IgnorePatternsInput<
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full" disabled={field.disabled}>
-          {field.value.length
-            ? `${field.value.length} ${field.value.length > 1 ? "patterns" : "pattern"}`
-            : "Add pattern"}
-        </Button>
-      </PopoverTrigger>
+      <FormControl>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={field.disabled}
+          >
+            {field.value.length
+              ? `${field.value.length} ${field.value.length > 1 ? "patterns" : "pattern"}`
+              : "Add pattern"}
+          </Button>
+        </PopoverTrigger>
+      </FormControl>
 
       <PopoverContent className="flex flex-col gap-2">
         <div className="flex gap-2">
@@ -81,39 +87,37 @@ export function IgnorePatternsInput<
         <Separator className="mt-2" />
 
         <FormItem>
-          <FormControl>
-            {field.value.length ? (
-              field.value.map((pattern, i) => (
-                <div
-                  key={pattern + i}
-                  className="flex gap-2 items-center justify-between mt-2 py-1"
+          {field.value.length ? (
+            field.value.map((pattern, i) => (
+              <div
+                key={pattern + i}
+                className="flex gap-2 items-center justify-between mt-2 py-1"
+              >
+                <SyntaxHighlighter
+                  language={"regex"}
+                  style={theme as { [key: string]: CSSProperties }}
+                  customStyle={{ background: "none", padding: 0, margin: 0 }}
+                  codeTagProps={{ className: "bg-none text-sm" }}
                 >
-                  <SyntaxHighlighter
-                    language={"regex"}
-                    style={theme as { [key: string]: CSSProperties }}
-                    customStyle={{ background: "none", padding: 0, margin: 0 }}
-                    codeTagProps={{ className: "bg-none text-sm" }}
-                  >
-                    {pattern}
-                  </SyntaxHighlighter>
+                  {pattern}
+                </SyntaxHighlighter>
 
-                  <Button
-                    variant="destructive"
-                    className="w-min h-min p-2"
-                    onClick={() => removePattern(pattern)}
-                  >
-                    <X size={14} />
-                  </Button>
-                </div>
-              ))
-            ) : (
-              <>
-                <p className="text-muted-foreground text-sm italic text-center">
-                  No ignore patterns added
-                </p>
-              </>
-            )}
-          </FormControl>
+                <Button
+                  variant="destructive"
+                  className="w-min h-min p-2"
+                  onClick={() => removePattern(pattern)}
+                >
+                  <X size={14} />
+                </Button>
+              </div>
+            ))
+          ) : (
+            <>
+              <p className="text-muted-foreground text-sm italic text-center">
+                No ignore patterns added
+              </p>
+            </>
+          )}
         </FormItem>
       </PopoverContent>
     </Popover>
