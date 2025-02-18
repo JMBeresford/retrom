@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.12](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.11...retrom-v0.7.12) - 2025-02-18
+
+### Bug Fixes
+- various launcher behaviors
+
+    You can now launch game files not at the root of
+    the game's directory.
+
+    Standalone mode no longer needs to 'install' games
+    to launch them
+
+
+
+- don't launch directories as fallback
+
+    When launching a game w/ no default file set, the
+    launcher will no longer consider directories when
+    resolving a fallback file to launch
+
+
+
+
+
+### Newly Added
+- Custom library structures
+
+    You can now define custom library structures
+    if the existing Single-File Game and Multi-File
+    Game options are not flexible enough!
+
+    resolves [#104](https://github.com/JMBeresford/retrom/pull/104)
+
+
+
+
 ## [0.7.11](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.10...retrom-v0.7.11) - 2025-02-11
 
 ### Newly Added
