@@ -11,6 +11,7 @@ use retrom_plugin_steam::SteamExt;
 use tauri::{command, AppHandle, Runtime};
 use tokio::sync::Mutex;
 use tracing::{info, instrument};
+use walkdir::WalkDir;
 
 use crate::{desktop::GameProcess, LauncherExt, Result};
 
@@ -24,6 +25,13 @@ pub(crate) async fn play_game<R: Runtime>(
 ) -> Result<()> {
     let launcher = app.launcher();
     let installer = app.installer();
+    let standalone = app
+        .config_manager()
+        .get_config()
+        .await
+        .server
+        .and_then(|s| s.standalone)
+        .unwrap_or(false);
 
     let game = match payload.game {
         Some(game) => game,
@@ -57,20 +65,24 @@ pub(crate) async fn play_game<R: Runtime>(
             .to_owned()
     });
 
-    if installer.get_game_installation_status(game_id).await != InstallationStatus::Installed {
+    if !standalone
+        && installer.get_game_installation_status(game_id).await != InstallationStatus::Installed
+    {
         return Err(crate::Error::NotInstalled(game_id));
     }
 
-    let install_dir = match installer.get_game_installation_path(game_id).await {
-        Some(path) => path,
-        None => return Err(crate::Error::NotInstalled(game_id)),
+    let install_dir = match standalone {
+        true => PathBuf::from(&game.path),
+        false => match installer.get_game_installation_path(game_id).await {
+            Some(path) => path,
+            None => return Err(crate::Error::NotInstalled(game_id)),
+        },
     };
 
-    let mut files: Vec<PathBuf> = install_dir
-        .as_path()
-        .read_dir()?
+    let mut files: Vec<PathBuf> = WalkDir::new(&install_dir)
+        .into_iter()
         .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
+        .map(|entry| entry.into_path())
         .collect();
 
     files.sort();
@@ -83,20 +95,22 @@ pub(crate) async fn play_game<R: Runtime>(
             .iter()
             .find(|file| Some(*file) != maybe_default_file.as_ref()),
         false => files.iter().find(|file| {
-            profile.supported_extensions.iter().any(|ext| {
-                file.file_name()
-                    .and_then(OsStr::to_str)
-                    .map(|name| name.ends_with(ext))
-                    .unwrap_or(false)
-            })
+            profile
+                .supported_extensions
+                .iter()
+                .any(|ext| file.extension().and_then(OsStr::to_str) == Some(ext.as_str()))
         }),
     };
 
     tracing::debug!("Fallback file: {:?}", fallback_file);
 
+    let relative_to_install_dir = maybe_default_file
+        .as_deref()
+        .and_then(|f| f.strip_prefix(&game.path).ok());
+
     let file_path = match files
         .iter()
-        .find(|f| f.file_name() == default_file_path.as_deref())
+        .find(|f| f.strip_prefix(&install_dir).ok() == relative_to_install_dir)
     {
         Some(file) => file,
         None => match fallback_file {

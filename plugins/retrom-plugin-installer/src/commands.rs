@@ -1,8 +1,8 @@
 use futures::TryStreamExt;
 use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{
-    GetGamesRequest, GetPlatformsRequest, InstallGamePayload, InstallationState, StorageType,
-    UninstallGamePayload,
+    GetGamesRequest, GetPlatformsRequest, InstallGamePayload, InstallationState,
+    InstallationStatus, StorageType, UninstallGamePayload,
 };
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
@@ -211,7 +211,38 @@ pub async fn get_game_installation_status<R: Runtime>(
 
 #[instrument(skip(app_handle))]
 #[tauri::command]
-pub async fn get_installation_state<R: Runtime>(app_handle: AppHandle<R>) -> InstallationState {
+pub async fn get_installation_state<R: Runtime>(
+    app_handle: AppHandle<R>,
+) -> crate::Result<InstallationState> {
+    let standalone = app_handle
+        .config_manager()
+        .get_config()
+        .await
+        .server
+        .and_then(|s| s.standalone)
+        .unwrap_or(false);
+
+    if standalone {
+        let mut game_client = app_handle.get_game_client().await;
+        let game_ids: Vec<i32> = game_client
+            .get_games(GetGamesRequest {
+                ..Default::default()
+            })
+            .await?
+            .into_inner()
+            .games
+            .into_iter()
+            .map(|g| g.id)
+            .collect();
+
+        return Ok(InstallationState {
+            installation_state: game_ids
+                .into_iter()
+                .map(|id| (id, InstallationStatus::Installed.into()))
+                .collect(),
+        });
+    }
+
     let installer = app_handle.installer();
     let mut installation_state: HashMap<i32, i32> = HashMap::new();
     let mut game_svc_client = app_handle.get_game_client().await;
@@ -244,7 +275,7 @@ pub async fn get_installation_state<R: Runtime>(app_handle: AppHandle<R>) -> Ins
         }
     }
 
-    InstallationState { installation_state }
+    Ok(InstallationState { installation_state })
 }
 
 #[instrument(skip(app))]

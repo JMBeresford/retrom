@@ -64,7 +64,7 @@ async_zip = { version = "^0.0.17", default-features = false, features = [
   "zstd",
   "deflate64",
 ] }
-walkdir = "2.5.0"
+walkdir = { workspace = true }
 chrono = "0.4.38"
 notify = { workspace = true }
 tempfile = { workspace = true }

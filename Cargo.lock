@@ -5213,6 +5213,7 @@ dependencies = [
  "tonic-web",
  "tower 0.5.2",
  "tracing",
+ "walkdir",
  "webpki-roots",
 ]
 

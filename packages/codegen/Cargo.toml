@@ -22,4 +22,4 @@ retrom-db = { workspace = true }
 [build-dependencies]
 prost-wkt-build = "0.6"
 tonic-build = "0.11"
-walkdir = "2.5.0"
+walkdir = { workspace = true }
