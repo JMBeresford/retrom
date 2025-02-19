@@ -1,5 +1,7 @@
 {
-  "$schema": "../../node_modules/@tauri-apps/cli/schema.json",
+  "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
+
+  "identifier": "com.retrom.client",
   "bundle": {
     "createUpdaterArtifacts": true
   }
