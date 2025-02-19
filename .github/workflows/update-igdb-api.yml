@@ -19,6 +19,10 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Download IGDB protos
         id: download
         run: |
@@ -26,6 +30,7 @@ jobs:
           rm igdbapi.proto
           wget https://api.igdb.com/v4/igdbapi.proto
           sed -i 's/package proto/package igdb/' igdbapi.proto
+          npx buf format -w
           if ! git diff --quiet; then echo "updated=true" >> "$GITHUB_OUTPUT"; fi
 
       - name: Branch
