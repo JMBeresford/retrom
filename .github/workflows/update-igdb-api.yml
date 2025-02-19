@@ -25,7 +25,7 @@ jobs:
           cd packages/codegen/protos
           rm igdbapi.proto
           wget https://api.igdb.com/v4/igdbapi.proto
-          sed -i 's/package = proto;$/package igdb;/g' igdbapi.proto
+          sed -i 's/package proto/package igdb/' igdbapi.proto
           if ! git diff --quiet; then echo "updated=true" >> "$GITHUB_OUTPUT"; fi
 
       - name: Branch
