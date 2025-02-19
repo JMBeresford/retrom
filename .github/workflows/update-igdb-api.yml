@@ -1,0 +1,53 @@
+name: update upstream APIs
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 2 * * *"
+
+jobs:
+  update-igdb-api:
+    name: Update IGDB API
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BRANCH: update-igdb-api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download IGDB protos
+        id: download
+        run: |
+          rm packages/codegen/protos/igdb.proto
+          wget -o packages/codegen/protos/igdb.proto https://api.igdb.com/v4/igdbapi.proto
+          if ! git diff --quiet; then echo "updated=true" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Branch
+        id: pr-check
+        run: |
+          if ! gh pr checkout $BRANCH; then
+            echo "create=true" >> "$GITHUB_OUTPUT" && git checkout -B $BRANCH;
+          fi
+
+      - name: Create/Update Pull Request
+        if: ${{ steps.download.outputs.updated }}
+        env:
+          CREATE: ${{ steps.pr-check.create }}
+          REPO: ${{ github.repository }}
+        run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
+          git add packages/codegen/protos/igdb.proto
+          git commit -m "chore: update igdb protos"
+          gh repo set-default $REPO
+
+          if [[ ! -z $CREATE ]]; then
+          echo $CREATE
+            gh pr create --fill --head "$BRANCH" --base main
+          else
+            git push origin HEAD:$BRANCH -uf
+          fi
