@@ -6,7 +6,7 @@ lint:
   use:
     - MINIMAL
   ignore:
-    - packages/codegen/protos/igdb.proto
+    - packages/codegen/protos/igdbapi.proto
 breaking:
   use:
     - FILE

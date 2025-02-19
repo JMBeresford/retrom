@@ -27,66 +27,82 @@ message AgeRatingResult {
 
 message AgeRating {
   uint64 id = 1;
-  AgeRatingCategoryEnum category = 2;
+  AgeRatingCategoryEnum category = 2 [deprecated = true];
   repeated AgeRatingContentDescription content_descriptions = 3;
-  AgeRatingRatingEnum rating = 4;
+  AgeRatingRatingEnum rating = 4 [deprecated = true];
   string rating_cover_url = 5;
   string synopsis = 6;
   string checksum = 7;
+  AgeRatingOrganization organization = 8;
+  AgeRatingCategory rating_category = 9;
+  repeated AgeRatingContentDescriptionV2 rating_content_descriptions = 10;
 }
 
 enum AgeRatingCategoryEnum {
-  AGERATING_CATEGORY_NULL = 0;
-  ESRB = 1;
-  PEGI = 2;
-  CERO = 3;
-  USK = 4;
-  GRAC = 5;
-  CLASS_IND = 6;
-  ACB = 7;
+  AGERATING_CATEGORY_NULL = 0 [deprecated = true];
+  ESRB = 1 [deprecated = true];
+  PEGI = 2 [deprecated = true];
+  CERO = 3 [deprecated = true];
+  USK = 4 [deprecated = true];
+  GRAC = 5 [deprecated = true];
+  CLASS_IND = 6 [deprecated = true];
+  ACB = 7 [deprecated = true];
 }
 
 enum AgeRatingRatingEnum {
-  AGERATING_RATING_NULL = 0;
-  THREE = 1;
-  SEVEN = 2;
-  TWELVE = 3;
-  SIXTEEN = 4;
-  EIGHTEEN = 5;
-  RP = 6;
-  EC = 7;
-  E = 8;
-  E10 = 9;
-  T = 10;
-  M = 11;
-  AO = 12;
-  CERO_A = 13;
-  CERO_B = 14;
-  CERO_C = 15;
-  CERO_D = 16;
-  CERO_Z = 17;
-  USK_0 = 18;
-  USK_6 = 19;
-  USK_12 = 20;
-  USK_16 = 21;
-  USK_18 = 22;
-  GRAC_ALL = 23;
-  GRAC_TWELVE = 24;
-  GRAC_FIFTEEN = 25;
-  GRAC_EIGHTEEN = 26;
-  GRAC_TESTING = 27;
-  CLASS_IND_L = 28;
-  CLASS_IND_TEN = 29;
-  CLASS_IND_TWELVE = 30;
-  CLASS_IND_FOURTEEN = 31;
-  CLASS_IND_SIXTEEN = 32;
-  CLASS_IND_EIGHTEEN = 33;
-  ACB_G = 34;
-  ACB_PG = 35;
-  ACB_M = 36;
-  ACB_MA15 = 37;
-  ACB_R18 = 38;
-  ACB_RC = 39;
+  AGERATING_RATING_NULL = 0 [deprecated = true];
+  THREE = 1 [deprecated = true];
+  SEVEN = 2 [deprecated = true];
+  TWELVE = 3 [deprecated = true];
+  SIXTEEN = 4 [deprecated = true];
+  EIGHTEEN = 5 [deprecated = true];
+  RP = 6 [deprecated = true];
+  EC = 7 [deprecated = true];
+  E = 8 [deprecated = true];
+  E10 = 9 [deprecated = true];
+  T = 10 [deprecated = true];
+  M = 11 [deprecated = true];
+  AO = 12 [deprecated = true];
+  CERO_A = 13 [deprecated = true];
+  CERO_B = 14 [deprecated = true];
+  CERO_C = 15 [deprecated = true];
+  CERO_D = 16 [deprecated = true];
+  CERO_Z = 17 [deprecated = true];
+  USK_0 = 18 [deprecated = true];
+  USK_6 = 19 [deprecated = true];
+  USK_12 = 20 [deprecated = true];
+  USK_16 = 21 [deprecated = true];
+  USK_18 = 22 [deprecated = true];
+  GRAC_ALL = 23 [deprecated = true];
+  GRAC_TWELVE = 24 [deprecated = true];
+  GRAC_FIFTEEN = 25 [deprecated = true];
+  GRAC_EIGHTEEN = 26 [deprecated = true];
+  GRAC_TESTING = 27 [deprecated = true];
+  CLASS_IND_L = 28 [deprecated = true];
+  CLASS_IND_TEN = 29 [deprecated = true];
+  CLASS_IND_TWELVE = 30 [deprecated = true];
+  CLASS_IND_FOURTEEN = 31 [deprecated = true];
+  CLASS_IND_SIXTEEN = 32 [deprecated = true];
+  CLASS_IND_EIGHTEEN = 33 [deprecated = true];
+  ACB_G = 34 [deprecated = true];
+  ACB_PG = 35 [deprecated = true];
+  ACB_M = 36 [deprecated = true];
+  ACB_MA15 = 37 [deprecated = true];
+  ACB_R18 = 38 [deprecated = true];
+  ACB_RC = 39 [deprecated = true];
+}
+
+message AgeRatingCategoryResult {
+  repeated AgeRatingCategory ageratingcategories = 1;
+}
+
+message AgeRatingCategory {
+  uint64 id = 1;
+  string rating = 2;
+  AgeRatingOrganization organization = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  string checksum = 6;
 }
 
 message AgeRatingContentDescriptionResult {
@@ -95,98 +111,123 @@ message AgeRatingContentDescriptionResult {
 
 message AgeRatingContentDescription {
   uint64 id = 1;
-  AgeRatingContentDescriptionCategoryEnum category = 2;
+  AgeRatingContentDescriptionCategoryEnum category = 2 [deprecated = true];
   string description = 3;
   string checksum = 4;
 }
 
 enum AgeRatingContentDescriptionCategoryEnum {
-  AGERATINGCONTENTDESCRIPTION_CATEGORY_NULL = 0;
-  ESRB_ALCOHOL_REFERENCE = 1;
-  ESRB_ANIMATED_BLOOD = 2;
-  ESRB_BLOOD = 3;
-  ESRB_BLOOD_AND_GORE = 4;
-  ESRB_CARTOON_VIOLENCE = 5;
-  ESRB_COMIC_MISCHIEF = 6;
-  ESRB_CRUDE_HUMOR = 7;
-  ESRB_DRUG_REFERENCE = 8;
-  ESRB_FANTASY_VIOLENCE = 9;
-  ESRB_INTENSE_VIOLENCE = 10;
-  ESRB_LANGUAGE = 11;
-  ESRB_LYRICS = 12;
-  ESRB_MATURE_HUMOR = 13;
-  ESRB_NUDITY = 14;
-  ESRB_PARTIAL_NUDITY = 15;
-  ESRB_REAL_GAMBLING = 16;
-  ESRB_SEXUAL_CONTENT = 17;
-  ESRB_SEXUAL_THEMES = 18;
-  ESRB_SEXUAL_VIOLENCE = 19;
-  ESRB_SIMULATED_GAMBLING = 20;
-  ESRB_STRONG_LANGUAGE = 21;
-  ESRB_STRONG_LYRICS = 22;
-  ESRB_STRONG_SEXUAL_CONTENT = 23;
-  ESRB_SUGGESTIVE_THEMES = 24;
-  ESRB_TOBACCO_REFERENCE = 25;
-  ESRB_USE_OF_ALCOHOL = 26;
-  ESRB_USE_OF_DRUGS = 27;
-  ESRB_USE_OF_TOBACCO = 28;
-  ESRB_VIOLENCE = 29;
-  ESRB_VIOLENT_REFERENCES = 30;
-  ESRB_ANIMATED_VIOLENCE = 31;
-  ESRB_MILD_LANGUAGE = 32;
-  ESRB_MILD_VIOLENCE = 33;
-  ESRB_USE_OF_DRUGS_AND_ALCOHOL = 34;
-  ESRB_DRUG_AND_ALCOHOL_REFERENCE = 35;
-  ESRB_MILD_SUGGESTIVE_THEMES = 36;
-  ESRB_MILD_CARTOON_VIOLENCE = 37;
-  ESRB_MILD_BLOOD = 38;
-  ESRB_REALISTIC_BLOOD_AND_GORE = 39;
-  ESRB_REALISTIC_VIOLENCE = 40;
-  ESRB_ALCOHOL_AND_TOBACCO_REFERENCE = 41;
-  ESRB_MATURE_SEXUAL_THEMES = 42;
-  ESRB_MILD_ANIMATED_VIOLENCE = 43;
-  ESRB_MILD_SEXUAL_THEMES = 44;
-  ESRB_USE_OF_ALCOHOL_AND_TOBACCO = 45;
-  ESRB_ANIMATED_BLOOD_AND_GORE = 46;
-  ESRB_MILD_FANTASY_VIOLENCE = 47;
-  ESRB_MILD_LYRICS = 48;
-  ESRB_REALISTIC_BLOOD = 49;
-  PEGI_VIOLENCE = 50;
-  PEGI_SEX = 51;
-  PEGI_DRUGS = 52;
-  PEGI_FEAR = 53;
-  PEGI_DISCRIMINATION = 54;
-  PEGI_BAD_LANGUAGE = 55;
-  PEGI_GAMBLING = 56;
-  PEGI_ONLINE_GAMEPLAY = 57;
-  PEGI_IN_GAME_PURCHASES = 58;
-  CERO_LOVE = 59;
-  CERO_SEXUAL_CONTENT = 60;
-  CERO_VIOLENCE = 61;
-  CERO_HORROR = 62;
-  CERO_DRINKING_SMOKING = 63;
-  CERO_GAMBLING = 64;
-  CERO_CRIME = 65;
-  CERO_CONTROLLED_SUBSTANCES = 66;
-  CERO_LANGUAGES_AND_OTHERS = 67;
-  GRAC_SEXUALITY = 68;
-  GRAC_VIOLENCE = 69;
-  GRAC_FEAR_HORROR_THREATENING = 70;
-  GRAC_LANGUAGE = 71;
-  GRAC_ALCOHOL_TOBACCO_DRUG = 72;
-  GRAC_CRIME_ANTI_SOCIAL = 73;
-  GRAC_GAMBLING = 74;
-  CLASS_IND_VIOLENCIA = 75;
-  CLASS_IND_VIOLENCIA_EXTREMA = 76;
-  CLASS_IND_CONTEUDO_SEXUAL = 77;
-  CLASS_IND_NUDEZ = 78;
-  CLASS_IND_SEXO = 79;
-  CLASS_IND_SEXO_EXPLICITO = 80;
-  CLASS_IND_DROGAS = 81;
-  CLASS_IND_DROGAS_LICITAS = 82;
-  CLASS_IND_DROGAS_ILICITAS = 83;
-  CLASS_IND_LINGUAGEM_IMPROPRIA = 84;
-  CLASS_IND_ATOS_CRIMINOSOS = 85;
+  AGERATINGCONTENTDESCRIPTION_CATEGORY_NULL = 0 [deprecated = true];
+  ESRB_ALCOHOL_REFERENCE = 1 [deprecated = true];
+  ESRB_ANIMATED_BLOOD = 2 [deprecated = true];
+  ESRB_BLOOD = 3 [deprecated = true];
+  ESRB_BLOOD_AND_GORE = 4 [deprecated = true];
+  ESRB_CARTOON_VIOLENCE = 5 [deprecated = true];
+  ESRB_COMIC_MISCHIEF = 6 [deprecated = true];
+  ESRB_CRUDE_HUMOR = 7 [deprecated = true];
+  ESRB_DRUG_REFERENCE = 8 [deprecated = true];
+  ESRB_FANTASY_VIOLENCE = 9 [deprecated = true];
+  ESRB_INTENSE_VIOLENCE = 10 [deprecated = true];
+  ESRB_LANGUAGE = 11 [deprecated = true];
+  ESRB_LYRICS = 12 [deprecated = true];
+  ESRB_MATURE_HUMOR = 13 [deprecated = true];
+  ESRB_NUDITY = 14 [deprecated = true];
+  ESRB_PARTIAL_NUDITY = 15 [deprecated = true];
+  ESRB_REAL_GAMBLING = 16 [deprecated = true];
+  ESRB_SEXUAL_CONTENT = 17 [deprecated = true];
+  ESRB_SEXUAL_THEMES = 18 [deprecated = true];
+  ESRB_SEXUAL_VIOLENCE = 19 [deprecated = true];
+  ESRB_SIMULATED_GAMBLING = 20 [deprecated = true];
+  ESRB_STRONG_LANGUAGE = 21 [deprecated = true];
+  ESRB_STRONG_LYRICS = 22 [deprecated = true];
+  ESRB_STRONG_SEXUAL_CONTENT = 23 [deprecated = true];
+  ESRB_SUGGESTIVE_THEMES = 24 [deprecated = true];
+  ESRB_TOBACCO_REFERENCE = 25 [deprecated = true];
+  ESRB_USE_OF_ALCOHOL = 26 [deprecated = true];
+  ESRB_USE_OF_DRUGS = 27 [deprecated = true];
+  ESRB_USE_OF_TOBACCO = 28 [deprecated = true];
+  ESRB_VIOLENCE = 29 [deprecated = true];
+  ESRB_VIOLENT_REFERENCES = 30 [deprecated = true];
+  ESRB_ANIMATED_VIOLENCE = 31 [deprecated = true];
+  ESRB_MILD_LANGUAGE = 32 [deprecated = true];
+  ESRB_MILD_VIOLENCE = 33 [deprecated = true];
+  ESRB_USE_OF_DRUGS_AND_ALCOHOL = 34 [deprecated = true];
+  ESRB_DRUG_AND_ALCOHOL_REFERENCE = 35 [deprecated = true];
+  ESRB_MILD_SUGGESTIVE_THEMES = 36 [deprecated = true];
+  ESRB_MILD_CARTOON_VIOLENCE = 37 [deprecated = true];
+  ESRB_MILD_BLOOD = 38 [deprecated = true];
+  ESRB_REALISTIC_BLOOD_AND_GORE = 39 [deprecated = true];
+  ESRB_REALISTIC_VIOLENCE = 40 [deprecated = true];
+  ESRB_ALCOHOL_AND_TOBACCO_REFERENCE = 41 [deprecated = true];
+  ESRB_MATURE_SEXUAL_THEMES = 42 [deprecated = true];
+  ESRB_MILD_ANIMATED_VIOLENCE = 43 [deprecated = true];
+  ESRB_MILD_SEXUAL_THEMES = 44 [deprecated = true];
+  ESRB_USE_OF_ALCOHOL_AND_TOBACCO = 45 [deprecated = true];
+  ESRB_ANIMATED_BLOOD_AND_GORE = 46 [deprecated = true];
+  ESRB_MILD_FANTASY_VIOLENCE = 47 [deprecated = true];
+  ESRB_MILD_LYRICS = 48 [deprecated = true];
+  ESRB_REALISTIC_BLOOD = 49 [deprecated = true];
+  PEGI_VIOLENCE = 50 [deprecated = true];
+  PEGI_SEX = 51 [deprecated = true];
+  PEGI_DRUGS = 52 [deprecated = true];
+  PEGI_FEAR = 53 [deprecated = true];
+  PEGI_DISCRIMINATION = 54 [deprecated = true];
+  PEGI_BAD_LANGUAGE = 55 [deprecated = true];
+  PEGI_GAMBLING = 56 [deprecated = true];
+  PEGI_ONLINE_GAMEPLAY = 57 [deprecated = true];
+  PEGI_IN_GAME_PURCHASES = 58 [deprecated = true];
+  CERO_LOVE = 59 [deprecated = true];
+  CERO_SEXUAL_CONTENT = 60 [deprecated = true];
+  CERO_VIOLENCE = 61 [deprecated = true];
+  CERO_HORROR = 62 [deprecated = true];
+  CERO_DRINKING_SMOKING = 63 [deprecated = true];
+  CERO_GAMBLING = 64 [deprecated = true];
+  CERO_CRIME = 65 [deprecated = true];
+  CERO_CONTROLLED_SUBSTANCES = 66 [deprecated = true];
+  CERO_LANGUAGES_AND_OTHERS = 67 [deprecated = true];
+  GRAC_SEXUALITY = 68 [deprecated = true];
+  GRAC_VIOLENCE = 69 [deprecated = true];
+  GRAC_FEAR_HORROR_THREATENING = 70 [deprecated = true];
+  GRAC_LANGUAGE = 71 [deprecated = true];
+  GRAC_ALCOHOL_TOBACCO_DRUG = 72 [deprecated = true];
+  GRAC_CRIME_ANTI_SOCIAL = 73 [deprecated = true];
+  GRAC_GAMBLING = 74 [deprecated = true];
+  CLASS_IND_VIOLENCIA = 75 [deprecated = true];
+  CLASS_IND_VIOLENCIA_EXTREMA = 76 [deprecated = true];
+  CLASS_IND_CONTEUDO_SEXUAL = 77 [deprecated = true];
+  CLASS_IND_NUDEZ = 78 [deprecated = true];
+  CLASS_IND_SEXO = 79 [deprecated = true];
+  CLASS_IND_SEXO_EXPLICITO = 80 [deprecated = true];
+  CLASS_IND_DROGAS = 81 [deprecated = true];
+  CLASS_IND_DROGAS_LICITAS = 82 [deprecated = true];
+  CLASS_IND_DROGAS_ILICITAS = 83 [deprecated = true];
+  CLASS_IND_LINGUAGEM_IMPROPRIA = 84 [deprecated = true];
+  CLASS_IND_ATOS_CRIMINOSOS = 85 [deprecated = true];
+}
+
+message AgeRatingContentDescriptionV2Result {
+  repeated AgeRatingContentDescriptionV2 ageratingcontentdescriptionsv2 = 1;
+}
+
+message AgeRatingContentDescriptionV2 {
+  uint64 id = 1;
+  string description = 2;
+  AgeRatingOrganization organization = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  string checksum = 6;
+}
+
+message AgeRatingOrganizationResult {
+  repeated AgeRatingOrganization ageratingorganizations = 1;
+}
+
+message AgeRatingOrganization {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
 }
 
 message AlternativeNameResult {
@@ -228,29 +269,43 @@ message Character {
   google.protobuf.Timestamp created_at = 4;
   string description = 5;
   repeated Game games = 6;
-  GenderGenderEnum gender = 7;
+  GenderGenderEnum gender = 7 [deprecated = true];
   CharacterMugShot mug_shot = 8;
   string name = 9;
   string slug = 10;
-  CharacterSpeciesEnum species = 11;
+  CharacterSpeciesEnum species = 11 [deprecated = true];
   google.protobuf.Timestamp updated_at = 12;
   string url = 13;
   string checksum = 14;
+  CharacterGender character_gender = 15;
+  CharacterSpecie character_species = 16;
 }
 
 enum GenderGenderEnum {
-  MALE = 0;
-  FEMALE = 1;
-  OTHER = 2;
+  MALE = 0 [deprecated = true];
+  FEMALE = 1 [deprecated = true];
+  OTHER = 2 [deprecated = true];
 }
 
 enum CharacterSpeciesEnum {
-  CHARACTER_SPECIES_NULL = 0;
-  HUMAN = 1;
-  ALIEN = 2;
-  ANIMAL = 3;
-  ANDROID = 4;
-  UNKNOWN = 5;
+  CHARACTER_SPECIES_NULL = 0 [deprecated = true];
+  HUMAN = 1 [deprecated = true];
+  ALIEN = 2 [deprecated = true];
+  ANIMAL = 3 [deprecated = true];
+  ANDROID = 4 [deprecated = true];
+  UNKNOWN = 5 [deprecated = true];
+}
+
+message CharacterGenderResult {
+  repeated CharacterGender charactergenders = 1;
+}
+
+message CharacterGender {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
 }
 
 message CharacterMugShotResult {
@@ -266,6 +321,18 @@ message CharacterMugShot {
   string url = 6;
   int32 width = 7;
   string checksum = 8;
+}
+
+message CharacterSpecieResult {
+  repeated CharacterSpecie characterspecies = 1;
+}
+
+message CharacterSpecie {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
 }
 
 message CollectionResult {
@@ -363,7 +430,7 @@ message CompanyResult {
 message Company {
   uint64 id = 1;
   google.protobuf.Timestamp change_date = 2;
-  DateFormatChangeDateCategoryEnum change_date_category = 3;
+  DateFormatChangeDateCategoryEnum change_date_category = 3 [deprecated = true];
   Company changed_company_id = 4;
   int32 country = 5;
   google.protobuf.Timestamp created_at = 6;
@@ -375,22 +442,25 @@ message Company {
   repeated Game published = 12;
   string slug = 13;
   google.protobuf.Timestamp start_date = 14;
-  DateFormatChangeDateCategoryEnum start_date_category = 15;
+  DateFormatChangeDateCategoryEnum start_date_category = 15 [deprecated = true];
   google.protobuf.Timestamp updated_at = 16;
   string url = 17;
   repeated CompanyWebsite websites = 18;
   string checksum = 19;
+  CompanyStatus status = 20;
+  DateFormat start_date_format = 21;
+  DateFormat change_date_format = 22;
 }
 
 enum DateFormatChangeDateCategoryEnum {
-  YYYYMMMMDD = 0;
-  YYYYMMMM = 1;
-  YYYY = 2;
-  YYYYQ1 = 3;
-  YYYYQ2 = 4;
-  YYYYQ3 = 5;
-  YYYYQ4 = 6;
-  TBD = 7;
+  YYYYMMMMDD = 0 [deprecated = true];
+  YYYYMMMM = 1 [deprecated = true];
+  YYYY = 2 [deprecated = true];
+  YYYYQ1 = 3 [deprecated = true];
+  YYYYQ2 = 4 [deprecated = true];
+  YYYYQ3 = 5 [deprecated = true];
+  YYYYQ4 = 6 [deprecated = true];
+  TBD = 7 [deprecated = true];
 }
 
 message CompanyLogoResult {
@@ -408,37 +478,51 @@ message CompanyLogo {
   string checksum = 8;
 }
 
+message CompanyStatusResult {
+  repeated CompanyStatus companystatuses = 1;
+}
+
+message CompanyStatus {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
+}
+
 message CompanyWebsiteResult {
   repeated CompanyWebsite companywebsites = 1;
 }
 
 message CompanyWebsite {
   uint64 id = 1;
-  WebsiteCategoryEnum category = 2;
+  WebsiteCategoryEnum category = 2 [deprecated = true];
   bool trusted = 3;
   string url = 4;
   string checksum = 5;
+  WebsiteType type = 6;
 }
 
 enum WebsiteCategoryEnum {
-  WEBSITE_CATEGORY_NULL = 0;
-  WEBSITE_OFFICIAL = 1;
-  WEBSITE_WIKIA = 2;
-  WEBSITE_WIKIPEDIA = 3;
-  WEBSITE_FACEBOOK = 4;
-  WEBSITE_TWITTER = 5;
-  WEBSITE_TWITCH = 6;
-  WEBSITE_INSTAGRAM = 8;
-  WEBSITE_YOUTUBE = 9;
-  WEBSITE_IPHONE = 10;
-  WEBSITE_IPAD = 11;
-  WEBSITE_ANDROID = 12;
-  WEBSITE_STEAM = 13;
-  WEBSITE_REDDIT = 14;
-  WEBSITE_ITCH = 15;
-  WEBSITE_EPICGAMES = 16;
-  WEBSITE_GOG = 17;
-  WEBSITE_DISCORD = 18;
+  WEBSITE_CATEGORY_NULL = 0 [deprecated = true];
+  WEBSITE_OFFICIAL = 1 [deprecated = true];
+  WEBSITE_WIKIA = 2 [deprecated = true];
+  WEBSITE_WIKIPEDIA = 3 [deprecated = true];
+  WEBSITE_FACEBOOK = 4 [deprecated = true];
+  WEBSITE_TWITTER = 5 [deprecated = true];
+  WEBSITE_TWITCH = 6 [deprecated = true];
+  WEBSITE_INSTAGRAM = 8 [deprecated = true];
+  WEBSITE_YOUTUBE = 9 [deprecated = true];
+  WEBSITE_IPHONE = 10 [deprecated = true];
+  WEBSITE_IPAD = 11 [deprecated = true];
+  WEBSITE_ANDROID = 12 [deprecated = true];
+  WEBSITE_STEAM = 13 [deprecated = true];
+  WEBSITE_REDDIT = 14 [deprecated = true];
+  WEBSITE_ITCH = 15 [deprecated = true];
+  WEBSITE_EPICGAMES = 16 [deprecated = true];
+  WEBSITE_GOG = 17 [deprecated = true];
+  WEBSITE_DISCORD = 18 [deprecated = true];
+  WEBSITE_BLUESKY = 19 [deprecated = true];
 }
 
 message CoverResult {
@@ -456,6 +540,18 @@ message Cover {
   int32 width = 8;
   string checksum = 9;
   GameLocalization game_localization = 10;
+}
+
+message DateFormatResult {
+  repeated DateFormat dateformats = 1;
+}
+
+message DateFormat {
+  uint64 id = 1;
+  string format = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
 }
 
 message EventResult {
@@ -518,7 +614,7 @@ message ExternalGameResult {
 
 message ExternalGame {
   uint64 id = 1;
-  ExternalGameCategoryEnum category = 2;
+  ExternalGameCategoryEnum category = 2 [deprecated = true];
   google.protobuf.Timestamp created_at = 3;
   Game game = 4;
   string name = 5;
@@ -526,40 +622,54 @@ message ExternalGame {
   google.protobuf.Timestamp updated_at = 7;
   string url = 8;
   int32 year = 9;
-  ExternalGameMediaEnum media = 10;
+  ExternalGameMediaEnum media = 10 [deprecated = true];
   Platform platform = 11;
   repeated int32 countries = 12;
   string checksum = 13;
+  ExternalGameSource external_game_source = 14;
+  GameReleaseFormat game_release_format = 15;
 }
 
 enum ExternalGameCategoryEnum {
-  EXTERNALGAME_CATEGORY_NULL = 0;
-  EXTERNALGAME_STEAM = 1;
-  EXTERNALGAME_GOG = 5;
-  EXTERNALGAME_YOUTUBE = 10;
-  EXTERNALGAME_MICROSOFT = 11;
-  EXTERNALGAME_APPLE = 13;
-  EXTERNALGAME_TWITCH = 14;
-  EXTERNALGAME_ANDROID = 15;
-  EXTERNALGAME_AMAZON_ASIN = 20;
-  EXTERNALGAME_AMAZON_LUNA = 22;
-  EXTERNALGAME_AMAZON_ADG = 23;
-  EXTERNALGAME_EPIC_GAME_STORE = 26;
-  EXTERNALGAME_OCULUS = 28;
-  EXTERNALGAME_UTOMIK = 29;
-  EXTERNALGAME_ITCH_IO = 30;
-  EXTERNALGAME_XBOX_MARKETPLACE = 31;
-  EXTERNALGAME_KARTRIDGE = 32;
-  EXTERNALGAME_PLAYSTATION_STORE_US = 36;
-  EXTERNALGAME_FOCUS_ENTERTAINMENT = 37;
-  EXTERNALGAME_XBOX_GAME_PASS_ULTIMATE_CLOUD = 54;
-  EXTERNALGAME_GAMEJOLT = 55;
+  EXTERNALGAME_CATEGORY_NULL = 0 [deprecated = true];
+  EXTERNALGAME_STEAM = 1 [deprecated = true];
+  EXTERNALGAME_GOG = 5 [deprecated = true];
+  EXTERNALGAME_YOUTUBE = 10 [deprecated = true];
+  EXTERNALGAME_MICROSOFT = 11 [deprecated = true];
+  EXTERNALGAME_APPLE = 13 [deprecated = true];
+  EXTERNALGAME_TWITCH = 14 [deprecated = true];
+  EXTERNALGAME_ANDROID = 15 [deprecated = true];
+  EXTERNALGAME_AMAZON_ASIN = 20 [deprecated = true];
+  EXTERNALGAME_AMAZON_LUNA = 22 [deprecated = true];
+  EXTERNALGAME_AMAZON_ADG = 23 [deprecated = true];
+  EXTERNALGAME_EPIC_GAME_STORE = 26 [deprecated = true];
+  EXTERNALGAME_OCULUS = 28 [deprecated = true];
+  EXTERNALGAME_UTOMIK = 29 [deprecated = true];
+  EXTERNALGAME_ITCH_IO = 30 [deprecated = true];
+  EXTERNALGAME_XBOX_MARKETPLACE = 31 [deprecated = true];
+  EXTERNALGAME_KARTRIDGE = 32 [deprecated = true];
+  EXTERNALGAME_PLAYSTATION_STORE_US = 36 [deprecated = true];
+  EXTERNALGAME_FOCUS_ENTERTAINMENT = 37 [deprecated = true];
+  EXTERNALGAME_XBOX_GAME_PASS_ULTIMATE_CLOUD = 54 [deprecated = true];
+  EXTERNALGAME_GAMEJOLT = 55 [deprecated = true];
 }
 
 enum ExternalGameMediaEnum {
-  EXTERNALGAME_MEDIA_NULL = 0;
-  EXTERNALGAME_DIGITAL = 1;
-  EXTERNALGAME_PHYSICAL = 2;
+  EXTERNALGAME_MEDIA_NULL = 0 [deprecated = true];
+  EXTERNALGAME_DIGITAL = 1 [deprecated = true];
+  EXTERNALGAME_PHYSICAL = 2 [deprecated = true];
+}
+
+message ExternalGameSourceResult {
+  repeated ExternalGameSource externalgamesources = 1;
+}
+
+message ExternalGameSource {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  string checksum = 6;
 }
 
 message FranchiseResult {
@@ -589,8 +699,8 @@ message Game {
   repeated AlternativeName alternative_names = 5;
   repeated Artwork artworks = 6;
   repeated Game bundles = 7;
-  GameCategoryEnum category = 8;
-  Collection collection = 9;
+  GameCategoryEnum category = 8 [deprecated = true];
+  Collection collection = 9 [deprecated = true];
   Cover cover = 10;
   google.protobuf.Timestamp created_at = 11;
   repeated Game dlcs = 12;
@@ -618,7 +728,7 @@ message Game {
   repeated Game similar_games = 34;
   string slug = 35;
   repeated Game standalone_expansions = 36;
-  GameStatusEnum status = 37;
+  GameStatusEnum status = 37 [deprecated = true];
   string storyline = 38;
   string summary = 39;
   repeated int32 tags = 40;
@@ -640,35 +750,37 @@ message Game {
   repeated LanguageSupport language_supports = 56;
   repeated GameLocalization game_localizations = 57;
   repeated Collection collections = 58;
+  GameStatus game_status = 59;
+  GameType game_type = 60;
 }
 
 enum GameCategoryEnum {
-  MAIN_GAME = 0;
-  DLC_ADDON = 1;
-  EXPANSION = 2;
-  BUNDLE = 3;
-  STANDALONE_EXPANSION = 4;
-  MOD = 5;
-  EPISODE = 6;
-  SEASON = 7;
-  REMAKE = 8;
-  REMASTER = 9;
-  EXPANDED_GAME = 10;
-  PORT = 11;
-  FORK = 12;
-  PACK = 13;
-  UPDATE = 14;
+  MAIN_GAME = 0 [deprecated = true];
+  DLC_ADDON = 1 [deprecated = true];
+  EXPANSION = 2 [deprecated = true];
+  BUNDLE = 3 [deprecated = true];
+  STANDALONE_EXPANSION = 4 [deprecated = true];
+  MOD = 5 [deprecated = true];
+  EPISODE = 6 [deprecated = true];
+  SEASON = 7 [deprecated = true];
+  REMAKE = 8 [deprecated = true];
+  REMASTER = 9 [deprecated = true];
+  EXPANDED_GAME = 10 [deprecated = true];
+  PORT = 11 [deprecated = true];
+  FORK = 12 [deprecated = true];
+  PACK = 13 [deprecated = true];
+  UPDATE = 14 [deprecated = true];
 }
 
 enum GameStatusEnum {
-  RELEASED = 0;
-  ALPHA = 2;
-  BETA = 3;
-  EARLY_ACCESS = 4;
-  OFFLINE = 5;
-  CANCELLED = 6;
-  RUMORED = 7;
-  DELISTED = 8;
+  RELEASED = 0 [deprecated = true];
+  ALPHA = 2 [deprecated = true];
+  BETA = 3 [deprecated = true];
+  EARLY_ACCESS = 4 [deprecated = true];
+  OFFLINE = 5 [deprecated = true];
+  CANCELLED = 6 [deprecated = true];
+  RUMORED = 7 [deprecated = true];
+  DELISTED = 8 [deprecated = true];
 }
 
 message GameEngineResult {
@@ -731,6 +843,58 @@ message GameMode {
   google.protobuf.Timestamp updated_at = 5;
   string url = 6;
   string checksum = 7;
+}
+
+message GameReleaseFormatResult {
+  repeated GameReleaseFormat gamereleaseformats = 1;
+}
+
+message GameReleaseFormat {
+  uint64 id = 1;
+  string format = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
+}
+
+message GameStatusResult {
+  repeated GameStatus gamestatuses = 1;
+}
+
+message GameStatus {
+  uint64 id = 1;
+  string status = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
+}
+
+message GameTimeToBeatResult {
+  repeated GameTimeToBeat gametimetobeats = 1;
+}
+
+message GameTimeToBeat {
+  uint64 id = 1;
+  int32 game_id = 2;
+  int32 hastily = 3;
+  int32 normally = 4;
+  int32 completely = 5;
+  int32 count = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+  string checksum = 9;
+}
+
+message GameTypeResult {
+  repeated GameType gametypes = 1;
+}
+
+message GameType {
+  uint64 id = 1;
+  string type = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
 }
 
 message GameVersionResult {
@@ -926,7 +1090,7 @@ message Platform {
   uint64 id = 1;
   string abbreviation = 2;
   string alternative_name = 3;
-  PlatformCategoryEnum category = 4;
+  PlatformCategoryEnum category = 4 [deprecated = true];
   google.protobuf.Timestamp created_at = 5;
   int32 generation = 6;
   string name = 7;
@@ -939,16 +1103,17 @@ message Platform {
   repeated PlatformVersion versions = 14;
   repeated PlatformWebsite websites = 15;
   string checksum = 16;
+  PlatformType platform_type = 17;
 }
 
 enum PlatformCategoryEnum {
-  PLATFORM_CATEGORY_NULL = 0;
-  CONSOLE = 1;
-  ARCADE = 2;
-  PLATFORM = 3;
-  OPERATING_SYSTEM = 4;
-  PORTABLE_CONSOLE = 5;
-  COMPUTER = 6;
+  PLATFORM_CATEGORY_NULL = 0 [deprecated = true];
+  CONSOLE = 1 [deprecated = true];
+  ARCADE = 2 [deprecated = true];
+  PLATFORM = 3 [deprecated = true];
+  OPERATING_SYSTEM = 4 [deprecated = true];
+  PORTABLE_CONSOLE = 5 [deprecated = true];
+  COMPUTER = 6 [deprecated = true];
 }
 
 message PlatformFamilyResult {
@@ -977,6 +1142,18 @@ message PlatformLogo {
   string checksum = 8;
 }
 
+message PlatformTypeResult {
+  repeated PlatformType platformtypes = 1;
+}
+
+message PlatformType {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
+}
+
 message PlatformVersionResult {
   repeated PlatformVersion platformversions = 1;
 }
@@ -991,7 +1168,6 @@ message PlatformVersion {
   string media = 7;
   string memory = 8;
   string name = 9;
-  string online = 10;
   string os = 11;
   string output = 12;
   PlatformLogo platform_logo = 13;
@@ -1024,30 +1200,32 @@ message PlatformVersionReleaseDateResult {
 
 message PlatformVersionReleaseDate {
   uint64 id = 1;
-  DateFormatChangeDateCategoryEnum category = 2;
+  DateFormatChangeDateCategoryEnum category = 2 [deprecated = true];
   google.protobuf.Timestamp created_at = 3;
   google.protobuf.Timestamp date = 4;
   string human = 5;
   int32 m = 6;
   PlatformVersion platform_version = 7;
-  RegionRegionEnum region = 8;
+  RegionRegionEnum region = 8 [deprecated = true];
   google.protobuf.Timestamp updated_at = 9;
   int32 y = 10;
   string checksum = 11;
+  DateFormat date_format = 12;
+  ReleaseDateRegion release_region = 13;
 }
 
 enum RegionRegionEnum {
-  REGION_REGION_NULL = 0;
-  EUROPE = 1;
-  NORTH_AMERICA = 2;
-  AUSTRALIA = 3;
-  NEW_ZEALAND = 4;
-  JAPAN = 5;
-  CHINA = 6;
-  ASIA = 7;
-  WORLDWIDE = 8;
-  KOREA = 9;
-  BRAZIL = 10;
+  REGION_REGION_NULL = 0 [deprecated = true];
+  EUROPE = 1 [deprecated = true];
+  NORTH_AMERICA = 2 [deprecated = true];
+  AUSTRALIA = 3 [deprecated = true];
+  NEW_ZEALAND = 4 [deprecated = true];
+  JAPAN = 5 [deprecated = true];
+  CHINA = 6 [deprecated = true];
+  ASIA = 7 [deprecated = true];
+  WORLDWIDE = 8 [deprecated = true];
+  KOREA = 9 [deprecated = true];
+  BRAZIL = 10 [deprecated = true];
 }
 
 message PlatformWebsiteResult {
@@ -1076,6 +1254,42 @@ message PlayerPerspective {
   string checksum = 7;
 }
 
+message PopularityPrimitiveResult {
+  repeated PopularityPrimitive popularityprimitives = 1;
+}
+
+message PopularityPrimitive {
+  uint64 id = 1;
+  int32 game_id = 2;
+  PopularityType popularity_type = 3;
+  PopularitySourcePopularitySourceEnum popularity_source = 4 [deprecated = true];
+  double value = 5;
+  google.protobuf.Timestamp calculated_at = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+  string checksum = 9;
+  ExternalGameSource external_popularity_source = 10;
+}
+
+enum PopularitySourcePopularitySourceEnum {
+  POPULARITYSOURCE_POPULARITY_SOURCE_NULL = 0 [deprecated = true];
+  IGDB = 121 [deprecated = true];
+}
+
+message PopularityTypeResult {
+  repeated PopularityType popularitytypes = 1;
+}
+
+message PopularityType {
+  uint64 id = 1;
+  PopularitySourcePopularitySourceEnum popularity_source = 2 [deprecated = true];
+  string name = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  string checksum = 6;
+  ExternalGameSource external_popularity_source = 7;
+}
+
 message RegionResult {
   repeated Region regions = 1;
 }
@@ -1096,18 +1310,32 @@ message ReleaseDateResult {
 
 message ReleaseDate {
   uint64 id = 1;
-  DateFormatChangeDateCategoryEnum category = 2;
+  DateFormatChangeDateCategoryEnum category = 2 [deprecated = true];
   google.protobuf.Timestamp created_at = 3;
   google.protobuf.Timestamp date = 4;
   Game game = 5;
   string human = 6;
   int32 m = 7;
   Platform platform = 8;
-  RegionRegionEnum region = 9;
+  RegionRegionEnum region = 9 [deprecated = true];
   google.protobuf.Timestamp updated_at = 10;
   int32 y = 11;
   string checksum = 12;
   ReleaseDateStatus status = 13;
+  DateFormat date_format = 14;
+  ReleaseDateRegion release_region = 15;
+}
+
+message ReleaseDateRegionResult {
+  repeated ReleaseDateRegion releasedateregions = 1;
+}
+
+message ReleaseDateRegion {
+  uint64 id = 1;
+  string region = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
 }
 
 message ReleaseDateStatusResult {
@@ -1210,9 +1438,22 @@ message WebsiteResult {
 
 message Website {
   uint64 id = 1;
-  WebsiteCategoryEnum category = 2;
+  WebsiteCategoryEnum category = 2 [deprecated = true];
   Game game = 3;
   bool trusted = 4;
   string url = 5;
   string checksum = 6;
+  WebsiteType type = 7;
+}
+
+message WebsiteTypeResult {
+  repeated WebsiteType websitetypes = 1;
+}
+
+message WebsiteType {
+  uint64 id = 1;
+  string type = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
 }

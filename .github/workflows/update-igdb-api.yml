@@ -22,8 +22,9 @@ jobs:
       - name: Download IGDB protos
         id: download
         run: |
-          rm packages/codegen/protos/igdb.proto
-          wget -o packages/codegen/protos/igdb.proto https://api.igdb.com/v4/igdbapi.proto
+          cd packages/codegen/protos
+          wget --continue --timestamping https://api.igdb.com/v4/igdbapi.proto
+          sed -i 's/package = proto;$/package igdb;/g' igdbapi.proto
           if ! git diff --quiet; then echo "updated=true" >> "$GITHUB_OUTPUT"; fi
 
       - name: Branch
@@ -41,7 +42,7 @@ jobs:
         run: |
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
-          git add packages/codegen/protos/igdb.proto
+          git add packages/codegen/protos/igdbapi.proto
           git commit -m "chore: update igdb protos"
           gh repo set-default $REPO
 
