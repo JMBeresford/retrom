@@ -1,5 +1,5 @@
-use either::Either;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
 use retrom_db::run_migrations;
@@ -151,21 +151,35 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
         let mut rest_service = rest_service.clone();
         let mut grpc_service = grpc_service.clone();
         std::future::ready(Ok::<_, Infallible>(tower::service_fn(
-            move |req: hyper::Request<hyper::Body>| match is_grpc_request(&req) {
-                false => Either::Left({
-                    let res = rest_service.call(req);
-                    Box::pin(async move {
-                        let res = res.await.map(|res| res.map(EitherBody::Left))?;
-                        Ok::<_, Error>(res)
-                    })
-                }),
-                true => Either::Right({
-                    let res = grpc_service.call(req);
-                    Box::pin(async move {
-                        let res = res.await.map(|res| res.map(EitherBody::Right))?;
-                        Ok::<_, Error>(res)
-                    })
-                }),
+            move |mut req: hyper::Request<hyper::Body>| {
+                let maybe_base_path = std::env::var("RETROM_BASE_PATH").ok();
+                if let Some(base) = maybe_base_path {
+                    let new_uri = req.uri().to_string().replace(&base, "/").replace("//", "/");
+
+                    tracing::debug!("Rewriting URI: {} -> {}", req.uri(), new_uri);
+
+                    let error = format!("Failed to remove base path: {base}");
+                    *req.uri_mut() = new_uri.parse().expect(&error);
+                }
+
+                match is_grpc_request(&req) {
+                    false => Either::Left({
+                        let res = rest_service.call(req);
+                        Box::pin(async move {
+                            let res = res.await.map(|res| res.map(EitherBody::Left))?;
+                            Ok::<_, Error>(res)
+                        })
+                    }),
+                    true => Either::Right({
+                        let uri = req.uri();
+                        tracing::info!("Received gRPC request: {}", uri);
+                        let res = grpc_service.call(req);
+                        Box::pin(async move {
+                            let res = res.await.map(|res| res.map(EitherBody::Right))?;
+                            Ok::<_, Error>(res)
+                        })
+                    }),
+                }
             },
         )))
     }));

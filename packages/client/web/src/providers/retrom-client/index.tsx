@@ -13,9 +13,12 @@ export function RetromClientProvider(props: PropsWithChildren) {
   const { children } = props;
 
   const client = useMemo(() => {
-    const host = checkIsDesktop()
-      ? hostname + (port ? `:${port}` : "")
-      : "/api";
+    const url = new URL(hostname);
+    if (port !== undefined) {
+      url.port = port.toString();
+    }
+
+    const host = checkIsDesktop() ? url.toString() : "./api";
 
     return new RetromClient(host);
   }, [hostname, port]);
