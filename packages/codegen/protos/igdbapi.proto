@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+
 package igdb;
 
 import "google/protobuf/timestamp.proto";
