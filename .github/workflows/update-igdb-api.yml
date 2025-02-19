@@ -23,7 +23,7 @@ jobs:
         id: download
         run: |
           cd packages/codegen/protos
-          wget --continue --timestamping https://api.igdb.com/v4/igdbapi.proto
+          wget https://api.igdb.com/v4/igdbapi.proto
           sed -i 's/package = proto;$/package igdb;/g' igdbapi.proto
           if ! git diff --quiet; then echo "updated=true" >> "$GITHUB_OUTPUT"; fi
 
