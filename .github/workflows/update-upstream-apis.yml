@@ -57,7 +57,6 @@ jobs:
           if [[ -z $EXISTING ]]; then
             echo "No existing pull request found, creating..."
             gh pr create \
-              --fill \
               --head "$BRANCH" \
               --base main \
               --label update-igdb-api \
