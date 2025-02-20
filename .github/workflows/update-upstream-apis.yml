@@ -56,7 +56,13 @@ jobs:
 
           if [[ -z $EXISTING ]]; then
             echo "No existing pull request found, creating..."
-            gh pr create --fill --head "$BRANCH" --base main
+            gh pr create \
+              --fill \
+              --head "$BRANCH" \
+              --base main \
+              --label update-igdb-api \
+              --title "chore: update igdb api" \
+              --body "New IGDB API proto definitions were found"
           else
             echo "Pull request already exists"
           fi
