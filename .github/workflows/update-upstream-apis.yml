@@ -59,7 +59,6 @@ jobs:
             gh pr create \
               --head "$BRANCH" \
               --base main \
-              --label update-igdb-api \
               --title "chore: update igdb api" \
               --body "New IGDB API proto definitions were found"
           else
