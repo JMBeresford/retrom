@@ -54,6 +54,9 @@ jobs:
 
           git push origin HEAD:$BRANCH -uf
 
-          if [[ ! -z $EXISTING ]]; then
+          if [[ -z $EXISTING ]]; then
+            echo "No existing pull request found, creating..."
             gh pr create --fill --head "$BRANCH" --base main
+          else
+            echo "Pull request already exists"
           fi
