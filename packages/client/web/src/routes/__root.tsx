@@ -25,6 +25,11 @@ const modalsSearchSchema = z.object({
       open: z.boolean().catch(false),
     })
     .optional(),
+  cleanLibraryModal: z
+    .object({
+      open: z.boolean().catch(false),
+    })
+    .optional(),
   matchPlatformsModal: z
     .object({
       open: z.boolean().catch(false),
