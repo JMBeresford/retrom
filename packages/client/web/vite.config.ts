@@ -28,6 +28,9 @@ const localServiceHost =
   process.env.RETROM_LOCAL_SERVICE_HOST ||
   `${localServiceHostname}:${localServicePort}`;
 
+const base =
+  process.env.VITE_RETROM_BASE_PATH || process.env.RETROM_BASE_PATH || "./";
+
 // https://vitejs.dev/config/
 export default defineConfig({
   define: {
@@ -37,6 +40,7 @@ export default defineConfig({
     "import.meta.env.VITE_RETROM_LOCAL_SERVICE_PORT":
       JSON.stringify(localServicePort),
   },
+  base,
   server: {
     port: 3000,
     host: "0.0.0.0",
