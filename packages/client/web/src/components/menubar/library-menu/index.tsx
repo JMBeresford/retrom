@@ -27,6 +27,12 @@ export function LibraryMenu() {
           </Link>
         </MenubarItem>
 
+        <MenubarItem asChild>
+          <Link search={{ cleanLibraryModal: { open: true } }}>
+            Clean Library
+          </Link>
+        </MenubarItem>
+
         <MenubarSeparator />
 
         <MenubarItem asChild>
