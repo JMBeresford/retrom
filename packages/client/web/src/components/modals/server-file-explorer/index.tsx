@@ -72,7 +72,7 @@ const MAX_CRUMBS = 3;
 export function ServerFileExplorerModal() {
   const [path, setPath] = useState<string>("./");
   const [selectedPath, setSelectedPath] = useState<string | undefined>();
-  const modalAction = useModalAction();
+  const modalAction = useModalAction("serverFileExplorerModal");
   const { serverFileExplorerModal } = RootRoute.useSearch();
   const navigate = RootRoute.useNavigate();
 
@@ -86,7 +86,7 @@ export function ServerFileExplorerModal() {
 
   const close = useCallback(
     (path?: string) => {
-      const action = modalAction?.activeModalProps?.onClose;
+      const action = modalAction.modalState?.onClose;
       if (action) {
         action(path);
       }
@@ -99,7 +99,7 @@ export function ServerFileExplorerModal() {
         search: (prev) => ({ ...prev, serverFileExplorerModal: undefined }),
       }).catch(console.error);
     },
-    [modalAction?.activeModalProps, navigate],
+    [modalAction?.modalState, navigate],
   );
 
   return (

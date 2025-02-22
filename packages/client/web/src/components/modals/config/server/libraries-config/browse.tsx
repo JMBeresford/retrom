@@ -21,12 +21,12 @@ export function BrowseButton<T extends FieldValues>(props: {
   field: ControllerRenderProps<T>;
   fieldState: ControllerFieldState;
 }) {
-  const { openModal } = useModalAction();
+  const { openModal } = useModalAction("serverFileExplorerModal");
   const { field, fieldState } = props;
 
   const browse = useCallback(
     (setValueCallback: (path: string) => void) => {
-      openModal?.("serverFileExplorerModal", {
+      openModal({
         title: "Select Library Path",
         description: "Select a directory for this library.",
         onClose: (path) => {

@@ -5,8 +5,8 @@ use crate::{
 };
 use retrom_codegen::retrom::{
     library_service_server::LibraryService, DeleteLibraryRequest, DeleteLibraryResponse,
-    UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdateLibraryRequest,
-    UpdateLibraryResponse,
+    DeleteMissingEntriesRequest, DeleteMissingEntriesResponse, UpdateLibraryMetadataRequest,
+    UpdateLibraryMetadataResponse, UpdateLibraryRequest, UpdateLibraryResponse,
 };
 use retrom_db::Pool;
 use std::sync::Arc;
@@ -74,6 +74,17 @@ impl LibraryService for LibraryServiceHandlers {
         request: Request<DeleteLibraryRequest>,
     ) -> Result<Response<DeleteLibraryResponse>, Status> {
         match delete_handlers::delete_library(self, request.into_inner()).await {
+            Ok(response) => Ok(Response::new(response)),
+            Err(why) => Err(why),
+        }
+    }
+
+    #[instrument(skip_all)]
+    async fn delete_missing_entries(
+        &self,
+        request: Request<DeleteMissingEntriesRequest>,
+    ) -> Result<Response<DeleteMissingEntriesResponse>, Status> {
+        match delete_handlers::delete_missing_entries(self, request.into_inner()).await {
             Ok(response) => Ok(Response::new(response)),
             Err(why) => Err(why),
         }

@@ -17,21 +17,21 @@ declare global {
       confirmModal?: {
         title: string;
         description: string;
-        onClose: () => void;
+        onConfirm: () => void;
       };
     }
   }
 }
 
 export function ConfirmModal() {
-  const modalAction = useModalAction();
+  const modalAction = useModalAction("confirmModal");
   const { confirmModal } = RootRoute.useSearch();
   const navigate = RootRoute.useNavigate();
 
   const close = useCallback(
     (confirmed: boolean = false) => {
-      if (confirmed && modalAction.activeModalProps?.onClose) {
-        modalAction.activeModalProps.onClose();
+      if (confirmed && modalAction.modalState?.onConfirm) {
+        modalAction.modalState.onConfirm();
       }
 
       return navigate({

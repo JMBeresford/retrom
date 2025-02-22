@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
   createContext,
+  PropsWithChildren,
   useCallback,
   useContext,
   useMemo,
@@ -10,7 +11,7 @@ import {
 declare global {
   namespace RetromModals {
     export interface ModalActions {
-      setupModal?: ModalActionProps;
+      _?: BaseModalActionProps;
     }
   }
 }
@@ -20,58 +21,73 @@ type ModalActionCallback<T> = T extends (args: infer U) => infer V
   : // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (...args: any[]) => any;
 
-export type ModalActionProps<Open = undefined, Close = undefined> = {
+export type BaseModalActionProps<Open = undefined, Close = undefined> = {
   title?: string;
   description?: string;
   onOpen?: ModalActionCallback<Open>;
   onClose?: ModalActionCallback<Close>;
 };
 
+type ModalMap = {
+  [K in keyof RetromModals.ModalActions]?: RetromModals.ModalActions[K];
+};
 export type ModalActionContext = {
-  openModal: <Key extends keyof RetromModals.ModalActions>(
-    key: Key,
-    props: RetromModals.ModalActions[Key],
+  modals: ModalMap;
+  setModalState: <T extends keyof RetromModals.ModalActions>(
+    modal: T,
+    state: RetromModals.ModalActions[T],
   ) => void;
-
-  activeModalProps?: ModalActionProps;
 };
 
 const context = createContext<ModalActionContext | undefined>(undefined);
 
-export function ModalActionProvider(props: React.PropsWithChildren) {
-  const [activeModalProps, setActiveModalProps] = useState<
-    ModalActionProps | undefined
-  >();
+export function ModalActionProvider(props: PropsWithChildren) {
+  const [modals, setModals] = useState<ModalMap>({});
+
+  const setModalState: ModalActionContext["setModalState"] = useCallback(
+    (modal, state) => {
+      setModals((prev) => {
+        prev[modal] = state;
+        return { ...prev };
+      });
+    },
+    [],
+  );
+
+  const value = useMemo(
+    () => ({ modals, setModalState }),
+    [modals, setModalState],
+  );
+
+  return <context.Provider value={value}>{props.children}</context.Provider>;
+}
+
+export function useModalAction<T extends keyof RetromModals.ModalActions>(
+  modal: T,
+) {
+  const modalContext = useContext(context);
+  if (!modalContext) {
+    throw new Error("useModalAction must be used within a ModalActionProvider");
+  }
+
+  const { modals, setModalState } = modalContext;
   const navigate = useNavigate();
 
-  const openModal: ModalActionContext["openModal"] = useCallback(
-    (key, props) => {
-      setActiveModalProps(props);
+  const openModal = useCallback(
+    (props: RetromModals.ModalActions[T]) => {
+      setModalState(modal, props);
 
       navigate({
         search: (prev) => ({
           ...prev,
-          [key]: { open: true, ...props },
+          [modal]: { open: true, ...props },
         }),
       }).catch(console.error);
     },
-    [navigate],
+    [navigate, modal, setModalState],
   );
 
-  const value = useMemo(
-    () => ({ openModal, activeModalProps }),
-    [openModal, activeModalProps],
-  );
+  const modalState = modals[modal];
 
-  return <context.Provider value={value} {...props} />;
-}
-
-export function useModalAction() {
-  const ctx = useContext(context);
-
-  if (!ctx) {
-    throw new Error("useModalAction must be used within a ModalActionProvider");
-  }
-
-  return ctx;
+  return useMemo(() => ({ openModal, modalState }), [openModal, modalState]);
 }

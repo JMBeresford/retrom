@@ -18,6 +18,7 @@ service LibraryService {
   rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
   rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
   rpc DeleteLibrary(DeleteLibraryRequest) returns (DeleteLibraryResponse);
+  rpc DeleteMissingEntries(DeleteMissingEntriesRequest) returns (DeleteMissingEntriesResponse);
 }
 
 service PlatformService {
@@ -222,6 +223,16 @@ message GetIgdbSearchResponse {
 message DeleteLibraryRequest {}
 
 message DeleteLibraryResponse {}
+
+message DeleteMissingEntriesRequest {
+  bool dry_run = 1;
+}
+
+message DeleteMissingEntriesResponse {
+  repeated Platform platforms_deleted = 1;
+  repeated Game games_deleted = 2;
+  repeated GameFile game_files_deleted = 3;
+}
 
 message DeletePlatformsRequest {
   repeated int32 ids = 1;
