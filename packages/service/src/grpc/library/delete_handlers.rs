@@ -104,7 +104,11 @@ pub async fn delete_missing_entries(
 
                 games_deleted.extend(games_of_platforms.into_iter());
 
-                let games: Vec<Game> = schema::games::table.load(conn).await?;
+                let games: Vec<Game> = schema::games::table
+                    .filter(schema::games::third_party.eq(false))
+                    .load(conn)
+                    .await?;
+
                 for game in games {
                     let path = match PathBuf::from_str(&game.path) {
                         Ok(path) => path,
