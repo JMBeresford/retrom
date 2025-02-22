@@ -62,6 +62,24 @@ pub async fn update_metadata(
             let db_pool = db_pool.clone();
 
             async move {
+                if !overwrite {
+                    let mut conn = match db_pool.get().await {
+                        Ok(conn) => conn,
+                        Err(why) => {
+                            tracing::error!("Failed to get connection: {}", why);
+                            return Err(why.to_string());
+                        }
+                    };
+
+                    if let Ok(Some(_)) = PlatformMetadata::belonging_to(&platform)
+                        .first::<PlatformMetadata>(&mut conn)
+                        .await
+                        .optional()
+                    {
+                        return Ok(());
+                    };
+                };
+
                 let metadata = igdb_provider.get_platform_metadata(platform, None).await;
                 let mut conn = match db_pool.get().await {
                     Ok(conn) => conn,
@@ -74,7 +92,9 @@ pub async fn update_metadata(
                 if let Some(metadata) = metadata {
                     diesel::insert_into(schema::platform_metadata::table)
                         .values(&metadata)
-                        .on_conflict_do_nothing()
+                        .on_conflict(schema::platform_metadata::platform_id)
+                        .do_update()
+                        .set(&metadata)
                         .execute(&mut conn)
                         .await
                         .map_err(|e| {
@@ -108,6 +128,23 @@ pub async fn update_metadata(
             let db_pool = db_pool.clone();
 
             async move {
+                if !overwrite {
+                    let mut conn = match db_pool.get().await {
+                        Ok(conn) => conn,
+                        Err(why) => {
+                            return Err(why.to_string());
+                        }
+                    };
+
+                    if let Ok(Some(_)) = GameMetadata::belonging_to(&game)
+                        .first::<GameMetadata>(&mut conn)
+                        .await
+                        .optional()
+                    {
+                        return Ok(());
+                    };
+                }
+
                 let mut conn = match db_pool.get().await {
                     Ok(conn) => conn,
                     Err(why) => {
@@ -154,7 +191,9 @@ pub async fn update_metadata(
                 if let Some(metadata) = metadata {
                     if let Err(e) = diesel::insert_into(schema::game_metadata::table)
                         .values(&metadata)
-                        .on_conflict_do_nothing()
+                        .on_conflict(schema::game_metadata::game_id)
+                        .do_update()
+                        .set(&metadata)
                         .get_results::<retrom::GameMetadata>(&mut conn)
                         .await
                         .optional()

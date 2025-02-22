@@ -13,10 +13,12 @@ import { cn } from "@/lib/utils";
 import { useUpdateLibraryMetadata } from "@/mutations/useUpdateLibraryMetadata";
 import { useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function DownloadMetadataModal() {
   const navigate = useNavigate();
+  const [overwrite, setOverwrite] = useState(false);
   const { downloadMetadataModal } = RootRoute.useSearch();
 
   const { mutate, isPending } = useUpdateLibraryMetadata();
@@ -45,6 +47,25 @@ export function DownloadMetadataModal() {
           </DialogDescription>
         </DialogHeader>
 
+        <div className="flex items-top gap-2">
+          <Checkbox
+            id="overwrite"
+            checked={overwrite}
+            onCheckedChange={(event) => setOverwrite(!!event)}
+          />
+
+          <div className={cn("grid gap-1 5 leading-none")}>
+            <label htmlFor="delete-from-disk">
+              Overwrite existing metadata
+            </label>
+
+            <p className="text-sm text-muted-foreground max-w-[60ch]">
+              This will update existing metadata with the latest data. Leaving
+              this unchecked will skip entries that already have metadata.
+            </p>
+          </div>
+        </div>
+
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="secondary">Cancel</Button>
@@ -54,7 +75,7 @@ export function DownloadMetadataModal() {
             className="relative"
             disabled={isPending}
             onClick={() => {
-              mutate();
+              mutate({ overwrite });
               close();
             }}
           >

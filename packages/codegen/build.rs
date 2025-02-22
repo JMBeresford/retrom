@@ -122,12 +122,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ),
     ];
 
-    let insertable_models: [ModelDefinitionParams; 13] = [
+    let insertable_models: [ModelDefinitionParams; 11] = [
         ("NewPlatform", "platforms", None, vec![]),
         ("NewGame", "games", None, vec![]),
         ("NewGameFile", "game_files", None, vec![]),
-        ("NewGameMetadata", "game_metadata", Some("game_id"), vec![]),
-        ("NewPlatformMetadata", "platform_metadata", None, vec![]),
         ("NewClient", "clients", None, vec![]),
         ("NewEmulator", "emulators", None, vec![]),
         ("NewEmulatorProfile", "emulator_profiles", None, vec![]),
@@ -158,7 +156,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ),
     ];
 
-    let updatable_models: [ModelDefinitionParams; 13] = [
+    let updatable_models: [ModelDefinitionParams; 15] = [
         ("UpdatedPlatform", "platforms", None, vec![]),
         ("UpdatedGame", "games", None, vec![]),
         ("UpdatedGameFile", "game_files", None, vec![]),
@@ -201,6 +199,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "local_emulator_configs",
             None,
             vec!["Emulator", "Client"],
+        ),
+        (
+            "NewGameMetadata",
+            "game_metadata",
+            Some("game_id"),
+            vec!["Game"],
+        ),
+        (
+            "NewPlatformMetadata",
+            "platform_metadata",
+            Some("platform_id"),
+            vec!["Platform"],
         ),
     ];
 
