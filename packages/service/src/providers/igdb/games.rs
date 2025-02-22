@@ -98,7 +98,7 @@ impl IGDBProvider {
                 screenshot
                     .url
                     .replace("//", "https://")
-                    .replace("t_thumb", "screenshot_huge_2x")
+                    .replace("t_thumb", "t_screenshot_huge_2x")
             })
             .collect();
 

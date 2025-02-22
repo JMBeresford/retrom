@@ -110,6 +110,7 @@ impl IGDBProvider {
             "artworks.url".to_string(),
             "artworks.height".to_string(),
             "artworks.width".to_string(),
+            "screenshots.url".to_string(),
             "summary".to_string(),
             "websites.url".to_string(),
             "websites.trusted".to_string(),
