@@ -49,9 +49,13 @@ export function CleanLibraryModal() {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         predicate: ({ queryKey }) =>
-          ["library", "games", "platforms", "metadata"].some((key) =>
-            queryKey.includes(key),
-          ),
+          [
+            "library",
+            "games",
+            "platforms",
+            "metadata",
+            "clean-library-dry-run",
+          ].some((key) => queryKey.includes(key)),
       });
 
       toast({
