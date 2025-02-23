@@ -42,7 +42,7 @@ export function DownloadMetadata(props: ComponentProps<typeof SheetTrigger>) {
               },
               MENU: {
                 handler: () => {
-                  downloadMetadata();
+                  downloadMetadata({});
                   setOpen(false);
                 },
               },
@@ -68,7 +68,7 @@ export function DownloadMetadata(props: ComponentProps<typeof SheetTrigger>) {
               <HotkeyButton
                 hotkey="MENU"
                 onClick={() => {
-                  downloadMetadata();
+                  downloadMetadata({});
                   setOpen(false);
                 }}
               >
