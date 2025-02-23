@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.13](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.12...retrom-v0.7.13) - 2025-02-23
+
+### Newly Added
+- clean library job
+
+    You can now trigger a "Clean Library" job which
+    will prune your Retrom database of items with
+    missing files/and or directories.
+
+    fixes [#214](https://github.com/JMBeresford/retrom/pull/214)
+
+
+
+- include screenshots in metadata
+
+    Game metadata will now include screenshots, in addition
+    to the existing artworks and videos
+
+
+
+- opt-in overwriting in download metadata job
+
+    The download metadata job now defaults to downloading
+    metadata only for entries with no existing metadata.
+
+    You can still optionally opt in to overwriting existing entries.
+
+
+
+
 ## [0.7.12](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.11...retrom-v0.7.12) - 2025-02-18
 
 ### Bug Fixes
