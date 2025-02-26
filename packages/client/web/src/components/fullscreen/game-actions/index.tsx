@@ -54,7 +54,7 @@ export function GameActions() {
                 "opacity-80 focus-hover:opacity-100 transition-all",
               )}
             >
-              <EllipsisVerticalIcon height="2rem" width="2rem" />
+              <EllipsisVerticalIcon size={28} />
             </Button>
           </FocusableElement>
         </SheetTrigger>

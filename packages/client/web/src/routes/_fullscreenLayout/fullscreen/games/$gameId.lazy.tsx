@@ -99,11 +99,8 @@ function Inner() {
                     desktop={
                       installationStatus === InstallationStatus.INSTALLED ? (
                         <PlayButton />
-                      ) : installationStatus ===
-                        InstallationStatus.NOT_INSTALLED ? (
-                        <InstallButton />
                       ) : (
-                        <></>
+                        <InstallButton />
                       )
                     }
                     web={<DownloadButton />}
