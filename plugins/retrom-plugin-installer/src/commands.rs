@@ -331,3 +331,24 @@ pub async fn migrate_installation_dir<R: Runtime>(
 
     Ok(())
 }
+
+#[instrument(skip(app))]
+#[tauri::command]
+pub async fn clear_installation_dir<R: Runtime>(app: AppHandle<R>) -> crate::Result<()> {
+    let installer = app.installer();
+    let install_dir = installer.get_installation_dir().await?;
+    let mut entries = tokio::fs::read_dir(&install_dir).await?;
+
+    while let Some(entry) = entries.next_entry().await? {
+        let path = entry.path();
+        if path.is_dir() {
+            tokio::fs::remove_dir_all(&path).await?;
+        } else {
+            tokio::fs::remove_file(&path).await?;
+        }
+    }
+
+    installer.installed_games.write().await.clear();
+
+    Ok(())
+}

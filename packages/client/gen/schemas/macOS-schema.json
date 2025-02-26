@@ -5053,6 +5053,11 @@
           "const": "fs:write-files"
         },
         {
+          "description": "Enables the clear_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-clear-installation-dir"
+        },
+        {
           "description": "Enables the get_game_installation_status command without any pre-configured scope.",
           "type": "string",
           "const": "installer:allow-get-game-installation-status"
@@ -5081,6 +5086,11 @@
           "description": "Enables the uninstall_game command without any pre-configured scope.",
           "type": "string",
           "const": "installer:allow-uninstall-game"
+        },
+        {
+          "description": "Denies the clear_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-clear-installation-dir"
         },
         {
           "description": "Denies the get_game_installation_status command without any pre-configured scope.",

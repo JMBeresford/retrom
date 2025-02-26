@@ -10,6 +10,8 @@ import {
 import { Route as RootRoute } from "@/routes/__root";
 import { useCallback } from "react";
 import { useModalAction } from "@/providers/modal-action";
+import { useMutation } from "@tanstack/react-query";
+import { LoaderCircle } from "lucide-react";
 
 declare global {
   namespace RetromModals {
@@ -17,7 +19,8 @@ declare global {
       confirmModal?: {
         title: string;
         description: string;
-        onConfirm: () => void;
+        onConfirm: () => void | Promise<void>;
+        onCancel?: () => void | Promise<void>;
       };
     }
   }
@@ -28,17 +31,29 @@ export function ConfirmModal() {
   const { confirmModal } = RootRoute.useSearch();
   const navigate = RootRoute.useNavigate();
 
+  const { mutate, status } = useMutation({
+    mutationFn: async () => {
+      const fn = modalAction.modalState?.onConfirm;
+
+      if (fn) {
+        await fn();
+      }
+    },
+  });
+
   const close = useCallback(
-    (confirmed: boolean = false) => {
-      if (confirmed && modalAction.modalState?.onConfirm) {
-        modalAction.modalState.onConfirm();
+    async (confirmed: boolean = false) => {
+      if (confirmed) {
+        mutate();
+      } else if (!confirmed && modalAction.modalState?.onCancel) {
+        await modalAction.modalState.onCancel();
       }
 
       return navigate({
         search: (prev) => ({ ...prev, confirmModal: undefined }),
       });
     },
-    [navigate, modalAction],
+    [navigate, modalAction, mutate],
   );
 
   return (
@@ -66,11 +81,16 @@ export function ConfirmModal() {
           <Button
             className="relative"
             variant="destructive"
+            disabled={status === "pending"}
             onClick={() => {
               void close(true);
             }}
           >
-            Confirm
+            {status === "pending" ? (
+              <LoaderCircle className="animate-spin" />
+            ) : (
+              "Confirm"
+            )}
           </Button>
         </div>
       </DialogContent>

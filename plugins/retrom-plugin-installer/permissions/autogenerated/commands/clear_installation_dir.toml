@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-clear-installation-dir"
+description = "Enables the clear_installation_dir command without any pre-configured scope."
+commands.allow = ["clear_installation_dir"]
+
+[[permission]]
+identifier = "deny-clear-installation-dir"
+description = "Denies the clear_installation_dir command without any pre-configured scope."
+commands.deny = ["clear_installation_dir"]

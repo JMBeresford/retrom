@@ -11,6 +11,32 @@
 <tr>
 <td>
 
+`retrom-plugin-installer:allow-clear-installation-dir`
+
+</td>
+<td>
+
+Enables the clear_installation_dir command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-installer:deny-clear-installation-dir`
+
+</td>
+<td>
+
+Denies the clear_installation_dir command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `retrom-plugin-installer:allow-get-game-installation-status`
 
 </td>

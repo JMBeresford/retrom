@@ -7,3 +7,7 @@ export async function openInstallationDir(gameId?: number): Promise<void> {
 export async function migrateInstallationDir(newDir: string): Promise<void> {
   return invoke("plugin:installer|migrate_installation_dir", { newDir });
 }
+
+export async function clearInstallationDir(): Promise<void> {
+  return invoke("plugin:installer|clear_installation_dir");
+}

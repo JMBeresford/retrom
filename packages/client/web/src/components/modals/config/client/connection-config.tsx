@@ -12,23 +12,29 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { TabsContent } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
 import { RetromClientConfig_Server } from "@/generated/retrom/client/client-config";
 import { cn } from "@/lib/utils";
 import { useDisableStandaloneMode } from "@/mutations/useDisableStandaloneMode";
 import { useEnableStandaloneMode } from "@/mutations/useEnableStandaloneMode";
 import { useConfig, useConfigStore } from "@/providers/config";
+import { useModalAction } from "@/providers/modal-action";
 import { RetromClient } from "@/providers/retrom-client/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, LoaderCircle } from "lucide-react";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
+import { clearInstallationDir } from "retrom-plugin-installer-api";
 import { z } from "zod";
 
 export function ConnectionConfig() {
+  const { openModal: confirm } = useModalAction("confirmModal");
   const serverConfig = useConfig((s) => s.server);
+  const queryClient = useQueryClient();
   const { mutateAsync: enable, status: enableStatus } =
     useEnableStandaloneMode();
+  const { toast } = useToast();
   const { mutateAsync: disable, status: disableStatus } =
     useDisableStandaloneMode();
 
@@ -37,10 +43,33 @@ export function ConnectionConfig() {
   const toggleStandaloneMode = useCallback(async () => {
     if (serverConfig?.standalone) {
       await disable(undefined);
+
+      await queryClient.resetQueries();
     } else {
-      await enable(undefined);
+      confirm({
+        title: "Are you sure?",
+        description:
+          "Disconnecting from a remote server will uninstall all currently installed games",
+        onConfirm: async () => {
+          try {
+            await clearInstallationDir();
+          } catch (error) {
+            console.error(error);
+            toast({
+              title: "Failed to clear installation directory",
+              variant: "destructive",
+            });
+
+            return;
+          }
+
+          await enable(undefined);
+
+          await queryClient.resetQueries();
+        },
+      });
     }
-  }, [disable, enable, serverConfig]);
+  }, [disable, enable, serverConfig, confirm, toast, queryClient]);
 
   return (
     <TabsContent value="connection" className="relative">
@@ -110,8 +139,11 @@ const connectionSchema = z.object({
 }) satisfies z.ZodObject<ConfigShape>;
 
 function ServerConnectionForm() {
+  const { openModal: confirm } = useModalAction("confirmModal");
   const configStore = useConfigStore();
   const serverConfig = useConfig((s) => s.server);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { mutateAsync: testConnection, status } = useMutation({
     mutationFn: (values: z.infer<typeof connectionSchema>) => {
@@ -139,23 +171,45 @@ function ServerConnectionForm() {
       try {
         await testConnection(values);
 
-        configStore.setState((prev) => {
-          prev.server = {
-            ...prev.server,
-            hostname: values.hostname,
-            port: values.port === "" ? undefined : values.port,
-            standalone: false,
-          };
+        confirm({
+          title: "Are you sure?",
+          description:
+            "Changing servers will uninstall all currently installed games",
+          onConfirm: async () => {
+            try {
+              await clearInstallationDir();
+            } catch (error) {
+              console.error(error);
+              toast({
+                title: "Failed to clear installation directory",
+                variant: "destructive",
+              });
 
-          return { ...prev };
+              return;
+            }
+
+            configStore.setState((prev) => {
+              prev.server = {
+                ...prev.server,
+                hostname: values.hostname,
+                port: values.port === "" ? undefined : values.port,
+                standalone: false,
+              };
+
+              return { ...prev };
+            });
+
+            await queryClient.resetQueries();
+
+            form.reset(values);
+          },
+          onCancel: () => form.reset(),
         });
-
-        form.reset(values);
       } catch (error) {
         console.error(error);
       }
     },
-    [configStore, testConnection, form],
+    [configStore, testConnection, form, confirm, toast, queryClient],
   );
 
   const isDirty = form.formState.isDirty;
@@ -179,7 +233,7 @@ function ServerConnectionForm() {
                 <FormItem>
                   <FormLabel>Hostname</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} autoComplete="on" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

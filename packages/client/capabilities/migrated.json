@@ -43,6 +43,7 @@
     "installer:allow-get-installation-state",
     "installer:allow-open-installation-dir",
     "installer:allow-migrate-installation-dir",
+    "installer:allow-clear-installation-dir",
     "dialog:allow-open",
     "launcher:allow-play-game",
     "launcher:allow-stop-game",

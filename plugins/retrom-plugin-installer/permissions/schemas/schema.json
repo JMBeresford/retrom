@@ -295,6 +295,16 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the clear_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-clear-installation-dir"
+        },
+        {
+          "description": "Denies the clear_installation_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-clear-installation-dir"
+        },
+        {
           "description": "Enables the get_game_installation_status command without any pre-configured scope.",
           "type": "string",
           "const": "allow-get-game-installation-status"

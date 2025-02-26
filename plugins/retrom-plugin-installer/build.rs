@@ -5,6 +5,7 @@ const COMMANDS: &[&str] = &[
     "get_installation_state",
     "open_installation_dir",
     "migrate_installation_dir",
+    "clear_installation_dir",
 ];
 
 fn main() {
