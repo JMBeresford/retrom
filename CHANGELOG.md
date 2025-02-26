@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.14](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.13...retrom-v0.7.14) - 2025-02-26
+
+### Bug Fixes
+- prioritize existing match in metadata update
+
+    When downloading metadata for your library w/ the
+    overwrite option, existing matches will be preserved.
+
+
+
+
 ## [0.7.13](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.12...retrom-v0.7.13) - 2025-02-23
 
 ### Newly Added
