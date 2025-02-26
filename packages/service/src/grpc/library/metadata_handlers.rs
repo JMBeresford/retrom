@@ -21,8 +21,8 @@ use retrom_codegen::retrom::{
     get_igdb_search_request::IgdbSearchType,
     igdb_fields::{IncludeFields, Selector},
     igdb_filters::{FilterOperator, FilterValue},
-    igdb_game_search_query::Fields,
-    GameGenre, GameMetadata, GetIgdbSearchRequest, IgdbFields, IgdbFilters, IgdbGameSearchQuery,
+    igdb_game_search_query, igdb_platform_search_query, GameGenre, GameMetadata,
+    GetIgdbSearchRequest, IgdbFields, IgdbFilters, IgdbGameSearchQuery, IgdbPlatformSearchQuery,
     NewGameGenre, NewGameGenreMap, NewSimilarGameMap, PlatformMetadata,
     UpdateLibraryMetadataResponse,
 };
@@ -62,25 +62,41 @@ pub async fn update_metadata(
             let db_pool = db_pool.clone();
 
             async move {
-                if !overwrite {
-                    let mut conn = match db_pool.get().await {
-                        Ok(conn) => conn,
-                        Err(why) => {
-                            tracing::error!("Failed to get connection: {}", why);
-                            return Err(why.to_string());
-                        }
-                    };
-
-                    if let Ok(Some(_)) = PlatformMetadata::belonging_to(&platform)
-                        .first::<PlatformMetadata>(&mut conn)
-                        .await
-                        .optional()
-                    {
-                        return Ok(());
-                    };
+                let mut conn = match db_pool.get().await {
+                    Ok(conn) => conn,
+                    Err(why) => {
+                        tracing::error!("Failed to get connection: {}", why);
+                        return Err(why.to_string());
+                    }
                 };
 
-                let metadata = igdb_provider.get_platform_metadata(platform, None).await;
+                let existing = PlatformMetadata::belonging_to(&platform)
+                    .first::<PlatformMetadata>(&mut conn)
+                    .await
+                    .optional()
+                    .ok()
+                    .flatten();
+
+                let mut query = IgdbPlatformSearchQuery {
+                    fields: Some(igdb_platform_search_query::Fields::default()),
+                    ..Default::default()
+                };
+
+                if let Some(exists) = existing.and_then(|meta| meta.igdb_id) {
+                    query
+                        .fields
+                        .as_mut()
+                        .unwrap()
+                        .id
+                        .replace(exists.to_u64().unwrap());
+                };
+
+                drop(conn);
+
+                let metadata = igdb_provider
+                    .get_platform_metadata(platform, Some(query))
+                    .await;
+
                 let mut conn = match db_pool.get().await {
                     Ok(conn) => conn,
                     Err(why) => {
@@ -128,23 +144,6 @@ pub async fn update_metadata(
             let db_pool = db_pool.clone();
 
             async move {
-                if !overwrite {
-                    let mut conn = match db_pool.get().await {
-                        Ok(conn) => conn,
-                        Err(why) => {
-                            return Err(why.to_string());
-                        }
-                    };
-
-                    if let Ok(Some(_)) = GameMetadata::belonging_to(&game)
-                        .first::<GameMetadata>(&mut conn)
-                        .await
-                        .optional()
-                    {
-                        return Ok(());
-                    };
-                }
-
                 let mut conn = match db_pool.get().await {
                     Ok(conn) => conn,
                     Err(why) => {
@@ -152,35 +151,51 @@ pub async fn update_metadata(
                     }
                 };
 
-                let query = match game.platform_id {
-                    Some(id) => {
-                        let platform_meta: Option<PlatformMetadata> =
-                            schema::platform_metadata::table
-                                .find(id)
-                                .first(&mut conn)
-                                .await
-                                .ok();
+                let existing = GameMetadata::belonging_to(&game)
+                    .first::<GameMetadata>(&mut conn)
+                    .await
+                    .optional()
+                    .ok()
+                    .flatten();
 
-                        let platform_igdb_id = platform_meta
-                            .and_then(|meta| meta.igdb_id)
-                            .and_then(|id| id.to_u64());
+                if existing.is_some() && !overwrite {
+                    return Ok(());
+                }
 
-                        IgdbGameSearchQuery {
-                            fields: Some(Fields {
-                                platform: platform_igdb_id,
-                                ..Default::default()
-                            }),
-                            ..Default::default()
-                        }
-                        .into()
+                let mut query = IgdbGameSearchQuery {
+                    fields: Some(igdb_game_search_query::Fields::default()),
+                    ..Default::default()
+                };
+
+                if let Some(id) = game.platform_id {
+                    let platform_meta: Option<PlatformMetadata> = schema::platform_metadata::table
+                        .find(id)
+                        .first(&mut conn)
+                        .await
+                        .ok();
+
+                    let platform_igdb_id = platform_meta
+                        .and_then(|meta| meta.igdb_id)
+                        .and_then(|id| id.to_u64());
+
+                    if let Some(igdb_id) = platform_igdb_id {
+                        query.fields.as_mut().unwrap().platform.replace(igdb_id);
                     }
-                    None => None,
+                };
+
+                if let Some(exists) = existing.and_then(|meta| meta.igdb_id) {
+                    query
+                        .fields
+                        .as_mut()
+                        .unwrap()
+                        .id
+                        .replace(exists.to_u64().unwrap());
                 };
 
                 // don't hold the db connection while we fetch metadata, as we are likely
                 // to be rate limited
                 drop(conn);
-                let metadata = igdb_provider.get_game_metadata(game, query).await;
+                let metadata = igdb_provider.get_game_metadata(game, Some(query)).await;
                 let mut conn = match db_pool.get().await {
                     Ok(conn) => conn,
                     Err(why) => {

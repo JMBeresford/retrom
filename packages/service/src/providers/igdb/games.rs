@@ -183,11 +183,16 @@ impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
             },
         };
 
+        let igdb_id = search_query.fields.as_ref().and_then(|fields| fields.id);
+
         let matches = self.search_game_metadata(search_query).await;
 
-        let exact_match = matches
-            .iter()
-            .find(|meta| meta.name == Some(name.to_string()));
+        let exact_match = matches.iter().find(|meta| {
+            meta.igdb_id
+                .as_ref()
+                .is_some_and(|id| id.to_owned().to_u64() == igdb_id)
+                || meta.name == Some(name.to_string())
+        });
 
         let first_match = matches.first();
 
