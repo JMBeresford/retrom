@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.15](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.14...retrom-v0.7.15) - 2025-02-26
+
+### Bug Fixes
+- *(fullscreen)* Installation progress
+
+    The Install button now correctly reports the installation
+    progress in fullscreen mode again.
+
+
+
+
 ## [0.7.14](https://github.com/JMBeresford/retrom/compare/retrom-v0.7.13...retrom-v0.7.14) - 2025-02-26
 
 ### Bug Fixes
