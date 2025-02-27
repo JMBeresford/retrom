@@ -11,6 +11,7 @@ mod error;
 pub use error::{Error, Result};
 
 use desktop::Installer;
+use tracing::{info_span, Instrument};
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the installer APIs.
 pub trait InstallerExt<R: Runtime> {
@@ -34,22 +35,31 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::get_installation_state,
             commands::open_installation_dir,
             commands::migrate_installation_dir,
-            commands::clear_installation_dir
+            commands::clear_installation_dir,
+            commands::update_steam_installations
         ])
         .setup(|app, api| {
             let installer = desktop::init(app, api)?;
             app.manage(installer);
 
             let app = app.clone();
+            let (tx, rx) = std::sync::mpsc::channel::<crate::Result<()>>();
+
             tauri::async_runtime::spawn_blocking(|| {
-                tauri::async_runtime::block_on(async move {
-                    let installer = app.installer();
+                tauri::async_runtime::block_on(
+                    async move {
+                        let installer = app.installer();
+                        let res = installer.init_installation_index().await;
 
-                    installer.init_installation_index().await?;
-
-                    crate::Result::Ok(())
-                })
+                        tx.send(res).unwrap();
+                    }
+                    .instrument(info_span!("installer_setup")),
+                )
             });
+
+            if let Err(why) = rx.recv().expect("Failed to receive from channel") {
+                tracing::error!("Failed to initialize installer: {:#?}", why);
+            }
 
             Ok(())
         })

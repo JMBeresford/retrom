@@ -189,4 +189,30 @@ Denies the uninstall_game command without any pre-configured scope.
 
 </td>
 </tr>
+
+<tr>
+<td>
+
+`retrom-plugin-installer:allow-update-steam-installations`
+
+</td>
+<td>
+
+Enables the update_steam_installations command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-installer:deny-update-steam-installations`
+
+</td>
+<td>
+
+Denies the update_steam_installations command without any pre-configured scope.
+
+</td>
+</tr>
 </table>

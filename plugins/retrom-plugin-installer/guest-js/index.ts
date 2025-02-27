@@ -11,3 +11,7 @@ export async function migrateInstallationDir(newDir: string): Promise<void> {
 export async function clearInstallationDir(): Promise<void> {
   return invoke("plugin:installer|clear_installation_dir");
 }
+
+export async function updateSteamInstallations(): Promise<void> {
+  return invoke("plugin:installer|update_steam_installations");
+}

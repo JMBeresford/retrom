@@ -5088,6 +5088,11 @@
           "const": "installer:allow-uninstall-game"
         },
         {
+          "description": "Enables the update_steam_installations command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-update-steam-installations"
+        },
+        {
           "description": "Denies the clear_installation_dir command without any pre-configured scope.",
           "type": "string",
           "const": "installer:deny-clear-installation-dir"
@@ -5121,6 +5126,11 @@
           "description": "Denies the uninstall_game command without any pre-configured scope.",
           "type": "string",
           "const": "installer:deny-uninstall-game"
+        },
+        {
+          "description": "Denies the update_steam_installations command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-update-steam-installations"
         },
         {
           "description": "Enables the execute command without any pre-configured scope.",

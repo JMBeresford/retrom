@@ -3,6 +3,7 @@ import { JobStatus } from "@/generated/retrom/jobs";
 import { GetJobSubscriptionResponse } from "@/generated/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateSteamInstallations } from "retrom-plugin-installer-api";
 
 export function useUpdateLibrary() {
   const { toast } = useToast();
@@ -17,7 +18,7 @@ export function useUpdateLibrary() {
         description: err.message,
       });
     },
-    onSuccess: ({ jobIds }) => {
+    onSuccess: async ({ jobIds }) => {
       void queryClient.invalidateQueries({
         predicate: (query) =>
           ["jobs"].some((key) => query.queryKey.includes(key)),
@@ -42,33 +43,42 @@ export function useUpdateLibrary() {
               "platforms",
               "game-metadata",
               "platform-metadata",
+              "installation-state",
             ].some((key) => query.queryKey.includes(key)),
         });
       }
 
-      async function waitForJobCompletion(
-        sub: AsyncIterable<GetJobSubscriptionResponse>,
+      async function pollSub(
+        subscription: AsyncIterable<GetJobSubscriptionResponse>,
       ) {
-        for await (const progress of sub) {
-          console.log(progress);
+        for await (const progress of subscription) {
           if (progress.job?.status === JobStatus.Success) {
             invalidate();
 
             toast({
               title: `Job complete: ${progress.job?.name}!`,
             });
-
-            return;
           }
         }
       }
 
-      for (const subscription of subscriptions) {
-        void waitForJobCompletion(subscription);
-      }
+      const promises = subscriptions.map(
+        (subscription) =>
+          new Promise<void>((resolve, reject) => {
+            if (subscription !== undefined) {
+              pollSub(subscription)
+                .then(() => resolve())
+                .catch(reject);
+            } else {
+              resolve();
+            }
+          }),
+      );
 
+      await Promise.all(promises);
+      await updateSteamInstallations();
       invalidate();
     },
-    mutationFn: async () => await retromClient.libraryClient.updateLibrary({}),
+    mutationFn: () => retromClient.libraryClient.updateLibrary({}),
   });
 }

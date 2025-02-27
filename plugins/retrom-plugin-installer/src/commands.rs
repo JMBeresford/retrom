@@ -1,8 +1,8 @@
 use futures::TryStreamExt;
 use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{
-    GetGamesRequest, GetPlatformsRequest, InstallGamePayload, InstallationState,
-    InstallationStatus, StorageType, UninstallGamePayload,
+    GetPlatformsRequest, InstallGamePayload, InstallationState, InstallationStatus, StorageType,
+    UninstallGamePayload,
 };
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
@@ -62,7 +62,9 @@ pub async fn install_game<R: Runtime>(
             "__RETROM_RESERVED__/Steam" => {
                 let steam_client = app_handle.steam();
 
-                return Ok(steam_client.install_game(steam_id).await?);
+                steam_client.install_game(steam_id).await?;
+                installer.mark_game_installed(game.id).await;
+                return Ok(());
             }
             _ => {
                 tracing::error!("No third party platform found for game: {:?}", game);
@@ -182,7 +184,9 @@ pub async fn uninstall_game<R: Runtime>(
     if game.third_party {
         if let Some(Ok(steam_id)) = game.steam_app_id.map(u32::try_from) {
             let steam_client = app_handle.steam();
-            return Ok(steam_client.uninstall_game(steam_id).await?);
+            steam_client.uninstall_game(steam_id).await?;
+            app_handle.installer().mark_game_uninstalled(game.id).await;
+            return Ok(());
         }
     }
 
@@ -214,68 +218,26 @@ pub async fn get_game_installation_status<R: Runtime>(
 pub async fn get_installation_state<R: Runtime>(
     app_handle: AppHandle<R>,
 ) -> crate::Result<InstallationState> {
-    let standalone = app_handle
-        .config_manager()
-        .get_config()
-        .await
-        .server
-        .and_then(|s| s.standalone)
-        .unwrap_or(false);
-
-    if standalone {
-        let mut game_client = app_handle.get_game_client().await;
-        let game_ids: Vec<i32> = game_client
-            .get_games(GetGamesRequest {
-                ..Default::default()
-            })
-            .await?
-            .into_inner()
-            .games
-            .into_iter()
-            .map(|g| g.id)
-            .collect();
-
-        return Ok(InstallationState {
-            installation_state: game_ids
-                .into_iter()
-                .map(|id| (id, InstallationStatus::Installed.into()))
-                .collect(),
-        });
-    }
-
     let installer = app_handle.installer();
     let mut installation_state: HashMap<i32, i32> = HashMap::new();
-    let mut game_svc_client = app_handle.get_game_client().await;
 
-    let game_res = game_svc_client
-        .get_games(GetGamesRequest {
-            ..Default::default()
-        })
-        .await
-        .expect("Could not get games")
-        .into_inner();
-
-    let ids: Vec<i32> = game_res.games.iter().map(|game| game.id).collect();
-
-    for game_id in ids.iter() {
-        let status = installer.get_game_installation_status(*game_id).await;
-
-        installation_state.insert(*game_id, status.into());
+    for game_id in installer.installed_games.read().await.iter() {
+        installation_state.insert(*game_id, InstallationStatus::Installed.into());
     }
 
-    for game in game_res.games.into_iter() {
-        let game_id = game.id;
-        let steam_id = game.steam_app_id;
-
-        if let Some(Ok(steam_id)) = steam_id.map(u32::try_from) {
-            let steam_client = app_handle.steam();
-            if let Ok(status) = steam_client.get_installation_status(steam_id).await {
-                installation_state.insert(game_id, status.into());
-            }
-        }
+    for game_id in installer.currently_installing.read().await.keys() {
+        installation_state.insert(*game_id, InstallationStatus::Installing.into());
     }
 
     Ok(InstallationState { installation_state })
+}
+
+#[instrument(skip(app_handle))]
+#[tauri::command]
+pub async fn update_steam_installations<R: Runtime>(app_handle: AppHandle<R>) -> crate::Result<()> {
+    let installer = app_handle.installer();
+
+    installer.update_steam_installations().await
 }
 
 #[instrument(skip(app))]
@@ -349,6 +311,7 @@ pub async fn clear_installation_dir<R: Runtime>(app: AppHandle<R>) -> crate::Res
     }
 
     installer.installed_games.write().await.clear();
+    installer.init_installation_index().await?;
 
     Ok(())
 }

@@ -6,6 +6,7 @@ const COMMANDS: &[&str] = &[
     "open_installation_dir",
     "migrate_installation_dir",
     "clear_installation_dir",
+    "update_steam_installations",
 ];
 
 fn main() {

@@ -363,6 +363,16 @@
           "description": "Denies the uninstall_game command without any pre-configured scope.",
           "type": "string",
           "const": "deny-uninstall-game"
+        },
+        {
+          "description": "Enables the update_steam_installations command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-update-steam-installations"
+        },
+        {
+          "description": "Denies the update_steam_installations command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-update-steam-installations"
         }
       ]
     }

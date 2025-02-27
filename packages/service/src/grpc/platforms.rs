@@ -256,7 +256,9 @@ impl PlatformService for PlatformServiceHandlers {
                 .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
 
                 diesel::update(
-                    schema::platforms::table.filter(schema::platforms::id.eq_any(&request.ids)),
+                    schema::platforms::table
+                        .filter(schema::platforms::id.eq_any(&request.ids))
+                        .filter(schema::platforms::third_party.eq(false)),
                 )
                 .set((
                     schema::platforms::is_deleted.eq(true),
@@ -266,12 +268,23 @@ impl PlatformService for PlatformServiceHandlers {
                 .await
                 .map_err(|why| Status::new(Code::Internal, why.to_string()))?
             }
-            false => diesel::delete(
-                schema::platforms::table.filter(schema::platforms::id.eq_any(&request.ids)),
-            )
-            .get_results(&mut conn)
-            .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?,
+            false => {
+                diesel::delete(
+                    schema::games::table.filter(schema::games::platform_id.eq_any(&request.ids)),
+                )
+                .execute(&mut conn)
+                .await
+                .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
+
+                diesel::delete(
+                    schema::platforms::table
+                        .filter(schema::platforms::id.eq_any(&request.ids))
+                        .filter(schema::platforms::third_party.eq(false)),
+                )
+                .get_results(&mut conn)
+                .await
+                .map_err(|why| Status::new(Code::Internal, why.to_string()))?
+            }
         };
 
         if delete_from_disk {

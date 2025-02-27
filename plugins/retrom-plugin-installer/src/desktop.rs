@@ -1,4 +1,6 @@
 use retrom_plugin_config::ConfigExt;
+use retrom_plugin_service_client::RetromPluginServiceClientExt;
+use retrom_plugin_steam::SteamExt;
 use serde::de::DeserializeOwned;
 use std::{
     collections::{HashMap, HashSet},
@@ -8,7 +10,7 @@ use std::{
 use tauri::{plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
 use tracing::{debug, info, instrument, trace};
 
-use retrom_codegen::retrom::{InstallationProgressUpdate, InstallationStatus};
+use retrom_codegen::retrom::{GetGamesRequest, InstallationProgressUpdate, InstallationStatus};
 use tokio::sync::RwLock;
 
 type GameId = i32;
@@ -100,24 +102,77 @@ impl<R: Runtime> Installer<R> {
         }
     }
 
+    #[instrument(skip(self))]
     pub(crate) async fn init_installation_index(&self) -> crate::Result<()> {
+        let standalone = self
+            .app_handle
+            .config_manager()
+            .get_config()
+            .await
+            .server
+            .and_then(|s| s.standalone)
+            .unwrap_or(false);
+
         let install_dir = self.get_installation_dir().await?;
 
         let mut installed_games = HashSet::new();
         for dir in install_dir.read_dir()? {
             let dir = dir?;
-            let game_id = dir.file_name().to_string_lossy().parse::<i32>();
-
-            if game_id.is_err() {
-                continue;
-            }
+            let game_id = match dir.file_name().to_string_lossy().parse::<i32>() {
+                Ok(id) => id,
+                _ => continue,
+            };
 
             if dir.path().is_dir() {
-                installed_games.insert(game_id?);
+                installed_games.insert(game_id);
+            }
+        }
+
+        if standalone {
+            let mut game_client = self.app_handle.get_game_client().await;
+            let games = game_client
+                .get_games(GetGamesRequest::default())
+                .await?
+                .into_inner()
+                .games;
+
+            for game in games.into_iter().filter(|g| !g.third_party) {
+                installed_games.insert(game.id);
             }
         }
 
         self.installed_games.write().await.extend(installed_games);
+        self.update_steam_installations().await?;
+
+        Ok(())
+    }
+
+    #[instrument(skip(self))]
+    pub async fn update_steam_installations(&self) -> crate::Result<()> {
+        let steam = self.app_handle.steam();
+
+        let mut game_client = self.app_handle.get_game_client().await;
+        let games = game_client
+            .get_games(GetGamesRequest::default())
+            .await?
+            .into_inner()
+            .games;
+
+        let mut installed = Vec::new();
+        for (app_id, game_id) in
+            games.into_iter().filter(|g| g.third_party).filter_map(|g| {
+                match g.steam_app_id.map(u32::try_from).and_then(Result::ok) {
+                    Some(app_id) => Some((app_id, g.id)),
+                    None => None,
+                }
+            })
+        {
+            if steam.get_installation_status(app_id).await? == InstallationStatus::Installed {
+                installed.push(game_id);
+            }
+        }
+
+        self.installed_games.write().await.extend(installed);
 
         Ok(())
     }

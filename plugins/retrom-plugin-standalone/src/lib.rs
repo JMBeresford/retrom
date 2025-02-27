@@ -35,6 +35,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             app.manage(standalone);
 
             let app = app.clone();
+            let (tx, rx) = std::sync::mpsc::channel();
 
             tauri::async_runtime::spawn_blocking(|| {
                 tauri::async_runtime::block_on(async move {
@@ -48,8 +49,12 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                             tracing::error!("Failed to start standalone server: {:#?}", why);
                         }
                     }
+
+                    tx.send(()).unwrap();
                 })
             });
+
+            rx.recv().expect("Failed to receive from channel");
 
             Ok(())
         })

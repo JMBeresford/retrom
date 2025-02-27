@@ -38,7 +38,7 @@ export function DeletePlatformModal() {
         blacklistEntries,
       });
 
-      if (!res.platformsDeleted.length) {
+      if (!platform.thirdParty && !res.platformsDeleted.length) {
         throw new Error("Failed to delete platform");
       }
 
