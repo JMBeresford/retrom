@@ -51,6 +51,8 @@ export function ConnectionConfig() {
         description:
           "Disconnecting from a remote server will uninstall all currently installed games",
         onConfirm: async () => {
+          await enable(undefined);
+
           try {
             await clearInstallationDir();
           } catch (error) {
@@ -62,8 +64,6 @@ export function ConnectionConfig() {
 
             return;
           }
-
-          await enable(undefined);
 
           await queryClient.resetQueries();
         },
@@ -176,18 +176,6 @@ function ServerConnectionForm() {
           description:
             "Changing servers will uninstall all currently installed games",
           onConfirm: async () => {
-            try {
-              await clearInstallationDir();
-            } catch (error) {
-              console.error(error);
-              toast({
-                title: "Failed to clear installation directory",
-                variant: "destructive",
-              });
-
-              return;
-            }
-
             configStore.setState((prev) => {
               prev.server = {
                 ...prev.server,
@@ -199,9 +187,21 @@ function ServerConnectionForm() {
               return { ...prev };
             });
 
-            await queryClient.resetQueries();
+            await queryClient.invalidateQueries();
 
             form.reset(values);
+
+            try {
+              await clearInstallationDir();
+            } catch (error) {
+              console.error(error);
+              toast({
+                title: "Failed to clear installation directory",
+                variant: "destructive",
+              });
+
+              return;
+            }
           },
           onCancel: () => form.reset(),
         });
