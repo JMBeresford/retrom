@@ -8,7 +8,7 @@
 
   ### Check out the [quick start guide](https://github.com/JMBeresford/retrom/wiki/Quick-Start) or the full [wiki](https://github.com/JMBeresford/retrom/wiki)
 
-  ### [Downoad the latest Client](https://github.com/JMBeresford/retrom/releases/latest)
+  ### [Download the latest Client](https://github.com/JMBeresford/retrom/releases/latest)
 
   ---
 
