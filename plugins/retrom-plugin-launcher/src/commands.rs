@@ -9,7 +9,7 @@ use retrom_plugin_config::ConfigExt;
 use retrom_plugin_installer::InstallerExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
-use tauri::{command, AppHandle, Manager, Runtime, WebviewUrl, WebviewWindow, WindowEvent};
+use tauri::{command, AppHandle, Runtime, WebviewUrl, WebviewWindow, WindowEvent};
 use tokio::sync::Mutex;
 use tracing::{info, instrument};
 use walkdir::WalkDir;
