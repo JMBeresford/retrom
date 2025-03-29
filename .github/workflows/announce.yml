@@ -41,7 +41,7 @@ jobs:
             <@&1354251624465567874> A new beta of Retrom has been released, beep boop! :tada: :rocket: :tada:
 
             Remember, beta releases are not stable and should be handled with care! It is suggested that you
-            keep installations of Beta retrom releases separated from your regular installations and make sure
+            keep installations of beta Retrom releases separated from your regular installations, and that you ensure 
             you have a proper backup solution for your library :wink:
           footer_timestamp: true
           avatar_url: "https://raw.githubusercontent.com/JMBeresford/retrom/refs/heads/main/packages/client/icons/icon.png"
