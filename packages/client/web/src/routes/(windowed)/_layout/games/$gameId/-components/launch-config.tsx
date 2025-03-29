@@ -32,7 +32,8 @@ export function LaunchConfig() {
         <Separator className="my-4" />
 
         <Button variant="outline" className="w-full gap-2" asChild>
-          <Link
+          <Link   
+            to="."
             search={(prev) => ({
               ...prev,
               defaultProfilesModal: { open: true },

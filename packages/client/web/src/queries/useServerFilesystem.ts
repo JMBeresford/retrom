@@ -1,7 +1,7 @@
 import {
   GetFilesystemNodeRequestSchema,
   type GetFilesystemNodeResponse,
-} from "@retrom/codegen/retrom/services_pb";
+} from "@retrom/codegen/retrom/services/file-explorer-service_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { MessageInitShape } from "@bufbuild/protobuf";

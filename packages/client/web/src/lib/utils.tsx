@@ -62,13 +62,29 @@ export function getFileParts(path: string) {
   return { name, extension };
 }
 
-export function getFileStub(path: string) {
-  return getFileParts(path).name;
+export function toTitleCase<T extends { toString: () => string }>(value: T) {
+  value = value ?? "";
+  return value
+    .toString()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+export function getFileStub(path?: string) {
+  return path ? getFileParts(path).name : "";
 }
 
 export function getFileName(path: string) {
   const { name, extension } = getFileParts(path);
   return name + (extension ? `.${extension}` : "");
+}
+
+export function millisToTimestamp(millis: number): Timestamp {
+  const seconds = Math.floor(millis / 1000);
+  const nanos = Math.floor((millis % 1000) * 1000000);
+
+  return { seconds, nanos };
 }
 
 export function timestampToDate(timestamp?: Timestamp): Date {

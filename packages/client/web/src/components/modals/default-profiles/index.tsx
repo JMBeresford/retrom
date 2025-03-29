@@ -25,6 +25,7 @@ import {
 import {
   DefaultEmulatorProfile,
   Emulator,
+  Emulator_OperatingSystem,
   EmulatorProfile,
   UpdatedDefaultEmulatorProfile,
 } from "@retrom/codegen/retrom/models/emulators_pb";
@@ -51,6 +52,7 @@ import { useConfig } from "@/providers/config";
 import { Label } from "@/components/ui/label";
 import { PlatformWithMetadata } from "../manage-emulators";
 import { Separator } from "@/components/ui/separator";
+import { checkIsDesktop } from "@/lib/env";
 
 export function DefaultProfilesModal() {
   const navigate = useNavigate();
@@ -83,7 +85,12 @@ export function DefaultProfilesModal() {
     });
 
   const { data: emulators, status: emulatorsStatus } = useEmulators({
-    selectFn: (data) => data.emulators,
+    selectFn: (data) =>
+      data.emulators.filter(
+        (e) =>
+          checkIsDesktop() ||
+          e.operatingSystems.includes(Emulator_OperatingSystem.WASM),
+      ),
   });
 
   const pending =
@@ -104,6 +111,7 @@ export function DefaultProfilesModal() {
       onOpenChange={(open) => {
         if (!open) {
           void navigate({
+            to: ".",
             search: (prev) => ({ ...prev, defaultProfilesModal: undefined }),
           });
         }
@@ -154,6 +162,7 @@ function DefaultEmulatorProfiles(props: {
   const { setOpen } = useDialogOpen();
   const { mutate: updateDefaultEmulatorProfiles } =
     useUpdateDefaultEmulatorProfiles();
+
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -226,8 +235,9 @@ function DefaultEmulatorProfiles(props: {
           <p className="max-w-[60ch] text-pretty">
             If you are not seeing what you expect here, make sure you have
             configured your{" "}
-            <Link
+            <Link   
               className="text-accent-text underline"
+              to="."
               search={(prev) => ({
                 ...prev,
                 manageEmulatorProfilesModal: { open: true },

@@ -1,6 +1,19 @@
 [sqlfluff]
 dialect = postgres
 max_line_length = 100
+exclude_rules = none
+
+[sqlfluff:layout:type:comma]
+spacing_before = touch
+line_position = trailing
+
+[sqlfluff:layout:type:array_type]
+spacing_within = touch:inline
+
+[sqlfluff:layout:type:alias_expression]
+spacing_before = align
+align_within = select_clause
+spacing_after = touch
 
 [sqlfluff:rules:capitalisation.keywords]
 capitalisation_policy = lower
@@ -16,3 +29,4 @@ capitalisation_policy = lower
 
 [sqlfluff:rules:capitalisation.types]
 extended_capitalisation_policy = lower
+

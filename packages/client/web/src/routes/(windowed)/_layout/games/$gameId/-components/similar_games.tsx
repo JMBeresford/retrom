@@ -36,7 +36,7 @@ export function SimilarGames() {
         >
           <div className="flex gap-5 pb-4 pr-[60px]">
             {similarGamesMetadata?.map((metadata) => (
-              <Link
+              <Link   
                 key={metadata.gameId}
                 to={"/games/$gameId"}
                 params={{ gameId: metadata.gameId.toString() }}

@@ -71,6 +71,12 @@
     @apply ring-inset;
   }
 
+  #sn-debug,
+  #sn-layouts {
+    pointer-events: none;
+    touch-action: none;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: Exo2;

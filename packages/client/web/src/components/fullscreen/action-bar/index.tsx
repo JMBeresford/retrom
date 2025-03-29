@@ -5,7 +5,7 @@ export function ActionBar(props: JSX.IntrinsicElements["div"]) {
   return (
     <div
       className={cn(
-        "bg-background border-t px-2 py-3 max-w-full",
+        "bg-background border-t px-2 py-1 max-w-full",
         "flex items-end justify-center overflow-hidden",
         className,
       )}

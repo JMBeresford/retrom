@@ -1,7 +1,9 @@
 use config::{Config, ConfigError, File};
-use retrom_codegen::retrom::{ContentDirectory, ServerConfig, StorageType};
+use retrom_codegen::retrom::{ContentDirectory, SavesConfig, ServerConfig, StorageType};
 use std::path::PathBuf;
 use tokio::sync::RwLock;
+
+use crate::meta::RetromDirs;
 
 #[derive(thiserror::Error, Debug)]
 pub enum RetromConfigError {
@@ -26,8 +28,12 @@ impl ServerConfigManager {
     #[tracing::instrument(name = "ServerConfigManager::new")]
     pub fn new() -> Result<Self> {
         dotenvy::dotenv().ok();
-        let config_path_str = std::env::var("RETROM_CONFIG").unwrap_or("./config.json".into());
-        let config_path = PathBuf::from(&config_path_str);
+        let dirs = RetromDirs::new();
+        let config_path_str = std::env::var("RETROM_CONFIG").ok();
+        let config_path = match config_path_str {
+            Some(config_path_str) => PathBuf::from(&config_path_str),
+            None => dirs.config_dir().join("config.json"),
+        };
 
         tracing::debug!("Config path: {:?}", config_path);
 
@@ -39,6 +45,10 @@ impl ServerConfigManager {
                     ignore_patterns: None,
                     custom_library_definition: None,
                 }],
+                saves: Some(SavesConfig {
+                    max_save_files_backups: 5,
+                    max_save_states_backups: 5,
+                }),
                 ..Default::default()
             };
 
@@ -52,7 +62,11 @@ impl ServerConfigManager {
             tracing::info!("Config file created at {:?}", config_path);
         }
 
-        let config = RwLock::new(Self::read_config_file(&config_path_str)?);
+        let config = RwLock::new(Self::read_config_file(
+            config_path
+                .to_str()
+                .expect("Could not stringify config path"),
+        )?);
 
         Ok(Self {
             config,

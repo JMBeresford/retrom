@@ -5,7 +5,7 @@ export const checkForUpdateMenuItem: MenuItem = {
   label: "Check for updates",
   appContext: "desktop",
   Render: (
-    <Link search={{ checkForUpdateModal: { open: true } }}>
+    <Link to="." search={{ checkForUpdateModal: { open: true } }}>
       Check for updates
     </Link>
   ),

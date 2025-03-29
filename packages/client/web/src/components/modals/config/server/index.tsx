@@ -1,14 +1,15 @@
 import { DialogDescription, DialogHeader } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ServerConfig } from "@retrom/codegen/retrom/server/config_pb";
+import { ServerConfigJson } from "@retrom/codegen/retrom/server/config_pb";
 import { useServerConfig } from "@/queries/useServerConfig";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { LoaderCircle } from "lucide-react";
 import { IgdbConfig } from "./igdb-config";
 import { SteamConfig } from "./steam-config";
+import { SavesConfig } from "./saves-config";
 import { LibrariesConfig } from "./libraries-config";
 
-type ServerTabs = Exclude<keyof ServerConfig, "connection">;
+type ServerTabs = Exclude<keyof ServerConfigJson, "connection">;
 
 export function ServerConfigTab() {
   const tabItems: Record<ServerTabs, { value: ServerTabs; name: string }> = {
@@ -18,6 +19,7 @@ export function ServerConfigTab() {
     },
     igdb: { value: "igdb", name: "IGDB" },
     steam: { value: "steam", name: "Steam" },
+    saves: { value: "saves", name: "Cloud Saves" },
   };
 
   const { data, status } = useServerConfig();
@@ -80,6 +82,7 @@ export function ServerConfigTab() {
           <LibrariesConfig currentConfig={data.config} />
           <IgdbConfig currentConfig={data.config} />
           <SteamConfig currentConfig={data.config} />
+          <SavesConfig currentConfig={data.config} />
         </Tabs>
       )}
     </TabsContent>

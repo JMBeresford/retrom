@@ -5,6 +5,7 @@ package retrom;
 enum FilesystemNodeType {
   DIRECTORY = 0;
   FILE = 1;
+  UNKNOWN = 2;
 }
 
 message FilesystemNode {

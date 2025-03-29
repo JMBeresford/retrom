@@ -11,7 +11,7 @@ export function SetupModal() {
   const { setupComplete } = useConfig((store) => store.flowCompletions) ?? {};
 
   if (!setupComplete && !setupModal?.open && checkIsDesktop()) {
-    return <Navigate search={{ setupModal: { open: true } }} />;
+    return <Navigate to="." search={{ setupModal: { open: true } }} />;
   }
 
   return (

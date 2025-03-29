@@ -11,12 +11,22 @@ enum SaveStrategy {
 }
 
 message Emulator {
+  enum OperatingSystem {
+    WINDOWS = 0;
+    MACOS = 1;
+    LINUX_x86_64 = 2;
+    WASM = 3;
+  }
+
   int32 id = 1;
   repeated int32 supported_platforms = 2;
   string name = 3;
   SaveStrategy save_strategy = 4;
   google.protobuf.Timestamp created_at = 5;
   google.protobuf.Timestamp updated_at = 6;
+  bool built_in = 7;
+  optional string libretro_name = 8;
+  repeated OperatingSystem operating_systems = 9;
 }
 
 message NewEmulator {
@@ -25,6 +35,9 @@ message NewEmulator {
   SaveStrategy save_strategy = 3;
   optional google.protobuf.Timestamp created_at = 4;
   optional google.protobuf.Timestamp updated_at = 5;
+  optional bool built_in = 6;
+  optional string libretro_name = 7;
+  repeated Emulator.OperatingSystem operating_systems = 8;
 }
 
 message UpdatedEmulator {
@@ -34,6 +47,9 @@ message UpdatedEmulator {
   optional SaveStrategy save_strategy = 4;
   optional google.protobuf.Timestamp created_at = 5;
   optional google.protobuf.Timestamp updated_at = 6;
+  optional bool built_in = 7;
+  optional string libretro_name = 8;
+  repeated Emulator.OperatingSystem operating_systems = 9;
 }
 
 message EmulatorProfile {

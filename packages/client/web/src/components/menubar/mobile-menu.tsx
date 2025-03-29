@@ -131,6 +131,7 @@ export function MobileMenu(props: { root: MenuRoot }) {
       open={open}
       onOpenChange={(value) => {
         navigate({
+          to: ".",
           search: (prev) => ({
             ...prev,
             mobileMenu: value ? { open: value } : undefined,

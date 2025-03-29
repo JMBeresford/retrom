@@ -46,7 +46,9 @@ function InnerToast(props: { breaking: boolean }) {
       duration: Infinity,
       action: (
         <ToastAction altText="show version resolution dialog" asChild>
-          <Link search={{ versionInfoModal: { open: true } }}>Resolve</Link>
+          <Link    to="." search={{ versionInfoModal: { open: true } }}>
+            Resolve
+          </Link>
         </ToastAction>
       ),
     });

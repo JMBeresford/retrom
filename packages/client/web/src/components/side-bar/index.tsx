@@ -192,8 +192,9 @@ export function SideBar() {
 
               <p>
                 Make sure Retrom knows about your{" "}
-                <Link
+                <Link   
                   className="text-accent-text"
+                  to="."
                   search={(prev) => ({
                     ...prev,
                     configModal: { open: true, tab: "server" },
@@ -202,8 +203,9 @@ export function SideBar() {
                   library sources
                 </Link>{" "}
                 and then{" "}
-                <Link
+                <Link   
                   className="text-accent-text"
+                  to="."
                   search={(prev) => ({
                     ...prev,
                     updateLibraryModal: { open: true },
@@ -307,7 +309,7 @@ export function SideBar() {
                                         "max-w-full w-full overflow-hidden overflow-ellipsis px-2 py-0.5",
                                       )}
                                     >
-                                      <Link
+                                      <Link   
                                         to="/games/$gameId"
                                         params={{ gameId: game.id.toString() }}
                                         className="grid grid-cols-[auto_1fr] items-center max-w-full h-full"
@@ -399,7 +401,7 @@ function PlatformContextMenu(
             e.stopPropagation();
           }}
         >
-          <Link
+          <Link   
             to="."
             search={(prev) => ({
               ...prev,
@@ -416,7 +418,8 @@ function PlatformContextMenu(
             e.stopPropagation();
           }}
         >
-          <Link
+          <Link   
+            to="."
             search={(prev) => ({
               ...prev,
               deletePlatformModal: {

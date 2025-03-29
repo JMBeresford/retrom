@@ -1,16 +1,1 @@
-{
-  "lspconfig": {
-    "rust_analyzer": {
-      "rust-analyzer.check.command": "clippy",
-      "rust-analyzer.files.excludeDirs": [
-        "./packages/client/web",
-        "./node_modules/",
-        "./target/",
-        "./plugins/retrom-plugin-launcher/node_modules/",
-        "./plugins/retrom-plugin-installer/node_modules/",
-        "./plugins/retrom-plugin-service-client/node_modules/",
-        "./plugins/retrom-plugin-steam/node_modules/"
-      ]
-    }
-  }
-}
+{}

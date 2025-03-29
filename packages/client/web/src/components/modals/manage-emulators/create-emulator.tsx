@@ -1,10 +1,11 @@
 import {
-  Popover,
-  PopoverClose,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -14,140 +15,77 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useCreateEmulators } from "@/mutations/useCreateEmulators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { ChevronsUpDown, LoaderCircleIcon, PlusCircleIcon } from "lucide-react";
-import {
-  emulatorSchema,
-  EmulatorSchema,
-  PlatformsDropdown,
-  PlatformWithMetadata,
-  saveStrategyDisplayMap,
-} from ".";
+import { PlusIcon } from "lucide-react";
+import { emulatorSchema, EmulatorSchema, PlatformWithMetadata } from ".";
 import { useCallback } from "react";
-import { SaveStrategy } from "@retrom/codegen/retrom/models/emulators_pb";
+import {
+  Emulator,
+  SaveStrategy,
+} from "@retrom/codegen/retrom/models/emulators_pb";
+import { useCreateEmulators } from "@/mutations/useCreateEmulators";
+import { saveStrategyDisplayMap } from "./utils";
 
-export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
-  const { platforms } = props;
+export function CreateEmulator(props: {
+  platforms: PlatformWithMetadata[];
+  onSuccess: (emu: Emulator) => void;
+}) {
+  const { onSuccess } = props;
   const form = useForm<EmulatorSchema>({
+    mode: "onSubmit",
     reValidateMode: "onChange",
     resolver: zodResolver(emulatorSchema),
     defaultValues: {
       name: "",
       supportedPlatforms: [],
       saveStrategy: undefined,
+      operatingSystems: [],
     },
   });
 
-  const { mutateAsync: createEmulators, isPending: createEmulatorsPending } =
+  const { mutateAsync: createEmulators, isPending: creationPending } =
     useCreateEmulators();
 
-  const onCreationFormSubmit = useCallback(
+  const handleSubmit = useCallback(
     async (values: EmulatorSchema) => {
-      await createEmulators({
-        emulators: [values],
-      });
+      try {
+        const { emulatorsCreated } = await createEmulators({
+          emulators: [values],
+        });
 
-      form.reset();
+        form.reset({
+          name: "",
+          supportedPlatforms: [],
+          saveStrategy: undefined,
+          operatingSystems: [],
+        });
+
+        onSuccess(emulatorsCreated[0]);
+      } catch (error) {
+        console.error(error);
+      }
     },
-    [createEmulators, form],
+    [form, onSuccess, createEmulators],
   );
-
-  const pending = createEmulatorsPending;
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onCreationFormSubmit)}
-        className={cn(
-          "grid col-span-full grid-flow-col grid-cols-subgrid w-full",
-          "[&_*]:ring-inset *:grid *:grid-rows-[auto_auto_1fr] *:grid-flow-row",
-          "border-b items-center [&_*]:placeholder:opacity-50",
-        )}
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className={cn("flex gap-2 mb-4")}
       >
-        <div></div>
         <FormField
           control={form.control}
           name="name"
-          render={({ field, fieldState: { error } }) => (
-            <FormItem>
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Enter emulator name"
-                  className={cn(
-                    error
-                      ? "border-solid border-2 border-destructive"
-                      : "border-none",
-                  )}
-                />
+                <Input {...field} placeholder="Enter emulator name" />
               </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="supportedPlatforms"
-          render={({ field, fieldState: { error } }) => (
-            <FormItem>
-              <Popover modal={true}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className={cn(
-                        "justify-between w-full border-l-0 font-normal hover:bg-transparent",
-                        error
-                          ? "border-solid border-2 border-destructive"
-                          : "border-none",
-                        field.value.length === 0 && "text-muted-foreground",
-                      )}
-                    >
-                      {field.value.length ? (
-                        `${field.value.length} platforms`
-                      ) : (
-                        <span className="opacity-50">Select platforms</span>
-                      )}
-
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent>
-                  <PlatformsDropdown
-                    selections={field.value}
-                    platforms={platforms ?? []}
-                    onChange={(id) => {
-                      const value = [...field.value];
-                      if (value.includes(id)) {
-                        value.splice(value.indexOf(id), 1);
-                      } else {
-                        value.push(id);
-                      }
-
-                      field.onChange(value);
-                    }}
-                  />
-
-                  <div className="flex justify-between gap-2 *:w-full">
-                    <PopoverClose asChild>
-                      <Button variant="secondary">Close</Button>
-                    </PopoverClose>
-
-                    <Button
-                      onClick={() => {
-                        field.onChange([]);
-                      }}
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -155,8 +93,9 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
         <FormField
           control={form.control}
           name="saveStrategy"
-          render={({ field, fieldState: { error } }) => (
-            <FormItem>
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Save Strategy</FormLabel>
               <Select
                 defaultValue={field.value?.toString() ?? ""}
                 onValueChange={(value) => {
@@ -166,22 +105,10 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                 <FormControl>
                   <SelectTrigger
                     className={cn(
-                      "hover:bg-transparent",
-                      error
-                        ? "border-solid border-2 border-destructive"
-                        : "border-none",
-                      field.value === undefined &&
-                        "text-muted-foreground opacity-50",
+                      field.value === undefined && "text-muted-foreground",
                     )}
                   >
-                    <SelectValue
-                      placeholder="Select save strategy"
-                      className="placeholder:opacity-50"
-                    >
-                      {field.value !== undefined
-                        ? saveStrategyDisplayMap[field.value]
-                        : null}
-                    </SelectValue>
+                    <SelectValue placeholder="Select save strategy..." />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -194,27 +121,26 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                     ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
             </FormItem>
           )}
         />
 
-        <div>
-          <Button
-            type="submit"
-            size="icon"
-            className="p-2 w-min h-min"
-            disabled={pending}
+        <div className="space-y-2">
+          <FormLabel
+            htmlFor="create-emulator-submit"
+            className="text-transparent select-none"
           >
-            <LoaderCircleIcon
-              className={cn(
-                "animate-spin absolute",
-                !pending && "opacity-0",
-                "w-[1rem] h-[1rem]",
-              )}
-            />
-            <PlusCircleIcon
-              className={cn(pending && "opacity-0", "w-[1rem] h-[1rem]")}
-            />
+            Submit
+          </FormLabel>
+
+          <Button
+            id="create-emulator-submit"
+            onClick={form.handleSubmit(handleSubmit)}
+            disabled={!form.formState.isValid || creationPending}
+            className={cn("flex gap-2 items-center")}
+          >
+            <PlusIcon className="w-[1rem]" /> Add Emulator
           </Button>
         </div>
       </form>
