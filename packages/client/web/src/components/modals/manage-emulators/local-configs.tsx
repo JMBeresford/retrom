@@ -48,19 +48,21 @@ export function LocalConfigs(props: {
           <Label>Executable Path</Label>
         </div>
 
-        {props.emulators.map((emulator) => {
-          const config = props.configs.find(
-            (c) => c.emulatorId === emulator.id,
-          );
+        {props.emulators
+          .filter((e) => !e.builtIn)
+          .map((emulator) => {
+            const config = props.configs.find(
+              (c) => c.emulatorId === emulator.id,
+            );
 
-          return (
-            <LocalConfigRow
-              key={emulator.id}
-              emulator={emulator}
-              config={config}
-            />
-          );
-        })}
+            return (
+              <LocalConfigRow
+                key={emulator.id}
+                emulator={emulator}
+                config={config}
+              />
+            );
+          })}
       </div>
 
       <DialogFooter className="border-none mt-8">

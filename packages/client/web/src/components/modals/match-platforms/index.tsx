@@ -169,6 +169,7 @@ export function MatchPlatformsModal() {
 
   const close = useCallback(() => {
     return navigate({
+      to: ".",
       search: (prev) => ({ ...prev, matchPlatformsModal: undefined }),
     });
   }, [navigate]);

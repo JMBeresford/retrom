@@ -5,6 +5,7 @@ import {
 } from "react";
 import { HotkeyZone, useHotkeyLayerContext } from "./layers";
 import { GAMEPAD_BUTTON_EVENT, GamepadButtonEvent } from "../gamepad/event";
+import { useInputDeviceContext } from "../input-device";
 
 export type Hotkey = (typeof Hotkey)[number];
 export const Hotkey = [
@@ -78,6 +79,7 @@ export function useHotkeys(opts: {
 }) {
   const { handlers, enabled = true } = opts;
   const layerContext = useHotkeyLayerContext();
+  const [_, setInputDevice] = useInputDeviceContext();
 
   const handleHotkey = useCallback(
     (
@@ -96,9 +98,13 @@ export function useHotkeys(opts: {
         return;
       }
 
+      if (!(event instanceof GamepadButtonEvent)) {
+        setInputDevice("hotkeys");
+      }
+
       handler(event);
     },
-    [handlers, layerContext],
+    [handlers, layerContext, setInputDevice],
   );
 
   const onKeyDown = useCallback(

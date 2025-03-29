@@ -40,6 +40,7 @@ export function useGames<T = GetGamesResponse>(opts: {
               altText="open update library modal"
               onClick={() =>
                 void navigate({
+                  to: ".",
                   search: (prev) => ({
                     ...prev,
                     updateLibraryModal: { open: true },

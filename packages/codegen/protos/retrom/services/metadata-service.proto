@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package retrom;
+
+import 'retrom/models/games.proto';
+import 'retrom/models/metadata.proto';
+import 'retrom/models/platforms.proto';
+import 'retrom/providers/igdb.proto';
+
+service MetadataService {
+  rpc GetGameMetadata(GetGameMetadataRequest) returns (GetGameMetadataResponse);
+  rpc UpdateGameMetadata(UpdateGameMetadataRequest) returns (UpdateGameMetadataResponse);
+
+  rpc GetPlatformMetadata(GetPlatformMetadataRequest) returns (GetPlatformMetadataResponse);
+  rpc UpdatePlatformMetadata(UpdatePlatformMetadataRequest) returns (UpdatePlatformMetadataResponse);
+
+  rpc GetIgdbSearch(GetIgdbSearchRequest) returns (GetIgdbSearchResponse);
+  rpc GetIgdbGameSearchResults(GetIgdbGameSearchResultsRequest) returns (GetIgdbGameSearchResultsResponse);
+  rpc GetIgdbPlatformSearchResults(GetIgdbPlatformSearchResultsRequest) returns (GetIgdbPlatformSearchResultsResponse);
+}
+
+message GetGameMetadataRequest {
+  repeated int32 game_ids = 1;
+}
+
+message GetGameMetadataResponse {
+  message GameGenres {
+    repeated GameGenre value = 1;
+  }
+
+  message SimilarGames {
+    repeated Game value = 1;
+  }
+
+  repeated GameMetadata metadata = 1;
+  map<int32, SimilarGames> similar_games = 2;
+  map<int32, GameGenres> genres = 3;
+}
+
+message GetPlatformMetadataRequest {
+  repeated int32 platform_ids = 1;
+}
+
+message GetPlatformMetadataResponse {
+  repeated PlatformMetadata metadata = 1;
+}
+
+message GetIgdbGameSearchResultsRequest {
+  IgdbGameSearchQuery query = 1;
+}
+
+message GetIgdbGameSearchResultsResponse {
+  repeated NewGameMetadata metadata = 1;
+}
+
+message UpdateGameMetadataRequest {
+  repeated UpdatedGameMetadata metadata = 1;
+}
+
+message UpdateGameMetadataResponse {
+  repeated GameMetadata metadata_updated = 1;
+}
+
+message GetIgdbPlatformSearchResultsRequest {
+  IgdbPlatformSearchQuery query = 1;
+}
+
+message GetIgdbPlatformSearchResultsResponse {
+  repeated NewPlatformMetadata metadata = 1;
+}
+
+message UpdatePlatformMetadataRequest {
+  repeated UpdatedPlatformMetadata metadata = 1;
+}
+
+message UpdatePlatformMetadataResponse {
+  repeated PlatformMetadata metadata_updated = 1;
+}
+
+// Arbitrary search query for IGDB
+message GetIgdbSearchRequest {
+  enum IgdbSearchType {
+    GAME = 0;
+    PLATFORM = 1;
+  }
+
+  IgdbSearchType search_type = 1;
+  optional IgdbSearch search = 2;
+  optional IgdbPagination pagination = 3;
+  optional IgdbFilters filters = 4;
+  optional IgdbFields fields = 5;
+}
+
+message IgdbSearchGameResponse {
+  repeated NewGameMetadata games = 1;
+}
+
+message IgdbSearchPlatformResponse {
+  repeated NewPlatformMetadata platforms = 1;
+}
+
+message GetIgdbSearchResponse {
+  oneof search_results {
+    IgdbSearchGameResponse game_matches = 1;
+    IgdbSearchPlatformResponse platform_matches = 2;
+  }
+}

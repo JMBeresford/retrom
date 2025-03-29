@@ -49,7 +49,7 @@
           "minimum": 1.0
         },
         "description": {
-          "description": "Human-readable description of what the permission does. Tauri convention is to use <h4> headings in markdown content for Tauri documentation generation purposes.",
+          "description": "Human-readable description of what the permission does. Tauri convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
           "type": [
             "string",
             "null"
@@ -111,7 +111,7 @@
           "type": "string"
         },
         "description": {
-          "description": "Human-readable description of what the permission does. Tauri internal convention is to use <h4> headings in markdown content for Tauri documentation generation purposes.",
+          "description": "Human-readable description of what the permission does. Tauri internal convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
           "type": [
             "string",
             "null"
@@ -297,52 +297,62 @@
         {
           "description": "Enables the execute command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-execute"
+          "const": "allow-execute",
+          "markdownDescription": "Enables the execute command without any pre-configured scope."
         },
         {
           "description": "Denies the execute command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-execute"
+          "const": "deny-execute",
+          "markdownDescription": "Denies the execute command without any pre-configured scope."
         },
         {
           "description": "Enables the get_game_play_status command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-game-play-status"
+          "const": "allow-get-game-play-status",
+          "markdownDescription": "Enables the get_game_play_status command without any pre-configured scope."
         },
         {
           "description": "Denies the get_game_play_status command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-game-play-status"
+          "const": "deny-get-game-play-status",
+          "markdownDescription": "Denies the get_game_play_status command without any pre-configured scope."
         },
         {
           "description": "Enables the ping command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-ping"
+          "const": "allow-ping",
+          "markdownDescription": "Enables the ping command without any pre-configured scope."
         },
         {
           "description": "Denies the ping command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-ping"
+          "const": "deny-ping",
+          "markdownDescription": "Denies the ping command without any pre-configured scope."
         },
         {
           "description": "Enables the play_game command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-play-game"
+          "const": "allow-play-game",
+          "markdownDescription": "Enables the play_game command without any pre-configured scope."
         },
         {
           "description": "Denies the play_game command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-play-game"
+          "const": "deny-play-game",
+          "markdownDescription": "Denies the play_game command without any pre-configured scope."
         },
         {
           "description": "Enables the stop_game command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-stop-game"
+          "const": "allow-stop-game",
+          "markdownDescription": "Enables the stop_game command without any pre-configured scope."
         },
         {
           "description": "Denies the stop_game command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-stop-game"
+          "const": "deny-stop-game",
+          "markdownDescription": "Denies the stop_game command without any pre-configured scope."
         }
       ]
     }

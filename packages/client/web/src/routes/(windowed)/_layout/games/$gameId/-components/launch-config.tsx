@@ -33,6 +33,7 @@ export function LaunchConfig() {
 
         <Button variant="outline" className="w-full gap-2" asChild>
           <Link
+            to="."
             search={(prev) => ({
               ...prev,
               defaultProfilesModal: { open: true },

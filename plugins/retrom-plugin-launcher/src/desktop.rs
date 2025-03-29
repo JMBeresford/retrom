@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use retrom_codegen::retrom::{
     GamePlayStatusUpdate, GetGameMetadataRequest, PlayStatus, UpdateGameMetadataRequest,
@@ -22,7 +22,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 
 type GameId = i32;
 pub struct GameProcess {
-    pub send: Mutex<tokio::sync::mpsc::Sender<()>>,
+    pub send: Arc<Mutex<tokio::sync::mpsc::Sender<()>>>,
     pub start_time: std::time::SystemTime,
 }
 

@@ -87,6 +87,7 @@ export function CleanLibraryModal() {
       onOpenChange={(open) => {
         if (!open) {
           void navigate({
+            to: ".",
             search: (prev) => ({ ...prev, cleanLibraryModal: undefined }),
           });
         }

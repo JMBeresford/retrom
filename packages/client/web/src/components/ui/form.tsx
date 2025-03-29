@@ -40,6 +40,14 @@ const FormField = <
   );
 };
 
+export const useMaybeFormField = () => {
+  try {
+    return useFormField();
+  } catch {
+    return undefined;
+  }
+};
+
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
@@ -89,7 +97,7 @@ const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField();
+  const { error, formItemId } = useMaybeFormField() ?? {};
 
   return (
     <Label
@@ -110,7 +118,7 @@ const FormControl = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } =
-    useFormField();
+    useMaybeFormField() ?? {};
 
   return (
     <Slot

@@ -20,15 +20,15 @@ const ConfigCheckbox = forwardRef<
   useImperativeHandle(forwardedRef, () => ref.current);
   const { className, label, children, ...rest } = props;
 
-  const id = `${props.id}-checkbox`;
+  const id = `${props.id ?? Math.random() * 12345432}-checkbox`;
 
   return (
     <div
       className={cn(
-        "relative flex gap-2 px-2 py-2 pl-4 bg-transparent transition-colors",
-        "before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-secondary before:transition-all",
+        "relative flex gap-2 py-2 px-4 bg-transparent transition-colors",
+        "before:absolute before:inset-y-0 before:left-0 before:w-0 before:bg-secondary before:transition-all",
         "focus-within:before:bg-accent focus-within:before:w-1 focus-within:bg-secondary/20",
-        "hover:before:w-1 hover:bg-secondary/20",
+        "hover:before:w-1 hover:bg-secondary/20 before:rounded-r",
       )}
     >
       <HotkeyLayer
@@ -51,13 +51,15 @@ const ConfigCheckbox = forwardRef<
 
       <div className="flex flex-col gap-2">
         {typeof label === "string" ? (
-          <Label htmlFor={id} className="font-semibold uppercase">
+          <Label htmlFor={id} className="font-normal text-base leading-none">
             {label}
           </Label>
         ) : (
           label
         )}
-        {children && <span>{children}</span>}
+        {children && (
+          <span className="text-sm text-muted-foreground">{children}</span>
+        )}
       </div>
     </div>
   );

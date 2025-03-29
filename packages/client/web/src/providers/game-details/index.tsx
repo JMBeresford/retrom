@@ -2,6 +2,7 @@ import { toast } from "@/components/ui/use-toast";
 import {
   Emulator,
   EmulatorProfile,
+  Emulator_OperatingSystem,
 } from "@retrom/codegen/retrom/models/emulators";
 import { GameFile } from "@retrom/codegen/retrom/models/game-files";
 import { Game } from "@retrom/codegen/retrom/models/games";
@@ -15,13 +16,18 @@ import {
   GetGameMetadataResponse_GameGenres,
   GetGameMetadataResponse_SimilarGames,
 } from "@retrom/codegen/retrom/services";
+import { checkIsDesktop } from "@/lib/env";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
 import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
 import { useEmulators } from "@/queries/useEmulators";
 import { useQuery } from "@tanstack/react-query";
+import { Navigate } from "@tanstack/react-router";
 import { useNavigate } from "@tanstack/react-router";
-import { PropsWithChildren, createContext, useContext } from "react";
+import { ClientError, Status } from "nice-grpc-common";
+import { PropsWithChildren, createContext, useContext, useMemo } from "react";
+import { useConfig } from "../config";
+import { getFileStub } from "@/lib/utils";
 
 export type GameDetailContext = {
   game: Game;
@@ -37,6 +43,7 @@ export type GameDetailContext = {
   validEmulators: Emulator[];
   defaultProfile?: EmulatorProfile;
   validProfiles: EmulatorProfile[];
+  name: string;
 };
 
 const GameDetailContext = createContext<GameDetailContext | null>(null);
@@ -46,9 +53,16 @@ export function GameDetailProvider(
 ) {
   const { gameId, errorRedirectUrl = "/" } = props;
   const navigate = useNavigate();
+  const fullscreenByDefault = useConfig(
+    (s) => s.config?.interface?.fullscreenByDefault,
+  );
   const retromClient = useRetromClient();
 
-  const { data: gameData, status: gameStatus } = useQuery({
+  const {
+    data: gameData,
+    status: gameStatus,
+    error,
+  } = useQuery({
     queryKey: ["games", "game-metadata", "game-files", gameId],
     queryFn: async () => {
       const data = await retromClient.gameClient.getGames({
@@ -115,7 +129,12 @@ export function GameDetailProvider(
           ? [platformData.platform.id]
           : [-1],
     },
-    selectFn: (data) => data.emulators,
+    selectFn: (data) =>
+      data.emulators.filter(
+        (e) =>
+          checkIsDesktop() ||
+          e.operatingSystems.includes(Emulator_OperatingSystem.WASM),
+      ),
   });
 
   const { data: profiles, status: profilesStatus } = useEmulatorProfiles({
@@ -131,6 +150,19 @@ export function GameDetailProvider(
     },
   });
 
+  const name = useMemo(
+    () =>
+      gameMetadata?.metadata.at(0)?.name || getFileStub(gameData?.game?.path),
+    [gameData?.game, gameMetadata?.metadata],
+  );
+
+  if (
+    (gameData && gameData.game === undefined) ||
+    (error instanceof ClientError && error.code === Status.NOT_FOUND)
+  ) {
+    const path = fullscreenByDefault ? "/fullscreen" : "/home";
+    return <Navigate to={path} />;
+  }
   const defaultProfile =
     profiles?.find((profile) => profile.id === defaultProfileId) ??
     profiles?.at(0);
@@ -187,6 +219,7 @@ export function GameDetailProvider(
     validEmulators: emulators,
     defaultProfile,
     validProfiles: profiles,
+    name,
   };
 
   return (

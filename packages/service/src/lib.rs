@@ -20,7 +20,9 @@ use tracing::Instrument;
 use retrom_db::embedded::DB_NAME;
 
 pub mod config;
+pub mod emulator_js;
 mod grpc;
+pub mod meta;
 mod providers;
 mod rest;
 
@@ -30,6 +32,7 @@ const CARGO_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tracing::instrument]
 pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr) {
+    let _ = emulator_js::EmulatorJs::new().await;
     let config_manager = match crate::config::ServerConfigManager::new() {
         Ok(config) => Arc::new(config),
         Err(err) => {

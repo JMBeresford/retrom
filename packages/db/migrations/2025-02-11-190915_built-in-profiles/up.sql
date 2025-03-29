@@ -3,10 +3,10 @@ alter table emulator_profiles add column built_in boolean not null default false
 insert into emulator_profiles (emulator_id, name, built_in, supported_extensions, custom_args)
 select
     emulators.id,
-    'Default' as profile_name,
-    true as built_in,
+    'Default'        as profile_name,
+    true             as built_in,
     array[]::text [] as supported_extensions,
-    array['{file}'] as custom_args
+    array['{file}']  as custom_args
 from emulators
 where emulators.id not in (select emulator_profiles.emulator_id from emulator_profiles);
 

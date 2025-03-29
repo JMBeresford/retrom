@@ -21,10 +21,14 @@ import { openInstallationDir } from "@retrom/plugin-installer";
 import { Fragment, useMemo } from "react";
 import {
   Emulator,
+  Emulator_OperatingSystem,
   EmulatorProfile,
 } from "@retrom/codegen/retrom/models/emulators";
 import { Badge } from "@/components/ui/badge";
 import { usePlayGame } from "@/mutations/usePlayGame";
+import { checkIsDesktop } from "@/lib/env";
+import { useNavigate } from "@tanstack/react-router";
+import { Core } from "@/lib/emulatorjs";
 
 export function Actions() {
   const { game, validEmulators, validProfiles, defaultProfile, gameFiles } =
@@ -32,6 +36,7 @@ export function Actions() {
 
   const { data: installationState } = useInstallationQuery(game);
   const { mutate: playGame } = usePlayGame(game);
+  const navigate = useNavigate();
 
   const playWithOptions = useMemo(() => {
     return validProfiles.reduce(
@@ -62,10 +67,7 @@ export function Actions() {
           installationState === InstallationStatus.INSTALLING && "bg-primary",
         )}
       >
-        <ActionButton
-          game={game}
-          className='[&_div[role="progressbar"]]:w-[85%] [&_div[role="progressbar"]_>_*]:bg-primary-foreground w-full'
-        />
+        <ActionButton className='[&_div[role="progressbar"]]:w-[85%] [&_div[role="progressbar"]_>_*]:bg-primary-foreground w-full' />
       </div>
 
       <DropdownMenu>
@@ -83,9 +85,7 @@ export function Actions() {
           <DropdownMenuSub>
             <DropdownMenuSubTrigger
               disabled={
-                installationState !== InstallationStatus.INSTALLED ||
-                validEmulators?.length === 0 ||
-                validProfiles.length === 0
+                validEmulators?.length === 0 || validProfiles.length === 0
               }
             >
               Play with
@@ -100,10 +100,37 @@ export function Actions() {
                   {profiles.map((emulatorProfile) => (
                     <DropdownMenuItem
                       key={emulatorProfile.id}
-                      onClick={() => {
+                      disabled={
+                        checkIsDesktop() &&
+                        installationState !== InstallationStatus.INSTALLED &&
+                        !emulator.operatingSystems.includes(
+                          Emulator_OperatingSystem.WASM,
+                        )
+                      }
+                      onClick={async () => {
                         const file = gameFiles?.find(
                           (file) => file.id === game.defaultFileId,
                         );
+
+                        if (
+                          !checkIsDesktop() &&
+                          emulator.libretroName &&
+                          emulator.operatingSystems?.includes(
+                            Emulator_OperatingSystem.WASM,
+                          )
+                        ) {
+                          const coreName = emulator.libretroName as
+                            | Core
+                            | undefined;
+
+                          if (coreName) {
+                            return await navigate({
+                              to: "/play/$gameId",
+                              params: { gameId: game.id.toString() },
+                              search: { coreName },
+                            }).catch(console.error);
+                          }
+                        }
 
                         playGame({ emulator, emulatorProfile, game, file });
                       }}
@@ -124,7 +151,9 @@ export function Actions() {
           <DropdownMenuSeparator />
 
           <DropdownMenuItem asChild>
-            <Link search={{ updateMetadataModal: { open: true } }}>Edit</Link>
+            <Link to="." search={{ updateMetadataModal: { open: true } }}>
+              Edit
+            </Link>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -136,7 +165,7 @@ export function Actions() {
 
           {installationState === InstallationStatus.INSTALLED && (
             <DropdownMenuItem asChild>
-              <Link search={{ uninstallGameModal: { open: true } }}>
+              <Link to="." search={{ uninstallGameModal: { open: true } }}>
                 Uninstall
               </Link>
             </DropdownMenuItem>
@@ -146,6 +175,7 @@ export function Actions() {
 
           <DropdownMenuItem asChild>
             <Link
+              to="."
               className="text-destructive-text"
               search={{ deleteGameModal: { open: true } }}
             >

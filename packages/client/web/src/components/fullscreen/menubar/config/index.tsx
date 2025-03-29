@@ -5,18 +5,13 @@ import {
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetOverlay,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { MenuEntryButton } from "../menu-entry-button";
 import { ComponentProps, useCallback, useState } from "react";
-import {
-  Form,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { useForm, useFormContext } from "react-hook-form";
 import {
   InterfaceConfig_GameListEntryImage,
@@ -33,6 +28,7 @@ import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useToast } from "@/components/ui/use-toast";
 import { FocusableElement, FocusContainer } from "../../focus-container";
 import { ConfigCheckbox } from "../config-inputs/checkbox";
+import { Separator } from "@/components/ui/separator";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
@@ -121,6 +117,7 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
         </FocusableElement>
       </SheetTrigger>
 
+      <SheetOverlay />
       <SheetContent>
         <HotkeyLayer
           id="config-menu"
@@ -138,10 +135,10 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
           >
             <SheetHeader>
               <SheetTitle>Configuration</SheetTitle>
-              <SheetDescription>
-                Retrom fullscreen configuration and options
-              </SheetDescription>
+              <SheetDescription>Retrom fullscreen options</SheetDescription>
             </SheetHeader>
+
+            <Separator className="w-[90%] mx-auto" />
 
             <ScrollArea className="h-full w-full">
               <Form {...form}>
@@ -178,7 +175,7 @@ function ConfigForm() {
   const form = useFormContext<FormSchema>();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col">
       <FormField
         control={form.control}
         name="interface.fullscreenByDefault"
@@ -191,16 +188,14 @@ function ConfigForm() {
                 checked={field.value}
                 onCheckedChange={field.onChange}
               >
-                <p className="text-sm text-muted-foreground">
-                  Enabling this will make Retrom start in fullscreen mode by
-                  default
-                </p>
+                Start Retrom in fullscreen mode
               </ConfigCheckbox>
             </FormItem>
           );
         }}
       />
 
+      <h2 className="text-lg px-4 pb-2 mt-4">Game List</h2>
       <FormField
         control={form.control}
         name="interface.fullscreenConfig.gridList.columns"
@@ -213,9 +208,6 @@ function ConfigForm() {
               label="Columns"
             />
             <FormMessage />
-            <FormDescription>
-              Number of columns to display in game list
-            </FormDescription>
           </FormItem>
         )}
       />
@@ -232,7 +224,6 @@ function ConfigForm() {
               label="Gap"
             />
             <FormMessage />
-            <FormDescription>Gap between game list entries</FormDescription>
           </FormItem>
         )}
       />
@@ -246,7 +237,7 @@ function ConfigForm() {
               onValueChange={(value) => field.onChange(parseInt(value))}
               defaultValue={field.value.toString()}
               triggerProps={{
-                label: "Game Image Type",
+                label: "Image Type",
                 id: "config-image-type",
               }}
             >
@@ -265,9 +256,6 @@ function ConfigForm() {
             </ConfigSelect>
 
             <FormMessage />
-            <FormDescription>
-              Which type of image to display in the game list
-            </FormDescription>
           </FormItem>
         )}
       />
