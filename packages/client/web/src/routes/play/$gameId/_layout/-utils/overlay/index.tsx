@@ -72,7 +72,7 @@ export function Overlay() {
     },
     controlOptions: {
       Trigger: "Control Options",
-      Content: (props) => <ControlOptions {...props} />,
+      Content: () => <ControlOptions />,
     },
     exitGame: {
       Trigger: "Exit Game",

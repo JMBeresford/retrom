@@ -42,7 +42,6 @@ export function ControlOptions() {
   const [tab, setTab] = useState<Tab | undefined>(undefined);
 
   const { open: parentOpen } = useSheetOpen();
-
   return (
     <div className="relative flex h-full">
       <FocusContainer
