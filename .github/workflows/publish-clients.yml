@@ -244,19 +244,19 @@ jobs:
         run: echo "APP_VERSION=$(cat Cargo.toml | grep "^version =" | sed 's/^version =//')" >> $GITHUB_ENV
 
       - name: Upload deb bundle
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Debian Bundle
           path: ${{ github.workspace }}/target/release/bundle/deb/Retrom_${{ env.APP_VERSION }}_${{ matrix.deb }}.deb
 
       - name: Upload rpm bundle
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: RPM Bundle
           path: ${{ github.workspace }}/target/release/bundle/rpm/Retrom-${{ env.APP_VERSION }}-1.${{ matrix.rpm }}.rpm
 
       - name: Upload appimage bundle
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: AppImage Bundle
           path: ${{ github.workspace }}/target/release/bundle/appimage/Retrom_${{ env.APP_VERSION }}_${{ matrix.appimage }}.AppImage
