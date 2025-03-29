@@ -88,6 +88,7 @@ function FocusableElementImpl<T extends HTMLElement>(
 
   const onClickHandler = useCallback(
     (e: MouseEvent<T>) => {
+      console.log("CLICKHANDLER: ", e);
       focusSelf();
       childProps.onClick?.(e);
       onClick?.(e);
