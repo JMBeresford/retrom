@@ -36,7 +36,7 @@ jobs:
         if: ${{ env.PRERELEASE }}
         uses: SethCohen/github-releases-to-discord@v1.16.2
         with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
+          webhook_url: ${{ secrets.DISCORD_BETA_RELEASE_WEBHOOK }}
           content: |
             <@&1354251624465567874> A new beta of Retrom has been released, beep boop! :tada: :rocket: :tada:
 
