@@ -2,7 +2,11 @@ name: Publish Clients Applications
 
 on:
   workflow_dispatch:
-  pull_request:
+    inputs:
+      title:
+        description: The name for this draft release. Used for both tag name and release name.
+        required: true
+        type: string
   release:
     types: [published]
 
@@ -118,6 +122,9 @@ jobs:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           RUSTFLAGS: ${{ matrix.rustflags }}
         with:
+          includeDebug: ${{ github.event.release.prerelease }}
+          includeRelease: ${{ !github.event.release.prerelease }}
+          prerelease: ${{ github.event.release.prerelease }}
           projectPath: packages/client
           tauriScript: pnpm tauri
           releaseId: ${{ github.event.release.id }}
@@ -127,7 +134,7 @@ jobs:
           updaterJsonPreferNsis: true
 
       - name: build pre-release binary
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -140,6 +147,6 @@ jobs:
           tauriScript: pnpm tauri
           args: ${{ matrix.target }}
           prerelease: true
-          releaseDraft: ${{ !startsWith(github.event.pull_request.head.ref, 'release-plz') }}
-          releaseName: ${{ github.event.pull_request.title }}-pre.${{ github.event.pull_request.head.sha }}
-          tagName: ${{ github.event.pull_request.title }}-pre.${{ github.event.pull_request.head.sha }}
+          releaseDraft: true
+          releaseName: ${{ inputs.title }}
+          tagName: ${{ inputs.title }}-pre.${{ github.sha }}
