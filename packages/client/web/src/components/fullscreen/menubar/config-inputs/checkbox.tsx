@@ -6,6 +6,7 @@ import {
   ElementRef,
   forwardRef,
   ReactNode,
+  useId,
   useImperativeHandle,
   useRef,
 } from "react";
@@ -19,8 +20,8 @@ const ConfigCheckbox = forwardRef<
   const ref = useRef<HTMLButtonElement>(null!);
   useImperativeHandle(forwardedRef, () => ref.current);
   const { className, label, children, ...rest } = props;
-
-  const id = `${props.id ?? Math.random() * 12345432}-checkbox`;
+  const genId = useId();
+  const id = `${props.id ?? genId}-checkbox`;
 
   return (
     <div
