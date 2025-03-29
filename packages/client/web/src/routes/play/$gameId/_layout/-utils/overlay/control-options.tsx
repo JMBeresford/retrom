@@ -16,11 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
 import { EmulatorJS } from "@/lib/emulatorjs/emulator";
-import {
-  EJSControls,
-  EJSGamepadEvent,
-  EmulatorJSControlMap,
-} from "@/lib/emulatorjs/gamepad";
+import { EJSControls, EmulatorJSControlMap } from "@/lib/emulatorjs/gamepad";
 import { cn, toTitleCase } from "@/lib/utils";
 import {
   GAMEPAD_BUTTON_EVENT,
@@ -34,7 +30,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 
@@ -356,7 +351,6 @@ function RecordInput(
     | { setControl: (value: string) => void; gamepad: true }
   ),
 ) {
-  const timeoutRef = useRef(0);
   const [recording, setRecording] = useState(false);
   const { player, buttonId, value, setControl, gamepad, emulatorJS } = props;
 
