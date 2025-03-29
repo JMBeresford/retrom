@@ -1234,10 +1234,11 @@ message PlatformWebsiteResult {
 
 message PlatformWebsite {
   uint64 id = 1;
-  WebsiteCategoryEnum category = 2;
+  WebsiteCategoryEnum category = 2 [deprecated = true];
   bool trusted = 3;
   string url = 4;
   string checksum = 5;
+  WebsiteType type = 6;
 }
 
 message PlayerPerspectiveResult {
