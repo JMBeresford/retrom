@@ -7,6 +7,7 @@ on:
         description: The name for this draft release. Used for both tag name and release name.
         required: true
         type: string
+
   release:
     types: [published]
 
@@ -16,6 +17,7 @@ concurrency:
 
 jobs:
   build-desktop-clients:
+    name: Build Desktop Clients (x64 - Windows, Linux, MacOS; ARM - MacOS)
     env:
       PQ_LIB_STATIC: 1
     permissions:
@@ -63,7 +65,10 @@ jobs:
           # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - uses: Swatinem/rust-cache@v2
+      - name: Cache rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -150,3 +155,108 @@ jobs:
           releaseDraft: true
           releaseName: ${{ inputs.title }}
           tagName: ${{ inputs.title }}-pre.${{ github.sha }}
+
+  build-desktop-clients_arm:
+    name: Build Desktop Clients (ARM Linux)
+    runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'release' }}
+
+    env:
+      PQ_LIB_STATIC: 1
+      BUILD_FLAGS: ${{ github.event.release.prerelease && '--debug' || '' }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [aarch64, armv7l]
+        include:
+          - arch: aarch64
+            cpu: cortex-a72
+            base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv8-Bookworm.img.xz
+            deb: arm64
+            rpm: aarch64
+            appimage: aarch64
+          - arch: armv7l
+            cpu: cortex-a53
+            deb: armhfp
+            rpm: arm
+            appimage: armhf
+            base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv7-Bookworm.img.xz
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Build binary
+        uses: pguyot/arm-runner-action@v2.6.5
+        with:
+          base_image: ${{ matrix.base_image }}
+          cpu: ${{ matrix.cpu }}
+          bind_mount_repository: true
+          image_additional_mb: 10240
+          optimize_image: no
+          commands: |
+            # Prevent Rust from complaining about $HOME not matching eid home
+            export HOME=/root
+
+            # Workaround to CI worker being stuck on Updating crates.io index
+            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+
+            # Install setup prerequisites
+            apt-get update -y --allow-releaseinfo-change
+            apt-get autoremove -y
+            apt-get install -y --no-install-recommends --no-install-suggests \
+              build-essential \
+              curl \
+              libwebkit2gtk-4.1-0=2.44.0-2 \
+              libwebkit2gtk-4.1-dev=2.44.0-2 \
+              libjavascriptcoregtk-4.1-0=2.44.0-2 \
+              libjavascriptcoregtk-4.1-dev=2.44.0-2 \
+              gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
+              gir1.2-webkit2-4.1=2.44.0-2
+              libpq-dev \
+              libssl-dev \
+              libgtk-3-dev \
+              libayatana-appindicator3-dev \
+              librsvg2-dev \
+              patchelf \
+              libfuse2 \
+              file
+
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            . "$HOME/.cargo/env"
+            curl -fsSL https://deb.nodesource.com/setup_lts.x | bash
+            apt-get install -y nodejs
+            npm i -g pnpm
+
+            # Install frontend dependencies
+            pnpm install && pnpm exec buf generate
+
+            # Build the application
+            pnpm --filter retrom-client build --verbose --config packages/client/tauri.build.conf.json ${{ env.BUILD_FLAGS }}
+
+      - name: Get app version
+        run: echo "APP_VERSION=$(cat Cargo.toml | grep "^version =" | sed 's/^version =//')" >> $GITHUB_ENV
+
+      - name: Upload deb bundle
+        uses: actions/upload-artifact@v3
+        with:
+          name: Debian Bundle
+          path: ${{ github.workspace }}/target/release/bundle/deb/Retrom_${{ env.APP_VERSION }}_${{ matrix.deb }}.deb
+
+      - name: Upload rpm bundle
+        uses: actions/upload-artifact@v3
+        with:
+          name: RPM Bundle
+          path: ${{ github.workspace }}/target/release/bundle/rpm/Retrom-${{ env.APP_VERSION }}-1.${{ matrix.rpm }}.rpm
+
+      - name: Upload appimage bundle
+        uses: actions/upload-artifact@v3
+        with:
+          name: AppImage Bundle
+          path: ${{ github.workspace }}/target/release/bundle/appimage/Retrom_${{ env.APP_VERSION }}_${{ matrix.appimage }}.AppImage
