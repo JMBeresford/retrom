@@ -701,9 +701,15 @@ dependencies = [
 
 [[package]]
 name = "cc"
+<<<<<<< HEAD
 version = "1.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "525046617d8376e3db1deffb079e91cef90a89fc3ca5c185bbf8c9ecdd15cd5c"
+=======
+version = "1.2.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fcb57c740ae1daf453ae85f16e37396f672b039e00d9d866e07ddb24e328e3a"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "jobserver",
  "libc",
@@ -1063,9 +1069,15 @@ checksum = "da692b8d1080ea3045efaab14434d40468c3d8657e42abddfffca87b428f4c1b"
 
 [[package]]
 name = "deranged"
+<<<<<<< HEAD
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c9e6a11ca8224451684bc0d7d5a7adbf8f2fd6887261a1cfc3c0432f9d4068e"
+=======
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28cfac68e08048ae1883171632c2aef3ebc555621ae56fbccce1cbf22dd7f058"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "powerfmt",
  "serde",
@@ -1103,9 +1115,15 @@ checksum = "dc55fe0d1f6c107595572ec8b107c0999bb1a2e0b75e37429a4fb0d6474a0e7d"
 
 [[package]]
 name = "diesel"
+<<<<<<< HEAD
 version = "2.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34d3950690ba3a6910126162b47e775e203006d4242a15de912bec6c0a695153"
+=======
+version = "2.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "470eb10efc8646313634c99bb1593f402a6434cbd86e266770c6e39219adb86a"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "bigdecimal",
  "bitflags 2.9.0",
@@ -2038,7 +2056,11 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http 0.2.12",
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "slab",
  "tokio",
  "tokio-util",
@@ -2057,7 +2079,11 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "http 1.3.1",
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "slab",
  "tokio",
  "tokio-util",
@@ -2605,9 +2631,15 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
+<<<<<<< HEAD
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cea70ddb795996207ad57735b50c5982d8844f38ba9ee5f1aedcfb708a2aa11e"
+=======
+version = "2.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3954d50fe15b02142bf25d3b8bdadb634ec3948f103d04ffe3031bc8fe9d7058"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "equivalent",
  "hashbrown 0.15.2",
@@ -2754,9 +2786,15 @@ dependencies = [
 
 [[package]]
 name = "jiff"
+<<<<<<< HEAD
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f33145a5cbea837164362c7bd596106eb7c5198f97d1ba6f6ebb3223952e488"
+=======
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c102670231191d07d37a35af3eb77f1f0dbf7a71be51a962dcd57ea607be7260"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "jiff-static",
  "log",
@@ -2767,9 +2805,15 @@ dependencies = [
 
 [[package]]
 name = "jiff-static"
+<<<<<<< HEAD
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43ce13c40ec6956157a3635d97a1ee2df323b263f09ea14165131289cb0f5c19"
+=======
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cdde31a9d349f1b1f51a0b3714a5940ac022976f4b49485fc04be052b183b4c"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3002,7 +3046,11 @@ checksum = "c0ff37bd590ca25063e35af745c343cb7a0271906fb7b37e4813e8f79f00268d"
 dependencies = [
  "bitflags 2.9.0",
  "libc",
+<<<<<<< HEAD
  "redox_syscall 0.5.11",
+=======
+ "redox_syscall 0.5.10",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 ]
 
 [[package]]
@@ -3775,9 +3823,15 @@ dependencies = [
 
 [[package]]
 name = "openssl"
+<<<<<<< HEAD
 version = "0.10.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fedfea7d58a1f73118430a55da6a286e7b044961736ce96a16a17068ea25e5da"
+=======
+version = "0.10.71"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e14130c6a98cd258fdcb0fb6d744152343ff729cbfcb28c656a9d12b999fbcd"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "bitflags 2.9.0",
  "cfg-if",
@@ -3807,18 +3861,30 @@ checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 
 [[package]]
 name = "openssl-src"
+<<<<<<< HEAD
 version = "300.5.0+3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8ce546f549326b0e6052b649198487d91320875da901e7bd11a06d1ee3f9c2f"
+=======
+version = "300.4.2+3.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "168ce4e058f975fe43e89d9ccf78ca668601887ae736090aacc23ae353c298e2"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "cc",
 ]
 
 [[package]]
 name = "openssl-sys"
+<<<<<<< HEAD
 version = "0.9.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8288979acd84749c744a9014b4382d42b8f7b2592847b5afb2ed29e5d16ede07"
+=======
+version = "0.9.106"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bb61ea9811cc39e3c2069f40b8b8e2e70d8569b361f879786cc7ed48b777cdd"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "cc",
  "libc",
@@ -4029,7 +4095,11 @@ checksum = "1e401f977ab385c9e4e3ab30627d6f26d00e2c73eef317493c4ec6d468726cf8"
 dependencies = [
  "cfg-if",
  "libc",
+<<<<<<< HEAD
  "redox_syscall 0.5.11",
+=======
+ "redox_syscall 0.5.10",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "smallvec",
  "windows-targets 0.52.6",
 ]
@@ -4098,7 +4168,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4c5cc86750666a3ed20bdaf5ca2a0344f9c67674cae0515bec2da16fbaa47db"
 dependencies = [
  "fixedbitset 0.4.2",
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 ]
 
 [[package]]
@@ -4108,7 +4182,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3672b37090dbd86368a4145bc067582552b29c27377cad4e0a306c97f9bd7772"
 dependencies = [
  "fixedbitset 0.5.7",
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 ]
 
 [[package]]
@@ -4301,7 +4379,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eac26e981c03a6e53e0aee43c113e3202f5581d5360dae7bd2c70e800dd0451d"
 dependencies = [
  "base64 0.22.1",
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "quick-xml",
  "serde",
  "time",
@@ -4457,9 +4539,15 @@ dependencies = [
 
 [[package]]
 name = "pq-src"
+<<<<<<< HEAD
 version = "0.3.6+libpq-17.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5f5b04f06b634725218f5f2d0423e889c82f07890dbb859e6cbfbc7e08d49bde"
+=======
+version = "0.3.5+libpq-17.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "847f26040e66cf0a93a3d2ee97c1ffe2ce2a0de76e9c8f6a4165b011069c3e09"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "cc",
  "openssl-sys",
@@ -4483,9 +4571,15 @@ checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 
 [[package]]
 name = "prettyplease"
+<<<<<<< HEAD
 version = "0.2.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "664ec5419c51e34154eec046ebcba56312d5a2fc3b09a06da188e1ad21afadf6"
+=======
+version = "0.2.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5316f57387668042f561aae71480de936257848f9c43ce528e311d89a07cadeb"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "proc-macro2",
  "syn 2.0.100",
@@ -4935,9 +5029,15 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
+<<<<<<< HEAD
 version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2f103c6d277498fbceb16e84d317e2a400f160f46904d5f5410848c829511a3"
+=======
+version = "0.5.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b8c0c260b63a8219631167be35e6a988e9554dbd323f8bd08439c8ed1302bd1"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "bitflags 2.9.0",
 ]
@@ -5805,7 +5905,11 @@ dependencies = [
  "chrono",
  "hex",
  "indexmap 1.9.3",
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "serde",
  "serde_derive",
  "serde_json",
@@ -5958,9 +6062,15 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
+<<<<<<< HEAD
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8917285742e9f3e1683f0a9c4e6b57960b7314d0b08d30d1ecd426713ee2eee9"
+=======
+version = "1.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fcf8323ef1faaee30a44a340193b1ac6814fd9b7b4e88e9d4519a3e4abe1cfd"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "serde",
 ]
@@ -5991,7 +6101,11 @@ dependencies = [
  "objc2-foundation 0.2.2",
  "objc2-quartz-core 0.2.2",
  "raw-window-handle",
+<<<<<<< HEAD
  "redox_syscall 0.5.11",
+=======
+ "redox_syscall 0.5.10",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "wasm-bindgen",
  "web-sys",
  "windows-sys 0.59.0",
@@ -6057,7 +6171,11 @@ dependencies = [
  "futures-util",
  "hashbrown 0.15.2",
  "hashlink",
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "log",
  "memchr",
  "native-tls",
@@ -7135,7 +7253,11 @@ version = "0.19.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b5bb770da30e5cbfde35a2d7b9b8a2c4b8ef89548a7a6aeab5c9a576e3e7421"
 dependencies = [
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "toml_datetime",
  "winnow 0.5.40",
 ]
@@ -7146,7 +7268,11 @@ version = "0.20.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "70f427fce4d84c72b5b732388bf4a9f4531b53f74e2887e3ecb2481f68f66d81"
 dependencies = [
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "toml_datetime",
  "winnow 0.5.40",
 ]
@@ -7157,11 +7283,19 @@ version = "0.22.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17b4795ff5edd201c7cd6dca065ae59972ce77d1b80fa0a84d94950ece7d1474"
 dependencies = [
+<<<<<<< HEAD
  "indexmap 2.9.0",
  "serde",
  "serde_spanned",
  "toml_datetime",
  "winnow 0.7.6",
+=======
+ "indexmap 2.8.0",
+ "serde",
+ "serde_spanned",
+ "toml_datetime",
+ "winnow 0.7.4",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 ]
 
 [[package]]
@@ -7301,7 +7435,11 @@ dependencies = [
  "futures-core",
  "futures-util",
  "hdrhistogram",
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "pin-project-lite",
  "slab",
  "sync_wrapper 1.0.2",
@@ -8045,7 +8183,11 @@ version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6994d13118ab492c3c80c1f81928718159254c53c472bf9ce36f8dae4add02a7"
 dependencies = [
+<<<<<<< HEAD
  "redox_syscall 0.5.11",
+=======
+ "redox_syscall 0.5.10",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "wasite",
  "web-sys",
 ]
@@ -8558,9 +8700,15 @@ dependencies = [
 
 [[package]]
 name = "winnow"
+<<<<<<< HEAD
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "63d3fcd9bba44b03821e7d699eeee959f3126dcc4aa8e4ae18ec617c2a5cea10"
+=======
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e97b544156e9bebe1a0ffbc03484fc1ffe3100cbce3ffb17eac35f7cdd7ab36"
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 dependencies = [
  "memchr",
 ]
@@ -8755,7 +8903,11 @@ dependencies = [
  "tracing",
  "uds_windows",
  "windows-sys 0.59.0",
+<<<<<<< HEAD
  "winnow 0.7.6",
+=======
+ "winnow 0.7.4",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "xdg-home",
  "zbus_macros",
  "zbus_names",
@@ -8785,7 +8937,11 @@ checksum = "7be68e64bf6ce8db94f63e72f0c7eb9a60d733f7e0499e628dfab0f84d6bcb97"
 dependencies = [
  "serde",
  "static_assertions",
+<<<<<<< HEAD
  "winnow 0.7.6",
+=======
+ "winnow 0.7.4",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "zvariant",
 ]
 
@@ -8868,7 +9024,11 @@ dependencies = [
  "crc32fast",
  "crossbeam-utils",
  "flate2",
+<<<<<<< HEAD
  "indexmap 2.9.0",
+=======
+ "indexmap 2.8.0",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "memchr",
  "zopfli",
 ]
@@ -8926,7 +9086,11 @@ dependencies = [
  "serde",
  "static_assertions",
  "url",
+<<<<<<< HEAD
  "winnow 0.7.6",
+=======
+ "winnow 0.7.4",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
  "zvariant_derive",
  "zvariant_utils",
 ]
@@ -8955,5 +9119,9 @@ dependencies = [
  "serde",
  "static_assertions",
  "syn 2.0.100",
+<<<<<<< HEAD
  "winnow 0.7.6",
+=======
+ "winnow 0.7.4",
+>>>>>>> a2e94dd (feat: initial emulatorJS and cloud save support)
 ]
