@@ -15,11 +15,14 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as FullscreenLayoutImport } from './routes/_fullscreenLayout'
 import { Route as windowedLayoutImport } from './routes/(windowed)/_layout'
+import { Route as PlayGameIdLayoutImport } from './routes/play/$gameId/_layout'
+import { Route as PlayGameIdLayoutIndexImport } from './routes/play/$gameId/_layout/index'
 import { Route as windowedLayoutGamesGameIdIndexImport } from './routes/(windowed)/_layout/games/$gameId/index'
 
 // Create Virtual Routes
 
 const windowedImport = createFileRoute('/(windowed)')()
+const PlayGameIdImport = createFileRoute('/play/$gameId')()
 const FullscreenLayoutFullscreenIndexLazyImport = createFileRoute(
   '/_fullscreenLayout/fullscreen/',
 )()
@@ -28,6 +31,9 @@ const windowedLayoutHomeLazyImport = createFileRoute(
 )()
 const FullscreenLayoutFullscreenGamesIndexLazyImport = createFileRoute(
   '/_fullscreenLayout/fullscreen/games/',
+)()
+const PlayGameIdLayoutFrameLazyImport = createFileRoute(
+  '/play/$gameId/_layout/frame',
 )()
 const FullscreenLayoutFullscreenGamesGameIdLazyImport = createFileRoute(
   '/_fullscreenLayout/fullscreen/games/$gameId',
@@ -42,6 +48,11 @@ const windowedRoute = windowedImport.update({
 
 const FullscreenLayoutRoute = FullscreenLayoutImport.update({
   id: '/_fullscreenLayout',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PlayGameIdRoute = PlayGameIdImport.update({
+  path: '/play/$gameId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -69,6 +80,11 @@ const windowedLayoutHomeLazyRoute = windowedLayoutHomeLazyImport
     import('./routes/(windowed)/_layout/home.lazy').then((d) => d.Route),
   )
 
+const PlayGameIdLayoutRoute = PlayGameIdLayoutImport.update({
+  id: '/_layout',
+  getParentRoute: () => PlayGameIdRoute,
+} as any)
+
 const FullscreenLayoutFullscreenGamesIndexLazyRoute =
   FullscreenLayoutFullscreenGamesIndexLazyImport.update({
     path: '/fullscreen/games/',
@@ -78,6 +94,18 @@ const FullscreenLayoutFullscreenGamesIndexLazyRoute =
       (d) => d.Route,
     ),
   )
+
+const PlayGameIdLayoutIndexRoute = PlayGameIdLayoutIndexImport.update({
+  path: '/',
+  getParentRoute: () => PlayGameIdLayoutRoute,
+} as any)
+
+const PlayGameIdLayoutFrameLazyRoute = PlayGameIdLayoutFrameLazyImport.update({
+  path: '/frame',
+  getParentRoute: () => PlayGameIdLayoutRoute,
+} as any).lazy(() =>
+  import('./routes/play/$gameId/_layout/frame.lazy').then((d) => d.Route),
+)
 
 const FullscreenLayoutFullscreenGamesGameIdLazyRoute =
   FullscreenLayoutFullscreenGamesGameIdLazyImport.update({
@@ -120,6 +148,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof windowedLayoutImport
       parentRoute: typeof windowedRoute
     }
+    '/play/$gameId': {
+      id: '/play/$gameId'
+      path: '/play/$gameId'
+      fullPath: '/play/$gameId'
+      preLoaderRoute: typeof PlayGameIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/play/$gameId/_layout': {
+      id: '/play/$gameId/_layout'
+      path: '/play/$gameId'
+      fullPath: '/play/$gameId'
+      preLoaderRoute: typeof PlayGameIdLayoutImport
+      parentRoute: typeof PlayGameIdRoute
+    }
     '/(windowed)/_layout/home': {
       id: '/_layout/home'
       path: '/home'
@@ -140,6 +182,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/fullscreen/games/$gameId'
       preLoaderRoute: typeof FullscreenLayoutFullscreenGamesGameIdLazyImport
       parentRoute: typeof FullscreenLayoutImport
+    }
+    '/play/$gameId/_layout/frame': {
+      id: '/play/$gameId/_layout/frame'
+      path: '/frame'
+      fullPath: '/play/$gameId/frame'
+      preLoaderRoute: typeof PlayGameIdLayoutFrameLazyImport
+      parentRoute: typeof PlayGameIdLayoutImport
+    }
+    '/play/$gameId/_layout/': {
+      id: '/play/$gameId/_layout/'
+      path: '/'
+      fullPath: '/play/$gameId/'
+      preLoaderRoute: typeof PlayGameIdLayoutIndexImport
+      parentRoute: typeof PlayGameIdLayoutImport
     }
     '/_fullscreenLayout/fullscreen/games/': {
       id: '/_fullscreenLayout/fullscreen/games/'
@@ -172,6 +228,12 @@ export const routeTree = rootRoute.addChildren({
       windowedLayoutGamesGameIdIndexRoute,
     }),
   }),
+  PlayGameIdRoute: PlayGameIdRoute.addChildren({
+    PlayGameIdLayoutRoute: PlayGameIdLayoutRoute.addChildren({
+      PlayGameIdLayoutFrameLazyRoute,
+      PlayGameIdLayoutIndexRoute,
+    }),
+  }),
 })
 
 /* prettier-ignore-end */
@@ -183,7 +245,8 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/_fullscreenLayout",
-        "/"
+        "/",
+        "/play/$gameId"
       ]
     },
     "/_fullscreenLayout": {
@@ -208,6 +271,20 @@ export const routeTree = rootRoute.addChildren({
         "/_layout/games/$gameId/"
       ]
     },
+    "/play/$gameId": {
+      "filePath": "play/$gameId",
+      "children": [
+        "/play/$gameId/_layout"
+      ]
+    },
+    "/play/$gameId/_layout": {
+      "filePath": "play/$gameId/_layout.tsx",
+      "parent": "/play/$gameId",
+      "children": [
+        "/play/$gameId/_layout/frame",
+        "/play/$gameId/_layout/"
+      ]
+    },
     "/_layout/home": {
       "filePath": "(windowed)/_layout/home.lazy.tsx",
       "parent": "/_layout"
@@ -219,6 +296,14 @@ export const routeTree = rootRoute.addChildren({
     "/_fullscreenLayout/fullscreen/games/$gameId": {
       "filePath": "_fullscreenLayout/fullscreen/games/$gameId.lazy.tsx",
       "parent": "/_fullscreenLayout"
+    },
+    "/play/$gameId/_layout/frame": {
+      "filePath": "play/$gameId/_layout/frame.lazy.tsx",
+      "parent": "/play/$gameId/_layout"
+    },
+    "/play/$gameId/_layout/": {
+      "filePath": "play/$gameId/_layout/index.tsx",
+      "parent": "/play/$gameId/_layout"
     },
     "/_fullscreenLayout/fullscreen/games/": {
       "filePath": "_fullscreenLayout/fullscreen/games/index.lazy.tsx",

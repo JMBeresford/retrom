@@ -7,7 +7,7 @@ import {
 } from "react";
 
 type RetromInputDevice = (typeof RetromInputDevice)[number];
-const RetromInputDevice = ["keyboard", "gamepad"] as const;
+const RetromInputDevice = ["keyboard-mouse", "gamepad", "hotkeys"] as const;
 
 type InputDeviceContext = [
   RetromInputDevice,
@@ -17,7 +17,7 @@ type InputDeviceContext = [
 const context = createContext<InputDeviceContext | undefined>(undefined);
 
 export function InputDeviceProvider(props: { children: React.ReactNode }) {
-  const value = useState<RetromInputDevice>("keyboard");
+  const value = useState<RetromInputDevice>("keyboard-mouse");
 
   return <context.Provider value={value}>{props.children}</context.Provider>;
 }

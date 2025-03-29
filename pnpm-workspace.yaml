@@ -2,4 +2,5 @@ injectWorkspacePackages: true
 packages:
   - packages/*
   - packages/client/web
+  - packages/codegen
   - plugins/*

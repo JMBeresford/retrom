@@ -2,21 +2,22 @@ import { JobsIndicator } from "@/components/menubar/jobs-indicator";
 import { useEffect, useState } from "react";
 import { MenuSheet } from "./menu-sheet";
 import { useSystemInfo } from "@/queries/useSystemInfo";
-import { cn } from "@/lib/utils";
+import { cn, Image } from "@/lib/utils";
+import logo from "@/assets/img/LogoLong-NoBackground-Small.png";
 
 export function FullscreenMenubar(props: JSX.IntrinsicElements["div"]) {
   return (
     <div {...props}>
       <div className="px-2 py-1">
-        <div className="grid place-items-center grid-flow-col auto-cols-fr p-0">
+        <div className="relative grid place-items-center grid-flow-col auto-cols-fr p-0">
           <MenuSheet className="mr-auto" />
 
-          <h1 className="text-3xl font-black text-accent">RETROM</h1>
+          <Image src={logo} alt="Retrom logo" className="h-6" />
 
           <div className="ml-auto flex gap-3 items-center">
             <JobsIndicator />
             <BatteryInfo />
-            <SystemTime className="text-xl font-semibold pr-3" />
+            <SystemTime className="text-base font-medium pr-3" />
           </div>
         </div>
       </div>

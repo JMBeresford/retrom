@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package retrom;
+
+import 'retrom/models/clients.proto';
+
+service ClientService {
+  rpc CreateClient(CreateClientRequest) returns (CreateClientResponse);
+  rpc GetClients(GetClientsRequest) returns (GetClientsResponse);
+  rpc UpdateClients(UpdateClientsRequest) returns (UpdateClientsResponse);
+  rpc DeleteClients(DeleteClientsRequest) returns (DeleteClientsResponse);
+}
+
+message CreateClientRequest {
+  NewClient client = 1;
+}
+
+message CreateClientResponse {
+  Client client_created = 1;
+}
+
+message GetClientsRequest {
+  repeated int32 ids = 1;
+  repeated string names = 2;
+}
+
+message GetClientsResponse {
+  repeated Client clients = 1;
+}
+
+message UpdateClientsRequest {
+  repeated UpdatedClient clients = 1;
+}
+
+message UpdateClientsResponse {
+  repeated Client clients_updated = 1;
+}
+
+message DeleteClientsRequest {
+  repeated int32 ids = 1;
+}
+
+message DeleteClientsResponse {
+  repeated Client clients_deleted = 1;
+}

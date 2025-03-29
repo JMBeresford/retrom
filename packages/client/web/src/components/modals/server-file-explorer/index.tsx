@@ -43,6 +43,7 @@ declare global {
   namespace RetromModals {
     export interface ModalActions {
       serverFileExplorerModal?: {
+        open?: boolean;
         title: string;
         description: string;
         onClose: (path: string | undefined) => void;

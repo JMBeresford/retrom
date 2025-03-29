@@ -11,7 +11,7 @@ import {
 declare global {
   namespace RetromModals {
     export interface ModalActions {
-      _?: BaseModalActionProps;
+      unused?: BaseModalActionProps;
     }
   }
 }
@@ -22,6 +22,7 @@ type ModalActionCallback<T> = T extends (args: infer U) => infer V
     (...args: any[]) => any;
 
 export type BaseModalActionProps<Open = undefined, Close = undefined> = {
+  open: boolean;
   title?: string;
   description?: string;
   onOpen?: ModalActionCallback<Open>;
@@ -78,16 +79,18 @@ export function useModalAction<T extends keyof RetromModals.ModalActions>(
       setModalState(modal, props);
 
       navigate({
+        reloadDocument: false,
+        to: ".",
         search: (prev) => ({
           ...prev,
-          [modal]: { open: true, ...props },
+          [modal]: { open: true },
         }),
       }).catch(console.error);
     },
     [navigate, modal, setModalState],
   );
 
-  const modalState = modals[modal];
+  const modalState = useMemo(() => modals[modal], [modal, modals]);
 
   return useMemo(() => ({ openModal, modalState }), [openModal, modalState]);
 }

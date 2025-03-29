@@ -109,6 +109,7 @@ export function SteamConfig(props: {
             <Button
               onClick={() =>
                 void navigate({
+                  to: ".",
                   search: (prev) => ({ ...prev, configModal: undefined }),
                 })
               }

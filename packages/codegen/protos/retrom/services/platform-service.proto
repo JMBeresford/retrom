@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package retrom;
+
+import 'retrom/models/metadata.proto';
+import 'retrom/models/platforms.proto';
+
+service PlatformService {
+  rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse);
+  rpc DeletePlatforms(DeletePlatformsRequest) returns (DeletePlatformsResponse);
+  rpc UpdatePlatforms(UpdatePlatformsRequest) returns (UpdatePlatformsResponse);
+}
+
+message GetPlatformsRequest {
+  repeated int32 ids = 1;
+  optional bool with_metadata = 2;
+  optional bool include_deleted = 3;
+}
+
+message GetPlatformsResponse {
+  repeated Platform platforms = 1;
+  repeated PlatformMetadata metadata = 2;
+}
+
+message DeletePlatformsRequest {
+  repeated int32 ids = 1;
+  bool delete_from_disk = 2;
+  bool blacklist_entries = 3;
+}
+
+message DeletePlatformsResponse {
+  repeated Platform platforms_deleted = 1;
+}
+
+message UpdatePlatformsRequest {
+  repeated UpdatedPlatform platforms = 1;
+}
+
+message UpdatePlatformsResponse {
+  repeated Platform platforms_updated = 1;
+}

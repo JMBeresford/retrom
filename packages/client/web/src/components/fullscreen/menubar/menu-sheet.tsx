@@ -5,6 +5,8 @@ import {
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetOverlay,
+  SheetPortal,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
@@ -17,6 +19,7 @@ import { useState } from "react";
 import { useHotkeys } from "@/providers/hotkeys";
 import { FocusContainer } from "../focus-container";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 declare global {
   export interface HotkeyZones {
@@ -42,46 +45,49 @@ export function MenuSheet(props: JSX.IntrinsicElements["button"]) {
         </HotkeyButton>
       </SheetTrigger>
 
-      <SheetContent
-        onCloseAutoFocus={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
-        <FocusContainer
-          initialFocus
-          opts={{ focusKey: "menu-root", isFocusBoundary: true }}
+      <SheetPortal>
+        <SheetOverlay />
+        <SheetContent
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
         >
-          <HotkeyLayer
-            id="menu-root"
-            allowBubbling="never"
-            handlers={{
-              BACK: { handler: () => setOpen(false), zone: "menuRoot" },
-            }}
+          <FocusContainer
+            initialFocus
+            opts={{ focusKey: "menu-root", isFocusBoundary: true }}
           >
-            <SheetHeader>
-              <SheetTitle>Menu</SheetTitle>
-              <SheetDescription>
-                Retrom configuration and options menu
-              </SheetDescription>
-            </SheetHeader>
+            <HotkeyLayer
+              id="menu-root"
+              allowBubbling="never"
+              handlers={{
+                BACK: { handler: () => setOpen(false), zone: "menuRoot" },
+              }}
+            >
+              <SheetHeader>
+                <SheetTitle>Menu</SheetTitle>
+                <SheetDescription>Retrom configuration menu</SheetDescription>
+              </SheetHeader>
 
-            <ScrollArea className="h-full w-full">
-              <div className="flex flex-col gap-4 h-full">
-                <Library />
-                <Config />
-                <ExitFullscreen />
-              </div>
-            </ScrollArea>
+              <Separator className="w-[90%] mx-auto" />
 
-            <SheetFooter>
-              <SheetClose asChild>
-                <HotkeyButton hotkey="BACK">close</HotkeyButton>
-              </SheetClose>
-            </SheetFooter>
-          </HotkeyLayer>
-        </FocusContainer>
-      </SheetContent>
+              <ScrollArea className="h-full w-full outline-none">
+                <div className="flex flex-col h-full">
+                  <Library />
+                  <Config />
+                  <ExitFullscreen />
+                </div>
+              </ScrollArea>
+
+              <SheetFooter>
+                <SheetClose asChild>
+                  <HotkeyButton hotkey="BACK">close</HotkeyButton>
+                </SheetClose>
+              </SheetFooter>
+            </HotkeyLayer>
+          </FocusContainer>
+        </SheetContent>
+      </SheetPortal>
     </Sheet>
   );
 }

@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package retrom;
+
+import 'retrom/file-explorer.proto';
+import 'retrom/files.proto';
+
+service FileExplorerService {
+  rpc GetFilesystemNode(GetFilesystemNodeRequest) returns (GetFilesystemNodeResponse);
+  rpc GetStat(GetStatRequest) returns (GetStatResponse);
+}
+
+message GetFilesystemNodeRequest {
+  optional string path = 1;
+}
+
+message GetFilesystemNodeResponse {
+  optional FilesystemNode node = 1;
+  repeated FilesystemNode children = 2;
+}
+
+message GetStatRequest {
+  string path = 1;
+  optional int32 max_depth = 2;
+  optional bool include_directories = 3;
+}
+
+message GetStatResponse {
+  repeated retrom.files.FileStat stats = 1;
+}

@@ -49,6 +49,7 @@ export function CheckForUpdateModal() {
       onOpenChange={(open) => {
         if (!open) {
           void navigate({
+            to: ".",
             search: (prev) => ({ ...prev, checkForUpdateModal: undefined }),
           });
         }
