@@ -8,6 +8,7 @@ on:
         required: true
         type: string
 
+  pull_request:
   release:
     types: [published]
 
@@ -159,7 +160,6 @@ jobs:
   build-desktop-clients_arm:
     name: Build Desktop Clients (ARM Linux)
     runs-on: ubuntu-24.04
-    if: ${{ github.event_name == 'release' }}
 
     env:
       PQ_LIB_STATIC: 1
@@ -241,21 +241,25 @@ jobs:
             pnpm --filter retrom-client build --verbose --config packages/client/tauri.build.conf.json ${{ env.BUILD_FLAGS }}
 
       - name: Get app version
+        if: ${{ github.event_name == 'release' }}
         run: echo "APP_VERSION=$(cat Cargo.toml | grep "^version =" | sed 's/^version =//')" >> $GITHUB_ENV
 
       - name: Upload deb bundle
+        if: ${{ github.event_name == 'release' }}
         uses: actions/upload-artifact@v4
         with:
           name: Debian Bundle
           path: ${{ github.workspace }}/target/release/bundle/deb/Retrom_${{ env.APP_VERSION }}_${{ matrix.deb }}.deb
 
       - name: Upload rpm bundle
+        if: ${{ github.event_name == 'release' }}
         uses: actions/upload-artifact@v4
         with:
           name: RPM Bundle
           path: ${{ github.workspace }}/target/release/bundle/rpm/Retrom-${{ env.APP_VERSION }}-1.${{ matrix.rpm }}.rpm
 
       - name: Upload appimage bundle
+        if: ${{ github.event_name == 'release' }}
         uses: actions/upload-artifact@v4
         with:
           name: AppImage Bundle

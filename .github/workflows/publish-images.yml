@@ -7,6 +7,7 @@ on:
         description: "Tags for the image"
         required: false
 
+  pull_request:
   release:
     types: [published]
 
@@ -77,12 +78,14 @@ jobs:
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
+        if: ${{ github.event_name == 'release' }}
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
+        if: ${{ github.event_name == 'release' }}
         uses: actions/upload-artifact@v4
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
@@ -92,6 +95,7 @@ jobs:
 
   merge-digests:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'release' }}
     needs:
       - build-images
 
