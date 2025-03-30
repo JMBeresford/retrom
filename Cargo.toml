@@ -86,3 +86,4 @@ pq-sys = { version = "0.6", features = ["bundled"] }
 openssl-sys = { version = "0.9.100", features = ["vendored"] }
 tempfile = "3.16.0"
 walkdir = "2.5.0"
+zeroize = "1.8.1"

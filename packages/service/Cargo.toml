@@ -54,6 +54,7 @@ opentelemetry_sdk = { workspace = true }
 opentelemetry-otlp = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }
 regex = "1.11.1"
+zeroize = { workspace = true }
 
 # opt out of lzma an xz to avoid linking twice (postrgres_embedded and async_zip)
 async_zip = { version = "^0.0.17", default-features = false, features = [
