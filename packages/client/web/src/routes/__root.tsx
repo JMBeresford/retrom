@@ -102,6 +102,14 @@ const modalsSearchSchema = z.object({
     })
     .optional()
     .catch(undefined),
+
+  updatePlatformMetadataModal: z
+    .object({
+      open: z.boolean(),
+      id: z.number(),
+    })
+    .optional()
+    .catch(undefined),
 });
 
 export const Route = createRootRoute({

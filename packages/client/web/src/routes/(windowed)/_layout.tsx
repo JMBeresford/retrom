@@ -30,6 +30,7 @@ import { ModalActionProvider } from "@/providers/modal-action";
 import { ConfirmModal } from "@/components/modals/confirm";
 import { DeletePlatformModal } from "@/components/modals/delete-platform";
 import { CleanLibraryModal } from "@/components/modals/clean-library";
+import { UpdatePlatformMetadataModal } from "@/components/modals/update-platform-metadata";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
@@ -108,6 +109,7 @@ function LayoutComponent() {
           <ServerFileExplorerModal />
           <DeletePlatformModal />
           <CleanLibraryModal />
+          <UpdatePlatformMetadataModal />
         </ModalActionProvider>
       )}
 

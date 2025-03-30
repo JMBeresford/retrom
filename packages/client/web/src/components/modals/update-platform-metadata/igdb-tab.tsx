@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetIgdbGameSearchResultsRequest } from "@/generated/retrom/services";
+import { GetIgdbPlatformSearchResultsRequest } from "@/generated/retrom/services";
 import {
   Select,
   SelectContent,
@@ -14,7 +14,6 @@ import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -27,45 +26,39 @@ import { cn, getFileStub } from "@/lib/utils";
 import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
-import { Checkbox } from "../../ui/checkbox";
-import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
-import { useUpdateGames } from "@/mutations/useUpdateGames";
-import { useGameDetail } from "@/providers/game-details";
+import { Platform } from "@/generated/retrom/models/platforms";
 import { useNavigate } from "@tanstack/react-router";
+import { PlatformMetadata } from "@/generated/retrom/models/metadata";
+import { useUpdatePlatformMetadata } from "@/mutations/useUpdatePlatformMetadata";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z
   .object({
     search: z.string().max(255),
     igdbId: z.coerce.number().optional(),
-    restrictToCurrentPlatform: z.boolean(),
   })
   .refine((data) => data.igdbId || data.search, {
     message: "You must provide either a search term or an IGDB ID",
   });
 
-export function IgdbTab() {
-  const {
-    game,
-    gameMetadata: currentMetadata,
-    platformMetadata,
-  } = useGameDetail();
-
+export function IgdbTab(props: {
+  platform: Platform;
+  currentMetadata?: PlatformMetadata;
+}) {
+  const { currentMetadata, platform } = props;
   const { toast } = useToast();
   const [selectedMatch, setSelectedMatch] = useState<string | undefined>();
-  const [renameDirectory, setRenameDirectory] = useState(false);
   const navigate = useNavigate();
   const retromClient = useRetromClient();
 
   const [searchRequest, setSearchRequest] =
-    useState<GetIgdbGameSearchResultsRequest>({
+    useState<GetIgdbPlatformSearchResultsRequest>({
       query: {
         search: {
-          value: currentMetadata?.name ?? getFileStub(game.path),
+          value: currentMetadata?.name ?? getFileStub(platform.path),
         },
-        gameId: game.id,
+        platformId: platform.id,
         fields: {
-          platform: platformMetadata?.igdbId,
           id: currentMetadata?.igdbId,
         },
       },
@@ -73,7 +66,7 @@ export function IgdbTab() {
 
   const { data: matches, isPending: searchPending } = useQuery({
     enabled: !!searchRequest,
-    queryKey: ["games", "igdb-search", searchRequest],
+    queryKey: ["platforms", "igdb-search", searchRequest],
     queryFn: async () => {
       if (
         !searchRequest.query?.search?.value &&
@@ -82,39 +75,33 @@ export function IgdbTab() {
         return null;
       }
 
-      return await retromClient.metadataClient.getIgdbGameSearchResults(
+      return await retromClient.metadataClient.getIgdbPlatformSearchResults(
         searchRequest,
       );
     },
     select: (data) => data?.metadata ?? [],
   });
 
-  const { mutateAsync: updateGames } = useUpdateGames();
   const { mutateAsync: updateMetadata, isPending: updatePending } =
-    useUpdateGameMetadata();
+    useUpdatePlatformMetadata();
 
   const loading = searchPending || updatePending;
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      search: currentMetadata?.name ?? getFileStub(game.path),
+      search: currentMetadata?.name ?? getFileStub(platform.path),
       igdbId: currentMetadata?.igdbId,
-      restrictToCurrentPlatform: platformMetadata?.igdbId !== undefined,
     },
   });
 
   const handleSearch = useCallback(
     (values: FormSchema) => {
-      const { search, igdbId, restrictToCurrentPlatform } = values;
+      const { search, igdbId } = values;
 
-      if (!game) {
+      if (!platform) {
         return;
       }
-
-      const platform = restrictToCurrentPlatform
-        ? platformMetadata?.igdbId
-        : undefined;
 
       setSearchRequest({
         query: {
@@ -123,13 +110,12 @@ export function IgdbTab() {
           },
           fields: {
             id: igdbId,
-            platform,
           },
-          gameId: game.id,
+          platformId: platform.id,
         },
       });
     },
-    [game, platformMetadata],
+    [platform],
   );
 
   const handleUpdate = useCallback(async () => {
@@ -149,45 +135,22 @@ export function IgdbTab() {
     }
 
     try {
-      const res = await updateMetadata({
-        metadata: [{ ...match, gameId: game.id }],
+      await updateMetadata({
+        metadata: [{ ...match, platformId: platform.id }],
       });
 
-      if (renameDirectory) {
-        const newName = res.metadataUpdated[0]?.name;
-        const currentFilename = getFileStub(game.path);
-
-        if (!newName || !currentFilename) {
-          throw new Error("Failed to update metadata");
-        }
-
-        const path = game.path.replace(currentFilename, newName);
-
-        await updateGames({
-          games: [{ id: game.id, path }],
-        });
-      }
+      void navigate({
+        to: ".",
+        search: (prev) => ({ ...prev, updateMetadataModal: undefined }),
+      });
     } catch {
       toast({
         title: "Error updating metadata",
         description: "Something went wrong, please try again",
         variant: "destructive",
       });
-    } finally {
-      void navigate({
-        search: (prev) => ({ ...prev, updateMetadataModal: undefined }),
-      });
     }
-  }, [
-    matches,
-    selectedMatch,
-    game,
-    toast,
-    updateMetadata,
-    renameDirectory,
-    updateGames,
-    navigate,
-  ]);
+  }, [matches, selectedMatch, platform, toast, updateMetadata, navigate]);
 
   return (
     <>
@@ -223,34 +186,6 @@ export function IgdbTab() {
               )}
             />
 
-            {platformMetadata?.igdbId !== undefined ? (
-              <FormField
-                control={form.control}
-                name="restrictToCurrentPlatform"
-                render={({ field }) => (
-                  <FormItem className="flex items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Restrict to currently matched platform
-                      </FormLabel>
-                      <FormDescription className="max-w-[50ch]">
-                        This will only search the games for{" "}
-                        <strong>({platformMetadata?.name})</strong>
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            ) : (
-              <></>
-            )}
-
             <Button type="submit">
               <LoaderCircleIcon
                 className={cn("animate-spin absolute", !loading && "opacity-0")}
@@ -271,8 +206,8 @@ export function IgdbTab() {
             <SelectValue
               placeholder={
                 matches && matches.length < 1
-                  ? "Search for a game"
-                  : "Select a matching game"
+                  ? "Search for a platform"
+                  : "Select a matching platform"
               }
             />
           </SelectTrigger>
@@ -280,7 +215,7 @@ export function IgdbTab() {
           <SelectContent>
             {matches?.map((match, i) => (
               <SelectItem
-                key={`${match.gameId}-${i}`}
+                key={`${match.platformId}-${i}`}
                 value={match.igdbId?.toString() ?? i.toString()}
               >
                 {match.name}
@@ -291,24 +226,8 @@ export function IgdbTab() {
       </div>
 
       <DialogFooter>
-        <div className="flex items-center justify-between gap-6 w-full mt-4">
-          <div className="flex items-top gap-2">
-            <Checkbox
-              id="rename-directory"
-              checked={renameDirectory}
-              onCheckedChange={(event) => setRenameDirectory(!!event)}
-            />
-
-            <div className="grid gap-1 5 leading-none">
-              <label htmlFor="rename-directory">Rename Directory</label>
-
-              <p className="text-sm text-muted-foreground">
-                This will alter the file system
-              </p>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
+        <div className="flex items-center gap-6 w-full mt-4">
+          <div className="flex gap-2 ml-auto">
             <DialogClose asChild>
               <Button disabled={loading} variant="secondary">
                 Cancel

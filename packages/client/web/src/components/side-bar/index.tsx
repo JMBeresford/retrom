@@ -384,6 +384,22 @@ function PlatformContextMenu(
       <DropdownMenuContent>
         <DropdownMenuItem
           asChild
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <Link
+            to="."
+            search={(prev) => ({
+              ...prev,
+              updatePlatformMetadataModal: { open: true, id: platform.id },
+            })}
+          >
+            Edit
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          asChild
           className="text-destructive-text"
           onClick={(e) => {
             e.stopPropagation();
