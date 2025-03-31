@@ -68,9 +68,6 @@ importers:
 
   packages/client:
     devDependencies:
-      '@retrom/client-web':
-        specifier: workspace:*
-        version: link:web
       '@tauri-apps/cli':
         specifier: ^2.2.7
         version: 2.2.7
