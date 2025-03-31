@@ -1,0 +1,12 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["@retrom/client-web#build:desktop"]
+    },
+    "dev": {
+      "dependsOn": ["@retrom/client-web#dev:desktop"]
+    }
+  }
+}

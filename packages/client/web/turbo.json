@@ -1,0 +1,12 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build:desktop": {
+      "dependsOn": ["^build"]
+    },
+    "dev:desktop": {
+      "dependsOn": ["^dev"]
+    }
+  }
+}

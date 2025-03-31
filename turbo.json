@@ -8,10 +8,6 @@
       "dependsOn": ["^build", "check-types", "cargo-build-transit"],
       "outputs": ["dist/**", "$TURBO_ROOT$/target/**"]
     },
-    "build:desktop": {
-      "dependsOn": ["^build:desktop", "check-types"],
-      "outputs": ["dist/**", "$TURBO_ROOT$/target/**"]
-    },
     // ensure TS+Rust packages build for both languages via this transit node
     // when calling 'build' -- no need to explicitly call 'cargo-build'
     "cargo-build-transit": {
@@ -47,11 +43,6 @@
       "dependsOn": ["^check-types", "@retrom/codegen#build"]
     },
     "dev": {
-      "dependsOn": ["@retrom/codegen#build"],
-      "persistent": true,
-      "cache": false
-    },
-    "dev:desktop": {
       "dependsOn": ["@retrom/codegen#build"],
       "persistent": true,
       "cache": false

@@ -5,9 +5,8 @@ COPY ./packages/. /app/packages
 COPY ./plugins/. /app/plugins
 COPY  ./Cargo.lock \
   ./Cargo.toml \
+  ./turbo.json \
   ./package.json \
-  ./buf.gen.yaml \
-  ./buf.yaml \
   ./pnpm-lock.yaml \
   ./pnpm-workspace.yaml \
   ./tsconfig.json \
