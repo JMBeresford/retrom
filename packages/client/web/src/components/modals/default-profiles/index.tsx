@@ -27,7 +27,7 @@ import {
   Emulator,
   EmulatorProfile,
   UpdatedDefaultEmulatorProfile,
-} from "@/generated/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators";
 import { cn, getFileStub, InferSchema } from "@/lib/utils";
 import { useUpdateDefaultEmulatorProfiles } from "@/mutations/useUpdateDefaultEmulatorProfiles";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";

@@ -14,11 +14,11 @@ import {
 } from "@/components/ui/accordion";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { useGames } from "@/queries/useGames";
-import { Game } from "@/generated/retrom/models/games";
+import { Game } from "@retrom/codegen/retrom/models/games";
 import {
   GameMetadata,
   PlatformMetadata,
-} from "@/generated/retrom/models/metadata";
+} from "@retrom/codegen/retrom/models/metadata";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useFilterAndSort } from "./filter-sort-context";
 import { FiltersAndSorting } from "./filters-and-sorting";
@@ -27,10 +27,10 @@ import { filterName, sortGames, sortPlatforms } from "./utils";
 import { ScrollArea } from "../ui/scroll-area";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { useInstallationStateQuery } from "@/queries/useInstallationState";
-import { InstallationStatus } from "@/generated/retrom/client/client-utils";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
 import { Skeleton } from "../ui/skeleton";
 import { EllipsisVertical } from "lucide-react";
-import { Platform } from "@/generated/retrom/models/platforms";
+import { Platform } from "@retrom/codegen/retrom/models/platforms";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +39,7 @@ import {
 } from "../ui/dropdown-menu";
 import { DropdownMenuTriggerProps } from "@radix-ui/react-dropdown-menu";
 import { Button } from "../ui/button";
-import { StorageType } from "@/generated/retrom/server/config";
+import { StorageType } from "@retrom/codegen/retrom/server/config";
 
 type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 

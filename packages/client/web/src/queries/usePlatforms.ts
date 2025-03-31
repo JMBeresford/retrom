@@ -1,7 +1,7 @@
 import {
   GetPlatformsRequest,
   GetPlatformsResponse,
-} from "@/generated/retrom/services";
+} from "@retrom/codegen/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 

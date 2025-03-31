@@ -1,5 +1,5 @@
-import { InstallationStatus } from "@/generated/retrom/client/client-utils";
-import { Game } from "@/generated/retrom/models/games";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
+import { Game } from "@retrom/codegen/retrom/models/games";
 import { useMemo } from "react";
 import { useInstallationStateQuery } from "./useInstallationState";
 

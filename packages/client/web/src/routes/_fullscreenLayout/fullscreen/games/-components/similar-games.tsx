@@ -3,7 +3,7 @@ import {
   FocusContainer,
 } from "@/components/fullscreen/focus-container";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { GameMetadata } from "@/generated/retrom/models/metadata";
+import { GameMetadata } from "@retrom/codegen/retrom/models/metadata";
 import { cn } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";

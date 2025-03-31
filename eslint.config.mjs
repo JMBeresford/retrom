@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import turbo from "eslint-plugin-turbo";
 import tseslint from "typescript-eslint";
 import tanstackQuery from "@tanstack/eslint-plugin-query";
 
@@ -10,6 +11,7 @@ export default tseslint.config(
   {
     extends: [
       js.configs.recommended,
+      turbo.configs["flat/recommended"],
       ...tanstackQuery.configs["flat/recommended"],
       ...tseslint.configs.recommendedTypeChecked,
     ],

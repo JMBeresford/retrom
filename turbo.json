@@ -1,0 +1,63 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["NODE_ENV", "CARGO_*", "DEV", "SSR", "RETROM_*", "IS_DESKTOP"],
+  "globalPassThroughEnv": ["APPLE_*", "TAURI_*", "GITHUB_TOKEN"],
+  "tasks": {
+    /* BUILDING */
+    "build": {
+      "dependsOn": ["^build", "check-types", "cargo-build-transit"],
+      "outputs": ["dist/**", "$TURBO_ROOT$/target/**"]
+    },
+    "build:desktop": {
+      "dependsOn": ["^build:desktop", "check-types"],
+      "outputs": ["dist/**", "$TURBO_ROOT$/target/**"]
+    },
+    // ensure TS+Rust packages build for both languages via this transit node
+    // when calling 'build' -- no need to explicitly call 'cargo-build'
+    "cargo-build-transit": {
+      "dependsOn": ["cargo-build"]
+    },
+    "cargo-build": {
+      "dependsOn": ["^cargo-build"]
+    },
+
+    /* LINTING */
+    "cargo-lint": {
+      "dependsOn": ["@retrom/codegen#cargo-build"]
+    },
+    // ensure TS+Rust packages lint both languages via this transit node
+    // when calling 'lint' -- no need to explicitly call 'cargo-lint'
+    "cargo-lint-transit": {
+      "dependsOn": ["cargo-lint"]
+    },
+    "lint": {
+      "dependsOn": ["^generate", "cargo-lint-transit", "@retrom/codegen#build"]
+    },
+
+    /* FORMATTING */
+    "format": {
+      "dependsOn": []
+    },
+    "format:check": {
+      "dependsOn": []
+    },
+
+    /* OTHER */
+    "check-types": {
+      "dependsOn": ["^check-types", "@retrom/codegen#build"]
+    },
+    "dev": {
+      "dependsOn": ["@retrom/codegen#build"],
+      "persistent": true,
+      "cache": false
+    },
+    "dev:desktop": {
+      "dependsOn": ["@retrom/codegen#build"],
+      "persistent": true,
+      "cache": false
+    },
+    "generate": {
+      "dependsOn": []
+    }
+  }
+}

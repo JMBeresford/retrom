@@ -1,17 +1,18 @@
 {
-  "name": "retrom-plugin-config-api",
-  "version": "0.1.0",
-  "author": "You",
-  "description": "",
+  "name": "@retrom/plugin-config",
   "type": "module",
-  "types": "./guest-js/index.ts",
-  "module": "./guest-js/index.ts",
-  "files": [
-    "guest-js",
-    "README.md"
-  ],
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "default": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "cargo-build": "cargo build",
+    "lint": "eslint ./guest-js/"
+  },
   "dependencies": {
-    "@tauri-apps/api": ">=2.0.0-beta.6"
+    "@tauri-apps/api": ">=2.0.0-beta.6",
+    "@retrom/codegen": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

@@ -1,4 +1,4 @@
-import { DeletePlatformsRequest } from "@/generated/retrom/services";
+import { DeletePlatformsRequest } from "@retrom/codegen/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

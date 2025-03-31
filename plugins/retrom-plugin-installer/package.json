@@ -1,15 +1,15 @@
 {
-  "name": "retrom-plugin-installer-api",
-  "version": "0.0.0",
+  "name": "@retrom/plugin-installer",
   "type": "module",
   "exports": {
-    "types": "./guest-js/index.ts",
-    "import": "./guest-js/index.ts"
+    "types": "./dist/index.d.ts",
+    "default": "./dist/index.js"
   },
-  "files": [
-    "guest-js",
-    "README.md"
-  ],
+  "scripts": {
+    "build": "tsc -b",
+    "cargo-build": "cargo build",
+    "lint": "eslint ./guest-js/"
+  },
   "dependencies": {
     "@tauri-apps/api": "workspace:*",
     "@tauri-apps/plugin-opener": "^2.2.5"

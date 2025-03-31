@@ -7,14 +7,14 @@ import {
 import {
   InterfaceConfig_GameListEntryImage,
   RetromClientConfig,
-} from "@/generated/retrom/client/client-config";
+} from "@retrom/codegen/retrom/client/client-config";
 import { createContext, PropsWithChildren, useContext } from "react";
 import { defaultAPIHostname, defaultAPIPort } from "./utils";
-import { Timestamp } from "@/generated/google/protobuf/timestamp";
+import { Timestamp } from "@retrom/codegen/google/protobuf/timestamp";
 import { checkIsDesktop } from "@/lib/env";
 import { migrate } from "./migrations";
 import { desktopStorage } from "./desktop";
-import * as ConfigFile from "retrom-plugin-config-api";
+import * as ConfigFile from "@retrom/plugin-config";
 
 const STORAGE_KEY = "retrom-client-config";
 export type LocalConfig = RetromClientConfig & {

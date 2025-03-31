@@ -28,13 +28,16 @@ import {
 } from "@/components/ui/popover";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Platform, UpdatedPlatform } from "@/generated/retrom/models/platforms";
+import {
+  Platform,
+  UpdatedPlatform,
+} from "@retrom/codegen/retrom/models/platforms";
 import {
   GetIgdbSearchRequest_IgdbSearchType,
   UpdatePlatformMetadataRequest,
-} from "@/generated/retrom/services";
+} from "@retrom/codegen/retrom/services";
 import { usePlatforms } from "@/queries/usePlatforms";
-import { PlatformMetadata } from "@/generated/retrom/models/metadata";
+import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";

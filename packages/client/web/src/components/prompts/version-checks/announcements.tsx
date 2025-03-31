@@ -2,7 +2,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { parseVersion, versionCompare } from "@/lib/version-utils";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { VersionAnnouncementsPayload } from "@/generated/retrom/utils";
+import { VersionAnnouncementsPayload } from "@retrom/codegen/retrom/utils";
 import { useClientVersion } from "@/queries/useClientVersion";
 import { Button } from "@/components/ui/button";
 

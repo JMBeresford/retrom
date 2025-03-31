@@ -1,9 +1,9 @@
-import { Game } from "@/generated/retrom/models/games";
+import { Game } from "@retrom/codegen/retrom/models/games";
 import {
   GameMetadata,
   PlatformMetadata,
-} from "@/generated/retrom/models/metadata";
-import { Platform } from "@/generated/retrom/models/platforms";
+} from "@retrom/codegen/retrom/models/metadata";
+import { Platform } from "@retrom/codegen/retrom/models/platforms";
 import { debounce } from "@/lib/utils";
 import { createContext, PropsWithChildren, useContext, useRef } from "react";
 import { create, StoreApi, UseBoundStore, useStore } from "zustand";

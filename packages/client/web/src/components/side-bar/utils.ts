@@ -1,15 +1,15 @@
-import { Platform } from "@/generated/retrom/models/platforms";
+import { Platform } from "@retrom/codegen/retrom/models/platforms";
 import {
   GameSortKey,
   PlatformSortKey,
   SortDirection,
 } from "./filter-sort-context";
 import { getFileStub, timestampToDate } from "@/lib/utils";
-import { Game } from "@/generated/retrom/models/games";
+import { Game } from "@retrom/codegen/retrom/models/games";
 import {
   GameMetadata,
   PlatformMetadata,
-} from "@/generated/retrom/models/metadata";
+} from "@retrom/codegen/retrom/models/metadata";
 
 export function sortPlatforms<
   P extends Platform & { metadata?: PlatformMetadata },

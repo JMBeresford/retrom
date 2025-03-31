@@ -28,18 +28,9 @@ jobs:
       matrix:
         include:
           - platform: "macos-latest" # for Arm based macs (M1 and above).
-            config: "--config tauri.build.conf.json"
             target: "--target aarch64-apple-darwin"
-            # rustflags: "-L/usr/local/opt/libpq/lib"
           - platform: "macos-latest" # for Intel based macs.
-            config: "--config tauri.build.conf.json"
             target: "--target x86_64-apple-darwin"
-            # rustflags: "-L/usr/local/opt/libpq/lib"
-          - platform: "ubuntu-24.04"
-            config: "--config tauri.build.conf.json"
-          - platform: "windows-latest"
-            config: "--config tauri.build.conf.json"
-            # rustflags: "-LC:\\Program\ Files\\PostgreSQL\\17\\lib"
 
     runs-on: ${{ matrix.platform }}
     defaults:
@@ -117,7 +108,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          VITE_IS_DESKTOP: true
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
@@ -126,17 +116,16 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          RUSTFLAGS: ${{ matrix.rustflags }}
         with:
           includeDebug: ${{ github.event.release.prerelease }}
           includeRelease: ${{ !github.event.release.prerelease }}
           prerelease: ${{ github.event.release.prerelease }}
           projectPath: packages/client
-          tauriScript: pnpm tauri
+          tauriScript: pnpm turbo --filter @retrom/client
+          args: ${{ matrix.target }}
           releaseId: ${{ github.event.release.id }}
           releaseBody: ${{ github.event.release.body }}
           tagName: ${{ github.event.release.tag_name }}
-          args: ${{ matrix.config }} ${{ matrix.target }}
           updaterJsonPreferNsis: true
 
       - name: build draft release binary
@@ -144,13 +133,11 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VITE_IS_DESKTOP: true
-          RUSTFLAGS: ${{ matrix.rustflags }}
         with:
           includeDebug: true
           includeRelease: false
           projectPath: packages/client
-          tauriScript: pnpm tauri
+          tauriScript: pnpm turbo --filter @retrom/client
           args: ${{ matrix.target }}
           prerelease: true
           releaseDraft: true
@@ -238,7 +225,7 @@ jobs:
             pnpm install && pnpm exec buf generate
 
             # Build the application
-            pnpm --filter retrom-client build --verbose --config packages/client/tauri.build.conf.json ${{ env.BUILD_FLAGS }}
+            pnpm turbo --filter @retrom/client build -- ${{ env.BUILD_FLAGS }}
 
       - name: Get app version
         if: ${{ github.event_name == 'release' }}

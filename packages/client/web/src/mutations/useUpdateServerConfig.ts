@@ -1,4 +1,4 @@
-import { ServerConfig } from "@/generated/retrom/server/config";
+import { ServerConfig } from "@retrom/codegen/retrom/server/config";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

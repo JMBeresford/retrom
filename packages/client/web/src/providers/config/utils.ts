@@ -1,4 +1,4 @@
-import { RetromClientConfig } from "@/generated/retrom/client/client-config";
+import { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config";
 import { z } from "zod";
 
 const {

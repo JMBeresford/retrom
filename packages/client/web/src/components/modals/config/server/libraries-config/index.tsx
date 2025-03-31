@@ -10,7 +10,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
-import { ServerConfig, StorageType } from "@/generated/retrom/server/config";
+import {
+  ServerConfig,
+  StorageType,
+} from "@retrom/codegen/retrom/server/config";
 import { useUpdateServerConfig } from "@/mutations/useUpdateServerConfig";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";

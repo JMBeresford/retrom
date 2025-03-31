@@ -1,5 +1,5 @@
-import { Game } from "@/generated/retrom/models/games";
-import { GameMetadata } from "@/generated/retrom/models/metadata";
+import { Game } from "@retrom/codegen/retrom/models/games";
+import { GameMetadata } from "@retrom/codegen/retrom/models/metadata";
 import { cn, getFileStub, Image } from "@/lib/utils";
 import { ActionButton } from "../components/action-button";
 import { GameDetailProvider } from "@/providers/game-details";

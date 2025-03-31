@@ -1,17 +1,20 @@
 import { toast } from "@/components/ui/use-toast";
-import { Emulator, EmulatorProfile } from "@/generated/retrom/models/emulators";
-import { GameFile } from "@/generated/retrom/models/game-files";
-import { Game } from "@/generated/retrom/models/games";
+import {
+  Emulator,
+  EmulatorProfile,
+} from "@retrom/codegen/retrom/models/emulators";
+import { GameFile } from "@retrom/codegen/retrom/models/game-files";
+import { Game } from "@retrom/codegen/retrom/models/games";
 import {
   GameMetadata,
   PlatformMetadata,
-} from "@/generated/retrom/models/metadata";
-import { Platform } from "@/generated/retrom/models/platforms";
+} from "@retrom/codegen/retrom/models/metadata";
+import { Platform } from "@retrom/codegen/retrom/models/platforms";
 
 import {
   GetGameMetadataResponse_GameGenres,
   GetGameMetadataResponse_SimilarGames,
-} from "@/generated/retrom/services";
+} from "@retrom/codegen/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
 import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";

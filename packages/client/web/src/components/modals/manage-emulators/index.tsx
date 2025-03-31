@@ -27,13 +27,13 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { usePlatforms } from "@/queries/usePlatforms";
-import { Platform } from "@/generated/retrom/models/platforms";
+import { Platform } from "@retrom/codegen/retrom/models/platforms";
 import {
   Emulator,
   NewEmulator,
   SaveStrategy,
   UpdatedEmulator,
-} from "@/generated/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators";
 import { z } from "zod";
 import { CreateEmulator } from "./create-emulator";
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDeleteEmulators } from "@/mutations/useDeleteEmulators";
-import { PlatformMetadata } from "@/generated/retrom/models/metadata";
+import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata";
 import { useNavigate } from "@tanstack/react-router";
 import { useLocalEmulatorConfigs } from "@/queries/useLocalEmulatorConfigs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

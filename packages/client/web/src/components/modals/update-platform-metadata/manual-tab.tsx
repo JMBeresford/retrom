@@ -16,10 +16,10 @@ import { LoaderCircleIcon } from "lucide-react";
 import { cn, getFileName, InferSchema } from "@/lib/utils";
 import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { Textarea } from "../../ui/textarea";
-import { PlatformMetadata } from "@/generated/retrom/models/metadata";
+import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata";
 import { useUpdatePlatformMetadata } from "@/mutations/useUpdatePlatformMetadata";
 import { useNavigate } from "@tanstack/react-router";
-import { Platform } from "@/generated/retrom/models/platforms";
+import { Platform } from "@retrom/codegen/retrom/models/platforms";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";
 

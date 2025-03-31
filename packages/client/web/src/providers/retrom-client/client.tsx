@@ -8,7 +8,7 @@ import {
   JobServiceDefinition,
   ServerServiceDefinition,
   FileExplorerServiceDefinition,
-} from "@/generated/retrom/services";
+} from "@retrom/codegen/retrom/services";
 import { createClient, createChannel } from "nice-grpc-web";
 
 export class RetromClient {

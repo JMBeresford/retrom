@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { usePlayGame } from "@/mutations/usePlayGame";
 import { usePlayStatusQuery } from "@/queries/usePlayStatus";
-import { PlayStatus } from "@/generated/retrom/client/client-utils";
+import { PlayStatus } from "@retrom/codegen/retrom/client/client-utils";
 import { useStopGame } from "@/mutations/useStopGame";
 import { ComponentProps, ForwardedRef, forwardRef, useCallback } from "react";
 import { LoaderCircleIcon, PlayIcon, PlusIcon, Square } from "lucide-react";

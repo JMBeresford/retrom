@@ -1,17 +1,16 @@
 {
-  "name": "retrom-plugin-standalone-api",
-  "version": "0.1.0",
-  "author": "You",
-  "description": "",
+  "name": "@retrom/plugin-standalone",
   "type": "module",
   "exports": {
-    "types": "./guest-js/index.ts",
-    "import": "./guest-js/index.ts"
+    "types": "./dist/index.d.ts",
+    "default": "./dist/index.js"
   },
-  "files": [
-    "guest-js",
-    "README.md"
-  ],
+  "scripts": {
+    "build": "tsc -b",
+    "cargo-build": "cargo build",
+    "lint": "eslint ./guest-js/",
+    "cargo-lint": "cargo clippy --all-targets --all-features -- -Dwarnings"
+  },
   "dependencies": {
     "@tauri-apps/api": ">=2.0.0-beta.6"
   },
