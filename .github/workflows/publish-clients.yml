@@ -99,7 +99,7 @@ jobs:
           arch -x86_64 /usr/local/bin/brew install postgresql@17
 
       - name: install frontend dependencies
-        run: pnpm install && pnpm exec buf generate
+        run: pnpm install
 
       - name: build release binary
         if: ${{ github.event_name == 'release' }}
@@ -222,7 +222,7 @@ jobs:
             npm i -g pnpm
 
             # Install frontend dependencies
-            pnpm install && pnpm exec buf generate
+            pnpm install
 
             # Build the application
             pnpm turbo --filter @retrom/client build -- ${{ env.BUILD_FLAGS }}

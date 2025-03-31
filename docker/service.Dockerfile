@@ -4,14 +4,14 @@ FROM common AS project
 COPY ./packages/. /app/packages
 COPY ./plugins/. /app/plugins
 COPY  ./Cargo.lock \
-      ./Cargo.toml \
-      ./package.json \
-      ./buf.gen.yaml \
-      ./buf.yaml \
-      ./pnpm-lock.yaml \
-      ./pnpm-workspace.yaml \
-      ./tsconfig.json \
-      /app/
+  ./Cargo.toml \
+  ./package.json \
+  ./buf.gen.yaml \
+  ./buf.yaml \
+  ./pnpm-lock.yaml \
+  ./pnpm-workspace.yaml \
+  ./tsconfig.json \
+  /app/
 
 ### WEB CLIENT
 FROM common AS web-deps
@@ -27,10 +27,9 @@ COPY --from=project /app /app
 WORKDIR /app
 
 RUN pnpm install --frozen-lockfile && \
-    pnpm exec buf generate && \
-    pnpm --filter=web build && \
-    pnpm deploy --filter=web /web && \
-    mv /app/packages/client/web/dist /web/dist
+  pnpm turbo --filter @retrom/client-web build && \
+  pnpm deploy --filter=@retrom/client-web /web && \
+  mv /app/packages/client/web/dist /web/dist
 
 ### SERVICE BINARY
 FROM rust:slim-bookworm AS service-deps
@@ -73,14 +72,14 @@ COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/start.sh /app/start.sh
 
 RUN mkdir -p /app/data/db && \
-    mkdir /app/psql && \
-    mkdir /app/config
+  mkdir /app/psql && \
+  mkdir /app/config
 
 VOLUME ["/app/config", "/app/data", "/app/psql"]
 
 RUN chown -R retrom:retrom /app && \
-    chmod -R "=rwx" /app && \
-    chmod +x /app/start.sh
+  chmod -R "=rwx" /app && \
+  chmod +x /app/start.sh
 
 EXPOSE ${RETROM_SERVER_PORT}
 EXPOSE ${PORT}
