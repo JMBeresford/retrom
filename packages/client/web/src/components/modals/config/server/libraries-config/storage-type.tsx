@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { StorageType } from "@/generated/retrom/server/config";
+import { StorageType } from "@retrom/codegen/retrom/server/config";
 
 export function StorageTypeSelect<
   Field extends ControllerRenderProps<

@@ -27,7 +27,7 @@ import {
   saveStrategyDisplayMap,
 } from ".";
 import { useCallback } from "react";
-import { SaveStrategy } from "@/generated/retrom/models/emulators";
+import { SaveStrategy } from "@retrom/codegen/retrom/models/emulators";
 
 export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
   const { platforms } = props;

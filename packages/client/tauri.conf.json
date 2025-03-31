@@ -29,8 +29,6 @@
     }
   },
   "build": {
-    "beforeBuildCommand": "pnpm --shell-emulator --filter=web build:desktop",
-    "beforeDevCommand": "pnpm --filter=web dev --port 3000",
     "frontendDist": "./web/dist",
     "devUrl": "http://localhost:3000"
   },

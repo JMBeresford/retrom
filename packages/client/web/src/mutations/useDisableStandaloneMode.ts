@@ -1,6 +1,6 @@
 import { useConfigStore } from "@/providers/config";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { disableStandaloneMode } from "retrom-plugin-standalone-api";
+import { disableStandaloneMode } from "@retrom/plugin-standalone";
 
 export function useDisableStandaloneMode() {
   const configStore = useConfigStore();

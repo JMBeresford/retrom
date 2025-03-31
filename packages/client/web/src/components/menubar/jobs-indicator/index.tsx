@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { JobStatus } from "@/generated/retrom/jobs";
+import { JobStatus } from "@retrom/codegen/retrom/jobs";
 import { cn } from "@/lib/utils";
 import { useJobProgress } from "@/queries/useJobProgress";
 import { LoaderCircleIcon } from "lucide-react";

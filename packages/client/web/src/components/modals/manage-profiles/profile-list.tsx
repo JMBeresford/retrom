@@ -12,7 +12,10 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Emulator, EmulatorProfile } from "@/generated/retrom/models/emulators";
+import {
+  Emulator,
+  EmulatorProfile,
+} from "@retrom/codegen/retrom/models/emulators";
 import { Edit, PlusIcon, Trash } from "lucide-react";
 import { EditProfileDialog } from "./edit-profile-dialog";
 import {

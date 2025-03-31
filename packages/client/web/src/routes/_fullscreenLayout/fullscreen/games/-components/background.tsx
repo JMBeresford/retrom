@@ -1,4 +1,4 @@
-import { GameMetadata } from "@/generated/retrom/models/metadata";
+import { GameMetadata } from "@retrom/codegen/retrom/models/metadata";
 import { Image } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { CatchBoundary } from "@tanstack/react-router";

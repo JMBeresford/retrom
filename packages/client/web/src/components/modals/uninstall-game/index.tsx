@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
-import { InstallationStatus } from "@/generated/retrom/client/client-utils";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
 import { cn, getFileStub } from "@/lib/utils";
 import { useUninstallGame } from "@/mutations/useUninstallGame";
 import { useGameDetail } from "@/providers/game-details";

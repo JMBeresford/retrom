@@ -1,7 +1,7 @@
 import {
   InterfaceConfig_GameListEntryImage,
   RetromClientConfig,
-} from "@/generated/retrom/client/client-config";
+} from "@retrom/codegen/retrom/client/client-config";
 import * as Versions from "./version-index";
 
 export function migrate(

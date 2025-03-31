@@ -1,7 +1,7 @@
 version: v2
 plugins:
   - remote: buf.build/community/stephenh-ts-proto
-    out: packages/client/web/src/generated
+    out: ./generated
     opt:
       - paths=source_relative
       - useDate=false

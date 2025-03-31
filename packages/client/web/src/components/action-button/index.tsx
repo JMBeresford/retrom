@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { InstallationStatus } from "@/generated/retrom/client/client-utils";
-import { Game } from "@/generated/retrom/models/games";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
+import { Game } from "@retrom/codegen/retrom/models/games";
 import { PlatformDependent } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";

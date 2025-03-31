@@ -13,13 +13,16 @@ import {
 import { cn } from "@/lib/utils";
 import { EllipsisVertical } from "lucide-react";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { InstallationStatus } from "@/generated/retrom/client/client-utils";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
 import { ActionButton } from "../../../../../../components/action-button";
 import { useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
-import { openInstallationDir } from "retrom-plugin-installer-api";
+import { openInstallationDir } from "@retrom/plugin-installer";
 import { Fragment, useMemo } from "react";
-import { Emulator, EmulatorProfile } from "@/generated/retrom/models/emulators";
+import {
+  Emulator,
+  EmulatorProfile,
+} from "@retrom/codegen/retrom/models/emulators";
 import { Badge } from "@/components/ui/badge";
 import { usePlayGame } from "@/mutations/usePlayGame";
 

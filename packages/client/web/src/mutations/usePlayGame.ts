@@ -1,7 +1,7 @@
-import { Game } from "@/generated/retrom/models/games";
+import { Game } from "@retrom/codegen/retrom/models/games";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
-import { PlayGamePayload } from "@/generated/retrom/client/client-utils";
+import { PlayGamePayload } from "@retrom/codegen/retrom/client/client-utils";
 
 export function usePlayGame(game?: Game) {
   const queryClient = useQueryClient();

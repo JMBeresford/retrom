@@ -20,7 +20,7 @@ import {
   Emulator,
   EmulatorProfile,
   NewEmulatorProfile,
-} from "@/generated/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators";
 import { cn, InferSchema } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";

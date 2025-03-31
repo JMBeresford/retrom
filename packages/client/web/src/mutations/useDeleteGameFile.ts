@@ -1,4 +1,4 @@
-import { DeleteGameFilesRequest } from "@/generated/retrom/services";
+import { DeleteGameFilesRequest } from "@retrom/codegen/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

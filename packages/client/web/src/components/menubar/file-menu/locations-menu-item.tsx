@@ -4,7 +4,7 @@ import {
   MenubarSubContent,
   MenubarSubTrigger,
 } from "@/components/ui/menubar";
-import { openInstallationDir } from "retrom-plugin-installer-api";
+import { openInstallationDir } from "@retrom/plugin-installer";
 
 export function LocationsMenuItem() {
   return (

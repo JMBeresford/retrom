@@ -1,4 +1,4 @@
-import { NewClient } from "@/generated/retrom/models/clients";
+import { NewClient } from "@retrom/codegen/retrom/models/clients";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

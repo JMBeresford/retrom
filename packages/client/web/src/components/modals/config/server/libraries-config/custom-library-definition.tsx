@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { useLayoutEffect, useMemo } from "react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { StorageType } from "@/generated/retrom/server/config";
+import { StorageType } from "@retrom/codegen/retrom/server/config";
 
 export function CustomLibraryDefinitionInput<
   Field extends ControllerRenderProps<

@@ -20,7 +20,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { FolderOpenIcon } from "lucide-react";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { migrateInstallationDir } from "retrom-plugin-installer-api";
+import { migrateInstallationDir } from "@retrom/plugin-installer";
 import { z } from "zod";
 
 type ConfigSchema = z.infer<typeof configSchema>;

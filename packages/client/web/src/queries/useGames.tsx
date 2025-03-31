@@ -1,6 +1,9 @@
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/components/ui/use-toast";
-import { GetGamesRequest, GetGamesResponse } from "@/generated/retrom/services";
+import {
+  GetGamesRequest,
+  GetGamesResponse,
+} from "@retrom/codegen/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";

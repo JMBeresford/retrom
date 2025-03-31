@@ -2,13 +2,16 @@
   "files": [],
   "references": [
     {
-      "path": "./packages/client/web/tsconfig.json"
+      "path": "./packages/client/web/"
     },
     {
-      "path": "./plugins/retrom-plugin-installer/tsconfig.json"
+      "path": "./plugins/retrom-plugin-installer/"
     },
     {
       "path": "./plugins/retrom-plugin-standalone/"
+    },
+    {
+      "path": "./plugins/retrom-plugin-config/"
     }
   ]
 }

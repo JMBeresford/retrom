@@ -1,7 +1,7 @@
 import {
   GetDefaultEmulatorProfilesRequest,
   GetDefaultEmulatorProfilesResponse,
-} from "@/generated/retrom/services";
+} from "@retrom/codegen/retrom/services";
 import { useConfig } from "@/providers/config";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";

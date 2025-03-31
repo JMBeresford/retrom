@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { RetromClientConfig_Server } from "@/generated/retrom/client/client-config";
+import { RetromClientConfig_Server } from "@retrom/codegen/retrom/client/client-config";
 import { cn } from "@/lib/utils";
 import { useDisableStandaloneMode } from "@/mutations/useDisableStandaloneMode";
 import { useEnableStandaloneMode } from "@/mutations/useEnableStandaloneMode";
@@ -25,7 +25,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, LoaderCircle } from "lucide-react";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { clearInstallationDir } from "retrom-plugin-installer-api";
+import { clearInstallationDir } from "@retrom/plugin-installer";
 import { z } from "zod";
 
 export function ConnectionConfig() {

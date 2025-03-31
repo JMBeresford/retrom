@@ -1,14 +1,15 @@
 {
-  "name": "retrom-client",
+  "name": "@retrom/client",
   "description": "The tauri wrapper for the retrom client",
   "type": "module",
   "scripts": {
-    "dev": "VITE_IS_DESKTOP=true tauri dev --no-watch --config tauri.dev.conf.json",
-    "build": "tauri build --config tauri.build.conf.json"
+    "dev:desktop": "tauri dev --no-watch --config tauri.dev.conf.json",
+    "build:desktop": "tauri build --config tauri.build.conf.json"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.0.0-rc.2",
     "@types/node": "^20",
+    "@retrom/client-web": "workspace:*",
     "execa": "^9.3.0"
   }
 }

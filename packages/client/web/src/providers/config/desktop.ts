@@ -1,5 +1,5 @@
-import { RetromClientConfig } from "@/generated/retrom/client/client-config";
-import * as ConfigFile from "retrom-plugin-config-api";
+import { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config";
+import * as ConfigFile from "@retrom/plugin-config";
 import { StateStorage } from "zustand/middleware";
 import { LocalConfig } from ".";
 

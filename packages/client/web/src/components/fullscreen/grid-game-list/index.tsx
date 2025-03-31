@@ -1,5 +1,5 @@
 import { GameWithMetadata } from "@/components/game-list";
-import { InterfaceConfig_GameListEntryImage } from "@/generated/retrom/client/client-config";
+import { InterfaceConfig_GameListEntryImage } from "@retrom/codegen/retrom/client/client-config";
 import { cn, getFileStub } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { useNavigate } from "@tanstack/react-router";

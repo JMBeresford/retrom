@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { ServerConfig } from "../generated/retrom/server/config";
+import { ServerConfig } from "@retrom/codegen/retrom/server/config";
 
 export function readLocalCargoToml(): string {
   const path = resolve(process.cwd(), "../../../Cargo.toml");
