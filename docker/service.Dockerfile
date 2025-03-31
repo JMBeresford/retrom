@@ -18,9 +18,13 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN npm i -g corepack@latest
 RUN corepack enable
-RUN apt-get update && apt-get install protobuf-compiler ca-certificates openssl libssl-dev libpq-dev libxml2 -y
+RUN apt-get update && apt-get install -y \
+  protobuf-compiler ca-certificates openssl libssl-dev libpq-dev libxml2 build-essential curl
 
 FROM web-deps AS web-builder
+
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 COPY --from=project /app /app
 WORKDIR /app
