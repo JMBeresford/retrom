@@ -46,10 +46,10 @@ jobs:
           sudo apt-get install -y libpq-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: install frontend dependencies
-        run: pnpm install && pnpm exec buf generate
+        run: pnpm install
 
       - name: run tests
         run: cargo test
 
       - name: run linter
-        run: cargo check && pnpm --filter=web lint
+        run: cargo check && pnpm turbo lint
