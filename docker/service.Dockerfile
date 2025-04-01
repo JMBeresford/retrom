@@ -19,7 +19,16 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN npm i -g corepack@latest
 RUN corepack enable
 RUN apt-get update && apt-get install -y \
-  protobuf-compiler ca-certificates openssl libssl-dev libpq-dev libxml2 build-essential curl
+  protobuf-compiler \
+  ca-certificates \
+  openssl \
+  libssl-dev \
+  libpq-dev \
+  libxml2 \
+  build-essential \
+  curl \
+  pkg-config \
+  libwebkit2gtk-4.1-dev
 
 FROM web-deps AS web-builder
 
