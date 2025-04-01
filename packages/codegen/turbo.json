@@ -2,14 +2,8 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
-    "transit": {
-      "dependsOn": ["cargo-build"]
-    },
     "build": {
       "dependsOn": ["generate"]
-    },
-    "build:desktop": {
-      "dependsOn": ["transit", "generate"]
     }
   }
 }

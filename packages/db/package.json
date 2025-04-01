@@ -1,0 +1,10 @@
+{
+  "name": "@retrom/db",
+  "scripts": {
+    "cargo-build": "cargo build",
+    "format": "cargo fmt",
+    "format:check": "cargo fmt --check",
+    "lint": "cargo clippy",
+    "lint:fix": "cargo clippy --fix"
+  }
+}

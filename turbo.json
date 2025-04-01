@@ -5,7 +5,7 @@
   "tasks": {
     /* BUILDING */
     "build": {
-      "dependsOn": ["^build", "check-types", "cargo-build-transit"],
+      "dependsOn": ["^build", "cargo-build-transit"],
       "outputs": ["dist/**", "$TURBO_ROOT$/target/**"]
     },
     // ensure TS+Rust packages build for both languages via this transit node
@@ -18,16 +18,11 @@
     },
 
     /* LINTING */
-    "cargo-lint": {
-      "dependsOn": ["@retrom/codegen#cargo-build"]
-    },
-    // ensure TS+Rust packages lint both languages via this transit node
-    // when calling 'lint' -- no need to explicitly call 'cargo-lint'
-    "cargo-lint-transit": {
-      "dependsOn": ["cargo-lint"]
-    },
     "lint": {
-      "dependsOn": ["^generate", "cargo-lint-transit", "@retrom/codegen#build"]
+      "dependsOn": ["@retrom/codegen#build"]
+    },
+    "lint:fix": {
+      "dependsOn": ["@retrom/codegen#build"]
     },
 
     /* FORMATTING */
@@ -39,9 +34,6 @@
     },
 
     /* OTHER */
-    "check-types": {
-      "dependsOn": ["^check-types", "@retrom/codegen#build"]
-    },
     "dev": {
       "dependsOn": ["@retrom/codegen#build"],
       "persistent": true,

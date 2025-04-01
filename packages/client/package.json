@@ -4,7 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "tauri dev --no-watch --config tauri.dev.conf.json",
-    "build": "tauri build --config tauri.build.conf.json"
+    "build": "tauri build --config tauri.build.conf.json",
+    "format": "cargo fmt",
+    "format:check": "cargo fmt --check",
+    "lint": "cargo clippy",
+    "lint:fix": "cargo clippy --fix"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.0.0-rc.2",

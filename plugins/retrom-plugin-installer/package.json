@@ -8,7 +8,10 @@
   "scripts": {
     "build": "tsc -b",
     "cargo-build": "cargo build",
-    "lint": "eslint ./guest-js/"
+    "format": "prettier ./guest-js/**/*.ts --write && cargo fmt",
+    "format:check": "prettier ./guest-js/**/*.ts --check && cargo fmt --check",
+    "lint": "eslint ./guest-js/ && cargo clippy",
+    "lint:fix": "eslint ./guest-js/ --fix && cargo clippy --fix"
   },
   "dependencies": {
     "@tauri-apps/api": "workspace:*",
