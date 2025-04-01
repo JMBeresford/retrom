@@ -121,6 +121,13 @@ jobs:
           arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           arch -x86_64 /usr/local/bin/brew install postgresql@17
 
+      - name: Set Perl environment variables # https://github.com/sfackler/rust-openssl/issues/2149#issuecomment-2014064057
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          echo "PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          echo "OPENSSL_SRC_PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: install frontend dependencies
         run: pnpm install
 
@@ -176,7 +183,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [aarch64, armv7l]
+        arch: [aarch64]
         include:
           - arch: aarch64
             cpu: cortex-a72
@@ -184,12 +191,12 @@ jobs:
             deb: arm64
             rpm: aarch64
             appimage: aarch64
-          - arch: armv7l
-            cpu: cortex-a53
-            deb: armhfp
-            rpm: arm
-            appimage: armhf
-            base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv7-Bookworm.img.xz
+          # - arch: armv7l
+          #   cpu: cortex-a53
+          #   deb: armhfp
+          #   rpm: arm
+          #   appimage: armhf
+          #   base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv7-Bookworm.img.xz
 
     steps:
       - uses: actions/checkout@v4
@@ -198,9 +205,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: ${{ matrix.cpu }}-turbo-${{ env.CACHE_VERSION }}-${{ github.sha }}
+          key: ${{ matrix.arch }}-turbo-${{ env.CACHE_VERSION }}-${{ github.sha }}
           restore-keys: |
-            ${{ matrix.cpu }}-turbo-${{ env.CACHE_VERSION }}
+            ${{ matrix.arch }}-turbo-${{ env.CACHE_VERSION }}
 
       - name: Cache rust build artifacts
         uses: Swatinem/rust-cache@v2
