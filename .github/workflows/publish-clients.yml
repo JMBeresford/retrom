@@ -24,6 +24,16 @@ jobs:
     name: Build Desktop Clients
     env:
       PQ_LIB_STATIC: 1
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
     permissions:
       contents: write
     strategy:
@@ -114,28 +124,25 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install
 
+      - name: build client
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          BUILD_ARGS: ${{ matrix.target }}
+        run: |
+          pnpm turbo --filter @retrom/client build
+
       - name: build release binary
         if: ${{ github.event_name == 'release' }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          BUILD_ARGS: ${{ matrix.target }}
         with:
           includeDebug: ${{ github.event.release.prerelease }}
           includeRelease: ${{ !github.event.release.prerelease }}
           prerelease: ${{ github.event.release.prerelease }}
           projectPath: packages/client
           tauriScript: pnpm turbo --filter @retrom/client
-          args: ${{ matrix.target }}
           releaseId: ${{ github.event.release.id }}
           releaseBody: ${{ github.event.release.body }}
           tagName: ${{ github.event.release.tag_name }}
@@ -146,12 +153,12 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_ARGS: ${{ matrix.target }}
         with:
           includeDebug: true
           includeRelease: false
           projectPath: packages/client
           tauriScript: pnpm turbo --filter @retrom/client
-          args: ${{ matrix.target }}
           prerelease: true
           releaseDraft: true
           releaseName: ${{ inputs.title }}
@@ -163,7 +170,7 @@ jobs:
 
     env:
       PQ_LIB_STATIC: 1
-      BUILD_FLAGS: ${{ github.event.release.prerelease && '--debug' || '' }}
+      BUILD_ARGS: ${{ github.event.release.prerelease && '--debug' || '' }}
     permissions:
       contents: write
     strategy:
@@ -246,7 +253,7 @@ jobs:
             pnpm install
 
             # Build the application
-            pnpm turbo --filter @retrom/client build -- ${{ env.BUILD_FLAGS }}
+            pnpm turbo --filter @retrom/client build
 
       - name: Get app version
         if: ${{ github.event_name == 'release' }}

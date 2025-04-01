@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      "env": ["BUILD_ARGS"],
       "dependsOn": ["@retrom/client-web#build:desktop"]
     },
     "dev": {
