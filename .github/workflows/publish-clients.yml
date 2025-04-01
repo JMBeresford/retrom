@@ -16,6 +16,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+env:
+  CACHE_VERSION: 1
+
 jobs:
   build-desktop-clients:
     name: Build Desktop Clients
@@ -40,6 +43,14 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache turbo build setup
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ matrix.platform }}-${{ matrix.target }}-turbo-${{ env.CACHE_VERSION }}-${{ github.sha }}
+          restore-keys: |
+            ${{ matrix.platform }}-${{ matrix.target }}-turbo-${{ env.CACHE_VERSION }}
 
       - name: setup pnpm
         uses: pnpm/action-setup@v4
@@ -174,7 +185,15 @@ jobs:
             base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv7-Bookworm.img.xz
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Cache turbo build setup
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ matrix.cpu }}-turbo-${{ env.CACHE_VERSION }}-${{ github.sha }}
+          restore-keys: |
+            ${{ matrix.cpu }}-turbo-${{ env.CACHE_VERSION }}
 
       - name: Cache rust build artifacts
         uses: Swatinem/rust-cache@v2
