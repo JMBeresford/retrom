@@ -118,13 +118,6 @@ jobs:
           arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           arch -x86_64 /usr/local/bin/brew install postgresql@17
 
-      # - name: Set Perl environment variables # https://github.com/sfackler/rust-openssl/issues/2149#issuecomment-2014064057
-      #   if: runner.os == 'Windows'
-      #   shell: pwsh
-      #   run: |
-      #     echo "PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-      #     echo "OPENSSL_SRC_PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-
       - name: install frontend dependencies
         run: pnpm install
 
@@ -245,6 +238,7 @@ jobs:
               librsvg2-dev \
               patchelf \
               libfuse2 \
+              protobuf-compiler \
               file
 
             curl https://sh.rustup.rs -sSf | sh -s -- -y
