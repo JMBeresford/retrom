@@ -173,7 +173,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [aarch64]
+        arch: [aarch64, armv7l]
         include:
           - arch: aarch64
             cpu: cortex-a72
@@ -181,12 +181,12 @@ jobs:
             deb: arm64
             rpm: aarch64
             appimage: aarch64
-          # - arch: armv7l
-          #   cpu: cortex-a53
-          #   deb: armhfp
-          #   rpm: arm
-          #   appimage: armhf
-          #   base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv7-Bookworm.img.xz
+          - arch: armv7l
+            cpu: cortex-a53
+            deb: armhfp
+            rpm: arm
+            appimage: armhf
+            base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv7-Bookworm.img.xz
 
     steps:
       - uses: actions/checkout@v4
@@ -239,6 +239,8 @@ jobs:
               patchelf \
               libfuse2 \
               protobuf-compiler \
+              libprotobuf-dev \
+              libprotoc-dev \
               file
 
             curl https://sh.rustup.rs -sSf | sh -s -- -y
