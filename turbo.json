@@ -19,10 +19,10 @@
 
     /* LINTING */
     "lint": {
-      "dependsOn": ["@retrom/codegen#build"]
+      "dependsOn": ["^build"]
     },
     "lint:fix": {
-      "dependsOn": ["@retrom/codegen#build"]
+      "dependsOn": ["^build"]
     },
 
     /* FORMATTING */
