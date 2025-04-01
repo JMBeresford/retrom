@@ -3,17 +3,11 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     },
     "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     /* Bundler mode */
@@ -27,8 +21,5 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-  ]
+  "include": ["./src/**/*.ts", "./src/**/*.tsx"]
 }
