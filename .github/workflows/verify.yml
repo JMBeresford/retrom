@@ -51,5 +51,8 @@ jobs:
       - name: run tests
         run: cargo test
 
+      - name: run formatter
+        run: pnpm turbo format:check
+
       - name: run linter
-        run: cargo check && pnpm turbo lint
+        run: pnpm turbo lint
