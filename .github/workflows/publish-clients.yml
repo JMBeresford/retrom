@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  CACHE_VERSION: 1
+  CACHE_VERSION: 2
 
 jobs:
   build-desktop-clients:
@@ -48,9 +48,6 @@ jobs:
           - platform: "windows-latest"
 
     runs-on: ${{ matrix.platform }}
-    defaults:
-      run:
-        shell: bash
     steps:
       - uses: actions/checkout@v4
 
@@ -121,12 +118,12 @@ jobs:
           arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           arch -x86_64 /usr/local/bin/brew install postgresql@17
 
-      - name: Set Perl environment variables # https://github.com/sfackler/rust-openssl/issues/2149#issuecomment-2014064057
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          echo "PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          echo "OPENSSL_SRC_PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      # - name: Set Perl environment variables # https://github.com/sfackler/rust-openssl/issues/2149#issuecomment-2014064057
+      #   if: runner.os == 'Windows'
+      #   shell: pwsh
+      #   run: |
+      #     echo "PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      #     echo "OPENSSL_SRC_PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: install frontend dependencies
         run: pnpm install
