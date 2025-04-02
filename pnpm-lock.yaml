@@ -380,6 +380,10 @@ importers:
         specifier: ^1.36.0
         version: 1.39.0
 
+  packages/db: {}
+
+  packages/service: {}
+
   plugins/retrom-plugin-config:
     dependencies:
       '@retrom/codegen':

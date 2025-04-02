@@ -45,6 +45,7 @@ jobs:
           - platform: "macos-latest" # for Intel based macs.
             target: "--target x86_64-apple-darwin"
           - platform: "ubuntu-24.04"
+          - platform: "ubuntu-24.04-arm"
           - platform: "windows-latest"
 
     runs-on: ${{ matrix.platform }}
@@ -88,10 +89,11 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: install dependencies (ubuntu 24 only)
-        if: matrix.platform == 'ubuntu-24.04' # This must match the platform value defined above.
+        if: startsWith(matrix.platform, 'ubuntu-24.04') # This must match the platform value defined above.
         run: |
           sudo apt-get update
           sudo apt-get install -y libpq-dev \
+            postgresql-client-17 \
             libappindicator3-dev \
             librsvg2-dev \
             patchelf \
@@ -105,7 +107,7 @@ jobs:
       - name: install dependencies (windows only)
         if: matrix.platform == 'windows-latest' # This must match the platform value defined above.
         run: |
-          choco install -y postgresql
+          choco install -y postgresql17
 
       - name: install dependencies (macos m1 only)
         if: matrix.target == '--target aarch64-apple-darwin' # This must match the value defined above.
@@ -160,117 +162,3 @@ jobs:
           releaseDraft: true
           releaseName: ${{ inputs.title }}
           tagName: ${{ inputs.title }}-pre.${{ github.sha }}
-
-  build-desktop-clients_arm:
-    name: Build Desktop Clients (ARM Linux)
-    runs-on: ubuntu-22.04
-
-    env:
-      PQ_LIB_STATIC: 1
-      BUILD_ARGS: ${{ github.event.release.prerelease && '--debug' || '' }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [aarch64]
-        include:
-          - arch: aarch64
-            cpu: cortex-a72
-            base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv8-Bookworm.img.xz
-            deb: arm64
-            rpm: aarch64
-            appimage: aarch64
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache turbo build setup
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: ${{ matrix.arch }}-turbo-${{ env.CACHE_VERSION }}-${{ github.sha }}
-          restore-keys: |
-            ${{ matrix.arch }}-turbo-${{ env.CACHE_VERSION }}
-
-      - name: Cache rust build artifacts
-        uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: true
-
-      - name: Build binary
-        uses: pguyot/arm-runner-action@v2.6.5
-        with:
-          base_image: ${{ matrix.base_image }}
-          cpu: ${{ matrix.cpu }}
-          bind_mount_repository: true
-          image_additional_mb: 10240
-          optimize_image: no
-          commands: |
-            # Prevent Rust from complaining about $HOME not matching eid home
-            export HOME=/root
-
-            # Workaround to CI worker being stuck on Updating crates.io index
-            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
-
-            # Install setup prerequisites
-            apt-get update -y --allow-releaseinfo-change
-            apt-get autoremove -y
-            apt-get install -y --no-install-recommends --no-install-suggests \
-              build-essential \
-              curl \
-              libwebkit2gtk-4.1-0 \
-              libwebkit2gtk-4.1-dev \
-              libjavascriptcoregtk-4.1-0 \
-              libjavascriptcoregtk-4.1-dev \
-              gir1.2-javascriptcoregtk-4.1 \
-              gir1.2-webkit2-4.1 \
-              libpq-dev \
-              libssl-dev \
-              libgtk-3-dev \
-              libayatana-appindicator3-dev \
-              librsvg2-dev \
-              patchelf \
-              libfuse2 \
-              protobuf-compiler \
-              libprotobuf-dev \
-              libprotoc-dev \
-              file
-
-            curl https://sh.rustup.rs -sSf | sh -s -- -y
-            . "$HOME/.cargo/env"
-            curl -fsSL https://deb.nodesource.com/setup_lts.x | bash
-            apt-get install -y nodejs
-            npm i -g pnpm
-
-            # Install frontend dependencies
-            pnpm install
-
-            # Build the application
-            pnpm turbo --filter @retrom/client build
-
-      - name: Get app version
-        if: ${{ github.event_name == 'release' }}
-        run: echo "APP_VERSION=$(cat Cargo.toml | grep "^version =" | sed 's/^version =//')" >> $GITHUB_ENV
-
-      - name: Upload deb bundle
-        if: ${{ github.event_name == 'release' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: Debian Bundle
-          path: ${{ github.workspace }}/target/release/bundle/deb/Retrom_${{ env.APP_VERSION }}_${{ matrix.deb }}.deb
-
-      - name: Upload rpm bundle
-        if: ${{ github.event_name == 'release' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: RPM Bundle
-          path: ${{ github.workspace }}/target/release/bundle/rpm/Retrom-${{ env.APP_VERSION }}-1.${{ matrix.rpm }}.rpm
-
-      - name: Upload appimage bundle
-        if: ${{ github.event_name == 'release' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: AppImage Bundle
-          path: ${{ github.workspace }}/target/release/bundle/appimage/Retrom_${{ env.APP_VERSION }}_${{ matrix.appimage }}.AppImage
