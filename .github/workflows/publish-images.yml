@@ -21,6 +21,8 @@ concurrency:
 
 jobs:
   build-images:
+    env:
+      IS_LATEST: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
     strategy:
       fail-fast: false
       matrix:
@@ -29,6 +31,8 @@ jobs:
           - linux/arm64
 
     runs-on: ubuntu-latest
+    outputs:
+      metadata-json: ${{ steps.meta.outputs.json }}
     permissions:
       contents: read
       packages: write
@@ -49,6 +53,13 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},priority=900
+            type=ref,event=branch,enable=true,priority=600
+            type=ref,event=tag,enable=true,priority=600
+            type=ref,event=pr,prefix=pr-,enable=true,priority=600
+            type=raw,value=latest,enable=${{ env.IS_LATEST }}
+            type=raw,value=latest-${{ matrix.platform }},enable=${{ env.IS_LATEST }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.3.0
@@ -78,14 +89,12 @@ jobs:
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
-        if: ${{ github.event_name == 'release' }}
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
-        if: ${{ github.event_name == 'release' }}
         uses: actions/upload-artifact@v4
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
@@ -95,7 +104,9 @@ jobs:
 
   merge-digests:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'release' }}
+    env:
+      DOCKER_METADATA_OUTPUT_JSON: ${{ needs.build-images.outputs.metadata-json }}
+      VERSION: ${{ fromJSON(needs.build-images.outputs.metadata-json).labels['org.opencontainers.image.version'] }}
     needs:
       - build-images
 
@@ -112,12 +123,6 @@ jobs:
         with:
           buildkitd-flags: --debug
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
@@ -128,9 +133,9 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+          docker buildx imagetools create "$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)"
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
