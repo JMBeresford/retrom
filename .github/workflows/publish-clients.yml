@@ -41,12 +41,17 @@ jobs:
       matrix:
         include:
           - platform: "macos-latest" # for Arm based macs (M1 and above).
+            cache-key-prefix: "macos-latest-aarch64"
             target: "--target aarch64-apple-darwin"
           - platform: "macos-latest" # for Intel based macs.
+            cache-key-prefix: "macos-latest-x86_64"
             target: "--target x86_64-apple-darwin"
           - platform: "ubuntu-24.04"
+            cache-key-prefix: "ubuntu-24.04-x64"
           - platform: "ubuntu-24.04-arm"
+            cache-key-prefix: "ubuntu-24.04-aarch64"
           - platform: "windows-latest"
+            cache-key-prefix: "windows-latest"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -56,9 +61,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: ${{ matrix.platform }}-${{ matrix.target }}-turbo-${{ env.CACHE_VERSION }}-${{ github.sha }}
+          key: ${{ matrix.cache-key-prefix }}-turbo-${{ env.CACHE_VERSION }}-${{ github.sha }}
           restore-keys: |
-            ${{ matrix.platform }}-${{ matrix.target }}-turbo-${{ env.CACHE_VERSION }}
+            ${{ matrix.cache-key-prefix }}-turbo-${{ env.CACHE_VERSION }}
 
       - name: setup pnpm
         uses: pnpm/action-setup@v4
