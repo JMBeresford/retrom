@@ -1,6 +1,11 @@
 {
   "announcements": [
     {
+      "versions": ["0.7.14"],
+      "level": "error",
+      "message": "The 'latest' tag of the retrom service docker image has been corrupted on this release. This will be remedied within 24 hours, but if you are encountering issues you should manually tag your service container to `ghcr.io/jmberesford/retrom-service:retrom-v0.7.14`"
+    },
+    {
       "versions": ["0.7.0", "0.7.1"],
       "level": "error",
       "message": "This version of Retrom has critical functionality issues. A client with this version will fail to launch if steam is uninstalled, please update to 0.7.2."
