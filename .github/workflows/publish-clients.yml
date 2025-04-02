@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  CACHE_VERSION: 2
+  CACHE_VERSION: 3
 
 jobs:
   build-desktop-clients:
@@ -163,17 +163,18 @@ jobs:
 
   build-desktop-clients_arm:
     name: Build Desktop Clients (ARM Linux)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
 
     env:
       PQ_LIB_STATIC: 1
       BUILD_ARGS: ${{ github.event.release.prerelease && '--debug' || '' }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: write
     strategy:
       fail-fast: false
       matrix:
-        arch: [aarch64, armv7l]
+        arch: [aarch64]
         include:
           - arch: aarch64
             cpu: cortex-a72
@@ -181,12 +182,6 @@ jobs:
             deb: arm64
             rpm: aarch64
             appimage: aarch64
-          - arch: armv7l
-            cpu: cortex-a53
-            deb: armhfp
-            rpm: arm
-            appimage: armhf
-            base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv7-Bookworm.img.xz
 
     steps:
       - uses: actions/checkout@v4
