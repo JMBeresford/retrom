@@ -22,8 +22,26 @@ env:
 jobs:
   build-desktop-clients:
     name: Build Desktop Clients
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-latest" # for Arm based macs (M1 and above).
+            cache-key-prefix: "macos-latest-aarch64"
+            target: "aarch64-apple-darwin"
+          - platform: "macos-latest" # for Intel based macs.
+            cache-key-prefix: "macos-latest-x86_64"
+            target: "x86_64-apple-darwin"
+          - platform: "ubuntu-24.04"
+            cache-key-prefix: "ubuntu-24.04-x64"
+          - platform: "ubuntu-24.04-arm"
+            cache-key-prefix: "ubuntu-24.04-aarch64"
+          - platform: "windows-latest"
+            cache-key-prefix: "windows-latest"
     env:
       PQ_LIB_STATIC: 1
+      OUT_DIR: ${{ github.workspace }}/target/${{ matrix.target && '${{ matrix.target }}/' || '' }}
+      IS_PROD_RELEASE: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -36,22 +54,6 @@ jobs:
       APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: "macos-latest" # for Arm based macs (M1 and above).
-            cache-key-prefix: "macos-latest-aarch64"
-            target: "--target aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel based macs.
-            cache-key-prefix: "macos-latest-x86_64"
-            target: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-24.04"
-            cache-key-prefix: "ubuntu-24.04-x64"
-          - platform: "ubuntu-24.04-arm"
-            cache-key-prefix: "ubuntu-24.04-aarch64"
-          - platform: "windows-latest"
-            cache-key-prefix: "windows-latest"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -128,41 +130,56 @@ jobs:
         run: pnpm install
 
       - name: build client
-        if: ${{ github.event_name == 'pull_request' }}
         env:
-          BUILD_ARGS: ${{ matrix.target }}
+          BUILD_ARGS: ${{ matrix.target && '--target ${{ matrix.target }}' || '' }} ${{ env.IS_RELEASE && '--release' || '--debug' }}
         run: |
           pnpm turbo --filter @retrom/client build
 
-      - name: build release binary
+      - name: build updater json
         if: ${{ github.event_name == 'release' }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_ARGS: ${{ matrix.target }}
         with:
-          includeDebug: ${{ github.event.release.prerelease }}
-          includeRelease: ${{ !github.event.release.prerelease }}
-          prerelease: ${{ github.event.release.prerelease }}
-          projectPath: packages/client
-          tauriScript: pnpm turbo --filter @retrom/client
-          releaseId: ${{ github.event.release.id }}
-          releaseBody: ${{ github.event.release.body }}
-          tagName: ${{ github.event.release.tag_name }}
+          includeDebug: false
+          includeRelease: false
+          includeUpdaterJson: true
+          tauriScript: echo
+          args: --target ${{ matrix.target }}
           updaterJsonPreferNsis: true
 
-      - name: build draft release binary
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: tauri-apps/tauri-action@v0
+      - name: Upload deb bundle
+        if: ${{ github.event_name == 'release' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BUILD_ARGS: ${{ matrix.target }}
+          TARGET_DIR_PREFIX: ${{ github.workspace }}/target/${{ env.IS_PROD_RELEASE && 'release' || 'debug' }}
+        uses: actions/upload-artifact@v4
         with:
-          includeDebug: true
-          includeRelease: false
-          projectPath: packages/client
-          tauriScript: pnpm turbo --filter @retrom/client
-          prerelease: true
-          releaseDraft: true
-          releaseName: ${{ inputs.title }}
-          tagName: ${{ inputs.title }}-pre.${{ github.sha }}
+          name: Debian Bundle
+          path: |
+            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.dmg
+            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.app
+            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.app.tar.gz
+            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.deb
+            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.rpm
+            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.AppImage
+            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.exe
+            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.msi
+            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.sig
+            ${{ github.workspace }}/latest.json
+
+      # - name: build draft release binary
+      #   if: ${{ github.event_name == 'workflow_dispatch' }}
+      #   uses: tauri-apps/tauri-action@v0
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     BUILD_ARGS: ${{ matrix.target }}
+      #   with:
+      #     includeDebug: true
+      #     includeRelease: false
+      #     projectPath: packages/client
+      #     tauriScript: pnpm turbo --filter @retrom/client
+      #     prerelease: true
+      #     releaseDraft: true
+      #     releaseName: ${{ inputs.title }}
+      #     tagName: ${{ inputs.title }}-pre.${{ github.sha }}
