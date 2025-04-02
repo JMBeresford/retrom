@@ -40,7 +40,6 @@ jobs:
             cache-key-prefix: "windows-latest"
     env:
       PQ_LIB_STATIC: 1
-      OUT_DIR: ${{ github.workspace }}/target/${{ matrix.target && '${{ matrix.target }}/' || '' }}
       IS_PROD_RELEASE: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -131,7 +130,7 @@ jobs:
 
       - name: build client
         env:
-          BUILD_ARGS: ${{ matrix.target && '--target ${{ matrix.target }}' || '' }} ${{ env.IS_RELEASE && '--release' || '--debug' }}
+          BUILD_ARGS: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }} ${{ env.IS_RELEASE && '--release' || '--debug' }}
         run: |
           pnpm turbo --filter @retrom/client build
 
