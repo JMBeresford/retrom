@@ -134,40 +134,24 @@ jobs:
         run: |
           pnpm turbo --filter @retrom/client build
 
-      - name: build updater json
+      - name: upload artifacts
         if: ${{ github.event_name == 'release' }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_ARGS: ${{ matrix.target }}
         with:
-          includeDebug: false
-          includeRelease: false
+          releaseId: ${{ github.event.release.id }}
+          projectPath: packages/client
+          prerelease: ${{ !env.IS_PROD_RELEASE }}
+          includeDebug: ${{ !env.IS_PROD_RELEASE }}
+          includeRelease: ${{ env.IS_PROD_RELEASE }}
           includeUpdaterJson: true
-          tauriScript: echo
+          tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
           args: --target ${{ matrix.target }}
           updaterJsonPreferNsis: true
 
-      - name: Upload deb bundle
-        # if: ${{ github.event_name == 'release' }}
-        env:
-          TARGET_DIR_PREFIX: ${{ github.workspace }}/target/${{ env.IS_PROD_RELEASE && 'release' || 'debug' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: Debian Bundle
-          path: |
-            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.dmg
-            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.app
-            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.app.tar.gz
-            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.deb
-            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.rpm
-            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.AppImage
-            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.exe
-            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.msi
-            ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.sig
-            ${{ github.workspace }}/latest.json
-
-      - name: build draft release binary
+      - name: create draft release
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: tauri-apps/tauri-action@v0
         env:
@@ -182,6 +166,6 @@ jobs:
           includeDebug: true
           includeRelease: false
           includeUpdaterJson: true
-          tauriScript: echo
+          tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
           args: --target ${{ matrix.target }}
           updaterJsonPreferNsis: true
