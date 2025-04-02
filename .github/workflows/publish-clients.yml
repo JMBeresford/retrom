@@ -10,7 +10,7 @@ on:
 
   pull_request:
   release:
-    types: [published]
+    types: [created]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
