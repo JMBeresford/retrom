@@ -149,7 +149,7 @@ jobs:
           updaterJsonPreferNsis: true
 
       - name: Upload deb bundle
-        if: ${{ github.event_name == 'release' }}
+        # if: ${{ github.event_name == 'release' }}
         env:
           TARGET_DIR_PREFIX: ${{ github.workspace }}/target/${{ env.IS_PROD_RELEASE && 'release' || 'debug' }}
         uses: actions/upload-artifact@v4
@@ -167,18 +167,21 @@ jobs:
             ${{ env.TARGET_DIR_PREFIX }}/**/Retrom*.sig
             ${{ github.workspace }}/latest.json
 
-      # - name: build draft release binary
-      #   if: ${{ github.event_name == 'workflow_dispatch' }}
-      #   uses: tauri-apps/tauri-action@v0
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     BUILD_ARGS: ${{ matrix.target }}
-      #   with:
-      #     includeDebug: true
-      #     includeRelease: false
-      #     projectPath: packages/client
-      #     tauriScript: pnpm turbo --filter @retrom/client
-      #     prerelease: true
-      #     releaseDraft: true
-      #     releaseName: ${{ inputs.title }}
-      #     tagName: ${{ inputs.title }}-pre.${{ github.sha }}
+      - name: build draft release binary
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_ARGS: ${{ matrix.target }}
+        with:
+          projectPath: packages/client
+          prerelease: true
+          releaseDraft: true
+          releaseName: ${{ inputs.title }}
+          tagName: ${{ inputs.title }}-pre.${{ github.sha }}
+          includeDebug: true
+          includeRelease: false
+          includeUpdaterJson: true
+          tauriScript: echo
+          args: --target ${{ matrix.target }}
+          updaterJsonPreferNsis: true
