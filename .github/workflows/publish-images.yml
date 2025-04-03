@@ -3,9 +3,18 @@ name: Publish Images
 on:
   workflow_dispatch:
     inputs:
-      tags:
-        description: "Tags for the image"
+      tag:
+        description: "Optional tag for the image"
+        type: string
         required: false
+      latest:
+        description: Tag this image as `latest`?
+        type: boolean
+        default: false
+      prerelease:
+        description: Consider this run as a prerelease?
+        type: boolean
+        default: true
 
   pull_request:
   release:
@@ -22,15 +31,17 @@ concurrency:
 jobs:
   build-images:
     env:
-      IS_LATEST: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
+      IS_LATEST: ${{ inputs.latest || (github.event_name == 'release' && !github.event.release.prerelease) }}
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
+        include:
+          - platform: linux/amd64
+            runner-os: ubuntu-24.04
+          - platform: linux/arm64
+            runner-os: ubuntu-24.04-arm
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner-os }}
     outputs:
       metadata-json: ${{ steps.meta.outputs.json }}
     permissions:
@@ -60,11 +71,7 @@ jobs:
             type=ref,event=pr,prefix=pr-,enable=true,priority=600
             type=raw,value=latest,enable=${{ env.IS_LATEST }}
             type=raw,value=latest-${{ matrix.platform }},enable=${{ env.IS_LATEST }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.3.0
-        with:
-          image: tonistiigi/binfmt:qemu-v8.1.5
+            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag || false }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
