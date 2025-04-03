@@ -8,7 +8,7 @@ import {
 import {
   Emulator_OperatingSystem,
   SaveStrategy,
-} from "@/generated/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators";
 import { PlatformWithMetadata } from ".";
 import { cn, getFileStub } from "@/lib/utils";
 import { Check } from "lucide-react";

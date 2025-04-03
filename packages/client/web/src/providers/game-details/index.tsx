@@ -15,7 +15,7 @@ import { Platform } from "@retrom/codegen/retrom/models/platforms";
 import {
   GetGameMetadataResponse_GameGenres,
   GetGameMetadataResponse_SimilarGames,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services/metadata-service";
 import { checkIsDesktop } from "@/lib/env";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";

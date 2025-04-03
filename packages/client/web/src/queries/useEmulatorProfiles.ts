@@ -1,7 +1,7 @@
 import {
   GetEmulatorProfilesRequest,
   GetEmulatorProfilesResponse,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services/emulator-service";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 

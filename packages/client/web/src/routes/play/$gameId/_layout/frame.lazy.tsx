@@ -6,8 +6,6 @@ import { cn, getFileStub, millisToTimestamp } from "@/lib/utils";
 import { useCallback, useState, useMemo } from "react";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 import { useGameDetail } from "@/providers/game-details";
-import { File } from "@/generated/retrom/files";
-import { FilesystemNodeType } from "@/generated/retrom/file-explorer";
 import { Route as ParentRoute } from ".";
 import { useToast } from "@/components/ui/use-toast";
 import { Overlay } from "./-utils/overlay";
@@ -21,6 +19,8 @@ import { checkIsDesktop } from "@/lib/env";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useApiUrl } from "@/utils/useApiUrl";
 import { ConfigExtended, EmulatorJSProvider } from "@/providers/emulator-js";
+import { File } from "@retrom/codegen/retrom/files";
+import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer";
 
 export type EmuJsFrameEvent =
   | "exit"

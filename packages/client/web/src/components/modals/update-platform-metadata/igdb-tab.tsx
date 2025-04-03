@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetIgdbPlatformSearchResultsRequest } from "@retrom/codegen/retrom/services";
+import { GetIgdbPlatformSearchResultsRequest } from "@retrom/codegen/retrom/services/metadata-service";
 import {
   Select,
   SelectContent,
