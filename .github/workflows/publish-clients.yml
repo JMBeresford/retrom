@@ -10,20 +10,37 @@ on:
 
   pull_request:
   release:
-    types: [published]
+    types: [created]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  CACHE_VERSION: 3
+  CACHE_VERSION: 4
 
 jobs:
   build-desktop-clients:
     name: Build Desktop Clients
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-latest" # for Arm based macs (M1 and above).
+            cache-key-prefix: "macos-latest-aarch64"
+            target: "aarch64-apple-darwin"
+          - platform: "macos-latest" # for Intel based macs.
+            cache-key-prefix: "macos-latest-x86_64"
+            target: "x86_64-apple-darwin"
+          - platform: "ubuntu-24.04"
+            cache-key-prefix: "ubuntu-24.04-x64"
+          - platform: "ubuntu-24.04-arm"
+            cache-key-prefix: "ubuntu-24.04-aarch64"
+          - platform: "windows-latest"
+            cache-key-prefix: "windows-latest"
     env:
       PQ_LIB_STATIC: 1
+      IS_PROD_RELEASE: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -36,17 +53,6 @@ jobs:
       APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: "macos-latest" # for Arm based macs (M1 and above).
-            target: "--target aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel based macs.
-            target: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-24.04"
-          - platform: "ubuntu-24.04-arm"
-          - platform: "windows-latest"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -56,9 +62,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: ${{ matrix.platform }}-${{ matrix.target }}-turbo-${{ env.CACHE_VERSION }}-${{ github.sha }}
+          key: ${{ matrix.cache-key-prefix }}-turbo-${{ env.CACHE_VERSION }}-${{ github.sha }}
           restore-keys: |
-            ${{ matrix.platform }}-${{ matrix.target }}-turbo-${{ env.CACHE_VERSION }}
+            ${{ matrix.cache-key-prefix }}-turbo-${{ env.CACHE_VERSION }}
 
       - name: setup pnpm
         uses: pnpm/action-setup@v4
@@ -123,41 +129,43 @@ jobs:
         run: pnpm install
 
       - name: build client
-        if: ${{ github.event_name == 'pull_request' }}
         env:
-          BUILD_ARGS: ${{ matrix.target }}
+          BUILD_ARGS: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }} ${{ env.IS_RELEASE && '--release' || '--debug' }}
         run: |
           pnpm turbo --filter @retrom/client build
 
-      - name: build release binary
+      - name: upload artifacts
         if: ${{ github.event_name == 'release' }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_ARGS: ${{ matrix.target }}
         with:
-          includeDebug: ${{ github.event.release.prerelease }}
-          includeRelease: ${{ !github.event.release.prerelease }}
-          prerelease: ${{ github.event.release.prerelease }}
-          projectPath: packages/client
-          tauriScript: pnpm turbo --filter @retrom/client
           releaseId: ${{ github.event.release.id }}
-          releaseBody: ${{ github.event.release.body }}
-          tagName: ${{ github.event.release.tag_name }}
+          projectPath: packages/client
+          prerelease: ${{ !env.IS_PROD_RELEASE }}
+          includeDebug: ${{ !env.IS_PROD_RELEASE }}
+          includeRelease: ${{ env.IS_PROD_RELEASE }}
+          includeUpdaterJson: true
+          tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
+          args: --target ${{ matrix.target }}
           updaterJsonPreferNsis: true
 
-      - name: build draft release binary
+      - name: create draft release
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_ARGS: ${{ matrix.target }}
         with:
-          includeDebug: true
-          includeRelease: false
           projectPath: packages/client
-          tauriScript: pnpm turbo --filter @retrom/client
           prerelease: true
           releaseDraft: true
           releaseName: ${{ inputs.title }}
           tagName: ${{ inputs.title }}-pre.${{ github.sha }}
+          includeDebug: true
+          includeRelease: false
+          includeUpdaterJson: true
+          tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
+          args: --target ${{ matrix.target }}
+          updaterJsonPreferNsis: true

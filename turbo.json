@@ -6,7 +6,7 @@
     /* BUILDING */
     "build": {
       "dependsOn": ["^build", "cargo-build-transit"],
-      "outputs": ["dist/**", "$TURBO_ROOT$/target/**"]
+      "outputs": ["dist/**", "tsconfig.tsbuildinfo"]
     },
     // ensure TS+Rust packages build for both languages via this transit node
     // when calling 'build' -- no need to explicitly call 'cargo-build'
@@ -14,6 +14,7 @@
       "dependsOn": ["cargo-build"]
     },
     "cargo-build": {
+      "cache": false,
       "dependsOn": ["^cargo-build"]
     },
 
@@ -40,6 +41,7 @@
       "cache": false
     },
     "generate": {
+      "outputs": ["generated/**"],
       "dependsOn": []
     }
   }
