@@ -137,7 +137,7 @@ jobs:
 
       - name: build client
         env:
-          BUILD_ARGS: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }} ${{ env.IS_PROD_RELEASE && '--release' || '--debug' }}
+          BUILD_ARGS: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }} ${{ env.IS_PROD_RELEASE && '' || '--debug' }}
         run: |
           pnpm turbo --filter @retrom/client build
 
