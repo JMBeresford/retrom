@@ -5,6 +5,9 @@
     "types": "./dist/index.d.ts",
     "default": "./dist/index.js"
   },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "cargo-build": "cargo build",

@@ -5,6 +5,9 @@
     "types": "./dist/index.d.ts",
     "default": "./dist/index.js"
   },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "cargo-build": "cargo build",
@@ -14,7 +17,7 @@
     "lint:fix": "eslint ./guest-js/ --fix && cargo clippy --fix"
   },
   "dependencies": {
-    "@tauri-apps/api": "workspace:*",
+    "@tauri-apps/api": "^2.2.0",
     "@tauri-apps/plugin-opener": "^2.2.5"
   },
   "devDependencies": {

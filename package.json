@@ -5,22 +5,10 @@
     "@tauri-apps/cli": "^2.2.7",
     "@turbo/gen": "^2.4.4",
     "turbo": "^2.4.4",
-    "@retrom/configs": "workspace:*",
     "typescript": "^5.5.4"
   },
-  "pnpm": {
-    "overrides": {
-      "typescript": "$typescript",
-      "@tauri-apps/cli": "$@tauri-apps/cli",
-      "@tauri-apps/api": "$@tauri-apps/api",
-      "@tauri-apps/plugin-fs": "$@tauri-apps/plugin-fs",
-      "@tauri-apps/plugin-upload": "$@tauri-apps/plugin-upload"
-    }
-  },
   "dependencies": {
-    "@tauri-apps/api": "^2.2.0",
-    "@tauri-apps/plugin-fs": "^2.0.0-rc",
-    "@tauri-apps/plugin-upload": "^2.0.0-rc"
+    "@tauri-apps/api": "^2.2.0"
   },
-  "packageManager": "pnpm@9.5.0"
+  "packageManager": "pnpm@10.7.0"
 }

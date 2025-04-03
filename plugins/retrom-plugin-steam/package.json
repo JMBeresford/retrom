@@ -1,6 +1,9 @@
 {
   "name": "@retrom/plugin-steam",
   "type": "module",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "cargo-build": "cargo build",

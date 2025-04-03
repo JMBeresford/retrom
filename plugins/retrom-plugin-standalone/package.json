@@ -1,6 +1,9 @@
 {
   "name": "@retrom/plugin-standalone",
   "type": "module",
+  "files": [
+    "dist/"
+  ],
   "exports": {
     "types": "./dist/index.d.ts",
     "default": "./dist/index.js"

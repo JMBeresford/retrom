@@ -7,6 +7,9 @@
       "default": "./dist/*.js"
     }
   },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "cargo-build": "cargo build",

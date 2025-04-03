@@ -4,6 +4,9 @@
   "dependencies": {
     "@tauri-apps/api": ">=2.0.0-beta.6"
   },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "cargo-build": "cargo build",

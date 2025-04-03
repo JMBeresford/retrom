@@ -1,6 +1,9 @@
 {
   "name": "@retrom/plugin-service-client",
   "type": "module",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "cargo-build": "cargo build",
