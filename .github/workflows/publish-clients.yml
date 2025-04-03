@@ -7,10 +7,17 @@ on:
         description: The name for this draft release. Used for both tag name and release name.
         required: true
         type: string
+      release-id:
+        description: The release-id to upload artifacts to
+        type: string
+      debug:
+        description: Enables debug builds
+        type: boolean
+        default: true
 
   pull_request:
   release:
-    types: [created]
+    types: [published]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -130,7 +137,7 @@ jobs:
 
       - name: build client
         env:
-          BUILD_ARGS: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }} ${{ env.IS_RELEASE && '--release' || '--debug' }}
+          BUILD_ARGS: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }} ${{ env.IS_PROD_RELEASE && '--release' || '--debug' }}
         run: |
           pnpm turbo --filter @retrom/client build
 
@@ -161,10 +168,11 @@ jobs:
           projectPath: packages/client
           prerelease: true
           releaseDraft: true
+          releaseId: ${{ inputs.release-id }}
           releaseName: ${{ inputs.title }}
           tagName: ${{ inputs.title }}-pre.${{ github.sha }}
-          includeDebug: true
-          includeRelease: false
+          includeDebug: ${{ inputs.debug }}
+          includeRelease: ${{ !inputs.debug }}
           includeUpdaterJson: true
           tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
           args: --target ${{ matrix.target }}
