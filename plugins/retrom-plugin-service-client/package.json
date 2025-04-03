@@ -2,7 +2,7 @@
   "name": "@retrom/plugin-service-client",
   "type": "module",
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc",
     "cargo-build": "cargo build",
     "format": "prettier ./guest-js/**/*.ts --write && cargo fmt",
     "format:check": "prettier ./guest-js/**/*.ts --check && cargo fmt --check",
@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "typescript": "^5.3.3",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.2",
+    "@retrom/configs": "workspace:*"
   }
 }

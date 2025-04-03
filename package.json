@@ -2,21 +2,15 @@
   "name": "retrom",
   "type": "module",
   "devDependencies": {
-    "@eslint/js": "^9.9.0",
-    "@tanstack/eslint-plugin-query": "^5.43.1",
     "@tauri-apps/cli": "^2.2.7",
     "@turbo/gen": "^2.4.4",
-    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
-    "eslint-plugin-react-refresh": "^0.4.9",
-    "globals": "^15.9.0",
     "turbo": "^2.4.4",
-    "typescript": "^5.5.4",
-    "typescript-eslint": "^8.19.1"
+    "@retrom/configs": "workspace:*",
+    "typescript": "^5.5.4"
   },
   "pnpm": {
     "overrides": {
       "typescript": "$typescript",
-      "eslint": "$eslint",
       "@tauri-apps/cli": "$@tauri-apps/cli",
       "@tauri-apps/api": "$@tauri-apps/api",
       "@tauri-apps/plugin-fs": "$@tauri-apps/plugin-fs",
@@ -26,10 +20,7 @@
   "dependencies": {
     "@tauri-apps/api": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.0.0-rc",
-    "@tauri-apps/plugin-upload": "^2.0.0-rc",
-    "eslint": "^9.9.0",
-    "eslint-config-turbo": "^2.4.4",
-    "eslint-plugin-turbo": "^2.4.4"
+    "@tauri-apps/plugin-upload": "^2.0.0-rc"
   },
   "packageManager": "pnpm@9.5.0"
 }

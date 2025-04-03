@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["./packages/*", "./plugins/*"]
-exclude = ["**/node_modules", "./packages/client/web"]
+exclude = ["**/node_modules", "./packages/client/web", "./packages/configs"]
 
 
 [workspace.package]
