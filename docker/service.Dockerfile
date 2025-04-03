@@ -9,7 +9,6 @@ COPY  ./Cargo.lock \
   ./package.json \
   ./pnpm-lock.yaml \
   ./pnpm-workspace.yaml \
-  ./tsconfig.json \
   /app/
 
 ### WEB CLIENT
