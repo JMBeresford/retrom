@@ -3,7 +3,7 @@ import { useToast } from "@/components/ui/use-toast";
 import {
   GetGamesRequest,
   GetGamesResponse,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services/game-service";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";

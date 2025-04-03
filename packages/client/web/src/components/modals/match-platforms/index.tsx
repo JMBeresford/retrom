@@ -35,7 +35,7 @@ import {
 import {
   GetIgdbSearchRequest_IgdbSearchType,
   UpdatePlatformMetadataRequest,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services/metadata-service";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata";
 import { ScrollArea } from "@/components/ui/scroll-area";

@@ -1,4 +1,4 @@
-import { File } from "@/generated/retrom/files";
+import { File } from "@retrom/codegen/retrom/files";
 import { useMutation } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useApiUrl } from "@/utils/useApiUrl";

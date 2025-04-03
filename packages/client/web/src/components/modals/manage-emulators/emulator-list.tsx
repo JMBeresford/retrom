@@ -19,7 +19,7 @@ import {
   Emulator,
   Emulator_OperatingSystem,
   SaveStrategy,
-} from "@/generated/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators";
 import { CreateEmulator } from "./create-emulator";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";

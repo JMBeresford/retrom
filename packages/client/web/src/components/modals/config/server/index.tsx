@@ -6,6 +6,7 @@ import { LoaderCircle } from "lucide-react";
 import { IgdbConfig } from "./igdb-config";
 import { SteamConfig } from "./steam-config";
 import { LibrariesConfig } from "./libraries-config";
+import { ServerConfig } from "@retrom/codegen/retrom/server/config";
 
 type ServerTabs = Exclude<keyof ServerConfig, "connection">;
 

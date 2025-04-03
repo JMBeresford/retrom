@@ -1,5 +1,4 @@
-import { FilesystemNodeType } from "@/generated/retrom/file-explorer";
-import { File } from "@/generated/retrom/files";
+import { File } from "@retrom/codegen/retrom/files";
 import { Core } from "@/lib/emulatorjs";
 import { EmulatorJS } from "@/lib/emulatorjs/emulator";
 import { useGameDetail } from "@/providers/game-details";
@@ -7,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { useRemoteFiles } from "./useRemoteFiles";
 import { useApiUrl } from "@/utils/useApiUrl";
+import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer";
 
 export function useUploadSaveState() {
   const { game } = useGameDetail();

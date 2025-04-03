@@ -1,11 +1,9 @@
 import { useToast } from "@/components/ui/use-toast";
 import { JobStatus } from "@retrom/codegen/retrom/jobs";
-import {
-  GetJobSubscriptionResponse,
-  UpdateLibraryMetadataRequest,
-} from "@retrom/codegen/retrom/services";
+import { UpdateLibraryMetadataRequest } from "@retrom/codegen/retrom/services/library-service";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { GetJobSubscriptionResponse } from "@retrom/codegen/retrom/services/job-service";
 
 export function useUpdateLibraryMetadata() {
   const { toast } = useToast();

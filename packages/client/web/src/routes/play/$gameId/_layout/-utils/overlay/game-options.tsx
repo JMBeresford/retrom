@@ -21,7 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { FileStat } from "@/generated/retrom/files";
+import { FileStat } from "@retrom/codegen/retrom/files";
 import { Loader2 } from "lucide-react";
 
 type Fn = () => void | Promise<void>;

@@ -21,7 +21,10 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import { emulatorSchema, EmulatorSchema, PlatformWithMetadata } from ".";
 import { useCallback } from "react";
-import { SaveStrategy } from "@retrom/codegen/retrom/models/emulators";
+import {
+  Emulator,
+  SaveStrategy,
+} from "@retrom/codegen/retrom/models/emulators";
 import { useCreateEmulators } from "@/mutations/useCreateEmulators";
 import { saveStrategyDisplayMap } from "./utils";
 

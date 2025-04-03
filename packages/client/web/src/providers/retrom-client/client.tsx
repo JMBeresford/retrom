@@ -1,14 +1,12 @@
-import {
-  GameServiceDefinition,
-  PlatformServiceDefinition,
-  EmulatorServiceDefinition,
-  MetadataServiceDefinition,
-  LibraryServiceDefinition,
-  ClientServiceDefinition,
-  JobServiceDefinition,
-  ServerServiceDefinition,
-  FileExplorerServiceDefinition,
-} from "@retrom/codegen/retrom/services";
+import { GameServiceDefinition } from "@retrom/codegen/retrom/services/game-service";
+import { PlatformServiceDefinition } from "@retrom/codegen/retrom/services/platform-service";
+import { EmulatorServiceDefinition } from "@retrom/codegen/retrom/services/emulator-service";
+import { MetadataServiceDefinition } from "@retrom/codegen/retrom/services/metadata-service";
+import { LibraryServiceDefinition } from "@retrom/codegen/retrom/services/library-service";
+import { ClientServiceDefinition } from "@retrom/codegen/retrom/services/client-service";
+import { JobServiceDefinition } from "@retrom/codegen/retrom/services/job-service";
+import { ServerServiceDefinition } from "@retrom/codegen/retrom/services/server-service";
+import { FileExplorerServiceDefinition } from "@retrom/codegen/retrom/services/file-explorer-service";
 import { createClient, createChannel } from "nice-grpc-web";
 
 export class RetromClient {

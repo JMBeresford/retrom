@@ -2,7 +2,7 @@ import { createContext, useContext, ReactNode } from "react";
 import { Config } from "@/lib/emulatorjs";
 import { EmulatorJS } from "@/lib/emulatorjs/emulator";
 import { useQuery } from "@tanstack/react-query";
-import { GameFile } from "@/generated/retrom/models/game-files";
+import { GameFile } from "@retrom/codegen/retrom/models/game-files";
 import { useApiUrl } from "@/utils/useApiUrl";
 import { Loader2 } from "lucide-react";
 import { CoreOptions, useCoreOptions } from "./core-options";
