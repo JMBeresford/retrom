@@ -149,7 +149,13 @@ impl<R: Runtime> Installer<R> {
 
     #[instrument(skip(self))]
     pub async fn update_steam_installations(&self) -> crate::Result<()> {
-        let steam = self.app_handle.steam();
+        let steam = match self.app_handle.steam() {
+            Some(steam) => steam,
+            None => {
+                debug!("Steam plugin not initialized, skipping update.");
+                return Ok(());
+            }
+        };
 
         let mut game_client = self.app_handle.get_game_client().await;
         let games = game_client

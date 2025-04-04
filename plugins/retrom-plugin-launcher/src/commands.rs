@@ -39,7 +39,14 @@ pub(crate) async fn play_game<R: Runtime>(
     };
 
     if game.third_party {
-        let steam = app.steam();
+        let steam = match app.steam() {
+            Some(steam) => steam,
+            None => {
+                return Err(crate::Error::InternalError(
+                    "Steam is not initialized".into(),
+                ))
+            }
+        };
 
         if let Some(Ok(app_id)) = game.steam_app_id.map(u32::try_from) {
             steam.launch_game(app_id).await?;

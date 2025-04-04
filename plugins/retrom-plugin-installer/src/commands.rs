@@ -60,7 +60,15 @@ pub async fn install_game<R: Runtime>(
 
         match platform_path.as_str() {
             "__RETROM_RESERVED__/Steam" => {
-                let steam_client = app_handle.steam();
+                let steam_client = match app_handle.steam() {
+                    Some(client) => client,
+                    None => {
+                        tracing::error!("Steam client not initialized");
+                        return Err(crate::error::Error::InternalError(
+                            "Steam client not initialized".into(),
+                        ));
+                    }
+                };
 
                 steam_client.install_game(steam_id).await?;
                 installer.mark_game_installed(game.id).await;
@@ -183,7 +191,16 @@ pub async fn uninstall_game<R: Runtime>(
 
     if game.third_party {
         if let Some(Ok(steam_id)) = game.steam_app_id.map(u32::try_from) {
-            let steam_client = app_handle.steam();
+            let steam_client = match app_handle.steam() {
+                Some(client) => client,
+                None => {
+                    tracing::error!("Steam client not initialized");
+                    return Err(crate::error::Error::InternalError(
+                        "Steam client not initialized".into(),
+                    ));
+                }
+            };
+
             steam_client.uninstall_game(steam_id).await?;
             app_handle.installer().mark_game_uninstalled(game.id).await;
             return Ok(());

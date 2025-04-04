@@ -21,6 +21,9 @@ pub enum Error {
     Steam(#[from] retrom_plugin_steam::Error),
     #[error(transparent)]
     Tonic(#[from] tonic::Status),
+
+    #[error("InternalError: {0}")]
+    InternalError(String),
 }
 
 impl Serialize for Error {

@@ -17,12 +17,12 @@ use tracing::instrument;
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the steam APIs.
 pub trait SteamExt<R: Runtime> {
-    fn steam(&self) -> &Steam<R>;
+    fn steam(&self) -> Option<&Steam<R>>;
 }
 
 impl<R: Runtime, T: Manager<R>> crate::SteamExt<R> for T {
-    fn steam(&self) -> &Steam<R> {
-        self.state::<Steam<R>>().inner()
+    fn steam(&self) -> Option<&Steam<R>> {
+        self.try_state::<Steam<R>>().map(|s| s.inner())
     }
 }
 
