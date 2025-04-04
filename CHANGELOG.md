@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.17](https://github.com/JMBeresford/retrom/compare/v0.7.16...v0.7.17) - 2025-04-04
+
+### Bug Fixes
+- web client
+
+    The web client was occasionally failing to build after recent changes to the docker image. This should no longer happen.
+
+
+
+- don't crash when steam not installed
+
+
 ## [0.7.16](https://github.com/JMBeresford/retrom/compare/v0.7.15...v0.7.16) - 2025-04-03
 
 ### Bug Fixes
