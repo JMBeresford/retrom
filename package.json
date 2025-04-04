@@ -4,6 +4,8 @@
   "devDependencies": {
     "@tauri-apps/cli": "^2.2.7",
     "@turbo/gen": "^2.4.4",
+    "eslint": "^9.23.0",
+    "prettier": "^3.5.3",
     "turbo": "^2.4.4",
     "typescript": "^5.5.4"
   },
