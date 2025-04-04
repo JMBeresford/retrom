@@ -1,18 +1,8 @@
 {
+  "extends": "@retrom/configs/tsconfig/base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./guest-js",
-    "composite": true,
-    "baseUrl": ".",
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "declaration": true
+    "rootDir": "guest-js"
   },
   "include": ["./**/*.ts"]
 }

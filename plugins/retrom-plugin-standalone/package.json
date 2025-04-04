@@ -1,12 +1,15 @@
 {
   "name": "@retrom/plugin-standalone",
   "type": "module",
+  "files": [
+    "dist/"
+  ],
   "exports": {
     "types": "./dist/index.d.ts",
     "default": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc",
     "cargo-build": "cargo build",
     "format": "prettier ./guest-js/**/*.ts --write && cargo fmt",
     "format:check": "prettier ./guest-js/**/*.ts --check && cargo fmt --check",
@@ -18,6 +21,7 @@
   },
   "devDependencies": {
     "typescript": "^5.3.3",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.2",
+    "@retrom/configs": "workspace:*"
   }
 }

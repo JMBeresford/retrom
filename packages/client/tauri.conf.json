@@ -45,7 +45,6 @@
       }
     ],
     "security": {
-      "headers": {},
       "csp": null
     }
   },

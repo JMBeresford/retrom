@@ -7,8 +7,11 @@
       "default": "./dist/*.js"
     }
   },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc",
     "cargo-build": "cargo build",
     "generate": "buf generate",
     "format": "buf format -w && cargo fmt",
@@ -23,6 +26,7 @@
     "nice-grpc-web": "^3.3.3"
   },
   "devDependencies": {
-    "@bufbuild/buf": "^1.36.0"
+    "@bufbuild/buf": "^1.36.0",
+    "@retrom/configs": "workspace:*"
   }
 }

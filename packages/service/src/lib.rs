@@ -12,8 +12,8 @@ use std::{
     sync::Arc,
     task::{Context, Poll},
 };
-use tower::Service;
 use tokio::task::JoinHandle;
+use tower::Service;
 use tracing::Instrument;
 
 #[cfg(feature = "embedded_db")]
