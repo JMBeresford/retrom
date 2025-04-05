@@ -32,9 +32,9 @@ chown retrom:retrom /app
 for i in "${app_dirs[@]}"; do
     if [  -d "$i" ]; then
         echo -e "Setting permissions for ${i}\n"
-        chmod "=rwx" $i
+        chmod "=rwx" "$i"
 
-        find "$i" -maxdepth 0 \( ! -user retrom -or ! -group retrom \) -exec chown retrom:retrom {} +
+        find "$i" \( ! -user retrom -or ! -group retrom \) -exec chown retrom:retrom {} +
     fi
 done
 
@@ -42,8 +42,8 @@ done
 chmod 750 /app/data/db
 
 if [ "$(id -u)" = 0 ]; then
-  exec runuser -u retrom "$@"
+    exec runuser -u retrom "$@"
 else
-  exec "$@"
+    exec "$@"
 fi
 
