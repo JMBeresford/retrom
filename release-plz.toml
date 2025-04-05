@@ -7,6 +7,7 @@ publish_no_verify = true
 changelog_update = false
 changelog_path = "./CHANGELOG.md"
 pr_name = "Release: v{{ version }}"
+git_release_type = "auto"
 
 [[package]]
 name = "retrom-service"
