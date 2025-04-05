@@ -19,7 +19,7 @@ pub async fn handle_rejection(
         Some(Error::StatusCode(code, _)) => {
             return Ok(warp::reply::with_status(
                 warp::reply::json(&format!("{:#?}", err)),
-                code.clone(),
+                *code,
             ));
         }
         Some(err) => {
