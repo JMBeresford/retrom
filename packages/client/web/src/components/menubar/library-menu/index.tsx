@@ -16,19 +16,19 @@ export function LibraryMenu() {
 
       <MenubarContent>
         <MenubarItem asChild>
-          <Link search={{ updateLibraryModal: { open: true } }}>
+          <Link to="." search={{ updateLibraryModal: { open: true } }}>
             Update Library
           </Link>
         </MenubarItem>
 
         <MenubarItem asChild>
-          <Link search={{ downloadMetadataModal: { open: true } }}>
+          <Link to="." search={{ downloadMetadataModal: { open: true } }}>
             Download Metadata
           </Link>
         </MenubarItem>
 
         <MenubarItem asChild>
-          <Link search={{ cleanLibraryModal: { open: true } }}>
+          <Link to="." search={{ cleanLibraryModal: { open: true } }}>
             Clean Library
           </Link>
         </MenubarItem>
@@ -38,6 +38,7 @@ export function LibraryMenu() {
         <MenubarItem asChild>
           <Link
             className="text-destructive-text"
+            to="."
             search={{ deleteLibraryModal: { open: true } }}
           >
             Delete Library

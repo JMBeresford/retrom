@@ -52,13 +52,7 @@ retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone", versio
 config = { version = "0.13.4", features = ["json5"] }
 futures = "0.3.30"
 bytes = "1.6.0"
-reqwest = { version = "0.12.3", features = [
-  "json",
-  "stream",
-  "gzip",
-  "brotli",
-  "deflate",
-] }
+reqwest = { version = "0.12.3", features = ["json", "stream"] }
 tonic = { version = "0.11", features = [
   "tls",
   "tls-roots",

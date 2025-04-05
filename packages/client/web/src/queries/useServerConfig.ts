@@ -1,7 +1,7 @@
 import {
   GetServerConfigRequest,
   GetServerConfigResponse,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services/server-service";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 

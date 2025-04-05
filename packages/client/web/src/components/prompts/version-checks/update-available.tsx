@@ -37,6 +37,7 @@ function InnerToast() {
             size="sm"
             onClick={() =>
               void navigate({
+                to: ".",
                 search: (prev) => ({
                   ...prev,
                   checkForUpdateModal: { open: true },

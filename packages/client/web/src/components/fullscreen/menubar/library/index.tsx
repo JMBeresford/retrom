@@ -5,6 +5,7 @@ import {
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetOverlay,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
@@ -16,6 +17,7 @@ import { DownloadMetadata } from "./download-metadata";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { FocusableElement, FocusContainer } from "../../focus-container";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 export function Library(props: JSX.IntrinsicElements["button"]) {
   const [open, setOpen] = useState(false);
@@ -28,6 +30,7 @@ export function Library(props: JSX.IntrinsicElements["button"]) {
         </FocusableElement>
       </SheetTrigger>
 
+      <SheetOverlay />
       <SheetContent>
         <FocusContainer
           initialFocus
@@ -47,8 +50,10 @@ export function Library(props: JSX.IntrinsicElements["button"]) {
               <SheetDescription>Retrom library operations</SheetDescription>
             </SheetHeader>
 
+            <Separator className="w-[90%] mx-auto" />
+
             <ScrollArea className="h-full w-full">
-              <div className="flex flex-col gap-4 h-full">
+              <div className="flex flex-col h-full">
                 <UpdateLibrary />
                 <DownloadMetadata />
               </div>

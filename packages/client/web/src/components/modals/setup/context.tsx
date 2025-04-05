@@ -55,6 +55,7 @@ export function SetupModalProvider(props: React.PropsWithChildren) {
       case "Confirm": {
         return () => {
           void navigate({
+            to: ".",
             search: (prev) => ({ ...prev, setupModal: undefined }),
           }).then(() => {
             setStep("Mode");

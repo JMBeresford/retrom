@@ -39,12 +39,17 @@
       {
         "fullscreen": false,
         "height": 900,
+        "label": "main",
         "resizable": true,
         "title": "Retrom",
         "width": 1600
       }
     ],
     "security": {
+      "headers": {
+        "Cross-Origin-Embedder-Policy": "credentialless",
+        "Cross-Origin-Opener-Policy": "same-origin"
+      },
       "csp": null
     }
   },

@@ -1,20 +1,5 @@
 /// <reference types="vite/client" />
 
-declare module "*.glsl" {
-  const content: string;
-  export default content;
-}
-
-declare module "*.frag" {
-  const content: string;
-  export default content;
-}
-
-declare module "*.vert" {
-  const content: string;
-  export default content;
-}
-
 const _Vars = [
   "RETROM_PORT",
   "RETROM_HOST",

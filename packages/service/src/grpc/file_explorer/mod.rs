@@ -1,9 +1,16 @@
 use std::path::PathBuf;
 
-use retrom_codegen::retrom::{
-    file_explorer_service_server::FileExplorerService, FilesystemNode, GetFilesystemNodeRequest,
-    GetFilesystemNodeResponse,
+use retrom_codegen::{
+    retrom::{
+        file_explorer_service_server::FileExplorerService, files::FileStat, FilesystemNode,
+        FilesystemNodeType, GetFilesystemNodeRequest, GetFilesystemNodeResponse, GetStatRequest,
+        GetStatResponse,
+    },
+    timestamp::Timestamp,
 };
+use walkdir::WalkDir;
+
+use crate::meta::RetromDirs;
 
 pub struct FileExplorerServiceHandlers {}
 
@@ -51,5 +58,54 @@ impl FileExplorerService for FileExplorerServiceHandlers {
             node: Some(node),
             children,
         }))
+    }
+
+    async fn get_stat(
+        &self,
+        request: tonic::Request<GetStatRequest>,
+    ) -> std::result::Result<tonic::Response<GetStatResponse>, tonic::Status> {
+        let request = request.into_inner();
+        let dirs = RetromDirs::new();
+        let public_path = dirs.public_dir().clone();
+        let path = public_path.join(&request.path);
+
+        let mut walk = WalkDir::new(path);
+        if let Some(depth) = request.max_depth {
+            walk = walk.max_depth(depth as usize);
+        }
+
+        let stats: Vec<FileStat> = walk
+            .into_iter()
+            .filter_map(Result::ok)
+            .map(|entry| entry.into_path())
+            .filter(|path| request.include_directories() || path.is_file())
+            .filter_map(|path| {
+                let metadata = path.metadata().ok();
+                let created_at = metadata
+                    .as_ref()
+                    .and_then(|m| m.created().ok())
+                    .map(Timestamp::from);
+
+                let updated_at = metadata
+                    .as_ref()
+                    .and_then(|m| m.modified().ok())
+                    .map(Timestamp::from);
+
+                let relative_path: String = path.strip_prefix(&public_path).ok()?.to_str()?.into();
+                let node_type: i32 = match path.is_dir() {
+                    true => FilesystemNodeType::Directory.into(),
+                    false => FilesystemNodeType::File.into(),
+                };
+
+                Some(FileStat {
+                    path: relative_path,
+                    created_at,
+                    updated_at,
+                    node_type,
+                })
+            })
+            .collect();
+
+        Ok(tonic::Response::new(GetStatResponse { stats }))
     }
 }

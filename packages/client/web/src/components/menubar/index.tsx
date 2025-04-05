@@ -5,7 +5,6 @@ import { PlatformsMenu } from "./platforms-menu";
 import { EmulatorsMenu } from "./emulators-menu";
 import { FileMenu } from "./file-menu";
 import { JobsIndicator } from "./jobs-indicator";
-import { DesktopOnly } from "@/lib/env";
 import { Link } from "@tanstack/react-router";
 import { ViewMenu } from "./view-menu";
 import { ConnectivityIndicator } from "./connectivity-indicator";
@@ -28,9 +27,7 @@ export function Menubar() {
         <LibraryMenu />
         <PlatformsMenu />
 
-        <DesktopOnly>
-          <EmulatorsMenu />
-        </DesktopOnly>
+        <EmulatorsMenu />
 
         <ViewMenu />
       </MenubarImpl>

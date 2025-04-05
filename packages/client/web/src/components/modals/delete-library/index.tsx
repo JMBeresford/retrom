@@ -57,6 +57,7 @@ export function DeleteLibraryModal() {
       onOpenChange={(open) => {
         if (!open) {
           void navigate({
+            to: ".",
             search: (prev) => ({ ...prev, deleteLibraryModal: undefined }),
           });
         }

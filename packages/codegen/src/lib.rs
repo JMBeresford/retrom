@@ -6,6 +6,10 @@ pub mod igdb {
 }
 
 pub mod retrom {
+    pub mod files {
+        tonic::include_proto!("retrom.files");
+    }
+
     use std::path::PathBuf;
 
     tonic::include_proto!("retrom");

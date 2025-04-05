@@ -25,6 +25,7 @@ export function DownloadMetadataModal() {
 
   const close = useCallback(() => {
     navigate({
+      to: ".",
       search: (prev) => ({ ...prev, downloadMetadataModal: undefined }),
     }).catch(console.error);
   }, [navigate]);

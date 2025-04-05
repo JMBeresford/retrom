@@ -4,6 +4,7 @@ import {
   MenubarContent,
   MenubarItem,
 } from "@/components/ui/menubar";
+import { DesktopOnly } from "@/lib/env";
 import { Link } from "@tanstack/react-router";
 
 export function EmulatorsMenu() {
@@ -15,16 +16,21 @@ export function EmulatorsMenu() {
 
       <MenubarContent>
         <MenubarItem asChild>
-          <Link search={{ manageEmulatorsModal: { open: true } }}>
+          <Link to="." search={{ manageEmulatorsModal: { open: true } }}>
             Manage Emulators
           </Link>
         </MenubarItem>
 
-        <MenubarItem asChild>
-          <Link search={{ manageEmulatorProfilesModal: { open: true } }}>
-            Manage Profiles
-          </Link>
-        </MenubarItem>
+        <DesktopOnly>
+          <MenubarItem asChild>
+            <Link
+              to="."
+              search={{ manageEmulatorProfilesModal: { open: true } }}
+            >
+              Manage Profiles
+            </Link>
+          </MenubarItem>
+        </DesktopOnly>
       </MenubarContent>
     </MenubarMenu>
   );

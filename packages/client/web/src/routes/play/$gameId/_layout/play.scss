@@ -1,0 +1,41 @@
+#game {
+  background: unset;
+
+  &,
+  * {
+    @apply border-none outline-none ring-0;
+  }
+
+  .ejs_start_button {
+    left: unset;
+    text-shadow: unset;
+    display: unset;
+
+    &,
+    &:hover {
+      box-shadow: unset;
+      animation: unset;
+    }
+
+    @apply absolute bottom-8 mx-auto leading-[0px] transform-none;
+    @apply bg-accent font-sans font-semibold px-4 py-2 rounded-md h-min text-3xl;
+    @apply hover:bg-accent/80 transition-colors;
+  }
+
+  .ejs_menu_bar {
+    display: none;
+    .ejs_volume_parent {
+    }
+
+    .ejs_menu_button {
+      .ejs_menu_text {
+      }
+    }
+
+    &.ejs_menu_bar_hidden {
+    }
+  }
+
+  .ejs_loading_text {
+  }
+}
