@@ -3,17 +3,32 @@ name: Publish Clients Applications
 on:
   workflow_dispatch:
     inputs:
+      release-id:
+        description: An existing release-id to upload artifacts to
+        type: string
       title:
-        description: The name for this draft release. Used for both tag name and release name.
+        description: The name for created release. Used for both tag name and release name.
         required: true
         type: string
-      release-id:
-        description: The release-id to upload artifacts to
+      release-body:
+        description: The body text for created release.
         type: string
-      debug:
-        description: Enables debug builds
+      prerelease:
+        description: Create a pre-release
+        type: boolean
+        default: false
+      draft:
+        description: Create a draft release
         type: boolean
         default: true
+      builds:
+        description: What builds should be included
+        type: choice
+        default: debug
+        options:
+          - debug
+          - release
+          - both
 
   pull_request:
   release:
@@ -47,7 +62,10 @@ jobs:
             cache-key-prefix: "windows-latest"
     env:
       PQ_LIB_STATIC: 1
-      IS_PROD_RELEASE: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
+      IS_PRERELEASE: ${{ inputs.prerelease || github.event.release.prerelease }}
+      DEBUG_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'debug' || github.event.release.prerelease }}
+      RELEASE_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'release' || (!github.event.release.prerelease && !github.event.release.draft) }}
+      TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -69,9 +87,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: ${{ matrix.cache-key-prefix }}-turbo-${{ env.CACHE_VERSION }}-${{ github.sha }}
+          key: ${{ matrix.cache-key-prefix }}-turbo-v${{ env.CACHE_VERSION }}-${{ github.sha }}
           restore-keys: |
-            ${{ matrix.cache-key-prefix }}-turbo-${{ env.CACHE_VERSION }}
+            ${{ matrix.cache-key-prefix }}-turbo-v${{ env.CACHE_VERSION }}
 
       - name: setup pnpm
         uses: pnpm/action-setup@v4
@@ -95,6 +113,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
+          prefix-key: ${{ matrix.cache-key-prefix }}-rust-v${{ env.CACHE_VERSION }}
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -123,12 +142,12 @@ jobs:
           choco install -y postgresql17
 
       - name: install dependencies (macos m1 only)
-        if: matrix.target == '--target aarch64-apple-darwin' # This must match the value defined above.
+        if: matrix.target == 'aarch64-apple-darwin' # This must match the value defined above.
         run: |
           brew install postgresql@17
 
       - name: install dependencies (macos intel only)
-        if: matrix.target == '--target x86_64-apple-darwin' # This must match the value defined above.
+        if: matrix.target == 'x86_64-apple-darwin' # This must match the value defined above.
         run: |
           arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           arch -x86_64 /usr/local/bin/brew install postgresql@17
@@ -136,45 +155,36 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install
 
-      - name: build client
+      - name: build release client
+        if: ${{ env.RELEASE_BUILDS }}
         env:
-          BUILD_ARGS: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }} ${{ !env.IS_PROD_RELEASE && '--debug' || '' }}
+          BUILD_ARGS: ${{ env.TARGET_ARG }}
         run: |
           pnpm turbo --filter @retrom/client build
 
-      - name: upload artifacts
-        if: ${{ github.event_name == 'release' }}
-        uses: tauri-apps/tauri-action@v0
+      - name: build debug client
+        if: ${{ env.DEBUG_BUILDS }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BUILD_ARGS: ${{ matrix.target }}
-        with:
-          releaseId: ${{ github.event.release.id }}
-          projectPath: packages/client
-          prerelease: ${{ !env.IS_PROD_RELEASE }}
-          includeDebug: ${{ !env.IS_PROD_RELEASE }}
-          includeRelease: ${{ env.IS_PROD_RELEASE }}
-          includeUpdaterJson: true
-          tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
-          args: --target ${{ matrix.target }}
-          updaterJsonPreferNsis: true
+          BUILD_ARGS: ${{ env.TARGET_ARG }} --debug
+        run: |
+          pnpm turbo --filter @retrom/client build
 
-      - name: create draft release
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+      - name: upload artifacts to release
+        if: ${{ github.event_name != 'pull_request' }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_ARGS: ${{ matrix.target }}
         with:
           projectPath: packages/client
-          prerelease: true
-          releaseDraft: true
-          releaseId: ${{ inputs.release-id }}
-          releaseName: ${{ inputs.title }}
-          tagName: ${{ inputs.title }}-pre.${{ github.sha }}
-          includeDebug: ${{ inputs.debug }}
-          includeRelease: ${{ !inputs.debug }}
+          releaseId: ${{ inputs.release-id || github.event.release.id }}
+          releaseBody: ${{ inputs.release-body || github.event.release.body }}
+          releaseName: ${{ inputs.title || github.event.release.name }}
+          tagName: ${{ inputs.title || github.event.release.tag_name }}
+          prerelease: ${{ env.IS_PRERELEASE }}
+          releaseDraft: ${{ inputs.draft }}
+          includeDebug: ${{ env.DEBUG_BUILDS }}
+          includeRelease: ${{ env.RELEASE_BUILDS }}
           includeUpdaterJson: true
           tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
-          args: --target ${{ matrix.target }}
           updaterJsonPreferNsis: true
