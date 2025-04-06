@@ -64,7 +64,10 @@ jobs:
       PQ_LIB_STATIC: 1
       IS_PRERELEASE: ${{ inputs.prerelease || github.event.release.prerelease }}
       DEBUG_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'debug' || github.event.release.prerelease }}
-      RELEASE_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'release' || (!github.event.release.prerelease && !github.event.release.draft) }}
+      RELEASE_BUILDS: |
+        inputs.builds == 'both' ||
+        inputs.builds == 'release' ||
+        (github.event.release.prerelease == false && !github.event.release.draft == false)
       TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -156,14 +159,14 @@ jobs:
         run: pnpm install
 
       - name: build release client
-        if: ${{ env.RELEASE_BUILDS }}
+        if: ${{ env.RELEASE_BUILDS == true }}
         env:
           BUILD_ARGS: ${{ env.TARGET_ARG }}
         run: |
           pnpm turbo --filter @retrom/client build
 
       - name: build debug client
-        if: ${{ env.DEBUG_BUILDS }}
+        if: ${{ env.DEBUG_BUILDS == true }}
         env:
           BUILD_ARGS: ${{ env.TARGET_ARG }} --debug
         run: |
@@ -186,5 +189,6 @@ jobs:
           includeDebug: ${{ env.DEBUG_BUILDS }}
           includeRelease: ${{ env.RELEASE_BUILDS }}
           includeUpdaterJson: true
-          tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
           updaterJsonPreferNsis: true
+          tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
+          args: ${{ env.TARGET_ARG }} # required for the action to look in the correct target subdir
