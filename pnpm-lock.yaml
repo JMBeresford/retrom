@@ -123,7 +123,7 @@ importers:
         version: link:../../codegen
       '@retrom/plugin-config':
         specifier: workspace:*
-        version: link:../../../plugins/retrom-plugin-config
+        version: file:plugins/retrom-plugin-config(ws@8.18.0)
       '@retrom/plugin-installer':
         specifier: workspace:*
         version: link:../../../plugins/retrom-plugin-installer
@@ -402,7 +402,7 @@ importers:
     dependencies:
       '@retrom/codegen':
         specifier: workspace:*
-        version: link:../../packages/codegen
+        version: file:packages/codegen(ws@8.18.0)
       '@tauri-apps/api':
         specifier: '>=2.0.0-beta.6'
         version: 2.2.0
@@ -1770,6 +1770,12 @@ packages:
     peerDependencies:
       '@react-three/fiber': '>=8'
       react: '>=18'
+
+  '@retrom/codegen@file:packages/codegen':
+    resolution: {directory: packages/codegen, type: directory}
+
+  '@retrom/plugin-config@file:plugins/retrom-plugin-config':
+    resolution: {directory: plugins/retrom-plugin-config, type: directory}
 
   '@rollup/plugin-typescript@11.1.6':
     resolution: {integrity: sha512-R92yOmIACgYdJ7dJ97p4K69I8gg6IEHt8M7dUBxN3W6nrO8uUxX5ixl0yU/N3aZTi8WhPuICvOHXQvF6FaykAA==}
@@ -6809,6 +6815,22 @@ snapshots:
       - immer
       - three
       - ts-node
+
+  '@retrom/codegen@file:packages/codegen(ws@8.18.0)':
+    dependencies:
+      '@bufbuild/protobuf': 2.1.0
+      nice-grpc-common: 2.0.2
+      nice-grpc-web: 3.3.4(ws@8.18.0)
+      protobufjs: 7.4.0
+    transitivePeerDependencies:
+      - ws
+
+  '@retrom/plugin-config@file:plugins/retrom-plugin-config(ws@8.18.0)':
+    dependencies:
+      '@retrom/codegen': file:packages/codegen(ws@8.18.0)
+      '@tauri-apps/api': 2.2.0
+    transitivePeerDependencies:
+      - ws
 
   '@rollup/plugin-typescript@11.1.6(rollup@4.21.2)(tslib@2.7.0)(typescript@5.5.4)':
     dependencies:
