@@ -4,6 +4,7 @@ import { GetJobSubscriptionResponse } from "@retrom/codegen/retrom/services";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateSteamInstallations } from "@retrom/plugin-installer";
+import { checkIsDesktop } from "@/lib/env";
 
 export function useUpdateLibrary() {
   const { toast } = useToast();
@@ -76,7 +77,10 @@ export function useUpdateLibrary() {
       );
 
       await Promise.all(promises);
-      await updateSteamInstallations();
+      if (checkIsDesktop()) {
+        await updateSteamInstallations();
+      }
+
       invalidate();
     },
     mutationFn: () => retromClient.libraryClient.updateLibrary({}),
