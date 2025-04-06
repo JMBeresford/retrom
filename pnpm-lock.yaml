@@ -123,7 +123,7 @@ importers:
         version: file:packages/codegen(ws@8.18.0)
       '@retrom/plugin-config':
         specifier: workspace:*
-        version: file:plugins/retrom-plugin-config(ws@8.18.0)
+        version: link:../../../plugins/retrom-plugin-config
       '@retrom/plugin-installer':
         specifier: workspace:*
         version: file:plugins/retrom-plugin-installer
@@ -405,7 +405,7 @@ importers:
     dependencies:
       '@retrom/codegen':
         specifier: workspace:*
-        version: file:packages/codegen(ws@8.18.0)
+        version: link:../../packages/codegen
       '@tauri-apps/api':
         specifier: '>=2.0.0-beta.6'
         version: 2.2.0
@@ -2154,6 +2154,7 @@ packages:
       '@react-three/fiber': '>=8'
       react: '>=18'
 
+<<<<<<< HEAD
   '@retrom/codegen@file:packages/codegen':
     resolution: {directory: packages/codegen, type: directory}
 
@@ -2175,6 +2176,8 @@ packages:
     resolution: {directory: plugins/retrom-plugin-config, type: directory}
 
 >>>>>>> 1232ade (chore: bump deps)
+=======
+>>>>>>> b687909 (chore: fix workflow)
   '@rollup/plugin-typescript@11.1.6':
     resolution: {integrity: sha512-R92yOmIACgYdJ7dJ97p4K69I8gg6IEHt8M7dUBxN3W6nrO8uUxX5ixl0yU/N3aZTi8WhPuICvOHXQvF6FaykAA==}
     engines: {node: '>=14.0.0'}
@@ -7606,6 +7609,7 @@ snapshots:
       - three
       - ts-node
 
+<<<<<<< HEAD
   '@retrom/codegen@file:packages/codegen(ws@8.18.0)':
     dependencies:
       '@bufbuild/protobuf': 2.1.0
@@ -7639,6 +7643,8 @@ snapshots:
 
 =======
 >>>>>>> 1232ade (chore: bump deps)
+=======
+>>>>>>> b687909 (chore: fix workflow)
   '@rollup/plugin-typescript@11.1.6(rollup@4.21.2)(tslib@2.7.0)(typescript@5.5.4)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.21.2)
