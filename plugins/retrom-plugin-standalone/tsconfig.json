@@ -1,6 +1,6 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
-  "include": ["./**/*.ts"],
+  "include": ["./**/*.ts", "./eslint.config.js"],
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "guest-js"

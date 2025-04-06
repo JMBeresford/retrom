@@ -1,8 +1,6 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "bundler",
     "outDir": "./dist",
     "rootDir": "./generated"
   },
