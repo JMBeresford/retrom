@@ -1,6 +1,14 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["NODE_ENV", "CARGO_*", "DEV", "SSR", "RETROM_*", "IS_DESKTOP"],
+  "globalEnv": [
+    "NODE_ENV",
+    "CARGO_*",
+    "DEV",
+    "SSR",
+    "RETROM_*",
+    "IS_DESKTOP",
+    "BUILD_ARGS"
+  ],
   "globalPassThroughEnv": ["APPLE_*", "TAURI_*", "GITHUB_TOKEN"],
   "tasks": {
     /* BUILDING */
@@ -36,7 +44,7 @@
 
     /* OTHER */
     "dev": {
-      "dependsOn": ["@retrom/codegen#build"],
+      "dependsOn": ["@retrom/codegen#build", "^build"],
       "persistent": true,
       "cache": false
     },

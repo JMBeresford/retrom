@@ -16,7 +16,7 @@
     "generate": "buf generate",
     "format": "buf format -w && cargo fmt",
     "format:check": "buf format --diff --exit-code && cargo fmt --check",
-    "lint": " cargo clippy",
+    "lint": "cargo clippy",
     "lint:fix": "cargo clippy --fix"
   },
   "dependencies": {
