@@ -2157,6 +2157,7 @@ packages:
   '@retrom/codegen@file:packages/codegen':
     resolution: {directory: packages/codegen, type: directory}
 
+<<<<<<< HEAD
   '@retrom/configs@file:packages/configs':
     resolution: {directory: packages/configs, type: directory}
 
@@ -2169,6 +2170,11 @@ packages:
   '@retrom/plugin-standalone@file:plugins/retrom-plugin-standalone':
     resolution: {directory: plugins/retrom-plugin-standalone, type: directory}
 
+=======
+  '@retrom/plugin-config@file:plugins/retrom-plugin-config':
+    resolution: {directory: plugins/retrom-plugin-config, type: directory}
+
+>>>>>>> 1232ade (chore: bump deps)
   '@rollup/plugin-typescript@11.1.6':
     resolution: {integrity: sha512-R92yOmIACgYdJ7dJ97p4K69I8gg6IEHt8M7dUBxN3W6nrO8uUxX5ixl0yU/N3aZTi8WhPuICvOHXQvF6FaykAA==}
     engines: {node: '>=14.0.0'}
@@ -7609,8 +7615,11 @@ snapshots:
     transitivePeerDependencies:
       - ws
 
+<<<<<<< HEAD
   '@retrom/configs@file:packages/configs': {}
 
+=======
+>>>>>>> 1232ade (chore: bump deps)
   '@retrom/plugin-config@file:plugins/retrom-plugin-config(ws@8.18.0)':
     dependencies:
       '@retrom/codegen': file:packages/codegen(ws@8.18.0)
@@ -7618,6 +7627,7 @@ snapshots:
     transitivePeerDependencies:
       - ws
 
+<<<<<<< HEAD
   '@retrom/plugin-installer@file:plugins/retrom-plugin-installer':
     dependencies:
       '@tauri-apps/api': 2.2.0
@@ -7627,6 +7637,8 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.2.0
 
+=======
+>>>>>>> 1232ade (chore: bump deps)
   '@rollup/plugin-typescript@11.1.6(rollup@4.21.2)(tslib@2.7.0)(typescript@5.5.4)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.21.2)
