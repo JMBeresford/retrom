@@ -15,9 +15,9 @@ import {
   useSheetOpen,
 } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
-import { EmulatorJS } from "@/lib/emulatorjs/emulator";
 import { EJSControls, EmulatorJSControlMap } from "@/lib/emulatorjs/gamepad";
 import { cn, toTitleCase } from "@/lib/utils";
+import { useEmulatorJS } from "@/providers/emulator-js";
 import {
   GAMEPAD_BUTTON_EVENT,
   GamepadButtonEvent,
@@ -26,7 +26,6 @@ import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { Keyboard, Gamepad2 } from "lucide-react";
 import {
   KeyboardEvent,
-  SetStateAction,
   useCallback,
   useEffect,
   useMemo,
@@ -36,74 +35,13 @@ import {
 type Player = `${keyof EJSControls}`;
 type Tab = Player | "reset";
 
-export function ControlOptions(props: { emulatorJS: EmulatorJS }) {
-  const { emulatorJS } = props;
+export function ControlOptions() {
+  const { controlOptions, emulatorJS } = useEmulatorJS();
+  const { bindings, setBindings, resetControls, labels } = controlOptions;
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab | undefined>(undefined);
 
   const { open: parentOpen } = useSheetOpen();
-  const [controls, _setControls] = useState<EJSControls>(
-    emulatorJS.controls ??
-      emulatorJS.defaultControllers ?? { 0: {}, 1: {}, 2: {}, 3: {} },
-  );
-
-  // Hacky as all hell, no other way to leverage the existing
-  // per-core button labeling emulatorJS does under the hood
-  const labels = useMemo(() => {
-    const elements = [
-      ...emulatorJS.controlMenu
-        .querySelectorAll('.ejs_control_body .ejs_control_bar[data-index="0"]')
-        .values(),
-    ];
-
-    const labelsById: { id: string; label: string }[] = [];
-    for (const el of elements) {
-      const label = el.attributes.getNamedItem("data-label")?.value;
-      const id = el.attributes.getNamedItem("data-id")?.value;
-
-      if (id && label) {
-        labelsById.push({ id, label });
-      }
-    }
-
-    return labelsById;
-  }, [emulatorJS]);
-
-  const setControls = useCallback(
-    (cb: SetStateAction<EJSControls>) => {
-      _setControls(cb);
-
-      emulatorJS.checkGamepadInputs();
-      emulatorJS.saveSettings();
-    },
-    [emulatorJS],
-  );
-
-  const resetControls = useCallback(() => {
-    try {
-      emulatorJS.controls = JSON.parse(
-        JSON.stringify(emulatorJS.defaultControllers),
-      ) as EJSControls;
-
-      emulatorJS.setupKeys();
-      emulatorJS.checkGamepadInputs();
-      emulatorJS.saveSettings();
-
-      _setControls(emulatorJS.controls);
-      toast({
-        title: "Controls Reset",
-        description: "Controls have been reset to their default values.",
-      });
-    } catch (e) {
-      console.error(e);
-      toast({
-        title: "Reset Controls Error",
-        description:
-          "An error occurred while resetting controls, please refresh and try again.",
-        variant: "destructive",
-      });
-    }
-  }, [emulatorJS, toast]);
 
   return (
     <div className="relative flex h-full">
@@ -126,7 +64,7 @@ export function ControlOptions(props: { emulatorJS: EmulatorJS }) {
               "py-6 transition-opacity ease-in-out [&:not(:focus-within):not(:hover)]:opacity-50",
             )}
           >
-            {Object.keys(controls).map((player) => {
+            {Object.keys(bindings).map((player) => {
               return (
                 <FocusableElement
                   key={player}
@@ -157,9 +95,9 @@ export function ControlOptions(props: { emulatorJS: EmulatorJS }) {
           </div>
         </FocusContainer>
 
-        {Object.keys(controls).map((key) => {
+        {Object.keys(bindings).map((key) => {
           const playerIdx = key as Player;
-          const control = controls[playerIdx];
+          const control = bindings[playerIdx];
 
           const open = tab === playerIdx && parentOpen;
 
@@ -244,13 +182,12 @@ export function ControlOptions(props: { emulatorJS: EmulatorJS }) {
                               player={playerIdx}
                               buttonId={buttonId}
                               value={value ? emulatorJS.keyMap[value] : ""}
-                              emulatorJS={emulatorJS}
                               setControl={(value) => {
                                 const ejsKey = Number(
                                   emulatorJS.keyLookup(value),
                                 );
                                 if (ejsKey > 0) {
-                                  setControls((prev) => {
+                                  setBindings((prev) => {
                                     const next = {
                                       ...prev,
                                       [playerIdx]: {
@@ -280,10 +217,9 @@ export function ControlOptions(props: { emulatorJS: EmulatorJS }) {
                               player={playerIdx}
                               buttonId={buttonId}
                               value={value2 ?? ""}
-                              emulatorJS={emulatorJS}
                               gamepad
                               setControl={(value) => {
-                                setControls((prev) => {
+                                setBindings((prev) => {
                                   const next = {
                                     ...prev,
                                     [playerIdx]: {
@@ -345,14 +281,14 @@ function RecordInput(
     player: Player;
     buttonId: keyof EmulatorJSControlMap;
     value: string;
-    emulatorJS: EmulatorJS;
   } & (
     | { setControl: (value: string | number) => void; gamepad?: never }
     | { setControl: (value: string) => void; gamepad: true }
   ),
 ) {
   const [recording, setRecording] = useState(false);
-  const { player, buttonId, value, setControl, gamepad, emulatorJS } = props;
+  const { emulatorJS } = useEmulatorJS();
+  const { player, buttonId, value, setControl, gamepad } = props;
 
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
