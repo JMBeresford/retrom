@@ -3,3 +3,9 @@ packages:
   - packages/*
   - packages/client/web
   - plugins/*
+onlyBuiltDependencies:
+  - "@bufbuild/buf"
+  - core-js-pure
+  - esbuild
+  - grpc-tools
+  - protobufjs
