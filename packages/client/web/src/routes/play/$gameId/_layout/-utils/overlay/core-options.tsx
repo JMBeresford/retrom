@@ -6,11 +6,14 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useEmulatorJS } from "@/providers/emulator-js";
+import { CoreOption } from "@/providers/emulator-js/core-options";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
+import { memo, useState } from "react";
 
-export function CoreOptions() {
-  const { settings } = useEmulatorJS();
-  const { coreOptions, setCoreOption } = settings;
+export const CoreOptions = function CoreOptions() {
+  const {
+    settings: { coreOptions },
+  } = useEmulatorJS();
 
   return (
     <ScrollArea
@@ -31,29 +34,52 @@ export function CoreOptions() {
       >
         <HotkeyLayer id="core-options">
           <div className="flex flex-col gap-2">
-            {Object.entries(coreOptions).map(
-              ([label, { value, allValues }]) => (
-                <div key={label}>
-                  <ConfigSelect
-                    value={value}
-                    onValueChange={(newValue) => setCoreOption(label, newValue)}
-                    triggerProps={{
-                      label,
-                      id: label,
-                    }}
-                  >
-                    {allValues.map((value) => (
-                      <ConfigSelectItem key={value} value={value}>
-                        {value}
-                      </ConfigSelectItem>
-                    ))}
-                  </ConfigSelect>
-                </div>
-              ),
-            )}
+            {Object.entries(coreOptions).map(([label, opts]) => (
+              <Option key={label} label={label} opts={opts} />
+            ))}
           </div>
         </HotkeyLayer>
       </FocusContainer>
     </ScrollArea>
   );
-}
+};
+
+const Option = memo(function Option(props: {
+  label: string;
+  opts: CoreOption;
+}) {
+  const [open, setOpen] = useState(false);
+  const {
+    label,
+    opts: { value, allValues },
+  } = props;
+
+  const {
+    settings: { setCoreOption },
+  } = useEmulatorJS();
+
+  return (
+    <div key={label}>
+      <ConfigSelect
+        value={value}
+        open={open}
+        onValueChange={(newValue) => setCoreOption(label, newValue)}
+        onOpenChange={(value) => {
+          setOpen(value);
+        }}
+        triggerProps={{
+          label,
+          id: label,
+        }}
+      >
+        {allValues
+          .filter((v) => open || v === value)
+          .map((value) => (
+            <ConfigSelectItem key={value} value={value}>
+              {value}
+            </ConfigSelectItem>
+          ))}
+      </ConfigSelect>
+    </div>
+  );
+});

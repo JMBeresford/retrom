@@ -60,11 +60,11 @@ export function Overlay() {
   const tabs: Record<Tab, TabOpts> = {
     gameOptions: {
       Trigger: "Game Options",
-      Content: (props) => <GameOptions {...props} />,
+      Content: () => <GameOptions />,
     },
     emulationOptions: {
       Trigger: "Emulation Options",
-      Content: (props) => <EmulationOptions {...props} />,
+      Content: () => <EmulationOptions />,
     },
     coreOptions: {
       Trigger: "Core Options",
@@ -104,7 +104,7 @@ export function Overlay() {
   return (
     <Sheet open={!!overlay} onOpenChange={toggleOpen}>
       <SheetPortal>
-        <SheetOverlay onClick={(e) => console.log(e)} />
+        <SheetOverlay />
         <SheetContent
           onCloseAutoFocus={(e) => {
             e.preventDefault();
@@ -169,45 +169,38 @@ export function Overlay() {
             </FocusContainer>
 
             <div className={cn("relative flex h-full")}>
-              {emulatorJS ? (
-                <>
-                  {Object.entries(tabs).map(([key, opts]) => (
-                    <Sheet modal={false} key={key} open={tab === (key as Tab)}>
-                      {"Content" in opts ? (
-                        <SheetContent
-                          key={key}
-                          className={cn(
-                            "absolute z-[-1] bg-transparent",
-                            "border-none shadow-none group fill-mode-both",
-                            tab === (key as Tab)
-                              ? "delay-200"
-                              : "has-data-[state=open]:delay-200 delay-0",
-                          )}
-                          onCloseAutoFocus={(e) => {
-                            e.preventDefault();
-                          }}
-                          onOpenAutoFocus={(e) => {
-                            e.preventDefault();
-                          }}
-                        >
-                          <SheetHeader className="sr-only">
-                            <SheetTitle>{key} tab</SheetTitle>
-                            <SheetDescription>
-                              Settings related to {key}
-                            </SheetDescription>
-                          </SheetHeader>
-
-                          {opts.Content ? (
-                            <opts.Content emulatorJS={emulatorJS} />
-                          ) : null}
-                        </SheetContent>
-                      ) : (
-                        <></>
+              {Object.entries(tabs).map(([key, opts]) => (
+                <Sheet modal={false} key={key} open={tab === (key as Tab)}>
+                  {"Content" in opts ? (
+                    <SheetContent
+                      key={key}
+                      className={cn(
+                        "absolute z-[-1] bg-transparent",
+                        "border-none shadow-none group fill-mode-both",
                       )}
-                    </Sheet>
-                  ))}
-                </>
-              ) : null}
+                      onCloseAutoFocus={(e) => {
+                        e.preventDefault();
+                      }}
+                      onOpenAutoFocus={(e) => {
+                        e.preventDefault();
+                      }}
+                    >
+                      <SheetHeader className="sr-only">
+                        <SheetTitle>{key} tab</SheetTitle>
+                        <SheetDescription>
+                          Settings related to {key}
+                        </SheetDescription>
+                      </SheetHeader>
+
+                      {opts.Content ? (
+                        <opts.Content emulatorJS={emulatorJS} />
+                      ) : null}
+                    </SheetContent>
+                  ) : (
+                    <></>
+                  )}
+                </Sheet>
+              ))}
             </div>
           </div>
 

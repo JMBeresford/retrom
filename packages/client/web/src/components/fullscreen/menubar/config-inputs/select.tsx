@@ -63,16 +63,6 @@ const ConfigSelect = forwardRef<
 
     useImperativeHandle(forwardedRef, () => triggerFocus.ref.current!);
 
-    const handleOpen = useCallback(() => {
-      setOpen(true);
-      contentFocus.focusSelf();
-    }, [setOpen, contentFocus]);
-
-    const handleClose = useCallback(() => {
-      setOpen(false);
-      triggerFocus.focusSelf();
-    }, [setOpen, triggerFocus]);
-
     const onOpenChange = useCallback(
       (val: boolean) => {
         setOpen(val);
@@ -112,7 +102,7 @@ const ConfigSelect = forwardRef<
             id={rest.id}
             handlers={{
               ACCEPT: {
-                handler: () => handleOpen(),
+                handler: () => onOpenChange(true),
               },
             }}
           >
@@ -121,7 +111,7 @@ const ConfigSelect = forwardRef<
               {...rest}
               className={cn(
                 "border-none focus:ring-0 bg-transparent focus:ring-transparent ring-offset-transparent",
-                "px-4 py-0 text-base hover:bg-transparent",
+                "px-4 py-0 text-base hover:bg-transparent text-left",
                 className,
               )}
             >
@@ -135,7 +125,7 @@ const ConfigSelect = forwardRef<
             <SelectContent>
               <HotkeyLayer
                 id={rest.id}
-                handlers={{ BACK: { handler: () => handleClose() } }}
+                handlers={{ BACK: { handler: () => onOpenChange(false) } }}
               >
                 {children}
               </HotkeyLayer>

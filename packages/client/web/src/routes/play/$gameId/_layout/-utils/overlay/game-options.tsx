@@ -4,7 +4,6 @@ import {
 } from "@/components/fullscreen/focus-container";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { EmulatorJS } from "@/lib/emulatorjs/emulator";
 import { cn, Image, timestampToDate } from "@/lib/utils";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useCallback, useMemo, useState } from "react";
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { FileStat } from "@retrom/codegen/retrom/files";
 import { Loader2 } from "lucide-react";
+import { useEmulatorJS } from "@/providers/emulator-js";
 
 type Fn = () => void | Promise<void>;
 type Tab =
@@ -43,8 +43,8 @@ type StateInfo = {
   stat: FileStat;
 };
 
-export function GameOptions(props: { emulatorJS: EmulatorJS }) {
-  const { emulatorJS } = props;
+export function GameOptions() {
+  const { emulatorJS } = useEmulatorJS();
   const [paused, setPaused] = useState(!!emulatorJS.paused);
   const { toast } = useToast();
   const { hostname, port } = useConfig((s) => s.server) ?? {};

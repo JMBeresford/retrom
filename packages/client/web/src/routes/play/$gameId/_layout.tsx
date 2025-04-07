@@ -13,7 +13,6 @@ import { GamepadProvider } from "@/providers/gamepad";
 export const Route = createFileRoute("/play/$gameId/_layout")({
   component: Layout,
   loader: () => {
-    console.log("INIT");
     init({
       // debug: import.meta.env.DEV,
       shouldUseNativeEvents: true,
@@ -52,11 +51,6 @@ function Layout() {
       RIGHT: {
         handler: () => navigateByDirection("right", {}),
         zone: "root-navigation",
-      },
-      MENU: {
-        handler: () => {
-          console.log("MAGOO");
-        },
       },
     },
   });

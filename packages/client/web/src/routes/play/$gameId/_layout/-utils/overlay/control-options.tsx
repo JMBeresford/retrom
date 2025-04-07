@@ -330,7 +330,6 @@ function RecordInput(
       if (!e.detail.gamepad.buttons[button]?.pressed) return;
 
       const label = emulatorJS.gamepad.getButtonLabel(button) as string;
-      console.log(label);
       if (label) {
         setControl(label);
       }

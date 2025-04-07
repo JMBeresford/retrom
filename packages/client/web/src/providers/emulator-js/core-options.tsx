@@ -1,9 +1,9 @@
 import { useMemo, useState, useCallback } from "react";
 import { EmulatorJS } from "@/lib/emulatorjs/emulator";
 
-type Option = { value: string; allValues: string[] };
+export type CoreOption = { value: string; allValues: string[] };
 export type CoreOptions = {
-  coreOptions: Record<string, Option>;
+  coreOptions: Record<string, CoreOption>;
   setCoreOption: (option: string, value: string) => void;
 };
 
@@ -13,7 +13,7 @@ export function useCoreOptions(emulatorJS?: EmulatorJS): CoreOptions {
 
     const rawOptions =
       emulatorJS.gameManager?.getCoreOptions()?.split("\n") ?? [];
-    const parsedOptions: Record<string, Option> = {};
+    const parsedOptions: Record<string, CoreOption> = {};
 
     rawOptions.forEach((line) => {
       const [labelAndDefault, allValues] = line.split(";").map((v) => v.trim());

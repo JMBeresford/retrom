@@ -65,7 +65,9 @@ function FocusableElementImpl<T extends HTMLElement>(
   const { opts, onClick, initialFocus, children, ...rest } = props;
   const { ref, focusSelf } = useFocusable({
     onFocus: ({ node }) => {
-      node?.focus();
+      if (node !== document.activeElement) {
+        node?.focus();
+      }
     },
     onBlur: ({ node }) => {
       if (node === document.activeElement) {
@@ -88,7 +90,6 @@ function FocusableElementImpl<T extends HTMLElement>(
 
   const onClickHandler = useCallback(
     (e: MouseEvent<T>) => {
-      console.log("CLICKHANDLER: ", e);
       focusSelf();
       childProps.onClick?.(e);
       onClick?.(e);

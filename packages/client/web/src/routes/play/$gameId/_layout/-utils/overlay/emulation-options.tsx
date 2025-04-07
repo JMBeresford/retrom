@@ -3,8 +3,8 @@ import { ConfigCheckbox } from "@/components/fullscreen/menubar/config-inputs/ch
 import { ConfigInput } from "@/components/fullscreen/menubar/config-inputs/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { EmulatorJS } from "@/lib/emulatorjs/emulator";
 import { cn } from "@/lib/utils";
+import { useEmulatorJS } from "@/providers/emulator-js";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useCallback, useState } from "react";
 
@@ -13,8 +13,8 @@ type EmulationOptions = {
   fastForward: "enabled" | "disabled";
 };
 
-export function EmulationOptions(props: { emulatorJS: EmulatorJS }) {
-  const { emulatorJS } = props;
+export function EmulationOptions() {
+  const { emulatorJS } = useEmulatorJS();
   const [volume, setVolume] = useState(Math.floor(emulatorJS.volume * 100));
   const [fastForward, _setFastForward] = useState(emulatorJS.isFastForward);
   const [ffRatio, setFFRatio] = useState(
