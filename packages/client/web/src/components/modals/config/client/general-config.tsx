@@ -41,7 +41,7 @@ export function GeneralConfig() {
     resolver: zodResolver(configSchema),
     defaultValues: {
       interface: {
-        fullscreenByDefault: config?.interface?.fullscreenByDefault,
+        fullscreenByDefault: config?.interface?.fullscreenByDefault ?? false,
       },
       installationDir: config?.installationDir,
     },

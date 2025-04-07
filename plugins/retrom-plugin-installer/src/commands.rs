@@ -285,8 +285,8 @@ pub async fn migrate_installation_dir<R: Runtime>(
     new_dir: &str,
 ) -> crate::Result<()> {
     let new_dir = PathBuf::from(new_dir);
-    let old_dir = app.installer().get_installation_dir().await?;
     let installer = app.installer();
+    let old_dir = installer.get_installation_dir().await?;
     let installing = installer.currently_installing.read().await;
 
     if !installing.is_empty() {
@@ -305,7 +305,15 @@ pub async fn migrate_installation_dir<R: Runtime>(
         let path = old_dir.join(game_id.to_string());
         let new_path = new_dir.join(path.file_name().unwrap());
 
-        tokio::fs::rename(&path, &new_path).await?;
+        if path.exists() {
+            tokio::fs::rename(&path, &new_path).await?;
+        } else {
+            tracing::debug!(
+                "Game directory for game ID {} does not exist at the old path: {:?}",
+                game_id,
+                path
+            );
+        }
     }
 
     Ok(())

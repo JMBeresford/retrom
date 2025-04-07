@@ -6,6 +6,8 @@
       "dependsOn": ["^build"]
     },
     "dev:desktop": {
+      "persistent": true,
+      "cache": false,
       "dependsOn": ["^dev"]
     }
   }
