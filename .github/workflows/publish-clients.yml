@@ -64,10 +64,7 @@ jobs:
       PQ_LIB_STATIC: 1
       IS_PRERELEASE: ${{ inputs.prerelease || github.event.release.prerelease }}
       DEBUG_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'debug' || github.event.release.prerelease }}
-      RELEASE_BUILDS: |
-        inputs.builds == 'both' ||
-        inputs.builds == 'release' ||
-        (github.event.release.prerelease == false && !github.event.release.draft == false)
+      RELEASE_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'release' || (github.event.release.prerelease == false && github.event.release.draft == false) }}
       TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
