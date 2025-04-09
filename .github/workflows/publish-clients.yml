@@ -156,14 +156,14 @@ jobs:
         run: pnpm install
 
       - name: build release client
-        if: ${{ env.RELEASE_BUILDS == true }}
+        if: ${{ env.RELEASE_BUILDS == 'true' }}
         env:
           BUILD_ARGS: ${{ env.TARGET_ARG }}
         run: |
           pnpm turbo --filter @retrom/client build
 
       - name: build debug client
-        if: ${{ env.DEBUG_BUILDS == true }}
+        if: ${{ env.DEBUG_BUILDS == 'true' }}
         env:
           BUILD_ARGS: ${{ env.TARGET_ARG }} --debug
         run: |
