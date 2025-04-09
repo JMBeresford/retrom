@@ -62,9 +62,9 @@ jobs:
             cache-key-prefix: "windows-latest"
     env:
       PQ_LIB_STATIC: 1
-      IS_PRERELEASE: ${{ inputs.prerelease || github.event.release.prerelease }}
-      DEBUG_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'debug' || github.event.release.prerelease }}
-      RELEASE_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'release' || (github.event_name == 'release' && github.event.release.prerelease == false) }}
+      IS_PRERELEASE: ${{ inputs.prerelease || github.event.release.prerelease == true }}
+      DEBUG_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'debug' || github.event.release.prerelease == true }}
+      RELEASE_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'release' || (github.event.release.prerelease == false && github.event.release.draft == false) }}
       TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -156,14 +156,14 @@ jobs:
         run: pnpm install
 
       - name: build release client
-        if: env.RELEASE_BUILDS == 'true'
+        if: ${{ env.RELEASE_BUILDS == 'true' }}
         env:
           BUILD_ARGS: ${{ env.TARGET_ARG }}
         run: |
           pnpm turbo --filter @retrom/client build
 
       - name: build debug client
-        if: env.DEBUG_BUILDS == 'true'
+        if: ${{ env.DEBUG_BUILDS == 'true' }}
         env:
           BUILD_ARGS: ${{ env.TARGET_ARG }} --debug
         run: |
@@ -182,7 +182,7 @@ jobs:
           releaseName: ${{ inputs.title || github.event.release.name }}
           tagName: ${{ inputs.title || github.event.release.tag_name }}
           prerelease: ${{ env.IS_PRERELEASE }}
-          releaseDraft: ${{ inputs.draft }}
+          releaseDraft: ${{ inputs.draft && 'true' || 'false' }}
           includeDebug: ${{ env.DEBUG_BUILDS }}
           includeRelease: ${{ env.RELEASE_BUILDS }}
           includeUpdaterJson: true
