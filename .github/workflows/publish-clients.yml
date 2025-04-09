@@ -182,7 +182,7 @@ jobs:
           releaseName: ${{ inputs.title || github.event.release.name }}
           tagName: ${{ inputs.title || github.event.release.tag_name }}
           prerelease: ${{ env.IS_PRERELEASE }}
-          releaseDraft: ${{ inputs.draft }}
+          releaseDraft: ${{ inputs.draft && 'true' || 'false' }}
           includeDebug: ${{ env.DEBUG_BUILDS }}
           includeRelease: ${{ env.RELEASE_BUILDS }}
           includeUpdaterJson: true
