@@ -44,7 +44,6 @@ export default defineConfig({
       "Cross-Origin-Embedder-Policy": "credentialless",
       "Cross-Origin-Opener-Policy": "same-origin",
     },
-
     proxy: {
       "/api": {
         target: localServiceHost,
@@ -56,6 +55,10 @@ export default defineConfig({
   preview: {
     port: 3000,
     host: "0.0.0.0",
+    headers: {
+      "Cross-Origin-Embedder-Policy": "credentialless",
+      "Cross-Origin-Opener-Policy": "same-origin",
+    },
     proxy: {
       "/api": {
         target: localServiceHost,

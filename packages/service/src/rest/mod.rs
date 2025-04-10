@@ -32,12 +32,9 @@ pub fn rest_service(
     );
 
     let headers = warp::reply::with::headers(headers);
-
     let routes = file(pool.clone()).or(game(pool.clone())).or(public());
 
-    let cors = warp::cors().allow_origins(["http://localhost:3000", "tauri://localhost"]);
-
-    warp::path("rest").and(routes).with(cors).with(headers)
+    warp::path("rest").and(routes).with(headers)
 }
 
 pub fn with_db_pool(
