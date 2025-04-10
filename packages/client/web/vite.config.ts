@@ -48,7 +48,7 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: localServiceHost,
-        // changeOrigin: true,
+        changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
@@ -56,11 +56,10 @@ export default defineConfig({
   preview: {
     port: 3000,
     host: "0.0.0.0",
-
     proxy: {
       "/api": {
         target: localServiceHost,
-        // changeOrigin: true,
+        changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
