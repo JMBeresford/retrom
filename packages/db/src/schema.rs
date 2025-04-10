@@ -40,6 +40,9 @@ diesel::table! {
         save_strategy -> Int4,
         created_at -> Nullable<Timestamptz>,
         updated_at -> Nullable<Timestamptz>,
+        built_in -> Bool,
+        libretro_name -> Nullable<Text>,
+        operating_systems -> Array<Int4>,
     }
 }
 

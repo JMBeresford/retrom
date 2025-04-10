@@ -38,7 +38,7 @@ export type HotkeyLayerContext = {
   getHandler: (hotkey: Hotkey) => HotkeyHandlerInfo | undefined;
 };
 
-const context = createContext<HotkeyLayerContext | null>(null);
+const hotkeyLayerContext = createContext<HotkeyLayerContext | null>(null);
 
 type HotkeyLayerOpts = {
   /**
@@ -116,6 +116,14 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
           `Layer ${id} handling hotkey ${hotkey}${zone ? ` in zone ${zone}` : ""}`,
         );
 
+        if (event instanceof GamepadButtonEvent) {
+          console.log(`Layer ${id} setting input device to gamepad`);
+          setInputDevice("gamepad");
+        } else {
+          console.log(`Layer ${id} setting input device to hotkeys`);
+          setInputDevice("hotkeys");
+        }
+
         handler(event);
       }
 
@@ -134,23 +142,21 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
         event.preventDefault();
       }
     },
-    [getHandler, isZoneActive, allowBubbling, id],
+    [getHandler, isZoneActive, allowBubbling, id, setInputDevice],
   );
 
   const onKeyDown = useCallback(
     (event: ReactKeyboardEvent) => {
-      setInputDevice("keyboard");
       const pressed = event.key;
       const hotkey = KeyboardHotkeyToHotkey[pressed];
 
       handleHotkey(hotkey, event);
     },
-    [handleHotkey, setInputDevice],
+    [handleHotkey],
   );
 
   const handleGamepadButton = useCallback(
     (event: GamepadButtonEvent) => {
-      setInputDevice("gamepad");
       const button = event.detail.button;
       const pressed = !!event.detail.gamepad.buttons.at(button)?.pressed;
 
@@ -162,7 +168,7 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
 
       handleHotkey(hotkey, event);
     },
-    [handleHotkey, setInputDevice],
+    [handleHotkey],
   );
 
   useEffect(() => {
@@ -176,7 +182,7 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
   }, [handleGamepadButton]);
 
   return (
-    <context.Provider
+    <hotkeyLayerContext.Provider
       value={{
         getHandler,
         isZoneActive,
@@ -186,10 +192,10 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
       <span ref={ref} id={id} onKeyDown={onKeyDown} className="contents">
         {children}
       </span>
-    </context.Provider>
+    </hotkeyLayerContext.Provider>
   );
 }
 
 export function useHotkeyLayerContext() {
-  return useContext(context);
+  return useContext(hotkeyLayerContext);
 }

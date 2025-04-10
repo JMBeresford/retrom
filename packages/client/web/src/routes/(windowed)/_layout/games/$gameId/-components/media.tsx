@@ -123,7 +123,12 @@ function VideoCarousel(props: { videos: string[] }) {
       <CarouselContent className="h-max">
         {videos.map((video, idx) => (
           <CarouselItem key={idx}>
-            <iframe className="w-full aspect-video rounded-lg" src={video} />
+            <iframe
+              // @ts-expect-error -- types out of date
+              credentialless="true"
+              className="w-full aspect-video rounded-lg"
+              src={video}
+            />
           </CarouselItem>
         ))}
       </CarouselContent>

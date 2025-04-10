@@ -40,7 +40,7 @@ export const HotkeyButton = forwardRef<
         {...rest}
       >
         <HotkeyIcon hotkey={hotkey} />
-        <span className="font-semibold text-xl leading-none h-min uppercase">
+        <span className="font-medium text-base leading-none h-min uppercase">
           {children}
         </span>
       </Button>
@@ -69,8 +69,8 @@ export function HotkeyIcon(
       style={{ aspectRatio: usingGamepad ? "unset" : "1/1" }}
       className={cn(
         "uppercase shadow-[0_0_5px_2px_hsl(var(--accent)_/_0.8)]",
-        "grid place-items-center",
-        "text-lg leading-[0] bg-primary/15 p-[8px]",
+        "grid place-items-center font-normal",
+        "leading-[0] bg-primary/15 p-[6px]",
         inputDevice === "gamepad" && "rounded-full py-[12px] px-[8px]",
         className,
       )}

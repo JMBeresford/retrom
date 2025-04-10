@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package retrom;
+
+import 'retrom/server/config.proto';
+import 'retrom/server/server-info.proto';
+
+service ServerService {
+  rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
+  rpc GetServerConfig(GetServerConfigRequest) returns (GetServerConfigResponse);
+  rpc UpdateServerConfig(UpdateServerConfigRequest) returns (UpdateServerConfigResponse);
+}
+
+message GetServerInfoRequest {}
+
+message GetServerInfoResponse {
+  ServerInfo server_info = 1;
+}
+
+message GetServerConfigRequest {}
+
+message GetServerConfigResponse {
+  ServerConfig config = 1;
+}
+
+message UpdateServerConfigRequest {
+  ServerConfig config = 1;
+}
+
+message UpdateServerConfigResponse {
+  ServerConfig config_updated = 1;
+}

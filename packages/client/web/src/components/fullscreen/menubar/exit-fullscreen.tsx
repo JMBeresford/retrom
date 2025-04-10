@@ -61,7 +61,7 @@ export function ExitFullscreen(props: ComponentProps<typeof SheetTrigger>) {
             <SheetHeader>
               <SheetTitle>Exit Fullscreen</SheetTitle>
               <SheetDescription>
-                Exit fullscreen mode and return to the desktop interface
+                Return to the desktop interface
               </SheetDescription>
             </SheetHeader>
 
