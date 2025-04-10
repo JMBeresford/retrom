@@ -35,7 +35,7 @@ pub fn rest_service(
 
     let routes = file(pool.clone()).or(game(pool.clone())).or(public());
 
-    let cors = warp::cors().allow_origin("http://localhost:3000");
+    let cors = warp::cors().allow_origins(["http://localhost:3000", "tauri://localhost"]);
 
     warp::path("rest").and(routes).with(cors).with(headers)
 }
