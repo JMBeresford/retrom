@@ -18,6 +18,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { EJSControls, EmulatorJSControlMap } from "@/lib/emulatorjs/gamepad";
 import { cn, toTitleCase } from "@/lib/utils";
 import { useEmulatorJS } from "@/providers/emulator-js";
+import { useControlOptions } from "@/providers/emulator-js/control-options";
 import {
   GAMEPAD_BUTTON_EVENT,
   GamepadButtonEvent,
@@ -26,6 +27,7 @@ import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { Keyboard, Gamepad2 } from "lucide-react";
 import {
   KeyboardEvent,
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -36,8 +38,10 @@ type Player = `${keyof EJSControls}`;
 type Tab = Player | "reset";
 
 export function ControlOptions() {
-  const { controlOptions, emulatorJS } = useEmulatorJS();
-  const { bindings, setBindings, resetControls, labels } = controlOptions;
+  const { emulatorJS } = useEmulatorJS();
+  const { bindings, setBindings, resetControls, labels } =
+    useControlOptions(emulatorJS);
+
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab | undefined>(undefined);
 
@@ -275,7 +279,7 @@ export function ControlOptions() {
   );
 }
 
-function RecordInput(
+const RecordInput = memo(function RecordInput(
   props: {
     player: Player;
     buttonId: keyof EmulatorJSControlMap;
@@ -380,4 +384,4 @@ function RecordInput(
       </MenuEntryButton>
     </FocusableElement>
   );
-}
+});

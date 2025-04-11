@@ -6,12 +6,10 @@ import { GameFile } from "@retrom/codegen/retrom/models/game-files";
 import { useApiUrl } from "@/utils/useApiUrl";
 import { Loader2 } from "lucide-react";
 import { CoreOptions, useCoreOptions } from "./core-options";
-import { ControlOptions, useControlOptions } from "./control-options";
 
 type EmulatorJSContextValue = {
   emulatorJS: EmulatorJS;
   settings: CoreOptions;
-  controlOptions: ControlOptions;
 };
 
 export type ConfigExtended = Omit<
@@ -113,12 +111,9 @@ export function EmulatorJSProvider(props: {
   function Provider(props: { emulatorJS: EmulatorJS; children: ReactNode }) {
     const { emulatorJS, children } = props;
     const settings = useCoreOptions(emulatorJS);
-    const controlOptions = useControlOptions(emulatorJS);
 
     return (
-      <EmulatorJSContext.Provider
-        value={{ emulatorJS, settings, controlOptions }}
-      >
+      <EmulatorJSContext.Provider value={{ emulatorJS, settings }}>
         {children}
       </EmulatorJSContext.Provider>
     );
