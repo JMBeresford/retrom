@@ -1,5 +1,6 @@
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -207,7 +208,9 @@ export function Overlay() {
           <SheetFooter
             className={cn("flex w-full justify-between bg-background")}
           >
-            <HotkeyButton hotkey="MENU">Close</HotkeyButton>
+            <SheetClose asChild>
+              <HotkeyButton hotkey="MENU">Close</HotkeyButton>
+            </SheetClose>
 
             <div className="flex gap-2">
               <HotkeyButton hotkey="ACCEPT">Accept</HotkeyButton>

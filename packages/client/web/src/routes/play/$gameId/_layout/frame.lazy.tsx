@@ -3,7 +3,7 @@ import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
 import type { EmulatorJS } from "@/lib/emulatorjs/emulator";
 import "./play.scss";
 import { cn, getFileStub, millisToTimestamp } from "@/lib/utils";
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useRef } from "react";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 import { useGameDetail } from "@/providers/game-details";
 import { Route as ParentRoute } from ".";
@@ -21,6 +21,7 @@ import { useApiUrl } from "@/utils/useApiUrl";
 import { ConfigExtended, EmulatorJSProvider } from "@/providers/emulator-js";
 import { File } from "@retrom/codegen/retrom/files";
 import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer";
+import { HotkeyButton } from "@/components/fullscreen/hotkey-button";
 
 export type EmuJsFrameEvent =
   | "exit"
@@ -49,6 +50,8 @@ function FrameComponent() {
   const { toast } = useToast();
   const apiUrl = useApiUrl();
   const navigate = useNavigate();
+  const [showMenuBtn, setShowMenuBtn] = useState(false);
+  const pointerMoveTimeout = useRef<number>();
 
   const { gameFiles, gameMetadata, game, defaultProfile, emulator } =
     useGameDetail();
@@ -287,6 +290,13 @@ function FrameComponent() {
   return (
     <div
       className="w-screen h-screen relative"
+      onPointerMoveCapture={() => {
+        setShowMenuBtn(true);
+        window.clearTimeout(pointerMoveTimeout.current);
+        pointerMoveTimeout.current = window.setTimeout(() => {
+          setShowMenuBtn(false);
+        }, 2000);
+      }}
       onContextMenuCapture={(e) => {
         e.stopPropagation();
       }}
@@ -305,6 +315,26 @@ function FrameComponent() {
           <div id="game" className={cn("grid place-items-center")}></div>
         </FocusableElement>
       </FocusContainer>
+      <div
+        className={cn(
+          "fixed top-0 left-0",
+          "bg-background border-r border-b rounded-br",
+          "transition-transform",
+          showMenuBtn ? "translate-x-0" : "-translate-x-full delay-200",
+        )}
+      >
+        <HotkeyButton
+          hotkey="MENU"
+          onClick={() =>
+            navigate({
+              to: ".",
+              search: (prev) => ({ ...prev, overlay: true }),
+            })
+          }
+        >
+          Menu
+        </HotkeyButton>
+      </div>
     </div>
   );
 }
