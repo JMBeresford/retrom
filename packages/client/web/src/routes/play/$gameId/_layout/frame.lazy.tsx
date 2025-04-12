@@ -44,7 +44,7 @@ export function emitFromFrame(event: EmuJsFrameEvent) {
 }
 
 function FrameComponent() {
-  const { coreName } = ParentRoute.useSearch();
+  const { coreName, overlay } = ParentRoute.useSearch();
   const { uploadFiles, downloadFiles } = useRemoteFiles();
   const { mutate: uploadSaveState } = useUploadSaveState();
   const { toast } = useToast();
@@ -291,9 +291,16 @@ function FrameComponent() {
     <div
       className="w-screen h-screen relative"
       onPointerMoveCapture={() => {
+        if (overlay) {
+          return;
+        }
+
         setShowMenuBtn(true);
         window.clearTimeout(pointerMoveTimeout.current);
         pointerMoveTimeout.current = window.setTimeout(() => {
+          if (overlay) {
+            return;
+          }
           setShowMenuBtn(false);
         }, 2000);
       }}
