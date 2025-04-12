@@ -63,16 +63,6 @@ const ConfigSelect = forwardRef<
 
     useImperativeHandle(forwardedRef, () => triggerFocus.ref.current!);
 
-    const handleOpen = useCallback(() => {
-      setOpen(true);
-      contentFocus.focusSelf();
-    }, [setOpen, contentFocus]);
-
-    const handleClose = useCallback(() => {
-      setOpen(false);
-      triggerFocus.focusSelf();
-    }, [setOpen, triggerFocus]);
-
     const onOpenChange = useCallback(
       (val: boolean) => {
         setOpen(val);
@@ -91,16 +81,16 @@ const ConfigSelect = forwardRef<
       <Select {...props} open={open} onOpenChange={onOpenChange}>
         <div
           className={cn(
-            "relative flex flex-col px-2 pt-2 pl-0 bg-transparent transition-colors",
-            "before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-secondary before:transition-all",
+            "relative flex flex-col pt-1 bg-transparent transition-colors",
+            "before:absolute before:inset-y-0 before:left-0 before:w-0 before:bg-secondary before:transition-all",
             "focus-within:before:bg-accent focus-within:before:w-1 focus-within:bg-secondary/20",
-            "hover:before:w-1 hover:bg-secondary/20",
+            "hover:before:w-1 hover:bg-secondary/20 before:rounded-r",
           )}
         >
           {label ? (
             <FormLabel
               htmlFor={rest.id}
-              className="font-semibold uppercase text-muted-foreground pl-4"
+              className="text-xs font-semibold uppercase text-muted-foreground px-4"
             >
               {label}
             </FormLabel>
@@ -112,7 +102,7 @@ const ConfigSelect = forwardRef<
             id={rest.id}
             handlers={{
               ACCEPT: {
-                handler: () => handleOpen(),
+                handler: () => onOpenChange(true),
               },
             }}
           >
@@ -121,7 +111,7 @@ const ConfigSelect = forwardRef<
               {...rest}
               className={cn(
                 "border-none focus:ring-0 bg-transparent focus:ring-transparent ring-offset-transparent",
-                "pl-4 py-0 text-xl hover:bg-transparent",
+                "px-4 py-0 text-base hover:bg-transparent text-left",
                 className,
               )}
             >
@@ -135,7 +125,7 @@ const ConfigSelect = forwardRef<
             <SelectContent>
               <HotkeyLayer
                 id={rest.id}
-                handlers={{ BACK: { handler: () => handleClose() } }}
+                handlers={{ BACK: { handler: () => onOpenChange(false) } }}
               >
                 {children}
               </HotkeyLayer>
@@ -161,6 +151,7 @@ const ConfigSelectTrigger = forwardRef<HTMLButtonElement, TriggerProps>(
         className={cn(
           "relative flex flex-col px-2 pt-2 pl-0 bg-transparent transition-colors",
           "before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-secondary before:transition-all",
+          "before:rounded-r",
           "focus-within:before:bg-accent focus-within:before:w-1 focus-within:bg-secondary/20",
           "hover:before:w-1 hover:bg-secondary/20",
         )}
@@ -217,7 +208,7 @@ const ConfigSelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
     const [open, setOpen] = useSelectOpen();
 
     return (
-      <SelectContent ref={ref} {...rest} className={className}>
+      <SelectContent ref={ref} {...rest} className={cn(className)}>
         <HotkeyLayer
           id={props.id}
           handlers={{ BACK: { handler: () => setOpen(false) } }}
@@ -297,7 +288,7 @@ const ConfigSelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
         <SelectItem
           ref={ref}
           {...rest}
-          className={cn("text-xl", className)}
+          className={cn("text-base", className)}
           onFocus={() => {
             if (!focused) {
               focusSelf();

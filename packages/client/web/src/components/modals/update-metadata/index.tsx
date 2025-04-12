@@ -24,6 +24,7 @@ export function UpdateMetadataModal() {
       onOpenChange={(open) => {
         if (!open) {
           void navigate({
+            to: ".",
             search: (prev) => ({ ...prev, updateMetadataModal: undefined }),
           });
         }

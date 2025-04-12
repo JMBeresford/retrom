@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package retrom;
+
+import 'retrom/models/game-files.proto';
+import 'retrom/models/games.proto';
+import 'retrom/models/platforms.proto';
+
+service LibraryService {
+  rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
+  rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
+  rpc DeleteLibrary(DeleteLibraryRequest) returns (DeleteLibraryResponse);
+  rpc DeleteMissingEntries(DeleteMissingEntriesRequest) returns (DeleteMissingEntriesResponse);
+}
+
+message UpdateLibraryRequest {}
+
+message UpdateLibraryResponse {
+  repeated string job_ids = 1;
+}
+
+message UpdateLibraryMetadataRequest {
+  optional bool overwrite = 1;
+}
+
+message UpdateLibraryMetadataResponse {
+  string platform_metadata_job_id = 1;
+  string game_metadata_job_id = 2;
+  string extra_metadata_job_id = 3;
+  optional string steam_metadata_job_id = 4;
+}
+
+message DeleteLibraryRequest {}
+
+message DeleteLibraryResponse {}
+
+message DeleteMissingEntriesRequest {
+  bool dry_run = 1;
+}
+
+message DeleteMissingEntriesResponse {
+  repeated Platform platforms_deleted = 1;
+  repeated Game games_deleted = 2;
+  repeated GameFile game_files_deleted = 3;
+}

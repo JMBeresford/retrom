@@ -1,8 +1,8 @@
 diff --git a/packages/db/src/schema.rs b/packages/db/src/schema.rs
-index 399e701..47c7f0d 100644
+index bc814db..b68dac2 100644
 --- a/packages/db/src/schema.rs
 +++ b/packages/db/src/schema.rs
-@@ -21,24 +21,24 @@ diesel::table! {
+@@ -21,29 +21,29 @@ diesel::table! {
  
  diesel::table! {
      emulator_profiles (id) {
@@ -28,9 +28,15 @@ index 399e701..47c7f0d 100644
          save_strategy -> Int4,
          created_at -> Nullable<Timestamptz>,
          updated_at -> Nullable<Timestamptz>,
+         built_in -> Bool,
+         libretro_name -> Nullable<Text>,
+-        operating_systems -> Array<Nullable<Int4>>,
++        operating_systems -> Array<Int4>,
      }
  }
-@@ -83,16 +83,16 @@ diesel::table! {
+ 
+ diesel::table! {
+@@ -86,16 +86,16 @@ diesel::table! {
          cover_url -> Nullable<Text>,
          background_url -> Nullable<Text>,
          icon_url -> Nullable<Text>,

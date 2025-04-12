@@ -1,4 +1,8 @@
-import { FormControl, FormLabel, useFormField } from "@/components/ui/form";
+import {
+  FormControl,
+  FormLabel,
+  useMaybeFormField,
+} from "@/components/ui/form";
 import { Input, InputProps } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { forwardRef, useImperativeHandle, useRef } from "react";
@@ -6,12 +10,12 @@ import { ControllerRenderProps } from "react-hook-form";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useFocusable } from "../../focus-container";
 
-type Props = InputProps & { label?: string };
+type Props = InputProps & { label?: string; bigStep?: number };
 
 export const ConfigInput = forwardRef<HTMLInputElement, Props>(
   (props: Props, forwardedRef) => {
-    const { className, label, ...rest } = props;
-    const { error } = useFormField();
+    const { className, label, bigStep: _bigStep, ...rest } = props;
+    const { error } = useMaybeFormField() ?? {};
 
     const wrapperRef = useRef<HTMLDivElement>(null!);
     const { ref, focused, focusSelf } = useFocusable<HTMLInputElement>({
@@ -35,6 +39,11 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
     const node = ref.current;
     useImperativeHandle(forwardedRef, () => ref.current!);
 
+    const step = Number(props.step ?? 1);
+    const bigStep = _bigStep ?? step * 5;
+    const min = props.min ? Number(props.min) : -Infinity;
+    const max = props.max ? Number(props.max) : Infinity;
+
     return (
       <HotkeyLayer
         handlers={{
@@ -57,7 +66,11 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
           UP: {
             handler: (event) => {
               if (node && node === document.activeElement && onChange) {
-                onChange(String(Number(node.value) + 1));
+                onChange(
+                  String(
+                    Math.max(Math.min(Number(node.value) + step, max), min),
+                  ),
+                );
 
                 event?.preventDefault();
                 event?.stopPropagation();
@@ -67,7 +80,11 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
           DOWN: {
             handler: (event) => {
               if (node && node === document.activeElement && onChange) {
-                onChange(String(Number(node.value) - 1));
+                onChange(
+                  String(
+                    Math.max(Math.min(Number(node.value) - step, max), min),
+                  ),
+                );
 
                 event?.preventDefault();
                 event?.stopPropagation();
@@ -77,7 +94,11 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
           LEFT: {
             handler: (event) => {
               if (node && node === document.activeElement && onChange) {
-                onChange(String(Number(node.value) - 5));
+                onChange(
+                  String(
+                    Math.max(Math.min(Number(node.value) - bigStep, max), min),
+                  ),
+                );
 
                 event?.preventDefault();
                 event?.stopPropagation();
@@ -87,7 +108,11 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
           RIGHT: {
             handler: (event) => {
               if (node && node === document.activeElement && onChange) {
-                onChange(String(Number(node.value) + 5));
+                onChange(
+                  String(
+                    Math.max(Math.min(Number(node.value) + bigStep, max), min),
+                  ),
+                );
 
                 event?.preventDefault();
                 event?.stopPropagation();
@@ -104,17 +129,18 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
             node?.focus();
           }}
           className={cn(
-            "relative flex flex-col px-2 pt-2 pl-4 bg-transparent transition-colors",
-            "before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-secondary before:transition-all",
+            "relative flex flex-col px-2 pl-4 bg-transparent transition-colors",
+            "before:absolute before:inset-y-0 before:left-0 before:w-0 before:bg-secondary before:transition-all",
             "focus-within:before:bg-accent focus-within:before:w-1 focus-within:bg-secondary/20",
             focused && "before:bg-accent before:w-1 bg-secondary/20",
-            "border-none outline-none",
+            "border-none outline-none before:rounded-r",
             "hover:before:w-1 hover:bg-secondary/20",
             error && "before:bg-destructive",
+            label && "pt-2",
           )}
         >
           {label ? (
-            <FormLabel className="font-semibold uppercase text-muted-foreground">
+            <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">
               {label}
             </FormLabel>
           ) : (
@@ -125,7 +151,7 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
             <Input
               ref={ref}
               className={cn(
-                "text-xl border-none p-0 focus-visible:ring-0 focus-visible:ring-transparent ring-offset-transparent",
+                "text-lg border-none p-0 focus-visible:ring-0 focus-visible:ring-transparent ring-offset-transparent",
                 "bg-transparent outline-none shadow-none",
                 "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                 'aria-[invalid="true"]:ring-transparent',

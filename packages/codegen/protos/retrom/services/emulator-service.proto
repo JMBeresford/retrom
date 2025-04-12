@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+package retrom;
+
+import 'retrom/models/emulators.proto';
+
+service EmulatorService {
+  rpc CreateEmulators(CreateEmulatorsRequest) returns (CreateEmulatorsResponse);
+  rpc GetEmulators(GetEmulatorsRequest) returns (GetEmulatorsResponse);
+  rpc UpdateEmulators(UpdateEmulatorsRequest) returns (UpdateEmulatorsResponse);
+  rpc DeleteEmulators(DeleteEmulatorsRequest) returns (DeleteEmulatorsResponse);
+
+  rpc CreateEmulatorProfiles(CreateEmulatorProfilesRequest) returns (CreateEmulatorProfilesResponse);
+  rpc GetEmulatorProfiles(GetEmulatorProfilesRequest) returns (GetEmulatorProfilesResponse);
+  rpc UpdateEmulatorProfiles(UpdateEmulatorProfilesRequest) returns (UpdateEmulatorProfilesResponse);
+  rpc DeleteEmulatorProfiles(DeleteEmulatorProfilesRequest) returns (DeleteEmulatorProfilesResponse);
+
+  rpc GetDefaultEmulatorProfiles(GetDefaultEmulatorProfilesRequest) returns (GetDefaultEmulatorProfilesResponse);
+  rpc UpdateDefaultEmulatorProfiles(UpdateDefaultEmulatorProfilesRequest) returns (UpdateDefaultEmulatorProfilesResponse);
+  rpc DeleteDefaultEmulatorProfiles(DeleteDefaultEmulatorProfilesRequest) returns (DeleteDefaultEmulatorProfilesResponse);
+
+  rpc CreateLocalEmulatorConfigs(CreateLocalEmulatorConfigsRequest) returns (CreateLocalEmulatorConfigsResponse);
+  rpc GetLocalEmulatorConfigs(GetLocalEmulatorConfigsRequest) returns (GetLocalEmulatorConfigsResponse);
+  rpc UpdateLocalEmulatorConfigs(UpdateLocalEmulatorConfigsRequest) returns (UpdateLocalEmulatorConfigsResponse);
+  rpc DeleteLocalEmulatorConfigs(DeleteLocalEmulatorConfigsRequest) returns (DeleteLocalEmulatorConfigsResponse);
+}
+
+message CreateEmulatorsRequest {
+  repeated NewEmulator emulators = 1;
+}
+
+message CreateEmulatorsResponse {
+  repeated Emulator emulators_created = 1;
+}
+
+message GetEmulatorsRequest {
+  repeated int32 ids = 1;
+  repeated int32 supported_platform_ids = 2;
+}
+
+message GetEmulatorsResponse {
+  repeated Emulator emulators = 1;
+}
+
+message UpdateEmulatorsRequest {
+  repeated UpdatedEmulator emulators = 1;
+}
+
+message UpdateEmulatorsResponse {
+  repeated Emulator emulators_updated = 1;
+}
+
+message DeleteEmulatorsRequest {
+  repeated int32 ids = 1;
+}
+
+message DeleteEmulatorsResponse {
+  repeated Emulator emulators_deleted = 1;
+}
+
+message CreateEmulatorProfilesRequest {
+  repeated NewEmulatorProfile profiles = 1;
+}
+
+message CreateEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles_created = 1;
+}
+
+message GetEmulatorProfilesRequest {
+  repeated int32 ids = 1;
+  repeated int32 emulator_ids = 2;
+}
+
+message GetEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles = 1;
+}
+
+message UpdateEmulatorProfilesRequest {
+  repeated UpdatedEmulatorProfile profiles = 1;
+}
+
+message UpdateEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles_updated = 1;
+}
+
+message DeleteEmulatorProfilesRequest {
+  repeated int32 ids = 1;
+}
+
+message DeleteEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles_deleted = 1;
+}
+
+message GetDefaultEmulatorProfilesRequest {
+  repeated int32 platform_ids = 1;
+}
+
+message GetDefaultEmulatorProfilesResponse {
+  repeated DefaultEmulatorProfile default_profiles = 1;
+}
+
+message UpdateDefaultEmulatorProfilesRequest {
+  repeated UpdatedDefaultEmulatorProfile default_profiles = 1;
+}
+
+message UpdateDefaultEmulatorProfilesResponse {
+  repeated DefaultEmulatorProfile default_profiles_updated = 1;
+}
+
+message DeleteDefaultEmulatorProfilesRequest {
+  repeated int32 platform_ids = 1;
+}
+
+message DeleteDefaultEmulatorProfilesResponse {
+  repeated DefaultEmulatorProfile default_profiles_deleted = 1;
+}
+
+message CreateLocalEmulatorConfigsRequest {
+  repeated NewLocalEmulatorConfig configs = 1;
+}
+
+message CreateLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs_created = 1;
+}
+
+message GetLocalEmulatorConfigsRequest {
+  repeated int32 emulator_ids = 1;
+  int32 client_id = 2;
+}
+
+message GetLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs = 1;
+}
+
+message UpdateLocalEmulatorConfigsRequest {
+  repeated UpdatedLocalEmulatorConfig configs = 1;
+}
+
+message UpdateLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs_updated = 1;
+}
+
+message DeleteLocalEmulatorConfigsRequest {
+  repeated int32 ids = 1;
+}
+
+message DeleteLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs_deleted = 1;
+}

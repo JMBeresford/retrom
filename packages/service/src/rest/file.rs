@@ -12,7 +12,7 @@ use warp::{filters::BoxedFilter, Filter};
 
 use super::with_db_pool;
 
-pub fn get_file(pool: Arc<Pool>) -> BoxedFilter<(impl warp::Reply,)> {
+pub fn file(pool: Arc<Pool>) -> BoxedFilter<(impl warp::Reply,)> {
     warp::path!("file" / i32)
         .and(warp::get())
         .and(with_db_pool(pool))

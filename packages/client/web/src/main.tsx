@@ -17,6 +17,11 @@ import {
   restoreStateCurrent,
   StateFlags,
 } from "@tauri-apps/plugin-window-state";
+import { scan } from "react-scan";
+
+if (import.meta.env.DEV) {
+  scan();
+}
 
 // Create a new router instance
 const router = createRouter({ routeTree });

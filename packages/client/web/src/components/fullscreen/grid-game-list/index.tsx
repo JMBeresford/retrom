@@ -35,7 +35,7 @@ export function GridGameList(props: { games?: GameWithMetadata[] }) {
       opts={{ focusKey: "game-list", forceFocus: true }}
       style={{ "--game-cols": columns, "--game-gap": `${gap}px` }}
       className={cn(
-        "w-[70%] mx-auto py-[30dvh]",
+        "w-[95%] mx-auto py-[30dvh]",
         "grid gap-[var(--game-gap)] grid-cols-[repeat(var(--game-cols),minmax(0,1fr))]",
       )}
     >
