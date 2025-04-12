@@ -22,6 +22,10 @@
     @apply hover:bg-accent/80 transition-colors;
   }
 
+  .ejs_virtualGamepad_open {
+    display: none;
+  }
+
   .ejs_menu_bar {
     display: none;
     .ejs_volume_parent {
