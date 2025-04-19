@@ -54,8 +54,11 @@ export function MenuSheet(props: JSX.IntrinsicElements["button"]) {
           }}
         >
           <FocusContainer
-            initialFocus
-            opts={{ focusKey: "menu-root", isFocusBoundary: true }}
+            opts={{
+              focusKey: "menu-root",
+              isFocusBoundary: true,
+              initialFocus: true,
+            }}
           >
             <HotkeyLayer
               id="menu-root"

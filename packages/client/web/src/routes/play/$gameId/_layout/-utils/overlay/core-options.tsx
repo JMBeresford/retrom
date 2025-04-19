@@ -5,21 +5,21 @@ import {
 } from "@/components/fullscreen/menubar/config-inputs/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useEmulatorJS } from "@/providers/emulator-js";
-import { CoreOption } from "@/providers/emulator-js/core-options";
+import {
+  CoreOption,
+  useCoreOptions,
+} from "@/providers/emulator-js/core-options";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { memo, useState } from "react";
 
 export const CoreOptions = function CoreOptions() {
-  const {
-    settings: { coreOptions },
-  } = useEmulatorJS();
+  const { coreOptions } = useCoreOptions();
 
   return (
     <ScrollArea
       className={cn(
         "flex flex-col w-fit h-full min-w-48",
-        "bg-background border-r",
+        "bg-background border-r *:scroll-p-[5dvh]",
       )}
     >
       <FocusContainer
@@ -33,7 +33,7 @@ export const CoreOptions = function CoreOptions() {
         }}
       >
         <HotkeyLayer id="core-options">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 scroll-m-6">
             {Object.entries(coreOptions).map(([label, opts]) => (
               <Option key={label} label={label} opts={opts} />
             ))}
@@ -53,10 +53,7 @@ const Option = memo(function Option(props: {
     label,
     opts: { value, allValues },
   } = props;
-
-  const {
-    settings: { setCoreOption },
-  } = useEmulatorJS();
+  const { setCoreOption } = useCoreOptions();
 
   return (
     <div key={label}>
@@ -74,9 +71,9 @@ const Option = memo(function Option(props: {
       >
         {allValues
           .filter((v) => open || v === value)
-          .map((value) => (
-            <ConfigSelectItem key={value} value={value}>
-              {value}
+          .map((val) => (
+            <ConfigSelectItem key={val} value={val}>
+              {val}
             </ConfigSelectItem>
           ))}
       </ConfigSelect>

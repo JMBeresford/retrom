@@ -67,8 +67,9 @@ export type HotkeyHandler = (
 ) => unknown;
 
 export type HotkeyHandlerInfo = {
-  handler: HotkeyHandler | undefined;
+  handler?: HotkeyHandler | undefined;
   zone?: HotkeyZone;
+  label?: string;
 };
 
 export type HotkeyHandlers = Partial<Record<Hotkey, HotkeyHandlerInfo>>;

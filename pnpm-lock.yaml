@@ -123,7 +123,7 @@ importers:
         version: link:../../codegen
       '@retrom/plugin-config':
         specifier: workspace:*
-        version: link:../../../plugins/retrom-plugin-config
+        version: file:plugins/retrom-plugin-config(ws@8.18.0)
       '@retrom/plugin-installer':
         specifier: workspace:*
         version: link:../../../plugins/retrom-plugin-installer
@@ -299,6 +299,9 @@ importers:
       '@types/three':
         specifier: ^0.169.0
         version: 0.169.0
+      '@types/wicg-file-system-access':
+        specifier: ^2023.10.6
+        version: 2023.10.6
       '@vitejs/plugin-react':
         specifier: ^4.3.1
         version: 4.3.1(vite@5.4.3(@types/node@20.16.3)(sass@1.77.8))
@@ -405,7 +408,7 @@ importers:
     dependencies:
       '@retrom/codegen':
         specifier: workspace:*
-        version: link:../../packages/codegen
+        version: file:packages/codegen(ws@8.18.0)
       '@tauri-apps/api':
         specifier: '>=2.0.0-beta.6'
         version: 2.2.0
@@ -2154,6 +2157,12 @@ packages:
       '@react-three/fiber': '>=8'
       react: '>=18'
 
+  '@retrom/codegen@file:packages/codegen':
+    resolution: {directory: packages/codegen, type: directory}
+
+  '@retrom/plugin-config@file:plugins/retrom-plugin-config':
+    resolution: {directory: plugins/retrom-plugin-config, type: directory}
+
   '@rollup/plugin-typescript@11.1.6':
     resolution: {integrity: sha512-R92yOmIACgYdJ7dJ97p4K69I8gg6IEHt8M7dUBxN3W6nrO8uUxX5ixl0yU/N3aZTi8WhPuICvOHXQvF6FaykAA==}
     engines: {node: '>=14.0.0'}
@@ -2653,6 +2662,9 @@ packages:
 
   '@types/webxr@0.5.20':
     resolution: {integrity: sha512-JGpU6qiIJQKUuVSKx1GtQnHJGxRjtfGIhzO2ilq43VZZS//f1h1Sgexbdk+Lq+7569a6EYhOWrUpIruR/1Enmg==}
+
+  '@types/wicg-file-system-access@2023.10.6':
+    resolution: {integrity: sha512-YO/183gNRzZFSdKu+ikkD7ambAj4PhgjFAF2A/Mw/7wroSF6ne8r804RkpZzqrJ/F6DO2/IYlQF/ULOZ/bhKyA==}
 
   '@typescript-eslint/eslint-plugin@8.19.1':
     resolution: {integrity: sha512-tJzcVyvvb9h/PB96g30MpxACd9IrunT7GF9wfA9/0TJ1LxGOJx1TdPzSbBBnNED7K9Ka8ybJsnEpiXPktolTLg==}
@@ -7585,6 +7597,22 @@ snapshots:
       - three
       - ts-node
 
+  '@retrom/codegen@file:packages/codegen(ws@8.18.0)':
+    dependencies:
+      '@bufbuild/protobuf': 2.1.0
+      nice-grpc-common: 2.0.2
+      nice-grpc-web: 3.3.4(ws@8.18.0)
+      protobufjs: 7.4.0
+    transitivePeerDependencies:
+      - ws
+
+  '@retrom/plugin-config@file:plugins/retrom-plugin-config(ws@8.18.0)':
+    dependencies:
+      '@retrom/codegen': file:packages/codegen(ws@8.18.0)
+      '@tauri-apps/api': 2.2.0
+    transitivePeerDependencies:
+      - ws
+
   '@rollup/plugin-typescript@11.1.6(rollup@4.21.2)(tslib@2.7.0)(typescript@5.5.4)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.21.2)
@@ -8062,6 +8090,8 @@ snapshots:
   '@types/uuid@10.0.0': {}
 
   '@types/webxr@0.5.20': {}
+
+  '@types/wicg-file-system-access@2023.10.6': {}
 
   '@typescript-eslint/eslint-plugin@8.19.1(@typescript-eslint/parser@8.19.1(eslint@9.17.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.17.0(jiti@1.21.6))(typescript@5.5.4)':
     dependencies:

@@ -8,20 +8,23 @@ import {
   ReactNode,
   useId,
   useImperativeHandle,
-  useRef,
 } from "react";
-import { FocusableElement } from "../../focus-container";
+import { useFocusable } from "../../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 
 const ConfigCheckbox = forwardRef<
   ElementRef<typeof Checkbox>,
   CheckboxProps & { label: ReactNode }
 >((props, forwardedRef) => {
-  const ref = useRef<HTMLButtonElement>(null!);
-  useImperativeHandle(forwardedRef, () => ref.current);
-  const { className, label, children, ...rest } = props;
   const genId = useId();
   const id = `${props.id ?? genId}-checkbox`;
+
+  const { ref } = useFocusable<HTMLButtonElement>({
+    focusKey: id,
+  });
+
+  useImperativeHandle(forwardedRef, () => ref.current!);
+  const { className, label, children, ...rest } = props;
 
   return (
     <div
@@ -34,20 +37,16 @@ const ConfigCheckbox = forwardRef<
     >
       <HotkeyLayer
         id={id}
-        handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
+        handlers={{
+          ACCEPT: { handler: () => ref.current?.click(), label: "Toggle" },
+        }}
       >
-        <FocusableElement
+        <Checkbox
           ref={ref}
-          opts={{
-            focusKey: id,
-          }}
-        >
-          <Checkbox
-            id={id}
-            className={cn("h-5 w-5 focus-visible:ring-0", className)}
-            {...rest}
-          />
-        </FocusableElement>
+          id={id}
+          className={cn("h-5 w-5 focus-visible:ring-0", className)}
+          {...rest}
+        />
       </HotkeyLayer>
 
       <div className="flex flex-col gap-2">

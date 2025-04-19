@@ -1,16 +1,14 @@
 import { ButtonProps } from "@/components/ui/button";
-import { FormControl, FormLabel } from "@/components/ui/form";
+import { FormLabel } from "@/components/ui/form";
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectValue,
   SelectItem,
-  useSelectOpen,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
-  SelectContentProps,
   SelectItemProps,
   SelectProps,
   SelectValueProps,
@@ -18,15 +16,11 @@ import {
 import {
   forwardRef,
   useCallback,
+  useId,
   useImperativeHandle,
-  useRef,
   useState,
 } from "react";
-import {
-  FocusableElement,
-  FocusContainer,
-  useFocusable,
-} from "../../focus-container";
+import { useFocusable } from "../../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { FocusContext } from "@noriginmedia/norigin-spatial-navigation";
 
@@ -37,35 +31,32 @@ const ConfigSelect = forwardRef<
   SelectProps & { triggerProps: TriggerProps }
 >(
   (
-    { children, triggerProps, open: _open, defaultOpen, ...props },
+    { children, triggerProps, open: openProp, defaultOpen = false, ...props },
     forwardedRef,
   ) => {
-    const { label, className, ...rest } = triggerProps;
-    const [open, setOpen] = useState(defaultOpen ?? false);
+    const { label, className, id: _id, ...rest } = triggerProps;
+
+    const genId = useId();
+    const id = `${_id ?? genId}-select`;
+    const [openInner, setOpenInner] = useState(defaultOpen);
+    const open = openProp ?? openInner;
 
     const contentFocus = useFocusable<HTMLDivElement>({
-      isFocusBoundary: true,
+      focusKey: id + "-content",
       focusable: false,
-      focusKey: rest.id + "-content",
+      forceFocus: true,
+      isFocusBoundary: true,
     });
 
     const triggerFocus = useFocusable<HTMLButtonElement>({
-      focusKey: rest.id + "-open",
-      onFocus: ({ node }) => {
-        node?.focus();
-      },
-      onBlur: ({ node }) => {
-        if (node === document.activeElement) {
-          node?.blur();
-        }
-      },
+      focusKey: id + "-trigger",
     });
 
     useImperativeHandle(forwardedRef, () => triggerFocus.ref.current!);
 
     const onOpenChange = useCallback(
       (val: boolean) => {
-        setOpen(val);
+        setOpenInner(val);
         props.onOpenChange?.(val);
 
         if (val) {
@@ -74,7 +65,7 @@ const ConfigSelect = forwardRef<
           triggerFocus.focusSelf();
         }
       },
-      [setOpen, props, contentFocus, triggerFocus],
+      [props, contentFocus, triggerFocus],
     );
 
     return (
@@ -89,7 +80,7 @@ const ConfigSelect = forwardRef<
         >
           {label ? (
             <FormLabel
-              htmlFor={rest.id}
+              htmlFor={id}
               className="text-xs font-semibold uppercase text-muted-foreground px-4"
             >
               {label}
@@ -99,15 +90,17 @@ const ConfigSelect = forwardRef<
           )}
 
           <HotkeyLayer
-            id={rest.id}
+            id={`${id}-trigger-hotkeys`}
             handlers={{
               ACCEPT: {
                 handler: () => onOpenChange(true),
+                label: "Select",
               },
             }}
           >
             <SelectTrigger
               ref={triggerFocus.ref}
+              id={id}
               {...rest}
               className={cn(
                 "border-none focus:ring-0 bg-transparent focus:ring-transparent ring-offset-transparent",
@@ -124,8 +117,10 @@ const ConfigSelect = forwardRef<
           <div ref={contentFocus.ref}>
             <SelectContent>
               <HotkeyLayer
-                id={rest.id}
-                handlers={{ BACK: { handler: () => onOpenChange(false) } }}
+                id={`${id}-content`}
+                handlers={{
+                  BACK: { handler: () => onOpenChange(false), label: "Back" },
+                }}
               >
                 {children}
               </HotkeyLayer>
@@ -136,104 +131,6 @@ const ConfigSelect = forwardRef<
     );
   },
 );
-
-const ConfigSelectTrigger = forwardRef<HTMLButtonElement, TriggerProps>(
-  (props, forwardedRef) => {
-    const ref = useRef<HTMLButtonElement>(null!);
-    useImperativeHandle(forwardedRef, () => ref.current);
-    const { children, className, label, ...rest } = props;
-    const [_, setOpen] = useSelectOpen();
-
-    const id = `${label}-${rest.id}-trigger`;
-
-    return (
-      <div
-        className={cn(
-          "relative flex flex-col px-2 pt-2 pl-0 bg-transparent transition-colors",
-          "before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-secondary before:transition-all",
-          "before:rounded-r",
-          "focus-within:before:bg-accent focus-within:before:w-1 focus-within:bg-secondary/20",
-          "hover:before:w-1 hover:bg-secondary/20",
-        )}
-      >
-        {label ? (
-          <FormLabel
-            htmlFor={id}
-            className="font-semibold uppercase text-muted-foreground pl-4"
-          >
-            {label}
-          </FormLabel>
-        ) : (
-          <></>
-        )}
-        <FormControl>
-          <HotkeyLayer
-            id={props.id}
-            handlers={{
-              ACCEPT: {
-                handler: () => setOpen(true),
-              },
-            }}
-          >
-            <FocusableElement
-              opts={{
-                focusKey: props.id,
-              }}
-            >
-              <SelectTrigger
-                id={id}
-                ref={ref}
-                {...rest}
-                className={cn(
-                  "border-none focus:ring-0 bg-transparent focus:ring-transparent ring-offset-transparent",
-                  "pl-4 py-0 text-xl hover:bg-transparent",
-                  className,
-                )}
-              >
-                {children}
-              </SelectTrigger>
-            </FocusableElement>
-          </HotkeyLayer>
-        </FormControl>
-      </div>
-    );
-  },
-);
-
-ConfigSelectTrigger.displayName = "ConfigSelectTrigger";
-
-const ConfigSelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
-  (props, ref) => {
-    const { children, className, ...rest } = props;
-    const [open, setOpen] = useSelectOpen();
-
-    return (
-      <SelectContent ref={ref} {...rest} className={cn(className)}>
-        <HotkeyLayer
-          id={props.id}
-          handlers={{ BACK: { handler: () => setOpen(false) } }}
-        >
-          {open ? (
-            <FocusContainer
-              initialFocus
-              opts={{
-                isFocusBoundary: true,
-                focusKey: props.id,
-                focusable: false,
-              }}
-            >
-              {children}
-            </FocusContainer>
-          ) : (
-            children
-          )}
-        </HotkeyLayer>
-      </SelectContent>
-    );
-  },
-);
-
-ConfigSelectContent.displayName = "ConfigSelectContent";
 
 const ConfigSelectValue = forwardRef<HTMLDivElement, SelectValueProps>(
   (props, ref) => {
@@ -251,18 +148,10 @@ ConfigSelectValue.displayName = "ConfigSelectValue";
 
 const ConfigSelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
   (props, forwardedRef) => {
-    const { ref, focused, focusSelf } = useFocusable<HTMLDivElement>({
-      focusKey: props.id,
-      onFocus: ({ node }) => {
-        if (node !== document.activeElement) {
-          node?.focus();
-        }
-      },
-      onBlur: ({ node }) => {
-        if (node === document.activeElement) {
-          node?.blur();
-        }
-      },
+    const genId = useId();
+    const id = `${props.id ?? genId}-select-item-${props.value}`;
+    const { ref, focusSelf, focused } = useFocusable<HTMLDivElement>({
+      focusKey: id,
     });
 
     useImperativeHandle(forwardedRef, () => ref.current!);
@@ -270,7 +159,7 @@ const ConfigSelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
 
     return (
       <HotkeyLayer
-        id={props.id}
+        id={`${id}-hotkeys`}
         handlers={{
           ACCEPT: {
             handler: () => {
@@ -282,6 +171,7 @@ const ConfigSelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
                 }),
               );
             },
+            label: "Confirm",
           },
         }}
       >
@@ -304,10 +194,4 @@ const ConfigSelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
 
 ConfigSelectItem.displayName = "ConfigSelectItem";
 
-export {
-  ConfigSelect,
-  ConfigSelectTrigger,
-  ConfigSelectContent,
-  ConfigSelectValue,
-  ConfigSelectItem,
-};
+export { ConfigSelect, ConfigSelectValue, ConfigSelectItem };

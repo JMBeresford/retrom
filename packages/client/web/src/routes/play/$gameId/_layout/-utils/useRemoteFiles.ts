@@ -1,11 +1,22 @@
-import { File } from "@retrom/codegen/retrom/files";
+import { File, FileStat } from "@retrom/codegen/retrom/files";
 import { useMutation } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useApiUrl } from "@/utils/useApiUrl";
+import { useCallback } from "react";
 
 export function useRemoteFiles() {
   const apiUrl = useApiUrl();
   const retromClient = useRetromClient();
+
+  const getPublicUrl = useCallback(
+    (path: FileStat | string) => {
+      path = typeof path === "string" ? path : path.path;
+
+      const publicDir = new URL("./rest/public/", apiUrl);
+      return new URL(`./${path}`, publicDir).toString();
+    },
+    [apiUrl],
+  );
 
   const uploadFiles = useMutation({
     mutationKey: ["upload-file", apiUrl],
@@ -40,10 +51,8 @@ export function useRemoteFiles() {
   });
 
   const downloadFiles = useMutation({
-    mutationKey: ["download-file", apiUrl],
+    mutationKey: ["download-file", getPublicUrl],
     mutationFn: async (path: string) => {
-      const publicUrl = new URL("./rest/public/", apiUrl);
-
       try {
         const { stats } = await retromClient.fileExplorerClient.getStat({
           path,
@@ -51,12 +60,10 @@ export function useRemoteFiles() {
 
         const files = await Promise.all(
           stats.map((stat) =>
-            fetch(new URL(`./${stat.path}`, publicUrl).toString()).then(
-              async (r) => ({
-                stat,
-                data: new Uint8Array(await r.arrayBuffer()),
-              }),
-            ),
+            fetch(getPublicUrl(stat).toString()).then(async (r) => ({
+              stat,
+              data: new Uint8Array(await r.arrayBuffer()),
+            })),
           ),
         );
 
@@ -70,5 +77,6 @@ export function useRemoteFiles() {
   return {
     uploadFiles,
     downloadFiles,
+    getPublicUrl,
   };
 }

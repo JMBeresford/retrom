@@ -5,13 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { GameFile } from "@retrom/codegen/retrom/models/game-files";
 import { useApiUrl } from "@/utils/useApiUrl";
 import { Loader2 } from "lucide-react";
-import { CoreOptions, useCoreOptions } from "./core-options";
 
-type EmulatorJSContextValue = {
-  emulatorJS: EmulatorJS;
-  settings: CoreOptions;
-};
-
+type EmulatorJSContextValue = EmulatorJS;
 export type ConfigExtended = Omit<
   Config,
   "onGameStart" | "ready" | "onSaveSave" | "onSaveState" | "onLoadState"
@@ -56,6 +51,7 @@ export function EmulatorJSProvider(props: {
   const { data: emulatorJS } = useQuery({
     queryKey: ["emulator-js", apiUrl, file.id, config],
     structuralSharing: false,
+    staleTime: Infinity,
     queryFn: () => {
       return new Promise<EmulatorJS>((resolve, reject) => {
         const dataUrl = new URL(
@@ -109,12 +105,9 @@ export function EmulatorJSProvider(props: {
   // Wait for the emuJS instance to be created, then create and provide
   // context w/ valid defaults derived from the instance
   function Provider(props: { emulatorJS: EmulatorJS; children: ReactNode }) {
-    const { emulatorJS, children } = props;
-    const settings = useCoreOptions(emulatorJS);
-
     return (
-      <EmulatorJSContext.Provider value={{ emulatorJS, settings }}>
-        {children}
+      <EmulatorJSContext.Provider value={props.emulatorJS}>
+        {props.children}
       </EmulatorJSContext.Provider>
     );
   }

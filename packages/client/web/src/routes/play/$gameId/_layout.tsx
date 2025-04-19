@@ -9,6 +9,7 @@ import {
 } from "@noriginmedia/norigin-spatial-navigation";
 import { useHotkeys } from "@/providers/hotkeys";
 import { GamepadProvider } from "@/providers/gamepad";
+import { FocusedHotkeyLayerProvider } from "@/providers/hotkeys/layers";
 
 export const Route = createFileRoute("/play/$gameId/_layout")({
   component: Layout,
@@ -56,16 +57,18 @@ function Layout() {
   });
 
   return (
-    <GamepadProvider>
-      <ModalActionProvider>
-        <GameDetailProvider gameId={parseInt(gameId)}>
-          <div className="w-dvw h-dvh overflow-hidden flex flex-col">
-            <Outlet />
-          </div>
-        </GameDetailProvider>
+    <FocusedHotkeyLayerProvider>
+      <GamepadProvider>
+        <ModalActionProvider>
+          <GameDetailProvider gameId={parseInt(gameId)}>
+            <div className="w-dvw h-dvh overflow-hidden flex flex-col">
+              <Outlet />
+            </div>
+          </GameDetailProvider>
 
-        <ConfirmModal />
-      </ModalActionProvider>
-    </GamepadProvider>
+          <ConfirmModal />
+        </ModalActionProvider>
+      </GamepadProvider>
+    </FocusedHotkeyLayerProvider>
   );
 }

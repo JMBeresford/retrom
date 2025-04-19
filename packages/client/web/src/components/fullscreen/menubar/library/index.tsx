@@ -15,7 +15,7 @@ import { HotkeyButton } from "../../hotkey-button";
 import { UpdateLibrary } from "./update-libary";
 import { DownloadMetadata } from "./download-metadata";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { FocusableElement, FocusContainer } from "../../focus-container";
+import { FocusContainer } from "../../focus-container";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
@@ -25,16 +25,19 @@ export function Library(props: JSX.IntrinsicElements["button"]) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <FocusableElement opts={{ focusKey: "library-menu-open" }}>
-          <MenuEntryButton {...props}>Library</MenuEntryButton>
-        </FocusableElement>
+        <MenuEntryButton id="library-menu-open" {...props}>
+          Library
+        </MenuEntryButton>
       </SheetTrigger>
 
       <SheetOverlay />
       <SheetContent>
         <FocusContainer
-          initialFocus
-          opts={{ focusKey: "library-menu", isFocusBoundary: true }}
+          opts={{
+            focusKey: "library-menu",
+            isFocusBoundary: true,
+            initialFocus: true,
+          }}
         >
           <HotkeyLayer
             id="library-menu"

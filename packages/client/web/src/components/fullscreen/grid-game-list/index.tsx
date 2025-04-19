@@ -31,8 +31,7 @@ export function GridGameList(props: { games?: GameWithMetadata[] }) {
 
   return (
     <FocusContainer
-      initialFocus
-      opts={{ focusKey: "game-list", forceFocus: true }}
+      opts={{ focusKey: "game-list", forceFocus: true, initialFocus: true }}
       style={{ "--game-cols": columns, "--game-gap": `${gap}px` }}
       className={cn(
         "w-[95%] mx-auto py-[30dvh]",

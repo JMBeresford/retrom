@@ -14,7 +14,7 @@ import { useUninstallGame } from "@/mutations/useUninstallGame";
 import { useGameDetail } from "@/providers/game-details";
 import { LoaderCircle } from "lucide-react";
 import { useState } from "react";
-import { FocusableElement, FocusContainer } from "../focus-container";
+import { FocusContainer } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
@@ -33,16 +33,13 @@ export function UninstallGameAction() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <FocusableElement
-          opts={{
-            focusKey: "uninstall-game-action-open",
-            focusable: !openDisabled,
-          }}
+        <MenuEntryButton
+          id="uninstall-game-action-open"
+          focusOpts={{ focusable: !openDisabled }}
+          disabled={openDisabled}
         >
-          <MenuEntryButton disabled={openDisabled}>
-            Uninstall Game
-          </MenuEntryButton>
-        </FocusableElement>
+          Uninstall Game
+        </MenuEntryButton>
       </SheetTrigger>
 
       <SheetContent
@@ -69,13 +66,6 @@ export function UninstallGameAction() {
                 Are you sure you want to uninstall this game?
               </SheetDescription>
             </SheetHeader>
-
-            <FocusableElement
-              initialFocus
-              opts={{ focusKey: "uninstall-game-action-trap" }}
-            >
-              <button className="opacity-0"></button>
-            </FocusableElement>
 
             <SheetFooter>
               <SheetClose asChild>

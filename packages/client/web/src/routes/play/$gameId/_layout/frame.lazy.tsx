@@ -11,10 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Overlay } from "./-utils/overlay";
 import { useRemoteFiles } from "./-utils/useRemoteFiles";
 import { useUploadSaveState } from "./-utils/useUploadSaveState";
-import {
-  FocusableElement,
-  FocusContainer,
-} from "@/components/fullscreen/focus-container";
+import { FocusContainer } from "@/components/fullscreen/focus-container";
 import { checkIsDesktop } from "@/lib/env";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useApiUrl } from "@/utils/useApiUrl";
@@ -185,9 +182,6 @@ function FrameComponent() {
       onGameStart: async (emulator) => {
         setStartTime(Date.now());
         const savePath = emulator.gameManager?.getSaveFilePath() ?? "";
-        console.log({
-          opts: emulator.gameManager?.getCoreOptions()?.split("\n"),
-        });
 
         const remoteSaves = await downloadFiles.mutateAsync(
           savePath.replace("/data/", ""),
@@ -309,18 +303,14 @@ function FrameComponent() {
       }}
     >
       <FocusContainer
-        className="block w-full h-full"
+        className="w-full h-full"
         opts={{ focusKey: "frame-focus-root" }}
       >
         <EmulatorJSProvider file={file} config={config}>
           <Overlay />
         </EmulatorJSProvider>
 
-        <FocusableElement
-          opts={{ focusKey: "frame-game-container", forceFocus: true }}
-        >
-          <div id="game" className={cn("grid place-items-center")}></div>
-        </FocusableElement>
+        <div id="game" className={cn("grid place-items-center")}></div>
       </FocusContainer>
       <div
         className={cn(

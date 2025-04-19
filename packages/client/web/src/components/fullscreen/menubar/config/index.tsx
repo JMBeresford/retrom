@@ -26,7 +26,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConfigSelect, ConfigSelectItem } from "../config-inputs/select";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useToast } from "@/components/ui/use-toast";
-import { FocusableElement, FocusContainer } from "../../focus-container";
+import { FocusContainer } from "../../focus-container";
 import { ConfigCheckbox } from "../config-inputs/checkbox";
 import { Separator } from "@/components/ui/separator";
 
@@ -110,11 +110,9 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
       }}
     >
       <SheetTrigger asChild>
-        <FocusableElement opts={{ focusKey: "config-menu-open" }}>
-          <MenuEntryButton id="config-menu-open" {...props}>
-            Config
-          </MenuEntryButton>
-        </FocusableElement>
+        <MenuEntryButton id="config-menu-open" {...props}>
+          Config
+        </MenuEntryButton>
       </SheetTrigger>
 
       <SheetOverlay />
@@ -127,8 +125,8 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
           }}
         >
           <FocusContainer
-            initialFocus
             opts={{
+              initialFocus: true,
               focusKey: "config-menu",
               isFocusBoundary: true,
             }}

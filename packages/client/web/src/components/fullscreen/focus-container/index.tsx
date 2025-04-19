@@ -2,108 +2,92 @@ import { cn } from "@/lib/utils";
 import {
   FocusContext,
   useFocusable as useFocusableImpl,
-  UseFocusableConfig,
+  UseFocusableConfig as UseFocusableConfigImpl,
 } from "@noriginmedia/norigin-spatial-navigation";
-import {
-  Children,
-  cloneElement,
-  ForwardedRef,
-  forwardRef,
-  HTMLProps,
-  MouseEvent,
-  PropsWithoutRef,
-  ReactElement,
-  RefObject,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-} from "react";
+import { ReactNode, RefObject, useCallback, useMemo } from "react";
 
-export function FocusContainer(
-  props: {
-    opts?: UseFocusableConfig<HTMLDivElement>;
-    initialFocus?: boolean;
-  } & JSX.IntrinsicElements["div"],
-) {
-  const { opts, initialFocus, className, ...rest } = props;
-  const { ref, focusKey, focusSelf } = useFocusable<HTMLDivElement>({
-    ...opts,
-  });
+export type FocusContainerProps = {
+  opts?: UseFocusableConfig<HTMLDivElement>;
+} & JSX.IntrinsicElements["div"];
 
-  useEffect(() => {
-    if (initialFocus) {
-      focusSelf();
-    }
-  }, [focusSelf, initialFocus]);
+export function FocusContainer(props: FocusContainerProps) {
+  const { opts, className, ...rest } = props;
+  const { ref, focusKey } = useFocusable<HTMLDivElement>(opts);
 
   return (
     <FocusContext.Provider value={focusKey}>
-      <div ref={ref} className={cn("contents", className)} {...rest} />
+      <div ref={ref} className={cn(className)} {...rest} />
     </FocusContext.Provider>
   );
 }
 
-export function useFocusable<T extends HTMLElement = HTMLElement>(
-  ...opts: Parameters<typeof useFocusableImpl<T>>
+export type UseFocusableConfig<T> = UseFocusableConfigImpl<T> & {};
+
+export function useFocusable<T extends HTMLElement>(
+  opts: UseFocusableConfig<T> = {},
 ) {
-  const focusable = useFocusableImpl(...opts);
-  const ref = focusable.ref as RefObject<T>;
+  const { onFocus, onBlur, ...restOpts } = opts;
 
-  return { ...focusable, ref };
-}
-
-function FocusableElementImpl<T extends HTMLElement>(
-  props: PropsWithoutRef<
-    HTMLProps<T> & {
-      opts?: UseFocusableConfig<T>;
-      initialFocus?: boolean;
-      children: ReactElement;
-    }
-  >,
-  forwardedRef: ForwardedRef<T>,
-) {
-  const { opts, onClick, initialFocus, children, ...rest } = props;
-  const { ref, focusSelf } = useFocusable({
-    onFocus: ({ node }) => {
-      if (node !== document.activeElement) {
-        node?.focus();
+  const onFocusHandler: NonNullable<typeof onFocus> = useCallback(
+    (layout, ...args) => {
+      if (document.activeElement !== layout.node) {
+        layout.node.focus();
       }
+
+      onFocus?.(layout, ...args);
     },
-    onBlur: ({ node }) => {
-      if (node === document.activeElement) {
-        node?.blur();
-      }
-    },
-    ...opts,
-  });
-
-  const child = Children.only(children);
-  const childProps = child.props as typeof props;
-
-  useImperativeHandle(forwardedRef, () => ref.current!);
-
-  useEffect(() => {
-    if (initialFocus) {
-      focusSelf();
-    }
-  }, [focusSelf, initialFocus]);
-
-  const onClickHandler = useCallback(
-    (e: MouseEvent<T>) => {
-      console.log("CLICKHANDLER: ", e);
-      focusSelf();
-      childProps.onClick?.(e);
-      onClick?.(e);
-    },
-    [onClick, focusSelf, childProps],
+    [onFocus],
   );
 
-  return cloneElement(child, {
-    ...rest,
-    ...childProps,
-    ref,
-    onClick: onClickHandler,
-  });
+  const onBlurHandler: NonNullable<typeof onBlur> = useCallback(
+    (layout, ...args) => {
+      if (document.activeElement === layout.node) {
+        layout.node?.blur();
+      }
+
+      onBlur?.(layout, ...args);
+    },
+    [onBlur],
+  );
+
+  const focusOpts = useMemo(
+    () => ({
+      ...restOpts,
+      onFocus: onFocusHandler,
+      onBlur: onBlurHandler,
+    }),
+    [restOpts, onFocusHandler, onBlurHandler],
+  );
+
+  const focusable = useFocusableImpl(focusOpts);
+  const ref = focusable.ref as RefObject<T>;
+
+  const value = useMemo(
+    () => ({
+      ...focusable,
+      ref,
+    }),
+    [focusable, ref],
+  );
+
+  return value;
 }
 
-export const FocusableElement = forwardRef(FocusableElementImpl);
+export function FocusableElement<T extends HTMLElement>(props: {
+  render: (ref: RefObject<T>) => ReactNode;
+  opts: UseFocusableConfig<T>;
+}) {
+  const { opts, render } = props;
+  const { ref } = useFocusable(opts);
+
+  // const onClickHandler = useCallback(
+  //   (e: MouseEvent<T>) => {
+  //     focusSelf();
+  //     childProps.onClick?.(e);
+  //     onClick?.(e);
+  //   },
+  //   [onClick, focusSelf, childProps],
+  // );
+
+  return <>{render(ref)}</>;
+}

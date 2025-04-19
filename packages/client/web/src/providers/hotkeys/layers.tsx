@@ -8,6 +8,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useMemo,
 } from "react";
 import {
   GamepadButtonToHotkey,
@@ -30,15 +31,29 @@ export type HotkeyLayerState = {
   id: string;
   zones?: Partial<HotkeyZones>;
   handlers?: HotkeyHandlers;
+  parentLayer?: HotkeyLayerState;
+};
+
+export type FocusedHotkeyLayerContext = {
+  focusedHotkeyLayer?: HotkeyLayerState;
+  layerFocused: (layer: HotkeyLayerState) => boolean;
+  layerBlurred: (layer: HotkeyLayerState) => boolean;
 };
 
 export type HotkeyLayerContext = {
   setZoneActive: (zone: HotkeyZone, active: boolean) => void;
   isZoneActive: (zone?: HotkeyZone) => boolean;
   getHandler: (hotkey: Hotkey) => HotkeyHandlerInfo | undefined;
+  layer: HotkeyLayerState;
 };
 
-const hotkeyLayerContext = createContext<HotkeyLayerContext | null>(null);
+const FocusedHotkeyLayerContext = createContext<
+  FocusedHotkeyLayerContext | undefined
+>(undefined);
+
+const HotkeyLayerContext = createContext<HotkeyLayerContext | undefined>(
+  undefined,
+);
 
 type HotkeyLayerOpts = {
   /**
@@ -49,9 +64,68 @@ type HotkeyLayerOpts = {
   allowBubbling?: "always" | "never" | "on-misses";
 };
 
-type HotkeyLayerProps = PropsWithChildren<
+export type HotkeyLayerProps = PropsWithChildren<
   HotkeyLayerOpts & Partial<HotkeyLayerState>
 >;
+
+export function FocusedHotkeyLayerProvider(props: PropsWithChildren) {
+  const [focusedHotkeyLayer, setFocusedHotkeyLayer] = useState<
+    HotkeyLayerState | undefined
+  >();
+
+  const layerFocused = useCallback(
+    (layer: HotkeyLayerState) => {
+      if (layer.id !== focusedHotkeyLayer?.id) {
+        setFocusedHotkeyLayer(layer);
+        return true;
+      }
+
+      return false;
+    },
+    [focusedHotkeyLayer?.id],
+  );
+
+  const layerBlurred = useCallback(
+    (layer: HotkeyLayerState) => {
+      if (layer.id === focusedHotkeyLayer?.id) {
+        setFocusedHotkeyLayer(undefined);
+        return true;
+      }
+
+      return false;
+    },
+    [focusedHotkeyLayer?.id],
+  );
+
+  const value: FocusedHotkeyLayerContext = useMemo(
+    () => ({
+      focusedHotkeyLayer,
+      layerFocused,
+      layerBlurred,
+    }),
+    [focusedHotkeyLayer, layerFocused, layerBlurred],
+  );
+
+  console.log({ focusedHotkeyLayer });
+
+  return (
+    <FocusedHotkeyLayerContext.Provider value={value}>
+      {props.children}
+    </FocusedHotkeyLayerContext.Provider>
+  );
+}
+
+export function useFocusedHotkeyLayer() {
+  const context = useContext(FocusedHotkeyLayerContext);
+
+  if (!context) {
+    throw new Error(
+      "useActiveHotkeysContext must be used within a ActiveHotkeysProvider",
+    );
+  }
+
+  return context;
+}
 
 export function HotkeyLayer(props: HotkeyLayerProps) {
   const {
@@ -66,6 +140,7 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
   const parent = useHotkeyLayerContext();
   const [_, setInputDevice] = useInputDeviceContext();
   const [zones, setZones] = useState(_zones ?? {});
+  const { layerBlurred, layerFocused } = useFocusedHotkeyLayer();
 
   const setZoneActive = useCallback(
     (zone: HotkeyZone, active: boolean) => {
@@ -91,14 +166,13 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
 
       // If a layer explicitly sets a zone as active/inactive respect that
       if (active !== undefined) {
-        console.log(`Layer ${id} has zone ${zone} set to ${active}`);
         return active;
       }
 
       // If no layer explicitly sets the zone as active/inactive default to true
       return parent?.isZoneActive(zone) ?? true;
     },
-    [parent, zones, id],
+    [parent, zones],
   );
 
   const handleHotkey = useCallback(
@@ -112,15 +186,9 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
       const zoneActive = isZoneActive(zone);
 
       if (handler && zoneActive) {
-        console.log(
-          `Layer ${id} handling hotkey ${hotkey}${zone ? ` in zone ${zone}` : ""}`,
-        );
-
         if (event instanceof GamepadButtonEvent) {
-          console.log(`Layer ${id} setting input device to gamepad`);
           setInputDevice("gamepad");
         } else {
-          console.log(`Layer ${id} setting input device to hotkeys`);
           setInputDevice("hotkeys");
         }
 
@@ -137,12 +205,11 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
         ).includes(hotkey);
 
       if (isNonNavigationalHotkey && noBubble) {
-        console.log(`Layer ${id} stopping propagation for hotkey ${hotkey}`);
         event.stopPropagation();
         event.preventDefault();
       }
     },
-    [getHandler, isZoneActive, allowBubbling, id, setInputDevice],
+    [getHandler, isZoneActive, allowBubbling, setInputDevice],
   );
 
   const onKeyDown = useCallback(
@@ -181,21 +248,50 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
     };
   }, [handleGamepadButton]);
 
+  const layer: HotkeyLayerState = useMemo(
+    () => ({
+      id,
+      zones,
+      handlers,
+      parentLayer: parent?.layer,
+    }),
+    [id, zones, handlers, parent],
+  );
+
+  const value: HotkeyLayerContext = useMemo(
+    () => ({
+      getHandler,
+      isZoneActive,
+      setZoneActive,
+      layer,
+    }),
+    [getHandler, isZoneActive, setZoneActive, layer],
+  );
+
   return (
-    <hotkeyLayerContext.Provider
-      value={{
-        getHandler,
-        isZoneActive,
-        setZoneActive,
-      }}
-    >
-      <span ref={ref} id={id} onKeyDown={onKeyDown} className="contents">
+    <HotkeyLayerContext.Provider value={value}>
+      <span
+        ref={ref}
+        id={id}
+        onKeyDown={onKeyDown}
+        className="contents"
+        onFocus={(e) => {
+          if (layerFocused(layer)) {
+            e.stopPropagation();
+          }
+        }}
+        onBlur={(e) => {
+          if (layerBlurred(layer)) {
+            e.stopPropagation();
+          }
+        }}
+      >
         {children}
       </span>
-    </hotkeyLayerContext.Provider>
+    </HotkeyLayerContext.Provider>
   );
 }
 
 export function useHotkeyLayerContext() {
-  return useContext(hotkeyLayerContext);
+  return useContext(HotkeyLayerContext);
 }

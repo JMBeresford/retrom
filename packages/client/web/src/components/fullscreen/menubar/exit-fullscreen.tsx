@@ -14,7 +14,7 @@ import { HotkeyHandlers } from "@/providers/hotkeys";
 import { MenuEntryButton } from "./menu-entry-button";
 import { HotkeyButton } from "../hotkey-button";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { FocusableElement, FocusContainer } from "../focus-container";
+import { FocusContainer } from "../focus-container";
 
 declare global {
   export interface HotkeyZones {
@@ -48,9 +48,9 @@ export function ExitFullscreen(props: ComponentProps<typeof SheetTrigger>) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <FocusableElement opts={{ focusKey: "exit-fullscreen-menu-open" }}>
-          <MenuEntryButton {...props}>Exit fullscreen</MenuEntryButton>
-        </FocusableElement>
+        <MenuEntryButton id="exit-fullscreen-menu-open" {...props}>
+          Exit fullscreen
+        </MenuEntryButton>
       </SheetTrigger>
 
       <SheetContent>
@@ -64,13 +64,6 @@ export function ExitFullscreen(props: ComponentProps<typeof SheetTrigger>) {
                 Return to the desktop interface
               </SheetDescription>
             </SheetHeader>
-
-            <FocusableElement
-              initialFocus
-              opts={{ focusKey: "exit-fullscreen-trap" }}
-            >
-              <button className="opacity-0"></button>
-            </FocusableElement>
 
             <SheetFooter>
               <SheetClose asChild>

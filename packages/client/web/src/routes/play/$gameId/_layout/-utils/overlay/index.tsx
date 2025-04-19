@@ -12,25 +12,31 @@ import {
 import { EmulatorJS } from "@/lib/emulatorjs/emulator";
 import { cn, Image } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
-import { ReactNode, useCallback, useState } from "react";
+import { memo, ReactNode, useCallback, useState } from "react";
 import { CoreOptions } from "./core-options";
-import { useHotkeys } from "@/providers/hotkeys";
+import { Hotkey, useHotkeys } from "@/providers/hotkeys";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
-import {
-  FocusableElement,
-  FocusContainer,
-} from "@/components/fullscreen/focus-container";
+import { FocusContainer } from "@/components/fullscreen/focus-container";
 import { GameOptions } from "./game-options";
 import logo from "@/assets/img/LogoLong-NoBackground-Small.png";
 import { Separator } from "@/components/ui/separator";
 import { EmulationOptions } from "./emulation-options";
 import { HotkeyButton } from "@/components/fullscreen/hotkey-button";
 import { ControlOptions } from "./control-options";
-import { pause, resume } from "@noriginmedia/norigin-spatial-navigation";
-import { HotkeyLayer } from "@/providers/hotkeys/layers";
+import {
+  pause,
+  resume,
+  setFocus,
+} from "@noriginmedia/norigin-spatial-navigation";
+import { HotkeyLayer, useFocusedHotkeyLayer } from "@/providers/hotkeys/layers";
 import { useNavigate } from "@tanstack/react-router";
 import { useSearch } from "@tanstack/react-router";
 import { useEmulatorJS } from "@/providers/emulator-js";
+import { ControlOptionsProvider } from "@/providers/emulator-js/control-options";
+import { CoreOptionsProvider } from "@/providers/emulator-js/core-options";
+
+const ControlOptionsMemo = memo(ControlOptions);
+const CoreOptionsMemo = memo(CoreOptions);
 
 type Tab =
   | "gameOptions"
@@ -45,8 +51,8 @@ type TabOpts = {
   Content?: (props: { emulatorJS: EmulatorJS }) => ReactNode;
 };
 
-export function Overlay() {
-  const { emulatorJS } = useEmulatorJS();
+export const Overlay = memo(function Overlay() {
+  const emulatorJS = useEmulatorJS();
   const { name } = useGameDetail();
   const { overlay } = useSearch({ strict: false });
   const [tab, setTab] = useState<Tab | undefined>(undefined);
@@ -69,11 +75,19 @@ export function Overlay() {
     },
     coreOptions: {
       Trigger: "Core Options",
-      Content: () => <CoreOptions />,
+      Content: () => (
+        <CoreOptionsProvider>
+          <CoreOptionsMemo />
+        </CoreOptionsProvider>
+      ),
     },
     controlOptions: {
       Trigger: "Control Options",
-      Content: () => <ControlOptions />,
+      Content: () => (
+        <ControlOptionsProvider>
+          <ControlOptionsMemo />
+        </ControlOptionsProvider>
+      ),
     },
     exitGame: {
       Trigger: "Exit Game",
@@ -112,6 +126,7 @@ export function Overlay() {
           }}
           onOpenAutoFocus={(e) => {
             e.preventDefault();
+            setFocus("menu-root");
           }}
           className={cn(
             "fixed inset-0 sm:max-w-screen flex flex-col",
@@ -126,84 +141,99 @@ export function Overlay() {
               Emulating via {emulatorJS?.config.core}
             </SheetDescription>
           </SheetHeader>
+          <FocusContainer
+            className="contents"
+            opts={{ focusKey: "overlay", isFocusBoundary: true }}
+          >
+            <div className="flex w-min h-full">
+              <FocusContainer
+                className={cn(
+                  "flex flex-col h-full relative w-min bg-background border-r py-6",
+                )}
+                opts={{
+                  focusKey: "menu-root",
+                  forceFocus: true,
+                }}
+              >
+                <div className="">
+                  <Image src={logo} className="w-fit min-w-0 pb-2 px-4" />
+                </div>
 
-          <div className="flex w-min h-full">
-            <FocusContainer
-              initialFocus
-              className={cn(
-                "flex flex-col h-full relative w-min bg-background border-r py-6",
-              )}
-              opts={{
-                focusKey: "menu-root",
-                forceFocus: true,
-              }}
-            >
-              <div className="">
-                <Image src={logo} className="w-fit min-w-0 pb-2 px-4" />
-              </div>
+                <Separator className="w-4/5 mx-auto my-2" />
 
-              <Separator className="w-4/5 mx-auto my-2" />
-
-              <HotkeyLayer id="menu-root">
-                <div
-                  className={cn(
-                    "flex flex-col justify-start w-max h-full",
-                    "transition-opacity ease-in-out [&:not(:focus-within):not(:hover)]:opacity-50",
-                  )}
-                >
-                  {Object.entries(tabs).map(([key, opts]) => (
-                    <FocusableElement
-                      key={key}
-                      opts={{ focusKey: `overlay-menu-root-${key}` }}
-                    >
+                <HotkeyLayer id="menu-root">
+                  <div
+                    className={cn(
+                      "flex flex-col justify-start w-max h-full",
+                      "transition-opacity ease-in-out [&:not(:focus-within):not(:hover)]:opacity-50",
+                    )}
+                  >
+                    {Object.entries(tabs).map(([key, opts]) => (
                       <MenuEntryButton
+                        key={key}
+                        id={`overlay-menu-root-${key}`}
                         data-state={key === tab ? "active" : undefined}
-                        onClick={opts.action}
+                        onClick={
+                          opts.action ? opts.action : () => setTab(key as Tab)
+                        }
                         onFocus={() => setTab(key as Tab)}
                       >
                         {opts.Trigger}
                       </MenuEntryButton>
-                    </FocusableElement>
-                  ))}
-                </div>
-              </HotkeyLayer>
-            </FocusContainer>
+                    ))}
+                  </div>
+                </HotkeyLayer>
+              </FocusContainer>
 
-            <div className={cn("relative flex h-full")}>
-              {Object.entries(tabs).map(([key, opts]) => (
-                <Sheet modal={false} key={key} open={tab === (key as Tab)}>
-                  {"Content" in opts ? (
-                    <SheetContent
-                      key={key}
-                      className={cn(
-                        "absolute z-[-1] bg-transparent",
-                        "border-none shadow-none group fill-mode-both",
+              <div className={cn("relative flex h-full")}>
+                {Object.entries(tabs).map(([key, opts]) => {
+                  const focusKey = `overlay-${key}-root`;
+                  const open = tab === key;
+
+                  return (
+                    <Sheet modal={false} key={key} open={open}>
+                      {"Content" in opts ? (
+                        <SheetContent
+                          key={key}
+                          className={cn(
+                            "absolute z-[-1] bg-transparent",
+                            "border-none shadow-none group fill-mode-both",
+                          )}
+                          onCloseAutoFocus={(e) => {
+                            e.preventDefault();
+                          }}
+                          onOpenAutoFocus={(e) => {
+                            e.preventDefault();
+                          }}
+                        >
+                          <SheetHeader className="sr-only">
+                            <SheetTitle>{key} tab</SheetTitle>
+                            <SheetDescription>
+                              Settings related to {key}
+                            </SheetDescription>
+                          </SheetHeader>
+
+                          <FocusContainer
+                            className="flex h-full"
+                            opts={{
+                              focusKey,
+                              focusable: open,
+                            }}
+                          >
+                            {opts.Content ? (
+                              <opts.Content emulatorJS={emulatorJS} />
+                            ) : null}
+                          </FocusContainer>
+                        </SheetContent>
+                      ) : (
+                        <></>
                       )}
-                      onCloseAutoFocus={(e) => {
-                        e.preventDefault();
-                      }}
-                      onOpenAutoFocus={(e) => {
-                        e.preventDefault();
-                      }}
-                    >
-                      <SheetHeader className="sr-only">
-                        <SheetTitle>{key} tab</SheetTitle>
-                        <SheetDescription>
-                          Settings related to {key}
-                        </SheetDescription>
-                      </SheetHeader>
-
-                      {opts.Content ? (
-                        <opts.Content emulatorJS={emulatorJS} />
-                      ) : null}
-                    </SheetContent>
-                  ) : (
-                    <></>
-                  )}
-                </Sheet>
-              ))}
+                    </Sheet>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          </FocusContainer>
 
           <SheetFooter
             className={cn("flex w-full justify-between bg-background")}
@@ -212,13 +242,43 @@ export function Overlay() {
               <HotkeyButton hotkey="MENU">Close</HotkeyButton>
             </SheetClose>
 
-            <div className="flex gap-2">
-              <HotkeyButton hotkey="ACCEPT">Accept</HotkeyButton>
-              <HotkeyButton hotkey="BACK">Back</HotkeyButton>
-            </div>
+            <ActionBar />
           </SheetFooter>
         </SheetContent>
       </SheetPortal>
     </Sheet>
+  );
+});
+
+function ActionBar() {
+  const { focusedHotkeyLayer } = useFocusedHotkeyLayer();
+
+  const getActiveHotkey = useCallback(
+    (hotkey: Hotkey) => {
+      let layer = focusedHotkeyLayer;
+      while (layer) {
+        if (layer.handlers?.[hotkey]) {
+          return layer.handlers?.[hotkey];
+        }
+
+        layer = layer.parentLayer;
+      }
+    },
+    [focusedHotkeyLayer],
+  );
+  return (
+    <div className="flex gap-2">
+      {Hotkey.map((hotkey) => {
+        const handler = getActiveHotkey(hotkey);
+
+        return handler?.label ? (
+          <HotkeyButton key={hotkey} hotkey={hotkey}>
+            {handler.label}
+          </HotkeyButton>
+        ) : null;
+      })}
+      {/* <HotkeyButton hotkey="ACCEPT">Accept</HotkeyButton> */}
+      {/* <HotkeyButton hotkey="BACK">Back</HotkeyButton> */}
+    </div>
   );
 }

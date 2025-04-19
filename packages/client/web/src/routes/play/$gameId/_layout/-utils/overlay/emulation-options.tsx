@@ -14,7 +14,7 @@ type EmulationOptions = {
 };
 
 export function EmulationOptions() {
-  const { emulatorJS } = useEmulatorJS();
+  const emulatorJS = useEmulatorJS();
   const [volume, setVolume] = useState(Math.floor(emulatorJS.volume * 100));
   const [fastForward, _setFastForward] = useState(emulatorJS.isFastForward);
   const [ffRatio, setFFRatio] = useState(

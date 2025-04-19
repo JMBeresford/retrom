@@ -62,8 +62,10 @@ export function getFileParts(path: string) {
   return { name, extension };
 }
 
-export function toTitleCase(value: string = "") {
+export function toTitleCase<T extends { toString: () => string }>(value: T) {
+  value = value ?? "";
   return value
+    .toString()
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");

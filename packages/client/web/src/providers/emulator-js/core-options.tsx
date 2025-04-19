@@ -1,5 +1,12 @@
-import { useMemo, useState, useCallback } from "react";
-import { EmulatorJS } from "@/lib/emulatorjs/emulator";
+import {
+  useMemo,
+  useState,
+  useCallback,
+  createContext,
+  PropsWithChildren,
+  useContext,
+} from "react";
+import { useEmulatorJS } from ".";
 
 export type CoreOption = { value: string; allValues: string[] };
 export type CoreOptions = {
@@ -7,7 +14,10 @@ export type CoreOptions = {
   setCoreOption: (option: string, value: string) => void;
 };
 
-export function useCoreOptions(emulatorJS?: EmulatorJS): CoreOptions {
+const CoreOptionsContext = createContext<CoreOptions | undefined>(undefined);
+
+export function CoreOptionsProvider(props: PropsWithChildren) {
+  const emulatorJS = useEmulatorJS();
   const initialCoreOptions = useMemo(() => {
     if (!emulatorJS) return {};
 
@@ -44,5 +54,23 @@ export function useCoreOptions(emulatorJS?: EmulatorJS): CoreOptions {
     [emulatorJS],
   );
 
-  return { coreOptions, setCoreOption };
+  const value: CoreOptions = useMemo(
+    () => ({ coreOptions, setCoreOption }),
+    [setCoreOption, coreOptions],
+  );
+
+  return (
+    <CoreOptionsContext.Provider value={value}>
+      {props.children}
+    </CoreOptionsContext.Provider>
+  );
+}
+
+export function useCoreOptions() {
+  const ctx = useContext(CoreOptionsContext);
+  if (!ctx) {
+    throw new Error("useCoreOptions must be used within a CoreOptionsProvider");
+  }
+
+  return ctx;
 }

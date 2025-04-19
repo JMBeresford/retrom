@@ -1,16 +1,11 @@
-import {
-  FocusableElement,
-  FocusContainer,
-} from "@/components/fullscreen/focus-container";
+import { FocusContainer } from "@/components/fullscreen/focus-container";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn, Image, timestampToDate } from "@/lib/utils";
+import { cn, getFileName, Image, timestampToDate } from "@/lib/utils";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { useConfig } from "@/providers/config";
-import { checkIsDesktop } from "@/lib/env";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useGameDetail } from "@/providers/game-details";
 import {
@@ -21,8 +16,16 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { FileStat } from "@retrom/codegen/retrom/files";
-import { Loader2 } from "lucide-react";
+import { EllipsisVertical, Loader2 } from "lucide-react";
 import { useEmulatorJS } from "@/providers/emulator-js";
+import { HotkeyIcon } from "@/components/fullscreen/hotkey-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useApiUrl } from "@/utils/useApiUrl";
 
 type Fn = () => void | Promise<void>;
 type Tab =
@@ -44,13 +47,13 @@ type StateInfo = {
 };
 
 export function GameOptions() {
-  const { emulatorJS } = useEmulatorJS();
+  const emulatorJS = useEmulatorJS();
   const [paused, setPaused] = useState(!!emulatorJS.paused);
   const { toast } = useToast();
-  const { hostname, port } = useConfig((s) => s.server) ?? {};
   const retromClient = useRetromClient();
   const { game } = useGameDetail();
   const [tab, setTab] = useState<Tab | undefined>(undefined);
+  const apiUrl = useApiUrl();
 
   const Actions = {
     Gameplay: {
@@ -113,23 +116,35 @@ export function GameOptions() {
     [emulatorJS, toast],
   );
 
-  const apiUrl = useMemo(() => {
-    if (!checkIsDesktop()) {
-      const url = new URL("/api/", window.location.href);
-      return url;
-    }
+  const { mutateAsync: importSaveState } = useMutation({
+    mutationKey: ["import-save-state"],
+    mutationFn: async (slot: number) => {
+      const file = await new Promise<File>((resolve, reject) => {
+        const el = document.createElement("input");
+        el.type = "file";
+        el.onchange = (e) => {
+          const target = e.target as HTMLInputElement;
+          const file = target.files?.[0];
+          if (!file) {
+            return reject(new Error("No file selected"));
+          }
 
-    if (!hostname) {
-      return;
-    }
+          resolve(file);
+        };
 
-    const url = new URL(hostname);
-    if (port !== undefined) {
-      url.port = port.toString();
-    }
+        el.click();
+      });
 
-    return url;
-  }, [hostname, port]);
+      const data = await file.arrayBuffer();
+
+      emulatorJS.changeSettingOption("save-state-slot", slot.toString());
+      emulatorJS.gameManager?.loadState(new Uint8Array(data));
+      return saveState(slot);
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
 
   const { data: stateInfo } = useQuery({
     queryKey: ["all-save-states", apiUrl, emulatorJS.coreName, game.id],
@@ -193,10 +208,7 @@ export function GameOptions() {
   });
 
   return (
-    <FocusContainer
-      className="flex h-full"
-      opts={{ focusKey: "game-options-root", onBlur: () => setTab(undefined) }}
-    >
+    <div className="flex h-full">
       <ScrollArea
         className={cn(
           "flex flex-col h-full min-w-48",
@@ -224,22 +236,16 @@ export function GameOptions() {
                       const { label, action } = tabOpts as TabOpts;
 
                       return (
-                        <FocusableElement
+                        <MenuEntryButton
                           key={key}
-                          id={key}
-                          opts={{
-                            focusKey: `game-options-${key}`,
-                          }}
+                          id={`game-options-${key}`}
+                          className="text-base"
+                          data-state={key === tab ? "active" : undefined}
+                          onClick={action}
+                          onFocus={() => setTab(key as Tab)}
                         >
-                          <MenuEntryButton
-                            className="text-base"
-                            data-state={key === tab ? "active" : undefined}
-                            onClick={action}
-                            onFocus={() => setTab(key as Tab)}
-                          >
-                            {label}
-                          </MenuEntryButton>
-                        </FocusableElement>
+                          {label}
+                        </MenuEntryButton>
                       );
                     })}
                   </div>
@@ -279,6 +285,10 @@ export function GameOptions() {
             <StateList
               stateInfo={stateInfo ?? {}}
               action={saveState}
+              remoteAction={{
+                label: "Import State",
+                action: (slot) => importSaveState(slot),
+              }}
               label="save-states"
             />
           </FocusContainer>
@@ -315,21 +325,162 @@ export function GameOptions() {
                 emulatorJS.settings["save-state-slot"] = slot.toString();
                 emulatorJS.callEvent("loadState", {});
               }}
+              remoteAction={{
+                label: "Export State",
+                action: (slot) => {
+                  const info = stateInfo?.[slot];
+                  const state = info?.state;
+                  if (info === undefined || state === undefined) {
+                    return;
+                  }
+
+                  const stat = info.stat;
+                  const blob = new Blob([state], {
+                    type: "application/octet-stream",
+                  });
+
+                  const fileName = getFileName(stat.path);
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = fileName;
+                  a.target = "_blank";
+                  a.rel = "noopener noreferrer";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  a.remove();
+
+                  toast({
+                    title: "State exported",
+                    description: "State has been exported successfully",
+                  });
+                },
+              }}
               label="load-states"
             />
           </FocusContainer>
         </SheetContent>
       </Sheet>
-    </FocusContainer>
+    </div>
   );
 }
 
 function StateList(props: {
   stateInfo?: Record<number, StateInfo | undefined>;
   action: (slot: number) => void | Promise<void>;
+  remoteAction: {
+    label: string;
+    action: (slot: number) => void | Promise<void>;
+  };
   label: string;
 }) {
-  const { stateInfo, action, label } = props;
+  const { stateInfo, action, remoteAction, label } = props;
+
+  function Slot(props: { slot: number }) {
+    const { slot } = props;
+    const info = stateInfo?.[slot];
+    const { screenshot, stat } = info ?? {};
+    const id = `${label}-${slot}`;
+    const [optsOpen, setOptsOpen] = useState(false);
+    const ref = useRef<HTMLButtonElement>(null);
+
+    return (
+      <DropdownMenu open={optsOpen} onOpenChange={setOptsOpen}>
+        <MenuEntryButton
+          id={id}
+          ref={ref}
+          onClick={() => (info?.state === undefined ? null : action(slot))}
+          className="flex group"
+          handlers={{
+            OPTION: {
+              handler: () => setOptsOpen((prev) => !prev),
+              label: "Options",
+            },
+          }}
+        >
+          <div className="flex gap-4 w-full items-start">
+            <div
+              className={cn(
+                "relative aspect-square h-16 overflow-hidden bg-black",
+                "grid place-items-center",
+              )}
+            >
+              {screenshot ? (
+                <Image src={screenshot} />
+              ) : (
+                <div className="absolute inset-0 grid place-items-center bg-muted">
+                  <p className="font-black text-2xl text-muted-foreground/50">
+                    {slot}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1 text-left h-full">
+              <h3 className="text-xl font-normal">Slot {slot}</h3>
+              <p className="text-sm text-muted-foreground font-normal">
+                {stat
+                  ? timestampToDate(stat.updatedAt).toLocaleString()
+                  : "Empty slot"}
+              </p>
+            </div>
+          </div>
+
+          <DropdownMenuTrigger asChild>
+            <div
+              className={cn(
+                "flex gap-1 items-center mb-auto rounded p-2",
+                "transition-all opacity-0 group-focus:opacity-100 group-hover:opacity-100",
+                "bg-transparent hover:bg-white/5",
+                "duration-300",
+              )}
+            >
+              <HotkeyIcon hotkey="OPTION" className="text-xs leading-[0]" />
+              <EllipsisVertical size={16} />
+            </div>
+          </DropdownMenuTrigger>
+        </MenuEntryButton>
+
+        <FocusContainer
+          opts={{
+            focusKey: id + "-options",
+            focusable: false,
+            isFocusBoundary: true,
+            onFocus: () => {
+              ref.current?.focus();
+            },
+          }}
+          className="flex flex-col"
+        >
+          <DropdownMenuContent
+            onCloseAutoFocus={(e) => e.preventDefault()}
+            className="p-0 [&_button]:py-3 [&_button]:pl-4"
+          >
+            <HotkeyLayer
+              id={id + "-options"}
+              handlers={{
+                BACK: { handler: () => setOptsOpen(false), label: "Close" },
+              }}
+            >
+              <DropdownMenuItem asChild>
+                <MenuEntryButton
+                  id={id + "-upload"}
+                  onClick={async () => await remoteAction.action(slot)}
+                >
+                  {remoteAction.label}
+                </MenuEntryButton>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <MenuEntryButton disabled={!stat} id={id + "-delete"}>
+                  Delete
+                </MenuEntryButton>
+              </DropdownMenuItem>
+            </HotkeyLayer>
+          </DropdownMenuContent>
+        </FocusContainer>
+      </DropdownMenu>
+    );
+  }
 
   return (
     <ScrollArea
@@ -344,49 +495,9 @@ function StateList(props: {
             <Loader2 className="animate-spin" />
           </div>
         ) : (
-          Object.entries(stateInfo).map(([_slot, info]) => {
-            const slot = Number(_slot);
-            const { screenshot, stat } = info ?? {};
-
-            return (
-              <FocusableElement
-                key={slot}
-                opts={{ focusKey: `${label}-${slot}` }}
-              >
-                <MenuEntryButton
-                  id={`save-state-${slot}`}
-                  onClick={() => action(slot)}
-                  className="flex gap-4 w-full items-start"
-                >
-                  <div
-                    className={cn(
-                      "relative aspect-square h-16 overflow-hidden bg-black",
-                      "grid place-items-center",
-                    )}
-                  >
-                    {screenshot ? (
-                      <Image src={screenshot} />
-                    ) : (
-                      <div className="absolute inset-0 grid place-items-center bg-muted">
-                        <p className="font-black text-2xl text-muted-foreground/50">
-                          {slot}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-1 text-left h-full">
-                    <h3 className="text-xl font-normal">Slot {slot}</h3>
-                    <p className="text-sm text-muted-foreground font-normal">
-                      {stat
-                        ? timestampToDate(stat.updatedAt).toLocaleString()
-                        : "Empty slot"}
-                    </p>
-                  </div>
-                </MenuEntryButton>
-              </FocusableElement>
-            );
-          })
+          Object.keys(stateInfo).map((slot) => (
+            <Slot key={slot} slot={Number(slot)} />
+          ))
         )}
       </div>
     </ScrollArea>
