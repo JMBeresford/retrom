@@ -3,16 +3,21 @@ use crate::meta::RetromDirs;
 use http::StatusCode;
 use retrom_codegen::retrom::{files::File, FilesystemNodeType};
 use std::path::PathBuf;
-use warp::{filters::BoxedFilter, Filter};
+use warp::{
+    filters::{path::Tail, BoxedFilter},
+    Filter,
+};
 
 #[tracing::instrument]
 pub fn public() -> BoxedFilter<(impl warp::Reply,)> {
     let public_dir = RetromDirs::new().public_dir().clone();
 
+    let get = warp::get().and(warp::fs::dir(public_dir));
+    let post = warp::post().and(post_file());
+    let delete = warp::delete().and(delete_file());
+
     warp::path("public")
-        .and(warp::get().and(warp::fs::dir(public_dir)))
-        .or(warp::post().and(post_file()))
-        .or(warp::delete().and(delete_file()))
+        .and(get.or(post).or(delete))
         .with(warp::filters::trace::request())
         .boxed()
 }
@@ -73,41 +78,24 @@ fn post_file() -> BoxedFilter<(impl warp::Reply,)> {
 
 #[tracing::instrument]
 fn delete_file() -> BoxedFilter<(impl warp::Reply,)> {
-    warp::body::json::<File>()
-        .and_then(|file: File| async move {
-            let stat = match file.stat {
-                Some(stat) => stat,
-                None => {
-                    return Err(warp::reject::custom(Error::StatusCode(
-                        StatusCode::BAD_REQUEST,
-                        "File stat not provided".into(),
-                    )))
-                }
-            };
+    warp::path::tail()
+        .and_then(|tail: Tail| async move {
+            let path = RetromDirs::new().public_dir().join(tail.as_str());
 
-            if PathBuf::from(&stat.path).is_absolute() {
-                return Err(warp::reject::custom(Error::StatusCode(
-                    StatusCode::BAD_REQUEST,
-                    "Path must be relative to public directory".into(),
-                )));
+            tracing::info!("Deleting filesystem entry at {:?}", tail.as_str());
+            if !path.exists() {
+                tracing::warn!("Filesystem entry not found at {:?}", path);
+                return Err(warp::reject::not_found());
             }
 
-            let path = RetromDirs::new().public_dir().join(stat.path);
-
-            match FilesystemNodeType::try_from(stat.node_type) {
-                Ok(FilesystemNodeType::File) => {
+            match path.is_file() {
+                true => {
                     tokio::fs::remove_file(&path).await.map_err(Error::from)?;
                 }
-                Ok(FilesystemNodeType::Directory) => {
+                false => {
                     tokio::fs::remove_dir_all(&path)
                         .await
                         .map_err(Error::from)?;
-                }
-                Err(why) => {
-                    return Err(warp::reject::custom(Error::StatusCode(
-                        StatusCode::BAD_REQUEST,
-                        format!("Invalid node type: {:#?}", why),
-                    )));
                 }
             }
 

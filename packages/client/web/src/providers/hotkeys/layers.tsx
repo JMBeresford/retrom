@@ -106,8 +106,6 @@ export function FocusedHotkeyLayerProvider(props: PropsWithChildren) {
     [focusedHotkeyLayer, layerFocused, layerBlurred],
   );
 
-  console.log({ focusedHotkeyLayer });
-
   return (
     <FocusedHotkeyLayerContext.Provider value={value}>
       {props.children}

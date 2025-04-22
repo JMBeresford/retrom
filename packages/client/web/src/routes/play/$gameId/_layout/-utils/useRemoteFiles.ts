@@ -74,9 +74,26 @@ export function useRemoteFiles() {
     },
   });
 
+  const deleteFiles = useMutation({
+    mutationKey: ["delete-file", apiUrl],
+    mutationFn: async (path: string) => {
+      const url = getPublicUrl(path);
+      const res = await fetch(url, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to delete file: ${res.statusText}`);
+      }
+
+      return res;
+    },
+  });
+
   return {
     uploadFiles,
     downloadFiles,
+    deleteFiles,
     getPublicUrl,
   };
 }

@@ -10,7 +10,6 @@ import { Route as ParentRoute } from ".";
 import { useToast } from "@/components/ui/use-toast";
 import { Overlay } from "./-utils/overlay";
 import { useRemoteFiles } from "./-utils/useRemoteFiles";
-import { useUploadSaveState } from "./-utils/useUploadSaveState";
 import { FocusContainer } from "@/components/fullscreen/focus-container";
 import { checkIsDesktop } from "@/lib/env";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -43,7 +42,6 @@ export function emitFromFrame(event: EmuJsFrameEvent) {
 function FrameComponent() {
   const { coreName, overlay } = ParentRoute.useSearch();
   const { uploadFiles, downloadFiles } = useRemoteFiles();
-  const { mutate: uploadSaveState } = useUploadSaveState();
   const { toast } = useToast();
   const apiUrl = useApiUrl();
   const navigate = useNavigate();
@@ -220,18 +218,8 @@ function FrameComponent() {
         emulator?.gameManager?.loadSaveFiles();
       },
       onSaveSave: handleSave,
-      onSaveState: (emulatorJS, info) => {
-        uploadSaveState(
-          { emulatorJS, ...info, core },
-          {
-            onSuccess: () => {
-              navigate({
-                to: ".",
-                search: (prev) => ({ ...prev, overlay: false }),
-              }).catch(console.error);
-            },
-          },
-        );
+      onSaveState: () => {
+        console.log("emulatorJS called save-state");
       },
       onLoadState: (emulatorJS) => {
         const slot = emulatorJS.settings["save-state-slot"] ?? 1;
@@ -276,7 +264,6 @@ function FrameComponent() {
       handleExit,
       downloadFiles,
       toast,
-      uploadSaveState,
       navigate,
     ],
   );

@@ -1,9 +1,14 @@
-declare class ModuleFS implements FS {}
+interface EJSModule extends EmscriptenModule {
+  cwrap: typeof cwrap;
+}
+
 export declare class EJS_GameManager {
   FS: typeof FS;
+  Module: EJSModule;
 
   functions: {
     saveStateInfo: () => unknown;
+    screenshot: () => unknown;
   };
 
   constructor(Module: unknown, EJS: unknown);

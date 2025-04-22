@@ -121,10 +121,15 @@ export function EmulatorJSProvider(props: {
   );
 }
 
-export const useEmulatorJS = () => {
+export function useEmulatorJS() {
   const context = useContext(EmulatorJSContext);
   if (context === undefined) {
     throw new Error("useEmulatorJS must be used within an EmulatorJSProvider");
   }
+
   return context;
-};
+}
+
+export function useMaybeEmulatorJS() {
+  return useContext(EmulatorJSContext);
+}

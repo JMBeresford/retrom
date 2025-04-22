@@ -23,6 +23,7 @@ export declare class EmulatorJS {
   isFastForward: boolean;
   paused: boolean;
   coreName: Core;
+  saveFileExt: string | false;
   elements: {
     main: HTMLElement;
     parent: HTMLElement;

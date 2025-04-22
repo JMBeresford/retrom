@@ -5,8 +5,6 @@ import { cn, getFileName, Image, timestampToDate } from "@/lib/utils";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useCallback, useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRetromClient } from "@/providers/retrom-client";
 import { useGameDetail } from "@/providers/game-details";
 import {
   Sheet,
@@ -15,8 +13,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { FileStat } from "@retrom/codegen/retrom/files";
-import { EllipsisVertical, Loader2 } from "lucide-react";
+import { EllipsisVertical } from "lucide-react";
 import { useEmulatorJS } from "@/providers/emulator-js";
 import { HotkeyIcon } from "@/components/fullscreen/hotkey-button";
 import {
@@ -25,7 +22,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useApiUrl } from "@/utils/useApiUrl";
+import { useSaveEJSState } from "@/mutations/emulator-js/useSaveEJSState";
+import { useImportEJSState } from "@/mutations/emulator-js/useImportEJSState";
+import { useEJSSaveState } from "@/queries/emulator-js/useEJSSaveState";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "@tanstack/react-router";
+import { useRemoteFiles } from "../useRemoteFiles";
 
 type Fn = () => void | Promise<void>;
 type Tab =
@@ -37,23 +39,16 @@ type Tab =
 
 type TabOpts<Action extends Fn = Fn> = {
   action?: Action;
+  disabled?: boolean;
   label: string;
 };
 
-type StateInfo = {
-  state?: Uint8Array;
-  screenshot?: string;
-  stat: FileStat;
-};
+const Slots = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 export function GameOptions() {
   const emulatorJS = useEmulatorJS();
   const [paused, setPaused] = useState(!!emulatorJS.paused);
-  const { toast } = useToast();
-  const retromClient = useRetromClient();
-  const { game } = useGameDetail();
   const [tab, setTab] = useState<Tab | undefined>(undefined);
-  const apiUrl = useApiUrl();
 
   const Actions = {
     Gameplay: {
@@ -80,6 +75,7 @@ export function GameOptions() {
     ["Cloud Saves"]: {
       syncSaveFile: {
         label: "Sync Save File",
+        disabled: !emulatorJS.saveFileExt,
         action: () => {
           emulatorJS.callEvent("saveSave", {});
         },
@@ -95,117 +91,6 @@ export function GameOptions() {
     string,
     Partial<Record<NonNullable<Tab>, TabOpts>>
   >;
-
-  const saveState = useCallback(
-    async (slot: number) => {
-      if (!emulatorJS.gameManager) return;
-
-      emulatorJS.changeSettingOption("save-state-slot", slot.toString());
-      const state = emulatorJS.gameManager?.getState();
-      const screenshot = await emulatorJS.gameManager?.screenshot();
-      if (state && screenshot) {
-        emulatorJS.callEvent("saveState", { state, screenshot });
-      } else {
-        toast({
-          title: "Failed to sync save state",
-          description: "Could not extract state info",
-          variant: "destructive",
-        });
-      }
-    },
-    [emulatorJS, toast],
-  );
-
-  const { mutateAsync: importSaveState } = useMutation({
-    mutationKey: ["import-save-state"],
-    mutationFn: async (slot: number) => {
-      const file = await new Promise<File>((resolve, reject) => {
-        const el = document.createElement("input");
-        el.type = "file";
-        el.onchange = (e) => {
-          const target = e.target as HTMLInputElement;
-          const file = target.files?.[0];
-          if (!file) {
-            return reject(new Error("No file selected"));
-          }
-
-          resolve(file);
-        };
-
-        el.click();
-      });
-
-      const data = await file.arrayBuffer();
-
-      emulatorJS.changeSettingOption("save-state-slot", slot.toString());
-      emulatorJS.gameManager?.loadState(new Uint8Array(data));
-      return saveState(slot);
-    },
-    onError: (error) => {
-      console.error(error);
-    },
-  });
-
-  const { data: stateInfo } = useQuery({
-    queryKey: ["all-save-states", apiUrl, emulatorJS.coreName, game.id],
-    staleTime: Infinity,
-    refetchOnMount: false,
-    queryFn: async () => {
-      const publicUrl = new URL("./rest/public/", apiUrl);
-      const path = `states/${emulatorJS.coreName}/${game.id}/`;
-
-      const { stats } = await retromClient.fileExplorerClient.getStat({ path });
-
-      const states: Record<number, StateInfo | undefined> = {
-        1: undefined,
-        2: undefined,
-        3: undefined,
-        4: undefined,
-        5: undefined,
-        6: undefined,
-        7: undefined,
-        8: undefined,
-        9: undefined,
-      };
-
-      const promises = [];
-      for (let i = 1; i < 10; i++) {
-        const stat = stats.find((s) => s.path.endsWith(`${i}.state`));
-        if (!stat) continue;
-
-        const screenshotPath = stats.find((s) =>
-          s.path.endsWith(`${i}.png`),
-        )?.path;
-
-        const screenshot = screenshotPath
-          ? new URL(`./${screenshotPath}`, publicUrl).toString()
-          : undefined;
-
-        states[i] = { screenshot, stat };
-
-        if (stat) {
-          promises.push(
-            fetch(new URL(`./rest/public/${stat.path}`, apiUrl).toString())
-              .then(async (res) => {
-                if (!res.ok) {
-                  return;
-                }
-
-                if (!states[i]) {
-                  throw new Error("Something went wrong. State info not found");
-                }
-
-                states[i]!.state = new Uint8Array(await res.arrayBuffer());
-              })
-              .catch(console.error),
-          );
-        }
-      }
-
-      await Promise.allSettled(promises);
-      return states;
-    },
-  });
 
   return (
     <div className="flex h-full">
@@ -233,11 +118,12 @@ export function GameOptions() {
                   </h2>
                   <div className="flex flex-col h-full">
                     {Object.entries(group).map(([key, tabOpts]) => {
-                      const { label, action } = tabOpts as TabOpts;
+                      const { label, action, disabled } = tabOpts as TabOpts;
 
                       return (
                         <MenuEntryButton
                           key={key}
+                          disabled={disabled}
                           id={`game-options-${key}`}
                           className="text-base"
                           data-state={key === tab ? "active" : undefined}
@@ -282,15 +168,7 @@ export function GameOptions() {
               focusable: tab === "saveState",
             }}
           >
-            <StateList
-              stateInfo={stateInfo ?? {}}
-              action={saveState}
-              remoteAction={{
-                label: "Import State",
-                action: (slot) => importSaveState(slot),
-              }}
-              label="save-states"
-            />
+            <StateList listKind="save" />
           </FocusContainer>
         </SheetContent>
       </Sheet>
@@ -319,45 +197,7 @@ export function GameOptions() {
               focusable: tab === "loadState",
             }}
           >
-            <StateList
-              stateInfo={stateInfo ?? {}}
-              action={(slot) => {
-                emulatorJS.settings["save-state-slot"] = slot.toString();
-                emulatorJS.callEvent("loadState", {});
-              }}
-              remoteAction={{
-                label: "Export State",
-                action: (slot) => {
-                  const info = stateInfo?.[slot];
-                  const state = info?.state;
-                  if (info === undefined || state === undefined) {
-                    return;
-                  }
-
-                  const stat = info.stat;
-                  const blob = new Blob([state], {
-                    type: "application/octet-stream",
-                  });
-
-                  const fileName = getFileName(stat.path);
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = fileName;
-                  a.target = "_blank";
-                  a.rel = "noopener noreferrer";
-                  a.click();
-                  URL.revokeObjectURL(url);
-                  a.remove();
-
-                  toast({
-                    title: "State exported",
-                    description: "State has been exported successfully",
-                  });
-                },
-              }}
-              label="load-states"
-            />
+            <StateList listKind="load" />
           </FocusContainer>
         </SheetContent>
       </Sheet>
@@ -365,31 +205,105 @@ export function GameOptions() {
   );
 }
 
-function StateList(props: {
-  stateInfo?: Record<number, StateInfo | undefined>;
-  action: (slot: number) => void | Promise<void>;
-  remoteAction: {
-    label: string;
-    action: (slot: number) => void | Promise<void>;
-  };
-  label: string;
-}) {
-  const { stateInfo, action, remoteAction, label } = props;
+function StateList(props: { listKind: "save" | "load" }) {
+  const { listKind } = props;
+  const label = listKind === "save" ? "save-state" : "load-state";
+  const { game } = useGameDetail();
 
   function Slot(props: { slot: number }) {
     const { slot } = props;
-    const info = stateInfo?.[slot];
+    const { toast } = useToast();
+    const emulatorJS = useEmulatorJS();
+    const { data: info, refetch } = useEJSSaveState(slot, game.id);
     const { screenshot, stat } = info ?? {};
     const id = `${label}-${slot}`;
     const [optsOpen, setOptsOpen] = useState(false);
     const ref = useRef<HTMLButtonElement>(null);
+    const navigate = useNavigate();
+    const { getPublicUrl, deleteFiles } = useRemoteFiles();
+
+    const { mutateAsync: saveState } = useSaveEJSState();
+    const { mutateAsync: importSaveState } = useImportEJSState();
+
+    const disabled = listKind === "load" && info?.state === undefined;
+
+    const action = useCallback(async () => {
+      if (listKind === "save") {
+        await saveState({ slot, core: emulatorJS.coreName, gameId: game.id });
+      } else {
+        emulatorJS.settings["save-state-slot"] = slot.toString();
+        emulatorJS.callEvent("loadState", {});
+      }
+
+      return navigate({
+        to: ".",
+        search: (prev) => ({ ...prev, overlay: false }),
+      }).catch(console.error);
+    }, [slot, emulatorJS, saveState, navigate]);
+
+    const remoteAction = useCallback(async () => {
+      if (listKind === "save") {
+        await importSaveState({
+          slot,
+          core: emulatorJS.coreName,
+          gameId: game.id,
+        });
+      } else {
+        const state = info?.state;
+        if (!info || state === undefined) {
+          return;
+        }
+
+        const stat = info.stat;
+        const blob = new Blob([state], {
+          type: "application/octet-stream",
+        });
+
+        const fileName = getFileName(stat.path);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.click();
+        URL.revokeObjectURL(url);
+        a.remove();
+
+        toast({
+          title: "State exported",
+          description: "State has been exported successfully",
+        });
+      }
+    }, [slot, emulatorJS, info, importSaveState, toast]);
+
+    const deleteState = useCallback(async () => {
+      if (!stat) {
+        return;
+      }
+
+      const path = stat.path;
+      await deleteFiles.mutateAsync(path);
+
+      toast({
+        title: "State deleted",
+        description: "State has been deleted successfully",
+      });
+
+      refetch().catch(console.error);
+
+      return navigate({
+        to: ".",
+        search: (prev) => ({ ...prev, overlay: false }),
+      }).catch(console.error);
+    }, [deleteFiles, stat, toast, navigate, refetch]);
 
     return (
       <DropdownMenu open={optsOpen} onOpenChange={setOptsOpen}>
         <MenuEntryButton
           id={id}
           ref={ref}
-          onClick={() => (info?.state === undefined ? null : action(slot))}
+          onClick={() => (disabled ? null : action())}
           className="flex group"
           handlers={{
             OPTION: {
@@ -405,8 +319,10 @@ function StateList(props: {
                 "grid place-items-center",
               )}
             >
-              {screenshot ? (
-                <Image src={screenshot} />
+              {info === undefined ? (
+                <Skeleton className="absolute inset-0" />
+              ) : screenshot ? (
+                <Image src={getPublicUrl(screenshot)} />
               ) : (
                 <div className="absolute inset-0 grid place-items-center bg-muted">
                   <p className="font-black text-2xl text-muted-foreground/50">
@@ -465,13 +381,21 @@ function StateList(props: {
               <DropdownMenuItem asChild>
                 <MenuEntryButton
                   id={id + "-upload"}
-                  onClick={async () => await remoteAction.action(slot)}
+                  onClick={async () => {
+                    if (info) {
+                      await remoteAction();
+                    }
+                  }}
                 >
-                  {remoteAction.label}
+                  {listKind === "save" ? "Import State" : "Download State"}
                 </MenuEntryButton>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <MenuEntryButton disabled={!stat} id={id + "-delete"}>
+                <MenuEntryButton
+                  disabled={!stat}
+                  id={id + "-delete"}
+                  onClick={deleteState}
+                >
                   Delete
                 </MenuEntryButton>
               </DropdownMenuItem>
@@ -490,15 +414,9 @@ function StateList(props: {
       )}
     >
       <div className="flex flex-col py-6">
-        {stateInfo === undefined ? (
-          <div className="flex flex-col">
-            <Loader2 className="animate-spin" />
-          </div>
-        ) : (
-          Object.keys(stateInfo).map((slot) => (
-            <Slot key={slot} slot={Number(slot)} />
-          ))
-        )}
+        {Slots.map((slot) => (
+          <Slot key={slot} slot={slot} />
+        ))}
       </div>
     </ScrollArea>
   );

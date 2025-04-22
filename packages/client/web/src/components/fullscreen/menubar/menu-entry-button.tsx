@@ -24,6 +24,7 @@ export const MenuEntryButton = forwardRef<HTMLButtonElement, Props>(
 
     const { ref, focused, focusSelf } = useFocusable<HTMLButtonElement>({
       focusKey: id,
+      focusable: !rest.disabled,
       ...focusOpts,
     });
 
