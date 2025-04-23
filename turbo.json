@@ -44,7 +44,7 @@
 
     /* OTHER */
     "dev": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["@retrom/codegen#build", "^build"],
       "persistent": true,
       "cache": false
     },
