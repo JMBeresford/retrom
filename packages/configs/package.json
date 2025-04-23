@@ -1,9 +1,15 @@
 {
   "name": "@retrom/configs",
   "type": "module",
+  "exports": {
+    "./*": {
+      "types": "./*",
+      "default": "./*"
+    }
+  },
   "files": [
-    "tsconfig/",
-    "eslint/"
+    "tsconfig/*",
+    "eslint/*"
   ],
   "scripts": {
     "format": "prettier . --write",

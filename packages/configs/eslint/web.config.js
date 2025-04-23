@@ -1,17 +1,21 @@
+// @ts-check
+
 import globals from "globals";
 import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tanstackQuery from "@tanstack/eslint-plugin-query";
+import tseslint from "typescript-eslint";
 import { config as baseConfig } from "./base.config.js";
 
 /**
- * A shared ESLint configuration for the repository.
+ * Shared ESLint configuration for TypeScript projects.
  *
- * @type {import("eslint").Linter.Config[]}
- * */
-export const config = [
-  ...baseConfig,
+ * @type {import("typescript-eslint").ConfigArray}
+ */
+export const config = tseslint.config(
+  baseConfig,
+  tanstackQuery.configs["flat/recommended"],
   {
     languageOptions: {
       ...pluginReact.configs.flat.recommended.languageOptions,
@@ -38,11 +42,6 @@ export const config = [
     },
   },
   {
-    plugins: {
-      "@tanstack/query": tanstackQuery,
-    },
-    rules: {
-      ...tanstackQuery.rules.recommended,
-    },
+    extends: tanstackQuery.configs["flat/recommended"],
   },
-];
+);

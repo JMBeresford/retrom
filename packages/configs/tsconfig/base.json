@@ -2,11 +2,13 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "composite": false,
+    "strict": true,
     "target": "ES2022",
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "esnext",
     "skipLibCheck": true,
+    "allowJs": true,
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
