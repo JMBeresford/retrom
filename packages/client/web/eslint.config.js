@@ -4,10 +4,11 @@ import { config } from "@retrom/configs/eslint/web.config.js";
 export default [
   ...config,
   {
+    ignores: ["./eslint.config.js"],
     languageOptions: {
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,
-        project: ["tsconfig.json", "tsconfig.node.json"]
+        projectService: true
       }
     }
   }

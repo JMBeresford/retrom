@@ -1,7 +1,9 @@
 version: v2
+clean: true
 plugins:
-  - remote: buf.build/community/stephenh-ts-proto
+  - local: protoc-gen-ts_proto
     out: ./generated
+    strategy: all
     opt:
       - paths=source_relative
       - useDate=false

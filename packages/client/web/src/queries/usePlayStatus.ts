@@ -64,22 +64,18 @@ export function usePlayStatusQuery(game: Game) {
 
   const query = useQuery({
     queryFn: async () => {
-      try {
-        if (!checkIsDesktop()) return;
+      if (!checkIsDesktop()) return null;
 
-        const payload: GetGamePlayStatusPayload = {
-          game,
-        };
+      const payload: GetGamePlayStatusPayload = {
+        game,
+      };
 
-        return await invoke<GamePlayStatusUpdate>(
-          "plugin:launcher|get_game_play_status",
-          { payload },
-        );
-      } catch (error) {
-        console.error(error);
-      }
+      return await invoke<GamePlayStatusUpdate>(
+        "plugin:launcher|get_game_play_status",
+        { payload },
+      );
     },
-    queryKey: [queryKey, game.path],
+    queryKey: [queryKey, game.path, game],
   });
 
   return query;
