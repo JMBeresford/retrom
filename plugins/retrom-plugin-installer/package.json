@@ -21,8 +21,6 @@
     "@tauri-apps/plugin-opener": "^2.2.5"
   },
   "devDependencies": {
-    "tslib": "^2.6.2",
-    "typescript": "^5.3.3",
     "@retrom/configs": "workspace:*"
   }
 }
