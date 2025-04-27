@@ -1,5 +1,3 @@
-// @ts-check
-
 import js from "@eslint/js";
 import turbo from "eslint-plugin-turbo";
 import tseslint from "typescript-eslint";

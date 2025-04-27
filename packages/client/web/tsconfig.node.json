@@ -24,7 +24,6 @@
     "vite.config.ts",
     "tailwind.config.ts",
     "src/lib/node-utils.ts",
-    "eslint.config.js",
     "postcss.config.js"
   ]
 }
