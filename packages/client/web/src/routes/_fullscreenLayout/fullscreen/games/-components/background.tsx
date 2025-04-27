@@ -1,7 +1,6 @@
 import { GameMetadata } from "@retrom/codegen/retrom/models/metadata";
 import { Image } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { CatchBoundary } from "@tanstack/react-router";
 import { useRef } from "react";
 import { BufferGeometry, Mesh, MeshBasicMaterial } from "three";
 import { damp } from "three/src/math/MathUtils.js";
@@ -44,21 +43,15 @@ export function Background(props: { metadata: Partial<GameMetadata> }) {
   }
 
   return (
-    <CatchBoundary
-      getResetKey={() => "reset"}
-      onCatch={(error) => console.error(error)}
-      errorComponent={() => <></>}
-    >
-      <group scale={1.1}>
-        <Image
-          ref={ref}
-          renderOrder={1}
-          url={url}
-          scale={[width, height]}
-          transparent
-          opacity={0}
-        />
-      </group>
-    </CatchBoundary>
+    <group scale={1.1}>
+      <Image
+        ref={ref}
+        renderOrder={1}
+        url={url}
+        scale={[width, height]}
+        transparent
+        opacity={0}
+      />
+    </group>
   );
 }
