@@ -171,219 +171,236 @@ export function GameFiles() {
           <CardTitle>Files</CardTitle>
         </CardHeader>
 
-        <CardContent className="grid gap-px w-full grid-flow-col grid-cols-[minmax(0,1fr)_auto] [&_*]:ring-inset">
-          <Select
-            value={selectedFile}
-            onValueChange={setSelectedFile}
-            disabled={!gameFiles.length}
+        <CardContent
+          className={cn(
+            "[&_*]:ring-inset",
+            "[&_[data-radix-popper-content-wrapper]]:contents",
+            "sm:[&_[data-radix-popper-content-wrapper]]:block",
+          )}
+        >
+          <div
+            className={cn(
+              "relative grid gap-px w-full",
+              "grid-flow-col grid-cols-[minmax(0,1fr)_auto] ",
+            )}
           >
-            <SelectTrigger
-              className={cn(
-                selectedFile === undefined && "text-muted-foreground",
-                "text-left rounded-r-none w-full",
-              )}
+            <Select
+              value={selectedFile}
+              onValueChange={setSelectedFile}
+              disabled={!gameFiles.length}
             >
-              <SelectValue
-                placeholder={
-                  gameFiles.length ? "Select a file" : "No files found"
-                }
-              />
-            </SelectTrigger>
-
-            <SelectContent
-              position="popper"
-              side="bottom"
-              className="max-h-[calc(var(--radix-select-content-available-height)*0.85)]"
-            >
-              {gameFiles
-                ?.sort((a, b) => {
-                  if (game.defaultFileId === a.id) {
-                    return -1;
+              <SelectTrigger
+                className={cn(
+                  selectedFile === undefined && "text-muted-foreground",
+                  "text-left rounded-r-none w-full whitespace-nowrap",
+                  "overflow-hidden overflow-ellipsis",
+                )}
+              >
+                <SelectValue
+                  placeholder={
+                    gameFiles.length ? "Select a file" : "No files found"
                   }
+                />
+              </SelectTrigger>
 
-                  if (game.defaultFileId === b.id) {
-                    return 1;
-                  }
+              <SelectContent
+                side="bottom"
+                className="max-h-[calc(var(--radix-select-content-available-height)*0.85)] w-min"
+              >
+                {gameFiles
+                  ?.sort((a, b) => {
+                    if (game.defaultFileId === a.id) {
+                      return -1;
+                    }
 
-                  return 0;
-                })
-                .map((file) => (
-                  <SelectItem key={file.id} value={file.id.toString()}>
-                    <div className="flex items-center">
-                      <span className="overflow-ellipsis overflow-hidden relative">
-                        <span className="whitespace-nowrap">
-                          {file.path.replace(game.path + "/", "")}
-                        </span>
-                      </span>
-                      {file.id === game.defaultFileId ? (
-                        <Badge className="ml-2" variant="secondary">
-                          default
-                        </Badge>
-                      ) : null}
-                    </div>
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
+                    if (game.defaultFileId === b.id) {
+                      return 1;
+                    }
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild disabled={!selectedFile}>
-              <Button size="icon" variant="outline" className="rounded-r-md">
-                <EllipsisVerticalIcon />
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent className="z-[10]">
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={handleMakeDefault}>
-                  Set as default
-                </DropdownMenuItem>
-
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <DropdownMenuItem
-                      onSelect={(e) => e.preventDefault()}
-                      onClick={() => {
-                        const file = gameFiles.find(
-                          (file) => file.id === +selectedFile,
-                        );
-
-                        if (file) setRenameValue(getFileName(file.path));
-                      }}
-                    >
-                      Rename
-                    </DropdownMenuItem>
-                  </DialogTrigger>
-
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Rename Game File</DialogTitle>
-                      <DialogDescription>
-                        Change the name of the file on both Retrom and the file
-                        system
-                      </DialogDescription>
-                    </DialogHeader>
-
-                    <Input
-                      value={renameValue}
-                      onChange={(e) => setRenameValue(e.target.value)}
-                    />
-
-                    <DialogFooter>
-                      <div className="flex gap-2">
-                        <DialogClose asChild>
-                          <Button disabled={pending} variant="secondary">
-                            Cancel
-                          </Button>
-                        </DialogClose>
-
-                        <DialogClose asChild>
-                          <Button onClick={handleRename} disabled={pending}>
-                            {pending ? (
-                              <LoaderCircleIcon className="animate-spin" />
-                            ) : (
-                              "Save"
-                            )}
-                          </Button>
-                        </DialogClose>
+                    return 0;
+                  })
+                  .map((file) => (
+                    <SelectItem key={file.id} value={file.id.toString()}>
+                      <div className="flex items-center w-fit">
+                        <div className="relative break-word">
+                          {file.path.replace(
+                            game.path.split("/").slice(0, -2).join("/"),
+                            "",
+                          )}
+                        </div>
+                        {file.id === game.defaultFileId ? (
+                          <Badge className="ml-2" variant="secondary">
+                            default
+                          </Badge>
+                        ) : null}
                       </div>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </DropdownMenuGroup>
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
 
-              <Separator />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild disabled={!selectedFile}>
+                <Button size="icon" variant="outline" className="rounded-r-md">
+                  <EllipsisVerticalIcon />
+                </Button>
+              </DropdownMenuTrigger>
 
-              <DropdownMenuGroup>
-                <Dialog>
-                  <DialogTrigger asChild className="text-destructive-text">
-                    <DropdownMenuItem
-                      onSelect={(e) => {
-                        e.preventDefault();
-                      }}
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DialogTrigger>
+              <DropdownMenuContent
+                portal={false}
+                className="z-[10] absolute sm:relative top-full inset-x-0 mt-2 sm:mt-0"
+              >
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={handleMakeDefault}>
+                    Set as default
+                  </DropdownMenuItem>
 
-                  <DialogContent className="max-w-[65ch]">
-                    <DialogHeader>
-                      <DialogTitle>Delete Game File</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to delete this file?
-                      </DialogDescription>
-                    </DialogHeader>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <DropdownMenuItem
+                        onSelect={(e) => e.preventDefault()}
+                        onClick={() => {
+                          const file = gameFiles.find(
+                            (file) => file.id === +selectedFile,
+                          );
 
-                    <p className="pb-2">
-                      You can either delete the entry from the database or
-                      delete the file from the disk. Deleting only the entry
-                      will leave your file system as is, but Retrom will ignore
-                      the file moving forward.
-                    </p>
+                          if (file) setRenameValue(getFileName(file.path));
+                        }}
+                      >
+                        Rename
+                      </DropdownMenuItem>
+                    </DialogTrigger>
 
-                    <div className="flex flex-col gap-4">
-                      <div className="flex items-top gap-2">
-                        <Checkbox
-                          id="delete-from-disk"
-                          checked={deleteFromDisk}
-                          onCheckedChange={(event) =>
-                            setDeleteFromDisk(!!event)
-                          }
-                        />
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Rename Game File</DialogTitle>
+                        <DialogDescription>
+                          Change the name of the file on both Retrom and the
+                          file system
+                        </DialogDescription>
+                      </DialogHeader>
 
-                        <div className="grid gap-1 5 leading-none">
-                          <label htmlFor="delete-from-disk">
-                            Delete from disk
-                          </label>
+                      <Input
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                      />
 
-                          <p className="text-sm text-muted-foreground">
-                            This will alter the file system
-                          </p>
+                      <DialogFooter>
+                        <div className="flex gap-2">
+                          <DialogClose asChild>
+                            <Button disabled={pending} variant="secondary">
+                              Cancel
+                            </Button>
+                          </DialogClose>
+
+                          <DialogClose asChild>
+                            <Button onClick={handleRename} disabled={pending}>
+                              {pending ? (
+                                <LoaderCircleIcon className="animate-spin" />
+                              ) : (
+                                "Save"
+                              )}
+                            </Button>
+                          </DialogClose>
+                        </div>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </DropdownMenuGroup>
+
+                <Separator />
+
+                <DropdownMenuGroup>
+                  <Dialog>
+                    <DialogTrigger asChild className="text-destructive-text">
+                      <DropdownMenuItem
+                        onSelect={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DialogTrigger>
+
+                    <DialogContent className="max-w-[65ch]">
+                      <DialogHeader>
+                        <DialogTitle>Delete Game File</DialogTitle>
+                        <DialogDescription>
+                          Are you sure you want to delete this file?
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <p className="pb-2">
+                        You can either delete the entry from the database or
+                        delete the file from the disk. Deleting only the entry
+                        will leave your file system as is, but Retrom will
+                        ignore the file moving forward.
+                      </p>
+
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-top gap-2">
+                          <Checkbox
+                            id="delete-from-disk"
+                            checked={deleteFromDisk}
+                            onCheckedChange={(event) =>
+                              setDeleteFromDisk(!!event)
+                            }
+                          />
+
+                          <div className="grid gap-1 5 leading-none">
+                            <label htmlFor="delete-from-disk">
+                              Delete from disk
+                            </label>
+
+                            <p className="text-sm text-muted-foreground">
+                              This will alter the file system
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-top gap-2">
+                          <Checkbox
+                            id="blacklist-entries"
+                            checked={blacklistEntries}
+                            onCheckedChange={(event) =>
+                              setBlacklistEntries(!!event)
+                            }
+                          />
+
+                          <div className="grid gap-1 5 leading-none">
+                            <label htmlFor="blacklist-entries">
+                              Blacklist entry
+                            </label>
+
+                            <p className="text-sm text-muted-foreground max-w-[45ch]">
+                              Enabling this will prevent the file from being
+                              re-imported in any future library scans
+                            </p>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex items-top gap-2">
-                        <Checkbox
-                          id="blacklist-entries"
-                          checked={blacklistEntries}
-                          onCheckedChange={(event) =>
-                            setBlacklistEntries(!!event)
-                          }
-                        />
+                      <DialogFooter>
+                        <div className="flex gap-2">
+                          <DialogClose asChild>
+                            <Button disabled={pending}>Cancel</Button>
+                          </DialogClose>
 
-                        <div className="grid gap-1 5 leading-none">
-                          <label htmlFor="blacklist-entries">
-                            Blacklist entry
-                          </label>
-
-                          <p className="text-sm text-muted-foreground max-w-[45ch]">
-                            Enabling this will prevent the file from being
-                            re-imported in any future library scans
-                          </p>
+                          <Button
+                            onClick={handleDelete}
+                            variant="destructive"
+                            disabled={pending}
+                          >
+                            Delete
+                          </Button>
                         </div>
-                      </div>
-                    </div>
-
-                    <DialogFooter>
-                      <div className="flex gap-2">
-                        <DialogClose asChild>
-                          <Button disabled={pending}>Cancel</Button>
-                        </DialogClose>
-
-                        <Button
-                          onClick={handleDelete}
-                          variant="destructive"
-                          disabled={pending}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </CardContent>
       </Card>
     </>

@@ -4,6 +4,7 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog";
@@ -70,7 +71,13 @@ export function DeleteLibraryModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex justify-end gap-2 mt-4">
+        <p>
+          This will not remove any files or directories from your file-system.
+          Running a library scan again will re-create the library and all
+          entries.
+        </p>
+
+        <DialogFooter>
           <DialogClose asChild>
             <Button>Cancel</Button>
           </DialogClose>
@@ -85,7 +92,7 @@ export function DeleteLibraryModal() {
             />
             <p className={cn(isPending && "opacity-0")}>Delete</p>
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

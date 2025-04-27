@@ -133,25 +133,20 @@ export function DeletePlatformModal() {
         </div>
 
         <DialogFooter>
-          <div className="flex gap-2">
-            <DialogClose asChild>
-              <Button>Cancel</Button>
-            </DialogClose>
+          <DialogClose asChild>
+            <Button>Cancel</Button>
+          </DialogClose>
 
-            <Button
-              className="relative"
-              variant="destructive"
-              onClick={handleDelete}
-            >
-              <LoaderCircleIcon
-                className={cn(
-                  "animate-spin absolute",
-                  !isPending && "opacity-0",
-                )}
-              />
-              <p className={cn(isPending && "opacity-0")}>Delete</p>
-            </Button>
-          </div>
+          <Button
+            className="relative"
+            variant="destructive"
+            onClick={handleDelete}
+          >
+            <LoaderCircleIcon
+              className={cn("animate-spin absolute", !isPending && "opacity-0")}
+            />
+            <p className={cn(isPending && "opacity-0")}>Delete</p>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

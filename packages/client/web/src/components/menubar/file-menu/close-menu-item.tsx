@@ -9,9 +9,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { MenubarItem } from "@/components/ui/menubar";
+import { MenuItem } from "..";
 
-export function CloseMenuItem() {
-  return (
+export const closeMenuItem: MenuItem = {
+  label: "Close",
+  appContext: "desktop",
+  Render: (
     <Dialog>
       <DialogTrigger asChild>
         <MenubarItem
@@ -45,5 +48,5 @@ export function CloseMenuItem() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
+  ),
+};

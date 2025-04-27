@@ -1,20 +1,9 @@
-import {
-  MenubarItem,
-  MenubarSub,
-  MenubarSubContent,
-  MenubarSubTrigger,
-} from "@/components/ui/menubar";
 import { openInstallationDir } from "@retrom/plugin-installer";
+import { MenuItem } from "..";
 
-export function LocationsMenuItem() {
-  return (
-    <MenubarSub>
-      <MenubarSubTrigger>Locations</MenubarSubTrigger>
-      <MenubarSubContent>
-        <MenubarItem onSelect={() => void openInstallationDir()}>
-          Open Installation Directory
-        </MenubarItem>
-      </MenubarSubContent>
-    </MenubarSub>
-  );
-}
+export const locationsMenuItem: MenuItem = {
+  label: "Locations",
+  appContext: "desktop",
+  action: () => void openInstallationDir(),
+  Render: "Open Installation Directory",
+};

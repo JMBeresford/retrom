@@ -28,7 +28,7 @@ export function RecentlyPlayed() {
 
   return (
     <div className="w-full">
-      <h1 className="font-black text-3xl mb-5">Recently Played</h1>
+      <h1 className="font-black text-3xl mb-5 px-5 sm:px-0">Recently Played</h1>
 
       <div className="relative flex w-full">
         <ScrollArea className="w-1 flex-1 pb-4 overflow-x-auto">
@@ -52,6 +52,7 @@ export function RecentlyPlayed() {
           className={cn(
             "absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background",
             "z-20 pointer-events-none touch-none",
+            "hidden sm:block",
           )}
         />
       </div>

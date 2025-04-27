@@ -82,7 +82,7 @@ const DialogContent = React.forwardRef<
 >(({ className, children, userCanClose = true, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay>
-      <ScrollArea className="h-screen w-screen">
+      <ScrollArea className="h-dvh w-dvw z-100">
         <DialogPrimitive.Content
           ref={ref}
           className={cn(
@@ -128,7 +128,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4",
+      "flex flex-col-reverse gap-2 sm:gap-0 sm:flex-row sm:justify-end sm:space-x-2 mt-4",
       className,
     )}
     {...props}

@@ -102,11 +102,22 @@ const modalsSearchSchema = z.object({
     })
     .optional()
     .catch(undefined),
-
   updatePlatformMetadataModal: z
     .object({
       open: z.boolean(),
       id: z.number(),
+    })
+    .optional()
+    .catch(undefined),
+  mobileSidebar: z
+    .object({
+      open: z.boolean(),
+    })
+    .optional()
+    .catch(undefined),
+  mobileMenu: z
+    .object({
+      open: z.boolean(),
     })
     .optional()
     .catch(undefined),

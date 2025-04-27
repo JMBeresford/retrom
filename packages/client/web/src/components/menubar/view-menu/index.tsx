@@ -1,20 +1,13 @@
-import {
-  MenubarContent,
-  MenubarMenu,
-  MenubarTrigger,
-} from "@/components/ui/menubar";
-import { FullscreenMenuItem } from "./fullscreen-menu-item";
+import { MenuItem, RootMenuItem } from "..";
+import { Link } from "@tanstack/react-router";
 
-export function ViewMenu() {
-  return (
-    <MenubarMenu>
-      <MenubarTrigger className="py-2 px-2 cursor-pointer h-auto">
-        View
-      </MenubarTrigger>
+const fullscreenMenuItem: MenuItem = {
+  label: "Fullscreen Mode",
+  Render: <Link to="/fullscreen">Fullscreen Mode</Link>,
+};
 
-      <MenubarContent>
-        <FullscreenMenuItem />
-      </MenubarContent>
-    </MenubarMenu>
-  );
-}
+export const viewMenu: RootMenuItem = {
+  label: "View",
+  viewportContext: "desktop",
+  items: [fullscreenMenuItem],
+};

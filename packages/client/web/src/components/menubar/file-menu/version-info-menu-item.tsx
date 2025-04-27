@@ -1,10 +1,9 @@
-import { MenubarItem } from "@/components/ui/menubar";
 import { Link } from "@tanstack/react-router";
+import { MenuItem } from "..";
 
-export function VersionInfoMenuItem() {
-  return (
-    <MenubarItem asChild>
-      <Link search={{ versionInfoModal: { open: true } }}>Version Info</Link>
-    </MenubarItem>
-  );
-}
+export const versionInfoMenuItem: MenuItem = {
+  label: "Version Info",
+  Render: (
+    <Link search={{ versionInfoModal: { open: true } }}>Version Info</Link>
+  ),
+};

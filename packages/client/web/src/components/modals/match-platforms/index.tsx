@@ -11,7 +11,7 @@ import {
 } from "../../ui/dialog";
 import { Button } from "../../ui/button";
 import { AlertCircleIcon, LoaderCircleIcon } from "lucide-react";
-import { cn, getFileName } from "@/lib/utils";
+import { cn, getFileName, getFileStub } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import {
@@ -38,11 +38,17 @@ import {
 } from "@retrom/codegen/retrom/services";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";
 import { useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
+import {
+  Table,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export type PlatformAndMetadata = Platform & { metadata: PlatformMetadata };
 
@@ -265,7 +271,7 @@ export function MatchPlatformsModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea type="auto" className="h-[60vh] pr-4">
+        <div>
           {allIgdbPlatforms?.length === 0 ? (
             <div className="flex mb-4 text-destructive-text items-center gap-1">
               <AlertCircleIcon className="h-4 w-4" />
@@ -278,99 +284,110 @@ export function MatchPlatformsModal() {
 
           {loading ? <LoaderCircleIcon className="animate-spin" /> : null}
           {error ? <AlertCircleIcon className="text-destructive-text" /> : null}
-          {platformData?.map((platform) => {
-            const selection =
-              selections.get(platform.id) || defaultSelections.get(platform.id);
+          <Table>
+            <TableHeader className="hidden sm:table-header-group">
+              <TableHead>Platform</TableHead>
+              <TableHead>IGDB Platform</TableHead>
+            </TableHeader>
 
-            const unchanged = defaultSelections.get(platform.id) === selection;
+            {platformData?.map((platform) => {
+              const selection =
+                selections.get(platform.id) ||
+                defaultSelections.get(platform.id);
 
-            const relativePath =
-              ".../" + (platform.path.split("/").pop() ?? platform.path);
+              const unchanged =
+                defaultSelections.get(platform.id) === selection;
 
-            return (
-              <div key={platform.id} className="grid grid-cols-2">
-                <code className="relative px-2 border-l border-y bg-muted grid place-items-center">
-                  <pre className="h-min w-full text-muted-foreground font-mono text-sm font-semibold">
-                    {relativePath}
-                  </pre>
-                </code>
-                <Popover modal={true}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className={cn(
-                        (selection === undefined || unchanged) &&
-                          "text-muted-foreground",
-                        "justify-between z-10",
-                      )}
-                    >
-                      <span>
-                        {findIgdbSelection(selection)?.name ??
-                          "Select a platform..."}
-                        {unchanged && (
-                          <span className="text-xs opacity-50">
-                            {" (unchanged)"}
+              const platformName =
+                platform.metadata.name ?? getFileStub(platform.path);
+
+              return (
+                <TableRow
+                  key={platform.id}
+                  className="py-0 flex flex-col mb-2 sm:mb-0 sm:table-row"
+                >
+                  <TableCell className="py-0">{platformName}</TableCell>
+
+                  <Popover modal={true}>
+                    <TableCell className="py-0 p-0">
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          role="combobox"
+                          className={cn(
+                            (selection === undefined || unchanged) &&
+                              "text-muted-foreground",
+                            "justify-between z-10 w-full",
+                          )}
+                        >
+                          <span>
+                            {findIgdbSelection(selection)?.name ??
+                              "Select a platform..."}
+                            {unchanged && (
+                              <span className="text-xs opacity-50">
+                                {" (unchanged)"}
+                              </span>
+                            )}
                           </span>
-                        )}
-                      </span>
 
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                    </TableCell>
 
-                  <PopoverContent className="p-0">
-                    <Command>
-                      <CommandInput placeholder="Search platforms..." />
-                      <CommandList>
-                        <CommandGroup>
-                          {allIgdbPlatforms?.map((igdbPlatform) => (
-                            <CommandItem
-                              key={igdbPlatform.igdbId}
-                              value={igdbPlatform.name}
-                              onSelect={() => {
-                                setSelections(
-                                  (prev) =>
-                                    new Map(
-                                      prev.set(
-                                        platform.id,
-                                        igdbPlatform.igdbId,
+                    <PopoverContent className="p-0">
+                      <Command>
+                        <CommandInput placeholder="Search platforms..." />
+                        <CommandList>
+                          <CommandGroup>
+                            {allIgdbPlatforms?.map((igdbPlatform) => (
+                              <CommandItem
+                                key={igdbPlatform.igdbId}
+                                value={igdbPlatform.name}
+                                onSelect={() => {
+                                  setSelections(
+                                    (prev) =>
+                                      new Map(
+                                        prev.set(
+                                          platform.id,
+                                          igdbPlatform.igdbId,
+                                        ),
                                       ),
-                                    ),
-                                );
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selection === igdbPlatform.igdbId
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              <div>
-                                {igdbPlatform.name}
-                                {igdbPlatform.igdbId ===
-                                  defaultSelections.get(platform.id) && (
-                                  <span className="text-xs opacity-50">
-                                    {" (current)"}
-                                  </span>
-                                )}
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            );
-          })}
-        </ScrollArea>
+                                  );
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selection === igdbPlatform.igdbId
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                                <div>
+                                  {igdbPlatform.name}
+                                  {igdbPlatform.igdbId ===
+                                    defaultSelections.get(platform.id) && (
+                                    <span className="text-xs opacity-50">
+                                      {" (current)"}
+                                    </span>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </TableRow>
+              );
+            })}
+          </Table>
+        </div>
 
         <DialogFooter>
-          <div className="flex justify-between gap-6 mt-4 pr-4 w-full">
+          <div className="flex flex-col sm:flex-row justify-between gap-6 sm:mt-4 sm:pr-4 w-full">
             <div className="flex items-top gap-2">
               <Checkbox
                 id="rename-directories"
@@ -387,7 +404,7 @@ export function MatchPlatformsModal() {
               </div>
             </div>
 
-            <div className="flex gap-2 items-top">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:items-top">
               <DialogClose asChild>
                 <Button variant="secondary">Cancel</Button>
               </DialogClose>

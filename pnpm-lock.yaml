@@ -123,7 +123,7 @@ importers:
         version: link:../../codegen
       '@retrom/plugin-config':
         specifier: workspace:*
-        version: link:../../../plugins/retrom-plugin-config
+        version: file:plugins/retrom-plugin-config(ws@8.18.0)
       '@retrom/plugin-installer':
         specifier: workspace:*
         version: link:../../../plugins/retrom-plugin-installer
@@ -253,6 +253,9 @@ importers:
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
+      vaul:
+        specifier: ^1.1.2
+        version: 1.1.2(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -405,7 +408,7 @@ importers:
     dependencies:
       '@retrom/codegen':
         specifier: workspace:*
-        version: link:../../packages/codegen
+        version: file:packages/codegen(ws@8.18.0)
       '@tauri-apps/api':
         specifier: '>=2.0.0-beta.6'
         version: 2.2.0
@@ -1769,6 +1772,12 @@ packages:
     peerDependencies:
       '@react-three/fiber': '>=8'
       react: '>=18'
+
+  '@retrom/codegen@file:packages/codegen':
+    resolution: {directory: packages/codegen, type: directory}
+
+  '@retrom/plugin-config@file:plugins/retrom-plugin-config':
+    resolution: {directory: plugins/retrom-plugin-config, type: directory}
 
   '@rollup/plugin-typescript@11.1.6':
     resolution: {integrity: sha512-R92yOmIACgYdJ7dJ97p4K69I8gg6IEHt8M7dUBxN3W6nrO8uUxX5ixl0yU/N3aZTi8WhPuICvOHXQvF6FaykAA==}
@@ -5347,6 +5356,12 @@ packages:
     resolution: {integrity: sha512-OljLrQ9SQdOUqTaQxqL5dEfZWrXExyyWsozYlAWFawPVNuD83igl7uJD2RTkNMbniIYgt8l81eCJGIdQF7avLQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
+  vaul@1.1.2:
+    resolution: {integrity: sha512-ZFkClGpWyI2WUQjdLJ/BaGuV6AVQiJ3uELGk3OYtP+B6yCO7Cmn9vPFXVJkRaGkOJu3m8bQMgtyzNHixULceQA==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
+
   vfile-location@5.0.3:
     resolution: {integrity: sha512-5yXvWDEgqeiYiBe1lbxYF7UMAIm/IcopxMHrMQDq3nvKcjPKIhZklUKL+AE7J7uApI4kwe2snsK+eI6UTj9EHg==}
 
@@ -6813,6 +6828,23 @@ snapshots:
       - immer
       - three
       - ts-node
+
+  '@retrom/codegen@file:packages/codegen(ws@8.18.0)':
+    dependencies:
+      '@bufbuild/protobuf': 2.2.5
+      nice-grpc-common: 2.0.2
+      nice-grpc-web: 3.3.4(ws@8.18.0)
+      protobufjs: 7.5.0
+      ts-proto: 2.7.0
+    transitivePeerDependencies:
+      - ws
+
+  '@retrom/plugin-config@file:plugins/retrom-plugin-config(ws@8.18.0)':
+    dependencies:
+      '@retrom/codegen': file:packages/codegen(ws@8.18.0)
+      '@tauri-apps/api': 2.2.0
+    transitivePeerDependencies:
+      - ws
 
   '@rollup/plugin-typescript@11.1.6(rollup@4.21.2)(tslib@2.7.0)(typescript@5.5.4)':
     dependencies:
@@ -11187,6 +11219,15 @@ snapshots:
       typescript: 5.5.4
 
   validate-npm-package-name@5.0.1: {}
+
+  vaul@1.1.2(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      '@radix-ui/react-dialog': 1.1.1(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
 
   vfile-location@5.0.3:
     dependencies:

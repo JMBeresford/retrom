@@ -154,203 +154,210 @@ export function SideBar() {
   ]);
 
   return (
-    <aside
-      className={cn(
-        "min-h-full h-full w-[100cqw] min-w-0 flex flex-col",
-        "bg-gradient-to-b from-primary/10 to-background",
-      )}
-    >
-      <FiltersAndSorting />
-      <Separator />
+    <div className="w-full h-full @container/sidebar">
+      <aside
+        className={cn(
+          "min-h-full h-full w-[100cqw] min-w-0 flex flex-col",
+          "bg-gradient-to-b from-primary/10 to-background",
+        )}
+      >
+        <FiltersAndSorting />
+        <Separator />
 
-      {loading ? (
-        <div className="w-[100cqw] grow flex flex-col gap-4 bg-card p-4 *:h-12">
-          <Skeleton className="w-full" />
-          <Skeleton className="w-full" />
-          <Skeleton className="w-full" />
-          <Skeleton className="w-full" />
-          <Skeleton className="w-full" />
-          <Skeleton className="w-full" />
-          <Skeleton className="w-full" />
-          <Skeleton className="w-full" />
-          <Skeleton className="w-full" />
-          <Skeleton className="w-full" />
-        </div>
-      ) : error ? (
-        <div className="w-full h-full grid place-items-center">
-          <p className="text-muted-foreground text-lg">
-            Could not load game data 😔
-          </p>
-        </div>
-      ) : !platformsWithMetadata.some((p) => gamesByPlatform[p.id]?.length) ? (
-        <div className="h-full grid place-items-center">
-          <div className="flex flex-col gap-4 text-center text-muted-foreground px-6">
-            <h3 className="text-2xl font-bold">Where all the games at?</h3>
-
-            <p>
-              Make sure Retrom knows about your{" "}
-              <Link
-                className="text-accent-text"
-                search={(prev) => ({
-                  ...prev,
-                  configModal: { open: true, tab: "server" },
-                })}
-              >
-                library sources
-              </Link>{" "}
-              and then{" "}
-              <Link
-                className="text-accent-text"
-                search={(prev) => ({
-                  ...prev,
-                  updateLibraryModal: { open: true },
-                })}
-              >
-                update your library
-              </Link>
+        {loading ? (
+          <div className="w-[100cqw] grow flex flex-col gap-4 bg-card p-4 *:h-12">
+            <Skeleton className="w-full" />
+            <Skeleton className="w-full" />
+            <Skeleton className="w-full" />
+            <Skeleton className="w-full" />
+            <Skeleton className="w-full" />
+            <Skeleton className="w-full" />
+            <Skeleton className="w-full" />
+            <Skeleton className="w-full" />
+            <Skeleton className="w-full" />
+            <Skeleton className="w-full" />
+          </div>
+        ) : error ? (
+          <div className="w-full h-full grid place-items-center">
+            <p className="text-muted-foreground text-lg">
+              Could not load game data 😔
             </p>
           </div>
-        </div>
-      ) : (
-        <ScrollArea
-          className={cn(
-            "h-full max-h-full w-full max-w-full px-4 pb-4",
-            "before:absolute before:inset-x-0 before:top-0 before:h-8 before:z-10",
-            "before:bg-gradient-to-b before:from-black/60 before:to-transparent",
-            "before:pointer-events-none",
-          )}
-        >
-          <TooltipProvider>
-            <Accordion
-              type="single"
-              collapsible={true}
-              className="pt-4"
-              defaultValue={currentGame?.platformId?.toString()}
-            >
-              {platformsWithMetadata.map((platform) => {
-                const games = gamesByPlatform[platform.id] ?? [];
+        ) : !platformsWithMetadata.some(
+            (p) => gamesByPlatform[p.id]?.length,
+          ) ? (
+          <div className="h-full grid place-items-center">
+            <div className="flex flex-col gap-4 text-center text-muted-foreground px-6">
+              <h3 className="text-2xl font-bold">Where all the games at?</h3>
 
-                const name =
-                  platform.metadata?.name || getFileStub(platform.path);
+              <p>
+                Make sure Retrom knows about your{" "}
+                <Link
+                  className="text-accent-text"
+                  search={(prev) => ({
+                    ...prev,
+                    configModal: { open: true, tab: "server" },
+                  })}
+                >
+                  library sources
+                </Link>{" "}
+                and then{" "}
+                <Link
+                  className="text-accent-text"
+                  search={(prev) => ({
+                    ...prev,
+                    updateLibraryModal: { open: true },
+                  })}
+                >
+                  update your library
+                </Link>
+              </p>
+            </div>
+          </div>
+        ) : (
+          <ScrollArea
+            className={cn(
+              "h-full max-h-full w-full max-w-full px-3 sm:px-4 pb-4",
+              "before:absolute before:inset-x-0 before:top-0 before:h-8 before:z-10",
+              "before:bg-gradient-to-b before:from-black/60 before:to-transparent",
+              "before:pointer-events-none",
+            )}
+          >
+            <TooltipProvider>
+              <Accordion
+                type="single"
+                collapsible={true}
+                className="pt-4"
+                defaultValue={currentGame?.platformId?.toString()}
+              >
+                {platformsWithMetadata.map((platform) => {
+                  const games = gamesByPlatform[platform.id] ?? [];
 
-                if (platform.thirdParty && !games.length) {
-                  return null;
-                }
+                  const name =
+                    platform.metadata?.name || getFileStub(platform.path);
 
-                return (
-                  <AccordionItem
-                    key={platform.id}
-                    value={platform.id.toString()}
-                    className={cn("border-b-0 w-full max-w-full")}
-                  >
-                    <div
-                      className={cn(
-                        "group grid grid-cols-[1fr_auto] border-b border-transparent",
-                        "hover:border-border transition-all",
-                      )}
+                  if (platform.thirdParty && !games.length) {
+                    return null;
+                  }
+
+                  return (
+                    <AccordionItem
+                      key={platform.id}
+                      value={platform.id.toString()}
+                      className={cn("border-b-0 w-full max-w-full")}
                     >
-                      <AccordionTrigger
-                        hideIcon
+                      <div
                         className={cn(
-                          "group py-2 font-medium overflow-hidden relative hover:no-underline",
+                          "group grid grid-cols-[1fr_auto] border-b border-transparent",
+                          "sm:hover:border-border transition-all",
                         )}
                       >
-                        <div className="flex w-full">
-                          <h3 className="text-left whitespace-nowrap overflow-ellipsis overflow-hidden">
-                            {name}
-                          </h3>
-                          <span className="sr-only">Toggle</span>
-                        </div>
-                      </AccordionTrigger>
-                      <PlatformContextMenu platform={platform} />
-                    </div>
+                        <AccordionTrigger
+                          hideIcon
+                          className={cn(
+                            "group py-2 font-medium overflow-hidden relative hover:no-underline",
+                          )}
+                        >
+                          <div className="flex w-full">
+                            <h3 className="text-left text-lg sm:text-base whitespace-nowrap overflow-ellipsis overflow-hidden">
+                              {name}
+                            </h3>
+                            <span className="sr-only">Toggle</span>
+                          </div>
+                        </AccordionTrigger>
+                        <PlatformContextMenu platform={platform} />
+                      </div>
 
-                    <AccordionContent>
-                      {games.length ? (
-                        <ul>
-                          {games.map((game) => {
-                            const isCurrentGame = currentGame?.id === game.id;
-                            const isInstalled =
-                              installationData?.installationState.get(
-                                game.id,
-                              ) === InstallationStatus.INSTALLED;
+                      <AccordionContent>
+                        {games.length ? (
+                          <ul>
+                            {games.map((game) => {
+                              const isCurrentGame = currentGame?.id === game.id;
+                              const isInstalled =
+                                installationData?.installationState.get(
+                                  game.id,
+                                ) === InstallationStatus.INSTALLED;
 
-                            const gameMetadata = game.metadata;
+                              const gameMetadata = game.metadata;
 
-                            const iconUrl = gameMetadata?.iconUrl;
-                            const fallbackName =
-                              game.storageType === StorageType.SINGLE_FILE_GAME
-                                ? getFileStub(game.path)
-                                : getFileName(game.path);
+                              const iconUrl = gameMetadata?.iconUrl;
+                              const fallbackName =
+                                game.storageType ===
+                                StorageType.SINGLE_FILE_GAME
+                                  ? getFileStub(game.path)
+                                  : getFileName(game.path);
 
-                            const gameName = gameMetadata?.name ?? fallbackName;
+                              const gameName =
+                                gameMetadata?.name ?? fallbackName;
 
-                            return (
-                              <Tooltip key={game.id}>
-                                <TooltipTrigger asChild>
-                                  <li
-                                    className={cn(
-                                      "relative z-10 before:z-[-1] before:duration-200",
-                                      "before:absolute before:inset-0 before:transition-opacity",
-                                      "before:bg-gradient-to-r before:from-accent/80 before:opacity-0",
-                                      "text-[1rem] text-muted-foreground/40 transition-all",
-                                      !isCurrentGame &&
-                                        "hover:before:opacity-60 hover:text-primary-foreground/80",
-                                      isInstalled && "text-muted-foreground",
-                                      isCurrentGame &&
-                                        "before:opacity-100 text-primary-foreground",
-                                      "max-w-full w-full overflow-hidden overflow-ellipsis px-3 my-1",
-                                    )}
-                                  >
-                                    <Link
-                                      to="/games/$gameId"
-                                      params={{ gameId: game.id.toString() }}
-                                      className="grid grid-cols-[auto_1fr] items-center max-w-full h-full"
+                              return (
+                                <Tooltip key={game.id}>
+                                  <TooltipTrigger asChild>
+                                    <li
+                                      className={cn(
+                                        "relative z-10 before:z-[-1] before:duration-200",
+                                        "border-l border-border",
+                                        "before:absolute before:inset-0 before:transition-opacity",
+                                        "before:bg-gradient-to-r before:from-accent/40 before:opacity-0",
+                                        "text-[1rem] text-muted-foreground/40 transition-all",
+                                        !isCurrentGame &&
+                                          "sm:hover:before:opacity-60 sm:hover:text-primary-foreground/80",
+                                        isInstalled && "text-muted-foreground",
+                                        isCurrentGame &&
+                                          "before:opacity-100 text-primary-foreground border-accent border-l-4",
+                                        "max-w-full w-full overflow-hidden overflow-ellipsis px-2 py-0.5",
+                                      )}
                                     >
-                                      <div className="relative min-w-[28px] min-h-[28px] mr-2 my-[2px]">
-                                        {iconUrl && (
-                                          <Image
-                                            src={iconUrl}
-                                            width={28}
-                                            height={28}
-                                            alt={gameName ?? ""}
-                                          />
-                                        )}
-                                      </div>
-                                      <span className="whitespace-nowrap overflow-hidden overflow-ellipsis">
-                                        <span>{gameName}</span>
-                                      </span>
-                                    </Link>
-                                  </li>
-                                </TooltipTrigger>
-                                <TooltipPortal>
-                                  <TooltipContent
-                                    side="right"
-                                    className="pointer-events-none touch-none"
-                                  >
-                                    {gameName}
-                                  </TooltipContent>
-                                </TooltipPortal>
-                              </Tooltip>
-                            );
-                          })}
-                        </ul>
-                      ) : (
-                        <div className="grid place-items-center pt-4">
-                          <p className="font-medium text-muted-foreground italic">
-                            Theres no games here...
-                          </p>
-                        </div>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
-            </Accordion>
-          </TooltipProvider>
-        </ScrollArea>
-      )}
-    </aside>
+                                      <Link
+                                        to="/games/$gameId"
+                                        params={{ gameId: game.id.toString() }}
+                                        className="grid grid-cols-[auto_1fr] items-center max-w-full h-full"
+                                      >
+                                        <div className="relative min-w-[28px] min-h-[28px] mr-2 my-[2px]">
+                                          {iconUrl && (
+                                            <Image
+                                              src={iconUrl}
+                                              width={28}
+                                              height={28}
+                                              alt={gameName ?? ""}
+                                            />
+                                          )}
+                                        </div>
+                                        <span className="whitespace-nowrap overflow-hidden overflow-ellipsis">
+                                          <span>{gameName}</span>
+                                        </span>
+                                      </Link>
+                                    </li>
+                                  </TooltipTrigger>
+                                  <TooltipPortal>
+                                    <TooltipContent
+                                      side="right"
+                                      className="hidden sm:block pointer-events-none touch-none"
+                                    >
+                                      {gameName}
+                                    </TooltipContent>
+                                  </TooltipPortal>
+                                </Tooltip>
+                              );
+                            })}
+                          </ul>
+                        ) : (
+                          <div className="grid place-items-center pt-4">
+                            <p className="font-medium text-muted-foreground italic">
+                              Theres no games here...
+                            </p>
+                          </div>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            </TooltipProvider>
+          </ScrollArea>
+        )}
+      </aside>
+    </div>
   );
 }
 
@@ -368,8 +375,8 @@ function PlatformContextMenu(
         asChild
         {...rest}
         className={cn(
-          "opacity-0 transition-opacity active:opacity-100",
-          "group-hover:opacity-100 data-[state=open]:opacity-100",
+          "sm:opacity-0 transition-opacity active:opacity-100",
+          "sm:group-hover:opacity-100 data-[state=open]:opacity-100",
         )}
       >
         <Button
@@ -381,7 +388,12 @@ function PlatformContextMenu(
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent>
+      <DropdownMenuContent
+        className={cn(
+          "w-dvw flex flex-col items-center gap-2",
+          "sm:w-auto sm:block",
+        )}
+      >
         <DropdownMenuItem
           asChild
           onClick={(e) => {
