@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { MenuItem, RootMenuItem } from "..";
 
-const manageEulatorsMenuItem: MenuItem = {
+const manageEmulatorsMenuItem: MenuItem = {
   label: "Manage Emulators",
   appContext: "desktop",
   Render: (
@@ -24,5 +24,5 @@ const manageEmulatorProfilesMenuItem: MenuItem = {
 export const emulatorsMenu: RootMenuItem = {
   label: "Emulators",
   appContext: "desktop",
-  items: [manageEulatorsMenuItem, manageEmulatorProfilesMenuItem],
+  items: [manageEmulatorsMenuItem, manageEmulatorProfilesMenuItem],
 };
