@@ -71,7 +71,7 @@ export function DeleteLibraryModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <p>
+        <p className="max-w-[45ch]">
           This will not remove any files or directories from your file-system.
           Running a library scan again will re-create the library and all
           entries.
