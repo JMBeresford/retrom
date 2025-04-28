@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.19](https://github.com/JMBeresford/retrom/compare/v0.7.18...v0.7.19) - 2025-04-28
+
+### Bug Fixes
+- fullscreen mode on AppImage installations ([#297](https://github.com/JMBeresford/retrom/pull/297))
+
+    Using the Retrom AppImage on linux should no longer lead to crashes in fullscreen mode
+
+
+
+
+
+### Newly Added
+- Mobile responsive UI ([#298](https://github.com/JMBeresford/retrom/pull/298))
+
+    Retrom's web client is now mobile responsive!
+
+
+
+
 ## [0.7.18](https://github.com/JMBeresford/retrom/compare/v0.7.17...v0.7.18) - 2025-04-07
 
 ### Bug Fixes
