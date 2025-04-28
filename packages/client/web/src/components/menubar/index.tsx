@@ -131,9 +131,7 @@ function MainMenuItem(props: { item: MenuItem }) {
   if (items) {
     return (
       <span
-        className={cn(
-          item.viewportContext === "mobile" ? "sm:hidden" : "sm:contents",
-        )}
+        className={cn(item.viewportContext === "mobile" ? "sm:hidden" : "")}
       >
         <MenubarSub>
           <MenubarSubTrigger>{label}</MenubarSubTrigger>
@@ -156,9 +154,7 @@ function MainMenuItem(props: { item: MenuItem }) {
       <MenubarItem
         asChild
         onSelect={action}
-        className={cn(
-          item.viewportContext === "mobile" ? "sm:hidden" : "sm:contents",
-        )}
+        className={cn(item.viewportContext === "mobile" ? "sm:hidden" : "")}
       >
         {Render}
       </MenubarItem>
@@ -202,9 +198,7 @@ function DesktopMenu(props: { root: MenuRoot }) {
       {root.items.filter(canRender).map((item, index) => (
         <MenubarMenu key={index}>
           <MenubarTrigger
-            className={cn(
-              item.viewportContext === "mobile" ? "sm:hidden" : "sm:contents",
-            )}
+            className={cn(item.viewportContext === "mobile" ? "sm:hidden" : "")}
           >
             {item.label}
           </MenubarTrigger>

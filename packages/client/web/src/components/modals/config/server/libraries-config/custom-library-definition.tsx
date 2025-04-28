@@ -42,40 +42,21 @@ export function CustomLibraryDefinitionInput<
   return (
     <Popover>
       <FormItem>
-        <PopoverTrigger asChild className="hidden sm:flex">
+        <PopoverTrigger asChild>
           <Button
             variant="secondary"
-            size="icon"
             className={cn(
-              "min-h-0 h-min w-min p-2",
+              "flex gap-2 sm:min-h-0 sm:w-min sm:h-min sm:p-2",
               !field.disabled && fieldState.error && "ring-2 ring-destructive",
             )}
             disabled={field.disabled}
           >
+            <span className="sm:hidden">Configure Library Structure</span>
             <Settings2 className="h-[1rem] w-[1rem]" />
           </Button>
         </PopoverTrigger>
 
-        <PopoverTrigger asChild className="sm:hidden">
-          <Button
-            variant="secondary"
-            className={cn(
-              "flex gap-2 w-full",
-              !field.disabled && fieldState.error && "ring-2 ring-destructive",
-            )}
-            disabled={field.disabled}
-          >
-            Configure Library Structure
-            <Settings2 className="h-[1rem] w-[1rem]" />
-          </Button>
-        </PopoverTrigger>
-
-        <PopoverContent
-          className="w-dvw sm:w-auto sm:max-w-[60ch] max-h-[80dvh] flex flex-col relative"
-          // side="left"
-          avoidCollisions
-          // collisionPadding={4}
-        >
+        <PopoverContent className="w-dvw sm:w-auto sm:max-w-[60ch] max-h-[80dvh] flex flex-col">
           <h3 className="text-lg font-extrabold">Library Structure</h3>
           <p className="text-sm text-muted-foreground mb-4">
             This describes how your library is structured, allowing Retrom to

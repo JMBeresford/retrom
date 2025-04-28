@@ -53,7 +53,7 @@ export function IgnorePatternsInput<
 
   return (
     <Popover>
-      <FormItem className="sm:contents w-full">
+      <FormItem className="sm:contents sm:space-y-0 w-full">
         <FormLabel className="sm:hidden">Ignore Patterns</FormLabel>
         <FormControl>
           <PopoverTrigger asChild>

@@ -22,7 +22,7 @@ export function StorageTypeSelect<
   const value = field.value;
 
   return (
-    <FormItem>
+    <FormItem className="sm:contents sm:space-y-0 w-full">
       <FormLabel className="sm:hidden whitespace-nowrap">
         Storage Type
       </FormLabel>
