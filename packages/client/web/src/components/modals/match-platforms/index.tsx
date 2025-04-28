@@ -44,6 +44,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
 import {
   Table,
+  TableBody,
   TableCell,
   TableHead,
   TableHeader,
@@ -286,103 +287,107 @@ export function MatchPlatformsModal() {
           {error ? <AlertCircleIcon className="text-destructive-text" /> : null}
           <Table>
             <TableHeader className="hidden sm:table-header-group">
-              <TableHead>Platform</TableHead>
-              <TableHead>IGDB Platform</TableHead>
+              <TableRow>
+                <TableHead>Platform</TableHead>
+                <TableHead>IGDB Platform</TableHead>
+              </TableRow>
             </TableHeader>
 
-            {platformData?.map((platform) => {
-              const selection =
-                selections.get(platform.id) ||
-                defaultSelections.get(platform.id);
+            <TableBody>
+              {platformData?.map((platform) => {
+                const selection =
+                  selections.get(platform.id) ||
+                  defaultSelections.get(platform.id);
 
-              const unchanged =
-                defaultSelections.get(platform.id) === selection;
+                const unchanged =
+                  defaultSelections.get(platform.id) === selection;
 
-              const platformName =
-                platform.metadata.name ?? getFileStub(platform.path);
+                const platformName =
+                  platform.metadata.name ?? getFileStub(platform.path);
 
-              return (
-                <TableRow
-                  key={platform.id}
-                  className="py-0 flex flex-col mb-2 sm:mb-0 sm:table-row"
-                >
-                  <TableCell className="py-0">{platformName}</TableCell>
+                return (
+                  <TableRow
+                    key={platform.id}
+                    className="py-0 flex flex-col mb-2 sm:mb-0 sm:table-row"
+                  >
+                    <TableCell className="py-0">{platformName}</TableCell>
 
-                  <Popover modal={true}>
-                    <TableCell className="py-0 p-0">
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          role="combobox"
-                          className={cn(
-                            (selection === undefined || unchanged) &&
-                              "text-muted-foreground",
-                            "justify-between z-10 w-full",
-                          )}
-                        >
-                          <span>
-                            {findIgdbSelection(selection)?.name ??
-                              "Select a platform..."}
-                            {unchanged && (
-                              <span className="text-xs opacity-50">
-                                {" (unchanged)"}
-                              </span>
+                    <Popover modal={true}>
+                      <TableCell className="py-0 p-0">
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            role="combobox"
+                            className={cn(
+                              (selection === undefined || unchanged) &&
+                                "text-muted-foreground",
+                              "justify-between z-10 w-full",
                             )}
-                          </span>
+                          >
+                            <span>
+                              {findIgdbSelection(selection)?.name ??
+                                "Select a platform..."}
+                              {unchanged && (
+                                <span className="text-xs opacity-50">
+                                  {" (unchanged)"}
+                                </span>
+                              )}
+                            </span>
 
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                    </TableCell>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                      </TableCell>
 
-                    <PopoverContent className="p-0">
-                      <Command>
-                        <CommandInput placeholder="Search platforms..." />
-                        <CommandList>
-                          <CommandGroup>
-                            {allIgdbPlatforms?.map((igdbPlatform) => (
-                              <CommandItem
-                                key={igdbPlatform.igdbId}
-                                value={igdbPlatform.name}
-                                onSelect={() => {
-                                  setSelections(
-                                    (prev) =>
-                                      new Map(
-                                        prev.set(
-                                          platform.id,
-                                          igdbPlatform.igdbId,
+                      <PopoverContent className="p-0">
+                        <Command>
+                          <CommandInput placeholder="Search platforms..." />
+                          <CommandList>
+                            <CommandGroup>
+                              {allIgdbPlatforms?.map((igdbPlatform) => (
+                                <CommandItem
+                                  key={igdbPlatform.igdbId}
+                                  value={igdbPlatform.name}
+                                  onSelect={() => {
+                                    setSelections(
+                                      (prev) =>
+                                        new Map(
+                                          prev.set(
+                                            platform.id,
+                                            igdbPlatform.igdbId,
+                                          ),
                                         ),
-                                      ),
-                                  );
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selection === igdbPlatform.igdbId
-                                      ? "opacity-100"
-                                      : "opacity-0",
-                                  )}
-                                />
-                                <div>
-                                  {igdbPlatform.name}
-                                  {igdbPlatform.igdbId ===
-                                    defaultSelections.get(platform.id) && (
-                                    <span className="text-xs opacity-50">
-                                      {" (current)"}
-                                    </span>
-                                  )}
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </TableRow>
-              );
-            })}
+                                    );
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selection === igdbPlatform.igdbId
+                                        ? "opacity-100"
+                                        : "opacity-0",
+                                    )}
+                                  />
+                                  <div>
+                                    {igdbPlatform.name}
+                                    {igdbPlatform.igdbId ===
+                                      defaultSelections.get(platform.id) && (
+                                      <span className="text-xs opacity-50">
+                                        {" (current)"}
+                                      </span>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
           </Table>
         </div>
 
