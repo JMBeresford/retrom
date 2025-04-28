@@ -120,16 +120,16 @@ importers:
         version: 0.6.1(@react-three/fiber@8.18.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.169.0))(@types/react@18.3.5)(react@18.3.1)(three@0.169.0)(ts-node@10.9.2(@types/node@22.14.1)(typescript@5.5.4))
       '@retrom/codegen':
         specifier: workspace:*
-        version: file:packages/codegen(ws@8.18.0)
+        version: link:../../codegen
       '@retrom/plugin-config':
         specifier: workspace:*
         version: file:plugins/retrom-plugin-config(ws@8.18.0)
       '@retrom/plugin-installer':
         specifier: workspace:*
-        version: file:plugins/retrom-plugin-installer
+        version: link:../../../plugins/retrom-plugin-installer
       '@retrom/plugin-standalone':
         specifier: workspace:*
-        version: file:plugins/retrom-plugin-standalone
+        version: link:../../../plugins/retrom-plugin-standalone
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@3.4.10(ts-node@10.9.2(@types/node@22.14.1)(typescript@5.5.4)))
@@ -253,6 +253,9 @@ importers:
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
+      vaul:
+        specifier: ^1.1.2
+        version: 1.1.2(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -265,7 +268,7 @@ importers:
         version: 9.9.1
       '@retrom/configs':
         specifier: workspace:*
-        version: file:packages/configs
+        version: link:../../configs
       '@tanstack/eslint-plugin-query':
         specifier: ^5.43.1
         version: 5.53.0(eslint@9.17.0(jiti@1.21.6))(typescript@5.5.4)
@@ -1773,17 +1776,8 @@ packages:
   '@retrom/codegen@file:packages/codegen':
     resolution: {directory: packages/codegen, type: directory}
 
-  '@retrom/configs@file:packages/configs':
-    resolution: {directory: packages/configs, type: directory}
-
   '@retrom/plugin-config@file:plugins/retrom-plugin-config':
     resolution: {directory: plugins/retrom-plugin-config, type: directory}
-
-  '@retrom/plugin-installer@file:plugins/retrom-plugin-installer':
-    resolution: {directory: plugins/retrom-plugin-installer, type: directory}
-
-  '@retrom/plugin-standalone@file:plugins/retrom-plugin-standalone':
-    resolution: {directory: plugins/retrom-plugin-standalone, type: directory}
 
   '@rollup/plugin-typescript@11.1.6':
     resolution: {integrity: sha512-R92yOmIACgYdJ7dJ97p4K69I8gg6IEHt8M7dUBxN3W6nrO8uUxX5ixl0yU/N3aZTi8WhPuICvOHXQvF6FaykAA==}
@@ -5362,6 +5356,12 @@ packages:
     resolution: {integrity: sha512-OljLrQ9SQdOUqTaQxqL5dEfZWrXExyyWsozYlAWFawPVNuD83igl7uJD2RTkNMbniIYgt8l81eCJGIdQF7avLQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
+  vaul@1.1.2:
+    resolution: {integrity: sha512-ZFkClGpWyI2WUQjdLJ/BaGuV6AVQiJ3uELGk3OYtP+B6yCO7Cmn9vPFXVJkRaGkOJu3m8bQMgtyzNHixULceQA==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
+
   vfile-location@5.0.3:
     resolution: {integrity: sha512-5yXvWDEgqeiYiBe1lbxYF7UMAIm/IcopxMHrMQDq3nvKcjPKIhZklUKL+AE7J7uApI4kwe2snsK+eI6UTj9EHg==}
 
@@ -6831,14 +6831,13 @@ snapshots:
 
   '@retrom/codegen@file:packages/codegen(ws@8.18.0)':
     dependencies:
-      '@bufbuild/protobuf': 2.1.0
+      '@bufbuild/protobuf': 2.2.5
       nice-grpc-common: 2.0.2
       nice-grpc-web: 3.3.4(ws@8.18.0)
-      protobufjs: 7.4.0
+      protobufjs: 7.5.0
+      ts-proto: 2.7.0
     transitivePeerDependencies:
       - ws
-
-  '@retrom/configs@file:packages/configs': {}
 
   '@retrom/plugin-config@file:plugins/retrom-plugin-config(ws@8.18.0)':
     dependencies:
@@ -6846,15 +6845,6 @@ snapshots:
       '@tauri-apps/api': 2.2.0
     transitivePeerDependencies:
       - ws
-
-  '@retrom/plugin-installer@file:plugins/retrom-plugin-installer':
-    dependencies:
-      '@tauri-apps/api': 2.2.0
-      '@tauri-apps/plugin-opener': 2.2.5
-
-  '@retrom/plugin-standalone@file:plugins/retrom-plugin-standalone':
-    dependencies:
-      '@tauri-apps/api': 2.2.0
 
   '@rollup/plugin-typescript@11.1.6(rollup@4.21.2)(tslib@2.7.0)(typescript@5.5.4)':
     dependencies:
@@ -11229,6 +11219,15 @@ snapshots:
       typescript: 5.5.4
 
   validate-npm-package-name@5.0.1: {}
+
+  vaul@1.1.2(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      '@radix-ui/react-dialog': 1.1.1(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
 
   vfile-location@5.0.3:
     dependencies:

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FormControl, FormItem } from "@/components/ui/form";
+import { FormControl, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   TooltipProvider,
@@ -42,31 +42,35 @@ export function BrowseButton<T extends FieldValues>(props: {
   return (
     <TooltipProvider>
       <Tooltip>
-        <FormItem className="flex items-center gap-2 h-min space-y-0 py-1 relative">
-          <Button
-            {...field}
-            size="icon"
-            type="button"
-            className="min-h-0 h-min w-min p-2"
-            onClick={() => browse(field.onChange)}
-          >
-            <FolderOpen className="h-[1rem] w-[1rem]" />
-          </Button>
+        <FormItem className="sm:flex sm:items-center sm:gap-2 h-min sm:space-y-0 py-1 relative">
+          <FormLabel className="sm:hidden">Path</FormLabel>
 
-          <TooltipTrigger asChild>
-            <FormControl>
-              <Input
-                {...field}
-                placeholder="Select a directory..."
-                className={cn(
-                  "text-xs text-muted-foreground transition-colors w-[350px] overflow-hidden overflow-ellipsis",
-                  "border-none font-mono placeholder:italic bg-transparent",
-                  fieldState.isDirty && "text-foreground",
-                )}
-              />
-            </FormControl>
-          </TooltipTrigger>
-          <TooltipContent hidden={!field.value}>{field.value}</TooltipContent>
+          <div className="flex w-full gap-2 sm:contents">
+            <Button
+              {...field}
+              size="icon"
+              type="button"
+              className="min-h-0 sm:h-min sm:w-min sm:p-2"
+              onClick={() => browse(field.onChange)}
+            >
+              <FolderOpen className="h-[1rem] w-[1rem]" />
+            </Button>
+
+            <TooltipTrigger asChild>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Select a directory..."
+                  className={cn(
+                    "text-xs text-muted-foreground transition-colors sm:w-[350px] overflow-hidden overflow-ellipsis",
+                    "sm:border-none font-mono placeholder:italic bg-transparent",
+                    fieldState.isDirty && "text-foreground",
+                  )}
+                />
+              </FormControl>
+            </TooltipTrigger>
+            <TooltipContent hidden={!field.value}>{field.value}</TooltipContent>
+          </div>
         </FormItem>
       </Tooltip>
     </TooltipProvider>

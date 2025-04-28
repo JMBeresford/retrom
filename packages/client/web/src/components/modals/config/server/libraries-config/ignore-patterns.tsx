@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FormControl, FormItem } from "@/components/ui/form";
+import { FormControl, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -53,73 +53,76 @@ export function IgnorePatternsInput<
 
   return (
     <Popover>
-      <FormControl>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full"
-            disabled={field.disabled}
-          >
-            {field.value.length
-              ? `${field.value.length} ${field.value.length > 1 ? "patterns" : "pattern"}`
-              : "Add pattern"}
-          </Button>
-        </PopoverTrigger>
-      </FormControl>
+      <FormItem className="sm:contents w-full">
+        <FormLabel className="sm:hidden">Ignore Patterns</FormLabel>
+        <FormControl>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full"
+              disabled={field.disabled}
+            >
+              {field.value.length
+                ? `${field.value.length} ${field.value.length > 1 ? "patterns" : "pattern"}`
+                : "Add pattern"}
+            </Button>
+          </PopoverTrigger>
+        </FormControl>
 
-      <PopoverContent className="flex flex-col gap-2">
-        <div className="flex gap-2">
-          <Input
-            ref={input}
-            placeholder="Enter ignore pattern..."
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                e.stopPropagation();
-                addPattern();
-              }
-            }}
-          />
-          <Button onClick={addPattern}>Add</Button>
-        </div>
+        <PopoverContent className="flex flex-col gap-2 w-full">
+          <div className="flex gap-2">
+            <Input
+              ref={input}
+              placeholder="Enter ignore pattern..."
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  addPattern();
+                }
+              }}
+            />
+            <Button onClick={addPattern}>Add</Button>
+          </div>
 
-        <Separator className="mt-2" />
+          <Separator className="mt-2" />
 
-        <FormItem>
-          {field.value.length ? (
-            field.value.map((pattern, i) => (
-              <div
-                key={pattern + i}
-                className="flex gap-2 items-center justify-between mt-2 py-1"
-              >
-                <SyntaxHighlighter
-                  language={"regex"}
-                  style={theme as { [key: string]: CSSProperties }}
-                  customStyle={{ background: "none", padding: 0, margin: 0 }}
-                  codeTagProps={{ className: "bg-none text-sm" }}
+          <FormItem>
+            {field.value.length ? (
+              field.value.map((pattern, i) => (
+                <div
+                  key={pattern + i}
+                  className="flex gap-2 items-center justify-between mt-2 py-1"
                 >
-                  {pattern}
-                </SyntaxHighlighter>
+                  <SyntaxHighlighter
+                    language={"regex"}
+                    style={theme as { [key: string]: CSSProperties }}
+                    customStyle={{ background: "none", padding: 0, margin: 0 }}
+                    codeTagProps={{ className: "bg-none text-sm" }}
+                  >
+                    {pattern}
+                  </SyntaxHighlighter>
 
-                <Button
-                  variant="destructive"
-                  className="w-min h-min p-2"
-                  onClick={() => removePattern(pattern)}
-                >
-                  <X size={14} />
-                </Button>
-              </div>
-            ))
-          ) : (
-            <>
-              <p className="text-muted-foreground text-sm italic text-center">
-                No ignore patterns added
-              </p>
-            </>
-          )}
-        </FormItem>
-      </PopoverContent>
+                  <Button
+                    variant="destructive"
+                    className="w-min h-min p-2"
+                    onClick={() => removePattern(pattern)}
+                  >
+                    <X size={14} />
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <>
+                <p className="text-muted-foreground text-sm italic text-center">
+                  No ignore patterns added
+                </p>
+              </>
+            )}
+          </FormItem>
+        </PopoverContent>
+      </FormItem>
     </Popover>
   );
 }

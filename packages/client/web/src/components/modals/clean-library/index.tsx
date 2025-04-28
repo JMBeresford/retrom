@@ -157,22 +157,18 @@ function List(props: { title: string; items: { id: number; path: string }[] }) {
 
   return (
     <Collapsible className="w-[70ch] max-w-[90dvw]">
-      <div className="flex items-center justify-between px-3">
-        <h5 className="font-semibold">
-          {items.length} {title}(s) will be removed
-        </h5>
-
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            disabled={!items.length}
-            size="icon"
-            className="min-h-none min-w-none p-2 w-fit h-fit my-2"
-          >
-            <ChevronsUpDown size={14} />
-          </Button>
-        </CollapsibleTrigger>
-      </div>
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="inline"
+          disabled={!items.length}
+          className="flex items-center justify-between w-full px-3 py-2"
+        >
+          <h5 className="font-semibold">
+            {items.length} {title}(s) will be removed
+          </h5>
+          <ChevronsUpDown size={14} />
+        </Button>
+      </CollapsibleTrigger>
       <Separator />
 
       <CollapsibleContent>
@@ -182,10 +178,18 @@ function List(props: { title: string; items: { id: number; path: string }[] }) {
               key={item.id}
               className={cn(
                 "odd:bg-muted text-muted-foreground p-3 last:border-b text-xs",
-                "hover:text-foreground transition-colors",
+                "hover:text-foreground transition-colors break-word whitespace-pre-wrap",
               )}
             >
-              {item.path}
+              {item.path
+                .split("/")
+                .filter(Boolean)
+                .map((part) => (
+                  <span>
+                    /{part}
+                    <wbr />
+                  </span>
+                ))}
             </pre>
           ))}
         </div>

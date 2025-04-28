@@ -39,7 +39,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  CACHE_VERSION: 5
+  CACHE_VERSION: 6
 
 jobs:
   build-desktop-clients:

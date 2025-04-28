@@ -81,25 +81,27 @@ export function VersionInfoModal() {
 
         <Separator className="mt-4" />
 
-        <div>
+        <div className="flex flex-col gap-2 sm:block text-center">
           <Label>Learn more:</Label>
-          <Button variant="link" className="text-accent-text">
-            <a
-              target="_blank"
-              href="https://github.com/JMBeresford/retrom/wiki/Updating#updating-the-server"
-            >
-              updating the server
-            </a>
-          </Button>
+          <div className="sm:contents">
+            <Button variant="link" className="text-accent-text">
+              <a
+                target="_blank"
+                href="https://github.com/JMBeresford/retrom/wiki/Updating#updating-the-server"
+              >
+                updating the server
+              </a>
+            </Button>
 
-          <Button variant="link" className="text-accent-text">
-            <a
-              target="_blank"
-              href="https://github.com/JMBeresford/retrom/wiki/Updating#updating-the-client"
-            >
-              updating the client
-            </a>
-          </Button>
+            <Button variant="link" className="text-accent-text">
+              <a
+                target="_blank"
+                href="https://github.com/JMBeresford/retrom/wiki/Updating#updating-the-client"
+              >
+                updating the client
+              </a>
+            </Button>
+          </div>
         </div>
 
         <DialogFooter>

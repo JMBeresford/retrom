@@ -42,7 +42,7 @@ export function CustomLibraryDefinitionInput<
   return (
     <Popover>
       <FormItem>
-        <PopoverTrigger asChild>
+        <PopoverTrigger asChild className="hidden sm:flex">
           <Button
             variant="secondary"
             size="icon"
@@ -56,11 +56,25 @@ export function CustomLibraryDefinitionInput<
           </Button>
         </PopoverTrigger>
 
+        <PopoverTrigger asChild className="sm:hidden">
+          <Button
+            variant="secondary"
+            className={cn(
+              "flex gap-2 w-full",
+              !field.disabled && fieldState.error && "ring-2 ring-destructive",
+            )}
+            disabled={field.disabled}
+          >
+            Configure Library Structure
+            <Settings2 className="h-[1rem] w-[1rem]" />
+          </Button>
+        </PopoverTrigger>
+
         <PopoverContent
-          className="w-auto max-w-[60ch] max-h-[80dvh] flex flex-col relative"
-          side="left"
+          className="w-dvw sm:w-auto sm:max-w-[60ch] max-h-[80dvh] flex flex-col relative"
+          // side="left"
           avoidCollisions
-          collisionPadding={4}
+          // collisionPadding={4}
         >
           <h3 className="text-lg font-extrabold">Library Structure</h3>
           <p className="text-sm text-muted-foreground mb-4">

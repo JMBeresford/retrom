@@ -101,13 +101,27 @@ export function LibrariesConfig(props: {
   const canSubmit = isDirty && isValid && status !== "pending";
   const contentDirectories = form.watch("contentDirectories");
 
+  const action = useCallback(
+    (library: (typeof contentDirectories)[number], index: number) => {
+      if (library.newly === "added") {
+        remove(index);
+      } else if (library.newly === "removed") {
+        const { newly: _, ...value } = library;
+        update(index, value);
+      } else {
+        update(index, { ...library, newly: "removed" });
+      }
+    },
+    [remove, update],
+  );
+
   return (
     <TabsContent value="contentDirectories">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hidden sm:table-row">
                 <TableHead>Path</TableHead>
                 <TableHead>Structure</TableHead>
                 <TableHead>
@@ -121,7 +135,10 @@ export function LibrariesConfig(props: {
             <TableBody>
               {contentDirectories.map((library, index) => {
                 return (
-                  <TableRow key={index} className="*:py-1">
+                  <TableRow
+                    key={index}
+                    className="*:py-1 flex flex-col sm:table-row pb-6 sm:pb-0"
+                  >
                     <TableCell>
                       <FormField
                         disabled={library.newly === "removed"}
@@ -140,7 +157,7 @@ export function LibrariesConfig(props: {
                         render={StorageTypeSelect}
                       />
                     </TableCell>
-                    <TableCell className="w-[150px]">
+                    <TableCell className="sm:w-[150px]">
                       <FormField
                         disabled={library.newly === "removed"}
                         control={form.control}
@@ -168,18 +185,9 @@ export function LibrariesConfig(props: {
                       <Button
                         type="button"
                         size="icon"
-                        onClick={() => {
-                          if (library.newly === "added") {
-                            remove(index);
-                          } else if (library.newly === "removed") {
-                            const { newly: _, ...value } = library;
-                            update(index, value);
-                          } else {
-                            update(index, { ...library, newly: "removed" });
-                          }
-                        }}
+                        onClick={() => action(library, index)}
                         variant={library.newly ? "secondary" : "destructive"}
-                        className="min-h-0 h-min w-min p-2"
+                        className="min-h-0 h-min w-min p-2 hidden sm:flex"
                       >
                         {library.newly ? (
                           <Undo className="h-[1rem] w-[1rem]" />
@@ -187,16 +195,34 @@ export function LibrariesConfig(props: {
                           <Trash className="h-[1rem] w-[1rem]" />
                         )}
                       </Button>
+
+                      <Button
+                        type="button"
+                        onClick={() => action(library, index)}
+                        variant={library.newly ? "secondary" : "destructive"}
+                        className="min-h-0 sm:hidden flex gap-2 w-full"
+                      >
+                        {library.newly ? (
+                          <>
+                            Undo <Undo className="h-[1rem] w-[1rem]" />
+                          </>
+                        ) : (
+                          <>
+                            Delete <Trash className="h-[1rem] w-[1rem]" />
+                          </>
+                        )}
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );
               })}
+
               <TableRow className="*:py-2 border-b-0">
                 <TableCell colSpan={5} className="text-end">
                   <Button
                     size="icon"
                     variant="secondary"
-                    className="min-h-0 h-min w-min p-2"
+                    className="min-h-0 h-min w-min p-2 hidden sm:flex"
                     onClick={() =>
                       append({
                         newly: "added",
@@ -209,6 +235,23 @@ export function LibrariesConfig(props: {
                   >
                     <Plus className="h-[1rem] w-[1rem]" />
                   </Button>
+
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="min-h-0 sm:hidden flex gap-2 w-full items-center"
+                    onClick={() =>
+                      append({
+                        newly: "added",
+                        path: "",
+                        storageType: 0,
+                        ignorePatterns: { patterns: [] },
+                        customLibraryDefinition: { definition: "" },
+                      })
+                    }
+                  >
+                    Add Library <Plus className="h-[1rem] w-[1rem]" />
+                  </Button>
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -216,7 +259,7 @@ export function LibrariesConfig(props: {
         </form>
       </Form>
 
-      <DialogFooter>
+      <DialogFooter className="gap-2">
         <Button
           onClick={() =>
             navigate({

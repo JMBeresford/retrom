@@ -55,10 +55,15 @@ export function Actions() {
   }, [validEmulators, validProfiles]);
 
   return (
-    <div className="flex">
+    <div
+      className={cn(
+        "flex relative",
+        "[&_*[data-radix-popper-content-wrapper]]:contents sm:[&_*[data-radix-popper-content-wrapper]]:block",
+      )}
+    >
       <div
         className={cn(
-          "w-full *:w-full rounded-bl-lg overflow-hidden border-r-2",
+          "w-full *:w-full rounded-l-lg sm:rounded-tl-none overflow-hidden border-r-2",
           installationState === InstallationStatus.INSTALLING && "bg-primary",
         )}
       >
@@ -73,13 +78,17 @@ export function Actions() {
           <Button
             size="icon"
             variant="accent"
-            className="rounded-none rounded-br-lg overflow-hidden ring-inset"
+            className="rounded-none rounded-r-lg sm:rounded-tr-none overflow-hidden ring-inset"
           >
             <EllipsisVertical />
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent>
+        <DropdownMenuContent
+          portal={false}
+          align="start"
+          className="absolute inset-x-0 top-full mt-2 sm:mt-0"
+        >
           <DropdownMenuSub>
             <DropdownMenuSubTrigger
               disabled={

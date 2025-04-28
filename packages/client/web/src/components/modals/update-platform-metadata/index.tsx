@@ -52,7 +52,7 @@ export function UpdatePlatformMetadataModal() {
         </DialogHeader>
 
         <Tabs defaultValue="igdb">
-          <TabsList>
+          <TabsList className="w-full *:w-full">
             <TabsTrigger value="igdb" disabled={!platform}>
               Search IGDB
             </TabsTrigger>

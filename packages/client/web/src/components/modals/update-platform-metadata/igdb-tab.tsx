@@ -186,7 +186,7 @@ export function IgdbTab(props: {
               )}
             />
 
-            <Button type="submit">
+            <Button type="submit" className="w-full sm:w-auto">
               <LoaderCircleIcon
                 className={cn("animate-spin absolute", !loading && "opacity-0")}
               />
@@ -205,9 +205,11 @@ export function IgdbTab(props: {
           <SelectTrigger>
             <SelectValue
               placeholder={
-                matches && matches.length < 1
-                  ? "Search for a platform"
-                  : "Select a matching platform"
+                <span className="text-muted-foreground italic">
+                  {matches && matches.length < 1
+                    ? "Search for a platform"
+                    : "Select a matching IGDB platform"}
+                </span>
               }
             />
           </SelectTrigger>
@@ -226,25 +228,21 @@ export function IgdbTab(props: {
       </div>
 
       <DialogFooter>
-        <div className="flex items-center gap-6 w-full mt-4">
-          <div className="flex gap-2 ml-auto">
-            <DialogClose asChild>
-              <Button disabled={loading} variant="secondary">
-                Cancel
-              </Button>
-            </DialogClose>
+        <DialogClose asChild>
+          <Button disabled={loading} variant="secondary">
+            Cancel
+          </Button>
+        </DialogClose>
 
-            <Button
-              onClick={handleUpdate}
-              disabled={selectedMatch === undefined || loading}
-            >
-              <LoaderCircleIcon
-                className={cn("animate-spin absolute", !loading && "opacity-0")}
-              />
-              <p className={cn(loading && "opacity-0")}>Update Metadata</p>
-            </Button>
-          </div>
-        </div>
+        <Button
+          onClick={handleUpdate}
+          disabled={selectedMatch === undefined || loading}
+        >
+          <LoaderCircleIcon
+            className={cn("animate-spin absolute", !loading && "opacity-0")}
+          />
+          <p className={cn(loading && "opacity-0")}>Update Metadata</p>
+        </Button>
       </DialogFooter>
     </>
   );

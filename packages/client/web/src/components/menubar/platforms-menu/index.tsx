@@ -1,34 +1,26 @@
-import {
-  MenubarTrigger,
-  MenubarMenu,
-  MenubarContent,
-  MenubarItem,
-} from "@/components/ui/menubar";
-import { DesktopOnly } from "@/lib/env";
 import { Link } from "@tanstack/react-router";
+import { RootMenuItem } from "..";
 
-export function PlatformsMenu() {
-  return (
-    <MenubarMenu>
-      <MenubarTrigger className="py-2 px-2 cursor-pointer h-auto">
-        Platforms
-      </MenubarTrigger>
+const matchPlatformsMenuItem = {
+  label: "Match Platforms",
+  Render: (
+    <Link search={{ matchPlatformsModal: { open: true } }}>
+      Match Platforms
+    </Link>
+  ),
+};
 
-      <MenubarContent>
-        <MenubarItem asChild>
-          <Link search={{ matchPlatformsModal: { open: true } }}>
-            Match Platforms
-          </Link>
-        </MenubarItem>
+const defaultProfilesMenuItem = {
+  label: "Default Emulator Profiles",
+  context: "desktop",
+  Render: (
+    <Link search={{ defaultProfilesModal: { open: true } }}>
+      Default Emulator Profiles
+    </Link>
+  ),
+};
 
-        <DesktopOnly>
-          <MenubarItem asChild>
-            <Link search={{ defaultProfilesModal: { open: true } }}>
-              Default Emulator Profiles
-            </Link>
-          </MenubarItem>
-        </DesktopOnly>
-      </MenubarContent>
-    </MenubarMenu>
-  );
-}
+export const platformsMenu: RootMenuItem = {
+  label: "Platforms",
+  items: [matchPlatformsMenuItem, defaultProfilesMenuItem],
+};

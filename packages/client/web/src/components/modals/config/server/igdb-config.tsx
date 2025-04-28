@@ -103,7 +103,7 @@ export function IgdbConfig(props: {
             )}
           />
 
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button
               onClick={() =>
                 void navigate({

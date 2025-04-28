@@ -48,10 +48,16 @@ function Game() {
 
   return (
     <GameDetailProvider gameId={parseInt(gameId)}>
-      <div className={cn("relative grid grid-cols-[300px_1fr] gap-8")}>
+      <div
+        className={cn("relative hidden sm:grid grid-cols-[300px_1fr] gap-8")}
+      >
         <BackgroundImage />
         <div id="left" className="flex flex-col gap-5">
-          <div className={cn("flex flex-col relative")}>
+          <div
+            className={cn(
+              "flex flex-col relative rounded-t-lg overflow-hidden",
+            )}
+          >
             <CoverImage />
             <Actions />
           </div>
@@ -82,6 +88,30 @@ function Game() {
             <SimilarGames />
           </div>
         </div>
+      </div>
+
+      <div className="flex flex-col sm:hidden px-5 gap-3 text-center bg-background">
+        <div className="relative rounded-t-lg overflow-hidden mb-4">
+          <CoverImage />
+
+          <div
+            className={cn(
+              "absolute inset-0 z-10",
+              "flex flex-col justify-end items-center",
+              "bg-gradient-to-t from-background ",
+            )}
+          >
+            <Title />
+          </div>
+        </div>
+
+        <Actions />
+
+        <Description />
+        <Links />
+        <GameFiles />
+        <Media />
+        <SimilarGames />
       </div>
 
       <UpdateMetadataModal />

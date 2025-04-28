@@ -1,10 +1,8 @@
-import { MenubarItem } from "@/components/ui/menubar";
 import { Link } from "@tanstack/react-router";
+import { MenuItem } from "..";
 
-export function SetupMenuItem() {
-  return (
-    <MenubarItem asChild>
-      <Link search={{ setupModal: { open: true } }}>Setup</Link>
-    </MenubarItem>
-  );
-}
+export const setupMenuItem: MenuItem = {
+  label: "Setup",
+  appContext: "desktop",
+  Render: <Link search={{ setupModal: { open: true } }}>Setup</Link>,
+};
