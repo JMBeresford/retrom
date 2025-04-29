@@ -29,7 +29,7 @@ export function ConfigModal() {
         }
       }}
     >
-      <DialogContent className="pl-0 py-0 overflow-hidden">
+      <DialogContent className="sm:pl-0 sm:py-0 overflow-hidden">
         {/* Allow the tabs to define their own headers, visually.
         Keep this for screen readers, accessibility etc but hide it */}
         <VisuallyHidden>
@@ -55,14 +55,14 @@ export function ConfigModal() {
           }}
           orientation="vertical"
         >
-          <div className="grid grid-cols-[min-content,1fr] w-full">
-            <div className="p-4 bg-muted mr-4">
-              <TabsList className="flex-col gap-2 h-fit w-min">
+          <div className="flex flex-col sm:grid grid-cols-[min-content,1fr] w-full">
+            <div className="pt-4 sm:p-4 sm:bg-muted sm:mr-4">
+              <TabsList className="flex sm:flex-col gap-2 h-fit w-full">
                 {Object.values(tabItems).map(({ value, name }) => (
                   <TabsTrigger
                     key={value}
                     value={value}
-                    className="text-md px-5 py-2"
+                    className="text-md px-5 py-2 w-full"
                   >
                     {name}
                   </TabsTrigger>

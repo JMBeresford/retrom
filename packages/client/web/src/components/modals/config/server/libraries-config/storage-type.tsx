@@ -1,6 +1,6 @@
 import { ControllerFieldState, ControllerRenderProps } from "react-hook-form";
 import { LibrariesSchema } from ".";
-import { FormControl, FormItem } from "@/components/ui/form";
+import { FormControl, FormItem, FormLabel } from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -22,7 +22,10 @@ export function StorageTypeSelect<
   const value = field.value;
 
   return (
-    <FormItem>
+    <FormItem className="sm:contents sm:space-y-0 w-full">
+      <FormLabel className="sm:hidden whitespace-nowrap">
+        Storage Type
+      </FormLabel>
       <Select
         disabled={field.disabled}
         value={value.toString()}
@@ -31,8 +34,8 @@ export function StorageTypeSelect<
         <FormControl>
           <SelectTrigger
             className={cn(
-              "border-transparent bg-transparent hover:bg-transparent",
-              "flex justify-between gap-2 text-muted-foreground px-0",
+              "sm:border-transparent bg-transparent hover:bg-transparent",
+              "flex justify-between gap-2 text-muted-foreground sm:px-0",
               fieldState.isDirty && "text-foreground",
             )}
           >

@@ -76,6 +76,12 @@ const modalsSearchSchema = z
       open: z.boolean(),
       id: z.number(),
     }),
+    mobileSidebar: z.object({
+      open: z.boolean(),
+    }),
+    mobileMenu: z.object({
+      open: z.boolean(),
+    }),
   })
   .partial();
 

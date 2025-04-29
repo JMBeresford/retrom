@@ -1,37 +1,27 @@
-import {
-  MenubarTrigger,
-  MenubarMenu,
-  MenubarContent,
-  MenubarItem,
-} from "@/components/ui/menubar";
-import { DesktopOnly } from "@/lib/env";
 import { Link } from "@tanstack/react-router";
+import { MenuItem, RootMenuItem } from "..";
 
-export function EmulatorsMenu() {
-  return (
-    <MenubarMenu>
-      <MenubarTrigger className="py-2 px-2 cursor-pointer h-auto">
-        Emulators
-      </MenubarTrigger>
+const manageEmulatorsMenuItem: MenuItem = {
+  label: "Manage Emulators",
+  Render: (
+    <Link to="." search={{ manageEmulatorsModal: { open: true } }}>
+      Manage Emulators
+    </Link>
+  ),
+};
 
-      <MenubarContent>
-        <MenubarItem asChild>
-          <Link to="." search={{ manageEmulatorsModal: { open: true } }}>
-            Manage Emulators
-          </Link>
-        </MenubarItem>
+const manageEmulatorProfilesMenuItem: MenuItem = {
+  label: "Manage Profiles",
+  appContext: "desktop",
+  Render: (
+    <Link to="." search={{ manageEmulatorProfilesModal: { open: true } }}>
+      Manage Profiles
+    </Link>
+  ),
+};
 
-        <DesktopOnly>
-          <MenubarItem asChild>
-            <Link
-              to="."
-              search={{ manageEmulatorProfilesModal: { open: true } }}
-            >
-              Manage Profiles
-            </Link>
-          </MenubarItem>
-        </DesktopOnly>
-      </MenubarContent>
-    </MenubarMenu>
-  );
-}
+export const emulatorsMenu: RootMenuItem = {
+  label: "Emulators",
+  appContext: "desktop",
+  items: [manageEmulatorsMenuItem, manageEmulatorProfilesMenuItem],
+};

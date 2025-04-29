@@ -31,7 +31,7 @@ export function Links() {
   }
 
   return (
-    <Card className={`col-span-4 row-span-2`}>
+    <Card className={"col-span-4 row-span-2"}>
       <CardHeader>
         <CardTitle>External Links</CardTitle>
       </CardHeader>
@@ -44,7 +44,7 @@ export function Links() {
             "after:bg-gradient-to-l after:from-background after:to-transparent z-10",
           )}
         >
-          <div className="flex gap-3 w-max pb-4 pr-8">
+          <div className="flex flex-wrap justify-center sm:flex-nowrap gap-3 sm:w-max pb-4 sm:pr-8">
             {links.map(({ link, hostname }, idx) => (
               <a
                 key={idx}

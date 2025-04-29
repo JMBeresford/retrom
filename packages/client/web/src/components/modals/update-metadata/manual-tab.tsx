@@ -166,7 +166,12 @@ export function ManualTab() {
             </div>
 
             <DialogFooter>
-              <div className="flex items-center justify-between gap-6 w-full mt-4">
+              <div
+                className={cn(
+                  "flex flex-col sm:flex-row sm:items-center",
+                  "justify-between gap-6 w-full sm:mt-4",
+                )}
+              >
                 <div className="flex items-top gap-2">
                   <Checkbox
                     id="rename-directory"
@@ -193,7 +198,7 @@ export function ManualTab() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col-reverse sm:flex-row gap-2">
                   <DialogClose asChild>
                     <Button disabled={pending} variant="secondary">
                       Cancel

@@ -47,7 +47,7 @@ export function Media() {
       <CardContent>
         <Tabs defaultValue={defaultTab}>
           {tabsShown > 1 ? (
-            <TabsList className="flex *:basis-1/3">
+            <TabsList className="flex *:w-full">
               {showImages ? (
                 <TabsTrigger value="images">Images</TabsTrigger>
               ) : null}

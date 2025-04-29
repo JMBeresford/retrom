@@ -53,6 +53,10 @@
     --ring: 263.4 70% 50.4%;
 
     --radius: 6px;
+
+    @media (max-width: 640px) {
+      --radius: 12px;
+    }
   }
 }
 

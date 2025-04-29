@@ -25,10 +25,11 @@ export function SimilarGames() {
         <CardTitle>Similar Games</CardTitle>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="grid place-items-center">
         <ScrollArea
           className={cn(
-            "after:absolute after:inset-y-0 after:right-0 after:w-[120px]",
+            "w-full",
+            "after:absolute after:inset-y-0 after:right-0 after:w-[60px] sm:after:w-[120px]",
             "after:bg-gradient-to-l after:from-background after:to-transparent z-10",
             "after:pointer-events-none after:touch-none",
           )}
@@ -45,7 +46,7 @@ export function SimilarGames() {
 
                   <div
                     className={cn(
-                      "opacity-0 hover:opacity-100 transition-opacity",
+                      "opacity-0 sm:hover:opacity-100 transition-opacity",
                       "absolute inset-0 bg-gradient-to-t from-muted",
                       "flex flex-col-reverse overflow-hidden p-2",
                       "text-pretty font-semibold",

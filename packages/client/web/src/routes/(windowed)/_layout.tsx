@@ -31,6 +31,7 @@ import { ConfirmModal } from "@/components/modals/confirm";
 import { DeletePlatformModal } from "@/components/modals/delete-platform";
 import { CleanLibraryModal } from "@/components/modals/clean-library";
 import { UpdatePlatformMetadataModal } from "@/components/modals/update-platform-metadata";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
@@ -65,29 +66,30 @@ function LayoutComponent() {
     <>
       {(!checkIsDesktop() || setupComplete) && (
         <ModalActionProvider>
-          <div className="h-screen max-h-screen w-screen max-w-screen relative flex flex-col">
+          <div className="h-[100dvh] max-h-[100dvh] w-screen max-w-[100dvw] relative flex flex-col">
             <Menubar />
             <ResizablePanelGroup
               direction="horizontal"
-              className="h-full w-full"
+              className="relative h-full w-full"
             >
+              <MobileSidebar />
+
               <ResizablePanel
+                id="desktop-sidebar"
                 defaultSize={25}
-                maxSize={40}
-                className="bg-muted"
+                maxSize={50}
+                className="bg-muted hidden sm:flex"
               >
-                <div className="w-full h-full @container/sidebar">
-                  <FilterAndSortContext>
-                    <SideBar />
-                  </FilterAndSortContext>
-                </div>
+                <FilterAndSortContext>
+                  <SideBar />
+                </FilterAndSortContext>
               </ResizablePanel>
 
-              <ResizableHandle />
+              <ResizableHandle className="hidden sm:flex" />
 
-              <ResizablePanel defaultSize={75}>
+              <ResizablePanel id="main-content" defaultSize={75}>
                 <ScrollArea className="h-full max-h-full w-full max-w-full">
-                  <main className="p-5 pb-16">
+                  <main className="sm:px-5 pt-5 pb-16">
                     <Outlet />
                   </main>
                 </ScrollArea>
@@ -115,5 +117,24 @@ function LayoutComponent() {
 
       <SetupModal />
     </>
+  );
+}
+
+function MobileSidebar() {
+  const { mobileSidebar } = Route.useSearch();
+
+  return (
+    <div
+      className={cn(
+        "sm:hidden absolute inset-0 border-r bg-background z-40",
+        "slide-in-from-left slide-out-to-left",
+        "transition-all duration-300 ease-in-out fill-mode-both",
+        mobileSidebar?.open ? "animate-in" : "animate-out",
+      )}
+    >
+      <FilterAndSortContext>
+        <SideBar />
+      </FilterAndSortContext>
+    </div>
   );
 }

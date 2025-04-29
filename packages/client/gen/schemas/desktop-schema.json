@@ -2451,6 +2451,12 @@
           "markdownDescription": "Enables the set_app_theme command without any pre-configured scope."
         },
         {
+          "description": "Enables the set_dock_visibility command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:app:allow-set-dock-visibility",
+          "markdownDescription": "Enables the set_dock_visibility command without any pre-configured scope."
+        },
+        {
           "description": "Enables the tauri_version command without any pre-configured scope.",
           "type": "string",
           "const": "core:app:allow-tauri-version",
@@ -2509,6 +2515,12 @@
           "type": "string",
           "const": "core:app:deny-set-app-theme",
           "markdownDescription": "Denies the set_app_theme command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_dock_visibility command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:app:deny-set-dock-visibility",
+          "markdownDescription": "Denies the set_dock_visibility command without any pre-configured scope."
         },
         {
           "description": "Denies the tauri_version command without any pre-configured scope.",

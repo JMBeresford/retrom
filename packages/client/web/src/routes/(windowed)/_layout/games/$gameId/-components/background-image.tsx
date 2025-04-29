@@ -10,7 +10,7 @@ export function BackgroundImage() {
   return (
     <div
       className={cn(
-        "col-span-2 fixed top-0 left-0 right-0 h-[100dvh]  z-[-1] overflow-hidden bg-secondary",
+        "col-span-2 fixed top-0 left-0 right-0 h-[100dvh] z-[-1] overflow-hidden bg-secondary",
       )}
     >
       {bgUrl && (

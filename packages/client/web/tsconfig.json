@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "composite": false,
+    "composite": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
@@ -24,5 +24,6 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["./src/**/*.ts", "./src/**/*.tsx"]
+  "include": ["./src/**/*.ts", "./src/**/*.tsx"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -272,7 +272,7 @@ function ServerConnectionForm() {
           </FormMessage>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <DialogClose asChild>
             <Button variant="secondary">Close</Button>
           </DialogClose>

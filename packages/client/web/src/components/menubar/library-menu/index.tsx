@@ -1,50 +1,50 @@
-import {
-  MenubarTrigger,
-  MenubarMenu,
-  MenubarContent,
-  MenubarSeparator,
-  MenubarItem,
-} from "@/components/ui/menubar";
 import { Link } from "@tanstack/react-router";
+import { MenuItem, RootMenuItem } from "..";
 
-export function LibraryMenu() {
-  return (
-    <MenubarMenu>
-      <MenubarTrigger className="py-2 px-2 cursor-pointer h-auto">
-        Library
-      </MenubarTrigger>
+export const updateLibraryMenuItem: MenuItem = {
+  label: "Update Library",
+  Render: (
+    <Link to="." search={{ updateLibraryModal: { open: true } }}>
+      Update Library
+    </Link>
+  ),
+};
 
-      <MenubarContent>
-        <MenubarItem asChild>
-          <Link to="." search={{ updateLibraryModal: { open: true } }}>
-            Update Library
-          </Link>
-        </MenubarItem>
+export const downloadMetadataMenuItem: MenuItem = {
+  label: "Download Metadata",
+  Render: (
+    <Link to="." search={{ downloadMetadataModal: { open: true } }}>
+      Download Metadata
+    </Link>
+  ),
+};
 
-        <MenubarItem asChild>
-          <Link to="." search={{ downloadMetadataModal: { open: true } }}>
-            Download Metadata
-          </Link>
-        </MenubarItem>
+export const cleanLibraryMenuItem: MenuItem = {
+  label: "Clean Library",
+  Render: (
+    <Link to="." search={{ cleanLibraryModal: { open: true } }}>
+      Clean Library
+    </Link>
+  ),
+};
 
-        <MenubarItem asChild>
-          <Link to="." search={{ cleanLibraryModal: { open: true } }}>
-            Clean Library
-          </Link>
-        </MenubarItem>
+export const deleteLibraryMenuItem: MenuItem = {
+  label: "Delete Library",
+  Render: (
+    <Link
+      to="."
+      className="text-destructive-text"
+      search={{ deleteLibraryModal: { open: true } }}
+    >
+      Delete Library
+    </Link>
+  ),
+};
 
-        <MenubarSeparator />
-
-        <MenubarItem asChild>
-          <Link
-            className="text-destructive-text"
-            to="."
-            search={{ deleteLibraryModal: { open: true } }}
-          >
-            Delete Library
-          </Link>
-        </MenubarItem>
-      </MenubarContent>
-    </MenubarMenu>
-  );
-}
+export const libraryMenu: RootMenuItem = {
+  label: "Library",
+  items: [
+    [updateLibraryMenuItem, downloadMetadataMenuItem, cleanLibraryMenuItem],
+    [deleteLibraryMenuItem],
+  ],
+};

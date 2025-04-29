@@ -116,7 +116,7 @@ export function ManualTab(props: {
             </div>
 
             <DialogFooter>
-              <div className="flex items-center gap-6 w-full mt-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-6 w-full sm:mt-4">
                 <FormField
                   name="renameDirectory"
                   control={form.control}
@@ -147,7 +147,7 @@ export function ManualTab(props: {
                   )}
                 />
 
-                <div className="flex gap-2 ml-auto">
+                <div className="flex flex-col-reverse sm:flex-row gap-2 sm:ml-auto">
                   <DialogClose asChild>
                     <Button disabled={pending} variant="secondary">
                       Cancel

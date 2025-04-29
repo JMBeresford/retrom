@@ -3,11 +3,11 @@ import turbo from "eslint-plugin-turbo";
 import tseslint from "typescript-eslint";
 
 /**
- * A shared ESLint configuration for the repository.
+ * Shared ESLint configuration for TypeScript projects.
  *
- * @type {import("eslint").Linter.Config[]}
- * */
-export const config = [
+ * @type {import("typescript-eslint").ConfigArray}
+ */
+export const config = tseslint.config(
   js.configs.recommended,
   turbo.configs["flat/recommended"],
   ...tseslint.configs.recommendedTypeChecked,
@@ -44,4 +44,4 @@ export const config = [
     },
   },
   { ignores: ["dist/**"] },
-];
+);

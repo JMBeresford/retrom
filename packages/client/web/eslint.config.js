@@ -1,14 +1,19 @@
-import { config } from "@retrom/configs/eslint/web.config.js";
+import { config as base } from "@retrom/configs/eslint/web.config.js";
+import tseslint from "typescript-eslint";
 
 /** @type {import("eslint").Linter.Config} */
-export default [
-  ...config,
+const config = tseslint.config(
+  base,
   {
+    ignores: ["eslint.config.js"],
     languageOptions: {
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,
-        project: ["tsconfig.json", "tsconfig.node.json"]
+        projectService: true
       }
     }
-  }
-];
+  },
+  { ignores: ["eslint.config.js"] }
+);
+
+export default config;

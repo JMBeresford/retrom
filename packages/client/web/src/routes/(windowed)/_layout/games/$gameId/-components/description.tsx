@@ -9,7 +9,7 @@ export function Description() {
   const description = useRehypeRemark(gameMetadata?.description);
 
   return (
-    <ScrollArea className="flex flex-col max-h-[250px] my-2">
+    <ScrollArea className="flex flex-col max-h-[150px] sm:max-h-[250px] my-2">
       <Markdown className={cn("text-foreground/90")}>
         {description || "No description available."}
       </Markdown>

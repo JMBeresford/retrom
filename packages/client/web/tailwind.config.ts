@@ -64,8 +64,8 @@ const config = {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) * 0.66)",
+        sm: "calc(var(--radius) * 0.33)",
       },
       keyframes: {
         "accordion-down": {

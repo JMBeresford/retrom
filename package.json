@@ -3,14 +3,18 @@
   "type": "module",
   "devDependencies": {
     "@tauri-apps/cli": "^2.4.1",
-    "@turbo/gen": "^2.4.4",
-    "eslint": "^9.23.0",
+    "@turbo/gen": "^2.5.0",
+    "eslint": "^9.25.1",
     "prettier": "^3.5.3",
+    "tslib": "^2.8.1",
     "turbo": "^2.5.0",
     "typescript": "^5.8.3"
   },
   "overrides": {
-    "typescript": "$typescript"
+    "typescript": "$typescript",
+    "tslib": "$tslib",
+    "prettier": "$prettier",
+    "eslint": "$eslint"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.2.0"

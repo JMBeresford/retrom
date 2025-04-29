@@ -40,7 +40,7 @@ export function UpdateMetadataModal() {
         </DialogHeader>
 
         <Tabs defaultValue={game.thirdParty ? "manual" : "igdb"}>
-          <TabsList>
+          <TabsList className="w-full *:w-full">
             <TabsTrigger disabled={game.thirdParty} value="igdb">
               Search IGDB
             </TabsTrigger>

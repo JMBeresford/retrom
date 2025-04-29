@@ -236,9 +236,9 @@ export function IgdbTab() {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Restrict to currently matched platform
+                    <div className="grid gap-1">
+                      <FormLabel className="font-normal text-foreground text-base leading-none">
+                        Restrict to currently matched IGDB platform
                       </FormLabel>
                       <FormDescription className="max-w-[50ch]">
                         This will only search the games for{" "}
@@ -252,7 +252,11 @@ export function IgdbTab() {
               <></>
             )}
 
-            <Button type="submit">
+            <Button
+              type="submit"
+              className="w-full sm:w-auto"
+              disabled={loading}
+            >
               <LoaderCircleIcon
                 className={cn("animate-spin absolute", !loading && "opacity-0")}
               />
@@ -271,9 +275,11 @@ export function IgdbTab() {
           <SelectTrigger>
             <SelectValue
               placeholder={
-                matches && matches.length < 1
-                  ? "Search for a game"
-                  : "Select a matching game"
+                <span className="text-muted-foreground italic">
+                  {matches && matches.length < 1
+                    ? "Search for a game..."
+                    : "Select a matching IGDB game..."}
+                </span>
               }
             />
           </SelectTrigger>
@@ -292,7 +298,12 @@ export function IgdbTab() {
       </div>
 
       <DialogFooter>
-        <div className="flex items-center justify-between gap-6 w-full mt-4">
+        <div
+          className={cn(
+            "flex flex-col sm:flex-row sm:items-center sm:justify-between",
+            "gap-6 w-full mt-4",
+          )}
+        >
           <div className="flex items-top gap-2">
             <Checkbox
               id="rename-directory"
@@ -300,7 +311,7 @@ export function IgdbTab() {
               onCheckedChange={(event) => setRenameDirectory(!!event)}
             />
 
-            <div className="grid gap-1 5 leading-none">
+            <div className="grid gap-1 leading-none">
               <label htmlFor="rename-directory">Rename Directory</label>
 
               <p className="text-sm text-muted-foreground">
@@ -309,7 +320,7 @@ export function IgdbTab() {
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col-reverse sm:flex-row gap-2">
             <DialogClose asChild>
               <Button disabled={loading} variant="secondary">
                 Cancel

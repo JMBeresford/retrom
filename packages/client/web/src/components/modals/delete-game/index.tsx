@@ -68,8 +68,12 @@ export function DeleteGameModal() {
 
         <p className="pb-2">
           You can either delete the entry from the database or delete the game
-          from the disk. Deleting only the entry will leave your file system as
-          is, but Retrom will ignore the game&apos;s directory moving forward.
+          from the disk.
+          <br />
+          <br />
+          Deleting only the entry will leave your file system as is, but Retrom
+          will re-create the entry on the next library scan unless you also
+          blacklist it.
         </p>
 
         <div className="flex flex-col gap-4">
@@ -114,25 +118,20 @@ export function DeleteGameModal() {
         </div>
 
         <DialogFooter>
-          <div className="flex gap-2">
-            <DialogClose asChild>
-              <Button>Cancel</Button>
-            </DialogClose>
+          <DialogClose asChild>
+            <Button>Cancel</Button>
+          </DialogClose>
 
-            <Button
-              className="relative"
-              variant="destructive"
-              onClick={handleDelete}
-            >
-              <LoaderCircleIcon
-                className={cn(
-                  "animate-spin absolute",
-                  !isPending && "opacity-0",
-                )}
-              />
-              <p className={cn(isPending && "opacity-0")}>Delete</p>
-            </Button>
-          </div>
+          <Button
+            className="relative"
+            variant="destructive"
+            onClick={handleDelete}
+          >
+            <LoaderCircleIcon
+              className={cn("animate-spin absolute", !isPending && "opacity-0")}
+            />
+            <p className={cn(isPending && "opacity-0")}>Delete</p>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

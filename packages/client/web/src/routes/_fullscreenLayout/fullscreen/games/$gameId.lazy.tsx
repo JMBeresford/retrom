@@ -7,7 +7,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn, getFileStub } from "@/lib/utils";
 import { GameDetailProvider, useGameDetail } from "@/providers/game-details";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  CatchBoundary,
+  createLazyFileRoute,
+  useNavigate,
+} from "@tanstack/react-router";
 import { Background } from "./-components/background";
 import { Description } from "./-components/description";
 import { ExtraInfo } from "./-components/extra-info";
@@ -58,6 +62,7 @@ function Inner() {
   const navigate = useNavigate();
 
   const name = gameMetadata?.name || getFileStub(game.path);
+  const url = gameMetadata?.backgroundUrl || gameMetadata?.coverUrl;
 
   return (
     <HotkeyLayer
@@ -85,10 +90,20 @@ function Inner() {
               )}
             >
               <div className="relative h-[75dvh] row-start-1 row-end-3 -z-[1] overflow-hidden">
-                <Scene>
-                  {gameMetadata && <Background metadata={gameMetadata} />}
-                  <Name name={name} />
-                </Scene>
+                <CatchBoundary
+                  getResetKey={() => "resetBg"}
+                  onCatch={(error) => console.error("MAGOO", error)}
+                  errorComponent={() => (
+                    <div className="absolute inset-0 grid place-items-center">
+                      <img src={url} className=""></img>
+                    </div>
+                  )}
+                >
+                  <Scene>
+                    {gameMetadata && <Background metadata={gameMetadata} />}
+                    <Name name={name} />
+                  </Scene>
+                </CatchBoundary>
 
                 <div className="absolute inset-0 bg-gradient-to-t from-background to-20% to-background/0" />
               </div>
