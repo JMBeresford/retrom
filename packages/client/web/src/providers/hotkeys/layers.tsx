@@ -19,6 +19,7 @@ import {
 } from ".";
 import { GAMEPAD_BUTTON_EVENT, GamepadButtonEvent } from "../gamepad/event";
 import { useInputDeviceContext } from "../input-device";
+import { cn } from "@/lib/utils";
 
 declare global {
   export interface HotkeyZones {
@@ -64,9 +65,9 @@ type HotkeyLayerOpts = {
   allowBubbling?: "always" | "never" | "on-misses";
 };
 
-export type HotkeyLayerProps = PropsWithChildren<
-  HotkeyLayerOpts & Partial<HotkeyLayerState>
->;
+export type HotkeyLayerProps = JSX.IntrinsicElements["span"] &
+  HotkeyLayerOpts &
+  Partial<HotkeyLayerState>;
 
 export function FocusedHotkeyLayerProvider(props: PropsWithChildren) {
   const [focusedHotkeyLayer, setFocusedHotkeyLayer] = useState<
@@ -132,6 +133,8 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
     zones: _zones,
     handlers = {},
     allowBubbling = "on-misses",
+    className,
+    ...rest
   } = props;
 
   const ref = useRef<HTMLSpanElement>(null!);
@@ -272,7 +275,7 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
         ref={ref}
         id={id}
         onKeyDown={onKeyDown}
-        className="contents"
+        className={cn("contents", className)}
         onFocus={(e) => {
           if (layerFocused(layer)) {
             e.stopPropagation();
@@ -283,6 +286,7 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
             e.stopPropagation();
           }
         }}
+        {...rest}
       >
         {children}
       </span>

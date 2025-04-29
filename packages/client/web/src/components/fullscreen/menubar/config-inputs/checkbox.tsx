@@ -9,7 +9,7 @@ import {
   useId,
   useImperativeHandle,
 } from "react";
-import { useFocusable } from "../../focus-container";
+import { FocusContainer, useFocusable } from "../../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 
 const ConfigCheckbox = forwardRef<
@@ -19,7 +19,7 @@ const ConfigCheckbox = forwardRef<
   const genId = useId();
   const id = `${props.id ?? genId}-checkbox`;
 
-  const { ref } = useFocusable<HTMLButtonElement>({
+  const { ref, focusSelf } = useFocusable<HTMLButtonElement>({
     focusKey: id,
   });
 
@@ -27,7 +27,8 @@ const ConfigCheckbox = forwardRef<
   const { className, label, children, ...rest } = props;
 
   return (
-    <div
+    <FocusContainer
+      opts={{ focusKey: `${id}-container`, onFocus: () => focusSelf() }}
       className={cn(
         "relative flex gap-2 py-2 px-4 bg-transparent transition-colors",
         "before:absolute before:inset-y-0 before:left-0 before:w-0 before:bg-secondary before:transition-all",
@@ -37,6 +38,7 @@ const ConfigCheckbox = forwardRef<
     >
       <HotkeyLayer
         id={id}
+        className="block"
         handlers={{
           ACCEPT: { handler: () => ref.current?.click(), label: "Toggle" },
         }}
@@ -61,7 +63,7 @@ const ConfigCheckbox = forwardRef<
           <span className="text-sm text-muted-foreground">{children}</span>
         )}
       </div>
-    </div>
+    </FocusContainer>
   );
 });
 

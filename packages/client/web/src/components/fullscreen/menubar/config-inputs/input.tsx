@@ -88,6 +88,10 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
                   handler: () => wrapperFocusable.focusSelf(),
                   label: "Accept",
                 },
+                BACK: {
+                  handler: () => wrapperFocusable.focusSelf(),
+                  label: "Back",
+                },
                 UP: {
                   handler: (event) => {
                     if (node && focusable.focused && onChange) {

@@ -115,7 +115,7 @@ const ConfigSelect = forwardRef<
 
         <FocusContext.Provider value={contentFocus.focusKey}>
           <div ref={contentFocus.ref}>
-            <SelectContent>
+            <SelectContent className="z-[110]">
               <HotkeyLayer
                 id={`${id}-content`}
                 handlers={{

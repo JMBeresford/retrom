@@ -107,13 +107,14 @@ export const Overlay = memo(function Overlay() {
             resume();
           } else {
             pause();
+            emulatorJS.elements.parent.focus();
           }
 
           return { ...prev, overlay: open };
         },
       }).catch(console.error);
     },
-    [navigate],
+    [navigate, emulatorJS],
   );
 
   return (
