@@ -22,6 +22,5 @@ const manageEmulatorProfilesMenuItem: MenuItem = {
 
 export const emulatorsMenu: RootMenuItem = {
   label: "Emulators",
-  appContext: "desktop",
   items: [manageEmulatorsMenuItem, manageEmulatorProfilesMenuItem],
 };
