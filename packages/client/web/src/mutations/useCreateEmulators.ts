@@ -27,7 +27,9 @@ export function useCreateEmulators() {
       });
       return queryClient.invalidateQueries({
         predicate: (query) =>
-          ["emulators", "emulator"].some((v) => query.queryKey.includes(v)),
+          ["emulators", "emulator", "emulator-profiles"].some((v) =>
+            query.queryKey.includes(v),
+          ),
       });
     },
   });
