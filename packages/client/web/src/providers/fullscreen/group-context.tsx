@@ -45,16 +45,23 @@ export function GroupContextProvider(props: PropsWithChildren) {
   const { data: games } = useGames({
     request: { withMetadata: true },
     selectFn: (data) =>
-      data.games.map((game) => {
-        const metadata = data.metadata.find(
-          (metadata) => metadata.gameId === game.id,
-        );
+      data.games
+        .map((game) => {
+          const metadata = data.metadata.find(
+            (metadata) => metadata.gameId === game.id,
+          );
 
-        return {
-          ...game,
-          metadata,
-        };
-      }),
+          return {
+            ...game,
+            metadata,
+          };
+        })
+        .sort((a, b) => {
+          const aName = a.metadata?.name ?? getFileStub(a.path);
+          const bName = b.metadata?.name ?? getFileStub(b.path);
+
+          return aName.localeCompare(bName);
+        }),
   });
 
   const allGames: Group = useMemo(

@@ -3,16 +3,14 @@ import { InterfaceConfig_GameListEntryImage } from "@retrom/codegen/retrom/clien
 import { cn, getFileStub } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { FocusContainer, useFocusable } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { useGroupContext } from "@/providers/fullscreen/group-context";
 
 const { BACKGROUND, COVER } = InterfaceConfig_GameListEntryImage;
 
 export function GridGameList(props: { games?: GameWithMetadata[] }) {
   const { games } = props;
-  const { activeGroup } = useGroupContext();
   const { columns, gap } = useConfig(
     (s) => s.config?.interface?.fullscreenConfig?.gridList,
   ) ?? { columns: 4, gap: 20 };
@@ -32,10 +30,15 @@ export function GridGameList(props: { games?: GameWithMetadata[] }) {
   return (
     <FocusContainer
       initialFocus
-      opts={{ focusKey: "game-list", forceFocus: true }}
+      opts={{
+        focusKey: "game-list",
+        forceFocus: true,
+        autoRestoreFocus: false,
+        saveLastFocusedChild: false,
+      }}
       style={{ "--game-cols": columns, "--game-gap": `${gap}px` }}
       className={cn(
-        "w-[70%] mx-auto py-[30dvh]",
+        "w-[95%] mx-auto py-[30dvh]",
         "grid gap-[var(--game-gap)] grid-cols-[repeat(var(--game-cols),minmax(0,1fr))]",
       )}
     >
@@ -47,10 +50,7 @@ export function GridGameList(props: { games?: GameWithMetadata[] }) {
           }}
           className="animate-in fade-in fill-mode-both duration-500"
         >
-          <GameListItem
-            game={game}
-            id={`game-list-${activeGroup?.id}-${idx}`}
-          />
+          <GameListItem game={game} id={`game-list-${game.id}`} />
         </div>
       ))}
     </FocusContainer>
@@ -60,7 +60,7 @@ export function GridGameList(props: { games?: GameWithMetadata[] }) {
 function GameListItem(props: { game: GameWithMetadata; id: string }) {
   const { game, id } = props;
   const navigate = useNavigate();
-  const { ref, focusSelf } = useFocusable<HTMLDivElement>({
+  const { ref } = useFocusable<HTMLDivElement>({
     focusKey: id,
     onFocus: ({ node }) => {
       node?.focus({ preventScroll: true });
@@ -76,17 +76,12 @@ function GameListItem(props: { game: GameWithMetadata; id: string }) {
     (s) => s.config?.interface?.fullscreenConfig?.gridList,
   ) ?? { imageType: COVER };
 
-  useEffect(() => {
-    if (id.endsWith("-0")) focusSelf();
-  }, [focusSelf, id]);
-
   return (
     <div
       className={cn(
         "group scale-95 focus-within:scale-100 hover:scale-100 transition-all",
         "shadow-lg shadow-background relative cursor-pointer",
         "ring-ring focus-within:ring-4 rounded h-full w-full",
-        // focused && "ring-4 scale-100",
       )}
     >
       <HotkeyLayer
@@ -96,7 +91,7 @@ function GameListItem(props: { game: GameWithMetadata; id: string }) {
           tabIndex={-1}
           id={id}
           ref={ref}
-          className="border-none outline-none"
+          className={cn("border-none outline-none")}
           onClick={() =>
             void navigate({
               to: "/fullscreen/games/$gameId",
