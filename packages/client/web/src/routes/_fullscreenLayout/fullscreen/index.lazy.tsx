@@ -5,27 +5,25 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Scrollbar } from "@radix-ui/react-scroll-area";
 import { GroupMenu } from "@/components/fullscreen/group-menu";
 import { ActionBar } from "@/components/fullscreen/action-bar";
-import { Fragment } from "react/jsx-runtime";
 import { Background, Scene } from "@/components/fullscreen/scene";
 import {
   FocusContainer,
   useFocusable,
 } from "@/components/fullscreen/focus-container";
-import { cn, getFileStub } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
+import { useMemo } from "react";
 
 export const Route = createLazyFileRoute("/_fullscreenLayout/fullscreen/")({
   component: FullscreenComponent,
 });
 
 function FullscreenComponent() {
-  const { activeGroup, allGroups } = useGroupContext();
-
   return (
     <div className="h-full grid grid-flow-row grid-rows-[1fr_auto]">
-      <div className="relative flex w-full overflow-hidden">
-        <CharList />
+      <div className="relative flex gap-4 w-full overflow-hidden">
+        <PartitionList />
         <div className="absolute inset-0 z-[-1]">
           <CatchBoundary
             getResetKey={() => "resetScene"}
@@ -41,16 +39,8 @@ function FullscreenComponent() {
             </Scene>
           </CatchBoundary>
         </div>
-        <ScrollArea className="max-h-full w-full">
-          <div className="relative">
-            {allGroups.map((group) =>
-              activeGroup?.id === group.id ? (
-                <GridGameList key={group.id} games={group.games} />
-              ) : (
-                <Fragment key={group.id} />
-              ),
-            )}
-          </div>
+        <ScrollArea className="max-h-full grow">
+          <GridGameList />
 
           <Scrollbar orientation="vertical" className="z-[100]" />
         </ScrollArea>
@@ -63,76 +53,49 @@ function FullscreenComponent() {
   );
 }
 
-const chars = [
-  "A",
-  "B",
-  "C",
-  "D",
-  "E",
-  "F",
-  "G",
-  "H",
-  "I",
-  "J",
-  "K",
-  "L",
-  "M",
-  "N",
-  "O",
-  "P",
-  "Q",
-  "R",
-  "S",
-  "T",
-  "U",
-  "V",
-  "W",
-  "X",
-  "Y",
-  "Z",
-];
+function PartitionList() {
+  const { activeGroup, allGroups } = useGroupContext();
 
-function CharList() {
-  const { activeGroup } = useGroupContext();
+  return allGroups.map((group) =>
+    group.id === activeGroup?.id ? (
+      <ScrollArea className={cn("max-h-full flex w-fit flex-col pr-2")}>
+        <FocusContainer
+          opts={{
+            focusKey: `group-${group.id}-partition-list`,
+          }}
+          className="flex flex-col gap-3 py-10 px-2 w-full"
+        >
+          {activeGroup?.partitionedGames?.map(([key], idx) => (
+            <span
+              key={key}
+              style={{ animationDelay: `${idx * 50}ms` }}
+              className="animate-in ease-out fade-in fill-mode-both"
+            >
+              <PartitionItem partitionKey={key} />
+            </span>
+          ))}
+        </FocusContainer>
 
-  return (
-    <ScrollArea
-      className={cn(
-        "max-h-full opacity-100 transition-opacity pointer-events-auto touch-auto",
-        !activeGroup?.alphabeticallySorted &&
-          "opacity-0 pointer-events-none touch-none",
-      )}
-    >
-      <FocusContainer
-        opts={{
-          focusKey: "char-list",
-          focusable: !!activeGroup?.alphabeticallySorted,
-        }}
-        className="flex flex-col gap-2 py-10 px-2"
-      >
-        {chars.map((char) => (
-          <CharItem key={char} char={char} />
-        ))}
-      </FocusContainer>
-
-      <Scrollbar orientation="vertical" className="opacity-0" />
-    </ScrollArea>
+        <Scrollbar orientation="vertical" className="opacity-0" />
+      </ScrollArea>
+    ) : null,
   );
 }
 
-function CharItem(props: { char: string }) {
-  const { char } = props;
+function PartitionItem(props: { partitionKey: string }) {
   const { activeGroup } = useGroupContext();
+  const { partitionKey } = props;
+  const games = useMemo(() => {
+    const group = activeGroup?.partitionedGames?.find(
+      ([k]) => k === partitionKey,
+    );
 
-  const scrollToId = activeGroup?.games?.find((game) => {
-    const name = game.metadata?.name ?? getFileStub(game.path);
-
-    return name ? name[0].toLowerCase() === char.toLowerCase() : false;
-  })?.id;
+    return group ? group[1] : [];
+  }, [activeGroup?.partitionedGames, partitionKey]);
 
   const { ref } = useFocusable<HTMLButtonElement>({
-    focusKey: `char-list-${char}`,
-    focusable: scrollToId !== undefined,
+    focusKey: `char-list-${activeGroup?.id}-${partitionKey}`,
+    focusable: games.length > 0,
 
     onFocus: ({ node }) => {
       node.focus();
@@ -151,22 +114,21 @@ function CharItem(props: { char: string }) {
       <Button
         ref={ref}
         variant="inline"
-        size="icon"
-        disabled={scrollToId === undefined}
+        disabled={!games.length}
         onClick={() => {
           document
-            .getElementById(`game-list-${scrollToId}`)
-            ?.scrollIntoView({ block: "center" });
+            .getElementById(`game-list-header-${partitionKey}`)
+            ?.scrollIntoView({ block: "start" });
         }}
         className={cn(
-          "w-fit h-fit aspect-square flex items-center justify-center",
+          "w-full h-min flex items-center justify-center",
           "text-foreground font-bold opacity-30",
-          "transition-all ease-in-out duration-200 p-3",
+          "transition-all ease-in-out duration-200 p-2.5",
           "focus-hover:opacity-100 focus-hover:bg-foreground/10",
-          "disabled:opacity-15",
+          "disabled:opacity-15 leading-none",
         )}
       >
-        {char}
+        {partitionKey}
       </Button>
     </HotkeyLayer>
   );

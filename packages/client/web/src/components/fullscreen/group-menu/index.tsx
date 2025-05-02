@@ -1,10 +1,6 @@
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import {
-  Link,
-  useElementScrollRestoration,
-  useNavigate,
-} from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Group, useGroupContext } from "@/providers/fullscreen/group-context";
 import { useEffect, useMemo, useRef } from "react";
 import { HotkeyButton } from "../hotkey-button";
@@ -17,14 +13,11 @@ declare global {
   }
 }
 
-const scrollRestorationId = "groupMenu";
-
 export function GroupMenu(
   props: Omit<JSX.IntrinsicElements["div"], "children">,
 ) {
   const { previousGroup, nextGroup, allGroups } = useGroupContext();
   const navigate = useNavigate();
-  useElementScrollRestoration({ id: scrollRestorationId });
 
   const handlers = useMemo(
     () =>
@@ -70,9 +63,8 @@ export function GroupMenu(
           </div>
 
           <ScrollArea
-            scrollRestorationId={scrollRestorationId}
             className={cn(
-              "relative w-full flex-grow",
+              "relative w-full",
               "before:absolute before:inset-y-0 before:left-0 before:w-1/5 before:z-10",
               "after:absolute after:inset-y-0 after:right-0 after:w-1/5",
               "before:bg-gradient-to-l before:from-transparent before:to-background",
@@ -83,7 +75,7 @@ export function GroupMenu(
           >
             <div
               className={cn(
-                "whitespace-nowrap w-max px-[100%]",
+                "whitespace-nowrap w-max px-[30dvw]",
                 "grid grid-flow-col place-items-center gap-4",
               )}
             >
@@ -121,12 +113,11 @@ function GroupEntry(props: { group: Group }) {
 
   useEffect(() => {
     if (active) {
-      setTimeout(() => {
-        ref.current?.scrollIntoView({
-          behavior: "smooth",
-          inline: "center",
-        });
-      }, 200);
+      ref.current?.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
     }
   }, [active, group]);
 
@@ -134,13 +125,17 @@ function GroupEntry(props: { group: Group }) {
     <Link
       ref={ref}
       className={cn(
-        "text-2xl font-bold px-4 transition-all uppercase",
+        "text-2xl font-medium px-4 transition-opacity uppercase",
+        "flex items-center gap-2",
         "opacity-30 hover:opacity-75",
         active && "opacity-100 hover:opacity-100",
       )}
       search={{ activeGroupId: group.id }}
     >
       {group.name}
+      <span className="text-sm font-light text-muted-foreground">
+        ({group.allGames.length})
+      </span>
     </Link>
   );
 }

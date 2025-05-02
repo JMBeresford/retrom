@@ -6,11 +6,14 @@ import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { FocusContainer, useFocusable } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
+import { useGroupContext } from "@/providers/fullscreen/group-context";
+import { Separator } from "@/components/ui/separator";
 
 const { BACKGROUND, COVER } = InterfaceConfig_GameListEntryImage;
 
-export function GridGameList(props: { games?: GameWithMetadata[] }) {
-  const { games } = props;
+export function GridGameList() {
+  const { activeGroup, allGroups } = useGroupContext();
+
   const { columns, gap } = useConfig(
     (s) => s.config?.interface?.fullscreenConfig?.gridList,
   ) ?? { columns: 4, gap: 20 };
@@ -18,42 +21,90 @@ export function GridGameList(props: { games?: GameWithMetadata[] }) {
   const getDelay = useCallback(
     (idx: number) => {
       const col = idx % columns;
-      const row = Math.floor(idx / columns);
 
-      const distFromFirst = 1 + Math.sqrt(col * col + row * row);
-
-      return distFromFirst * 150;
+      return col * 150;
     },
     [columns],
   );
 
-  return (
-    <FocusContainer
-      initialFocus
-      opts={{
-        focusKey: "game-list",
-        forceFocus: true,
-        autoRestoreFocus: false,
-        saveLastFocusedChild: false,
-      }}
-      style={{ "--game-cols": columns, "--game-gap": `${gap}px` }}
-      className={cn(
-        "w-[95%] mx-auto py-[30dvh]",
-        "grid gap-[var(--game-gap)] grid-cols-[repeat(var(--game-cols),minmax(0,1fr))]",
-      )}
-    >
-      {games?.map((game, idx) => (
-        <div
-          key={game.id}
-          style={{
-            animationDelay: `${getDelay(idx)}ms`,
-          }}
-          className="animate-in fade-in fill-mode-both duration-500"
-        >
-          <GameListItem game={game} id={`game-list-${game.id}`} />
-        </div>
-      ))}
-    </FocusContainer>
+  return allGroups.map((group) =>
+    group.id === activeGroup?.id ? (
+      <FocusContainer
+        initialFocus
+        opts={{
+          focusKey: `game-list-${group.id}`,
+          saveLastFocusedChild: false,
+        }}
+        style={{ "--game-cols": columns, "--game-gap": `${gap}px` }}
+        className={cn("flex flex-col gap-4 w-full mx-auto py-[20dvh] px-4")}
+      >
+        {group.allGames.length === 0 && (
+          <div className="flex flex-col gap-4 items-center justify-center">
+            <h2 className="text-foreground/80 font-black text-2xl">
+              No games found 😔
+            </h2>
+            <p className="text-foreground/50">
+              Please add some games to your library.
+            </p>
+          </div>
+        )}
+        {activeGroup?.partitionedGames
+          ?.filter(([_, games]) => !!games.length)
+          .map(([key, games]) => (
+            <FocusContainer
+              opts={{
+                focusKey: `game-list-${activeGroup.id}-${key}-container`,
+                focusable: !!games.length,
+                saveLastFocusedChild: false,
+              }}
+              key={key}
+              className={cn(!games.length ? "hidden" : "block")}
+            >
+              <div
+                className={cn(
+                  "grid gap-4 place-items-center mb-4 px-4",
+                  "grid-cols-[1fr,auto,1fr]",
+                )}
+              >
+                <Separator className="bg-foreground/30" />
+
+                <h3
+                  id={`game-list-header-${key}`}
+                  className="uppercase font-black text-xl text-foreground/80 scroll-mt-16"
+                >
+                  {key}
+                </h3>
+
+                <Separator className="bg-foreground/30" />
+              </div>
+
+              <div
+                className={cn(
+                  "grid w-full gap-[var(--game-gap)]",
+                  "grid-cols-[repeat(var(--game-cols),minmax(0,1fr))]",
+                )}
+              >
+                {games.map((game) => (
+                  <div
+                    key={game.id}
+                    style={{
+                      animationDelay: `${getDelay(group.allGames.findIndex(({ id }) => id === game.id))}ms`,
+                    }}
+                    className={cn(
+                      "animate-in fade-in fill-mode-both duration-500",
+                    )}
+                  >
+                    <GameListItem
+                      game={game}
+                      id={`game-list-${activeGroup.id}-${game.id}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </FocusContainer>
+          ))}
+      </FocusContainer>
+    ) : null,
   );
 }
 
@@ -62,6 +113,7 @@ function GameListItem(props: { game: GameWithMetadata; id: string }) {
   const navigate = useNavigate();
   const { ref } = useFocusable<HTMLDivElement>({
     focusKey: id,
+    forceFocus: true,
     onFocus: ({ node }) => {
       node?.focus({ preventScroll: true });
       node?.scrollIntoView({
@@ -81,7 +133,7 @@ function GameListItem(props: { game: GameWithMetadata; id: string }) {
       className={cn(
         "group scale-95 focus-within:scale-100 hover:scale-100 transition-all",
         "shadow-lg shadow-background relative cursor-pointer",
-        "ring-ring focus-within:ring-4 rounded h-full w-full",
+        "rounded h-full w-full",
       )}
     >
       <HotkeyLayer
@@ -149,6 +201,7 @@ function GameImage(props: {
           "group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0",
           "absolute inset-0",
           "bg-gradient-to-t from-card",
+          "ring-ring ring-inset group-focus-within:ring-4",
           props.kind === BACKGROUND ? "text-lg py-2 px-4" : "text-2xl p-4",
           "flex items-end font-black",
         )}
