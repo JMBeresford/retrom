@@ -12,6 +12,7 @@ export type Group = {
   id: number;
   name: string;
   games?: GameWithMetadata[];
+  alphabeticallySorted: boolean;
 };
 
 type GroupContext = {
@@ -62,6 +63,7 @@ export function GroupContextProvider(props: PropsWithChildren) {
       id: -1,
       name: "All Games",
       games: games?.slice(0, 50),
+      alphabeticallySorted: true,
     }),
     [games],
   );
@@ -71,6 +73,7 @@ export function GroupContextProvider(props: PropsWithChildren) {
       kind: "metadataProperty",
       id: -2,
       name: "Recently Played",
+      alphabeticallySorted: false,
       games: games
         ?.sort((a, b) => {
           const aLastPlayed = timestampToDate(a.metadata?.lastPlayed).getTime();
@@ -92,7 +95,15 @@ export function GroupContextProvider(props: PropsWithChildren) {
           name: platform.metadata?.name ?? getFileStub(platform.path),
           url: "/fullscreen/platforms/$platformId",
           params: { platformId: platform.id.toString() },
-          games: games?.filter((game) => game.platformId === platform.id),
+          alphabeticallySorted: true,
+          games: games
+            ?.filter((game) => game.platformId === platform.id)
+            .sort((a, b) => {
+              const aName = a.metadata?.name ?? getFileStub(a.path);
+              const bName = b.metadata?.name ?? getFileStub(b.path);
+
+              return aName.localeCompare(bName);
+            }),
         }))
         .sort((a, b) => a.name.localeCompare(b.name)) ?? [],
     [platforms, games],
