@@ -43,6 +43,10 @@ sort of _self-hosted Steam_ for your DRM-free game library.
   clients.
   - **Support for Windows, MacOS, and Linux!**
 - Access your library from anywhere with the web client.
+- Unify your emulation library with third party libraries
+  - Steam
+  - GoG (soon™)
+  - Native PC / Linux / MacOS games (experimental)
 - Manage emulator profiles on a per-client basis, stored on the server for easily
   sharing configurations between devices or restoring them after a reinstall.
 - Launch all your games across any amount of emulators or platforms via your
