@@ -2,7 +2,7 @@
   "name": "@retrom/plugin-standalone",
   "type": "module",
   "files": [
-    "dist/"
+    "dist/**"
   ],
   "exports": {
     "types": "./dist/index.d.ts",
