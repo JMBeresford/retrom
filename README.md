@@ -43,6 +43,10 @@ sort of _self-hosted Steam_ for your DRM-free game library.
   clients.
   - **Support for Windows, MacOS, and Linux!**
 - Access your library from anywhere with the web client.
+- Unify your emulation library with third party libraries
+  - Steam
+  - GoG (soon™)
+  - Native PC / Linux / MacOS games (experimental)
 - Manage emulator profiles on a per-client basis, stored on the server for easily
   sharing configurations between devices or restoring them after a reinstall.
 - Launch all your games across any amount of emulators or platforms via your
@@ -52,21 +56,41 @@ sort of _self-hosted Steam_ for your DRM-free game library.
 
 ## Screenshots
 
-**Home Screen**
+<details>
+  
+<summary>Home Screen</summary>
 
-![Screenshot 2024-10-10 at 10 49 08 AM](https://github.com/user-attachments/assets/f33a6530-e616-41c4-90d7-1273e0586439)
+<div align='center'>
+  <img src="https://github.com/user-attachments/assets/bb7015d1-823a-4247-8c7c-b0e6e0450018" />
+  <span>
+    <img width='49%' src="https://github.com/user-attachments/assets/653ef3fa-94d4-42cb-a319-d53673893601" /> 
+    <img width='49%' src="https://github.com/user-attachments/assets/d7afce18-e2b2-47fa-bd0d-0d89b30fff8a" />
+  </span>
+  <span>
+    <img width='49%' src="https://github.com/user-attachments/assets/9acd572a-7c56-479b-a359-84c4167009d3" />
+    <img width='49%' src="https://github.com/user-attachments/assets/bf7d59bc-008f-4d36-9b63-dd20f67b18fa" />
+  </span>
+</div>
 
-**Game View**
+</details>
 
-![Screenshot 2024-10-10 at 12 03 15 PM](https://github.com/user-attachments/assets/f22ced99-f9a6-43e4-a1ab-ef111b4be44a)
+<details>
+  
+<summary>Game Details</summary>
 
-**Fullscreen Mode**
+<div align='center'>
+  <img src="https://github.com/user-attachments/assets/1518d684-e40e-4927-9065-cbe05f96c7c9" />
+  <span>
+    <img width="49%" src="https://github.com/user-attachments/assets/0330afa4-0798-4582-a334-70e9a0acf689" />
+    <img width="49%" src="https://github.com/user-attachments/assets/19d8cf30-9eaf-4d69-a012-85837b58e1c2" />
+  </span>
+  <span>
+    <img width="49%" src="https://github.com/user-attachments/assets/6d397e90-8868-4e7d-b677-cccdb9923768" />
+    <img width="49%" src="https://github.com/user-attachments/assets/14582db8-cd18-4f3b-ad76-4ccfb23b2d3c" />
+  </span>
+</div>
 
-![image](https://github.com/user-attachments/assets/17b4458a-1698-41de-bf08-06ad7fe454ae)
-
-![image](https://github.com/user-attachments/assets/c709b935-7b59-4e6f-9432-84e4d9928931)
-
-![image](https://github.com/user-attachments/assets/da4aebb2-ac81-4783-a0fd-c9fe3e06a447)
+</details>
 
 ## Roadmap
 

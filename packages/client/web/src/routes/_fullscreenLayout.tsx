@@ -36,6 +36,7 @@ export const Route = createFileRoute("/_fullscreenLayout")({
     init({
       // debug: import.meta.env.DEV,
       shouldUseNativeEvents: true,
+      distanceCalculationMethod: "center",
       useGetBoundingClientRect: true,
       // visualDebug: true,
     });

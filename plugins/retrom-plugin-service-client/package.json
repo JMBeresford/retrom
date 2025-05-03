@@ -2,7 +2,7 @@
   "name": "@retrom/plugin-service-client",
   "type": "module",
   "files": [
-    "dist/"
+    "dist/**"
   ],
   "scripts": {
     "build": "tsc",

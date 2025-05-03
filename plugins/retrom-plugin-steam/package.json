@@ -2,7 +2,7 @@
   "name": "@retrom/plugin-steam",
   "type": "module",
   "files": [
-    "dist/"
+    "dist/**"
   ],
   "scripts": {
     "build": "tsc",

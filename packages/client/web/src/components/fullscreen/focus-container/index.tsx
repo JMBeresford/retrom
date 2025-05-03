@@ -4,7 +4,7 @@ import {
   useFocusable as useFocusableImpl,
   UseFocusableConfig as UseFocusableConfigImpl,
 } from "@noriginmedia/norigin-spatial-navigation";
-import { ReactNode, RefObject, useCallback, useMemo } from "react";
+import { ReactNode, RefObject, useCallback, useEffect, useMemo } from "react";
 
 export type FocusContainerProps = {
   opts?: UseFocusableConfig<HTMLDivElement>;
@@ -21,7 +21,9 @@ export function FocusContainer(props: FocusContainerProps) {
   );
 }
 
-export type UseFocusableConfig<T> = UseFocusableConfigImpl<T> & {};
+export type UseFocusableConfig<T> = UseFocusableConfigImpl<T> & {
+  initialFocus?: boolean;
+};
 
 export function useFocusable<T extends HTMLElement>(
   opts: UseFocusableConfig<T> = {},
@@ -69,6 +71,12 @@ export function useFocusable<T extends HTMLElement>(
     }),
     [focusable, ref],
   );
+
+  useEffect(() => {
+    if (opts.initialFocus && !focusable.focused) {
+      focusable.focusSelf();
+    }
+  }, [focusable, opts.initialFocus]);
 
   return value;
 }

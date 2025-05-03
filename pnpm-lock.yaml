@@ -59,8 +59,8 @@ importers:
         specifier: ^3.3.4
         version: 3.9.0(react-hook-form@7.54.2(react@18.3.1))
       '@noriginmedia/norigin-spatial-navigation':
-        specifier: ^2.2.1
-        version: 2.2.1(react@18.3.1)
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.3.1)
       '@radix-ui/react-accordion':
         specifier: ^1.1.2
         version: 1.2.0(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -129,7 +129,7 @@ importers:
         version: file:plugins/retrom-plugin-config(ws@8.18.0)
       '@retrom/plugin-installer':
         specifier: workspace:*
-        version: link:../../../plugins/retrom-plugin-installer
+        version: file:plugins/retrom-plugin-installer
       '@retrom/plugin-standalone':
         specifier: workspace:*
         version: link:../../../plugins/retrom-plugin-standalone
@@ -1372,8 +1372,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@noriginmedia/norigin-spatial-navigation@2.2.1':
-    resolution: {integrity: sha512-tw2u0vvf4y6MQpbty4XJRA51q+IWGXMYXbf5Gz0d4ZmG3fcBZ2JujdfcLDyUjG4fQ3iUnKqbe7i2qoZBXPuFLQ==}
+  '@noriginmedia/norigin-spatial-navigation@2.3.0':
+    resolution: {integrity: sha512-gR//N45NnKz1h0/AVknkfg7QnNATETdgXUUD3EKPxuQPyhk7NhsphODzRamyvjYaxsU6VbY/szcUlzBWWBkNMw==}
     peerDependencies:
       react: '>=16.8.0'
 
@@ -2177,6 +2177,9 @@ packages:
   '@retrom/plugin-config@file:plugins/retrom-plugin-config':
     resolution: {directory: plugins/retrom-plugin-config, type: directory}
 
+  '@retrom/plugin-installer@file:plugins/retrom-plugin-installer':
+    resolution: {directory: plugins/retrom-plugin-installer, type: directory}
+
   '@rollup/plugin-typescript@11.1.6':
     resolution: {integrity: sha512-R92yOmIACgYdJ7dJ97p4K69I8gg6IEHt8M7dUBxN3W6nrO8uUxX5ixl0yU/N3aZTi8WhPuICvOHXQvF6FaykAA==}
     engines: {node: '>=14.0.0'}
@@ -2527,6 +2530,9 @@ packages:
 
   '@tauri-apps/plugin-opener@2.2.5':
     resolution: {integrity: sha512-hHsJ9RPWpZvZEPVFaL+d25gABMUMOf/A6ESXnvf/ii9guTukj58WXsAE/SOysXRIhej7kseRCxnOnIMpSCdUsQ==}
+
+  '@tauri-apps/plugin-opener@2.2.6':
+    resolution: {integrity: sha512-bSdkuP71ZQRepPOn8BOEdBKYJQvl6+jb160QtJX/i2H9BF6ZySY/kYljh76N2Ne5fJMQRge7rlKoStYQY5Jq1w==}
 
   '@tauri-apps/plugin-process@2.0.0-rc.1':
     resolution: {integrity: sha512-Bl22xdoiu+AqEP6rzjb7DUJwdLDnejuRFukpkdrqF1/VEWJK5PuE903l+8mIOsd17zZ1Ua8y8WaBWnOXx4QHmw==}
@@ -6887,7 +6893,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
 
-  '@noriginmedia/norigin-spatial-navigation@2.2.1(react@18.3.1)':
+  '@noriginmedia/norigin-spatial-navigation@2.3.0(react@18.3.1)':
     dependencies:
       lodash: 4.17.21
       react: 18.3.1
@@ -7737,6 +7743,11 @@ snapshots:
     transitivePeerDependencies:
       - ws
 
+  '@retrom/plugin-installer@file:plugins/retrom-plugin-installer':
+    dependencies:
+      '@tauri-apps/api': 2.2.0
+      '@tauri-apps/plugin-opener': 2.2.6
+
   '@rollup/plugin-typescript@11.1.6(rollup@4.21.2)(tslib@2.7.0)(typescript@5.5.4)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.21.2)
@@ -8019,6 +8030,10 @@ snapshots:
       '@tauri-apps/api': 2.2.0
 
   '@tauri-apps/plugin-opener@2.2.5':
+    dependencies:
+      '@tauri-apps/api': 2.2.0
+
+  '@tauri-apps/plugin-opener@2.2.6':
     dependencies:
       '@tauri-apps/api': 2.2.0
 
