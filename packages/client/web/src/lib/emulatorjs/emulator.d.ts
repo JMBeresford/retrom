@@ -24,6 +24,8 @@ export declare class EmulatorJS {
   paused: boolean;
   coreName: Core;
   saveFileExt: string | false;
+  functions?: { [key: string]: Array<() => unknown> };
+  touch?: boolean;
   elements: {
     main: HTMLElement;
     parent: HTMLElement;

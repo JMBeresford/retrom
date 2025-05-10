@@ -4,16 +4,17 @@ export const useMediaQuery = (query: string) => {
   const [matches, setMatches] = useState(false);
 
   useEffect(() => {
-    const media = window.matchMedia(query);
-    if (media.matches !== matches) {
+    const listener = () => {
+      const media = window.matchMedia(query);
+      console.log({ media });
       setMatches(media.matches);
-    }
+    };
 
-    const listener = () => setMatches(media.matches);
+    listener();
     window.addEventListener("resize", listener);
 
     return () => window.removeEventListener("resize", listener);
-  }, [matches, query]);
+  }, [query]);
 
   return matches;
 };

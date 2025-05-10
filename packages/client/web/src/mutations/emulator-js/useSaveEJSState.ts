@@ -1,4 +1,4 @@
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { useEmulatorJS } from "@/providers/emulator-js";
 import { useRemoteFiles } from "@/routes/play/$gameId/_layout/-utils/useRemoteFiles";
 import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer";
@@ -6,7 +6,6 @@ import { File } from "@retrom/codegen/retrom/files";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useSaveEJSState() {
-  const { toast } = useToast();
   const emulatorJS = useEmulatorJS();
   const queryClient = useQueryClient();
   const { uploadFiles } = useRemoteFiles();
@@ -28,7 +27,6 @@ export function useSaveEJSState() {
         return;
       }
 
-      emulatorJS.changeSettingOption("save-state-slot", slot.toString());
       const state = emulatorJS.gameManager.getState();
       try {
         emulatorJS.gameManager.FS.unlink("screenshot.png");
@@ -51,7 +49,6 @@ export function useSaveEJSState() {
       }
 
       if (state && screenshot) {
-        emulatorJS.callEvent("saveState", { state, screenshot });
         const stateFile: File = {
           content: state,
           stat: {

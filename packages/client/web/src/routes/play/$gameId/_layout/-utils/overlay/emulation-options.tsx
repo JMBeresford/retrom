@@ -1,12 +1,13 @@
-import { FocusContainer } from "@/components/fullscreen/focus-container";
 import { ConfigCheckbox } from "@/components/fullscreen/menubar/config-inputs/checkbox";
 import { ConfigInput } from "@/components/fullscreen/menubar/config-inputs/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { MenuItem } from "@/components/menubar";
 import { useEmulatorJS } from "@/providers/emulator-js";
-import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useCallback, useState } from "react";
+
+export const emulationOptions: MenuItem = {
+  label: "Emulation Options",
+  items: [{ Render: <EmulationOptions /> }],
+};
 
 type EmulationOptions = {
   ["ff-ratio"]: string;
@@ -54,84 +55,64 @@ export function EmulationOptions() {
   );
 
   return (
-    <ScrollArea
-      className={cn(
-        "flex flex-col w-fit h-full min-w-48",
-        "bg-background border-r",
-      )}
-    >
-      <FocusContainer
-        className={cn(
-          "flex flex-col gap-2 py-6",
-          "transition-opacity ease-in-out [&:not(:focus-within):not(:hover)]:opacity-50",
-        )}
-        onFocus={(e) => e.target.scrollIntoView({ block: "center" })}
-        opts={{
-          focusKey: "emulation-options",
+    <>
+      <ConfigInput
+        className="w-full"
+        value={volume}
+        type="number"
+        onChange={(e) => {
+          if (typeof e === "number" || typeof e === "string") {
+            setEmulatorVolume(Number(e));
+          }
+        }}
+        min={0}
+        max={100}
+        step={1}
+        label="Volume"
+      />
+
+      <ConfigCheckbox
+        id="emulation-options-muted"
+        label="Muted"
+        checked={volume === 0}
+        onCheckedChange={(v) => {
+          if (v) {
+            setEmulatorVolume(0);
+          } else {
+            setEmulatorVolume(5);
+          }
         }}
       >
-        <HotkeyLayer id="emulation-options">
-          <ConfigInput
-            className="w-full"
-            value={volume}
-            type="number"
-            onChange={(e) => {
-              if (typeof e === "number" || typeof e === "string") {
-                setEmulatorVolume(Number(e));
-              }
-            }}
-            min={0}
-            max={100}
-            step={1}
-            label="Volume"
-          />
+        Mutes the emulator audio
+      </ConfigCheckbox>
 
-          <ConfigCheckbox
-            id="emulation-options-muted"
-            label="Muted"
-            checked={volume === 0}
-            onCheckedChange={(v) => {
-              if (v) {
-                setEmulatorVolume(0);
-              } else {
-                setEmulatorVolume(5);
-              }
-            }}
-          >
-            Mutes the emulator audio
-          </ConfigCheckbox>
+      <ConfigInput
+        className="w-full"
+        type="number"
+        value={ffRatio}
+        onChange={(e) => {
+          if (typeof e === "number" || typeof e === "string") {
+            setFFRatio(e);
+            setSetting("ff-ratio", e);
+          }
+        }}
+        min={1.25}
+        max={10}
+        step={0.25}
+        bigStep={1}
+        label="Fast Forward Ratio"
+      />
 
-          <Separator className="w-[90%] mx-auto" />
-
-          <ConfigInput
-            className="w-full"
-            type="number"
-            value={ffRatio}
-            onChange={(e) => {
-              if (typeof e === "number" || typeof e === "string") {
-                setFFRatio(e);
-                setSetting("ff-ratio", e);
-              }
-            }}
-            min={1.25}
-            max={10}
-            step={0.25}
-            bigStep={1}
-            label="Fast Forward Ratio"
-          />
-
-          <ConfigCheckbox
-            id="emulation-options-fast_forward"
-            label="Fast Forward"
-            checked={fastForward}
-            onCheckedChange={(v) => {
-              setFastForward(!!v);
-            }}
-          >
-            Increases emulation speed
-          </ConfigCheckbox>
-        </HotkeyLayer>
-      </FocusContainer>
-    </ScrollArea>
+      <ConfigCheckbox
+        id="emulation-options-fast_forward"
+        label="Fast Forward"
+        checked={fastForward}
+        onCheckedChange={(v) => {
+          setFastForward(!!v);
+        }}
+      >
+        Increases emulation speed
+      </ConfigCheckbox>
+    </>
   );
 }

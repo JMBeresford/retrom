@@ -14,6 +14,7 @@ import { useHotkeys } from "@/providers/hotkeys";
 import { checkIsDesktop } from "@/lib/env";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { zodValidator } from "@tanstack/zod-adapter";
+import { FocusedHotkeyLayerProvider } from "@/providers/hotkeys/layers";
 
 declare global {
   export interface HotkeyZones {
@@ -77,19 +78,21 @@ function FullscreenLayout() {
   });
 
   return (
-    <GamepadProvider>
-      <GroupContextProvider>
-        <div
-          ref={container}
-          className={cn("h-[100dvh] w-screen relative", "flex flex-col")}
-        >
-          <FullscreenMenubar className="w-full border-b z-[50] bg-background" />
+    <FocusedHotkeyLayerProvider>
+      <GamepadProvider>
+        <GroupContextProvider>
+          <div
+            ref={container}
+            className={cn("h-[100dvh] w-screen relative", "flex flex-col")}
+          >
+            <FullscreenMenubar className="w-full border-b z-[50] bg-background" />
 
-          <div className="flex flex-col h-full max-h-full overflow-hidden w-full *:overflow-y-auto">
-            <Outlet />
+            <div className="flex flex-col h-full max-h-full overflow-hidden w-full *:overflow-y-auto">
+              <Outlet />
+            </div>
           </div>
-        </div>
-      </GroupContextProvider>
-    </GamepadProvider>
+        </GroupContextProvider>
+      </GamepadProvider>
+    </FocusedHotkeyLayerProvider>
   );
 }

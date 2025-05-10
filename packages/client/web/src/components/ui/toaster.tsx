@@ -6,7 +6,7 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast";
-import { ToasterToast, useToast } from "@/components/ui/use-toast";
+import { ToasterToast, useToastState } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { ReactNode } from "@tanstack/react-router";
 import { AlertCircleIcon, InfoIcon, LucideProps } from "lucide-react";
@@ -27,7 +27,7 @@ const TitleIcon: Record<
 };
 
 export function Toaster() {
-  const { toasts } = useToast();
+  const { toasts } = useToastState();
 
   return (
     <ToastProvider>

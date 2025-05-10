@@ -119,7 +119,7 @@ export function useFocusedHotkeyLayer() {
 
   if (!context) {
     throw new Error(
-      "useActiveHotkeysContext must be used within a ActiveHotkeysProvider",
+      "useFocusedHotkeyLayer must be used within a FocusedHotkeyLayerProvider",
     );
   }
 

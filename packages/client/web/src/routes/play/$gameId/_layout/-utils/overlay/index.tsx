@@ -1,101 +1,223 @@
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
-  SheetOverlay,
   SheetPortal,
   SheetTitle,
+  SheetTrigger,
+  useSheetOpen,
 } from "@/components/ui/sheet";
-import { EmulatorJS } from "@/lib/emulatorjs/emulator";
-import { cn, Image } from "@/lib/utils";
+import { cn, getFileStub, Image } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
-import { memo, ReactNode, useCallback, useState } from "react";
-import { CoreOptions } from "./core-options";
+import { memo, useCallback } from "react";
+import { coreOptions } from "./core-options";
 import { Hotkey, useHotkeys } from "@/providers/hotkeys";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
 import { FocusContainer } from "@/components/fullscreen/focus-container";
-import { GameOptions } from "./game-options";
-import logo from "@/assets/img/LogoLong-NoBackground-Small.png";
+import { gameOptions } from "./game-options";
+import logo from "@/assets/img/Logo.png";
 import { Separator } from "@/components/ui/separator";
-import { EmulationOptions } from "./emulation-options";
+import { emulationOptions } from "./emulation-options";
 import { HotkeyButton } from "@/components/fullscreen/hotkey-button";
-import { ControlOptions } from "./control-options";
-import {
-  pause,
-  resume,
-  setFocus,
-} from "@noriginmedia/norigin-spatial-navigation";
+import { controlOptions } from "./control-options";
+import { pause, resume } from "@noriginmedia/norigin-spatial-navigation";
 import { HotkeyLayer, useFocusedHotkeyLayer } from "@/providers/hotkeys/layers";
 import { useNavigate } from "@tanstack/react-router";
 import { useSearch } from "@tanstack/react-router";
 import { useEmulatorJS } from "@/providers/emulator-js";
-import { ControlOptionsProvider } from "@/providers/emulator-js/control-options";
-import { CoreOptionsProvider } from "@/providers/emulator-js/core-options";
+import { MenuItem, MenuItemGroup, MenuRoot } from "@/components/menubar";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-const ControlOptionsMemo = memo(ControlOptions);
-const CoreOptionsMemo = memo(CoreOptions);
-
-type Tab =
-  | "gameOptions"
-  | "emulationOptions"
-  | "coreOptions"
-  | "controlOptions"
-  | "exitGame";
-
-type TabOpts = {
-  Trigger: ReactNode;
-  action?: () => void | Promise<void>;
-  Content?: (props: { emulatorJS: EmulatorJS }) => ReactNode;
+const overlayMenu: MenuRoot = {
+  items: [
+    {
+      groupItems: [gameOptions, emulationOptions, coreOptions, controlOptions],
+    },
+    { groupItems: [{ label: "Exit Game", Render: <ExitGame /> }] },
+  ],
 };
 
-export const Overlay = memo(function Overlay() {
-  const emulatorJS = useEmulatorJS();
-  const { name } = useGameDetail();
+function OverlayMenuItem(props: { item: MenuItem }) {
+  const { item } = props;
+  const { Render, action, items, label } = item;
+
+  if (items) {
+    return (
+      <Sheet modal={false}>
+        <SheetTrigger asChild>
+          <MenuEntryButton onClick={action}>{label}</MenuEntryButton>
+        </SheetTrigger>
+
+        <OverlayMenuSubMenu item={item} />
+      </Sheet>
+    );
+  }
+
+  if (Render) {
+    return Render;
+  }
+
+  if (typeof label === "string") {
+    return <MenuEntryButton onClick={action}>{label}</MenuEntryButton>;
+  }
+
+  return label;
+}
+
+function OverlayMenuSubMenu(props: { item: MenuItem }) {
+  const {
+    item: { items = [], label },
+  } = props;
+  const { setOpen } = useSheetOpen();
+  const id = typeof label === "string" ? label : undefined;
+
+  return (
+    <SheetPortal container={document.getElementById("overlay-container")}>
+      <SheetContent
+        userCanClose
+        className="absolute w-96 justify-start"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
+        <SheetHeader>
+          <SheetTitle>{label}</SheetTitle>
+          <SheetDescription>Settings related to {label}</SheetDescription>
+          <Separator className="mx-auto mt-4" />
+        </SheetHeader>
+
+        <HotkeyLayer
+          id={id}
+          handlers={{
+            BACK: { handler: () => setOpen(false), label: "Back" },
+          }}
+        >
+          <FocusContainer
+            className="flex flex-col overflow-hidden"
+            opts={{
+              initialFocus: true,
+              focusKey: id,
+              isFocusBoundary: true,
+              forceFocus: true,
+            }}
+          >
+            <ScrollArea className="flex flex-col">
+              {items.map((sub, idx) =>
+                "groupItems" in sub ? (
+                  <OverlayMenuItemGroup key={idx} group={sub} />
+                ) : (
+                  <OverlayMenuItem key={idx} item={sub} />
+                ),
+              )}
+            </ScrollArea>
+          </FocusContainer>
+        </HotkeyLayer>
+      </SheetContent>
+    </SheetPortal>
+  );
+}
+
+function OverlayMenuItemGroup(props: { group: MenuItemGroup }) {
+  const {
+    group: { groupItems, label },
+  } = props;
+
+  return (
+    <div className="pb-4 group">
+      <div className="px-3 pb-2">
+        {label ? (
+          <Label className="py-2 text-muted-foreground font-semibold">
+            {label}
+          </Label>
+        ) : null}
+
+        <Separator className={cn("mx-auto", !label && "group-first:hidden")} />
+      </div>
+
+      {groupItems.map((item, idx) => (
+        <OverlayMenuItem key={idx} item={item} />
+      ))}
+    </div>
+  );
+}
+
+export const OverlayMenu = memo(function OverlayMenu(props: {
+  core: string;
+  name: string;
+  platform: string;
+  imgSrc: string;
+}) {
+  const { core, name, imgSrc, platform } = props;
+
+  return (
+    <SheetContent className="absolute w-96" userCanClose>
+      <SheetHeader className="px-3">
+        <div className="flex flex-row gap-2">
+          <Image src={imgSrc} className="w-16 min-w-0" />
+
+          <div className="text-pretty w-fit">
+            <SheetTitle className="font-black whitespace-nowrap overflow-hidden overflow-ellipsis">
+              {name}
+            </SheetTitle>
+            <SheetDescription className="text-foreground text-base font-semibold mb-1">
+              {platform}
+            </SheetDescription>
+            <SheetDescription>Emulating via {core}</SheetDescription>
+          </div>
+        </div>
+
+        <Separator className="mx-auto mt-4" />
+      </SheetHeader>
+
+      <HotkeyLayer id="menu-root">
+        <div className="flex flex-col h-full">
+          <FocusContainer
+            opts={{
+              focusKey: "menu-root",
+              isFocusBoundary: true,
+              forceFocus: true,
+            }}
+          >
+            <ScrollArea className="flex flex-col h-full">
+              {overlayMenu.items.map((sub, idx) =>
+                "groupItems" in sub ? (
+                  <OverlayMenuItemGroup key={idx} group={sub} />
+                ) : (
+                  <OverlayMenuItem key={idx} item={sub} />
+                ),
+              )}
+            </ScrollArea>
+          </FocusContainer>
+        </div>
+      </HotkeyLayer>
+    </SheetContent>
+  );
+});
+
+/**
+ * Hoist the 'useNavigate' and 'useEmulatorJS' hooks that
+ * can lead to many re-renders to the top level. Render
+ * the overlay contents as a memoized component within in order
+ * to avoid these re-renders down the tree.
+ */
+export function Overlay() {
   const { overlay } = useSearch({ strict: false });
-  const [tab, setTab] = useState<Tab | undefined>(undefined);
+  const emulatorJS = useEmulatorJS();
+  const { name, gameMetadata, emulator, platform, platformMetadata } =
+    useGameDetail();
+
   const navigate = useNavigate();
+
+  const open = !!overlay;
 
   useHotkeys({
     handlers: {
       MENU: { handler: () => toggleOpen() },
     },
   });
-
-  const tabs: Record<Tab, TabOpts> = {
-    gameOptions: {
-      Trigger: "Game Options",
-      Content: () => <GameOptions />,
-    },
-    emulationOptions: {
-      Trigger: "Emulation Options",
-      Content: () => <EmulationOptions />,
-    },
-    coreOptions: {
-      Trigger: "Core Options",
-      Content: () => (
-        <CoreOptionsProvider>
-          <CoreOptionsMemo />
-        </CoreOptionsProvider>
-      ),
-    },
-    controlOptions: {
-      Trigger: "Control Options",
-      Content: () => (
-        <ControlOptionsProvider>
-          <ControlOptionsMemo />
-        </ControlOptionsProvider>
-      ),
-    },
-    exitGame: {
-      Trigger: "Exit Game",
-      action: () => {
-        emulatorJS?.callEvent("exit", {});
-      },
-    },
-  };
 
   const toggleOpen = useCallback(
     (value?: boolean) => {
@@ -118,138 +240,53 @@ export const Overlay = memo(function Overlay() {
   );
 
   return (
-    <Sheet open={!!overlay} onOpenChange={toggleOpen}>
-      <SheetPortal>
-        <SheetOverlay />
-        <SheetContent
-          onCloseAutoFocus={(e) => {
-            e.preventDefault();
-          }}
-          onOpenAutoFocus={(e) => {
-            e.preventDefault();
-            setFocus("menu-root");
-          }}
+    <Sheet open={open} onOpenChange={toggleOpen}>
+      <div
+        className={cn(
+          "fixed inset-0 z-[90] grid grid-rows-[1fr,auto]",
+          "transition-colors ease-in-out duration-200",
+          open
+            ? "bg-black/80 pointer-events-auto touch-auto"
+            : "bg-transparent pointer-events-none touch-none",
+        )}
+      >
+        <div id="overlay-container" className="relative w-fit">
+          <OverlayMenu
+            core={emulator?.name ?? emulatorJS.coreName}
+            name={name}
+            platform={platformMetadata?.name ?? getFileStub(platform.path)}
+            imgSrc={gameMetadata?.coverUrl ?? logo}
+          />
+        </div>
+
+        <div
           className={cn(
-            "fixed inset-0 sm:max-w-screen flex flex-col",
-            "bg-transparent outline-none border-none gap-0",
-            "data-[state=open]:slide-in-from-left-0 data-[state=closed]:slide-out-to-left-0",
-            "data-[state=open]:fade-in data-[state=closed]:fade-out",
+            "hidden sm:flex justify-between bg-background h-min border-t",
+            "py-2 fill-mode-both",
+            "slide-in-from-bottom fade-in slide-out-to-bottom fade-out",
+            open ? "animate-in " : "animate-out ",
           )}
         >
-          <SheetHeader className="sr-only">
-            <SheetTitle>{name}</SheetTitle>
-            <SheetDescription>
-              Emulating via {emulatorJS?.config.core}
-            </SheetDescription>
-          </SheetHeader>
-          <FocusContainer
-            className="contents"
-            opts={{ focusKey: "overlay", isFocusBoundary: true }}
-          >
-            <div className="flex w-min h-full">
-              <FocusContainer
-                className={cn(
-                  "flex flex-col h-full relative w-min bg-background border-r py-6",
-                )}
-                opts={{
-                  focusKey: "menu-root",
-                  forceFocus: true,
-                }}
-              >
-                <div className="">
-                  <Image src={logo} className="w-fit min-w-0 pb-2 px-4" />
-                </div>
-
-                <Separator className="w-4/5 mx-auto my-2" />
-
-                <HotkeyLayer id="menu-root">
-                  <div
-                    className={cn(
-                      "flex flex-col justify-start w-max h-full",
-                      "transition-opacity ease-in-out [&:not(:focus-within):not(:hover)]:opacity-50",
-                    )}
-                  >
-                    {Object.entries(tabs).map(([key, opts]) => (
-                      <MenuEntryButton
-                        key={key}
-                        id={`overlay-menu-root-${key}`}
-                        data-state={key === tab ? "active" : undefined}
-                        onClick={
-                          opts.action ? opts.action : () => setTab(key as Tab)
-                        }
-                        onFocus={() => setTab(key as Tab)}
-                      >
-                        {opts.Trigger}
-                      </MenuEntryButton>
-                    ))}
-                  </div>
-                </HotkeyLayer>
-              </FocusContainer>
-
-              <div className={cn("relative flex h-full")}>
-                {Object.entries(tabs).map(([key, opts]) => {
-                  const focusKey = `overlay-${key}-root`;
-                  const open = tab === key;
-
-                  return (
-                    <Sheet modal={false} key={key} open={open}>
-                      {"Content" in opts ? (
-                        <SheetContent
-                          key={key}
-                          className={cn(
-                            "absolute z-[-1] bg-transparent",
-                            "border-none shadow-none group fill-mode-both",
-                          )}
-                          onCloseAutoFocus={(e) => {
-                            e.preventDefault();
-                          }}
-                          onOpenAutoFocus={(e) => {
-                            e.preventDefault();
-                          }}
-                        >
-                          <SheetHeader className="sr-only">
-                            <SheetTitle>{key} tab</SheetTitle>
-                            <SheetDescription>
-                              Settings related to {key}
-                            </SheetDescription>
-                          </SheetHeader>
-
-                          <FocusContainer
-                            className="flex h-full"
-                            opts={{
-                              focusKey,
-                              focusable: open,
-                            }}
-                          >
-                            {opts.Content ? (
-                              <opts.Content emulatorJS={emulatorJS} />
-                            ) : null}
-                          </FocusContainer>
-                        </SheetContent>
-                      ) : (
-                        <></>
-                      )}
-                    </Sheet>
-                  );
-                })}
-              </div>
-            </div>
-          </FocusContainer>
-
-          <SheetFooter
-            className={cn("flex w-full justify-between bg-background")}
-          >
-            <SheetClose asChild>
-              <HotkeyButton hotkey="MENU">Close</HotkeyButton>
-            </SheetClose>
-
-            <ActionBar />
-          </SheetFooter>
-        </SheetContent>
-      </SheetPortal>
+          <HotkeyButton hotkey="MENU">Close</HotkeyButton>
+          <ActionBar />
+        </div>
+      </div>
     </Sheet>
   );
-});
+}
+
+function ExitGame() {
+  const emulatorJS = useEmulatorJS();
+
+  return (
+    <MenuEntryButton
+      onClick={() => emulatorJS?.callEvent("exit", {})}
+      label="Return to your Retrom library"
+    >
+      Exit Game
+    </MenuEntryButton>
+  );
+}
 
 function ActionBar() {
   const { focusedHotkeyLayer } = useFocusedHotkeyLayer();
@@ -278,8 +315,6 @@ function ActionBar() {
           </HotkeyButton>
         ) : null;
       })}
-      {/* <HotkeyButton hotkey="ACCEPT">Accept</HotkeyButton> */}
-      {/* <HotkeyButton hotkey="BACK">Back</HotkeyButton> */}
     </div>
   );
 }

@@ -54,28 +54,43 @@ export function ExitFullscreen(props: ComponentProps<typeof SheetTrigger>) {
       </SheetTrigger>
 
       <SheetContent>
-        <FocusContainer
-          opts={{ focusKey: "exit-fullscreen-menu", isFocusBoundary: true }}
-        >
-          <HotkeyLayer id="exit-fullscreen-menu" handlers={handlers}>
-            <SheetHeader>
-              <SheetTitle>Exit Fullscreen</SheetTitle>
-              <SheetDescription>
-                Return to the desktop interface
-              </SheetDescription>
-            </SheetHeader>
+        <HotkeyLayer id="exit-fullscreen-menu" handlers={handlers}>
+          <SheetHeader>
+            <SheetTitle>Exit Fullscreen</SheetTitle>
+            <SheetDescription>Return to the desktop interface</SheetDescription>
+          </SheetHeader>
 
-            <SheetFooter>
+          <FocusContainer
+            opts={{
+              focusKey: "exit-fullscreen-menu",
+              isFocusBoundary: true,
+              initialFocus: true,
+            }}
+            className="w-full"
+          >
+            <SheetFooter className="px-2 justify-between">
               <SheetClose asChild>
-                <HotkeyButton hotkey="BACK">back</HotkeyButton>
+                <HotkeyButton
+                  className="w-1/2"
+                  focusOpts={{ focusKey: "exit-fullscreen-menu-close" }}
+                  hotkey="BACK"
+                >
+                  back
+                </HotkeyButton>
               </SheetClose>
 
-              <HotkeyButton type="submit" hotkey="MENU" onClick={exit}>
+              <HotkeyButton
+                focusOpts={{ focusKey: "exit-fullscreen-menu-confirm" }}
+                className="w-1/2"
+                type="submit"
+                hotkey="MENU"
+                onClick={exit}
+              >
                 Exit
               </HotkeyButton>
             </SheetFooter>
-          </HotkeyLayer>
-        </FocusContainer>
+          </FocusContainer>
+        </HotkeyLayer>
       </SheetContent>
     </Sheet>
   );

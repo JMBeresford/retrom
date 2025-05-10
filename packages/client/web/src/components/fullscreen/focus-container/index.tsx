@@ -1,8 +1,11 @@
 import { cn } from "@/lib/utils";
+import { useInputDeviceContext } from "@/providers/input-device";
 import {
   FocusContext,
+  setFocus,
   useFocusable as useFocusableImpl,
   UseFocusableConfig as UseFocusableConfigImpl,
+  getCurrentFocusKey,
 } from "@noriginmedia/norigin-spatial-navigation";
 import { ReactNode, RefObject, useCallback, useEffect, useMemo } from "react";
 
@@ -28,12 +31,13 @@ export type UseFocusableConfig<T> = UseFocusableConfigImpl<T> & {
 export function useFocusable<T extends HTMLElement>(
   opts: UseFocusableConfig<T> = {},
 ) {
+  const [inputDevice] = useInputDeviceContext();
   const { onFocus, onBlur, ...restOpts } = opts;
 
   const onFocusHandler: NonNullable<typeof onFocus> = useCallback(
     (layout, ...args) => {
       if (document.activeElement !== layout.node) {
-        layout.node.focus();
+        layout.node?.focus();
       }
 
       onFocus?.(layout, ...args);
@@ -73,10 +77,15 @@ export function useFocusable<T extends HTMLElement>(
   );
 
   useEffect(() => {
-    if (opts.initialFocus && !focusable.focused) {
-      focusable.focusSelf();
+    if (
+      ["hotkeys", "gamepad"].includes(inputDevice) &&
+      opts.focusKey &&
+      opts.initialFocus &&
+      getCurrentFocusKey() !== opts.focusKey
+    ) {
+      setFocus(opts.focusKey);
     }
-  }, [focusable, opts.initialFocus]);
+  }, [opts.initialFocus, opts.focusKey, inputDevice]);
 
   return value;
 }

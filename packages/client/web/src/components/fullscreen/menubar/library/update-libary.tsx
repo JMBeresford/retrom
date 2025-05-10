@@ -33,39 +33,50 @@ export function UpdateLibrary() {
       </SheetTrigger>
 
       <SheetContent>
-        <FocusContainer
-          opts={{
-            focusKey: "update-library-menu",
-            isFocusBoundary: true,
+        <HotkeyLayer
+          id="update-library"
+          handlers={{
+            BACK: {
+              handler: () => setOpen(false),
+            },
+            MENU: {
+              handler: handleUpdate,
+            },
           }}
         >
-          <HotkeyLayer
-            id="update-library"
-            handlers={{
-              BACK: {
-                handler: () => setOpen(false),
-              },
-              MENU: {
-                handler: handleUpdate,
-              },
-            }}
-          >
-            <SheetHeader>
-              <SheetTitle>Update Library</SheetTitle>
-              <SheetDescription>Update Retrom library</SheetDescription>
-            </SheetHeader>
+          <SheetHeader>
+            <SheetTitle>Update Library</SheetTitle>
+            <SheetDescription>Update Retrom library</SheetDescription>
+          </SheetHeader>
 
-            <SheetFooter>
+          <FocusContainer
+            opts={{
+              focusKey: "update-library-menu",
+              initialFocus: true,
+              isFocusBoundary: true,
+            }}
+            className="block"
+          >
+            <SheetFooter className="px-2">
               <SheetClose asChild>
-                <HotkeyButton hotkey="BACK">back</HotkeyButton>
+                <HotkeyButton
+                  focusOpts={{ focusKey: "update-library-menu-close" }}
+                  hotkey="BACK"
+                >
+                  back
+                </HotkeyButton>
               </SheetClose>
 
-              <HotkeyButton hotkey="MENU" onClick={handleUpdate}>
+              <HotkeyButton
+                focusOpts={{ focusKey: "update-library-menu-confirm" }}
+                hotkey="MENU"
+                onClick={handleUpdate}
+              >
                 Update
               </HotkeyButton>
             </SheetFooter>
-          </HotkeyLayer>
-        </FocusContainer>
+          </FocusContainer>
+        </HotkeyLayer>
       </SheetContent>
     </Sheet>
   );

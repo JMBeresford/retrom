@@ -2,7 +2,7 @@ import { File, FileStat } from "@retrom/codegen/retrom/files";
 import { useMutation } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useApiUrl } from "@/utils/useApiUrl";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 export function useRemoteFiles() {
   const apiUrl = useApiUrl();
@@ -18,7 +18,7 @@ export function useRemoteFiles() {
     [apiUrl],
   );
 
-  const uploadFiles = useMutation({
+  const { mutate: mutateUpload, mutateAsync: mutateAsyncUpload } = useMutation({
     mutationKey: ["upload-file", apiUrl],
     mutationFn: async (files: File[]) => {
       return Promise.allSettled(
@@ -50,31 +50,36 @@ export function useRemoteFiles() {
     },
   });
 
-  const downloadFiles = useMutation({
-    mutationKey: ["download-file", getPublicUrl],
-    mutationFn: async (path: string) => {
-      try {
-        const { stats } = await retromClient.fileExplorerClient.getStat({
-          path,
-        });
+  const { mutate: mutateDownload, mutateAsync: mutateAsyncDownload } =
+    useMutation({
+      mutationKey: ["download-file", getPublicUrl],
+      mutationFn: async (path: string) => {
+        try {
+          const { stats } = await retromClient.fileExplorerClient.getStat({
+            path,
+          });
 
-        const files = await Promise.all(
-          stats.map((stat) =>
-            fetch(getPublicUrl(stat).toString()).then(async (r) => ({
-              stat,
-              data: new Uint8Array(await r.arrayBuffer()),
-            })),
-          ),
-        );
+          const files = await Promise.all(
+            stats.map((stat) =>
+              fetch(getPublicUrl(stat).toString()).then(
+                async (r) =>
+                  ({
+                    stat,
+                    content: new Uint8Array(await r.arrayBuffer()),
+                  }) satisfies File,
+              ),
+            ),
+          );
 
-        return files;
-      } catch (e) {
-        console.error(e);
-      }
-    },
-  });
+          return files;
+        } catch (e) {
+          console.error(e);
+          return [];
+        }
+      },
+    });
 
-  const deleteFiles = useMutation({
+  const { mutate: mutateDelete, mutateAsync: mutateAsyncDelete } = useMutation({
     mutationKey: ["delete-file", apiUrl],
     mutationFn: async (path: string) => {
       const url = getPublicUrl(path);
@@ -90,10 +95,30 @@ export function useRemoteFiles() {
     },
   });
 
-  return {
-    uploadFiles,
-    downloadFiles,
-    deleteFiles,
-    getPublicUrl,
-  };
+  return useMemo(
+    () => ({
+      uploadFiles: {
+        mutate: mutateUpload,
+        mutateAsync: mutateAsyncUpload,
+      },
+      downloadFiles: {
+        mutate: mutateDownload,
+        mutateAsync: mutateAsyncDownload,
+      },
+      deleteFiles: {
+        mutate: mutateDelete,
+        mutateAsync: mutateAsyncDelete,
+      },
+      getPublicUrl,
+    }),
+    [
+      mutateUpload,
+      mutateAsyncUpload,
+      mutateDownload,
+      mutateAsyncDownload,
+      mutateDelete,
+      mutateAsyncDelete,
+      getPublicUrl,
+    ],
+  );
 }

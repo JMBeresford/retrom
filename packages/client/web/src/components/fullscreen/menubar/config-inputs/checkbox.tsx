@@ -21,6 +21,7 @@ const ConfigCheckbox = forwardRef<
 
   const { ref, focusSelf } = useFocusable<HTMLButtonElement>({
     focusKey: id,
+    focusable: !props.disabled,
   });
 
   useImperativeHandle(forwardedRef, () => ref.current!);
@@ -33,11 +34,11 @@ const ConfigCheckbox = forwardRef<
         "relative flex gap-2 py-2 px-4 bg-transparent transition-colors",
         "before:absolute before:inset-y-0 before:left-0 before:w-0 before:bg-secondary before:transition-all",
         "focus-within:before:bg-accent focus-within:before:w-1 focus-within:bg-secondary/20",
-        "hover:before:w-1 hover:bg-secondary/20 before:rounded-r",
+        "hover:before:w-1 hover:bg-secondary/20 before:rounded-r hover:before:bg-accent",
       )}
     >
       <HotkeyLayer
-        id={id}
+        id={`${id}-hotkeys`}
         className="block"
         handlers={{
           ACCEPT: { handler: () => ref.current?.click(), label: "Toggle" },
@@ -51,9 +52,18 @@ const ConfigCheckbox = forwardRef<
         />
       </HotkeyLayer>
 
-      <div className="flex flex-col gap-2">
+      <div
+        onClick={() => ref.current?.click()}
+        className={cn(
+          "flex flex-col gap-2",
+          rest.disabled ? "opacity-50" : "cursor-pointer",
+        )}
+      >
         {typeof label === "string" ? (
-          <Label htmlFor={id} className="font-normal text-base leading-none">
+          <Label
+            htmlFor={id}
+            className="font-normal text-base leading-none cursor-pointer"
+          >
             {label}
           </Label>
         ) : (

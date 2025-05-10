@@ -28,38 +28,45 @@ export function DownloadMetadata(props: ComponentProps<typeof SheetTrigger>) {
       </SheetTrigger>
 
       <SheetContent>
-        <FocusContainer
-          opts={{
-            focusKey: "download-metadata-menu",
-            isFocusBoundary: true,
+        <HotkeyLayer
+          id="download-metadata"
+          handlers={{
+            BACK: {
+              handler: () => setOpen(false),
+            },
+            MENU: {
+              handler: () => {
+                downloadMetadata({});
+                setOpen(false);
+              },
+            },
           }}
         >
-          <HotkeyLayer
-            id="download-metadata"
-            handlers={{
-              BACK: {
-                handler: () => setOpen(false),
-              },
-              MENU: {
-                handler: () => {
-                  downloadMetadata({});
-                  setOpen(false);
-                },
-              },
+          <SheetHeader>
+            <SheetTitle>Download Metadata</SheetTitle>
+            <SheetDescription>Update your library metadata</SheetDescription>
+          </SheetHeader>
+
+          <FocusContainer
+            opts={{
+              focusKey: "download-metadata-menu",
+              initialFocus: true,
+              isFocusBoundary: true,
             }}
           >
-            <SheetHeader>
-              <SheetTitle>Download Metadata</SheetTitle>
-              <SheetDescription>Update your library metadata</SheetDescription>
-            </SheetHeader>
-
-            <SheetFooter>
+            <SheetFooter className="px-2">
               <SheetClose asChild>
-                <HotkeyButton hotkey="BACK">back</HotkeyButton>
+                <HotkeyButton
+                  focusOpts={{ focusKey: "download-metadata-menu-close" }}
+                  hotkey="BACK"
+                >
+                  back
+                </HotkeyButton>
               </SheetClose>
 
               <HotkeyButton
                 hotkey="MENU"
+                focusOpts={{ focusKey: "download-metadata-menu-confirm" }}
                 onClick={() => {
                   downloadMetadata({});
                   setOpen(false);
@@ -68,8 +75,8 @@ export function DownloadMetadata(props: ComponentProps<typeof SheetTrigger>) {
                 Download
               </HotkeyButton>
             </SheetFooter>
-          </HotkeyLayer>
-        </FocusContainer>
+          </FocusContainer>
+        </HotkeyLayer>
       </SheetContent>
     </Sheet>
   );

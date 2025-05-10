@@ -124,20 +124,21 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
             MENU: { handler: () => form.handleSubmit(handleSubmit)() },
           }}
         >
+          <SheetHeader>
+            <SheetTitle>Configuration</SheetTitle>
+            <SheetDescription>Retrom fullscreen options</SheetDescription>
+          </SheetHeader>
+
+          <Separator className="w-[90%] mx-auto" />
+
           <FocusContainer
+            className="flex flex-col h-full"
             opts={{
               initialFocus: true,
               focusKey: "config-menu",
               isFocusBoundary: true,
             }}
           >
-            <SheetHeader>
-              <SheetTitle>Configuration</SheetTitle>
-              <SheetDescription>Retrom fullscreen options</SheetDescription>
-            </SheetHeader>
-
-            <Separator className="w-[90%] mx-auto" />
-
             <ScrollArea className="h-full w-full">
               <Form {...form}>
                 <form
@@ -148,21 +149,21 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
                 </form>
               </Form>
             </ScrollArea>
-
-            <SheetFooter>
-              <SheetClose asChild>
-                <HotkeyButton hotkey="BACK">back</HotkeyButton>
-              </SheetClose>
-
-              <HotkeyButton
-                disabled={disabled}
-                onClick={form.handleSubmit(handleSubmit)}
-                hotkey="MENU"
-              >
-                confirm
-              </HotkeyButton>
-            </SheetFooter>
           </FocusContainer>
+
+          <SheetFooter className="px-2 flex justify-between">
+            <SheetClose asChild>
+              <HotkeyButton hotkey="BACK">back</HotkeyButton>
+            </SheetClose>
+
+            <HotkeyButton
+              disabled={disabled}
+              onClick={form.handleSubmit(handleSubmit)}
+              hotkey="MENU"
+            >
+              confirm
+            </HotkeyButton>
+          </SheetFooter>
         </HotkeyLayer>
       </SheetContent>
     </Sheet>
@@ -193,7 +194,7 @@ function ConfigForm() {
         }}
       />
 
-      <h2 className="text-lg px-4 pb-2 mt-4">Game List</h2>
+      <h2 className="text-lg font-semibold px-4 pb-2 mt-4">Game List</h2>
       <FormField
         control={form.control}
         name="interface.fullscreenConfig.gridList.columns"

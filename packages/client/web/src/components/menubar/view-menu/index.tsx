@@ -1,4 +1,4 @@
-import { MenuItem, RootMenuItem } from "..";
+import { MenuItem } from "..";
 import { Link } from "@tanstack/react-router";
 
 const fullscreenMenuItem: MenuItem = {
@@ -6,7 +6,7 @@ const fullscreenMenuItem: MenuItem = {
   Render: <Link to="/fullscreen">Fullscreen Mode</Link>,
 };
 
-export const viewMenu: RootMenuItem = {
+export const viewMenu: MenuItem = {
   label: "View",
   viewportContext: "desktop",
   items: [fullscreenMenuItem],

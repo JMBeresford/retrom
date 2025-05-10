@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { RootMenuItem } from "..";
+import { MenuItem } from "..";
 
 const matchPlatformsMenuItem = {
   label: "Match Platforms",
@@ -20,7 +20,7 @@ const defaultProfilesMenuItem = {
   ),
 };
 
-export const platformsMenu: RootMenuItem = {
+export const platformsMenu: MenuItem = {
   label: "Platforms",
   items: [matchPlatformsMenuItem, defaultProfilesMenuItem],
 };

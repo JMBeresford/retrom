@@ -1,19 +1,11 @@
-import { FocusContainer } from "@/components/fullscreen/focus-container";
+import { ConfigCheckbox } from "@/components/fullscreen/menubar/config-inputs/checkbox";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
+import { MenuItem } from "@/components/menubar";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  useSheetOpen,
-} from "@/components/ui/sheet";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { EmulatorJSControlMap } from "@/lib/emulatorjs/gamepad";
 import { cn, toTitleCase } from "@/lib/utils";
+import { useEmulatorJS } from "@/providers/emulator-js";
 import {
   Player,
   useControlOptions,
@@ -23,7 +15,6 @@ import {
   GAMEPAD_BUTTON_EVENT,
   GamepadButtonEvent,
 } from "@/providers/gamepad/event";
-import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { Keyboard, Gamepad2 } from "lucide-react";
 import {
   KeyboardEvent,
@@ -34,133 +25,80 @@ import {
   useState,
 } from "react";
 
-type Tab = Player | "reset";
-
 const { Player1, Player2, Player3, Player4 } = Player;
-const PlayerList = [Player1, Player2, Player3, Player4];
 
-export function ControlOptions() {
-  const { resetControls } = useControlOptions();
-  const [tab, setTab] = useState<Tab | undefined>(undefined);
+export const controlOptions: MenuItem = {
+  label: "Control Options",
+  items: [
+    {
+      label: "Player Bindings",
+      groupItems: [
+        {
+          label: "Player 1",
+          items: [{ Render: <PlayerBindings player={Player1} /> }],
+        },
+        {
+          label: "Player 2",
+          items: [{ Render: <PlayerBindings player={Player2} /> }],
+        },
+        {
+          label: "Player 3",
+          items: [{ Render: <PlayerBindings player={Player3} /> }],
+        },
+        {
+          label: "Player 4",
+          items: [{ Render: <PlayerBindings player={Player4} /> }],
+        },
+      ],
+    },
+    {
+      label: "Other Control Options",
+      groupItems: [
+        { label: "Virtual Gamepad", Render: <VirtualGamepad /> },
+        {
+          label: "Reset Controls",
+          Render: <ResetControls />,
+        },
+      ],
+    },
+  ],
+};
 
-  const { open: parentOpen } = useSheetOpen();
+function VirtualGamepad() {
+  const emulatorJS = useEmulatorJS();
+  const [enabled, setEnabled] = useState(
+    emulatorJS.settings["virtual-gamepad"] === "enabled",
+  );
+
   return (
-    <div className="relative flex h-full">
-      <FocusContainer
-        className={cn("flex h-full w-min border-r bg-background")}
-        opts={{
-          focusKey: "control-options-tabs",
-        }}
-      >
-        <div
-          className={cn(
-            "flex flex-col h-full w-max min-w-48",
-            "py-6 transition-opacity ease-in-out [&:not(:focus-within):not(:hover)]:opacity-50",
-          )}
-        >
-          {PlayerList.map((player) => {
-            return (
-              <MenuEntryButton
-                key={player}
-                id={`control-options-tab-${player}`}
-                className="text-base"
-                data-state={tab === player ? "active" : undefined}
-                onFocus={() => setTab(player)}
-                onClick={() => setTab(player)}
-              >
-                Player {Number(player) + 1}
-              </MenuEntryButton>
-            );
-          })}
+    <ConfigCheckbox
+      id="virtual-gamepad-enabled"
+      label="Virtual Gamepad"
+      checked={enabled}
+      onCheckedChange={(v) => {
+        const value = v ? "enabled" : "disabled";
+        emulatorJS.changeSettingOption("virtual-gamepad", value);
+        emulatorJS.menuOptionChanged("virtual-gamepad", value);
 
-          <Separator className="w-4/5 mx-auto my-2" />
+        setEnabled(!!v);
+      }}
+    >
+      Enables the on-screen gamepad
+    </ConfigCheckbox>
+  );
+}
 
-          <MenuEntryButton
-            id="control-options-reset"
-            className="text-base"
-            onClick={() => resetControls()}
-            onFocus={() => setTab("reset")}
-          >
-            Reset Controls
-          </MenuEntryButton>
-        </div>
-      </FocusContainer>
-
-      {PlayerList.map((player) => {
-        const open = tab === player && parentOpen;
-
-        return (
-          <Sheet modal={false} key={player} open={open}>
-            <SheetContent
-              className={cn(
-                "absolute left-full inset-y-0 z-[-1] py-6 flex flex-col",
-                "fill-mode-both",
-              )}
-              onCloseAutoFocus={(e) => {
-                e.preventDefault();
-              }}
-              onOpenAutoFocus={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <SheetHeader className="sr-only">
-                <SheetTitle>Player {player}</SheetTitle>
-                <SheetDescription>
-                  Control settings for player {player}
-                </SheetDescription>
-              </SheetHeader>
-              <ScrollArea
-                className={cn(
-                  "relative flex flex-col",
-                  "transition-opacity ease-in-out [&:not(:focus-within):not(:hover)]:opacity-50",
-                )}
-              >
-                <HotkeyLayer id={`control-bindings-${player}`}>
-                  <FocusContainer
-                    opts={{
-                      focusable: open,
-                      focusKey: `control-options-${player}`,
-                    }}
-                    onFocus={(e) =>
-                      e.target.scrollIntoView({ block: "center" })
-                    }
-                    className={cn(
-                      "grid grid-cols-[auto,1fr,1fr] auto-rows-fr w-max h-full",
-                    )}
-                  >
-                    <PlayerBindings player={player} />
-                  </FocusContainer>
-                </HotkeyLayer>
-              </ScrollArea>
-            </SheetContent>
-          </Sheet>
-        );
-      })}
-
-      <Sheet modal={false} open={tab === "reset"}>
-        <SheetContent
-          className={cn(
-            "absolute left-full inset-y-0 z-[-1] py-6 flex flex-col",
-            "fill-mode-both",
-          )}
-          onCloseAutoFocus={(e) => {
-            e.preventDefault();
-          }}
-          onOpenAutoFocus={(e) => {
-            e.preventDefault();
-          }}
-        >
-          <SheetHeader className="px-4 w-min">
-            <SheetTitle className="whitespace-nowrap w-min">
-              Reset Controls
-            </SheetTitle>
-            <SheetDescription className="min-w-[27ch] max-w-[35ch] break-word">
-              This will reset all controls to their default values
-            </SheetDescription>
-          </SheetHeader>
-        </SheetContent>
-      </Sheet>
-    </div>
+function ResetControls() {
+  const { resetControls } = useControlOptions();
+  return (
+    <MenuEntryButton
+      id="control-options-reset"
+      className="text-base"
+      onClick={() => resetControls()}
+      label="This will set all bindings to default values"
+    >
+      Reset Controls
+    </MenuEntryButton>
   );
 }
 
@@ -169,7 +107,11 @@ function PlayerBindings(props: { player: Player }) {
   const { labels } = useControlOptions();
 
   return (
-    <>
+    <div
+      className={cn(
+        "grid grid-cols-[min-content,1fr,1fr] auto-rows-fr w-fit h-full",
+      )}
+    >
       <div
         className={cn(
           "grid grid-cols-subgrid grid-rows-subgrid col-span-3",
@@ -209,7 +151,7 @@ function PlayerBindings(props: { player: Player }) {
           </div>
         );
       })}
-    </>
+    </div>
   );
 }
 
@@ -218,7 +160,6 @@ const RecordInput = memo(function RecordInput(props: {
   buttonId: keyof EmulatorJSControlMap;
   gamepad?: boolean;
 }) {
-  const { toast } = useToast();
   const [recording, setRecording] = useState(false);
   const { player, buttonId, gamepad } = props;
   const { setBindings, keyLookup, getKeyLabel, getButtonLabel } =
@@ -280,7 +221,7 @@ const RecordInput = memo(function RecordInput(props: {
         });
       }
     },
-    [recording, setBinding, gamepad, toast, keyLookup],
+    [recording, setBinding, gamepad, keyLookup],
   );
 
   const handleGamepad = useCallback(
@@ -334,6 +275,7 @@ const RecordInput = memo(function RecordInput(props: {
       onKeyDown={handleKey}
       className={cn(
         "text-base font-normal items-center pr-3 h-full",
+        "justify-start text-left whitespace-normal",
         recording && "text-accent-text text-sm italic animate-pulse",
       )}
     >

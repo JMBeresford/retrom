@@ -10,22 +10,32 @@ import {
 } from "@/providers/hotkeys";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useInputDeviceContext } from "@/providers/input-device";
-import { ComponentProps, forwardRef, useImperativeHandle, useRef } from "react";
+import { ComponentProps, forwardRef, useImperativeHandle } from "react";
+import { useFocusable, UseFocusableConfig } from "../focus-container";
 
 export const HotkeyButton = forwardRef<
   HTMLButtonElement,
-  ButtonProps & { hotkey: Hotkey }
+  ButtonProps & {
+    hotkey: Hotkey;
+    focusOpts?: UseFocusableConfig<HTMLButtonElement>;
+  }
 >((props, forwardedRef) => {
-  const ref = useRef<HTMLButtonElement>(null!);
-  useImperativeHandle(forwardedRef, () => ref.current);
-  const { children, className, hotkey, ...rest } = props;
+  const {
+    children,
+    className,
+    hotkey,
+    focusOpts = { focusable: false },
+    ...rest
+  } = props;
+  const { ref } = useFocusable<HTMLButtonElement>(focusOpts);
+  useImperativeHandle(forwardedRef, () => ref.current!);
 
   return (
     <HotkeyLayer
       id={props.id}
       handlers={{
         ACCEPT: {
-          handler: () => ref.current.click(),
+          handler: () => ref.current?.click(),
         },
       }}
     >

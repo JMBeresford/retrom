@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { MenuItem, RootMenuItem } from "..";
+import { MenuItem } from "..";
 
 export const updateLibraryMenuItem: MenuItem = {
   label: "Update Library",
@@ -41,10 +41,16 @@ export const deleteLibraryMenuItem: MenuItem = {
   ),
 };
 
-export const libraryMenu: RootMenuItem = {
+export const libraryMenu: MenuItem = {
   label: "Library",
   items: [
-    [updateLibraryMenuItem, downloadMetadataMenuItem, cleanLibraryMenuItem],
-    [deleteLibraryMenuItem],
+    {
+      groupItems: [
+        updateLibraryMenuItem,
+        downloadMetadataMenuItem,
+        cleanLibraryMenuItem,
+      ],
+    },
+    { groupItems: [deleteLibraryMenuItem] },
   ],
 };

@@ -1,55 +1,42 @@
 import { createContext, useContext, ReactNode } from "react";
-import { Config } from "@/lib/emulatorjs";
+import { Config, Core } from "@/lib/emulatorjs";
 import { EmulatorJS } from "@/lib/emulatorjs/emulator";
 import { useQuery } from "@tanstack/react-query";
-import { GameFile } from "@retrom/codegen/retrom/models/game-files";
 import { useApiUrl } from "@/utils/useApiUrl";
 import { Loader2 } from "lucide-react";
+import { useGameDetail } from "../game-details";
+import { getFileStub } from "@/lib/utils";
+import { useSearch } from "@tanstack/react-router";
+import { CoreOptionsProvider } from "./core-options";
+import { ControlOptionsProvider } from "./control-options";
+import { GameOptionsProvider } from "./game-options";
+import { EJSSessionStateProvider } from "./ejs-session";
 
 type EmulatorJSContextValue = EmulatorJS;
-export type ConfigExtended = Omit<
-  Config,
-  "onGameStart" | "ready" | "onSaveSave" | "onSaveState" | "onLoadState"
-> & {
-  ready: (emulator: EmulatorJS) => Promise<void> | void;
-  onGameStart: (emulator: EmulatorJS) => Promise<void> | void;
-  onSaveSave: (
-    emulator: EmulatorJS,
-    ...payload: Parameters<NonNullable<Config["onSaveSave"]>>
-  ) => Promise<void> | void;
-  onSaveState: (
-    emulator: EmulatorJS,
-    ...payload: Parameters<NonNullable<Config["onSaveState"]>>
-  ) => Promise<void> | void;
-  onLoadState: (
-    emulator: EmulatorJS,
-    ...payload: Parameters<NonNullable<Config["onLoadState"]>>
-  ) => Promise<void> | void;
-};
 
 const EmulatorJSContext = createContext<EmulatorJSContextValue | undefined>(
   undefined,
 );
 
-export function EmulatorJSProvider(props: {
-  file: GameFile;
-  config: ConfigExtended;
-  children: ReactNode;
-}) {
+export function EmulatorJSProvider(props: { children: ReactNode }) {
+  const { coreName } = useSearch({ strict: false });
   const apiUrl = useApiUrl();
-  const { config, file, children } = props;
+  const { gameFiles, game, gameMetadata, defaultProfile, emulator } =
+    useGameDetail();
+  const { children } = props;
 
-  const {
-    ready,
-    onGameStart,
-    onSaveSave,
-    onSaveState,
-    onLoadState,
-    ...restConfig
-  } = config;
+  const core = (coreName ?? emulator?.libretroName) as Core | undefined;
+  const file =
+    gameFiles.find((f) => f.id === game.defaultFileId) ??
+    gameFiles.find(
+      (f) =>
+        defaultProfile &&
+        defaultProfile.supportedExtensions.some((e) => f.path.endsWith(e)),
+    ) ??
+    gameFiles[0];
 
   const { data: emulatorJS } = useQuery({
-    queryKey: ["emulator-js", apiUrl, file.id, config],
+    queryKey: ["emulator-js", apiUrl, file.id],
     structuralSharing: false,
     staleTime: Infinity,
     queryFn: () => {
@@ -58,6 +45,7 @@ export function EmulatorJSProvider(props: {
           "./rest/public/emulator-js/data/",
           apiUrl,
         ).toString();
+
         const loaderUrl = new URL("./loader.js", dataUrl);
         const gameUrl = new URL(`./rest/file/${file.id}`, apiUrl).toString();
 
@@ -69,21 +57,44 @@ export function EmulatorJSProvider(props: {
           threads: !!window.SharedArrayBuffer,
           backgroundColor: "#00000000",
           startButtonName: "Launch Game",
-          ready: async () => {
-            const emulator = window.EJS_emulator!;
-            console.log(emulator);
-            resolve(emulator);
-            if (ready) {
-              await ready(emulator);
+          core,
+          startOnLoaded: true,
+          disableDatabases: true,
+          gameName: gameMetadata?.name ?? getFileStub(game.path),
+          gameID: game.id,
+          ready: () => {
+            const emulator = window.EJS_emulator;
+
+            if (!emulator) {
+              return reject(new Error("emulatorJS not initialized"));
             }
+
+            console.log("EmulatorJS initialized");
+            console.log(emulator);
+
+            emulator.on("exit", () => {
+              console.warn("emulatorJS called exit");
+            });
           },
-          onGameStart: () => onGameStart?.(window.EJS_emulator!),
-          onSaveSave: (payload) => onSaveSave?.(window.EJS_emulator!, payload),
-          onSaveState: (payload) =>
-            onSaveState?.(window.EJS_emulator!, payload),
-          onLoadState: (payload) =>
-            onLoadState?.(window.EJS_emulator!, payload),
-          ...restConfig,
+          onGameStart: () => {
+            console.log("emulatorJS called game-start");
+            const emulator = window.EJS_emulator;
+
+            if (!emulator) {
+              return reject(new Error("emulatorJS not initialized"));
+            }
+
+            resolve(emulator);
+          },
+          onSaveSave: () => {
+            console.warn("emulatorJS called save-save");
+          },
+          onSaveState: () => {
+            console.warn("emulatorJS called save-state");
+          },
+          onLoadState: () => {
+            console.warn("emulatorJS called load-state");
+          },
         };
 
         for (const k of Object.keys(configFinal)) {
@@ -102,22 +113,26 @@ export function EmulatorJSProvider(props: {
     },
   });
 
-  // Wait for the emuJS instance to be created, then create and provide
-  // context w/ valid defaults derived from the instance
-  function Provider(props: { emulatorJS: EmulatorJS; children: ReactNode }) {
+  // Wait for the emuJS instance to be created,
+  // then create and provide context
+  if (!emulatorJS) {
     return (
-      <EmulatorJSContext.Provider value={props.emulatorJS}>
-        {props.children}
-      </EmulatorJSContext.Provider>
+      <div>
+        <Loader2 className="animate-spin" />
+      </div>
     );
   }
 
-  return emulatorJS ? (
-    <Provider emulatorJS={emulatorJS}>{children}</Provider>
-  ) : (
-    <div>
-      <Loader2 className="animate-spin" />
-    </div>
+  return (
+    <EmulatorJSContext.Provider value={emulatorJS}>
+      <EJSSessionStateProvider>
+        <GameOptionsProvider>
+          <CoreOptionsProvider>
+            <ControlOptionsProvider>{children}</ControlOptionsProvider>
+          </CoreOptionsProvider>
+        </GameOptionsProvider>
+      </EJSSessionStateProvider>
+    </EmulatorJSContext.Provider>
   );
 }
 

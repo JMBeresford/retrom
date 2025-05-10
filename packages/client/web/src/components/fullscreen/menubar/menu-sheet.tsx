@@ -53,42 +53,41 @@ export function MenuSheet(props: JSX.IntrinsicElements["button"]) {
             e.stopPropagation();
           }}
         >
-          <FocusContainer
-            opts={{
-              focusKey: "menu-root",
-              isFocusBoundary: true,
-              initialFocus: true,
+          <HotkeyLayer
+            id="menu-root"
+            allowBubbling="never"
+            handlers={{
+              BACK: { handler: () => setOpen(false), zone: "menuRoot" },
             }}
           >
-            <HotkeyLayer
-              id="menu-root"
-              allowBubbling="never"
-              handlers={{
-                BACK: { handler: () => setOpen(false), zone: "menuRoot" },
-              }}
-            >
-              <SheetHeader>
-                <SheetTitle>Menu</SheetTitle>
-                <SheetDescription>Retrom configuration menu</SheetDescription>
-              </SheetHeader>
+            <SheetHeader>
+              <SheetTitle>Menu</SheetTitle>
+              <SheetDescription>Retrom configuration menu</SheetDescription>
+            </SheetHeader>
 
-              <Separator className="w-[90%] mx-auto" />
+            <Separator className="w-[90%] mx-auto" />
 
-              <ScrollArea className="h-full w-full outline-none">
-                <div className="flex flex-col h-full">
-                  <Library />
-                  <Config />
-                  <ExitFullscreen />
-                </div>
-              </ScrollArea>
+            <ScrollArea className="h-full w-full outline-none">
+              <FocusContainer
+                opts={{
+                  focusKey: "menu-root",
+                  isFocusBoundary: true,
+                  initialFocus: true,
+                }}
+                className="flex flex-col h-full"
+              >
+                <Library />
+                <Config />
+                <ExitFullscreen />
+              </FocusContainer>
+            </ScrollArea>
 
-              <SheetFooter>
-                <SheetClose asChild>
-                  <HotkeyButton hotkey="BACK">close</HotkeyButton>
-                </SheetClose>
-              </SheetFooter>
-            </HotkeyLayer>
-          </FocusContainer>
+            <SheetFooter>
+              <SheetClose asChild>
+                <HotkeyButton hotkey="BACK">close</HotkeyButton>
+              </SheetClose>
+            </SheetFooter>
+          </HotkeyLayer>
         </SheetContent>
       </SheetPortal>
     </Sheet>

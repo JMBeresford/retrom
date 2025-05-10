@@ -6,10 +6,18 @@ import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { FocusContainer, useFocusable } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { useGroupContext } from "@/providers/fullscreen/group-context";
+import { Group, useGroupContext } from "@/providers/fullscreen/group-context";
 import { Separator } from "@/components/ui/separator";
 
 const { BACKGROUND, COVER } = InterfaceConfig_GameListEntryImage;
+
+function getFirstGameId(group: Group) {
+  const firstPartitionWithGames = group.partitionedGames.find(
+    ([_, games]) => !!games.length,
+  );
+
+  return firstPartitionWithGames?.[1][0].id;
+}
 
 export function GridGameList() {
   const { activeGroup, allGroups } = useGroupContext();
@@ -30,10 +38,10 @@ export function GridGameList() {
   return allGroups.map((group) =>
     group.id === activeGroup?.id ? (
       <FocusContainer
+        key={group.id}
         opts={{
           focusKey: `game-list-${group.id}`,
           saveLastFocusedChild: false,
-          initialFocus: true,
         }}
         style={{ "--game-cols": columns, "--game-gap": `${gap}px` }}
         className={cn("flex flex-col gap-4 w-full mx-auto py-[20dvh] px-4")}
@@ -96,7 +104,8 @@ export function GridGameList() {
                   >
                     <GameListItem
                       game={game}
-                      id={`game-list-${activeGroup.id}-${game.id}`}
+                      id={`game-list-${group.id}-${game.id}`}
+                      initialFocus={game.id === getFirstGameId(group)}
                     />
                   </div>
                 ))}
@@ -108,14 +117,18 @@ export function GridGameList() {
   );
 }
 
-function GameListItem(props: { game: GameWithMetadata; id: string }) {
-  const { game, id } = props;
+function GameListItem(props: {
+  game: GameWithMetadata;
+  id: string;
+  initialFocus?: boolean;
+}) {
+  const { game, id, initialFocus } = props;
   const navigate = useNavigate();
   const { ref } = useFocusable<HTMLDivElement>({
     focusKey: id,
     forceFocus: true,
+    initialFocus,
     onFocus: ({ node }) => {
-      node?.focus({ preventScroll: true });
       node?.scrollIntoView({
         behavior: "smooth",
         block: "center",

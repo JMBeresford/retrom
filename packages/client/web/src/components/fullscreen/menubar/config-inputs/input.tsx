@@ -172,6 +172,9 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
                   className,
                 )}
                 {...rest}
+                onChange={(e) => {
+                  onChange?.(e.target.value);
+                }}
               />
             </HotkeyLayer>
           </FormControl>

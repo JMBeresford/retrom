@@ -141,6 +141,7 @@ function Inner() {
 const PlayButton = memo(() => {
   const { ref } = useFocusable<HTMLButtonElement>({
     focusKey: "fullscreen-play-button",
+    initialFocus: true,
     onFocus: ({ node }) => {
       node?.focus({ preventScroll: true });
     },
@@ -159,6 +160,7 @@ const PlayButton = memo(() => {
 const InstallButton = memo(() => {
   const { ref } = useFocusable<HTMLButtonElement>({
     focusKey: "fullscreen-install-button",
+    initialFocus: true,
     onFocus: ({ node }) => {
       node?.focus({ preventScroll: true });
     },
@@ -185,6 +187,7 @@ function DownloadButton() {
   const { game } = useGameDetail();
   const { ref } = useFocusable<HTMLButtonElement>({
     focusKey: "fullscreen-download-button",
+    initialFocus: true,
     onFocus: ({ node }) => {
       node?.focus({ preventScroll: true });
     },

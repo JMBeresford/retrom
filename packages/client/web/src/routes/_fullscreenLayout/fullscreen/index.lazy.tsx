@@ -58,7 +58,10 @@ function PartitionList() {
 
   return allGroups.map((group) =>
     group.id === activeGroup?.id ? (
-      <ScrollArea className={cn("max-h-full flex w-fit flex-col pr-2")}>
+      <ScrollArea
+        key={group.id}
+        className={cn("max-h-full flex w-fit flex-col pr-2")}
+      >
         <FocusContainer
           opts={{
             focusKey: `group-${group.id}-partition-list`,
