@@ -265,7 +265,15 @@ const RecordInput = memo(function RecordInput(props: {
       handlers={{
         ACCEPT: {
           handler: record,
-          label: "Record",
+          actionBar: {
+            label: "Record",
+          },
+        },
+        OPTION: {
+          handler: () => setBinding(""),
+          actionBar: {
+            label: "Clear",
+          },
         },
       }}
       onClick={record}

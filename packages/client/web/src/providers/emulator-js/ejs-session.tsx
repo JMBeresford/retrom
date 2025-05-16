@@ -4,6 +4,7 @@ import {
   PropsWithChildren,
   useContext,
   useCallback,
+  useLayoutEffect,
 } from "react";
 import { useEmulatorJS } from ".";
 import { File } from "@retrom/codegen/retrom/files";
@@ -16,6 +17,7 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useGameDetail } from "../game-details";
 import { millisToTimestamp } from "@/lib/utils";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
+import { Progress } from "@/components/ui/progress";
 
 export type EJSSessionState = Readonly<{
   extractSave: () => File | undefined;
@@ -79,17 +81,24 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
     const save = extractSave();
 
     if (save) {
+      const { update } = toast({
+        id: "upload-save-file",
+        title: "Uploading Save File",
+        description: <Progress />,
+        duration: Infinity,
+      });
+
       await uploadFiles.mutateAsync([save], {
         onSuccess: () => {
           emitFromFrame("save-synced");
 
-          toast({
-            title: "Save uploaded",
+          update({
+            title: "Save Uploaded",
             description: "Your save has been uploaded successfully",
           });
         },
         onError: (err) => {
-          toast({
+          update({
             title: "Failed to upload save",
             description: err.message,
             variant: "destructive",
@@ -102,17 +111,40 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
   const downloadRemoteSaveFiles = useCallback(async () => {
     const savePath = emulatorJS.gameManager?.getSaveFilePath() ?? "";
 
-    return downloadFiles.mutateAsync(savePath.replace("/data/", ""), {
-      onError: (err) => {
-        toast({
-          title: "Failed to download save",
-          description: err.message,
-          variant: "destructive",
-        });
-
-        return [];
-      },
+    const { update } = toast({
+      id: "download-remote-saves",
+      duration: Infinity,
+      title: "Downloading Save Files",
+      description: <Progress />,
     });
+
+    try {
+      const res = await downloadFiles.mutateAsync(
+        savePath.replace("/data/", ""),
+        {
+          onError: (err) => {
+            throw err;
+          },
+        },
+      );
+
+      update({
+        id: "download-remote-saves",
+        title: "Save files downloaded",
+        description: "Your save files have been downloaded successfully",
+        duration: 5000,
+      });
+
+      return res;
+    } catch (err) {
+      update({
+        title: "Failed to download save",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
+
+      return [];
+    }
   }, [downloadFiles, emulatorJS]);
 
   const loadSaveFiles = useCallback(
@@ -166,7 +198,9 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
           const durationMinutes = durationMillis / 1000 / 60;
 
           meta.lastPlayed = millisToTimestamp(startTime);
-          meta.minutesPlayed = (meta.minutesPlayed ?? 0) + durationMinutes;
+          meta.minutesPlayed = Math.floor(
+            (meta.minutesPlayed ?? 0) + durationMinutes,
+          );
         }
 
         await updateGameMetadata({
@@ -178,17 +212,21 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
     }
   }, [updateGameMetadata, gameMetadata, startTime]);
 
-  // useLayoutEffect(() => {
-  //   emulatorJS.on("saveSave", saveSaveFile);
-  //
-  //   return () => {
-  //     if (emulatorJS.functions?.["saveSave"]) {
-  //       emulatorJS.functions["saveSave"] = emulatorJS.functions[
-  //         "saveSave"
-  //       ].filter((f) => f !== saveSaveFile);
-  //     }
-  //   };
-  // }, [emulatorJS, saveSaveFile]);
+  useLayoutEffect(() => {
+    if (!emulatorJS.retromStarted) {
+      emulatorJS.retromStarted = true;
+      loadSaveFiles().catch(console.error);
+    }
+    // emulatorJS.on("saveSave", saveSaveFile);
+    //
+    // return () => {
+    //   if (emulatorJS.functions?.["saveSave"]) {
+    //     emulatorJS.functions["saveSave"] = emulatorJS.functions[
+    //       "saveSave"
+    //     ].filter((f) => f !== saveSaveFile);
+    //   }
+    // };
+  }, [emulatorJS, saveSaveFile, loadSaveFiles]);
 
   const value: EJSSessionState = useMemo(
     () => ({

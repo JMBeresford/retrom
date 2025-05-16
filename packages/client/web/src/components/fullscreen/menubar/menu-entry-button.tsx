@@ -42,8 +42,12 @@ export const MenuEntryButton = forwardRef<HTMLButtonElement, Props>(
           ...handlers,
           ACCEPT: {
             handler: () => ref.current?.click(),
-            label: "Accept",
             ...handlers?.ACCEPT,
+            actionBar: {
+              label: "Accept",
+              position: "right",
+              ...handlers?.ACCEPT?.actionBar,
+            },
           },
         }}
       >

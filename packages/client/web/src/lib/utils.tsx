@@ -82,7 +82,7 @@ export function getFileName(path: string) {
 
 export function millisToTimestamp(millis: number): Timestamp {
   const seconds = Math.floor(millis / 1000);
-  const nanos = (millis % 1000) * 1000000;
+  const nanos = Math.floor((millis % 1000) * 1000000);
 
   return { seconds, nanos };
 }

@@ -69,7 +69,10 @@ export type HotkeyHandler = (
 export type HotkeyHandlerInfo = {
   handler?: HotkeyHandler | undefined;
   zone?: HotkeyZone;
-  label?: string;
+  actionBar?: {
+    label?: string;
+    position?: "left" | "right";
+  };
 };
 
 export type HotkeyHandlers = Partial<Record<Hotkey, HotkeyHandlerInfo>>;

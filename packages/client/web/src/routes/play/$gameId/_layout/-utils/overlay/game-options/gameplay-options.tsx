@@ -1,7 +1,7 @@
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
 import { MenuItem } from "@/components/menubar";
-import { useEmulatorJS } from "@/providers/emulator-js";
 import { useGameOptions } from "@/providers/emulator-js/game-options";
+import { useNavigate } from "@tanstack/react-router";
 
 export const playPause: MenuItem = {
   Render: <PlayPauseRender />,
@@ -22,10 +22,22 @@ function PlayPauseRender() {
 }
 
 function RestartGameRender() {
-  const emulatorJS = useEmulatorJS();
+  const { restartGame } = useGameOptions();
+  const navigate = useNavigate();
 
   return (
-    <MenuEntryButton onClick={() => emulatorJS.gameManager?.restart()}>
+    <MenuEntryButton
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        restartGame();
+        navigate({
+          to: ".",
+          search: (prev) => ({ ...prev, overlay: undefined }),
+        }).catch(console.error);
+      }}
+    >
       Restart Game
     </MenuEntryButton>
   );

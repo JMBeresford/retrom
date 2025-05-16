@@ -38,8 +38,8 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
 
     const step = Number(props.step ?? 1);
     const bigStep = _bigStep ?? step * 5;
-    const min = props.min ? Number(props.min) : -Infinity;
-    const max = props.max ? Number(props.max) : Infinity;
+    const min = props.min !== undefined ? Number(props.min) : -Infinity;
+    const max = props.max !== undefined ? Number(props.max) : Infinity;
 
     const node = focusable.ref.current;
 
@@ -51,7 +51,9 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
             handler: () => {
               focusable.focusSelf();
             },
-            label: "Edit",
+            actionBar: {
+              label: "Edit",
+            },
           },
         }}
       >
@@ -86,11 +88,15 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
               handlers={{
                 ACCEPT: {
                   handler: () => wrapperFocusable.focusSelf(),
-                  label: "Accept",
+                  actionBar: {
+                    label: "Accept",
+                  },
                 },
                 BACK: {
                   handler: () => wrapperFocusable.focusSelf(),
-                  label: "Back",
+                  actionBar: {
+                    label: "Back",
+                  },
                 },
                 UP: {
                   handler: (event) => {
@@ -105,7 +111,9 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
                       event?.stopPropagation();
                     }
                   },
-                  label: `+${step}`,
+                  actionBar: {
+                    label: `+${step}`,
+                  },
                 },
                 DOWN: {
                   handler: (event) => {
@@ -120,7 +128,9 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
                       event?.stopPropagation();
                     }
                   },
-                  label: `-${step}`,
+                  actionBar: {
+                    label: `-${step}`,
+                  },
                 },
                 LEFT: {
                   handler: (event) => {
@@ -139,7 +149,9 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
                       event?.stopPropagation();
                     }
                   },
-                  label: `-${bigStep}`,
+                  actionBar: {
+                    label: `-${bigStep}`,
+                  },
                 },
                 RIGHT: {
                   handler: (event) => {
@@ -158,7 +170,9 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
                       event?.stopPropagation();
                     }
                   },
-                  label: `+${bigStep}`,
+                  actionBar: {
+                    label: `+${bigStep}`,
+                  },
                 },
               }}
             >

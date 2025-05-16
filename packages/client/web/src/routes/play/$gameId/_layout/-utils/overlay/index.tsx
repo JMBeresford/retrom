@@ -10,18 +10,18 @@ import {
 } from "@/components/ui/sheet";
 import { cn, getFileStub, Image } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { coreOptions } from "./core-options";
 import { Hotkey, useHotkeys } from "@/providers/hotkeys";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
 import { FocusContainer } from "@/components/fullscreen/focus-container";
 import { gameOptions } from "./game-options";
 import logo from "@/assets/img/Logo.png";
+import logoLong from "@/assets/img/LogoLong-NoBackground-Small.png";
 import { Separator } from "@/components/ui/separator";
 import { emulationOptions } from "./emulation-options";
 import { HotkeyButton } from "@/components/fullscreen/hotkey-button";
 import { controlOptions } from "./control-options";
-import { pause, resume } from "@noriginmedia/norigin-spatial-navigation";
 import { HotkeyLayer, useFocusedHotkeyLayer } from "@/providers/hotkeys/layers";
 import { useNavigate } from "@tanstack/react-router";
 import { useSearch } from "@tanstack/react-router";
@@ -29,6 +29,7 @@ import { useEmulatorJS } from "@/providers/emulator-js";
 import { MenuItem, MenuItemGroup, MenuRoot } from "@/components/menubar";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEJSSessionState } from "@/providers/emulator-js/ejs-session";
 
 const overlayMenu: MenuRoot = {
   items: [
@@ -92,7 +93,10 @@ function OverlayMenuSubMenu(props: { item: MenuItem }) {
         <HotkeyLayer
           id={id}
           handlers={{
-            BACK: { handler: () => setOpen(false), label: "Back" },
+            BACK: {
+              handler: () => setOpen(false),
+              actionBar: { label: "Back", position: "right" },
+            },
           }}
         >
           <FocusContainer
@@ -172,27 +176,25 @@ export const OverlayMenu = memo(function OverlayMenu(props: {
         <Separator className="mx-auto mt-4" />
       </SheetHeader>
 
-      <HotkeyLayer id="menu-root">
-        <div className="flex flex-col h-full">
-          <FocusContainer
-            opts={{
-              focusKey: "menu-root",
-              isFocusBoundary: true,
-              forceFocus: true,
-            }}
-          >
-            <ScrollArea className="flex flex-col h-full">
-              {overlayMenu.items.map((sub, idx) =>
-                "groupItems" in sub ? (
-                  <OverlayMenuItemGroup key={idx} group={sub} />
-                ) : (
-                  <OverlayMenuItem key={idx} item={sub} />
-                ),
-              )}
-            </ScrollArea>
-          </FocusContainer>
-        </div>
-      </HotkeyLayer>
+      <div className="flex flex-col h-full">
+        <FocusContainer
+          opts={{
+            focusKey: "menu-root",
+            isFocusBoundary: true,
+            forceFocus: true,
+          }}
+        >
+          <ScrollArea className="flex flex-col h-full">
+            {overlayMenu.items.map((sub, idx) =>
+              "groupItems" in sub ? (
+                <OverlayMenuItemGroup key={idx} group={sub} />
+              ) : (
+                <OverlayMenuItem key={idx} item={sub} />
+              ),
+            )}
+          </ScrollArea>
+        </FocusContainer>
+      </div>
     </SheetContent>
   );
 });
@@ -215,7 +217,7 @@ export function Overlay() {
 
   useHotkeys({
     handlers: {
-      MENU: { handler: () => toggleOpen() },
+      MENU: { handler: () => toggleOpen(), actionBar: { label: "Open" } },
     },
   });
 
@@ -226,9 +228,9 @@ export function Overlay() {
         search: (prev) => {
           const open = value ?? !prev.overlay;
           if (open) {
-            resume();
+            // resume();
           } else {
-            pause();
+            // pause();
             emulatorJS.elements.parent.focus();
           }
 
@@ -250,24 +252,36 @@ export function Overlay() {
             : "bg-transparent pointer-events-none touch-none",
         )}
       >
-        <div id="overlay-container" className="relative w-fit">
-          <OverlayMenu
-            core={emulator?.name ?? emulatorJS.coreName}
-            name={name}
-            platform={platformMetadata?.name ?? getFileStub(platform.path)}
-            imgSrc={gameMetadata?.coverUrl ?? logo}
-          />
-        </div>
+        <HotkeyLayer
+          id="menu-root"
+          allowBubbling="never"
+          handlers={{
+            BACK: {
+              handler: () => toggleOpen(false),
+            },
+            MENU: {
+              handler: () => toggleOpen(false),
+            },
+          }}
+        >
+          <div id="overlay-container" className="relative w-fit">
+            <OverlayMenu
+              core={emulator?.name ?? emulatorJS.coreName}
+              name={name}
+              platform={platformMetadata?.name ?? getFileStub(platform.path)}
+              imgSrc={gameMetadata?.coverUrl ?? logo}
+            />
+          </div>
+        </HotkeyLayer>
 
         <div
           className={cn(
-            "hidden sm:flex justify-between bg-background h-min border-t",
+            "hidden sm:flex bg-background h-min border-t",
             "py-2 fill-mode-both",
             "slide-in-from-bottom fade-in slide-out-to-bottom fade-out",
             open ? "animate-in " : "animate-out ",
           )}
         >
-          <HotkeyButton hotkey="MENU">Close</HotkeyButton>
           <ActionBar />
         </div>
       </div>
@@ -276,12 +290,15 @@ export function Overlay() {
 }
 
 function ExitGame() {
-  const emulatorJS = useEmulatorJS();
+  const { handleExit, saveSaveFile } = useEJSSessionState();
 
   return (
     <MenuEntryButton
-      onClick={() => emulatorJS?.callEvent("exit", {})}
-      label="Return to your Retrom library"
+      onClick={async () => {
+        await saveSaveFile();
+        handleExit().catch(console.error);
+      }}
+      label="Return to your Retrom library."
     >
       Exit Game
     </MenuEntryButton>
@@ -291,30 +308,73 @@ function ExitGame() {
 function ActionBar() {
   const { focusedHotkeyLayer } = useFocusedHotkeyLayer();
 
-  const getActiveHotkey = useCallback(
-    (hotkey: Hotkey) => {
+  const hotkeys = useMemo(() => {
+    function getActiveHotkey(hotkey: Hotkey) {
       let layer = focusedHotkeyLayer;
       while (layer) {
         if (layer.handlers?.[hotkey]) {
-          return layer.handlers?.[hotkey];
+          return layer.handlers[hotkey];
         }
 
         layer = layer.parentLayer;
       }
-    },
-    [focusedHotkeyLayer],
-  );
-  return (
-    <div className="flex gap-2">
-      {Hotkey.map((hotkey) => {
-        const handler = getActiveHotkey(hotkey);
+    }
 
-        return handler?.label ? (
-          <HotkeyButton key={hotkey} hotkey={hotkey}>
-            {handler.label}
-          </HotkeyButton>
-        ) : null;
-      })}
+    const hotkeys = Hotkey.flatMap((hotkey) => {
+      const handler = getActiveHotkey(hotkey);
+
+      return handler ? [{ hotkey, handler }] : [];
+    }).concat([
+      {
+        hotkey: "MENU",
+        handler: { actionBar: { label: "Close Menu", position: "left" } },
+      },
+    ]);
+
+    return {
+      left: hotkeys.filter((h) => h.handler.actionBar?.position === "left"),
+      right: hotkeys.filter((h) => h.handler.actionBar?.position !== "left"),
+    };
+  }, [focusedHotkeyLayer]);
+
+  return (
+    <div className="grid grid-cols-3 gap-2 w-full h-full">
+      <div className="flex gap-2">
+        {hotkeys.left.map(({ hotkey, handler }) => {
+          const { label } = handler?.actionBar ?? {};
+
+          if (!label) {
+            return null;
+          }
+
+          return (
+            <HotkeyButton key={hotkey} hotkey={hotkey}>
+              {label}
+            </HotkeyButton>
+          );
+        })}
+      </div>
+
+      <Image
+        src={logoLong}
+        className="h-5 col-start-2 row-start-1 place-self-center"
+      />
+
+      <div className="flex gap-2 justify-end">
+        {hotkeys.right.map(({ hotkey, handler }) => {
+          const { label } = handler?.actionBar ?? {};
+
+          if (!label) {
+            return null;
+          }
+
+          return (
+            <HotkeyButton key={hotkey} hotkey={hotkey}>
+              {label}
+            </HotkeyButton>
+          );
+        })}
+      </div>
     </div>
   );
 }

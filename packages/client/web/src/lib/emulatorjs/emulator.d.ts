@@ -26,6 +26,8 @@ export declare class EmulatorJS {
   saveFileExt: string | false;
   functions?: { [key: string]: Array<() => unknown> };
   touch?: boolean;
+  started?: boolean;
+  retromStarted?: boolean;
   elements: {
     main: HTMLElement;
     parent: HTMLElement;

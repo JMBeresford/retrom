@@ -41,7 +41,10 @@ const ConfigCheckbox = forwardRef<
         id={`${id}-hotkeys`}
         className="block"
         handlers={{
-          ACCEPT: { handler: () => ref.current?.click(), label: "Toggle" },
+          ACCEPT: {
+            handler: () => ref.current?.click(),
+            actionBar: { label: "Toggle" },
+          },
         }}
       >
         <Checkbox

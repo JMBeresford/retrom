@@ -144,21 +144,22 @@ export function ManageEmulatorsModal() {
           <Tabs defaultValue="emulators">
             <div className="w-full mb-6">
               <TabsList className="flex">
-                <TabsTrigger value="emulators" className="basis-1/2">
+                <TabsTrigger value="emulators" className="w-full">
                   All Emulators
                 </TabsTrigger>
 
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger className="cursor-default basis-1/2">
-                      <TabsTrigger
-                        disabled={!checkIsDesktop()}
-                        className="w-full"
-                        value="local-configs"
-                      >
+                    <TabsTrigger
+                      asChild
+                      disabled={!checkIsDesktop()}
+                      className="w-full"
+                      value="local-configs"
+                    >
+                      <TooltipTrigger className="disabled:pointer-events-auto">
                         Local Paths
-                      </TabsTrigger>
-                    </TooltipTrigger>
+                      </TooltipTrigger>
+                    </TabsTrigger>
 
                     <TooltipContent
                       className={cn(checkIsDesktop() && "hidden")}

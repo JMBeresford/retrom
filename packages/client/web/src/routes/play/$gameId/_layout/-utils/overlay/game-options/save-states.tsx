@@ -117,7 +117,9 @@ function StateList(props: { listKind: "save" | "load" }) {
           handlers={{
             OPTION: {
               handler: () => setOptsOpen((prev) => !prev),
-              label: "Options",
+              actionBar: {
+                label: "Options",
+              },
             },
           }}
         >
@@ -179,16 +181,20 @@ function StateList(props: { listKind: "save" | "load" }) {
         >
           <DropdownMenuContent
             onCloseAutoFocus={(e) => e.preventDefault()}
-            className="p-0 [&_button]:py-3 [&_button]:pl-4 z-[100]"
+            className="p-0 [&_button]:py-3 [&_button]:px-4 z-[100]"
           >
             <HotkeyLayer
               id={id + "-options"}
               handlers={{
-                BACK: { handler: () => setOptsOpen(false), label: "Close" },
+                BACK: {
+                  handler: () => setOptsOpen(false),
+                  actionBar: { label: "Close" },
+                },
               }}
             >
               <DropdownMenuItem asChild>
                 <MenuEntryButton
+                  focusOpts={{ initialFocus: true }}
                   id={id + "-upload"}
                   onClick={async () => {
                     if (info) {
