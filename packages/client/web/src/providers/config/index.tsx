@@ -98,8 +98,8 @@ const configStore = create<LocalConfig>()(
         onRehydrateStorage: (state) => {
           return (_s, err) => {
             if (err) {
-              console.error("Failed to rehydrate storage", err);
-              return;
+              console.error("Failed to rehydrate storage", err, state, _s);
+              // return;
             }
             state.setHasHydrated(true);
           };

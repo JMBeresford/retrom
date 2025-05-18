@@ -1,9 +1,18 @@
 {
   "name": "retrom",
   "type": "module",
+  "scripts": {
+    "start:desktop": "pnpm turbo --filter @retrom/client --filter @retrom/service dev --filter @retrom/client-web dev:desktop",
+    "start:web": "pnpm turbo --filter @retrom/client-web --filter @retrom/service dev"
+  },
   "devDependencies": {
+    "@opentelemetry/context-zone": "^2.0.1",
+    "@opentelemetry/instrumentation": "^0.201.0",
+    "@opentelemetry/instrumentation-fetch": "^0.201.0",
     "@tauri-apps/cli": "^2.4.1",
     "@turbo/gen": "^2.5.0",
+    "@uptrace/web": "^1.23.0",
+    "dotenv": "^16.5.0",
     "eslint": "^9.25.1",
     "prettier": "^3.5.3",
     "tslib": "^2.8.1",
@@ -17,6 +26,13 @@
     "eslint": "$eslint"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.201.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.201.0",
+    "@opentelemetry/instrumentation-document-load": "^0.46.0",
+    "@opentelemetry/resources": "^2.0.1",
+    "@opentelemetry/sdk-trace-web": "^2.0.1",
+    "@opentelemetry/semantic-conventions": "^1.33.0",
     "@tauri-apps/api": "^2.2.0"
   },
   "packageManager": "pnpm@10.7.0"
