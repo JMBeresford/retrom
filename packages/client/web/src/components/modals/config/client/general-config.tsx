@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { checkIsDesktop } from "@/lib/env";
-import { cn } from "@/lib/utils";
+import { cn, InferSchema } from "@/lib/utils";
 import { useConfigStore } from "@/providers/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
@@ -22,28 +22,44 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { migrateInstallationDir } from "@retrom/plugin-installer";
 import { z } from "zod";
+import { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config_pb";
+import { RawMessage } from "@/utils/protos";
 
 type ConfigSchema = z.infer<typeof configSchema>;
 const configSchema = z.object({
-  interface: z.object({
-    fullscreenByDefault: z.boolean(),
+  config: z.object({
+    interface: z.object({
+      fullscreenByDefault: z.boolean(),
+    }),
+    installationDir: z.string().optional(),
   }),
-  installationDir: z.string().optional(),
-});
+  telemetry: z.object({
+    enabled: z.boolean(),
+  }),
+}) satisfies InferSchema<
+  Pick<RawMessage<RetromClientConfig>, "config" | "telemetry">
+>;
 
 export function GeneralConfig() {
   const navigate = useNavigate();
   const configStore = useConfigStore();
-  const config = configStore((s) => s.config);
+  const { config, telemetry } = configStore();
   const { toast } = useToast();
+
+  console.log({ config, telemetry });
 
   const form = useForm<ConfigSchema>({
     resolver: zodResolver(configSchema),
     defaultValues: {
-      interface: {
-        fullscreenByDefault: config?.interface?.fullscreenByDefault ?? false,
+      config: {
+        interface: {
+          fullscreenByDefault: config?.interface?.fullscreenByDefault ?? false,
+        },
+        installationDir: config?.installationDir ?? "",
       },
-      installationDir: config?.installationDir ?? "",
+      telemetry: {
+        enabled: telemetry?.enabled ?? false,
+      },
     },
   });
 
@@ -51,11 +67,11 @@ export function GeneralConfig() {
     async (values: ConfigSchema) => {
       if (
         checkIsDesktop() &&
-        values.installationDir &&
-        values.installationDir !== config?.installationDir
+        values.config.installationDir &&
+        values.config.installationDir !== config?.installationDir
       ) {
         try {
-          await migrateInstallationDir(values.installationDir);
+          await migrateInstallationDir(values.config.installationDir);
         } catch (e) {
           toast({
             title: "Failed to migrate installation directory",
@@ -81,9 +97,14 @@ export function GeneralConfig() {
           ...s.config,
           interface: {
             ...s.config?.interface,
-            ...values.interface,
+            ...values.config.interface,
           },
-          installationDir: values.installationDir,
+          installationDir: values.config.installationDir,
+        };
+
+        s.telemetry = {
+          ...s.telemetry,
+          enabled: values.telemetry.enabled,
         };
 
         return s;
@@ -106,7 +127,7 @@ export function GeneralConfig() {
           <FormField
             control={form.control}
             disabled={!checkIsDesktop()}
-            name="installationDir"
+            name="config.installationDir"
             render={({ field, fieldState: { isDirty } }) => (
               <FormItem className={cn(!checkIsDesktop() && "hidden")}>
                 <FormLabel>Installation Directory</FormLabel>
@@ -151,7 +172,7 @@ export function GeneralConfig() {
 
           <FormField
             control={form.control}
-            name="interface.fullscreenByDefault"
+            name="config.interface.fullscreenByDefault"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
@@ -169,6 +190,37 @@ export function GeneralConfig() {
                       <p className="text-sm text-muted-foreground">
                         Enabling this will make Retrom launch in fullscreen mode
                         by default
+                      </p>
+                    </div>
+                  </div>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="telemetry.enabled"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <div className="flex items-top gap-2">
+                    <Checkbox
+                      id="telemetry-enabled"
+                      checked={field.value}
+                      onCheckedChange={(val) => field.onChange(val)}
+                    />
+                    <div className={cn("grid gap-1 5 leading-none")}>
+                      <label htmlFor="telemetry-enabled">
+                        Enable Telemetry
+                        <span className="text-xs text-muted-foreground ml-1">
+                          (requires restart)
+                        </span>
+                      </label>
+
+                      <p className="text-sm text-muted-foreground max-w-[45ch]">
+                        Send anonymous usage data such as performance metrics
+                        and errors to help improve Retrom.
                       </p>
                     </div>
                   </div>

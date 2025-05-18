@@ -46,11 +46,14 @@
       }
     ],
     "security": {
+      "csp": null,
       "headers": {
+        "Access-Control-Allow-Credentials": "true",
         "Cross-Origin-Embedder-Policy": "credentialless",
-        "Cross-Origin-Opener-Policy": "same-origin"
-      },
-      "csp": null
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Access-Control-Allow-Headers": ["traceparent"],
+        "Access-Control-Allow-Methods": "*"
+      }
     }
   },
   "plugins": {

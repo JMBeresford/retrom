@@ -177,7 +177,6 @@ impl GameService for GameServiceHandlers {
         Ok(Response::new(response))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn update_games(
         &self,
         request: Request<retrom::UpdateGamesRequest>,
@@ -293,7 +292,6 @@ impl GameService for GameServiceHandlers {
         Ok(Response::new(response))
     }
 
-    #[tracing::instrument(skip(self, request), fields(request = ?request))]
     async fn delete_game_files(
         &self,
         request: Request<retrom::DeleteGameFilesRequest>,
@@ -359,7 +357,6 @@ impl GameService for GameServiceHandlers {
         Ok(Response::new(response))
     }
 
-    #[tracing::instrument(skip(self, request))]
     async fn update_game_files(
         &self,
         request: Request<retrom::UpdateGameFilesRequest>,

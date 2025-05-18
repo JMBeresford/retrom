@@ -16,42 +16,44 @@ export function useClientVersion<Err = DefaultError, Data = FnData>(
   const queryOpts: UseQueryOptions<FnData, Err, Data> = {
     ...opts,
     queryKey: ["client-version"],
-    queryFn: async () => {
-      if (import.meta.env.SSR) {
-        const { readLocalCargoToml } = await import("@/lib/node-utils");
-
-        return (
-          parseVersion(readLocalCargoToml()) ??
-          create(VersionSchema, {
-            major: 0,
-            minor: 0,
-            patch: 0,
-          })
-        );
-      }
-
-      if (checkIsDesktop()) {
-        const version = parseVersion(await getVersion());
-        if (!version) {
-          throw new Error("No version found");
-        }
-
-        return version;
-      }
-
-      const version = parseVersion(
-        import.meta.env.RETROM_VERSION || import.meta.env.VITE_RETROM_VERSION,
-      );
-
-      if (!version) {
-        throw new Error("No version found");
-      }
-
-      return version;
-    },
+    queryFn: getClientVersion,
   };
 
   return useQuery({
     ...queryOpts,
   });
+}
+
+export async function getClientVersion() {
+  if (import.meta.env.SSR) {
+    const { readLocalCargoToml } = await import("@/lib/node-utils");
+
+    return (
+      parseVersion(readLocalCargoToml()) ??
+      create(VersionSchema, {
+        major: 0,
+        minor: 0,
+        patch: 0,
+      })
+    );
+  }
+
+  if (checkIsDesktop()) {
+    const version = parseVersion(await getVersion());
+    if (!version) {
+      throw new Error("No version found");
+    }
+
+    return version;
+  }
+
+  const version = parseVersion(
+    import.meta.env.RETROM_VERSION || import.meta.env.VITE_RETROM_VERSION,
+  );
+
+  if (!version) {
+    throw new Error("No version found");
+  }
+
+  return version;
 }

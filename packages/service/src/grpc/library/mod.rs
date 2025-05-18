@@ -11,7 +11,6 @@ use retrom_codegen::retrom::{
 use retrom_db::Pool;
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Result, Status};
-use tracing::instrument;
 
 pub mod content_resolver;
 mod delete_handlers;
@@ -46,7 +45,6 @@ impl LibraryServiceHandlers {
 
 #[tonic::async_trait]
 impl LibraryService for LibraryServiceHandlers {
-    #[tracing::instrument(skip_all)]
     async fn update_library(
         &self,
         request: Request<UpdateLibraryRequest>,
@@ -57,7 +55,6 @@ impl LibraryService for LibraryServiceHandlers {
         }
     }
 
-    #[instrument(skip_all)]
     async fn update_library_metadata(
         &self,
         request: Request<UpdateLibraryMetadataRequest>,
@@ -68,7 +65,6 @@ impl LibraryService for LibraryServiceHandlers {
         }
     }
 
-    #[instrument(skip_all)]
     async fn delete_library(
         &self,
         request: Request<DeleteLibraryRequest>,
@@ -79,7 +75,6 @@ impl LibraryService for LibraryServiceHandlers {
         }
     }
 
-    #[instrument(skip_all)]
     async fn delete_missing_entries(
         &self,
         request: Request<DeleteMissingEntriesRequest>,

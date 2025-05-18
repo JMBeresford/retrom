@@ -10,6 +10,7 @@ import { JobService } from "@retrom/codegen/retrom/services/job-service_pb";
 import { FileExplorerService } from "@retrom/codegen/retrom/services/file-explorer-service_pb";
 import { SavesService } from "@retrom/codegen/retrom/services/saves-service_pb";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
+import { otelInterceptor } from "./otel";
 
 export class RetromClient {
   readonly host: string;
@@ -33,6 +34,7 @@ export class RetromClient {
 
     const transport = createGrpcWebTransport({
       baseUrl: host,
+      interceptors: [otelInterceptor],
     });
 
     this.gameClient = createClient(GameService, transport);

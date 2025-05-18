@@ -13,7 +13,7 @@ const iconVariants = cva("w-[1rem] h-[1rem]", {
     variant: {
       info: "text-primary",
       warn: "text-yellow-300",
-      alert: "text-destructive-text",
+      destructive: "text-destructive-text",
     },
   },
   defaultVariants: {
@@ -27,7 +27,7 @@ const IconMap: Record<
 > = {
   info: (props) => <InfoIcon {...props} />,
   warn: (props) => <CircleAlertIcon {...props} />,
-  alert: (props) => <CircleAlertIcon {...props} />,
+  destructive: (props) => <CircleAlertIcon {...props} />,
 };
 
 export function Callout(props: CalloutProps & JSX.IntrinsicElements["div"]) {

@@ -2,6 +2,7 @@ use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
+use otel::{init_tracing_subscriber, span_from_grpc_request};
 use retrom_db::run_migrations;
 use retry::retry;
 use std::{
@@ -15,6 +16,7 @@ use std::{
 use tokio::task::JoinHandle;
 use tower::Service;
 use tracing::Instrument;
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 #[cfg(feature = "embedded_db")]
 use retrom_db::embedded::DB_NAME;
@@ -23,6 +25,7 @@ pub mod config;
 pub mod emulator_js;
 mod grpc;
 pub mod meta;
+pub mod otel;
 mod providers;
 mod rest;
 
@@ -30,7 +33,7 @@ pub const DEFAULT_PORT: i32 = 5101;
 pub const DEFAULT_DB_URL: &str = "postgres://postgres:postgres@localhost/retrom";
 const CARGO_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[tracing::instrument]
+#[tracing::instrument(name = "root_span")]
 pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr) {
     let _ = emulator_js::EmulatorJs::new().await;
     let config_manager = match crate::config::ServerConfigManager::new() {
@@ -40,6 +43,11 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
             exit(1)
         }
     };
+
+    let config = config_manager.get_config().await;
+    if config.telemetry.is_some_and(|t| t.enabled) {
+        init_tracing_subscriber();
+    }
 
     let (mut port, mut db_url) = (DEFAULT_PORT, DEFAULT_DB_URL.to_string());
 
@@ -122,7 +130,6 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
             .into_iter()
             .for_each(|migration| tracing::info!("Ran migration: {}", migration));
     })
-    .instrument(tracing::info_span!("run_migrations"))
     .await
     .expect("Could not run migrations");
 
@@ -154,48 +161,89 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
         let mut rest_service = rest_service.clone();
         let mut grpc_service = grpc_service.clone();
         std::future::ready(Ok::<_, Infallible>(tower::service_fn(
-            move |req: hyper::Request<hyper::Body>| match is_grpc_request(&req) {
-                false => Either::Left({
-                    let res = rest_service.call(req);
-                    Box::pin(async move {
-                        let res = res.await.map(|res| res.map(EitherBody::Left))?;
-                        Ok::<_, Error>(res)
-                    })
-                }),
-                true => Either::Right({
-                    let res = grpc_service.call(req);
-                    Box::pin(async move {
-                        let res = res.await.map(|res| res.map(EitherBody::Right))?;
-                        Ok::<_, Error>(res)
-                    })
-                }),
+            move |req: hyper::Request<hyper::Body>| {
+                let span = span_from_grpc_request(&req);
+
+                match is_grpc_request(&req) {
+                    false => Either::Left({
+                        let res = span.in_scope(|| rest_service.call(req));
+
+                        Box::pin(
+                            async move {
+                                let res = res.await.map(|res| res.map(EitherBody::Left))?;
+                                Ok::<_, Error>(res)
+                            }
+                            .instrument(span),
+                        )
+                    }),
+                    true => Either::Right({
+                        let res = span.in_scope(|| grpc_service.call(req));
+
+                        Box::pin(
+                            async move {
+                                let res = res.await.map(|res| {
+                                    let grpc_status = res
+                                        .headers()
+                                        .get("grpc-status")
+                                        .and_then(|h| h.to_str().ok())
+                                        .map(|h| h.to_string());
+
+                                    let grpc_message = res
+                                        .headers()
+                                        .get("grpc-message")
+                                        .and_then(|h| h.to_str().ok())
+                                        .map(|h| h.to_string());
+
+                                    if let Some(ref grpc_message) = grpc_message {
+                                        span.record(
+                                            "rpc.grpc.metadata.messages",
+                                            format!("{:#?}", vec![&grpc_message]),
+                                        );
+                                    }
+
+                                    if let Some(grpc_status) = grpc_status {
+                                        span.record("rpc.grpc.status_code", &grpc_status);
+
+                                        if grpc_status != "0" {
+                                            span.set_status(opentelemetry::trace::Status::error(
+                                                grpc_message.unwrap_or_default(),
+                                            ));
+                                        }
+                                    }
+
+                                    res.map(EitherBody::Right)
+                                })?;
+
+                                Ok::<_, Error>(res)
+                            }
+                            .in_current_span(),
+                        )
+                    }),
+                }
             },
         )))
     }));
 
     let port = server.local_addr();
 
-    let handle: JoinHandle<()> = tokio::spawn(
-        async move {
-            if let Err(why) = server.await {
-                tracing::error!("Server error: {}", why);
-            }
-
-            #[cfg(feature = "embedded_db")]
-            if let Some(psql_running) = psql {
-                use retrom_db::embedded::PgCtlFailsafeOperations;
-
-                if let Err(why) = psql_running.failsafe_stop().await {
-                    tracing::error!("Could not stop embedded db: {}", why);
-                }
-
-                tracing::info!("Embedded db stopped");
-            }
-
-            tracing::info!("Server stopped");
+    let handle: JoinHandle<()> = tokio::spawn(async move {
+        if let Err(why) = server.await {
+            tracing::error!("Server error: {}", why);
         }
-        .instrument(tracing::info_span!("server_handle")),
-    );
+
+        #[cfg(feature = "embedded_db")]
+        if let Some(psql_running) = psql {
+            use retrom_db::embedded::PgCtlFailsafeOperations;
+
+            if let Err(why) = psql_running.failsafe_stop().await {
+                tracing::error!("Could not stop embedded db: {}", why);
+            }
+
+            tracing::info!("Embedded db stopped");
+        }
+
+        tracing::info!("Server stopped");
+    });
 
     (handle, port)
 }

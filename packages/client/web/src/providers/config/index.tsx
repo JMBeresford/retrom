@@ -53,6 +53,10 @@ const defaultConfig: RetromClientConfigJson = {
   },
   flowCompletions: {
     setupComplete: false,
+    telemetryEnabled: false,
+  },
+  telemetry: {
+    enabled: false,
   },
 };
 
@@ -71,13 +75,13 @@ const initialConfig = configFile
   ? toJson(RetromClientConfigSchema, configFile)
   : defaultConfig;
 
-const configStore = create<LocalConfig>()(
+export const configStore = create<LocalConfig>()(
   subscribeWithSelector(
     persist(() => initialConfig, {
       name: STORAGE_KEY,
-      version: 4,
+      version: 5,
       migrate,
-      skipHydration: true,
+      skipHydration: checkIsDesktop(),
       onRehydrateStorage: (state) => {
         console.log("Rehydrating config state", state);
       },

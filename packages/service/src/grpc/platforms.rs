@@ -81,7 +81,6 @@ impl PlatformService for PlatformServiceHandlers {
         Ok(Response::new(response))
     }
 
-    #[tracing::instrument(skip(self))]
     async fn update_platforms(
         &self,
         request: Request<UpdatePlatformsRequest>,
@@ -217,7 +216,6 @@ impl PlatformService for PlatformServiceHandlers {
         Ok(Response::new(response))
     }
 
-    #[tracing::instrument(skip(self))]
     async fn delete_platforms(
         &self,
         request: Request<DeletePlatformsRequest>,

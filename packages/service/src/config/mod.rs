@@ -25,7 +25,6 @@ pub struct ServerConfigManager {
 }
 
 impl ServerConfigManager {
-    #[tracing::instrument(name = "ServerConfigManager::new")]
     pub fn new() -> Result<Self> {
         dotenvy::dotenv().ok();
         let dirs = RetromDirs::new();

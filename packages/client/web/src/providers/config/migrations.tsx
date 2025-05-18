@@ -27,6 +27,7 @@ const migrationFns: Record<number, (config: object) => object> = {
   1: migrateV1toV2,
   2: migrateV2toV3,
   3: migrateV3toV4,
+  4: migrateV4toV5,
 };
 
 function migrateV1toV2(oldConfig: Versions.ConfigV1): Versions.ConfigV2 {
@@ -65,4 +66,17 @@ function migrateV3toV4(oldConfig: Versions.ConfigV3): Versions.ConfigV4 {
   const newConfig: Versions.ConfigV4 = oldConfig;
 
   return newConfig;
+}
+
+function migrateV4toV5(oldConfig: Versions.ConfigV4): Versions.ConfigV5 {
+  return {
+    ...oldConfig,
+    flowCompletions: {
+      ...oldConfig.flowCompletions,
+      telemetryEnabled: false,
+    },
+    telemetry: {
+      enabled: false,
+    },
+  };
 }
