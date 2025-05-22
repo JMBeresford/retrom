@@ -45,4 +45,29 @@ pub mod retrom {
             })
         }
     }
+
+    impl TryFrom<PathBuf> for crate::retrom::files::FileStat {
+        type Error = ();
+
+        fn try_from(path_buf: PathBuf) -> Result<Self, Self::Error> {
+            let metadata = path_buf.metadata().or(Err(()))?;
+            let path = path_buf.canonicalize().or(Err(()))?;
+            let path = path.to_str().ok_or(())?.into();
+            let node_type = if path_buf.is_dir() {
+                crate::retrom::FilesystemNodeType::Directory as i32
+            } else {
+                crate::retrom::FilesystemNodeType::File as i32
+            };
+
+            let created_at = metadata.created().ok().map(|t| t.into());
+            let updated_at = metadata.modified().ok().map(|t| t.into());
+
+            Ok(crate::retrom::files::FileStat {
+                path,
+                node_type,
+                created_at,
+                updated_at,
+            })
+        }
+    }
 }

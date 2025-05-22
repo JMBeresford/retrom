@@ -61,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let queryable_models: [ModelDefinitionParams; 13] = [
         ("Platform", "platforms", None, vec![]),
-        ("Game", "games", None, vec![]),
+        ("Game", "games", None, vec!["Platform"]),
         (
             "GameFile",
             "game_files",

@@ -34,6 +34,7 @@ pub mod library;
 pub mod metadata;
 pub mod platforms;
 pub mod server;
+mod saves;
 
 const DEFAULT_MAX_AGE: Duration = Duration::from_secs(24 * 60 * 60);
 const DEFAULT_EXPOSED_HEADERS: [HeaderName; 3] = [
