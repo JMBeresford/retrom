@@ -9,6 +9,7 @@ use retrom_plugin_installer::InstallerExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
 use tauri::{command, AppHandle, Runtime};
+use tauri_plugin_opener::OpenerExt;
 use tokio::sync::Mutex;
 use tracing::{info, instrument};
 use walkdir::WalkDir;
@@ -55,11 +56,11 @@ pub(crate) async fn play_game<R: Runtime>(
     }
 
     let game_id = game.id;
-    let profile = payload
-        .emulator_profile
-        .expect("No emulator profile provided");
-    let emulator = payload.emulator.expect("No emulator provided");
     let maybe_default_game_file = payload.file;
+    let emulator = payload.emulator;
+    
+    // Handle the case when no emulator profile is provided
+    let use_system_default = payload.emulator_profile.is_none();
 
     let maybe_default_file = maybe_default_game_file
         .clone()
@@ -92,16 +93,23 @@ pub(crate) async fn play_game<R: Runtime>(
     tracing::debug!("Files: {:?}", files);
     tracing::debug!("Default file: {:?}", &maybe_default_file);
 
-    let fallback_file = match profile.supported_extensions.is_empty() {
-        true => files
-            .iter()
-            .find(|file| Some(*file) != maybe_default_file.as_ref()),
-        false => files.iter().find(|file| {
-            profile
-                .supported_extensions
+    let fallback_file = if use_system_default {
+        // When using system default, just find any file if default is not specified
+        files.iter().find(|file| Some(*file) != maybe_default_file.as_ref())
+    } else {
+        // Original behavior for emulator profiles
+        let profile = payload.emulator_profile.as_ref().unwrap();
+        match profile.supported_extensions.is_empty() {
+            true => files
                 .iter()
-                .any(|ext| file.extension().and_then(OsStr::to_str) == Some(ext.as_str()))
-        }),
+                .find(|file| Some(*file) != maybe_default_file.as_ref()),
+            false => files.iter().find(|file| {
+                profile
+                    .supported_extensions
+                    .iter()
+                    .any(|ext| file.extension().and_then(OsStr::to_str) == Some(ext.as_str()))
+            }),
+        }
     };
 
     tracing::debug!("Fallback file: {:?}", fallback_file);
@@ -128,89 +136,122 @@ pub(crate) async fn play_game<R: Runtime>(
         None => return Err(crate::Error::FileNotFound(game_id)),
     };
 
-    let install_dir = match install_dir.canonicalize()?.to_str() {
-        Some(path) => path.to_string(),
-        None => return Err(crate::Error::FileNotFound(game_id)),
-    };
-
-    let client_config = app.config_manager().get_config().await;
-
-    let client_id = client_config
-        .config
-        .and_then(|c| c.client_info.map(|info| info.id))
-        .expect("Client ID not found");
-
-    let mut emulator_client = app.get_emulator_client().await;
-    let res = emulator_client
-        .get_local_emulator_configs(GetLocalEmulatorConfigsRequest {
-            client_id,
-            emulator_ids: vec![emulator.id],
-        })
-        .await
-        .expect("Failed to get local emulator configs")
-        .into_inner();
-
-    let local_config = res.configs.first().expect("No emulator config found");
-
-    let mut cmd = launcher.get_open_cmd(&local_config.executable_path);
-
-    let args = if !profile.custom_args.is_empty() {
-        #[allow(clippy::literal_string_with_formatting_args)]
-        profile
-            .custom_args
-            .into_iter()
-            .map(|arg| match arg.starts_with("\"") && arg.ends_with("\"") {
-                false => arg,
-                true => arg[1..arg.len() - 1].to_string(),
-            })
-            .map(|arg| match arg.starts_with("'") && arg.ends_with("'") {
-                false => arg,
-                true => arg[1..arg.len() - 1].to_string(),
-            })
-            .map(|arg| arg.replace("{file}", &file_path))
-            .map(|arg| arg.replace("{install_dir}", &install_dir))
-            .collect()
-    } else {
-        vec![file_path]
-    };
-
-    info!("Args Constructed: {:?}", args);
-
-    cmd.args(args);
-
+    // Create process to track game play time
     let (send, mut recv) = tokio::sync::mpsc::channel(1);
-    let mut process = cmd.spawn()?;
     let send = Mutex::new(send);
+    
+    if use_system_default {
+        // Use system default application to open the file
+        tracing::info!("Opening file with system default application: {}", file_path);
+        app.opener().open_path(file_path, None::<&str>)?;
+        
+        // Mark game as running
+        launcher
+            .mark_game_as_running(
+                game_id,
+                GameProcess {
+                    send,
+                    start_time: std::time::SystemTime::now(),
+                },
+            )
+            .await?;
+            
+        // We can't track when the user closes the application when using system default,
+        // so we'll wait for a stop command or set a reasonable timeout
+        let app = app.clone();
+        tokio::select! {
+            _ = recv.recv() => {
+                info!("Received stop signal for game {}", game_id);
+                app.launcher().mark_game_as_stopped(game_id).await?;
+            }
+            // Default behavior is to keep the game marked as running until explicitly stopped
+        };
+    } else {
+        // Original flow for emulator-based launching
+        let profile = payload.emulator_profile.unwrap();
+        let emulator = emulator.expect("No emulator provided");
+        let install_dir = match install_dir.canonicalize()?.to_str() {
+            Some(path) => path.to_string(),
+            None => return Err(crate::Error::FileNotFound(game_id)),
+        };
+        
+        let client_config = app.config_manager().get_config().await;
 
-    launcher
-        .mark_game_as_running(
-            game_id,
-            GameProcess {
-                send,
-                start_time: std::time::SystemTime::now(),
-            },
-        )
-        .await?;
+        let client_id = client_config
+            .config
+            .and_then(|c| c.client_info.map(|info| info.id))
+            .expect("Client ID not found");
 
-    let app = app.clone();
-    tokio::select! {
-        _ = recv.recv() => {
-            info!("Recieved stop signal for game {}", game_id);
+        let mut emulator_client = app.get_emulator_client().await;
+        let res = emulator_client
+            .get_local_emulator_configs(GetLocalEmulatorConfigsRequest {
+                client_id,
+                emulator_ids: vec![emulator.id],
+            })
+            .await
+            .expect("Failed to get local emulator configs")
+            .into_inner();
 
-            process.kill().await?;
-            info!("Killed game process for game {}", game_id);
+        let local_config = res.configs.first().expect("No emulator config found");
 
-            app.launcher().mark_game_as_stopped(game_id).await?;
-        }
-        _ = process.wait() => {
-            info!("Game process for game {} was exited", game_id);
+        let mut cmd = launcher.get_open_cmd(&local_config.executable_path);
 
-            app.launcher()
-                .mark_game_as_stopped(game_id)
-                .await
-                .expect("Error stopping game");
-        }
-    };
+        let args = if !profile.custom_args.is_empty() {
+            #[allow(clippy::literal_string_with_formatting_args)]
+            profile
+                .custom_args
+                .into_iter()
+                .map(|arg| match arg.starts_with("\"") && arg.ends_with("\"") {
+                    false => arg,
+                    true => arg[1..arg.len() - 1].to_string(),
+                })
+                .map(|arg| match arg.starts_with("'") && arg.ends_with("'") {
+                    false => arg,
+                    true => arg[1..arg.len() - 1].to_string(),
+                })
+                .map(|arg| arg.replace("{file}", &file_path))
+                .map(|arg| arg.replace("{install_dir}", &install_dir))
+                .collect()
+        } else {
+            vec![file_path]
+        };
+
+        info!("Args Constructed: {:?}", args);
+
+        cmd.args(args);
+
+        let mut process = cmd.spawn()?;
+        
+        launcher
+            .mark_game_as_running(
+                game_id,
+                GameProcess {
+                    send,
+                    start_time: std::time::SystemTime::now(),
+                },
+            )
+            .await?;
+
+        let app = app.clone();
+        tokio::select! {
+            _ = recv.recv() => {
+                info!("Received stop signal for game {}", game_id);
+
+                process.kill().await?;
+                info!("Killed game process for game {}", game_id);
+
+                app.launcher().mark_game_as_stopped(game_id).await?;
+            }
+            _ = process.wait() => {
+                info!("Game process for game {} was exited", game_id);
+
+                app.launcher()
+                    .mark_game_as_stopped(game_id)
+                    .await
+                    .expect("Error stopping game");
+            }
+        };
+    }
 
     Ok(())
 }
