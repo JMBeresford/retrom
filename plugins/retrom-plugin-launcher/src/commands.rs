@@ -59,9 +59,10 @@ pub(crate) async fn play_game<R: Runtime>(
     let maybe_default_game_file = payload.file;
     let emulator = payload.emulator;
     
-    // Check if we should use system default application (no emulator profile provided)
+    // Check if we should use system default application (no emulator configured)
     // This enables direct launching of PC games or files with system-defined associations
-    let use_system_default = payload.emulator_profile.is_none();
+    // Only fallback to system default when no emulator is available at all
+    let use_system_default = emulator.is_none();
 
     let maybe_default_file = maybe_default_game_file
         .clone()
@@ -98,20 +99,21 @@ pub(crate) async fn play_game<R: Runtime>(
         // When using system default application, file type doesn't matter
         // Just find any file if no default is specified
         files.iter().find(|file| Some(*file) != maybe_default_file.as_ref())
-    } else {
-        // Original behavior for emulator profiles - respect supported extensions
-        let profile = payload.emulator_profile.as_ref().unwrap();
-        match profile.supported_extensions.is_empty() {
-            true => files
-                .iter()
-                .find(|file| Some(*file) != maybe_default_file.as_ref()),
-            false => files.iter().find(|file| {
+    } else if let Some(profile) = payload.emulator_profile.as_ref() {
+        // When a specific emulator profile is provided, respect its supported extensions
+        if profile.supported_extensions.is_empty() {
+            files.iter().find(|file| Some(*file) != maybe_default_file.as_ref())
+        } else {
+            files.iter().find(|file| {
                 profile
                     .supported_extensions
                     .iter()
                     .any(|ext| file.extension().and_then(OsStr::to_str) == Some(ext.as_str()))
-            }),
+            })
         }
+    } else {
+        // When no profile is provided but we have an emulator, accept any file
+        files.iter().find(|file| Some(*file) != maybe_default_file.as_ref())
     };
 
     tracing::debug!("Fallback file: {:?}", fallback_file);
@@ -169,8 +171,8 @@ pub(crate) async fn play_game<R: Runtime>(
             // Game remains marked as running until explicitly stopped through UI
         };
     } else {
-        // Original flow for emulator-based launching
-        let profile = payload.emulator_profile.unwrap();
+        // Flow for emulator-based launching
+        // We can reach here with or without an emulator profile
         let emulator = emulator.expect("No emulator provided");
         let install_dir = match install_dir.canonicalize()?.to_str() {
             Some(path) => path.to_string(),
@@ -198,23 +200,30 @@ pub(crate) async fn play_game<R: Runtime>(
 
         let mut cmd = launcher.get_open_cmd(&local_config.executable_path);
 
-        let args = if !profile.custom_args.is_empty() {
-            #[allow(clippy::literal_string_with_formatting_args)]
-            profile
-                .custom_args
-                .into_iter()
-                .map(|arg| match arg.starts_with("\"") && arg.ends_with("\"") {
-                    false => arg,
-                    true => arg[1..arg.len() - 1].to_string(),
-                })
-                .map(|arg| match arg.starts_with("'") && arg.ends_with("'") {
-                    false => arg,
-                    true => arg[1..arg.len() - 1].to_string(),
-                })
-                .map(|arg| arg.replace("{file}", &file_path))
-                .map(|arg| arg.replace("{install_dir}", &install_dir))
-                .collect()
+        // If we have a specific emulator profile with custom args, use those;
+        // otherwise, just pass the file path as a lone argument (default behavior)
+        let args = if let Some(profile) = payload.emulator_profile {
+            if !profile.custom_args.is_empty() {
+                #[allow(clippy::literal_string_with_formatting_args)]
+                profile
+                    .custom_args
+                    .into_iter()
+                    .map(|arg| match arg.starts_with("\"") && arg.ends_with("\"") {
+                        false => arg,
+                        true => arg[1..arg.len() - 1].to_string(),
+                    })
+                    .map(|arg| match arg.starts_with("'") && arg.ends_with("'") {
+                        false => arg,
+                        true => arg[1..arg.len() - 1].to_string(),
+                    })
+                    .map(|arg| arg.replace("{file}", &file_path))
+                    .map(|arg| arg.replace("{install_dir}", &install_dir))
+                    .collect()
+            } else {
+                vec![file_path]
+            }
         } else {
+            // No profile provided - use default behavior (pass file as lone argument)
             vec![file_path]
         };
 
