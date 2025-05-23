@@ -1,9 +1,8 @@
-version: v2
-clean: true
+version: v1
 plugins:
-  - local: protoc-gen-es
-    out: ./generated
-    strategy: all
-    opt:
-      - target=ts
-      - import_extension=.js
+  - name: es
+    out: generated
+    opt: target=ts,import_extension=.js
+  - name: connect-web
+    out: generated
+    opt: target=ts,import_extension=.js
