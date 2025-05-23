@@ -20,9 +20,8 @@
     "lint:fix": "cargo clippy --fix"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "^1.10.1",
-    "@bufbuild/protoc-gen-connect-web": "^0.11.0", 
-    "@bufbuild/protoc-gen-es": "^1.8.0",
+    "@bufbuild/protobuf": "2.4.0",
+    "@bufbuild/protoc-gen-es": "2.4.0",
     "protobufjs": "^7.5.0"
   },
   "devDependencies": {

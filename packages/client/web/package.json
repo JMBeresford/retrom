@@ -14,9 +14,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "^1.10.1",
-    "@connectrpc/connect": "^1.4.0",
-    "@connectrpc/connect-web": "^1.4.0",
+    "@bufbuild/protobuf": "2.4.0",
+    "@connectrpc/connect": "2.0.2",
+    "@connectrpc/connect-web": "2.0.2",
     "@hookform/resolvers": "^3.3.4",
     "@noriginmedia/norigin-spatial-navigation": "^2.3.0",
     "@radix-ui/react-accordion": "^1.1.2",
