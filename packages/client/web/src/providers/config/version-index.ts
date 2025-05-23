@@ -1,5 +1,5 @@
 import { Timestamp } from "@bufbuild/protobuf/wkt";
-import { InterfaceConfig_GameListEntryImage } from "@retrom/codegen/retrom/client/client-config_pb.js";
+import { InterfaceConfig_GameListEntryImage } from "@retrom/codegen/retrom/client/client-config_pb";
 
 export type ConfigV1 = {
   server?: {

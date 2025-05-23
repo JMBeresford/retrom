@@ -8,7 +8,7 @@ import {
   MetadataService,
   PlatformService,
   ServerService,
-} from "@retrom/codegen/retrom/services_connectweb.js";
+} from "@retrom/codegen/retrom/services_pb";
 import { createPromiseClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 
@@ -30,7 +30,7 @@ export class RetromClient {
     }
 
     this.host = host;
-    
+
     const transport = createConnectTransport({
       baseUrl: host,
     });
@@ -51,6 +51,9 @@ export class RetromClient {
 
     this.jobClient = createPromiseClient(JobService, transport);
 
-    this.fileExplorerClient = createPromiseClient(FileExplorerService, transport);
+    this.fileExplorerClient = createPromiseClient(
+      FileExplorerService,
+      transport,
+    );
   }
 }

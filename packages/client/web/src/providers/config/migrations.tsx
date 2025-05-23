@@ -2,7 +2,7 @@ import {
   InterfaceConfig_GameListEntryImage,
   RetromClientConfig,
   RetromClientConfigSchema,
-} from "@retrom/codegen/retrom/client/client-config_pb.js";
+} from "@retrom/codegen/retrom/client/client-config_pb";
 import { create } from "@bufbuild/protobuf";
 import * as Versions from "./version-index";
 

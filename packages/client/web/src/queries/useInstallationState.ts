@@ -2,7 +2,7 @@ import {
   InstallationState,
   InstallationStateSchema,
   InstallationStatus,
-} from "@retrom/codegen/retrom/client/client-utils_pb.js";
+} from "@retrom/codegen/retrom/client/client-utils_pb";
 import { checkIsDesktop } from "@/lib/env";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";

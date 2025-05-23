@@ -8,7 +8,7 @@ import {
   InterfaceConfig_GameListEntryImage,
   RetromClientConfig,
   RetromClientConfigSchema,
-} from "@retrom/codegen/retrom/client/client-config_pb.js";
+} from "@retrom/codegen/retrom/client/client-config_pb";
 import { createContext, PropsWithChildren, useContext } from "react";
 import { defaultAPIHostname, defaultAPIPort } from "./utils";
 import { Timestamp } from "@bufbuild/protobuf/wkt";

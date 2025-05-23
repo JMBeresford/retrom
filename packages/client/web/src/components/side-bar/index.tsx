@@ -27,7 +27,7 @@ import { filterName, sortGames, sortPlatforms } from "./utils";
 import { ScrollArea } from "../ui/scroll-area";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { useInstallationStateQuery } from "@/queries/useInstallationState";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb.js";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 import { Skeleton } from "../ui/skeleton";
 import { EllipsisVertical } from "lucide-react";
 import { Platform } from "@retrom/codegen/retrom/models/platforms";

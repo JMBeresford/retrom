@@ -31,14 +31,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Platform,
   UpdatedPlatform,
-} from "@retrom/codegen/retrom/models/platforms_pb.js";
+} from "@retrom/codegen/retrom/models/platforms_pb";
 import {
   GetIgdbSearchRequest_IgdbSearchType,
   UpdatePlatformMetadataRequest,
   UpdatePlatformMetadataRequestSchema,
-} from "@retrom/codegen/retrom/services_pb.js";
+} from "@retrom/codegen/retrom/services_pb";
 import { usePlatforms } from "@/queries/usePlatforms";
-import { PlatformMetadata, PlatformMetadataSchema } from "@retrom/codegen/retrom/models/metadata_pb.js";
+import {
+  PlatformMetadata,
+  PlatformMetadataSchema,
+} from "@retrom/codegen/retrom/models/metadata_pb";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";
 import { useNavigate } from "@tanstack/react-router";
