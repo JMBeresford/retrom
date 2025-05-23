@@ -8,8 +8,10 @@ export function useDeleteGames() {
 
   return useMutation({
     mutationKey: ["delete-games"],
-    mutationFn: async (request: DeleteGamesRequest) =>
-      retromClient.gameClient.deleteGames(request),
+    mutationFn: async (request: DeleteGamesRequest) => {
+      const response = await retromClient.gameClient.deleteGames(request);
+      return response;
+    },
     onSuccess: () => {
       return queryClient.invalidateQueries({
         predicate: (query) =>

@@ -70,10 +70,12 @@ export function GameDetailProvider(
 
   const { data: gameMetadata, status: gameMetadataStatus } = useQuery({
     queryKey: ["game", "games", "game-metadata", "games-metadata", gameId],
-    queryFn: async () =>
-      retromClient.metadataClient.getGameMetadata({
+    queryFn: async () => {
+      const response = await retromClient.metadataClient.getGameMetadata({
         gameIds: [gameId],
-      }),
+      });
+      return response;
+    },
   });
 
   const { data: platformData, status: platformStatus } = useQuery({

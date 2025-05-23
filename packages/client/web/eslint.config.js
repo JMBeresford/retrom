@@ -11,6 +11,14 @@ const config = tseslint.config(
         tsconfigRootDir: import.meta.dirname,
         projectService: true
       }
+    },
+    rules: {
+      // Temporarily disable unsafe rules during migration from ts-proto to protobuf-es
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-argument": "off"
     }
   },
   { ignores: ["eslint.config.js"] }

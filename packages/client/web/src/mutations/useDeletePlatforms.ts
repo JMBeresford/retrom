@@ -8,8 +8,10 @@ export function useDeletePlatforms() {
 
   return useMutation({
     mutationKey: ["deletePlatforms"],
-    mutationFn: async (req: DeletePlatformsRequest) =>
-      retromClient.platformClient.deletePlatforms(req),
+    mutationFn: async (req: DeletePlatformsRequest) => {
+      const response = await retromClient.platformClient.deletePlatforms(req);
+      return response;
+    },
     onSuccess: () => {
       queryClient
         .invalidateQueries({

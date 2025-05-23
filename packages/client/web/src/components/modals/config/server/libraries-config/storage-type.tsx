@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
+import type { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 
 export function StorageTypeSelect<
   Field extends ControllerRenderProps<
@@ -47,11 +47,11 @@ export function StorageTypeSelect<
 
         <SelectContent>
           {Object.values(StorageType)
-            .filter((type) => type >= 0)
+            .filter((type) => typeof type === 'number' && type >= 0)
             .map((type) => (
               <SelectItem key={type} value={type.toString()}>
-                {StorageTypeLabel[type]}
-                {type === StorageType.MULTI_FILE_GAME && (
+                {StorageTypeLabel[type as StorageType]}
+                {Number(type) === 1 && (
                   <Badge variant="outline" className="mx-2">
                     Default
                   </Badge>

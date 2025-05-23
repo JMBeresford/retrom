@@ -4,10 +4,9 @@ import {
   persist,
   subscribeWithSelector,
 } from "zustand/middleware";
-import {
+import type {
   InterfaceConfig_GameListEntryImage,
   RetromClientConfig,
-  RetromClientConfigSchema,
 } from "@retrom/codegen/retrom/client/client-config_pb";
 import { createContext, PropsWithChildren, useContext } from "react";
 import { defaultAPIHostname, defaultAPIPort } from "./utils";
