@@ -137,12 +137,9 @@ pub(crate) async fn play_game<R: Runtime>(
     let send = Mutex::new(send);
     
     if use_system_default {
-        // Use system default application to open the file
         tracing::info!("Opening file with system default application: {}", file_path);
         app.opener().open_path(file_path, None::<&str>)?;
         
-        // Mark game as running, then immediately as stopped
-        // This updates "Last played" metadata without tracking play time
         launcher
             .mark_game_as_running(
                 game_id,
@@ -153,14 +150,11 @@ pub(crate) async fn play_game<R: Runtime>(
             )
             .await?;
         
-        // Immediately mark as stopped since we're not tracking play time
         launcher.mark_game_as_stopped(game_id).await?;
         
         return Ok(());
     }
     
-    // Flow for emulator-based launching
-    // We can reach here with or without an emulator profile
     let emulator = emulator.expect("No emulator provided");
     let install_dir = match install_dir.canonicalize()?.to_str() {
         Some(path) => path.to_string(),
@@ -188,8 +182,6 @@ pub(crate) async fn play_game<R: Runtime>(
 
     let mut cmd = launcher.get_open_cmd(&local_config.executable_path);
 
-    // If we have a specific emulator profile with custom args, use those;
-    // otherwise, just pass the file path as a lone argument (default behavior)
     let args = if let Some(profile) = payload.emulator_profile {
         if !profile.custom_args.is_empty() {
             #[allow(clippy::literal_string_with_formatting_args)]
@@ -211,7 +203,6 @@ pub(crate) async fn play_game<R: Runtime>(
             vec![file_path]
         }
     } else {
-        // No profile provided - use default behavior (pass file as lone argument)
         vec![file_path]
     };
 
