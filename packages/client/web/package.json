@@ -14,7 +14,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "^2.1.0",
+    "@bufbuild/protobuf": "^2.2.5",
+    "@connectrpc/connect": "^1.4.0",
+    "@connectrpc/connect-web": "^1.4.0",
     "@hookform/resolvers": "^3.3.4",
     "@noriginmedia/norigin-spatial-navigation": "^2.3.0",
     "@radix-ui/react-accordion": "^1.1.2",
@@ -63,8 +65,6 @@
     "long": "^5.2.3",
     "lucide-react": "^0.376.0",
     "maath": "^0.10.8",
-    "nice-grpc-common": "^2.0.2",
-    "nice-grpc-web": "^3.3.3",
     "protobufjs": "^7.2.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

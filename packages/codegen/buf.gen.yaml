@@ -1,18 +1,9 @@
 version: v2
 clean: true
 plugins:
-  - local: protoc-gen-ts_proto
+  - local: protoc-gen-es
     out: ./generated
     strategy: all
     opt:
-      - paths=source_relative
-      - useDate=false
-      - oneof=unions
-      - outputServices=nice-grpc
-      - outputServices=generic-definitions
-      - outputJsonMethods=true
-      - useExactTypes=false
-      - esModuleInterop=true
-      - useOptionals=messages
-      - useMapType=true
-      - enumsAsLiterals=true
+      - target=ts
+      - import_extension=.js
