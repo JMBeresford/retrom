@@ -95,14 +95,9 @@ pub(crate) async fn play_game<R: Runtime>(
     tracing::debug!("Files: {:?}", files);
     tracing::debug!("Default file: {:?}", &maybe_default_file);
 
-    let fallback_file = if use_system_default {
-        // When using system default application, file type doesn't matter
-        // Just find any file if no default is specified
-        files.iter().find(|file| Some(*file) != maybe_default_file.as_ref())
-    } else if let Some(profile) = payload.emulator_profile.as_ref() {
-        // When a specific emulator profile is provided, respect its supported extensions
-        if profile.supported_extensions.is_empty() {
-            files.iter().find(|file| Some(*file) != maybe_default_file.as_ref())
+    let fallback_file = payload.emulator_profile.and_then(|profile| if
+        profile.supported_extensions.is_empty() {
+            None
         } else {
             files.iter().find(|file| {
                 profile
@@ -111,10 +106,7 @@ pub(crate) async fn play_game<R: Runtime>(
                     .any(|ext| file.extension().and_then(OsStr::to_str) == Some(ext.as_str()))
             })
         }
-    } else {
-        // When no profile is provided but we have an emulator, accept any file
-        files.iter().find(|file| Some(*file) != maybe_default_file.as_ref())
-    };
+    ).unwrap_or_else(|| files.iter().find(|file| Some(*file) != maybe_default_file.as_ref()));
 
     tracing::debug!("Fallback file: {:?}", fallback_file);
 
@@ -149,7 +141,8 @@ pub(crate) async fn play_game<R: Runtime>(
         tracing::info!("Opening file with system default application: {}", file_path);
         app.opener().open_path(file_path, None::<&str>)?;
         
-        // Mark game as running - even with system default applications we want to track stats
+        // Mark game as running, then immediately as stopped
+        // This updates "Last played" metadata without tracking play time
         launcher
             .mark_game_as_running(
                 game_id,
@@ -159,17 +152,11 @@ pub(crate) async fn play_game<R: Runtime>(
                 },
             )
             .await?;
-            
-        // When using system default applications, we can't track when the user closes the app
-        // so we'll wait for an explicit stop command from the user interface
-        let app = app.clone();
-        tokio::select! {
-            _ = recv.recv() => {
-                info!("Received stop signal for game {}", game_id);
-                app.launcher().mark_game_as_stopped(game_id).await?;
-            }
-            // Game remains marked as running until explicitly stopped through UI
-        };
+        
+        // Immediately mark as stopped since we're not tracking play time
+        launcher.mark_game_as_stopped(game_id).await?;
+        
+        return Ok(());
     } else {
         // Flow for emulator-based launching
         // We can reach here with or without an emulator profile
