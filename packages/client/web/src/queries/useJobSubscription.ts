@@ -1,4 +1,4 @@
-import { JobProgress, JobStatus } from "@retrom/codegen/retrom/jobs";
+import type { JobProgress, JobStatus } from "@retrom/codegen/retrom/jobs_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -17,23 +17,25 @@ export function useJobSubscription(opts: {
   useQuery({
     queryKey: ["job", jobId],
     queryFn: async () => {
-      const stream = retromClient.jobClient.getJobSubscription({ jobId });
+      const stream = await retromClient.jobClient.getJobSubscription({ jobId });
 
       for await (const progress of stream) {
         const { job } = progress;
 
-        if (onProgress && job?.status === JobStatus.Running) {
-          onProgress(job);
-        }
+        if (job) {
+          if (onProgress && job.status === JobStatus.Running) {
+            onProgress(job as JobProgress);
+          }
 
-        if (onCompletion && job?.status === JobStatus.Success) {
-          onCompletion(job);
-        }
+          if (onCompletion && job.status === JobStatus.Success) {
+            onCompletion(job as JobProgress);
+          }
 
-        setJobProgress(progress.job);
+          setJobProgress(job as JobProgress);
+        }
       }
 
-      return stream;
+      return null;
     },
   });
 

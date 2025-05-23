@@ -1,4 +1,4 @@
-import { DeletePlatformsRequest } from "@retrom/codegen/retrom/services";
+import type { DeletePlatformsRequest } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -8,8 +8,10 @@ export function useDeletePlatforms() {
 
   return useMutation({
     mutationKey: ["deletePlatforms"],
-    mutationFn: async (req: DeletePlatformsRequest) =>
-      retromClient.platformClient.deletePlatforms(req),
+    mutationFn: async (req: DeletePlatformsRequest) => {
+      const response = await retromClient.platformClient.deletePlatforms(req);
+      return response;
+    },
     onSuccess: () => {
       queryClient
         .invalidateQueries({

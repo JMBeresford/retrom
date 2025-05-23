@@ -1,4 +1,4 @@
-import {
+import type {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
@@ -15,7 +15,7 @@ import {
 import {
   Emulator,
   EmulatorProfile,
-} from "@retrom/codegen/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators_pb";
 import { Edit, PlusIcon, Trash } from "lucide-react";
 import { EditProfileDialog } from "./edit-profile-dialog";
 import {

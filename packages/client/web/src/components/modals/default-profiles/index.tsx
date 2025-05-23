@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import type { Button } from "@/components/ui/button";
 import {
   Command,
   CommandGroup,
@@ -27,7 +27,7 @@ import {
   Emulator,
   EmulatorProfile,
   UpdatedDefaultEmulatorProfile,
-} from "@retrom/codegen/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators_pb";
 import { cn, getFileStub, InferSchema } from "@/lib/utils";
 import { useUpdateDefaultEmulatorProfiles } from "@/mutations/useUpdateDefaultEmulatorProfiles";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";

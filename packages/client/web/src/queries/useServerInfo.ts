@@ -1,7 +1,7 @@
-import {
+import type {
   GetServerInfoRequest,
   GetServerInfoResponse,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -20,7 +20,10 @@ export function useServerInfo<T = GetServerInfoResponse>(
 
   return useQuery({
     enabled,
-    queryFn: () => retromClient.serverClient.getServerInfo(request),
+    queryFn: async () => {
+      const response = await retromClient.serverClient.getServerInfo(request);
+      return response as GetServerInfoResponse;
+    },
     queryKey: ["server-info", queryClient, request, retromClient],
     select: selectFn,
   });

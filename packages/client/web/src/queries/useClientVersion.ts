@@ -1,5 +1,5 @@
-import { parseVersion } from "@/lib/version-utils";
-import { Version } from "@retrom/codegen/retrom/server/server-info";
+import type { parseVersion } from "@/lib/version-utils";
+import { Version } from "@retrom/codegen/retrom/server/server-info_pb";
 import { checkIsDesktop } from "@/lib/env";
 import { DefaultError, useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";

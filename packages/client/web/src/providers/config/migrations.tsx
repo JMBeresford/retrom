@@ -1,7 +1,9 @@
 import {
   InterfaceConfig_GameListEntryImage,
   RetromClientConfig,
-} from "@retrom/codegen/retrom/client/client-config";
+  RetromClientConfigSchema,
+} from "@retrom/codegen/retrom/client/client-config_pb";
+import { create } from "@bufbuild/protobuf";
 import * as Versions from "./version-index";
 
 export function migrate(
@@ -18,7 +20,7 @@ export function migrate(
     migrationFn = migrationFns[oldVersion];
   }
 
-  return RetromClientConfig.create(newConfig);
+  return create(RetromClientConfigSchema, newConfig);
 }
 
 const migrationFns: Record<number, (config: object) => object> = {

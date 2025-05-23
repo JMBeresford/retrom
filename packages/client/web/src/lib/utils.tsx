@@ -1,4 +1,4 @@
-import { Timestamp } from "@retrom/codegen/google/protobuf/timestamp";
+import { Timestamp } from "@bufbuild/protobuf/wkt";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
@@ -86,11 +86,9 @@ export function debounce<Fn extends (...args: any[]) => any>(
   fn: Fn,
   ms: number = 300,
 ): (...args: Parameters<Fn>) => void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- it's fine
-  let timeout: any;
+  let timeout: NodeJS.Timeout | undefined;
 
   return (...args: Parameters<Fn>) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- it's fine
     clearTimeout(timeout);
     timeout = setTimeout(() => {
       fn(...args);

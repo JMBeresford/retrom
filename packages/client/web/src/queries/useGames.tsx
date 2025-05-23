@@ -1,9 +1,9 @@
-import { ToastAction } from "@/components/ui/toast";
+import type { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/components/ui/use-toast";
-import {
+import type {
   GetGamesRequest,
   GetGamesResponse,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -30,7 +30,9 @@ export function useGames<T = GetGamesResponse>(opts: {
     ],
     queryFn: async () => {
       const data = await retromClient.gameClient.getGames(request);
-      if (!data.games.length) {
+      const response = data as GetGamesResponse;
+
+      if (!response.games.length) {
         toast({
           title: "Your Library Is Empty",
           duration: Infinity,
@@ -52,7 +54,7 @@ export function useGames<T = GetGamesResponse>(opts: {
           ),
         });
       }
-      return data;
+      return response;
     },
     select: selectFn,
   });

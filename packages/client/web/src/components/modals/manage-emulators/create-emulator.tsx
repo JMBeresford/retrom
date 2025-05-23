@@ -27,7 +27,7 @@ import {
   saveStrategyDisplayMap,
 } from ".";
 import { useCallback } from "react";
-import { SaveStrategy } from "@retrom/codegen/retrom/models/emulators";
+import { SaveStrategy } from "@retrom/codegen/retrom/models/emulators_pb";
 
 export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
   const { platforms } = props;
@@ -162,7 +162,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                 onValueChange={(value) => {
                   const valueNum = parseInt(value);
                   const saveStrategy = Object.values(SaveStrategy).find(
-                    (v) => v === valueNum,
+                    (v) => typeof v === "number" && v === valueNum,
                   );
 
                   if (saveStrategy === undefined) return;

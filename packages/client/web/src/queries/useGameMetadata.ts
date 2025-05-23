@@ -1,7 +1,7 @@
-import {
+import type {
   GetGameMetadataRequest,
   GetGameMetadataResponse,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -20,7 +20,11 @@ export function useGameMetadata<T = GetGameMetadataResponse>(
 
   return useQuery({
     enabled,
-    queryFn: () => retromClient.metadataClient.getGameMetadata(request),
+    queryFn: async () => {
+      const response =
+        await retromClient.metadataClient.getGameMetadata(request);
+      return response as GetGameMetadataResponse;
+    },
     queryKey: ["game-metadata", "metadata", queryClient, request],
     select: selectFn,
   });

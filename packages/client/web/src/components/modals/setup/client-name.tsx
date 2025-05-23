@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { useClientInfo } from "@/queries/useClientInfo";
 import { useConfigStore } from "@/providers/config";
-import { Timestamp } from "@retrom/codegen/google/protobuf/timestamp";
+import { Timestamp } from "@bufbuild/protobuf/wkt";
 
 export function ClientName() {
   const { previousStep, nextStep } = useSetupModal();

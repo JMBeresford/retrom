@@ -1,9 +1,9 @@
-import { useToast } from "@/components/ui/use-toast";
-import { JobStatus } from "@retrom/codegen/retrom/jobs";
-import {
+import type { useToast } from "@/components/ui/use-toast";
+import { JobStatus } from "@retrom/codegen/retrom/jobs_pb";
+import type {
   GetJobSubscriptionResponse,
   UpdateLibraryMetadataRequest,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

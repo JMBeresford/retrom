@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import type { useCallback, useMemo, useState } from "react";
 import { useToast } from "../../ui/use-toast";
 import {
   Dialog,
@@ -31,13 +31,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Platform,
   UpdatedPlatform,
-} from "@retrom/codegen/retrom/models/platforms";
+} from "@retrom/codegen/retrom/models/platforms_pb";
 import {
   GetIgdbSearchRequest_IgdbSearchType,
   UpdatePlatformMetadataRequest,
-} from "@retrom/codegen/retrom/services";
+  UpdatePlatformMetadataRequestSchema,
+} from "@retrom/codegen/retrom/services_pb";
 import { usePlatforms } from "@/queries/usePlatforms";
-import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata";
+import {
+  PlatformMetadata,
+  PlatformMetadataSchema,
+} from "@retrom/codegen/retrom/models/metadata_pb";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";
 import { useNavigate } from "@tanstack/react-router";
@@ -50,6 +54,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { create } from "@bufbuild/protobuf";
 
 export type PlatformAndMetadata = Platform & { metadata: PlatformMetadata };
 
@@ -105,7 +110,7 @@ export function MatchPlatformsModal() {
 
         platformsWithMetadata.push({
           ...platform,
-          metadata: platformMetadata ?? PlatformMetadata.create(),
+          metadata: platformMetadata ?? create(PlatformMetadataSchema, {}),
         });
       }
 
@@ -181,7 +186,7 @@ export function MatchPlatformsModal() {
   }, [navigate]);
 
   const handleUpdate = useCallback(async () => {
-    const req = UpdatePlatformMetadataRequest.create();
+    const req = create(UpdatePlatformMetadataRequestSchema, {});
 
     for (const [platformId, igdbId] of selections.entries()) {
       const defaultSelection = defaultSelections.get(platformId);

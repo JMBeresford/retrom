@@ -1,4 +1,4 @@
-import { DeleteGamesRequest } from "@retrom/codegen/retrom/services";
+import type { DeleteGamesRequest } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -8,8 +8,10 @@ export function useDeleteGames() {
 
   return useMutation({
     mutationKey: ["delete-games"],
-    mutationFn: async (request: DeleteGamesRequest) =>
-      retromClient.gameClient.deleteGames(request),
+    mutationFn: async (request: DeleteGamesRequest) => {
+      const response = await retromClient.gameClient.deleteGames(request);
+      return response;
+    },
     onSuccess: () => {
       return queryClient.invalidateQueries({
         predicate: (query) =>

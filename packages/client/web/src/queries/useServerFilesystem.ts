@@ -1,7 +1,7 @@
-import {
+import type {
   GetFilesystemNodeRequest,
   GetFilesystemNodeResponse,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -19,7 +19,11 @@ export function useServerFilesystem<T = GetFilesystemNodeResponse>(
 
   return useQuery({
     enabled,
-    queryFn: () => retromClient.fileExplorerClient.getFilesystemNode(request),
+    queryFn: async () => {
+      const response =
+        await retromClient.fileExplorerClient.getFilesystemNode(request);
+      return response as GetFilesystemNodeResponse;
+    },
     queryKey: ["file-explorer", request, retromClient],
     select: selectFn,
   });

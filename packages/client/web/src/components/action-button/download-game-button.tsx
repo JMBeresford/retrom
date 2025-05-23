@@ -1,6 +1,11 @@
-import { ForwardedRef, forwardRef, useImperativeHandle, useRef } from "react";
+import type {
+  ForwardedRef,
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+} from "react";
 import { Button, ButtonProps } from "../ui/button";
-import { Game } from "@retrom/codegen/retrom/models/games";
+import type { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { checkIsDesktop } from "@/lib/env";
 import { useConfigStore } from "@/providers/config";
 import { cn } from "@/lib/utils";

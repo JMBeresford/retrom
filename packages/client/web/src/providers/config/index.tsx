@@ -4,13 +4,13 @@ import {
   persist,
   subscribeWithSelector,
 } from "zustand/middleware";
-import {
+import type {
   InterfaceConfig_GameListEntryImage,
   RetromClientConfig,
-} from "@retrom/codegen/retrom/client/client-config";
+} from "@retrom/codegen/retrom/client/client-config_pb";
 import { createContext, PropsWithChildren, useContext } from "react";
 import { defaultAPIHostname, defaultAPIPort } from "./utils";
-import { Timestamp } from "@retrom/codegen/google/protobuf/timestamp";
+import { Timestamp } from "@bufbuild/protobuf/wkt";
 import { checkIsDesktop } from "@/lib/env";
 import { migrate } from "./migrations";
 import { desktopStorage } from "./desktop";

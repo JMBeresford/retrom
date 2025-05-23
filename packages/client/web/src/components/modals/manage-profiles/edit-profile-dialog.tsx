@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import type { Badge } from "@/components/ui/badge";
 import {
   DialogClose,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   Emulator,
   EmulatorProfile,
   NewEmulatorProfile,
-} from "@retrom/codegen/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators_pb";
 import { cn, InferSchema } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";

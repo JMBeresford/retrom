@@ -1,7 +1,7 @@
-import { z } from "zod";
+import type { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetIgdbPlatformSearchResultsRequest } from "@retrom/codegen/retrom/services";
-import {
+import { GetIgdbPlatformSearchResultsRequest } from "@retrom/codegen/retrom/services_pb";
+import type {
   Select,
   SelectContent,
   SelectItem,
@@ -26,9 +26,9 @@ import { cn, getFileStub } from "@/lib/utils";
 import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
-import { Platform } from "@retrom/codegen/retrom/models/platforms";
-import { useNavigate } from "@tanstack/react-router";
-import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata";
+import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
+import type { useNavigate } from "@tanstack/react-router";
+import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
 import { useUpdatePlatformMetadata } from "@/mutations/useUpdatePlatformMetadata";
 
 type FormSchema = z.infer<typeof formSchema>;

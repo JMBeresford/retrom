@@ -1,7 +1,7 @@
-import {
+import type {
   GetServerConfigRequest,
   GetServerConfigResponse,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -20,7 +20,11 @@ export function useServerConfig<T = GetServerConfigResponse>(
     queryKey: ["server-config", opts.request],
     select: opts.selectFn,
     enabled: opts.enabled,
-    queryFn: () =>
-      retromClient.serverClient.getServerConfig(opts.request ?? {}),
+    queryFn: async () => {
+      const response = await retromClient.serverClient.getServerConfig(
+        opts.request ?? {},
+      );
+      return response as GetServerConfigResponse;
+    },
   });
 }

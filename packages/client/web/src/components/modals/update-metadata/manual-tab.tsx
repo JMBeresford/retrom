@@ -16,13 +16,13 @@ import { LoaderCircleIcon } from "lucide-react";
 import { cn, getFileName, InferSchema } from "@/lib/utils";
 import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { Textarea } from "../../ui/textarea";
-import { GameMetadata } from "@retrom/codegen/retrom/models/metadata";
-import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
+import { GameMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
+import type { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 import { Checkbox } from "../../ui/checkbox";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";
 import { useNavigate } from "@tanstack/react-router";
-import { StorageType } from "@retrom/codegen/retrom/server/config";
+import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 
 type FormFieldRenderer = ({
   form,
