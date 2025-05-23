@@ -1,5 +1,5 @@
-import { Timestamp } from "@retrom/codegen/google/protobuf/timestamp";
-import { InterfaceConfig_GameListEntryImage } from "@retrom/codegen/retrom/client/client-config";
+import { Timestamp } from "@retrom/codegen/google/protobuf/timestamp_pb.js";
+import { InterfaceConfig_GameListEntryImage } from "@retrom/codegen/retrom/client/client-config_pb.js";
 
 export type ConfigV1 = {
   server?: {

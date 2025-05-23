@@ -1,15 +1,16 @@
 import {
-  GameServiceDefinition,
-  PlatformServiceDefinition,
-  EmulatorServiceDefinition,
-  MetadataServiceDefinition,
-  LibraryServiceDefinition,
-  ClientServiceDefinition,
-  JobServiceDefinition,
-  ServerServiceDefinition,
-  FileExplorerServiceDefinition,
-} from "@retrom/codegen/retrom/services";
-import { createClient, createChannel } from "nice-grpc-web";
+  ClientService,
+  EmulatorService,
+  FileExplorerService,
+  GameService,
+  JobService,
+  LibraryService,
+  MetadataService,
+  PlatformService,
+  ServerService,
+} from "@retrom/codegen/retrom/services_connectweb.js";
+import { createPromiseClient } from "@connectrpc/connect";
+import { createConnectTransport } from "@connectrpc/connect-web";
 
 export class RetromClient {
   readonly host: string;
@@ -29,43 +30,27 @@ export class RetromClient {
     }
 
     this.host = host;
-    this.gameClient = createClient(GameServiceDefinition, createChannel(host));
+    
+    const transport = createConnectTransport({
+      baseUrl: host,
+    });
 
-    this.platformClient = createClient(
-      PlatformServiceDefinition,
-      createChannel(host),
-    );
+    this.gameClient = createPromiseClient(GameService, transport);
 
-    this.emulatorClient = createClient(
-      EmulatorServiceDefinition,
-      createChannel(host),
-    );
+    this.platformClient = createPromiseClient(PlatformService, transport);
 
-    this.metadataClient = createClient(
-      MetadataServiceDefinition,
-      createChannel(host),
-    );
+    this.emulatorClient = createPromiseClient(EmulatorService, transport);
 
-    this.libraryClient = createClient(
-      LibraryServiceDefinition,
-      createChannel(host),
-    );
+    this.metadataClient = createPromiseClient(MetadataService, transport);
 
-    this.clientsClient = createClient(
-      ClientServiceDefinition,
-      createChannel(host),
-    );
+    this.libraryClient = createPromiseClient(LibraryService, transport);
 
-    this.serverClient = createClient(
-      ServerServiceDefinition,
-      createChannel(host),
-    );
+    this.clientsClient = createPromiseClient(ClientService, transport);
 
-    this.jobClient = createClient(JobServiceDefinition, createChannel(host));
+    this.serverClient = createPromiseClient(ServerService, transport);
 
-    this.fileExplorerClient = createClient(
-      FileExplorerServiceDefinition,
-      createChannel(host),
-    );
+    this.jobClient = createPromiseClient(JobService, transport);
+
+    this.fileExplorerClient = createPromiseClient(FileExplorerService, transport);
   }
 }
