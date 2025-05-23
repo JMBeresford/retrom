@@ -157,98 +157,99 @@ pub(crate) async fn play_game<R: Runtime>(
         launcher.mark_game_as_stopped(game_id).await?;
         
         return Ok(());
-    } else {
-        // Flow for emulator-based launching
-        // We can reach here with or without an emulator profile
-        let emulator = emulator.expect("No emulator provided");
-        let install_dir = match install_dir.canonicalize()?.to_str() {
-            Some(path) => path.to_string(),
-            None => return Err(crate::Error::FileNotFound(game_id)),
-        };
-        
-        let client_config = app.config_manager().get_config().await;
+    }
+    
+    // Flow for emulator-based launching
+    // We can reach here with or without an emulator profile
+    let emulator = emulator.expect("No emulator provided");
+    let install_dir = match install_dir.canonicalize()?.to_str() {
+        Some(path) => path.to_string(),
+        None => return Err(crate::Error::FileNotFound(game_id)),
+    };
+    
+    let client_config = app.config_manager().get_config().await;
 
-        let client_id = client_config
-            .config
-            .and_then(|c| c.client_info.map(|info| info.id))
-            .expect("Client ID not found");
+    let client_id = client_config
+        .config
+        .and_then(|c| c.client_info.map(|info| info.id))
+        .expect("Client ID not found");
 
-        let mut emulator_client = app.get_emulator_client().await;
-        let res = emulator_client
-            .get_local_emulator_configs(GetLocalEmulatorConfigsRequest {
-                client_id,
-                emulator_ids: vec![emulator.id],
-            })
-            .await
-            .expect("Failed to get local emulator configs")
-            .into_inner();
+    let mut emulator_client = app.get_emulator_client().await;
+    let res = emulator_client
+        .get_local_emulator_configs(GetLocalEmulatorConfigsRequest {
+            client_id,
+            emulator_ids: vec![emulator.id],
+        })
+        .await
+        .expect("Failed to get local emulator configs")
+        .into_inner();
 
-        let local_config = res.configs.first().expect("No emulator config found");
+    let local_config = res.configs.first().expect("No emulator config found");
 
-        let mut cmd = launcher.get_open_cmd(&local_config.executable_path);
+    let mut cmd = launcher.get_open_cmd(&local_config.executable_path);
 
-        // If we have a specific emulator profile with custom args, use those;
-        // otherwise, just pass the file path as a lone argument (default behavior)
-        let args = if let Some(profile) = payload.emulator_profile {
-            if !profile.custom_args.is_empty() {
-                #[allow(clippy::literal_string_with_formatting_args)]
-                profile
-                    .custom_args
-                    .into_iter()
-                    .map(|arg| match arg.starts_with("\"") && arg.ends_with("\"") {
-                        false => arg,
-                        true => arg[1..arg.len() - 1].to_string(),
-                    })
-                    .map(|arg| match arg.starts_with("'") && arg.ends_with("'") {
-                        false => arg,
-                        true => arg[1..arg.len() - 1].to_string(),
-                    })
-                    .map(|arg| arg.replace("{file}", &file_path))
-                    .map(|arg| arg.replace("{install_dir}", &install_dir))
-                    .collect()
-            } else {
-                vec![file_path]
-            }
+    // If we have a specific emulator profile with custom args, use those;
+    // otherwise, just pass the file path as a lone argument (default behavior)
+    let args = if let Some(profile) = payload.emulator_profile {
+        if !profile.custom_args.is_empty() {
+            #[allow(clippy::literal_string_with_formatting_args)]
+            profile
+                .custom_args
+                .into_iter()
+                .map(|arg| match arg.starts_with("\"") && arg.ends_with("\"") {
+                    false => arg,
+                    true => arg[1..arg.len() - 1].to_string(),
+                })
+                .map(|arg| match arg.starts_with("'") && arg.ends_with("'") {
+                    false => arg,
+                    true => arg[1..arg.len() - 1].to_string(),
+                })
+                .map(|arg| arg.replace("{file}", &file_path))
+                .map(|arg| arg.replace("{install_dir}", &install_dir))
+                .collect()
         } else {
-            // No profile provided - use default behavior (pass file as lone argument)
             vec![file_path]
-        };
+        }
+    } else {
+        // No profile provided - use default behavior (pass file as lone argument)
+        vec![file_path]
+    };
 
-        info!("Args Constructed: {:?}", args);
+    info!("Args Constructed: {:?}", args);
 
-        cmd.args(args);
+    cmd.args(args);
 
-        let mut process = cmd.spawn()?;
-        
-        launcher
-            .mark_game_as_running(
-                game_id,
-                GameProcess {
-                    send,
-                    start_time: std::time::SystemTime::now(),
-                },
-            )
-            .await?;
+    let mut process = cmd.spawn()?;
+    
+    launcher
+        .mark_game_as_running(
+            game_id,
+            GameProcess {
+                send,
+                start_time: std::time::SystemTime::now(),
+            },
+        )
+        .await?;
 
-        let app = app.clone();
-        tokio::select! {
-            _ = recv.recv() => {
-                info!("Received stop signal for game {}", game_id);
+    let app = app.clone();
+    tokio::select! {
+        _ = recv.recv() => {
+            info!("Received stop signal for game {}", game_id);
 
-                process.kill().await?;
-                info!("Killed game process for game {}", game_id);
+            process.kill().await?;
+            info!("Killed game process for game {}", game_id);
 
-                app.launcher().mark_game_as_stopped(game_id).await?;
-            }
-            _ = process.wait() => {
-                info!("Game process for game {} was exited", game_id);
+            app.launcher().mark_game_as_stopped(game_id).await?;
+        }
+        _ = process.wait() => {
+            info!("Game process for game {} was exited", game_id);
 
-                app.launcher()
-                    .mark_game_as_stopped(game_id)
-                    .await
-                    .expect("Error stopping game");
-            }
-        };
+            app.launcher()
+                .mark_game_as_stopped(game_id)
+                .await
+                .expect("Error stopping game");
+        }
+    };
     }
 
     Ok(())
