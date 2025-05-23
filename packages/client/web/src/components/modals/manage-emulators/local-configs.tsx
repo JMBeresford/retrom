@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import type { Button } from "@/components/ui/button";
 import { DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import {
   Emulator,
   LocalEmulatorConfig,
-} from "@retrom/codegen/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators_pb";
 import { cn } from "@/lib/utils";
 import { useCreateLocalEmulatorConfigs } from "@/mutations/useCreateLocalEmulatorConfig";
 import { useUpdateLocalEmulatorConfig } from "@/mutations/useUpdateLocalEmulatorConfigs";

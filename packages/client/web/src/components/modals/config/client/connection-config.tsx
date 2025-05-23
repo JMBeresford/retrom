@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import type { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogClose, DialogFooter } from "@/components/ui/dialog";
 import {

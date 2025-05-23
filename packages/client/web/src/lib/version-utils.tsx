@@ -1,5 +1,5 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Version } from "@retrom/codegen/retrom/server/server-info";
+import type { ScrollArea } from "@/components/ui/scroll-area";
+import { Version } from "@retrom/codegen/retrom/server/server-info_pb";
 import { Update } from "@tauri-apps/plugin-updater";
 import Markdown from "react-markdown";
 import classes from "./version-utils.module.scss";

@@ -1,4 +1,4 @@
-import {
+import type {
   FocusableElement,
   FocusContainer,
 } from "@/components/fullscreen/focus-container";

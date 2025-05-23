@@ -1,4 +1,4 @@
-import { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config_pb";
+import type { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config_pb";
 import { z } from "zod";
 
 const {

@@ -1,9 +1,9 @@
-import {
+import type {
   InstallationProgressUpdate,
   InstallGamePayload,
-} from "@retrom/codegen/retrom/client/client-utils";
-import { Game } from "@retrom/codegen/retrom/models/games";
-import { GameFile } from "@retrom/codegen/retrom/models/game-files";
+} from "@retrom/codegen/retrom/client/client-utils_pb";
+import type { Game } from "@retrom/codegen/retrom/models/games_pb";
+import type { GameFile } from "@retrom/codegen/retrom/models/game-files_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 import { UnlistenFn } from "@tauri-apps/api/event";

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import type { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { JobStatus } from "@retrom/codegen/retrom/jobs";
+import { JobStatus } from "@retrom/codegen/retrom/jobs_pb";
 import { cn } from "@/lib/utils";
 import { useJobProgress } from "@/queries/useJobProgress";
 import { LoaderCircleIcon } from "lucide-react";

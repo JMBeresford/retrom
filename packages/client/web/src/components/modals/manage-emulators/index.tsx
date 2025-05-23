@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import type { useCallback, useEffect } from "react";
 import { Route as RootRoute } from "@/routes/__root";
 import {
   Dialog,
@@ -27,14 +27,14 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { usePlatforms } from "@/queries/usePlatforms";
-import { Platform } from "@retrom/codegen/retrom/models/platforms";
-import {
+import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
+import type {
   Emulator,
   NewEmulator,
   SaveStrategy,
   UpdatedEmulator,
-} from "@retrom/codegen/retrom/models/emulators";
-import { z } from "zod";
+} from "@retrom/codegen/retrom/models/emulators_pb";
+import type { z } from "zod";
 import { CreateEmulator } from "./create-emulator";
 import { Button } from "@/components/ui/button";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -56,7 +56,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDeleteEmulators } from "@/mutations/useDeleteEmulators";
-import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata";
+import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
 import { useNavigate } from "@tanstack/react-router";
 import { useLocalEmulatorConfigs } from "@/queries/useLocalEmulatorConfigs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

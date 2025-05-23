@@ -1,4 +1,4 @@
-import { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config_pb";
+import type { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config_pb";
 import * as ConfigFile from "@retrom/plugin-config";
 import { StateStorage } from "zustand/middleware";
 import { LocalConfig } from ".";

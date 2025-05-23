@@ -1,5 +1,5 @@
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
-import { Game } from "@retrom/codegen/retrom/models/games";
+import type { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import type { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { useMemo } from "react";
 import { useInstallationStateQuery } from "./useInstallationState";
 

@@ -1,7 +1,7 @@
-import {
+import type {
   GetPlatformsRequest,
   GetPlatformsResponse,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -16,8 +16,10 @@ export function usePlatforms<S = GetPlatformsResponse>(
 
   return useQuery({
     queryKey: ["platforms", "platform-metadata", request, retromClient],
-    queryFn: async () =>
-      await retromClient.platformClient.getPlatforms(request),
+    queryFn: async () => {
+      const response = await retromClient.platformClient.getPlatforms(request);
+      return response as GetPlatformsResponse;
+    },
     select: selectFn,
   });
 }
