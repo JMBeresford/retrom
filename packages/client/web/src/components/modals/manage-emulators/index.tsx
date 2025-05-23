@@ -391,7 +391,9 @@ function EmulatorList(props: {
                             const valueNum = parseInt(value);
                             const saveStrategy = Object.values(
                               SaveStrategy,
-                            ).find((v) => typeof v === 'number' && v === valueNum);
+                            ).find(
+                              (v) => typeof v === "number" && v === valueNum,
+                            );
 
                             if (saveStrategy === undefined) return;
 

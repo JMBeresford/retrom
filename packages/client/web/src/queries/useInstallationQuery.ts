@@ -9,8 +9,8 @@ export function useInstallationQuery(game: Game) {
 
   const data = useMemo(() => {
     if (!_data || !game) return InstallationStatus.UNRECOGNIZED;
-    
-    const status = 
+
+    const status =
       _data.installationState.get(game.id) ?? InstallationStatus.UNRECOGNIZED;
 
     return status;

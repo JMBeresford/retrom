@@ -162,7 +162,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                 onValueChange={(value) => {
                   const valueNum = parseInt(value);
                   const saveStrategy = Object.values(SaveStrategy).find(
-                    (v) => typeof v === 'number' && v === valueNum,
+                    (v) => typeof v === "number" && v === valueNum,
                   );
 
                   if (saveStrategy === undefined) return;

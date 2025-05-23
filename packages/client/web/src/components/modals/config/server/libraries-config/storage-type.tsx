@@ -47,7 +47,7 @@ export function StorageTypeSelect<
 
         <SelectContent>
           {Object.values(StorageType)
-            .filter((type) => typeof type === 'number' && type >= 0)
+            .filter((type) => typeof type === "number" && type >= 0)
             .map((type) => (
               <SelectItem key={type} value={type.toString()}>
                 {StorageTypeLabel[type as StorageType]}

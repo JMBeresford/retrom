@@ -31,7 +31,7 @@ export function useGames<T = GetGamesResponse>(opts: {
     queryFn: async () => {
       const data = await retromClient.gameClient.getGames(request);
       const response = data as GetGamesResponse;
-      
+
       if (!response.games.length) {
         toast({
           title: "Your Library Is Empty",

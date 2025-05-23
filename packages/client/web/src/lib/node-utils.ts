@@ -1,8 +1,6 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import {
-  ServerConfigSchema,
-} from "@retrom/codegen/retrom/server/config_pb";
+import { ServerConfigSchema } from "@retrom/codegen/retrom/server/config_pb";
 import { fromJson } from "@bufbuild/protobuf";
 
 export function readLocalCargoToml(): string {
