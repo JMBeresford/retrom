@@ -5186,6 +5186,7 @@ dependencies = [
  "serde",
  "tauri",
  "tauri-plugin",
+ "tauri-plugin-opener",
  "thiserror 1.0.69",
  "tokio",
  "tokio-rustls 0.25.0",
