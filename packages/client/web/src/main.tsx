@@ -18,6 +18,14 @@ import {
   StateFlags,
 } from "@tauri-apps/plugin-window-state";
 
+if (import.meta.env.DEV) {
+  import("react-scan")
+    .then(({ scan: _scan }) => {
+      // _scan();
+    })
+    .catch(console.error);
+}
+
 // Create a new router instance
 const router = createRouter({ routeTree });
 

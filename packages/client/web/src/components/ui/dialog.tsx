@@ -5,13 +5,14 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "./scroll-area";
 
-type DialogOpenState = {
+export type DialogOpenState = {
   open: Readonly<boolean>;
   setOpen: (open: boolean) => void;
 };
-const dialogOpenContext = React.createContext<DialogOpenState | undefined>(
-  undefined,
-);
+
+export const dialogOpenContext = React.createContext<
+  DialogOpenState | undefined
+>(undefined);
 
 export const useDialogOpen = () => {
   const context = React.useContext(dialogOpenContext);

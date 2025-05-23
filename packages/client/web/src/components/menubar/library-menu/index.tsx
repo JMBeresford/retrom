@@ -1,17 +1,19 @@
 import { Link } from "@tanstack/react-router";
-import { MenuItem, RootMenuItem } from "..";
+import { MenuItem } from "..";
 
 export const updateLibraryMenuItem: MenuItem = {
   label: "Update Library",
   Render: (
-    <Link search={{ updateLibraryModal: { open: true } }}>Update Library</Link>
+    <Link to="." search={{ updateLibraryModal: { open: true } }}>
+      Update Library
+    </Link>
   ),
 };
 
 export const downloadMetadataMenuItem: MenuItem = {
   label: "Download Metadata",
   Render: (
-    <Link search={{ downloadMetadataModal: { open: true } }}>
+    <Link to="." search={{ downloadMetadataModal: { open: true } }}>
       Download Metadata
     </Link>
   ),
@@ -20,7 +22,9 @@ export const downloadMetadataMenuItem: MenuItem = {
 export const cleanLibraryMenuItem: MenuItem = {
   label: "Clean Library",
   Render: (
-    <Link search={{ cleanLibraryModal: { open: true } }}>Clean Library</Link>
+    <Link to="." search={{ cleanLibraryModal: { open: true } }}>
+      Clean Library
+    </Link>
   ),
 };
 
@@ -28,6 +32,7 @@ export const deleteLibraryMenuItem: MenuItem = {
   label: "Delete Library",
   Render: (
     <Link
+      to="."
       className="text-destructive-text"
       search={{ deleteLibraryModal: { open: true } }}
     >
@@ -36,10 +41,16 @@ export const deleteLibraryMenuItem: MenuItem = {
   ),
 };
 
-export const libraryMenu: RootMenuItem = {
+export const libraryMenu: MenuItem = {
   label: "Library",
   items: [
-    [updateLibraryMenuItem, downloadMetadataMenuItem, cleanLibraryMenuItem],
-    [deleteLibraryMenuItem],
+    {
+      groupItems: [
+        updateLibraryMenuItem,
+        downloadMetadataMenuItem,
+        cleanLibraryMenuItem,
+      ],
+    },
+    { groupItems: [deleteLibraryMenuItem] },
   ],
 };

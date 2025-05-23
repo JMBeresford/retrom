@@ -1,5 +1,5 @@
 import { useToast } from "@/components/ui/use-toast";
-import { UpdateEmulatorProfilesRequest } from "@retrom/codegen/retrom/services";
+import { UpdateEmulatorProfilesRequest } from "@retrom/codegen/retrom/services/emulator-service";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

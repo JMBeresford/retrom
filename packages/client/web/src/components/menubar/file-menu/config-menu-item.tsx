@@ -3,5 +3,9 @@ import { MenuItem } from "..";
 
 export const configMenuItem: MenuItem = {
   label: "Configuration",
-  Render: <Link search={{ configModal: { open: true } }}>Configuration</Link>,
+  Render: (
+    <Link to="." search={{ configModal: { open: true } }}>
+      Configuration
+    </Link>
+  ),
 };

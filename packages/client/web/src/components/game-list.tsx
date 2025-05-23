@@ -77,7 +77,6 @@ export function GameList(props: { games: GameWithMetadata[] }) {
                       <ActionButton
                         size="sm"
                         className='text-md min-w-[100px] [&_div[role="progressbar"]_>_*]:bg-primary-foreground'
-                        game={game}
                       />
                     </div>
                   </GameDetailProvider>

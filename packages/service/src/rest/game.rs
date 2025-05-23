@@ -16,7 +16,7 @@ use warp::{filters::BoxedFilter, Filter};
 use super::with_db_pool;
 
 #[instrument(skip_all)]
-pub fn get_game_files(pool: Arc<Pool>) -> BoxedFilter<(impl warp::Reply,)> {
+pub fn game(pool: Arc<Pool>) -> BoxedFilter<(impl warp::Reply,)> {
     warp::path!("game" / i32)
         .and(warp::get())
         .and(with_db_pool(pool))

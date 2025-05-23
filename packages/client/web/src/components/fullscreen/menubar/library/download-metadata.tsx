@@ -13,7 +13,7 @@ import { MenuEntryButton } from "../menu-entry-button";
 import { HotkeyButton } from "../../hotkey-button";
 import { useUpdateLibraryMetadata } from "@/mutations/useUpdateLibraryMetadata";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { FocusableElement, FocusContainer } from "../../focus-container";
+import { FocusContainer } from "../../focus-container";
 
 export function DownloadMetadata(props: ComponentProps<typeof SheetTrigger>) {
   const { mutate: downloadMetadata } = useUpdateLibraryMetadata();
@@ -22,51 +22,51 @@ export function DownloadMetadata(props: ComponentProps<typeof SheetTrigger>) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger {...props} asChild>
-        <FocusableElement opts={{ focusKey: "download-metadata-open" }}>
-          <MenuEntryButton>Download Metadata</MenuEntryButton>
-        </FocusableElement>
+        <MenuEntryButton id="download-metadata-open">
+          Download Metadata
+        </MenuEntryButton>
       </SheetTrigger>
 
       <SheetContent>
-        <FocusContainer
-          opts={{
-            focusKey: "download-metadata-menu",
-            isFocusBoundary: true,
+        <HotkeyLayer
+          id="download-metadata"
+          handlers={{
+            BACK: {
+              handler: () => setOpen(false),
+            },
+            MENU: {
+              handler: () => {
+                downloadMetadata({});
+                setOpen(false);
+              },
+            },
           }}
         >
-          <HotkeyLayer
-            id="download-metadata"
-            handlers={{
-              BACK: {
-                handler: () => setOpen(false),
-              },
-              MENU: {
-                handler: () => {
-                  downloadMetadata({});
-                  setOpen(false);
-                },
-              },
+          <SheetHeader>
+            <SheetTitle>Download Metadata</SheetTitle>
+            <SheetDescription>Update your library metadata</SheetDescription>
+          </SheetHeader>
+
+          <FocusContainer
+            opts={{
+              focusKey: "download-metadata-menu",
+              initialFocus: true,
+              isFocusBoundary: true,
             }}
           >
-            <SheetHeader>
-              <SheetTitle>Download Metadata</SheetTitle>
-              <SheetDescription>Update your library metadata</SheetDescription>
-            </SheetHeader>
-
-            <FocusableElement
-              initialFocus
-              opts={{ focusKey: "download-metadata-trap" }}
-            >
-              <button className="opacity-0"></button>
-            </FocusableElement>
-
-            <SheetFooter>
+            <SheetFooter className="px-2">
               <SheetClose asChild>
-                <HotkeyButton hotkey="BACK">back</HotkeyButton>
+                <HotkeyButton
+                  focusOpts={{ focusKey: "download-metadata-menu-close" }}
+                  hotkey="BACK"
+                >
+                  back
+                </HotkeyButton>
               </SheetClose>
 
               <HotkeyButton
                 hotkey="MENU"
+                focusOpts={{ focusKey: "download-metadata-menu-confirm" }}
                 onClick={() => {
                   downloadMetadata({});
                   setOpen(false);
@@ -75,8 +75,8 @@ export function DownloadMetadata(props: ComponentProps<typeof SheetTrigger>) {
                 Download
               </HotkeyButton>
             </SheetFooter>
-          </HotkeyLayer>
-        </FocusContainer>
+          </FocusContainer>
+        </HotkeyLayer>
       </SheetContent>
     </Sheet>
   );
