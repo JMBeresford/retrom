@@ -12,7 +12,7 @@ import { LoaderCircleIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useClientInfo } from "@/queries/useClientInfo";
 import { useConfigStore } from "@/providers/config";
-import { Timestamp } from "@retrom/codegen/google/protobuf/timestamp";
+import { Timestamp } from "@bufbuild/protobuf/wkt";
 import { useQueryClient } from "@tanstack/react-query";
 
 export function Confirm() {

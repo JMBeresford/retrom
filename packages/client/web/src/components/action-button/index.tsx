@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb.js";
 import { Game } from "@retrom/codegen/retrom/models/games";
 import { PlatformDependent } from "@/lib/env";
 import { cn } from "@/lib/utils";

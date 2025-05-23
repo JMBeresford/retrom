@@ -6,7 +6,7 @@ import {
   LoaderCircleIcon,
 } from "lucide-react";
 import { useInstallGame } from "@/mutations/useInstallGame";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb.js";
 import { Progress } from "../ui/progress";
 import { ComponentProps, ForwardedRef, forwardRef } from "react";
 import { cn } from "@/lib/utils";

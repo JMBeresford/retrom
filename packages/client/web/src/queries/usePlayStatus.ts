@@ -1,7 +1,7 @@
 import {
   GamePlayStatusUpdate,
   GetGamePlayStatusPayload,
-} from "@retrom/codegen/retrom/client/client-utils";
+} from "@retrom/codegen/retrom/client/client-utils_pb.js";
 import { Game } from "@retrom/codegen/retrom/models/games";
 import { checkIsDesktop } from "@/lib/env";
 import { useQuery, useQueryClient } from "@tanstack/react-query";

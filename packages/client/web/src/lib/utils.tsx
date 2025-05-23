@@ -1,4 +1,4 @@
-import { Timestamp } from "@retrom/codegen/google/protobuf/timestamp";
+import { Timestamp } from "@bufbuild/protobuf/wkt";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
