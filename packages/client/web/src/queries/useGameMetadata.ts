@@ -20,7 +20,10 @@ export function useGameMetadata<T = GetGameMetadataResponse>(
 
   return useQuery({
     enabled,
-    queryFn: () => retromClient.metadataClient.getGameMetadata(request),
+    queryFn: async () => {
+      const response = await retromClient.metadataClient.getGameMetadata(request);
+      return response as GetGameMetadataResponse;
+    },
     queryKey: ["game-metadata", "metadata", queryClient, request],
     select: selectFn,
   });

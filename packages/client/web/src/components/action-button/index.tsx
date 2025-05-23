@@ -1,5 +1,5 @@
 import type { Button } from "@/components/ui/button";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import type { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 import type { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { PlatformDependent } from "@/lib/env";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,9 @@ export const ActionButton = forwardRef(
     forwardedRef: ForwardedRef<HTMLButtonElement>,
   ) => {
     const { game, className, ...rest } = props;
-    const { data: installationState, status } = useInstallationQuery(game);
+    const installationQuery = useInstallationQuery(game);
+    const installationState = installationQuery.data;
+    const status = installationQuery.status;
 
     const buttonClasses = cn(
       "rounded-none font-bold text-lg tracking-wider flex gap-2 items-center",
