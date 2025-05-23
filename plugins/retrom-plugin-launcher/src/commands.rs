@@ -58,7 +58,7 @@ pub(crate) async fn play_game<R: Runtime>(
     let game_id = game.id;
     let maybe_default_game_file = payload.file;
     let emulator = payload.emulator;
-    
+
     // Check if we should use system default application (no emulator configured)
     // This enables direct launching of PC games or files with system-defined associations
     // Only fallback to system default when no emulator is available at all
@@ -95,18 +95,25 @@ pub(crate) async fn play_game<R: Runtime>(
     tracing::debug!("Files: {:?}", files);
     tracing::debug!("Default file: {:?}", &maybe_default_file);
 
-    let fallback_file = payload.emulator_profile.and_then(|profile| if
-        profile.supported_extensions.is_empty() {
-            None
-        } else {
-            files.iter().find(|file| {
-                profile
-                    .supported_extensions
-                    .iter()
-                    .any(|ext| file.extension().and_then(OsStr::to_str) == Some(ext.as_str()))
-            })
-        }
-    ).unwrap_or_else(|| files.iter().find(|file| Some(*file) != maybe_default_file.as_ref()));
+    let fallback_file = payload
+        .emulator_profile
+        .and_then(|profile| {
+            if profile.supported_extensions.is_empty() {
+                None
+            } else {
+                files.iter().find(|file| {
+                    profile
+                        .supported_extensions
+                        .iter()
+                        .any(|ext| file.extension().and_then(OsStr::to_str) == Some(ext.as_str()))
+                })
+            }
+        })
+        .unwrap_or_else(|| {
+            files
+                .iter()
+                .find(|file| Some(*file) != maybe_default_file.as_ref())
+        });
 
     tracing::debug!("Fallback file: {:?}", fallback_file);
 
@@ -135,11 +142,14 @@ pub(crate) async fn play_game<R: Runtime>(
     // Create process to track game play time
     let (send, mut recv) = tokio::sync::mpsc::channel(1);
     let send = Mutex::new(send);
-    
+
     if use_system_default {
-        tracing::info!("Opening file with system default application: {}", file_path);
+        tracing::info!(
+            "Opening file with system default application: {}",
+            file_path
+        );
         app.opener().open_path(file_path, None::<&str>)?;
-        
+
         launcher
             .mark_game_as_running(
                 game_id,
@@ -149,18 +159,18 @@ pub(crate) async fn play_game<R: Runtime>(
                 },
             )
             .await?;
-        
+
         launcher.mark_game_as_stopped(game_id).await?;
-        
+
         return Ok(());
     }
-    
+
     let emulator = emulator.expect("No emulator provided");
     let install_dir = match install_dir.canonicalize()?.to_str() {
         Some(path) => path.to_string(),
         None => return Err(crate::Error::FileNotFound(game_id)),
     };
-    
+
     let client_config = app.config_manager().get_config().await;
 
     let client_id = client_config
@@ -211,7 +221,7 @@ pub(crate) async fn play_game<R: Runtime>(
     cmd.args(args);
 
     let mut process = cmd.spawn()?;
-    
+
     launcher
         .mark_game_as_running(
             game_id,
@@ -241,7 +251,6 @@ pub(crate) async fn play_game<R: Runtime>(
                 .expect("Error stopping game");
         }
     };
-    }
 
     Ok(())
 }
