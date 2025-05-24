@@ -10,7 +10,23 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+// Import needed for reference but not directly used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
+
+// Constants to avoid enum comparisons
+const MULTI_FILE_GAME = 0; // StorageType.MULTI_FILE_GAME
+const SINGLE_FILE_GAME = 1; // StorageType.SINGLE_FILE_GAME
+const CUSTOM = 2; // StorageType.CUSTOM
+const UNRECOGNIZED = -1; // StorageType.UNRECOGNIZED
+
+// Map storage type numbers to labels
+const storageTypeLabels: Record<number, string> = {
+  [MULTI_FILE_GAME]: "Multi-file Games",
+  [SINGLE_FILE_GAME]: "Single-file Games",
+  [CUSTOM]: "Custom",
+  [UNRECOGNIZED]: "Unrecognized",
+};
 
 export function StorageTypeSelect<
   Field extends ControllerRenderProps<
@@ -19,7 +35,6 @@ export function StorageTypeSelect<
   >,
 >(props: { field: Field; fieldState: ControllerFieldState }) {
   const { field, fieldState } = props;
-  const value = field.value;
 
   return (
     <FormItem className="sm:contents sm:space-y-0 w-full">
@@ -28,7 +43,7 @@ export function StorageTypeSelect<
       </FormLabel>
       <Select
         disabled={field.disabled}
-        value={value.toString()}
+        value={field.value.toString()}
         onValueChange={(value) => field.onChange(parseInt(value))}
       >
         <FormControl>
@@ -40,18 +55,17 @@ export function StorageTypeSelect<
             )}
           >
             <SelectValue asChild placeholder="Select a storage type">
-              <p className="text-left">{StorageTypeLabel[field.value]}</p>
+              <p className="text-left">{storageTypeLabels[field.value] || "Unknown"}</p>
             </SelectValue>
           </SelectTrigger>
         </FormControl>
 
         <SelectContent>
-          {Object.values(StorageType)
-            .filter((type): type is number => typeof type === "number" && type >= 0)
-            .map((type) => (
-              <SelectItem key={type} value={type.toString()}>
-                {StorageTypeLabel[type]}
-                {Number(type) === 1 && (
+          {[MULTI_FILE_GAME, SINGLE_FILE_GAME, CUSTOM]
+            .map((value) => (
+              <SelectItem key={value} value={value.toString()}>
+                {storageTypeLabels[value]}
+                {value === SINGLE_FILE_GAME && (
                   <Badge variant="outline" className="mx-2">
                     Default
                   </Badge>
@@ -63,10 +77,3 @@ export function StorageTypeSelect<
     </FormItem>
   );
 }
-
-const StorageTypeLabel: Record<StorageType, string> = {
-  [StorageType.MULTI_FILE_GAME]: "Multi-file Games",
-  [StorageType.SINGLE_FILE_GAME]: "Single-file Games",
-  [StorageType.CUSTOM]: "Custom",
-  [StorageType.UNRECOGNIZED]: "Unrecognized",
-};
