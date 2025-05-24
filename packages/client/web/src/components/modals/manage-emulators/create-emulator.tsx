@@ -161,8 +161,12 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                 defaultValue={field.value?.toString() ?? ""}
                 onValueChange={(value) => {
                   const valueNum = parseInt(value);
-                  const saveStrategy = Object.values(SaveStrategy).find(
-                    (v) => typeof v === "number" && v === valueNum,
+                  // Use type guard to ensure we're comparing numbers correctly
+                  const numericValues = Object.values(SaveStrategy).filter(
+                    (v): v is number => typeof v === "number"
+                  );
+                  const saveStrategy = numericValues.find(
+                    (v) => v === valueNum,
                   );
 
                   if (saveStrategy === undefined) return;

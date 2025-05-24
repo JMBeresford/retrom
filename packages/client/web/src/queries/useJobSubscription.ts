@@ -17,21 +17,21 @@ export function useJobSubscription(opts: {
   useQuery({
     queryKey: ["job", jobId],
     queryFn: async () => {
-      const stream = await retromClient.jobClient.getJobSubscription({ jobId });
+      const stream = retromClient.jobClient.getJobSubscription({ jobId });
 
       for await (const progress of stream) {
         const { job } = progress;
 
         if (job) {
           if (onProgress && job.status === JobStatus.Running) {
-            onProgress(job as JobProgress);
+            onProgress(job);
           }
 
           if (onCompletion && job.status === JobStatus.Success) {
-            onCompletion(job as JobProgress);
+            onCompletion(job);
           }
 
-          setJobProgress(job as JobProgress);
+          setJobProgress(job);
         }
       }
 

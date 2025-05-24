@@ -1,17 +1,18 @@
-import type {
-  GetLocalEmulatorConfigsRequest,
-  GetLocalEmulatorConfigsResponse,
+import {
+  GetLocalEmulatorConfigsRequestSchema,
+  type GetLocalEmulatorConfigsResponse,
 } from "@retrom/codegen/retrom/services_pb";
 import { useConfig } from "@/providers/config";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 type SelectFn<S> = (data: GetLocalEmulatorConfigsResponse) => S;
 
 export function useLocalEmulatorConfigs<T = GetLocalEmulatorConfigsResponse>(
   opts: {
-    request?: Partial<GetLocalEmulatorConfigsRequest>;
+    request?: MessageInitShape<typeof GetLocalEmulatorConfigsRequestSchema>;
     selectFn?: SelectFn<T>;
     enabled?: boolean;
   } = {},
@@ -35,7 +36,7 @@ export function useLocalEmulatorConfigs<T = GetLocalEmulatorConfigsResponse>(
     queryFn: async () => {
       const response =
         await retromClient.emulatorClient.getLocalEmulatorConfigs(req);
-      return response as GetLocalEmulatorConfigsResponse;
+      return response;
     },
   });
 }

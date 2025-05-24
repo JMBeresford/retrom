@@ -1,15 +1,16 @@
-import type {
-  GetServerInfoRequest,
-  GetServerInfoResponse,
+import {
+  GetServerInfoRequestSchema,
+  type GetServerInfoResponse,
 } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 type SelectFn<S> = (data: GetServerInfoResponse) => S;
 
 export function useServerInfo<T = GetServerInfoResponse>(
   opts: {
-    request?: Partial<GetServerInfoRequest>;
+    request?: MessageInitShape<typeof GetServerInfoRequestSchema>;
     selectFn?: SelectFn<T>;
     enabled?: boolean;
   } = {},
@@ -22,7 +23,7 @@ export function useServerInfo<T = GetServerInfoResponse>(
     enabled,
     queryFn: async () => {
       const response = await retromClient.serverClient.getServerInfo(request);
-      return response as GetServerInfoResponse;
+      return response;
     },
     queryKey: ["server-info", queryClient, request, retromClient],
     select: selectFn,
