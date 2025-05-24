@@ -93,7 +93,9 @@ impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
         name = name.split_whitespace().collect::<Vec<&str>>().join(" ");
         let name = name.as_str();
 
-        let search = deunicode(name);
+        // Remove special characters like ™ and ® before deunicoding
+        let name_without_special = super::provider::remove_special_chars(name);
+        let search = deunicode(&name_without_special);
         debug!("Searching for platform: {}", search);
 
         let search_query = match query {

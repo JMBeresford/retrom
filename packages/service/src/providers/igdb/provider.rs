@@ -406,6 +406,16 @@ impl MetadataProvider<GetIgdbSearchRequest, IgdbSearchData> for IGDBProvider {
     }
 }
 
+// Helper function to remove special characters like ™ and ® that may interfere with metadata matching
+pub fn remove_special_chars(input: &str) -> String {
+    let special_chars = ['™', '®', '©', '℗', '℠'];
+    let mut result = input.to_string();
+    for c in special_chars {
+        result = result.replace(c, "");
+    }
+    result
+}
+
 fn render_filter_operation(igdb_filter: (String, FilterValue)) -> String {
     let (field, filter) = igdb_filter;
 
