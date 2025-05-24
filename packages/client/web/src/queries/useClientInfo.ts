@@ -1,15 +1,16 @@
 import type {
-  GetClientsRequest,
+  GetClientsRequestSchema,
   GetClientsResponse,
 } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 type SelectFn<S> = (data: GetClientsResponse) => S;
 
 export function useClientInfo<T = GetClientsResponse>(
   opts: {
-    request?: Partial<GetClientsRequest>;
+    request?: MessageInitShape<typeof GetClientsRequestSchema>;
     selectFn?: SelectFn<T>;
     enabled?: boolean;
   } = {},

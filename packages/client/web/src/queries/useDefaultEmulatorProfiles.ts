@@ -1,12 +1,12 @@
 import type {
-  GetDefaultEmulatorProfilesRequest,
+  GetDefaultEmulatorProfilesRequestSchema,
   GetDefaultEmulatorProfilesResponse,
 } from "@retrom/codegen/retrom/services_pb";
 import { useConfig } from "@/providers/config";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Metadata } from "nice-grpc-common";
 import { useMemo } from "react";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 type SelectFn<S> = (data: GetDefaultEmulatorProfilesResponse) => S;
 
@@ -14,7 +14,7 @@ export function useDefaultEmulatorProfiles<
   T = GetDefaultEmulatorProfilesResponse,
 >(
   opts: {
-    request?: Partial<GetDefaultEmulatorProfilesRequest>;
+    request?: MessageInitShape<typeof GetDefaultEmulatorProfilesRequestSchema>;
     selectFn?: SelectFn<T>;
     enabled?: boolean;
   } = {},
@@ -25,9 +25,9 @@ export function useDefaultEmulatorProfiles<
   const queryClient = useQueryClient();
   const retromClient = useRetromClient();
 
-  const metadata = useMemo(() => {
-    const clientId = clientInfo?.id.toString();
-    const meta = new Metadata({ "x-client-id": clientId ?? [] });
+  const headers = useMemo(() => {
+    const clientId = clientInfo?.id.toString() ?? "-1";
+    const meta = new Headers({ "x-client-id": clientId });
 
     return meta;
   }, [clientInfo]);
@@ -36,14 +36,14 @@ export function useDefaultEmulatorProfiles<
     enabled,
     queryFn: () =>
       retromClient.emulatorClient.getDefaultEmulatorProfiles(request, {
-        metadata,
+        headers,
       }),
     queryKey: [
       "default-emulator-profiles",
       "emulator-profiles",
       queryClient,
       request,
-      metadata,
+      headers,
     ],
     select: selectFn,
   });

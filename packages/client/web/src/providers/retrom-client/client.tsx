@@ -1,4 +1,4 @@
-import type {
+import {
   ClientService,
   EmulatorService,
   FileExplorerService,
@@ -9,7 +9,7 @@ import type {
   PlatformService,
   ServerService,
 } from "@retrom/codegen/retrom/services_pb";
-import { createPromiseClient } from "@connectrpc/connect";
+import { createClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 
 export class RetromClient {
@@ -35,25 +35,22 @@ export class RetromClient {
       baseUrl: host,
     });
 
-    this.gameClient = createPromiseClient(GameService, transport);
+    this.gameClient = createClient(GameService, transport);
 
-    this.platformClient = createPromiseClient(PlatformService, transport);
+    this.platformClient = createClient(PlatformService, transport);
 
-    this.emulatorClient = createPromiseClient(EmulatorService, transport);
+    this.emulatorClient = createClient(EmulatorService, transport);
 
-    this.metadataClient = createPromiseClient(MetadataService, transport);
+    this.metadataClient = createClient(MetadataService, transport);
 
-    this.libraryClient = createPromiseClient(LibraryService, transport);
+    this.libraryClient = createClient(LibraryService, transport);
 
-    this.clientsClient = createPromiseClient(ClientService, transport);
+    this.clientsClient = createClient(ClientService, transport);
 
-    this.serverClient = createPromiseClient(ServerService, transport);
+    this.serverClient = createClient(ServerService, transport);
 
-    this.jobClient = createPromiseClient(JobService, transport);
+    this.jobClient = createClient(JobService, transport);
 
-    this.fileExplorerClient = createPromiseClient(
-      FileExplorerService,
-      transport,
-    );
+    this.fileExplorerClient = createClient(FileExplorerService, transport);
   }
 }

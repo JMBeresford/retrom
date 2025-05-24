@@ -1,15 +1,16 @@
 import type {
-  GetEmulatorsRequest,
+  GetEmulatorsRequestSchema,
   GetEmulatorsResponse,
 } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 type SelectFn<S> = (data: GetEmulatorsResponse) => S;
 
 export function useEmulators<T = GetEmulatorsResponse>(
   opts: {
-    request?: Partial<GetEmulatorsRequest>;
+    request?: MessageInitShape<typeof GetEmulatorsRequestSchema>;
     selectFn?: SelectFn<T>;
     enabled?: boolean;
   } = {},

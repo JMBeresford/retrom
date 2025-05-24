@@ -11,12 +11,10 @@ export function useJobProgress() {
     queryKey: ["jobs", "job-progress"],
     staleTime: Infinity,
     queryFn: async () => {
-      const stream = await retromClient.jobClient.getJobs({});
+      const stream = retromClient.jobClient.getJobs({});
 
       for await (const res of stream) {
-        const runningJobs = res.jobs.filter(
-          (job) => job.percent < 100,
-        ) as JobProgress[];
+        const runningJobs = res.jobs.filter((job) => job.percent < 100);
 
         setJobs(runningJobs);
       }
