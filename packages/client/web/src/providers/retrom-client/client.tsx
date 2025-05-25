@@ -1,3 +1,4 @@
+import { openTelemetryClientMiddleware } from "nice-grpc-opentelemetry";
 import {
   GameServiceDefinition,
   PlatformServiceDefinition,
@@ -9,7 +10,11 @@ import {
   ServerServiceDefinition,
   FileExplorerServiceDefinition,
 } from "@retrom/codegen/retrom/services";
-import { createClient, createChannel } from "nice-grpc-web";
+import { createChannel, createClientFactory } from "nice-grpc-web";
+
+const clientFactory = createClientFactory().use(
+  openTelemetryClientMiddleware(),
+);
 
 export class RetromClient {
   readonly host: string;
@@ -29,41 +34,47 @@ export class RetromClient {
     }
 
     this.host = host;
-    this.gameClient = createClient(GameServiceDefinition, createChannel(host));
+    this.gameClient = clientFactory.create(
+      GameServiceDefinition,
+      createChannel(host),
+    );
 
-    this.platformClient = createClient(
+    this.platformClient = clientFactory.create(
       PlatformServiceDefinition,
       createChannel(host),
     );
 
-    this.emulatorClient = createClient(
+    this.emulatorClient = clientFactory.create(
       EmulatorServiceDefinition,
       createChannel(host),
     );
 
-    this.metadataClient = createClient(
+    this.metadataClient = clientFactory.create(
       MetadataServiceDefinition,
       createChannel(host),
     );
 
-    this.libraryClient = createClient(
+    this.libraryClient = clientFactory.create(
       LibraryServiceDefinition,
       createChannel(host),
     );
 
-    this.clientsClient = createClient(
+    this.clientsClient = clientFactory.create(
       ClientServiceDefinition,
       createChannel(host),
     );
 
-    this.serverClient = createClient(
+    this.serverClient = clientFactory.create(
       ServerServiceDefinition,
       createChannel(host),
     );
 
-    this.jobClient = createClient(JobServiceDefinition, createChannel(host));
+    this.jobClient = clientFactory.create(
+      JobServiceDefinition,
+      createChannel(host),
+    );
 
-    this.fileExplorerClient = createClient(
+    this.fileExplorerClient = clientFactory.create(
       FileExplorerServiceDefinition,
       createChannel(host),
     );

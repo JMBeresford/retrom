@@ -45,7 +45,12 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "headers": {
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Headers": ["traceparent"],
+        "Access-Control-Allow-Methods": "*"
+      }
     }
   },
   "plugins": {

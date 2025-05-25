@@ -127,6 +127,9 @@ export const Route = createRootRoute({
   validateSearch: zodSearchValidator(modalsSearchSchema),
   component: RootComponent,
   errorComponent: (opts) => <div>Error: {String(opts.error)}</div>,
+  loader: async () => {
+    await import("../otel.ts");
+  },
 });
 
 function RootComponent() {
