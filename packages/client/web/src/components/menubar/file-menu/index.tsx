@@ -4,13 +4,13 @@ import { checkForUpdateMenuItem } from "./check-for-update-menu-item";
 import { locationsMenuItem } from "./locations-menu-item";
 import { setupMenuItem } from "./setup-menu-item";
 import { closeMenuItem } from "./close-menu-item";
-import { RootMenuItem } from "..";
+import { MenuItem } from "..";
 
-export const fileMenu: RootMenuItem = {
+export const fileMenu: MenuItem = {
   label: "File",
   items: [
-    [configMenuItem],
-    [versionInfoMenuItem, checkForUpdateMenuItem],
-    [locationsMenuItem, setupMenuItem, closeMenuItem],
+    { groupItems: [configMenuItem] },
+    { groupItems: [versionInfoMenuItem, checkForUpdateMenuItem] },
+    { groupItems: [locationsMenuItem, setupMenuItem, closeMenuItem] },
   ],
 };

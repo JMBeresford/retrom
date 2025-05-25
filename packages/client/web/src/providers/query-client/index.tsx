@@ -5,11 +5,9 @@ import {
 } from "@tanstack/react-query";
 import { PropsWithChildren, useState } from "react";
 import { Status, ClientError } from "nice-grpc-common";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 
 export function QueryClientProvider(props: PropsWithChildren) {
-  const { toast } = useToast();
-
   const [queryClient] = useState(
     () =>
       new QueryClient({

@@ -5,6 +5,8 @@ import {
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetOverlay,
+  SheetPortal,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
@@ -17,6 +19,7 @@ import { useState } from "react";
 import { useHotkeys } from "@/providers/hotkeys";
 import { FocusContainer } from "../focus-container";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 declare global {
   export interface HotkeyZones {
@@ -42,15 +45,13 @@ export function MenuSheet(props: JSX.IntrinsicElements["button"]) {
         </HotkeyButton>
       </SheetTrigger>
 
-      <SheetContent
-        onCloseAutoFocus={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
-        <FocusContainer
-          initialFocus
-          opts={{ focusKey: "menu-root", isFocusBoundary: true }}
+      <SheetPortal>
+        <SheetOverlay />
+        <SheetContent
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
         >
           <HotkeyLayer
             id="menu-root"
@@ -61,17 +62,24 @@ export function MenuSheet(props: JSX.IntrinsicElements["button"]) {
           >
             <SheetHeader>
               <SheetTitle>Menu</SheetTitle>
-              <SheetDescription>
-                Retrom configuration and options menu
-              </SheetDescription>
+              <SheetDescription>Retrom configuration menu</SheetDescription>
             </SheetHeader>
 
-            <ScrollArea className="h-full w-full">
-              <div className="flex flex-col gap-4 h-full">
+            <Separator className="w-[90%] mx-auto" />
+
+            <ScrollArea className="h-full w-full outline-none">
+              <FocusContainer
+                opts={{
+                  focusKey: "menu-root",
+                  isFocusBoundary: true,
+                  initialFocus: true,
+                }}
+                className="flex flex-col h-full"
+              >
                 <Library />
                 <Config />
                 <ExitFullscreen />
-              </div>
+              </FocusContainer>
             </ScrollArea>
 
             <SheetFooter>
@@ -80,8 +88,8 @@ export function MenuSheet(props: JSX.IntrinsicElements["button"]) {
               </SheetClose>
             </SheetFooter>
           </HotkeyLayer>
-        </FocusContainer>
-      </SheetContent>
+        </SheetContent>
+      </SheetPortal>
     </Sheet>
   );
 }

@@ -135,6 +135,7 @@ export function ManualTab() {
       form.reset(updated);
 
       return navigate({
+        to: ".",
         search: (prev) => ({ ...prev, updateMetadataModal: undefined }),
       });
     },

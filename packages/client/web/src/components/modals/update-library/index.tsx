@@ -24,6 +24,7 @@ export function UpdateLibraryModal() {
   const close = useCallback(
     () =>
       navigate({
+        to: ".",
         search: { updateLibraryModal: undefined },
       }),
     [navigate],

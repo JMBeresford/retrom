@@ -17,7 +17,7 @@ import { useDeleteGames } from "@/mutations/useDeleteGames";
 import { useGameDetail } from "@/providers/game-details";
 import { useNavigate } from "@tanstack/react-router";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { FocusableElement, FocusContainer } from "../focus-container";
+import { FocusContainer } from "../focus-container";
 import { Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -51,9 +51,9 @@ export function DeleteGameAction() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <FocusableElement opts={{ focusKey: "delete-game-action-open" }}>
-          <MenuEntryButton>Delete Game</MenuEntryButton>
-        </FocusableElement>
+        <MenuEntryButton id="delete-game-action-open">
+          Delete Game
+        </MenuEntryButton>
       </SheetTrigger>
 
       <SheetContent>
@@ -65,8 +65,7 @@ export function DeleteGameAction() {
           }}
         >
           <FocusContainer
-            initialFocus
-            opts={{ focusKey: "delete-game-action" }}
+            opts={{ focusKey: "delete-game-action", initialFocus: true }}
           >
             <SheetHeader>
               <SheetTitle>Delete Game</SheetTitle>

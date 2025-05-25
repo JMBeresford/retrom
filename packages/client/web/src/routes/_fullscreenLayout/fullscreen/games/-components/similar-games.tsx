@@ -1,6 +1,7 @@
 import {
   FocusableElement,
   FocusContainer,
+  useFocusable,
 } from "@/components/fullscreen/focus-container";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { GameMetadata } from "@retrom/codegen/retrom/models/metadata";
@@ -10,6 +11,7 @@ import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useGameMetadata } from "@/queries/useGameMetadata";
 import { useNavigate } from "@tanstack/react-router";
 import { AlertCircleIcon, LoaderCircleIcon } from "lucide-react";
+import { RefObject } from "react";
 
 export function SimilarGames() {
   const { extraMetadata } = useGameDetail();
@@ -62,11 +64,12 @@ export function SimilarGames() {
                   });
                 },
               }}
-            >
-              <p tabIndex={-1} className="outline-none">
-                No similar games found for this game.
-              </p>
-            </FocusableElement>
+              render={(ref: RefObject<HTMLParagraphElement>) => (
+                <p ref={ref} tabIndex={-1} className="outline-none">
+                  No similar games found for this game.
+                </p>
+              )}
+            />
           ) : (
             data.metadata
               .slice(0, 20)
@@ -85,6 +88,17 @@ export function SimilarGames() {
 function SimilarGame(props: { metadata: GameMetadata }) {
   const { metadata } = props;
   const navigate = useNavigate();
+  const { ref } = useFocusable<HTMLDivElement>({
+    focusKey: `similar-game-${metadata.gameId}`,
+    onFocus: ({ node }) => {
+      node?.focus({ preventScroll: true });
+      node?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "center",
+      });
+    },
+  });
 
   const goToGame = () => {
     void navigate({
@@ -96,30 +110,17 @@ function SimilarGame(props: { metadata: GameMetadata }) {
 
   return (
     <HotkeyLayer handlers={{ ACCEPT: { handler: () => goToGame() } }}>
-      <FocusableElement
-        opts={{
-          focusKey: `similar-game-${metadata.gameId}`,
-          onFocus: ({ node }) => {
-            node?.focus({ preventScroll: true });
-            node?.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-              inline: "center",
-            });
-          },
-        }}
+      <div
+        ref={ref}
+        tabIndex={-1}
+        className={cn(
+          "focus:ring-2 focus:ring-offset-2 focus:ring-offset-ring focus:ring-ring min-w-[150px] max-w-[200px]",
+          "outline-none scale-95 transition-all duration-200 focus-hover:scale-100 cursor-pointer",
+        )}
+        onClick={() => goToGame()}
       >
-        <div
-          tabIndex={-1}
-          className={cn(
-            "focus:ring-2 focus:ring-offset-2 focus:ring-offset-ring focus:ring-ring min-w-[150px] max-w-[200px]",
-            "outline-none scale-95 transition-all duration-200 focus-hover:scale-100 cursor-pointer",
-          )}
-          onClick={() => goToGame()}
-        >
-          <img src={metadata.coverUrl} alt="" />
-        </div>
-      </FocusableElement>
+        <img src={metadata.coverUrl} alt="" />
+      </div>
     </HotkeyLayer>
   );
 }

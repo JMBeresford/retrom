@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { RootMenuItem } from "..";
+import { MenuItem } from "..";
 
 const matchPlatformsMenuItem = {
   label: "Match Platforms",
   Render: (
-    <Link search={{ matchPlatformsModal: { open: true } }}>
+    <Link to="." search={{ matchPlatformsModal: { open: true } }}>
       Match Platforms
     </Link>
   ),
@@ -14,13 +14,13 @@ const defaultProfilesMenuItem = {
   label: "Default Emulator Profiles",
   context: "desktop",
   Render: (
-    <Link search={{ defaultProfilesModal: { open: true } }}>
+    <Link to="." search={{ defaultProfilesModal: { open: true } }}>
       Default Emulator Profiles
     </Link>
   ),
 };
 
-export const platformsMenu: RootMenuItem = {
+export const platformsMenu: MenuItem = {
   label: "Platforms",
   items: [matchPlatformsMenuItem, defaultProfilesMenuItem],
 };

@@ -25,6 +25,7 @@ export function GroupMenu(
         PAGE_LEFT: {
           handler: () =>
             navigate({
+              to: ".",
               search: (prev) => ({ ...prev, activeGroupId: previousGroup?.id }),
             }),
           zone: "groupMenu",
@@ -32,6 +33,7 @@ export function GroupMenu(
         PAGE_RIGHT: {
           handler: () =>
             navigate({
+              to: ".",
               search: (prev) => ({ ...prev, activeGroupId: nextGroup?.id }),
             }),
           zone: "groupMenu",
@@ -58,7 +60,7 @@ export function GroupMenu(
               disabled={previousGroup?.id === undefined}
               onClick={handlers.PAGE_LEFT.handler}
             >
-              <ArrowLeft className="ml-2" />
+              <ArrowLeft size={20} className="ml-2" />
             </HotkeyButton>
           </div>
 
@@ -95,7 +97,7 @@ export function GroupMenu(
               disabled={nextGroup?.id === undefined}
               onClick={handlers.PAGE_RIGHT.handler}
             >
-              <ArrowRight className="mr-2" />
+              <ArrowRight size={20} className="mr-2" />
             </HotkeyButton>
           </div>
         </div>
@@ -130,6 +132,7 @@ function GroupEntry(props: { group: Group }) {
         "opacity-30 hover:opacity-75",
         active && "opacity-100 hover:opacity-100",
       )}
+      to="."
       search={{ activeGroupId: group.id }}
     >
       {group.name}

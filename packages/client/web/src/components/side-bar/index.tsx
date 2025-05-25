@@ -194,6 +194,7 @@ export function SideBar() {
                 Make sure Retrom knows about your{" "}
                 <Link
                   className="text-accent-text"
+                  to="."
                   search={(prev) => ({
                     ...prev,
                     configModal: { open: true, tab: "server" },
@@ -204,6 +205,7 @@ export function SideBar() {
                 and then{" "}
                 <Link
                   className="text-accent-text"
+                  to="."
                   search={(prev) => ({
                     ...prev,
                     updateLibraryModal: { open: true },
@@ -418,6 +420,7 @@ function PlatformContextMenu(
           }}
         >
           <Link
+            to="."
             search={(prev) => ({
               ...prev,
               deletePlatformModal: {
