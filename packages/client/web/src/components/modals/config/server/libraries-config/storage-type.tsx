@@ -10,23 +10,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-// Import needed for reference but not directly used
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
-
-// Constants to avoid enum comparisons
-const MULTI_FILE_GAME = 0; // StorageType.MULTI_FILE_GAME
-const SINGLE_FILE_GAME = 1; // StorageType.SINGLE_FILE_GAME
-const CUSTOM = 2; // StorageType.CUSTOM
-const UNRECOGNIZED = -1; // StorageType.UNRECOGNIZED
-
-// Map storage type numbers to labels
-const storageTypeLabels: Record<number, string> = {
-  [MULTI_FILE_GAME]: "Multi-file Games",
-  [SINGLE_FILE_GAME]: "Single-file Games",
-  [CUSTOM]: "Custom",
-  [UNRECOGNIZED]: "Unrecognized",
-};
 
 export function StorageTypeSelect<
   Field extends ControllerRenderProps<
@@ -55,17 +39,18 @@ export function StorageTypeSelect<
             )}
           >
             <SelectValue asChild placeholder="Select a storage type">
-              <p className="text-left">{storageTypeLabels[field.value] || "Unknown"}</p>
+              <p className="text-left">{StorageTypeLabel[field.value]}</p>
             </SelectValue>
           </SelectTrigger>
         </FormControl>
 
         <SelectContent>
-          {[MULTI_FILE_GAME, SINGLE_FILE_GAME, CUSTOM]
+          {Object.values(StorageType)
+            .filter((type) => typeof type === "number")
             .map((value) => (
               <SelectItem key={value} value={value.toString()}>
-                {storageTypeLabels[value]}
-                {value === SINGLE_FILE_GAME && (
+                {StorageTypeLabel[value as StorageType]}
+                {Number(value) === StorageType.SINGLE_FILE_GAME && (
                   <Badge variant="outline" className="mx-2">
                     Default
                   </Badge>
@@ -77,3 +62,9 @@ export function StorageTypeSelect<
     </FormItem>
   );
 }
+
+const StorageTypeLabel: Record<StorageType, string> = {
+  [StorageType.MULTI_FILE_GAME]: "Multi-file Games",
+  [StorageType.SINGLE_FILE_GAME]: "Single-file Games",
+  [StorageType.CUSTOM]: "Custom",
+};
