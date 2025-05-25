@@ -29,13 +29,6 @@ import {
 import { useCallback } from "react";
 import { SaveStrategy } from "@retrom/codegen/retrom/models/emulators_pb";
 
-// Constants to avoid enum comparison issues
-const saveStrategyValues = {
-  SAVE_COPY: 0, // SaveStrategy.SAVE_COPY
-  SAVE_IN_PLACE: 1, // SaveStrategy.SAVE_IN_PLACE
-  UNRECOGNIZED: -1, // SaveStrategy.UNRECOGNIZED
-};
-
 export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
   const { platforms } = props;
   const form = useForm<EmulatorSchema>({
@@ -168,17 +161,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                 defaultValue={field.value?.toString() ?? ""}
                 onValueChange={(value) => {
                   const valueNum = parseInt(value);
-                  // Use simple number comparison
-                  let saveStrategy: number | undefined = undefined;
-                  
-                  if (valueNum === saveStrategyValues.SAVE_COPY) {
-                    saveStrategy = SaveStrategy.SAVE_COPY;
-                  } else if (valueNum === saveStrategyValues.SAVE_IN_PLACE) {
-                    saveStrategy = SaveStrategy.SAVE_IN_PLACE;
-                  }
-
-                  if (saveStrategy === undefined) return;
-                  field.onChange(saveStrategy);
+                  field.onChange(valueNum);
                 }}
               >
                 <FormControl>
@@ -203,10 +186,10 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {Object.entries(SaveStrategy)
-                    .filter(([_, value]) => value !== SaveStrategy.UNRECOGNIZED)
-                    .map(([key, value]) => (
-                      <SelectItem key={key} value={value.toString()}>
+                  {Object.values(SaveStrategy)
+                    .filter((type) => typeof type === "number")
+                    .map((value) => (
+                      <SelectItem key={value} value={value.toString()}>
                         {saveStrategyDisplayMap[value]}
                       </SelectItem>
                     ))}

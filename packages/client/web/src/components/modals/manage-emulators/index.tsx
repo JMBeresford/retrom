@@ -398,10 +398,12 @@ function EmulatorList(props: {
                             const valueNum = parseInt(value);
                             // Use simple number comparison
                             let saveStrategy: number | undefined = undefined;
-                            
+
                             if (valueNum === saveStrategyValues.SAVE_COPY) {
                               saveStrategy = SaveStrategyEnum.SAVE_COPY;
-                            } else if (valueNum === saveStrategyValues.SAVE_IN_PLACE) {
+                            } else if (
+                              valueNum === saveStrategyValues.SAVE_IN_PLACE
+                            ) {
                               saveStrategy = SaveStrategyEnum.SAVE_IN_PLACE;
                             }
 
