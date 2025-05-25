@@ -66,17 +66,13 @@ import { Separator } from "@/components/ui/separator";
 
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
-// Constants to avoid enum comparison issues
-const saveStrategyValues = {
-  SAVE_COPY: 0, // SaveStrategyEnum.SAVE_COPY
-  SAVE_IN_PLACE: 1, // SaveStrategyEnum.SAVE_IN_PLACE
-  UNRECOGNIZED: -1, // SaveStrategyEnum.UNRECOGNIZED
-};
+// Constants to avoid enum comparison issues are not needed
+// with the correct filtering of enum values
 
 export const saveStrategyDisplayMap: Record<SaveStrategy, string> = {
-  [SaveStrategyEnum.SAVE_COPY]: "Save Copy",
-  [SaveStrategyEnum.SAVE_IN_PLACE]: "Save In Place",
-  [SaveStrategyEnum.UNRECOGNIZED]: "Unrecognized",
+  [SaveStrategyEnum.SINGLE_FILE]: "Single File",
+  [SaveStrategyEnum.FILE_SYSTEM_DIRECTORY]: "File System Directory",
+  [SaveStrategyEnum.DISK_IMAGE]: "Disk Image",
 };
 
 export type EmulatorSchema = z.infer<typeof emulatorSchema>;
@@ -395,24 +391,7 @@ function EmulatorList(props: {
                         <Select
                           defaultValue={field.value?.toString()}
                           onValueChange={(value) => {
-                            const valueNum = parseInt(value);
-                            // Use simple number comparison
-                            let saveStrategy: number | undefined = undefined;
-
-                            if (valueNum === saveStrategyValues.SAVE_COPY) {
-                              saveStrategy = SaveStrategyEnum.SAVE_COPY;
-                            } else if (
-                              valueNum === saveStrategyValues.SAVE_IN_PLACE
-                            ) {
-                              saveStrategy = SaveStrategyEnum.SAVE_IN_PLACE;
-                            }
-
-                            if (saveStrategy === undefined) return;
-                            field.onChange(saveStrategy);
-
-                            if (saveStrategy === undefined) return;
-
-                            field.onChange(saveStrategy);
+                            field.onChange(parseInt(value));
                           }}
                         >
                           <FormControl>
@@ -429,10 +408,7 @@ function EmulatorList(props: {
                           </FormControl>
                           <SelectContent>
                             {Object.values(SaveStrategy)
-                              .filter((value) => typeof value !== "string")
-                              .filter(
-                                (value) => value !== SaveStrategy.UNRECOGNIZED,
-                              )
+                              .filter((type) => typeof type === "number")
                               .map((value) => (
                                 <SelectItem
                                   key={value}

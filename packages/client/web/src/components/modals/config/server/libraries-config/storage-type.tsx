@@ -49,8 +49,8 @@ export function StorageTypeSelect<
             .filter((type) => typeof type === "number")
             .map((value) => (
               <SelectItem key={value} value={value.toString()}>
-                {StorageTypeLabel[value as StorageType]}
-                {Number(value) === StorageType.SINGLE_FILE_GAME && (
+                {StorageTypeLabel[value]}
+                {value === StorageType.SINGLE_FILE_GAME && (
                   <Badge variant="outline" className="mx-2">
                     Default
                   </Badge>

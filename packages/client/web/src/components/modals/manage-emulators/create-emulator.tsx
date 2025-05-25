@@ -160,8 +160,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
               <Select
                 defaultValue={field.value?.toString() ?? ""}
                 onValueChange={(value) => {
-                  const valueNum = parseInt(value);
-                  field.onChange(valueNum);
+                  field.onChange(parseInt(value));
                 }}
               >
                 <FormControl>
