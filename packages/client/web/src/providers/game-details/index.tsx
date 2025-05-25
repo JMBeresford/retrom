@@ -1,17 +1,17 @@
-import type { toast } from "@/components/ui/use-toast";
-import type {
+import { toast } from "@/components/ui/use-toast";
+import {
   Emulator,
   EmulatorProfile,
 } from "@retrom/codegen/retrom/models/emulators_pb";
-import type { GameFile } from "@retrom/codegen/retrom/models/game-files_pb";
-import type { Game } from "@retrom/codegen/retrom/models/games_pb";
-import type {
+import { GameFile } from "@retrom/codegen/retrom/models/game-files_pb";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
+import {
   GameMetadata,
   PlatformMetadata,
 } from "@retrom/codegen/retrom/models/metadata_pb";
-import type { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
+import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
 
-import type {
+import {
   GetGameMetadataResponse_GameGenres,
   GetGameMetadataResponse_SimilarGames,
 } from "@retrom/codegen/retrom/services_pb";
@@ -181,8 +181,8 @@ export function GameDetailProvider(
     platform: platformData.platform,
     gameMetadata: gameMetadata.metadata.at(0),
     extraMetadata: {
-      genres: gameMetadata.genres.get(gameData.game.id),
-      similarGames: gameMetadata.similarGames.get(gameData.game.id),
+      genres: gameMetadata.genres[gameData.game.id],
+      similarGames: gameMetadata.similarGames[gameData.game.id],
     },
     platformMetadata: platformData.platformMetadata,
     emulator,

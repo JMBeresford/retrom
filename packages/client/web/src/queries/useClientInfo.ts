@@ -1,4 +1,4 @@
-import type {
+import {
   GetClientsRequestSchema,
   GetClientsResponse,
 } from "@retrom/codegen/retrom/services_pb";

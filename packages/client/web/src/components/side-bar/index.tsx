@@ -1,4 +1,4 @@
-import type { Image, cn, getFileName, getFileStub } from "@/lib/utils";
+import { Image, cn, getFileName, getFileStub } from "@/lib/utils";
 import { useMemo } from "react";
 import {
   Tooltip,
@@ -15,11 +15,11 @@ import {
 import { usePlatforms } from "@/queries/usePlatforms";
 import { useGames } from "@/queries/useGames";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
-import type {
+import {
   GameMetadata,
   PlatformMetadata,
 } from "@retrom/codegen/retrom/models/metadata_pb";
-import type { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useFilterAndSort } from "./filter-sort-context";
 import { FiltersAndSorting } from "./filters-and-sorting";
 import { Separator } from "../ui/separator";
@@ -28,10 +28,10 @@ import { ScrollArea } from "../ui/scroll-area";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { useInstallationStateQuery } from "@/queries/useInstallationState";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
-import type { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "../ui/skeleton";
 import { EllipsisVertical } from "lucide-react";
 import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
-import type {
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -121,11 +121,11 @@ export function SideBar() {
       if (groupByInstallationStatus) {
         games.sort((a, b) => {
           const aInstalled =
-            installationData?.installationState.get(a.id) ===
+            installationData?.installationState[a.id] ===
             InstallationStatus.INSTALLED;
 
           const bInstalled =
-            installationData?.installationState.get(b.id) ===
+            installationData?.installationState[b.id] ===
             InstallationStatus.INSTALLED;
 
           if (aInstalled && !bInstalled) {
@@ -274,9 +274,8 @@ export function SideBar() {
                             {games.map((game) => {
                               const isCurrentGame = currentGame?.id === game.id;
                               const isInstalled =
-                                installationData?.installationState.get(
-                                  game.id,
-                                ) === InstallationStatus.INSTALLED;
+                                installationData?.installationState[game.id] ===
+                                InstallationStatus.INSTALLED;
 
                               const gameMetadata = game.metadata;
 

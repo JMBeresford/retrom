@@ -1,4 +1,4 @@
-import type { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Route as RootRoute } from "@/routes/__root";
 import {
   Dialog,
@@ -28,14 +28,15 @@ import {
 } from "@/components/ui/command";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
-import type {
+import {
   Emulator,
-  NewEmulator,
+  EmulatorSchema,
+  NewEmulatorJson,
   SaveStrategy,
-  UpdatedEmulator,
+  UpdatedEmulatorJson,
 } from "@retrom/codegen/retrom/models/emulators_pb";
 import { SaveStrategy as SaveStrategyEnum } from "@retrom/codegen/retrom/models/emulators_pb";
-import type { z } from "zod";
+import { z } from "zod";
 import { CreateEmulator } from "./create-emulator";
 import { Button } from "@/components/ui/button";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -63,6 +64,7 @@ import { useLocalEmulatorConfigs } from "@/queries/useLocalEmulatorConfigs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LocalConfigs } from "./local-configs";
 import { Separator } from "@/components/ui/separator";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
@@ -88,7 +90,7 @@ export const emulatorSchema = z.object({
     message: "Select a save strategy",
   }),
 }) satisfies z.ZodObject<
-  Record<keyof Omit<NewEmulator, "createdAt" | "updatedAt">, z.ZodTypeAny>
+  Record<keyof Omit<NewEmulatorJson, "createdAt" | "updatedAt">, z.ZodTypeAny>
 >;
 
 export type ChangesetSchema = z.infer<typeof changesetSchema>;
@@ -103,7 +105,7 @@ export const changesetSchema = z.object({
   emulators: z.ZodArray<
     z.ZodObject<
       Record<
-        keyof Omit<UpdatedEmulator, "createdAt" | "updatedAt">,
+        keyof Omit<UpdatedEmulatorJson, "createdAt" | "updatedAt">,
         z.ZodTypeAny
       >
     >
@@ -507,7 +509,9 @@ export function PlatformsDropdown(props: {
   );
 }
 
-function DeleteButton(props: { emulator: Emulator }) {
+function DeleteButton(props: {
+  emulator: MessageInitShape<typeof EmulatorSchema>;
+}) {
   const { emulator } = props;
   const { mutate: deleteEmulator, isPending } = useDeleteEmulators({
     key: emulator.id,
@@ -521,7 +525,9 @@ function DeleteButton(props: { emulator: Emulator }) {
       disabled={isPending}
       type="button"
       onClick={() => {
-        deleteEmulator({ ids: [emulator.id] });
+        if (emulator.id !== undefined) {
+          deleteEmulator({ ids: [emulator.id] });
+        }
       }}
     >
       <TrashIcon

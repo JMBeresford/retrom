@@ -49,7 +49,7 @@
           "minimum": 1.0
         },
         "description": {
-          "description": "Human-readable description of what the permission does. Tauri convention is to use <h4> headings in markdown content for Tauri documentation generation purposes.",
+          "description": "Human-readable description of what the permission does. Tauri convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
           "type": [
             "string",
             "null"
@@ -111,7 +111,7 @@
           "type": "string"
         },
         "description": {
-          "description": "Human-readable description of what the permission does. Tauri internal convention is to use <h4> headings in markdown content for Tauri documentation generation purposes.",
+          "description": "Human-readable description of what the permission does. Tauri internal convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
           "type": [
             "string",
             "null"
@@ -297,82 +297,98 @@
         {
           "description": "Enables the clear_installation_dir command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-clear-installation-dir"
+          "const": "allow-clear-installation-dir",
+          "markdownDescription": "Enables the clear_installation_dir command without any pre-configured scope."
         },
         {
           "description": "Denies the clear_installation_dir command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-clear-installation-dir"
+          "const": "deny-clear-installation-dir",
+          "markdownDescription": "Denies the clear_installation_dir command without any pre-configured scope."
         },
         {
           "description": "Enables the get_game_installation_status command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-game-installation-status"
+          "const": "allow-get-game-installation-status",
+          "markdownDescription": "Enables the get_game_installation_status command without any pre-configured scope."
         },
         {
           "description": "Denies the get_game_installation_status command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-game-installation-status"
+          "const": "deny-get-game-installation-status",
+          "markdownDescription": "Denies the get_game_installation_status command without any pre-configured scope."
         },
         {
           "description": "Enables the get_installation_state command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-installation-state"
+          "const": "allow-get-installation-state",
+          "markdownDescription": "Enables the get_installation_state command without any pre-configured scope."
         },
         {
           "description": "Denies the get_installation_state command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-installation-state"
+          "const": "deny-get-installation-state",
+          "markdownDescription": "Denies the get_installation_state command without any pre-configured scope."
         },
         {
           "description": "Enables the install_game command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-install-game"
+          "const": "allow-install-game",
+          "markdownDescription": "Enables the install_game command without any pre-configured scope."
         },
         {
           "description": "Denies the install_game command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-install-game"
+          "const": "deny-install-game",
+          "markdownDescription": "Denies the install_game command without any pre-configured scope."
         },
         {
           "description": "Enables the migrate_installation_dir command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-migrate-installation-dir"
+          "const": "allow-migrate-installation-dir",
+          "markdownDescription": "Enables the migrate_installation_dir command without any pre-configured scope."
         },
         {
           "description": "Denies the migrate_installation_dir command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-migrate-installation-dir"
+          "const": "deny-migrate-installation-dir",
+          "markdownDescription": "Denies the migrate_installation_dir command without any pre-configured scope."
         },
         {
           "description": "Enables the open_installation_dir command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-open-installation-dir"
+          "const": "allow-open-installation-dir",
+          "markdownDescription": "Enables the open_installation_dir command without any pre-configured scope."
         },
         {
           "description": "Denies the open_installation_dir command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-open-installation-dir"
+          "const": "deny-open-installation-dir",
+          "markdownDescription": "Denies the open_installation_dir command without any pre-configured scope."
         },
         {
           "description": "Enables the uninstall_game command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-uninstall-game"
+          "const": "allow-uninstall-game",
+          "markdownDescription": "Enables the uninstall_game command without any pre-configured scope."
         },
         {
           "description": "Denies the uninstall_game command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-uninstall-game"
+          "const": "deny-uninstall-game",
+          "markdownDescription": "Denies the uninstall_game command without any pre-configured scope."
         },
         {
           "description": "Enables the update_steam_installations command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-update-steam-installations"
+          "const": "allow-update-steam-installations",
+          "markdownDescription": "Enables the update_steam_installations command without any pre-configured scope."
         },
         {
           "description": "Denies the update_steam_installations command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-update-steam-installations"
+          "const": "deny-update-steam-installations",
+          "markdownDescription": "Denies the update_steam_installations command without any pre-configured scope."
         }
       ]
     }

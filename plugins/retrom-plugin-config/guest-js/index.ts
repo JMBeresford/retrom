@@ -1,10 +1,10 @@
-import type { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config_pb";
+import { RetromClientConfigJson } from "@retrom/codegen/retrom/client/client-config_pb";
 import { invoke } from "@tauri-apps/api/core";
 
-export async function getConfig(): Promise<RetromClientConfig> {
-  return invoke<RetromClientConfig>("plugin:config|get_config");
+export async function getConfig(): Promise<RetromClientConfigJson> {
+  return invoke<RetromClientConfigJson>("plugin:config|get_config");
 }
 
-export async function setConfig(config: RetromClientConfig): Promise<void> {
+export async function setConfig(config: RetromClientConfigJson): Promise<void> {
   return invoke("plugin:config|set_config", { newConfig: config });
 }

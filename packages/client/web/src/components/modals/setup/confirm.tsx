@@ -12,8 +12,9 @@ import { LoaderCircleIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useClientInfo } from "@/queries/useClientInfo";
 import { useConfigStore } from "@/providers/config";
-import { Timestamp } from "@bufbuild/protobuf/wkt";
 import { useQueryClient } from "@tanstack/react-query";
+import { timestampNow, TimestampSchema } from "@bufbuild/protobuf/wkt";
+import { toJson } from "@bufbuild/protobuf";
 
 export function Confirm() {
   const { toast } = useToast();
@@ -50,8 +51,14 @@ export function Confirm() {
             clientInfo: {
               id: client.id,
               name: client.name,
-              createdAt: client.createdAt ?? Timestamp.create(),
-              updatedAt: client.updatedAt ?? Timestamp.create(),
+              createdAt: toJson(
+                TimestampSchema,
+                client.createdAt ?? timestampNow(),
+              ),
+              updatedAt: toJson(
+                TimestampSchema,
+                client.updatedAt ?? timestampNow(),
+              ),
             },
           };
         }

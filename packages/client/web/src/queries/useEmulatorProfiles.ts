@@ -1,9 +1,9 @@
-import type {
+import {
   GetEmulatorProfilesRequestSchema,
   GetEmulatorProfilesResponse,
 } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { MessageInitShape } from "@bufbuild/protobuf";
 
 type SelectFn<S> = (data: GetEmulatorProfilesResponse) => S;

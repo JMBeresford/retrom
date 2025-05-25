@@ -1,9 +1,9 @@
-import type { Game } from "@retrom/codegen/retrom/models/games_pb";
-import type {
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
+import {
   GameMetadata,
   PlatformMetadata,
 } from "@retrom/codegen/retrom/models/metadata_pb";
-import type { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
+import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
 import { debounce } from "@/lib/utils";
 import { createContext, PropsWithChildren, useContext, useRef } from "react";
 import { create, StoreApi, UseBoundStore, useStore } from "zustand";

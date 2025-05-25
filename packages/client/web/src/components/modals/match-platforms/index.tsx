@@ -1,4 +1,4 @@
-import type { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useToast } from "../../ui/use-toast";
 import {
   Dialog,
@@ -28,10 +28,7 @@ import {
 } from "@/components/ui/popover";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Platform,
-  UpdatedPlatform,
-} from "@retrom/codegen/retrom/models/platforms_pb";
+import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
 import {
   GetIgdbSearchRequest_IgdbSearchType,
   UpdatePlatformMetadataRequest,
@@ -41,6 +38,7 @@ import { usePlatforms } from "@/queries/usePlatforms";
 import {
   PlatformMetadata,
   PlatformMetadataSchema,
+  UpdatedPlatformMetadataSchema,
 } from "@retrom/codegen/retrom/models/metadata_pb";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";
@@ -71,8 +69,8 @@ export function MatchPlatformsModal() {
         searchType: GetIgdbSearchRequest_IgdbSearchType.PLATFORM,
         fields: {
           selector: {
-            $case: "include",
-            include: { value: ["id", "name", "summary"] },
+            case: "include",
+            value: { value: ["id", "name", "summary"] },
           },
         },
 
@@ -80,8 +78,8 @@ export function MatchPlatformsModal() {
         pagination: { limit: 500 },
       }),
     select: (res) => {
-      if (res.searchResults?.$case === "platformMatches") {
-        return res.searchResults.platformMatches.platforms;
+      if (res.searchResults.case === "platformMatches") {
+        return res.searchResults.value.platforms;
       }
 
       console.error("Wrong enum encountered in oneOf type");
@@ -148,7 +146,7 @@ export function MatchPlatformsModal() {
     });
 
   const defaultSelections = useMemo(() => {
-    const map = new Map<number, number | undefined>();
+    const map = new Map<number, bigint | undefined>();
     platformData?.forEach((platform) =>
       map.set(platform.id, platform.metadata.igdbId),
     );
@@ -165,7 +163,7 @@ export function MatchPlatformsModal() {
 
   const { toast } = useToast();
   const [renameDirectories, setRenameDirectories] = useState(false);
-  const [selections, setSelections] = useState<Map<number, number | undefined>>(
+  const [selections, setSelections] = useState<Map<number, bigint | undefined>>(
     new Map(defaultSelections),
   );
 
@@ -201,32 +199,34 @@ export function MatchPlatformsModal() {
         continue;
       }
 
-      req.metadata.push({
-        ...igdbMetadata,
-        platformId,
-      });
+      const { $typeName: _, ...selection } = igdbMetadata;
+
+      req.metadata.push(
+        create(UpdatedPlatformMetadataSchema, {
+          ...selection,
+          platformId,
+        }),
+      );
     }
 
     const res = await updateMetadata(req);
 
     if (renameDirectories) {
-      const updatedPlatforms: UpdatedPlatform[] = res.metadataUpdated.flatMap(
-        (meta) => {
-          const platform = platformData?.find((p) => p.id === meta.platformId);
+      const updatedPlatforms = res.metadataUpdated.flatMap((meta) => {
+        const platform = platformData?.find((p) => p.id === meta.platformId);
 
-          if (!platform || !meta.name) return [];
+        if (!platform || !meta.name) return [];
 
-          const currentFilename = getFileName(platform.path);
-          const path = platform.path.replace(currentFilename, meta.name);
+        const currentFilename = getFileName(platform.path);
+        const path = platform.path.replace(currentFilename, meta.name);
 
-          return [
-            {
-              id: platform.id,
-              path,
-            },
-          ];
-        },
-      );
+        return [
+          {
+            id: platform.id,
+            path,
+          },
+        ];
+      });
 
       try {
         await updatePlatforms({ platforms: updatedPlatforms });
@@ -254,7 +254,7 @@ export function MatchPlatformsModal() {
   ]);
 
   const findIgdbSelection = useCallback(
-    (id?: number) =>
+    (id?: bigint) =>
       id ? allIgdbPlatforms?.find((p) => p.igdbId === id) : undefined,
     [allIgdbPlatforms],
   );

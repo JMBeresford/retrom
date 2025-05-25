@@ -1,4 +1,4 @@
-import type {
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -10,7 +10,7 @@ import { Fragment, ReactElement, useCallback, useMemo, useState } from "react";
 import { Route as RootRoute } from "@/routes/__root";
 import { useServerFilesystem } from "@/queries/useServerFilesystem";
 import { GetFilesystemNodeRequest } from "@retrom/codegen/retrom/services_pb";
-import type { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,

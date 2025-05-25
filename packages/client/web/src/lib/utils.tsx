@@ -1,4 +1,4 @@
-import { Timestamp } from "@bufbuild/protobuf/wkt";
+import { Timestamp, timestampDate } from "@bufbuild/protobuf/wkt";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
@@ -76,9 +76,7 @@ export function timestampToDate(timestamp?: Timestamp): Date {
     return new Date(0);
   }
 
-  const { seconds, nanos } = timestamp;
-
-  return new Date(seconds * 1000 + nanos / 1000000);
+  return timestampDate(timestamp);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -4,20 +4,21 @@ import {
   persist,
   subscribeWithSelector,
 } from "zustand/middleware";
-import type {
-  InterfaceConfig_GameListEntryImage,
-  RetromClientConfig,
+import {
+  RetromClientConfigJson,
+  RetromClientConfigSchema,
 } from "@retrom/codegen/retrom/client/client-config_pb";
 import { createContext, PropsWithChildren, useContext } from "react";
 import { defaultAPIHostname, defaultAPIPort } from "./utils";
-import { Timestamp } from "@bufbuild/protobuf/wkt";
 import { checkIsDesktop } from "@/lib/env";
 import { migrate } from "./migrations";
 import { desktopStorage } from "./desktop";
 import * as ConfigFile from "@retrom/plugin-config";
+import { toJson } from "@bufbuild/protobuf";
+import { timestampNow, TimestampSchema } from "@bufbuild/protobuf/wkt";
 
 const STORAGE_KEY = "retrom-client-config";
-export type LocalConfig = RetromClientConfig & {
+export type LocalConfig = RetromClientConfigJson & {
   _hasHydrated: boolean;
   setHasHydrated: (value: boolean) => void;
 };
@@ -26,7 +27,7 @@ const context = createContext<UseBoundStore<StoreApi<LocalConfig>> | undefined>(
   undefined,
 );
 
-const initialConfig: RetromClientConfig = {
+const initialConfig: RetromClientConfigJson = {
   server: {
     hostname: defaultAPIHostname(),
     port: defaultAPIPort(),
@@ -38,8 +39,8 @@ const initialConfig: RetromClientConfig = {
       : {
           name: `retrom-web${navigator?.userAgent ? `_${navigator.userAgent}` : ""}`,
           id: -1,
-          createdAt: Timestamp.create(),
-          updatedAt: Timestamp.create(),
+          createdAt: toJson(TimestampSchema, timestampNow()),
+          updatedAt: toJson(TimestampSchema, timestampNow()),
         },
     interface: {
       fullscreenByDefault: false,
@@ -47,7 +48,7 @@ const initialConfig: RetromClientConfig = {
         gridList: {
           columns: 4,
           gap: 20,
-          imageType: InterfaceConfig_GameListEntryImage.COVER,
+          imageType: "COVER",
         },
       },
     },
@@ -56,7 +57,6 @@ const initialConfig: RetromClientConfig = {
     setupComplete: false,
   },
 };
-
 if (checkIsDesktop()) {
   try {
     const fromLegacyStorage = localStorage.getItem(STORAGE_KEY);
@@ -68,7 +68,7 @@ if (checkIsDesktop()) {
 
       if (state && typeof version === "number") {
         const config = migrate(state, version);
-        await ConfigFile.setConfig(config);
+        await ConfigFile.setConfig(toJson(RetromClientConfigSchema, config));
         localStorage.removeItem(STORAGE_KEY);
       }
     }

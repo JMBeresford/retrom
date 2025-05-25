@@ -1,4 +1,4 @@
-import type { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";

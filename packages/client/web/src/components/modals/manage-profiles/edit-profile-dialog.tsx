@@ -1,4 +1,4 @@
-import type { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
   DialogClose,
   DialogContent,

@@ -1,4 +1,3 @@
-import type { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config_pb";
 import * as ConfigFile from "@retrom/plugin-config";
 import { StateStorage } from "zustand/middleware";
 import { LocalConfig } from ".";
@@ -18,7 +17,7 @@ export const desktopStorage: StateStorage = {
       return;
     }
 
-    await ConfigFile.setConfig(RetromClientConfig.fromJSON(parsed.state));
+    await ConfigFile.setConfig(parsed.state);
   },
 
   removeItem: async () => {

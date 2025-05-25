@@ -1,4 +1,4 @@
-import type {
+import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,

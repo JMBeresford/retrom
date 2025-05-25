@@ -1,4 +1,4 @@
-import type {
+import {
   FocusableElement,
   FocusContainer,
 } from "@/components/fullscreen/focus-container";
@@ -21,11 +21,11 @@ import { FocusEvent, memo, useRef } from "react";
 import { PlatformDependent } from "@/lib/env";
 import { DownloadGameButton } from "@/components/action-button/download-game-button";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 import { PlayGameButton } from "@/components/action-button/play-game-button";
 import { InstallGameButton } from "@/components/action-button/install-game-button";
 import { buttonVariants } from "@/components/ui/button";
 import { Name } from "./-components/name";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 
 export const Route = createLazyFileRoute(
   "/_fullscreenLayout/fullscreen/games/$gameId",

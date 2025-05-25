@@ -1,12 +1,12 @@
-import type { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
-import type {
+import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
+import {
   GameSortKey,
   PlatformSortKey,
   SortDirection,
 } from "./filter-sort-context";
 import { getFileStub, timestampToDate } from "@/lib/utils";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
-import type {
+import {
   GameMetadata,
   PlatformMetadata,
 } from "@retrom/codegen/retrom/models/metadata_pb";

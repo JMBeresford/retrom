@@ -1,4 +1,4 @@
-import type {
+import {
   GetEmulatorsRequestSchema,
   GetEmulatorsResponse,
 } from "@retrom/codegen/retrom/services_pb";

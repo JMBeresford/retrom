@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss";
+import { Config } from "tailwindcss";
 import animatePlugin from "tailwindcss-animate";
 import containerQueryPlugin from "@tailwindcss/container-queries";
 import { fontFamily } from "tailwindcss/defaultTheme";

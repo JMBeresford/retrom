@@ -10,7 +10,7 @@ import {
   ServerService,
 } from "@retrom/codegen/retrom/services_pb";
 import { createClient } from "@connectrpc/connect";
-import { createConnectTransport } from "@connectrpc/connect-web";
+import { createGrpcWebTransport } from "@connectrpc/connect-web";
 
 export class RetromClient {
   readonly host: string;
@@ -31,7 +31,7 @@ export class RetromClient {
 
     this.host = host;
 
-    const transport = createConnectTransport({
+    const transport = createGrpcWebTransport({
       baseUrl: host,
     });
 

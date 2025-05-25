@@ -1,5 +1,5 @@
-import type { StopGamePayload } from "@retrom/codegen/retrom/client/client-utils_pb";
-import type { Game } from "@retrom/codegen/retrom/models/games_pb";
+import { StopGamePayload } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 

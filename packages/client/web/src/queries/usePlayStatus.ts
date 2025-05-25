@@ -1,8 +1,8 @@
-import type {
+import {
   GamePlayStatusUpdate,
   GetGamePlayStatusPayload,
 } from "@retrom/codegen/retrom/client/client-utils_pb";
-import type { Game } from "@retrom/codegen/retrom/models/games_pb";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { checkIsDesktop } from "@/lib/env";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";

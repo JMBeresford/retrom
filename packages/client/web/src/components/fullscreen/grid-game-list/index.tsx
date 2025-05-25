@@ -1,4 +1,4 @@
-import type { GameWithMetadata } from "@/components/game-list";
+import { GameWithMetadata } from "@/components/game-list";
 import { InterfaceConfig_GameListEntryImage } from "@retrom/codegen/retrom/client/client-config_pb";
 import { cn, getFileStub } from "@/lib/utils";
 import { useConfig } from "@/providers/config";

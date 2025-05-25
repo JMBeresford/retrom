@@ -1,4 +1,4 @@
-import type { DeleteEmulatorProfilesRequest } from "@retrom/codegen/retrom/services_pb";
+import { DeleteEmulatorProfilesRequest } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

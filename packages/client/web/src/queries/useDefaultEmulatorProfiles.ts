@@ -1,4 +1,4 @@
-import type {
+import {
   GetDefaultEmulatorProfilesRequestSchema,
   GetDefaultEmulatorProfilesResponse,
 } from "@retrom/codegen/retrom/services_pb";

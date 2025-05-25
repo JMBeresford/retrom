@@ -1,4 +1,4 @@
-import type { DialogDescription, DialogHeader } from "@/components/ui/dialog";
+import { DialogDescription, DialogHeader } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ServerConfig } from "@retrom/codegen/retrom/server/config_pb";
 import { useServerConfig } from "@/queries/useServerConfig";

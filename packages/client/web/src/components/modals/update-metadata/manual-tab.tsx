@@ -17,7 +17,7 @@ import { cn, getFileName, InferSchema } from "@/lib/utils";
 import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { Textarea } from "../../ui/textarea";
 import { GameMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
-import type { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
+import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 import { Checkbox } from "../../ui/checkbox";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";

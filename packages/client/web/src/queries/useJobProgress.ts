@@ -1,4 +1,4 @@
-import type { JobProgress } from "@retrom/codegen/retrom/jobs_pb";
+import { JobProgress } from "@retrom/codegen/retrom/jobs_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";

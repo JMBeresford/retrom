@@ -1,4 +1,4 @@
-import type { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config_pb";
+import { RetromClientConfigJson } from "@retrom/codegen/retrom/client/client-config_pb";
 import { z } from "zod";
 
 const {
@@ -54,4 +54,4 @@ export const configSchema = z.object({
   flowCompletions: z.object({
     setupComplete: z.boolean(),
   }),
-}) satisfies z.ZodSchema<RetromClientConfig, z.ZodTypeDef, unknown>;
+}) satisfies z.ZodSchema<RetromClientConfigJson, z.ZodTypeDef, unknown>;

@@ -1,10 +1,11 @@
-import type { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { parseVersion, versionCompare } from "@/lib/version-utils";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { VersionAnnouncementsPayload } from "@retrom/codegen/retrom/utils_pb";
+import { VersionAnnouncementsPayloadSchema } from "@retrom/codegen/retrom/utils_pb";
 import { useClientVersion } from "@/queries/useClientVersion";
 import { Button } from "@/components/ui/button";
+import { fromJson, JsonValue } from "@bufbuild/protobuf";
 
 const url =
   "https://raw.githubusercontent.com/JMBeresford/retrom/refs/heads/main/version-announcements.json";
@@ -23,9 +24,10 @@ export function Announcements() {
       }
 
       const res = await fetch(url);
+      const resJson = (await res.json()) as JsonValue;
 
       if (res.ok) {
-        const payload = VersionAnnouncementsPayload.fromJSON(await res.json());
+        const payload = fromJson(VersionAnnouncementsPayloadSchema, resJson);
 
         for (const announcement of payload.announcements) {
           for (const versionStr of announcement.versions) {

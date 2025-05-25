@@ -1,4 +1,4 @@
-import type { useInstallationQuery } from "@/queries/useInstallationQuery";
+import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { Button } from "../ui/button";
 import {
   CircleAlertIcon,
@@ -6,7 +6,7 @@ import {
   LoaderCircleIcon,
 } from "lucide-react";
 import { useInstallGame } from "@/mutations/useInstallGame";
-import type { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 import { Progress } from "../ui/progress";
 import { ComponentProps, ForwardedRef, forwardRef } from "react";
 import { cn } from "@/lib/utils";

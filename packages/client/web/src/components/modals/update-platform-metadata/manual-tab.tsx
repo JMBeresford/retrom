@@ -17,7 +17,7 @@ import { cn, getFileName, InferSchema } from "@/lib/utils";
 import { DialogClose, DialogFooter } from "../../ui/dialog";
 import { Textarea } from "../../ui/textarea";
 import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
-import type { useUpdatePlatformMetadata } from "@/mutations/useUpdatePlatformMetadata";
+import { useUpdatePlatformMetadata } from "@/mutations/useUpdatePlatformMetadata";
 import { useNavigate } from "@tanstack/react-router";
 import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
 import { Checkbox } from "@/components/ui/checkbox";

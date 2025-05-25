@@ -1,11 +1,14 @@
 import { parseVersion } from "@/lib/version-utils";
-import { VersionSchema } from "@retrom/codegen/retrom/server/server-info_pb";
+import {
+  Version,
+  VersionSchema,
+} from "@retrom/codegen/retrom/server/server-info_pb";
 import { checkIsDesktop } from "@/lib/env";
 import { DefaultError, useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
-import { MessageInitShape } from "@bufbuild/protobuf";
+import { create } from "@bufbuild/protobuf";
 
-type FnData = MessageInitShape<typeof VersionSchema>;
+type FnData = Version;
 
 export function useClientVersion<Err = DefaultError, Data = FnData>(
   opts: Omit<UseQueryOptions<FnData, Err, Data>, "queryFn" | "queryKey"> = {},
@@ -18,11 +21,12 @@ export function useClientVersion<Err = DefaultError, Data = FnData>(
         const { readLocalCargoToml } = await import("@/lib/node-utils");
 
         return (
-          parseVersion(readLocalCargoToml()) ?? {
+          parseVersion(readLocalCargoToml()) ??
+          create(VersionSchema, {
             major: 0,
             minor: 0,
             patch: 0,
-          }
+          })
         );
       }
 
