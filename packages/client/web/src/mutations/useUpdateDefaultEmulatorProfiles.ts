@@ -11,7 +11,9 @@ export function useUpdateDefaultEmulatorProfiles() {
 
   return useMutation({
     mutationFn: (
-      request: MessageInitShape<typeof UpdateDefaultEmulatorProfilesRequestSchema>,
+      request: MessageInitShape<
+        typeof UpdateDefaultEmulatorProfilesRequestSchema
+      >,
     ) => retromClient.emulatorClient.updateDefaultEmulatorProfiles(request),
     mutationKey: ["update-default-emulator-profiles", queryClient],
     onError: (error) => {
