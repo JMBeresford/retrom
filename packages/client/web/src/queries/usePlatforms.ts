@@ -17,10 +17,7 @@ export function usePlatforms<S = GetPlatformsResponse>(
 
   return useQuery({
     queryKey: ["platforms", "platform-metadata", request, retromClient],
-    queryFn: async () => {
-      const response = await retromClient.platformClient.getPlatforms(request);
-      return response;
-    },
+    queryFn: () => retromClient.platformClient.getPlatforms(request),
     select: selectFn,
   });
 }

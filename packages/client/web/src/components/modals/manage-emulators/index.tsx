@@ -68,9 +68,6 @@ import { MessageInitShape } from "@bufbuild/protobuf";
 
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
-// Constants to avoid enum comparison issues are not needed
-// with the correct filtering of enum values
-
 export const saveStrategyDisplayMap: Record<SaveStrategy, string> = {
   [SaveStrategyEnum.SINGLE_FILE]: "Single File",
   [SaveStrategyEnum.FILE_SYSTEM_DIRECTORY]: "File System Directory",

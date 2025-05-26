@@ -21,10 +21,7 @@ export function useServerInfo<T = GetServerInfoResponse>(
 
   return useQuery({
     enabled,
-    queryFn: async () => {
-      const response = await retromClient.serverClient.getServerInfo(request);
-      return response;
-    },
+    queryFn: () => retromClient.serverClient.getServerInfo(request),
     queryKey: ["server-info", queryClient, request, retromClient],
     select: selectFn,
   });

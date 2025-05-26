@@ -20,11 +20,7 @@ export function useServerFilesystem<T = GetFilesystemNodeResponse>(
 
   return useQuery({
     enabled,
-    queryFn: async () => {
-      const response =
-        await retromClient.fileExplorerClient.getFilesystemNode(request);
-      return response;
-    },
+    queryFn: () => retromClient.fileExplorerClient.getFilesystemNode(request),
     queryKey: ["file-explorer", request, retromClient],
     select: selectFn,
   });
