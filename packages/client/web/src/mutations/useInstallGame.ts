@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "react";
-import { MessageInitShape } from "@bufbuild/protobuf";
+import { MessageInitShape, MessageShape } from "@bufbuild/protobuf";
 
 export function useInstallGame(
   game: MessageInitShape<typeof GameSchema>,
@@ -22,7 +22,9 @@ export function useInstallGame(
     async function listen() {
       unlisten = await window.listen(
         "install-progress",
-        (event: { payload: MessageInitShape<typeof InstallationProgressUpdateSchema> }) => {
+        (event: {
+          payload: MessageShape<typeof InstallationProgressUpdateSchema>;
+        }) => {
           const { progress, gameId } = event.payload;
           if (gameId === game.id) {
             setProgress(progress);
