@@ -3,7 +3,7 @@ import { configMenuItem } from "./config-menu-item";
 import { checkForUpdateMenuItem } from "./check-for-update-menu-item";
 import { locationsMenuItem } from "./locations-menu-item";
 import { setupMenuItem } from "./setup-menu-item";
-import { closeMenuItem } from "./close-menu-item";
+import { exitMenuItem } from "./close-menu-item";
 import { RootMenuItem } from "..";
 
 export const fileMenu: RootMenuItem = {
@@ -11,6 +11,6 @@ export const fileMenu: RootMenuItem = {
   items: [
     [configMenuItem],
     [versionInfoMenuItem, checkForUpdateMenuItem],
-    [locationsMenuItem, setupMenuItem, closeMenuItem],
+    [locationsMenuItem, setupMenuItem, exitMenuItem],
   ],
 };

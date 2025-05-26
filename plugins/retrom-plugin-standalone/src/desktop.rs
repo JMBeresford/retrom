@@ -41,7 +41,7 @@ impl<R: Runtime> Standalone<R> {
         self.addr.write().await.replace(addr);
         self.server_handle.write().await.replace(handle);
 
-        tracing::info!("Started standalone server at: {}", addr);
+        tracing::info!("Started standalone server at: {addr}");
 
         Ok(())
     }

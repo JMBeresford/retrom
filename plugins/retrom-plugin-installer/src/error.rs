@@ -31,6 +31,8 @@ pub enum Error {
     MigrationError(String),
     #[error("Internal Error: {0}")]
     InternalError(String),
+    #[error(transparent)]
+    DecodeError(#[from] prost::DecodeError),
 }
 
 impl Serialize for Error {

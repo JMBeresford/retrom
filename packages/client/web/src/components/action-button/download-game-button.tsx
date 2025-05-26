@@ -1,9 +1,4 @@
-import {
-  ForwardedRef,
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-} from "react";
+import { ForwardedRef, forwardRef, useImperativeHandle, useRef } from "react";
 import { Button, ButtonProps } from "../ui/button";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { checkIsDesktop } from "@/lib/env";

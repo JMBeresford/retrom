@@ -5103,6 +5103,7 @@ name = "retrom-plugin-config"
 version = "0.7.21"
 dependencies = [
  "config",
+ "prost 0.12.6",
  "retrom-codegen",
  "serde",
  "serde_json",
@@ -5119,6 +5120,7 @@ version = "0.7.21"
 dependencies = [
  "dotenvy",
  "futures",
+ "prost 0.12.6",
  "reqwest",
  "retrom-codegen",
  "retrom-plugin-config",
@@ -5143,6 +5145,7 @@ dependencies = [
  "hyper 0.14.32",
  "hyper-rustls 0.25.0",
  "hyper-util",
+ "prost 0.12.6",
  "retrom-codegen",
  "retrom-plugin-config",
  "retrom-plugin-installer",

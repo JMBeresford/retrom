@@ -19,7 +19,7 @@ import { Input, InputStyles } from "@/components/ui/input";
 import {
   Emulator,
   EmulatorProfile,
-  NewEmulatorProfile,
+  NewEmulatorProfileSchema,
 } from "@retrom/codegen/retrom/models/emulators_pb";
 import { cn, InferSchema } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +30,7 @@ import { useCallback } from "react";
 import { useCreateEmulatorProfiles } from "@/mutations/useCreateEmulatorProfile";
 import { useUpdateEmulatorProfiles } from "@/mutations/useUpdateEmulatorProfiles";
 import { LoaderCircleIcon } from "lucide-react";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 type Props = {
   emulator: Emulator;
@@ -54,7 +55,9 @@ const formSchema = z.object({
         message: "Custom arguments must include {file} or {install_dir}",
       },
     ),
-}) satisfies InferSchema<Omit<NewEmulatorProfile, "emulatorId">>;
+}) satisfies InferSchema<
+  Omit<MessageInitShape<typeof NewEmulatorProfileSchema>, "emulatorId">
+>;
 
 export function EditProfileDialog(props: Props) {
   const { emulator, existingProfile } = props;

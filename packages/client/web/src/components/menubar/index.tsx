@@ -164,9 +164,7 @@ function MainMenuItem(props: { item: MenuItem }) {
   return (
     <MenubarItem
       onSelect={action}
-      className={cn(
-        item.viewportContext === "mobile" ? "sm:hidden" : "sm:contents",
-      )}
+      className={cn(item.viewportContext === "mobile" ? "sm:hidden" : "")}
     >
       {label}
     </MenubarItem>

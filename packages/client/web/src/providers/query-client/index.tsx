@@ -17,6 +17,10 @@ export function QueryClientProvider(props: PropsWithChildren) {
           queries: {
             staleTime: 1000 * 60,
             throwOnError: false,
+            queryKeyHashFn: (key) =>
+              JSON.stringify(key, (_: unknown, v: unknown) =>
+                typeof v === "bigint" ? v.toString() : v,
+              ),
           },
         },
         queryCache: new QueryCache({

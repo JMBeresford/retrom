@@ -1,11 +1,8 @@
-import {
-  InstallationProgressUpdate,
-  InstallGamePayload,
-} from "@retrom/codegen/retrom/client/client-utils_pb";
+import { InstallationProgressUpdate } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { installGame } from "@retrom/plugin-installer";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { GameFile } from "@retrom/codegen/retrom/models/game-files_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { invoke } from "@tauri-apps/api/core";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "react";
@@ -40,11 +37,8 @@ export function useInstallGame(game: Game, files: GameFile[]) {
   }, [game, queryClient]);
 
   const mutation = useMutation({
-    mutationKey: ["installation", game.path, files],
-    mutationFn: () =>
-      invoke<void>("plugin:installer|install_game", {
-        payload: { game, files } satisfies InstallGamePayload,
-      }),
+    mutationKey: ["installation", game.path],
+    mutationFn: () => installGame({ game, files }),
     onSuccess: () => {
       return queryClient.invalidateQueries({
         queryKey: ["installation-state"],

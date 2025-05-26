@@ -1,7 +1,8 @@
 import { useToast } from "@/components/ui/use-toast";
-import { CreateEmulatorProfilesRequest } from "@retrom/codegen/retrom/services_pb";
+import { CreateEmulatorProfilesRequestSchema } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export function useCreateEmulatorProfiles() {
   const queryClient = useQueryClient();
@@ -9,8 +10,9 @@ export function useCreateEmulatorProfiles() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (request: CreateEmulatorProfilesRequest) =>
-      retromClient.emulatorClient.createEmulatorProfiles(request),
+    mutationFn: (
+      request: MessageInitShape<typeof CreateEmulatorProfilesRequestSchema>,
+    ) => retromClient.emulatorClient.createEmulatorProfiles(request),
     mutationKey: ["create-emulator-profiles", queryClient],
     onError: (error) => {
       console.error(error);

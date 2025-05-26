@@ -96,7 +96,6 @@ export function GeneralConfig() {
 
   const dirty = form.formState.isDirty;
 
-  console.log({ dirty, formstate: form.formState });
   return (
     <TabsContent value="general" className="mt-4">
       <Form {...form}>

@@ -5,6 +5,7 @@ import {
   subscribeWithSelector,
 } from "zustand/middleware";
 import {
+  RetromClientConfig,
   RetromClientConfigJson,
   RetromClientConfigSchema,
 } from "@retrom/codegen/retrom/client/client-config_pb";
@@ -18,16 +19,13 @@ import { toJson } from "@bufbuild/protobuf";
 import { timestampNow, TimestampSchema } from "@bufbuild/protobuf/wkt";
 
 const STORAGE_KEY = "retrom-client-config";
-export type LocalConfig = RetromClientConfigJson & {
-  _hasHydrated: boolean;
-  setHasHydrated: (value: boolean) => void;
-};
+export type LocalConfig = RetromClientConfigJson;
 
 const context = createContext<UseBoundStore<StoreApi<LocalConfig>> | undefined>(
   undefined,
 );
 
-const initialConfig: RetromClientConfigJson = {
+const defaultConfig: RetromClientConfigJson = {
   server: {
     hostname: defaultAPIHostname(),
     port: defaultAPIPort(),
@@ -57,80 +55,50 @@ const initialConfig: RetromClientConfigJson = {
     setupComplete: false,
   },
 };
+
+let configFile: RetromClientConfig | undefined;
 if (checkIsDesktop()) {
-  try {
-    const fromLegacyStorage = localStorage.getItem(STORAGE_KEY);
-    if (fromLegacyStorage) {
-      const parsed = JSON.parse(fromLegacyStorage) as Record<string, unknown>;
-
-      const state = parsed?.state;
-      const version = parsed?.version;
-
-      if (state && typeof version === "number") {
-        const config = migrate(state, version);
-        await ConfigFile.setConfig(toJson(RetromClientConfigSchema, config));
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
-  } catch (e) {
-    console.error("Failed to migrate legacy storage", e);
+  const fromLegacyStorage = localStorage.getItem(STORAGE_KEY);
+  if (fromLegacyStorage) {
+    console.warn("Legacy localStorage found, this config is no longer used!");
   }
 
-  const configFile = await ConfigFile.getConfig();
-
-  if (configFile) {
-    Object.assign(initialConfig, configFile);
-  }
+  configFile = await ConfigFile.getConfig();
+  console.log("Config file loaded", configFile);
 }
+
+const initialConfig = configFile
+  ? toJson(RetromClientConfigSchema, configFile)
+  : defaultConfig;
 
 const configStore = create<LocalConfig>()(
   subscribeWithSelector(
-    persist(
-      (set) => ({
-        ...initialConfig,
-        _hasHydrated: !checkIsDesktop(),
-        setHasHydrated: (value) => set({ _hasHydrated: value }),
-      }),
-      {
-        name: STORAGE_KEY,
-        version: 4,
-        migrate,
-        onRehydrateStorage: (state) => {
-          return (_s, err) => {
-            if (err) {
-              console.error("Failed to rehydrate storage", err);
-              return;
-            }
-            state.setHasHydrated(true);
-          };
-        },
-        storage: checkIsDesktop()
-          ? createJSONStorage(() => desktopStorage)
-          : createJSONStorage(() => localStorage),
+    persist(() => initialConfig, {
+      name: STORAGE_KEY,
+      version: 4,
+      migrate,
+      skipHydration: true,
+      onRehydrateStorage: (state) => {
+        console.log("Rehydrating config state", state);
       },
-    ),
+      storage: checkIsDesktop()
+        ? createJSONStorage(() => desktopStorage, {
+            replacer: (_, v) => {
+              console.log(v);
+              return typeof v === "bigint" ? v.toString() : v;
+            },
+          })
+        : createJSONStorage(() => localStorage, {
+            replacer: (_, v) => (typeof v === "bigint" ? v.toString() : v),
+          }),
+    }),
   ),
 );
 
 export function ConfigProvider(props: PropsWithChildren) {
   const { children } = props;
 
-  return (
-    <context.Provider value={configStore}>
-      <WaitOnHydration>{children}</WaitOnHydration>
-    </context.Provider>
-  );
-}
-
-function WaitOnHydration(props: PropsWithChildren) {
-  const { children } = props;
-  const hasHydrated = useConfig((state) => state._hasHydrated);
-
-  if (!hasHydrated && checkIsDesktop()) {
-    return null;
-  }
-
-  return <>{children}</>;
+  return <context.Provider value={configStore}>{children}</context.Provider>;
 }
 
 export function useConfigStore() {

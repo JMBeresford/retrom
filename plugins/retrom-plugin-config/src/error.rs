@@ -15,6 +15,9 @@ pub enum Error {
 
     #[error(transparent)]
     ParseConfig(#[from] config::ConfigError),
+
+    #[error(transparent)]
+    DecodeError(#[from] prost::DecodeError),
 }
 
 impl Serialize for Error {

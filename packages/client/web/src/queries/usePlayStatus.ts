@@ -1,11 +1,8 @@
-import {
-  GamePlayStatusUpdate,
-  GetGamePlayStatusPayload,
-} from "@retrom/codegen/retrom/client/client-utils_pb";
+import { GamePlayStatusUpdate } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { getGamePlayStatus } from "@retrom/plugin-launcher";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { checkIsDesktop } from "@/lib/env";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { invoke } from "@tauri-apps/api/core";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect } from "react";
@@ -63,17 +60,12 @@ export function usePlayStatusQuery(game: Game) {
   }, [game, queryClient]);
 
   const query = useQuery({
-    queryFn: async () => {
+    queryFn: () => {
       if (!checkIsDesktop()) return null;
 
-      const payload: GetGamePlayStatusPayload = {
+      return getGamePlayStatus({
         game,
-      };
-
-      return await invoke<GamePlayStatusUpdate>(
-        "plugin:launcher|get_game_play_status",
-        { payload },
-      );
+      });
     },
     queryKey: [queryKey, game.path, game],
   });

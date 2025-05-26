@@ -20,7 +20,7 @@ pub enum Error {
     #[error(transparent)]
     Steam(#[from] retrom_plugin_steam::Error),
     #[error(transparent)]
-    Tonic(#[from] tonic::Status),
+    DecodeError(#[from] prost::DecodeError),
 
     #[error("InternalError: {0}")]
     InternalError(String),

@@ -1,8 +1,9 @@
 {
   "name": "@retrom/plugin-launcher",
   "type": "module",
-  "dependencies": {
-    "@tauri-apps/api": ">=2.0.0-beta.6"
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "default": "./dist/index.js"
   },
   "files": [
     "dist/**"
@@ -15,8 +16,13 @@
     "lint": "eslint ./guest-js/ && cargo clippy",
     "lint:fix": "eslint ./guest-js/ --fix && cargo clippy --fix"
   },
+  "dependencies": {
+    "@tauri-apps/api": ">=2.0.0-beta.6",
+    "@bufbuild/protobuf": "2.4.0"
+  },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
+    "@retrom/codegen": "workspace:*",
     "rollup": "^4.9.6",
     "typescript": "^5.3.3",
     "tslib": "^2.6.2",

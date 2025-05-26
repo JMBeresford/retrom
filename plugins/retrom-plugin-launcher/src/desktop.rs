@@ -53,10 +53,10 @@ impl<R: Runtime> Launcher<R> {
     ) -> crate::Result<()> {
         let already_running = self.child_processes.write().await.insert(game_id, child);
 
-        info!("Marking game {} as running", game_id);
+        info!("Marking game {game_id} as running");
 
         if already_running.is_some() {
-            warn!("Game {} is already running", game_id);
+            warn!("Game {game_id} is already running");
         }
 
         self.app_handle.emit(
@@ -74,10 +74,10 @@ impl<R: Runtime> Launcher<R> {
     pub async fn mark_game_as_stopped(&self, game_id: GameId) -> crate::Result<()> {
         let child = self.child_processes.write().await.remove(&game_id);
 
-        info!("Marking game {} as stopped", game_id);
+        info!("Marking game {game_id} as stopped");
 
         if child.is_none() {
-            warn!("Game {} is not running", game_id);
+            warn!("Game {game_id} is not running");
         }
 
         let mut metadata_client = self.app_handle.get_metadata_client().await;
@@ -121,7 +121,7 @@ impl<R: Runtime> Launcher<R> {
                 .map(|res| res.ok().unwrap_or(0));
 
             if let Some(mins) = session_duration {
-                info!("Game {} played for {} minutes", game_id, mins);
+                info!("Game {game_id} played for {mins} minutes");
                 updated_metadata.minutes_played = Some(played + mins);
             }
 
@@ -130,7 +130,7 @@ impl<R: Runtime> Launcher<R> {
             });
 
             if let Err(why) = metadata_client.update_game_metadata(request).await {
-                warn!("Failed to update game metadata: {}", why);
+                warn!("Failed to update game metadata: {:#?}", why);
             }
         }
 
@@ -150,12 +150,12 @@ impl<R: Runtime> Launcher<R> {
         let all_processes = self.child_processes.read().await;
         let game = all_processes.get(&game_id);
 
-        info!("Stopping game {}", game_id);
+        info!("Stopping game {game_id}");
 
         if let Some(game) = game {
             game.send.lock().await.send(()).await?;
 
-            info!("Game {} stopped", game_id);
+            info!("Game {game_id} stopped");
         }
 
         Ok(())
