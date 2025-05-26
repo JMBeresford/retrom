@@ -14,11 +14,11 @@ import {
 } from "@/components/ui/accordion";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { useGames } from "@/queries/useGames";
-import { Game } from "@retrom/codegen/retrom/models/games";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import {
   GameMetadata,
   PlatformMetadata,
-} from "@retrom/codegen/retrom/models/metadata";
+} from "@retrom/codegen/retrom/models/metadata_pb";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useFilterAndSort } from "./filter-sort-context";
 import { FiltersAndSorting } from "./filters-and-sorting";
@@ -27,10 +27,10 @@ import { filterName, sortGames, sortPlatforms } from "./utils";
 import { ScrollArea } from "../ui/scroll-area";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { useInstallationStateQuery } from "@/queries/useInstallationState";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 import { Skeleton } from "../ui/skeleton";
 import { EllipsisVertical } from "lucide-react";
-import { Platform } from "@retrom/codegen/retrom/models/platforms";
+import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +39,7 @@ import {
 } from "../ui/dropdown-menu";
 import { DropdownMenuTriggerProps } from "@radix-ui/react-dropdown-menu";
 import { Button } from "../ui/button";
-import { StorageType } from "@retrom/codegen/retrom/server/config";
+import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 
 type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
@@ -121,11 +121,11 @@ export function SideBar() {
       if (groupByInstallationStatus) {
         games.sort((a, b) => {
           const aInstalled =
-            installationData?.installationState.get(a.id) ===
+            installationData?.installationState[a.id] ===
             InstallationStatus.INSTALLED;
 
           const bInstalled =
-            installationData?.installationState.get(b.id) ===
+            installationData?.installationState[b.id] ===
             InstallationStatus.INSTALLED;
 
           if (aInstalled && !bInstalled) {
@@ -274,9 +274,8 @@ export function SideBar() {
                             {games.map((game) => {
                               const isCurrentGame = currentGame?.id === game.id;
                               const isInstalled =
-                                installationData?.installationState.get(
-                                  game.id,
-                                ) === InstallationStatus.INSTALLED;
+                                installationData?.installationState[game.id] ===
+                                InstallationStatus.INSTALLED;
 
                               const gameMetadata = game.metadata;
 

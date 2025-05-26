@@ -26,7 +26,9 @@ import {
 } from "@/components/ui/select";
 import { useClientInfo } from "@/queries/useClientInfo";
 import { useConfigStore } from "@/providers/config";
-import { Timestamp } from "@retrom/codegen/google/protobuf/timestamp";
+import { timestampNow, TimestampSchema } from "@bufbuild/protobuf/wkt";
+import { toJson } from "@bufbuild/protobuf";
+import { ClientSchema } from "@retrom/codegen/retrom/models/clients_pb";
 
 export function ClientName() {
   const { previousStep, nextStep } = useSetupModal();
@@ -50,8 +52,8 @@ export function ClientName() {
           clientInfo: {
             name: newClient,
             id: -1,
-            createdAt: Timestamp.create(),
-            updatedAt: Timestamp.create(),
+            createdAt: toJson(TimestampSchema, timestampNow()),
+            updatedAt: toJson(TimestampSchema, timestampNow()),
           },
         };
         return store;
@@ -190,12 +192,7 @@ export function ClientName() {
                     (client) => client.name === selectedClient,
                   );
                   if (selectedClient && client && prev.config) {
-                    prev.config.clientInfo = {
-                      name: client.name,
-                      id: client.id,
-                      createdAt: client.createdAt ?? Timestamp.create(),
-                      updatedAt: client.updatedAt ?? Timestamp.create(),
-                    };
+                    prev.config.clientInfo = toJson(ClientSchema, client);
                   }
 
                   return { ...prev };

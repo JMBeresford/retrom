@@ -1,4 +1,5 @@
 use futures::TryStreamExt;
+use prost::Message;
 use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{
     GetPlatformsRequest, InstallGamePayload, InstallationState, InstallationStatus, StorageType,
@@ -18,12 +19,13 @@ use crate::{
     InstallerExt,
 };
 
-#[instrument(skip_all, fields(game_id = payload.clone().game.unwrap().id))]
+#[instrument(skip_all)]
 #[tauri::command]
 pub async fn install_game<R: Runtime>(
     app_handle: AppHandle<R>,
-    payload: InstallGamePayload,
+    payload: Vec<u8>,
 ) -> crate::Result<()> {
+    let payload = InstallGamePayload::decode(payload.as_slice())?;
     let game = payload.game.unwrap();
     let files = payload.files;
     let installer = app_handle.installer();
@@ -109,7 +111,7 @@ pub async fn install_game<R: Runtime>(
                 let mut host = server.hostname.to_string();
 
                 if let Some(port) = server.port {
-                    host.push_str(&format!(":{}", port));
+                    host.push_str(&format!(":{port}"));
                 }
 
                 host
@@ -181,12 +183,13 @@ pub async fn install_game<R: Runtime>(
     Ok(())
 }
 
-#[instrument(skip_all, fields(game_id = payload.clone().game.unwrap().id))]
+#[instrument(skip_all)]
 #[tauri::command]
 pub async fn uninstall_game<R: Runtime>(
     app_handle: AppHandle<R>,
-    payload: UninstallGamePayload,
+    payload: Vec<u8>,
 ) -> crate::Result<()> {
+    let payload = UninstallGamePayload::decode(payload.as_slice())?;
     let game = payload.game.unwrap();
 
     if game.third_party {
@@ -234,7 +237,7 @@ pub async fn get_game_installation_status<R: Runtime>(
 #[tauri::command]
 pub async fn get_installation_state<R: Runtime>(
     app_handle: AppHandle<R>,
-) -> crate::Result<InstallationState> {
+) -> crate::Result<Vec<u8>> {
     let installer = app_handle.installer();
     let mut installation_state: HashMap<i32, i32> = HashMap::new();
 
@@ -246,7 +249,9 @@ pub async fn get_installation_state<R: Runtime>(
         installation_state.insert(*game_id, InstallationStatus::Installing.into());
     }
 
-    Ok(InstallationState { installation_state })
+    let res = InstallationState { installation_state };
+
+    Ok(res.encode_to_vec())
 }
 
 #[instrument(skip(app_handle))]

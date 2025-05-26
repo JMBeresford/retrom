@@ -1,9 +1,13 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Version } from "@retrom/codegen/retrom/server/server-info";
+import {
+  Version,
+  VersionSchema,
+} from "@retrom/codegen/retrom/server/server-info_pb";
 import { Update } from "@tauri-apps/plugin-updater";
 import Markdown from "react-markdown";
 import classes from "./version-utils.module.scss";
 import { cn } from "./utils";
+import { create } from "@bufbuild/protobuf";
 
 export function versionCompare(a: Version, b: Version): number {
   const { major: aMajor, minor: aMinor } = a;
@@ -40,7 +44,7 @@ export function parseVersion(version?: string): Version | undefined {
     .map((part) => part.replace("v", ""))
     .map(Number);
 
-  return { major, minor, patch };
+  return create(VersionSchema, { major, minor, patch });
 }
 
 export function versionToString(version: Version) {

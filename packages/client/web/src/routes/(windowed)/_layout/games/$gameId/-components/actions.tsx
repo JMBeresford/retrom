@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { EllipsisVertical } from "lucide-react";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 import { ActionButton } from "../../../../../../components/action-button";
 import { useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
@@ -22,7 +22,7 @@ import { Fragment, useMemo } from "react";
 import {
   Emulator,
   EmulatorProfile,
-} from "@retrom/codegen/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators_pb";
 import { Badge } from "@/components/ui/badge";
 import { usePlayGame } from "@/mutations/usePlayGame";
 

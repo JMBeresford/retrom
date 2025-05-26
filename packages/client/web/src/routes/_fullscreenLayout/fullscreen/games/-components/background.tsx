@@ -1,4 +1,4 @@
-import { GameMetadata } from "@retrom/codegen/retrom/models/metadata";
+import { GameMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
 import { Image } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";

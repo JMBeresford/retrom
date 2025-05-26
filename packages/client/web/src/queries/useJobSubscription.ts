@@ -1,4 +1,4 @@
-import { JobProgress, JobStatus } from "@retrom/codegen/retrom/jobs";
+import { JobProgress, JobStatus } from "@retrom/codegen/retrom/jobs_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -22,18 +22,20 @@ export function useJobSubscription(opts: {
       for await (const progress of stream) {
         const { job } = progress;
 
-        if (onProgress && job?.status === JobStatus.Running) {
-          onProgress(job);
-        }
+        if (job) {
+          if (onProgress && job.status === JobStatus.Running) {
+            onProgress(job);
+          }
 
-        if (onCompletion && job?.status === JobStatus.Success) {
-          onCompletion(job);
-        }
+          if (onCompletion && job.status === JobStatus.Success) {
+            onCompletion(job);
+          }
 
-        setJobProgress(progress.job);
+          setJobProgress(job);
+        }
       }
 
-      return stream;
+      return null;
     },
   });
 

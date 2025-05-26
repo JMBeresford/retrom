@@ -36,9 +36,13 @@ if (!rootElement.innerHTML) {
     await restoreStateCurrent(StateFlags.ALL);
   }
 
-  root.render(
-    <StrictMode>
-      <RouterProvider router={router} />
-    </StrictMode>,
-  );
+  try {
+    root.render(
+      <StrictMode>
+        <RouterProvider router={router} />
+      </StrictMode>,
+    );
+  } catch (error) {
+    console.log({ error });
+  }
 }

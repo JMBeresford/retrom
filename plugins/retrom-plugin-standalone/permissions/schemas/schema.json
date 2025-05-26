@@ -49,7 +49,7 @@
           "minimum": 1.0
         },
         "description": {
-          "description": "Human-readable description of what the permission does. Tauri convention is to use <h4> headings in markdown content for Tauri documentation generation purposes.",
+          "description": "Human-readable description of what the permission does. Tauri convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
           "type": [
             "string",
             "null"
@@ -111,7 +111,7 @@
           "type": "string"
         },
         "description": {
-          "description": "Human-readable description of what the permission does. Tauri internal convention is to use <h4> headings in markdown content for Tauri documentation generation purposes.",
+          "description": "Human-readable description of what the permission does. Tauri internal convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
           "type": [
             "string",
             "null"
@@ -297,22 +297,26 @@
         {
           "description": "Enables the disable_standalone_mode command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-disable-standalone-mode"
+          "const": "allow-disable-standalone-mode",
+          "markdownDescription": "Enables the disable_standalone_mode command without any pre-configured scope."
         },
         {
           "description": "Denies the disable_standalone_mode command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-disable-standalone-mode"
+          "const": "deny-disable-standalone-mode",
+          "markdownDescription": "Denies the disable_standalone_mode command without any pre-configured scope."
         },
         {
           "description": "Enables the enable_standalone_mode command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-enable-standalone-mode"
+          "const": "allow-enable-standalone-mode",
+          "markdownDescription": "Enables the enable_standalone_mode command without any pre-configured scope."
         },
         {
           "description": "Denies the enable_standalone_mode command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-enable-standalone-mode"
+          "const": "deny-enable-standalone-mode",
+          "markdownDescription": "Denies the enable_standalone_mode command without any pre-configured scope."
         }
       ]
     }

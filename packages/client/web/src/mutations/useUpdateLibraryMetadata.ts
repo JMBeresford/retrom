@@ -1,11 +1,12 @@
 import { useToast } from "@/components/ui/use-toast";
-import { JobStatus } from "@retrom/codegen/retrom/jobs";
+import { JobStatus } from "@retrom/codegen/retrom/jobs_pb";
 import {
   GetJobSubscriptionResponse,
-  UpdateLibraryMetadataRequest,
-} from "@retrom/codegen/retrom/services";
+  UpdateLibraryMetadataRequestSchema,
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export function useUpdateLibraryMetadata() {
   const { toast } = useToast();
@@ -92,7 +93,8 @@ export function useUpdateLibraryMetadata() {
         })
         .catch(console.error);
     },
-    mutationFn: (req: UpdateLibraryMetadataRequest = {}) =>
-      retromClient.libraryClient.updateLibraryMetadata(req),
+    mutationFn: (
+      req: MessageInitShape<typeof UpdateLibraryMetadataRequestSchema> = {},
+    ) => retromClient.libraryClient.updateLibraryMetadata(req),
   });
 }

@@ -17,7 +17,7 @@ import { useState } from "react";
 import { FocusableElement, FocusContainer } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 
 export function UninstallGameAction() {
   const [open, setOpen] = useState(false);

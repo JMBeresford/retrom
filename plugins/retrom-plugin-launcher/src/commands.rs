@@ -1,5 +1,6 @@
 use std::{ffi::OsStr, path::PathBuf};
 
+use prost::Message;
 use retrom_codegen::retrom::{
     GamePlayStatusUpdate, GetGamePlayStatusPayload, GetLocalEmulatorConfigsRequest,
     InstallationStatus, PlayGamePayload, PlayStatus, StopGamePayload,
@@ -16,13 +17,9 @@ use walkdir::WalkDir;
 use crate::{desktop::GameProcess, LauncherExt, Result};
 
 #[command]
-#[instrument(skip_all, fields(
-    game_id = payload.game.as_ref().map(|game| game.id),
-    emulator_profile_id = payload.emulator_profile.as_ref().map(|profile| profile.id)))]
-pub(crate) async fn play_game<R: Runtime>(
-    app: AppHandle<R>,
-    payload: PlayGamePayload,
-) -> Result<()> {
+#[instrument(skip_all)]
+pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -> Result<()> {
+    let payload = PlayGamePayload::decode(payload.as_slice())?;
     let launcher = app.launcher();
     let installer = app.installer();
     let standalone = app
@@ -195,15 +192,15 @@ pub(crate) async fn play_game<R: Runtime>(
     let app = app.clone();
     tokio::select! {
         _ = recv.recv() => {
-            info!("Recieved stop signal for game {}", game_id);
+            info!("Recieved stop signal for game {game_id}");
 
             process.kill().await?;
-            info!("Killed game process for game {}", game_id);
+            info!("Killed game process for game {game_id}");
 
             app.launcher().mark_game_as_stopped(game_id).await?;
         }
         _ = process.wait() => {
-            info!("Game process for game {} was exited", game_id);
+            info!("Game process for game {game_id} was exited");
 
             app.launcher()
                 .mark_game_as_stopped(game_id)
@@ -216,11 +213,9 @@ pub(crate) async fn play_game<R: Runtime>(
 }
 
 #[command]
-#[instrument(skip_all, fields(game_id = payload.game.as_ref().map(|game| game.id)))]
-pub(crate) async fn stop_game<R: Runtime>(
-    app: AppHandle<R>,
-    payload: StopGamePayload,
-) -> Result<()> {
+#[instrument(skip_all)]
+pub(crate) async fn stop_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -> Result<()> {
+    let payload = StopGamePayload::decode(payload.as_slice())?;
     let launcher = app.launcher();
     let game = payload.game;
 
@@ -238,9 +233,10 @@ pub(crate) async fn stop_game<R: Runtime>(
 #[instrument(skip_all)]
 pub(crate) async fn get_game_play_status<R: Runtime>(
     app: AppHandle<R>,
-    payload: GetGamePlayStatusPayload,
-) -> Result<GamePlayStatusUpdate> {
+    payload: Vec<u8>,
+) -> Result<Vec<u8>> {
     let launcher = app.launcher();
+    let payload = GetGamePlayStatusPayload::decode(payload.as_slice())?;
     let game = payload.game;
 
     let game_id = match &game {
@@ -248,15 +244,17 @@ pub(crate) async fn get_game_play_status<R: Runtime>(
         None => return Err(crate::Error::GameNotFound(None)),
     };
 
-    if launcher.is_game_running(game_id).await {
-        Ok(GamePlayStatusUpdate {
+    let res = if launcher.is_game_running(game_id).await {
+        GamePlayStatusUpdate {
             game_id,
             play_status: PlayStatus::Playing.into(),
-        })
+        }
     } else {
-        Ok(GamePlayStatusUpdate {
+        GamePlayStatusUpdate {
             game_id,
             play_status: PlayStatus::NotPlaying.into(),
-        })
-    }
+        }
+    };
+
+    Ok(res.encode_to_vec())
 }

@@ -1,18 +1,19 @@
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils";
-import { Game } from "@retrom/codegen/retrom/models/games";
+import { GameSchema } from "@retrom/codegen/retrom/models/games_pb";
 import { useMemo } from "react";
 import { useInstallationStateQuery } from "./useInstallationState";
+import { MessageShape } from "@bufbuild/protobuf";
 
-export function useInstallationQuery(game: Game) {
+export function useInstallationQuery(game: MessageShape<typeof GameSchema>) {
   const { data: _data, ...installationStateQuery } =
     useInstallationStateQuery();
 
   const data = useMemo(() => {
-    const status =
-      _data?.installationState.get(game.id) ?? InstallationStatus.UNRECOGNIZED;
+    if (!_data?.installationState) {
+      return undefined;
+    }
 
-    return status;
-  }, [_data, game.id]);
+    return _data.installationState[game.id];
+  }, [_data, game]);
 
   return {
     ...installationStateQuery,

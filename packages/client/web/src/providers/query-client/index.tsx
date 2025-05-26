@@ -4,8 +4,8 @@ import {
   QueryClientProvider as QueryClientProviderImpl,
 } from "@tanstack/react-query";
 import { PropsWithChildren, useState } from "react";
-import { Status, ClientError } from "nice-grpc-common";
 import { useToast } from "@/components/ui/use-toast";
+import { ConnectError, Code } from "@connectrpc/connect";
 
 export function QueryClientProvider(props: PropsWithChildren) {
   const { toast } = useToast();
@@ -14,18 +14,25 @@ export function QueryClientProvider(props: PropsWithChildren) {
     () =>
       new QueryClient({
         defaultOptions: {
-          queries: { staleTime: 1000 * 60, throwOnError: false },
+          queries: {
+            staleTime: 1000 * 60,
+            throwOnError: false,
+            queryKeyHashFn: (key) =>
+              JSON.stringify(key, (_: unknown, v: unknown) =>
+                typeof v === "bigint" ? v.toString() : v,
+              ),
+          },
         },
         queryCache: new QueryCache({
           onError: (error) => {
             console.error(error);
-            if (error instanceof ClientError) {
+            if (error instanceof ConnectError) {
               const description = (
                 <span className="text-wrap break-all">{error.message}</span>
               );
 
               switch (error.code) {
-                case Status.UNAUTHENTICATED: {
+                case Code.Unauthenticated: {
                   toast({
                     variant: "destructive",
                     title: "Unauthenticated",
@@ -35,7 +42,7 @@ export function QueryClientProvider(props: PropsWithChildren) {
                   break;
                 }
 
-                case Status.INTERNAL: {
+                case Code.Internal: {
                   toast({
                     variant: "destructive",
                     title: "Internal server error",

@@ -1,7 +1,8 @@
 import { useToast } from "@/components/ui/use-toast";
-import { UpdateEmulatorsRequest } from "@retrom/codegen/retrom/services";
+import { UpdateEmulatorsRequestSchema } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export function useUpdateEmulators() {
   const queryClient = useQueryClient();
@@ -9,8 +10,9 @@ export function useUpdateEmulators() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (request: UpdateEmulatorsRequest) =>
-      retromClient.emulatorClient.updateEmulators(request),
+    mutationFn: (
+      request: MessageInitShape<typeof UpdateEmulatorsRequestSchema>,
+    ) => retromClient.emulatorClient.updateEmulators(request),
     mutationKey: ["emulators"],
     onSuccess: () => {
       toast({

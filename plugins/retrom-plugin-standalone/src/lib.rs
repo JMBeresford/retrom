@@ -64,7 +64,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                     Handle::current().block_on(async move {
                         let standalone = app.standalone();
                         if let Err(why) = standalone.stop_server().await {
-                            tracing::error!("Failed to stop standalone server: {}", why);
+                            tracing::error!("Failed to stop standalone server: {:#?}", why);
                         }
                     });
                 });

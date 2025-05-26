@@ -27,7 +27,7 @@ import {
   saveStrategyDisplayMap,
 } from ".";
 import { useCallback } from "react";
-import { SaveStrategy } from "@retrom/codegen/retrom/models/emulators";
+import { SaveStrategy } from "@retrom/codegen/retrom/models/emulators_pb";
 
 export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
   const { platforms } = props;
@@ -160,13 +160,7 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
               <Select
                 defaultValue={field.value?.toString() ?? ""}
                 onValueChange={(value) => {
-                  const valueNum = parseInt(value);
-                  const saveStrategy = Object.values(SaveStrategy).find(
-                    (v) => v === valueNum,
-                  );
-
-                  if (saveStrategy === undefined) return;
-                  field.onChange(saveStrategy);
+                  field.onChange(parseInt(value));
                 }}
               >
                 <FormControl>
@@ -191,10 +185,10 @@ export function CreateEmulator(props: { platforms: PlatformWithMetadata[] }) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {Object.entries(SaveStrategy)
-                    .filter(([_, value]) => value !== SaveStrategy.UNRECOGNIZED)
-                    .map(([key, value]) => (
-                      <SelectItem key={key} value={value.toString()}>
+                  {Object.values(SaveStrategy)
+                    .filter((type) => typeof type === "number")
+                    .map((value) => (
+                      <SelectItem key={value} value={value.toString()}>
                         {saveStrategyDisplayMap[value]}
                       </SelectItem>
                     ))}

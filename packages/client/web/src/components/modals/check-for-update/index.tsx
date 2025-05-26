@@ -23,7 +23,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { AlertCircle, LoaderCircleIcon } from "lucide-react";
 import { Route as RootRoute } from "@/routes/__root";
 import { useNavigate } from "@tanstack/react-router";
-import { Version } from "@retrom/codegen/retrom/server/server-info";
+import { Version } from "@retrom/codegen/retrom/server/server-info_pb";
 import { Update } from "@tauri-apps/plugin-updater";
 import { Separator } from "@/components/ui/separator";
 

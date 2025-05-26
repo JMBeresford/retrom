@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { StorageType } from "@retrom/codegen/retrom/server/config";
+import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 
 export function StorageTypeSelect<
   Field extends ControllerRenderProps<
@@ -19,7 +19,6 @@ export function StorageTypeSelect<
   >,
 >(props: { field: Field; fieldState: ControllerFieldState }) {
   const { field, fieldState } = props;
-  const value = field.value;
 
   return (
     <FormItem className="sm:contents sm:space-y-0 w-full">
@@ -28,7 +27,7 @@ export function StorageTypeSelect<
       </FormLabel>
       <Select
         disabled={field.disabled}
-        value={value.toString()}
+        value={field.value.toString()}
         onValueChange={(value) => field.onChange(parseInt(value))}
       >
         <FormControl>
@@ -47,11 +46,11 @@ export function StorageTypeSelect<
 
         <SelectContent>
           {Object.values(StorageType)
-            .filter((type) => type >= 0)
-            .map((type) => (
-              <SelectItem key={type} value={type.toString()}>
-                {StorageTypeLabel[type]}
-                {type === StorageType.MULTI_FILE_GAME && (
+            .filter((type) => typeof type === "number")
+            .map((value) => (
+              <SelectItem key={value} value={value.toString()}>
+                {StorageTypeLabel[value]}
+                {value === StorageType.SINGLE_FILE_GAME && (
                   <Badge variant="outline" className="mx-2">
                     Default
                   </Badge>
@@ -68,5 +67,4 @@ const StorageTypeLabel: Record<StorageType, string> = {
   [StorageType.MULTI_FILE_GAME]: "Multi-file Games",
   [StorageType.SINGLE_FILE_GAME]: "Single-file Games",
   [StorageType.CUSTOM]: "Custom",
-  [StorageType.UNRECOGNIZED]: "Unrecognized",
 };

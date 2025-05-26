@@ -1,6 +1,7 @@
-import { NewClient } from "@retrom/codegen/retrom/models/clients";
+import { NewClientSchema } from "@retrom/codegen/retrom/models/clients_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export function useCreateClient() {
   const queryClient = useQueryClient();
@@ -8,7 +9,7 @@ export function useCreateClient() {
 
   return useMutation({
     mutationKey: ["new-client"],
-    mutationFn: (newClient: NewClient) =>
+    mutationFn: (newClient: MessageInitShape<typeof NewClientSchema>) =>
       retromClient.clientsClient.createClient({ client: newClient }),
     onError: console.error,
     onSuccess: () => {

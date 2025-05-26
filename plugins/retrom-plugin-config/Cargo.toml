@@ -11,6 +11,7 @@ exclude = ["./examples", "./webview-dist", "./webview-src", "**/node_modules"]
 links = "tauri-plugin-config"
 
 [dependencies]
+prost = { workspace = true }
 tauri = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

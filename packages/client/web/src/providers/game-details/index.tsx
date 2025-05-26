@@ -2,19 +2,19 @@ import { toast } from "@/components/ui/use-toast";
 import {
   Emulator,
   EmulatorProfile,
-} from "@retrom/codegen/retrom/models/emulators";
-import { GameFile } from "@retrom/codegen/retrom/models/game-files";
-import { Game } from "@retrom/codegen/retrom/models/games";
+} from "@retrom/codegen/retrom/models/emulators_pb";
+import { GameFile } from "@retrom/codegen/retrom/models/game-files_pb";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import {
   GameMetadata,
   PlatformMetadata,
-} from "@retrom/codegen/retrom/models/metadata";
-import { Platform } from "@retrom/codegen/retrom/models/platforms";
+} from "@retrom/codegen/retrom/models/metadata_pb";
+import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
 
 import {
   GetGameMetadataResponse_GameGenres,
   GetGameMetadataResponse_SimilarGames,
-} from "@retrom/codegen/retrom/services";
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
 import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
@@ -70,10 +70,12 @@ export function GameDetailProvider(
 
   const { data: gameMetadata, status: gameMetadataStatus } = useQuery({
     queryKey: ["game", "games", "game-metadata", "games-metadata", gameId],
-    queryFn: async () =>
-      retromClient.metadataClient.getGameMetadata({
+    queryFn: async () => {
+      const response = await retromClient.metadataClient.getGameMetadata({
         gameIds: [gameId],
-      }),
+      });
+      return response;
+    },
   });
 
   const { data: platformData, status: platformStatus } = useQuery({
@@ -179,8 +181,8 @@ export function GameDetailProvider(
     platform: platformData.platform,
     gameMetadata: gameMetadata.metadata.at(0),
     extraMetadata: {
-      genres: gameMetadata.genres.get(gameData.game.id),
-      similarGames: gameMetadata.similarGames.get(gameData.game.id),
+      genres: gameMetadata.genres[gameData.game.id],
+      similarGames: gameMetadata.similarGames[gameData.game.id],
     },
     platformMetadata: platformData.platformMetadata,
     emulator,

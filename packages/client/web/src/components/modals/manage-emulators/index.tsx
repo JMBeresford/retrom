@@ -27,13 +27,15 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { usePlatforms } from "@/queries/usePlatforms";
-import { Platform } from "@retrom/codegen/retrom/models/platforms";
+import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
 import {
   Emulator,
-  NewEmulator,
+  EmulatorSchema,
+  NewEmulatorJson,
   SaveStrategy,
-  UpdatedEmulator,
-} from "@retrom/codegen/retrom/models/emulators";
+  UpdatedEmulatorJson,
+} from "@retrom/codegen/retrom/models/emulators_pb";
+import { SaveStrategy as SaveStrategyEnum } from "@retrom/codegen/retrom/models/emulators_pb";
 import { z } from "zod";
 import { CreateEmulator } from "./create-emulator";
 import { Button } from "@/components/ui/button";
@@ -56,20 +58,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDeleteEmulators } from "@/mutations/useDeleteEmulators";
-import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata";
+import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
 import { useNavigate } from "@tanstack/react-router";
 import { useLocalEmulatorConfigs } from "@/queries/useLocalEmulatorConfigs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LocalConfigs } from "./local-configs";
 import { Separator } from "@/components/ui/separator";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
 export const saveStrategyDisplayMap: Record<SaveStrategy, string> = {
-  [SaveStrategy.SINGLE_FILE]: "Single File",
-  [SaveStrategy.FILE_SYSTEM_DIRECTORY]: "File System Directory",
-  [SaveStrategy.DISK_IMAGE]: "Disk Image",
-  [SaveStrategy.UNRECOGNIZED]: "Unrecognized",
+  [SaveStrategyEnum.SINGLE_FILE]: "Single File",
+  [SaveStrategyEnum.FILE_SYSTEM_DIRECTORY]: "File System Directory",
+  [SaveStrategyEnum.DISK_IMAGE]: "Disk Image",
 };
 
 export type EmulatorSchema = z.infer<typeof emulatorSchema>;
@@ -81,11 +83,11 @@ export const emulatorSchema = z.object({
   supportedPlatforms: z
     .array(z.number())
     .min(1, "Select at least one platform"),
-  saveStrategy: z.nativeEnum(SaveStrategy, {
+  saveStrategy: z.nativeEnum(SaveStrategyEnum, {
     message: "Select a save strategy",
   }),
 }) satisfies z.ZodObject<
-  Record<keyof Omit<NewEmulator, "createdAt" | "updatedAt">, z.ZodTypeAny>
+  Record<keyof Omit<NewEmulatorJson, "createdAt" | "updatedAt">, z.ZodTypeAny>
 >;
 
 export type ChangesetSchema = z.infer<typeof changesetSchema>;
@@ -100,7 +102,7 @@ export const changesetSchema = z.object({
   emulators: z.ZodArray<
     z.ZodObject<
       Record<
-        keyof Omit<UpdatedEmulator, "createdAt" | "updatedAt">,
+        keyof Omit<UpdatedEmulatorJson, "createdAt" | "updatedAt">,
         z.ZodTypeAny
       >
     >
@@ -388,14 +390,7 @@ function EmulatorList(props: {
                         <Select
                           defaultValue={field.value?.toString()}
                           onValueChange={(value) => {
-                            const valueNum = parseInt(value);
-                            const saveStrategy = Object.values(
-                              SaveStrategy,
-                            ).find((v) => v === valueNum);
-
-                            if (saveStrategy === undefined) return;
-
-                            field.onChange(saveStrategy);
+                            field.onChange(parseInt(value));
                           }}
                         >
                           <FormControl>
@@ -412,10 +407,7 @@ function EmulatorList(props: {
                           </FormControl>
                           <SelectContent>
                             {Object.values(SaveStrategy)
-                              .filter((value) => typeof value !== "string")
-                              .filter(
-                                (value) => value !== SaveStrategy.UNRECOGNIZED,
-                              )
+                              .filter((type) => typeof type === "number")
                               .map((value) => (
                                 <SelectItem
                                   key={value}
@@ -514,7 +506,9 @@ export function PlatformsDropdown(props: {
   );
 }
 
-function DeleteButton(props: { emulator: Emulator }) {
+function DeleteButton(props: {
+  emulator: MessageInitShape<typeof EmulatorSchema>;
+}) {
   const { emulator } = props;
   const { mutate: deleteEmulator, isPending } = useDeleteEmulators({
     key: emulator.id,
@@ -528,7 +522,9 @@ function DeleteButton(props: { emulator: Emulator }) {
       disabled={isPending}
       type="button"
       onClick={() => {
-        deleteEmulator({ ids: [emulator.id] });
+        if (emulator.id !== undefined) {
+          deleteEmulator({ ids: [emulator.id] });
+        }
       }}
     >
       <TrashIcon

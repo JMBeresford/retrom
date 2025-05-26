@@ -1,15 +1,16 @@
 import {
-  GameServiceDefinition,
-  PlatformServiceDefinition,
-  EmulatorServiceDefinition,
-  MetadataServiceDefinition,
-  LibraryServiceDefinition,
-  ClientServiceDefinition,
-  JobServiceDefinition,
-  ServerServiceDefinition,
-  FileExplorerServiceDefinition,
-} from "@retrom/codegen/retrom/services";
-import { createClient, createChannel } from "nice-grpc-web";
+  ClientService,
+  EmulatorService,
+  FileExplorerService,
+  GameService,
+  JobService,
+  LibraryService,
+  MetadataService,
+  PlatformService,
+  ServerService,
+} from "@retrom/codegen/retrom/services_pb";
+import { createClient } from "@connectrpc/connect";
+import { createGrpcWebTransport } from "@connectrpc/connect-web";
 
 export class RetromClient {
   readonly host: string;
@@ -29,43 +30,27 @@ export class RetromClient {
     }
 
     this.host = host;
-    this.gameClient = createClient(GameServiceDefinition, createChannel(host));
 
-    this.platformClient = createClient(
-      PlatformServiceDefinition,
-      createChannel(host),
-    );
+    const transport = createGrpcWebTransport({
+      baseUrl: host,
+    });
 
-    this.emulatorClient = createClient(
-      EmulatorServiceDefinition,
-      createChannel(host),
-    );
+    this.gameClient = createClient(GameService, transport);
 
-    this.metadataClient = createClient(
-      MetadataServiceDefinition,
-      createChannel(host),
-    );
+    this.platformClient = createClient(PlatformService, transport);
 
-    this.libraryClient = createClient(
-      LibraryServiceDefinition,
-      createChannel(host),
-    );
+    this.emulatorClient = createClient(EmulatorService, transport);
 
-    this.clientsClient = createClient(
-      ClientServiceDefinition,
-      createChannel(host),
-    );
+    this.metadataClient = createClient(MetadataService, transport);
 
-    this.serverClient = createClient(
-      ServerServiceDefinition,
-      createChannel(host),
-    );
+    this.libraryClient = createClient(LibraryService, transport);
 
-    this.jobClient = createClient(JobServiceDefinition, createChannel(host));
+    this.clientsClient = createClient(ClientService, transport);
 
-    this.fileExplorerClient = createClient(
-      FileExplorerServiceDefinition,
-      createChannel(host),
-    );
+    this.serverClient = createClient(ServerService, transport);
+
+    this.jobClient = createClient(JobService, transport);
+
+    this.fileExplorerClient = createClient(FileExplorerService, transport);
   }
 }

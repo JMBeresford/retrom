@@ -2,7 +2,6 @@ import {
   createRootRoute,
   Navigate,
   Outlet,
-  ScrollRestoration,
   useLocation,
 } from "@tanstack/react-router";
 import { ConfigProvider, useConfigStore } from "../providers/config";
@@ -121,6 +120,7 @@ const modalsSearchSchema = z.object({
     })
     .optional()
     .catch(undefined),
+  exitModal: z.object({ open: z.boolean() }).optional().catch(undefined),
 });
 
 export const Route = createRootRoute({
@@ -132,18 +132,17 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <>
-      <ConfigProvider>
-        <RetromClientProvider>
-          <QueryClientProvider>
+      <QueryClientProvider>
+        <ConfigProvider>
+          <RetromClientProvider>
             <HandleLayoutRedirect />
             <Outlet />
 
             <Prompts />
             <Toaster />
-          </QueryClientProvider>
-        </RetromClientProvider>
-      </ConfigProvider>
-      <ScrollRestoration />
+          </RetromClientProvider>
+        </ConfigProvider>
+      </QueryClientProvider>
     </>
   );
 }

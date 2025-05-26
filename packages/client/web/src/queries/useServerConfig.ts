@@ -1,15 +1,16 @@
 import {
-  GetServerConfigRequest,
-  GetServerConfigResponse,
-} from "@retrom/codegen/retrom/services";
+  GetServerConfigRequestSchema,
+  type GetServerConfigResponse,
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 type SelectFn<S> = (data: GetServerConfigResponse) => S;
 
 export function useServerConfig<T = GetServerConfigResponse>(
   opts: {
-    request?: Partial<GetServerConfigRequest>;
+    request?: MessageInitShape<typeof GetServerConfigRequestSchema>;
     selectFn?: SelectFn<T>;
     enabled?: boolean;
   } = {},
@@ -20,7 +21,11 @@ export function useServerConfig<T = GetServerConfigResponse>(
     queryKey: ["server-config", opts.request],
     select: opts.selectFn,
     enabled: opts.enabled,
-    queryFn: () =>
-      retromClient.serverClient.getServerConfig(opts.request ?? {}),
+    queryFn: async () => {
+      const response = await retromClient.serverClient.getServerConfig(
+        opts.request ?? {},
+      );
+      return response;
+    },
   });
 }

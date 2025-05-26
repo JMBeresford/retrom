@@ -1,6 +1,7 @@
-import { DeleteEmulatorProfilesRequest } from "@retrom/codegen/retrom/services";
+import { DeleteEmulatorProfilesRequestSchema } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export function useDeleteEmulatorProfiles(
   opts: { key?: string | number } = {},
@@ -10,8 +11,9 @@ export function useDeleteEmulatorProfiles(
   const retromClient = useRetromClient();
 
   return useMutation({
-    mutationFn: (request: DeleteEmulatorProfilesRequest) =>
-      retromClient.emulatorClient.deleteEmulatorProfiles(request),
+    mutationFn: (
+      request: MessageInitShape<typeof DeleteEmulatorProfilesRequestSchema>,
+    ) => retromClient.emulatorClient.deleteEmulatorProfiles(request),
     mutationKey: ["delete-emulator-profiles", key],
     onSuccess: () => {
       return queryClient.invalidateQueries({

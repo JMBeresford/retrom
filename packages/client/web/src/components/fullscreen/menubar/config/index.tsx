@@ -21,7 +21,7 @@ import { useForm, useFormContext } from "react-hook-form";
 import {
   InterfaceConfig_GameListEntryImage,
   RetromClientConfig_Config,
-} from "@retrom/codegen/retrom/client/client-config";
+} from "@retrom/codegen/retrom/client/client-config_pb";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useConfig, useConfigStore } from "@/providers/config";

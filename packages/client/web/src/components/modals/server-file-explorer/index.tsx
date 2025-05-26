@@ -9,7 +9,7 @@ import {
 import { Fragment, ReactElement, useCallback, useMemo, useState } from "react";
 import { Route as RootRoute } from "@/routes/__root";
 import { useServerFilesystem } from "@/queries/useServerFilesystem";
-import { GetFilesystemNodeRequest } from "@retrom/codegen/retrom/services";
+import { GetFilesystemNodeRequest } from "@retrom/codegen/retrom/services_pb";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer";
+import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer_pb";
 import {
   FileIcon,
   FolderIcon,

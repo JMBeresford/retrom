@@ -13,7 +13,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import {
   ServerConfig,
   StorageType,
-} from "@retrom/codegen/retrom/server/config";
+} from "@retrom/codegen/retrom/server/config_pb";
 import { useUpdateServerConfig } from "@/mutations/useUpdateServerConfig";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";

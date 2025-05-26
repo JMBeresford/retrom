@@ -1,13 +1,14 @@
-import { ServerConfig } from "@retrom/codegen/retrom/server/config";
+import { ServerConfigSchema } from "@retrom/codegen/retrom/server/config_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export function useUpdateServerConfig() {
   const retromClient = useRetromClient();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (config: ServerConfig) =>
+    mutationFn: (config: MessageInitShape<typeof ServerConfigSchema>) =>
       retromClient.serverClient.updateServerConfig({ config }),
     onSuccess: () => {
       return queryClient.invalidateQueries({

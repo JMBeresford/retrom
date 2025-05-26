@@ -1,7 +1,7 @@
 import { useToast } from "@/components/ui/use-toast";
-import { Game } from "@retrom/codegen/retrom/models/games";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { invoke } from "@tauri-apps/api/core";
+import { uninstallGame } from "@retrom/plugin-installer";
 
 export function useUninstallGame(game: Game) {
   const queryClient = useQueryClient();
@@ -9,11 +9,7 @@ export function useUninstallGame(game: Game) {
 
   return useMutation({
     mutationKey: ["uninstall", game.path],
-    mutationFn: async () => {
-      return invoke("plugin:installer|uninstall_game", {
-        payload: { game },
-      });
-    },
+    mutationFn: () => uninstallGame({ game }),
     onSuccess: () => {
       toast({
         title: "Game uninstalled",

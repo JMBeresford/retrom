@@ -1,13 +1,14 @@
 import {
-  GetPlatformsRequest,
-  GetPlatformsResponse,
-} from "@retrom/codegen/retrom/services";
+  GetPlatformsRequestSchema,
+  type GetPlatformsResponse,
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export function usePlatforms<S = GetPlatformsResponse>(
   opts: {
-    request?: Partial<GetPlatformsRequest>;
+    request?: MessageInitShape<typeof GetPlatformsRequestSchema>;
     selectFn?: (data: GetPlatformsResponse) => S;
   } = {},
 ) {
@@ -16,8 +17,7 @@ export function usePlatforms<S = GetPlatformsResponse>(
 
   return useQuery({
     queryKey: ["platforms", "platform-metadata", request, retromClient],
-    queryFn: async () =>
-      await retromClient.platformClient.getPlatforms(request),
+    queryFn: () => retromClient.platformClient.getPlatforms(request),
     select: selectFn,
   });
 }

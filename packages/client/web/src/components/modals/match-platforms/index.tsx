@@ -28,16 +28,18 @@ import {
 } from "@/components/ui/popover";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Platform,
-  UpdatedPlatform,
-} from "@retrom/codegen/retrom/models/platforms";
+import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
 import {
   GetIgdbSearchRequest_IgdbSearchType,
   UpdatePlatformMetadataRequest,
-} from "@retrom/codegen/retrom/services";
+  UpdatePlatformMetadataRequestSchema,
+} from "@retrom/codegen/retrom/services_pb";
 import { usePlatforms } from "@/queries/usePlatforms";
-import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata";
+import {
+  PlatformMetadata,
+  PlatformMetadataSchema,
+  UpdatedPlatformMetadataSchema,
+} from "@retrom/codegen/retrom/models/metadata_pb";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";
 import { useNavigate } from "@tanstack/react-router";
@@ -50,6 +52,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { create } from "@bufbuild/protobuf";
 
 export type PlatformAndMetadata = Platform & { metadata: PlatformMetadata };
 
@@ -66,8 +69,8 @@ export function MatchPlatformsModal() {
         searchType: GetIgdbSearchRequest_IgdbSearchType.PLATFORM,
         fields: {
           selector: {
-            $case: "include",
-            include: { value: ["id", "name", "summary"] },
+            case: "include",
+            value: { value: ["id", "name", "summary"] },
           },
         },
 
@@ -75,8 +78,8 @@ export function MatchPlatformsModal() {
         pagination: { limit: 500 },
       }),
     select: (res) => {
-      if (res.searchResults?.$case === "platformMatches") {
-        return res.searchResults.platformMatches.platforms;
+      if (res.searchResults.case === "platformMatches") {
+        return res.searchResults.value.platforms;
       }
 
       console.error("Wrong enum encountered in oneOf type");
@@ -105,7 +108,7 @@ export function MatchPlatformsModal() {
 
         platformsWithMetadata.push({
           ...platform,
-          metadata: platformMetadata ?? PlatformMetadata.create(),
+          metadata: platformMetadata ?? create(PlatformMetadataSchema, {}),
         });
       }
 
@@ -143,7 +146,7 @@ export function MatchPlatformsModal() {
     });
 
   const defaultSelections = useMemo(() => {
-    const map = new Map<number, number | undefined>();
+    const map = new Map<number, bigint | undefined>();
     platformData?.forEach((platform) =>
       map.set(platform.id, platform.metadata.igdbId),
     );
@@ -160,7 +163,7 @@ export function MatchPlatformsModal() {
 
   const { toast } = useToast();
   const [renameDirectories, setRenameDirectories] = useState(false);
-  const [selections, setSelections] = useState<Map<number, number | undefined>>(
+  const [selections, setSelections] = useState<Map<number, bigint | undefined>>(
     new Map(defaultSelections),
   );
 
@@ -181,7 +184,7 @@ export function MatchPlatformsModal() {
   }, [navigate]);
 
   const handleUpdate = useCallback(async () => {
-    const req = UpdatePlatformMetadataRequest.create();
+    const req = create(UpdatePlatformMetadataRequestSchema, {});
 
     for (const [platformId, igdbId] of selections.entries()) {
       const defaultSelection = defaultSelections.get(platformId);
@@ -196,32 +199,34 @@ export function MatchPlatformsModal() {
         continue;
       }
 
-      req.metadata.push({
-        ...igdbMetadata,
-        platformId,
-      });
+      const { $typeName: _, ...selection } = igdbMetadata;
+
+      req.metadata.push(
+        create(UpdatedPlatformMetadataSchema, {
+          ...selection,
+          platformId,
+        }),
+      );
     }
 
     const res = await updateMetadata(req);
 
     if (renameDirectories) {
-      const updatedPlatforms: UpdatedPlatform[] = res.metadataUpdated.flatMap(
-        (meta) => {
-          const platform = platformData?.find((p) => p.id === meta.platformId);
+      const updatedPlatforms = res.metadataUpdated.flatMap((meta) => {
+        const platform = platformData?.find((p) => p.id === meta.platformId);
 
-          if (!platform || !meta.name) return [];
+        if (!platform || !meta.name) return [];
 
-          const currentFilename = getFileName(platform.path);
-          const path = platform.path.replace(currentFilename, meta.name);
+        const currentFilename = getFileName(platform.path);
+        const path = platform.path.replace(currentFilename, meta.name);
 
-          return [
-            {
-              id: platform.id,
-              path,
-            },
-          ];
-        },
-      );
+        return [
+          {
+            id: platform.id,
+            path,
+          },
+        ];
+      });
 
       try {
         await updatePlatforms({ platforms: updatedPlatforms });
@@ -249,7 +254,7 @@ export function MatchPlatformsModal() {
   ]);
 
   const findIgdbSelection = useCallback(
-    (id?: number) =>
+    (id?: bigint) =>
       id ? allIgdbPlatforms?.find((p) => p.igdbId === id) : undefined,
     [allIgdbPlatforms],
   );

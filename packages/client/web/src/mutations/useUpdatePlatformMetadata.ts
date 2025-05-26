@@ -1,7 +1,8 @@
 import { useToast } from "@/components/ui/use-toast";
-import { UpdatePlatformMetadataRequest } from "@retrom/codegen/retrom/services";
+import { UpdatePlatformMetadataRequestSchema } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export function useUpdatePlatformMetadata() {
   const queryClient = useQueryClient();
@@ -18,7 +19,9 @@ export function useUpdatePlatformMetadata() {
         variant: "destructive",
       });
     },
-    mutationFn: async (req: UpdatePlatformMetadataRequest) => {
+    mutationFn: async (
+      req: MessageInitShape<typeof UpdatePlatformMetadataRequestSchema>,
+    ) => {
       return await retromClient.metadataClient.updatePlatformMetadata(req);
     },
     onSuccess: () =>

@@ -1,15 +1,16 @@
 import {
-  GetServerInfoRequest,
-  GetServerInfoResponse,
-} from "@retrom/codegen/retrom/services";
+  GetServerInfoRequestSchema,
+  type GetServerInfoResponse,
+} from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 type SelectFn<S> = (data: GetServerInfoResponse) => S;
 
 export function useServerInfo<T = GetServerInfoResponse>(
   opts: {
-    request?: Partial<GetServerInfoRequest>;
+    request?: MessageInitShape<typeof GetServerInfoRequestSchema>;
     selectFn?: SelectFn<T>;
     enabled?: boolean;
   } = {},

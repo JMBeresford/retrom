@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Version } from "@retrom/codegen/retrom/server/server-info";
+import { Version } from "@retrom/codegen/retrom/server/server-info_pb";
 import { cn } from "@/lib/utils";
 import {
   isBreakingChange,

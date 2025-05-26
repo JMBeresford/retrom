@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { RetromClientConfig_Server } from "@retrom/codegen/retrom/client/client-config";
+import { RetromClientConfig_Server } from "@retrom/codegen/retrom/client/client-config_pb";
 import { cn } from "@/lib/utils";
 import { useDisableStandaloneMode } from "@/mutations/useDisableStandaloneMode";
 import { useEnableStandaloneMode } from "@/mutations/useEnableStandaloneMode";

@@ -1,7 +1,8 @@
 import { useToast } from "@/components/ui/use-toast";
-import { UpdateGameMetadataRequest } from "@retrom/codegen/retrom/services";
+import { UpdateGameMetadataRequestSchema } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export function useUpdateGameMetadata() {
   const queryClient = useQueryClient();
@@ -18,7 +19,9 @@ export function useUpdateGameMetadata() {
         variant: "destructive",
       });
     },
-    mutationFn: async (req: UpdateGameMetadataRequest) => {
+    mutationFn: async (
+      req: MessageInitShape<typeof UpdateGameMetadataRequestSchema>,
+    ) => {
       return await retromClient.metadataClient.updateGameMetadata(req);
     },
     onSuccess: () =>

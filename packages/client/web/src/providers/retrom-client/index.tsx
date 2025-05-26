@@ -6,11 +6,11 @@ import { checkIsDesktop } from "@/lib/env";
 const context = createContext<RetromClient | undefined>(undefined);
 
 export function RetromClientProvider(props: PropsWithChildren) {
+  const { children } = props;
+
   const { hostname, port } = useConfig((s) => s.server) ?? {
     hostname: "http://localhost",
   };
-
-  const { children } = props;
 
   const client = useMemo(() => {
     const host = checkIsDesktop()

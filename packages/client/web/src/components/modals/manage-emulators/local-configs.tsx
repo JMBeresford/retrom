@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import {
   Emulator,
   LocalEmulatorConfig,
-} from "@retrom/codegen/retrom/models/emulators";
+} from "@retrom/codegen/retrom/models/emulators_pb";
 import { cn } from "@/lib/utils";
 import { useCreateLocalEmulatorConfigs } from "@/mutations/useCreateLocalEmulatorConfig";
 import { useUpdateLocalEmulatorConfig } from "@/mutations/useUpdateLocalEmulatorConfigs";
