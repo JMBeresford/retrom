@@ -1,6 +1,7 @@
-import { UpdateGamesRequest } from "@retrom/codegen/retrom/services_pb";
+import { UpdateGamesRequestSchema } from "@retrom/codegen/retrom/services_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
 export function useUpdateGames() {
   const queryClient = useQueryClient();
@@ -8,8 +9,9 @@ export function useUpdateGames() {
 
   return useMutation({
     mutationKey: ["update-games"],
-    mutationFn: (request: UpdateGamesRequest) =>
-      retromClient.gameClient.updateGames(request),
+    mutationFn: (
+      request: MessageInitShape<typeof UpdateGamesRequestSchema>,
+    ) => retromClient.gameClient.updateGames(request),
     onError: console.error,
     onSuccess: () => {
       return queryClient.invalidateQueries({

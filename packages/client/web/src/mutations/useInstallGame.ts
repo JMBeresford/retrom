@@ -1,13 +1,17 @@
-import { InstallationProgressUpdate } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { InstallationProgressUpdateSchema } from "@retrom/codegen/retrom/client/client-utils_pb";
 import { installGame } from "@retrom/plugin-installer";
-import { Game } from "@retrom/codegen/retrom/models/games_pb";
-import { GameFile } from "@retrom/codegen/retrom/models/game-files_pb";
+import { GameSchema } from "@retrom/codegen/retrom/models/games_pb";
+import { GameFileSchema } from "@retrom/codegen/retrom/models/game-files_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "react";
+import { MessageInitShape } from "@bufbuild/protobuf";
 
-export function useInstallGame(game: Game, files: GameFile[]) {
+export function useInstallGame(
+  game: MessageInitShape<typeof GameSchema>,
+  files: MessageInitShape<typeof GameFileSchema>[],
+) {
   const queryClient = useQueryClient();
   const [progress, setProgress] = useState(0);
 
@@ -18,7 +22,7 @@ export function useInstallGame(game: Game, files: GameFile[]) {
     async function listen() {
       unlisten = await window.listen(
         "install-progress",
-        (event: { payload: InstallationProgressUpdate }) => {
+        (event: { payload: MessageInitShape<typeof InstallationProgressUpdateSchema> }) => {
           const { progress, gameId } = event.payload;
           if (gameId === game.id) {
             setProgress(progress);
