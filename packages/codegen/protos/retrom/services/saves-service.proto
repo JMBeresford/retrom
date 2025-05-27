@@ -26,6 +26,7 @@ message BackupStats {
   int32 backup_index = 1;
   repeated retrom.files.FileStat backup_file_stats = 2;
   google.protobuf.Timestamp created_at = 3;
+  string backup_path = 4;
 }
 
 message StatSaveFilesRequest {
@@ -48,6 +49,7 @@ message StatSaveFilesResponse {
     repeated BackupStats backups = 2;
     int32 game_id = 3;
     optional int32 emulator_id = 4;
+    string save_path = 5;
   }
 
   repeated SaveFilesStat save_files_stats = 1;
