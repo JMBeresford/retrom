@@ -1,14 +1,14 @@
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
-import { MenuItem } from "@/components/menubar";
 import { useGameOptions } from "@/providers/emulator-js/game-options";
 import { useNavigate } from "@tanstack/react-router";
+import { OverlayMenuItem } from "..";
 
-export const playPause: MenuItem = {
-  Render: <PlayPauseRender />,
+export const playPause: OverlayMenuItem = {
+  Render: PlayPauseRender,
 };
 
-export const restartGame: MenuItem = {
-  Render: <RestartGameRender />,
+export const restartGame: OverlayMenuItem = {
+  Render: RestartGameRender,
 };
 
 function PlayPauseRender() {

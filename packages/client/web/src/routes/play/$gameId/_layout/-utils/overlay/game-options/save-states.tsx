@@ -1,4 +1,3 @@
-import { MenuItem } from "@/components/menubar";
 import { useEmulatorJS } from "@/providers/emulator-js";
 import { useGameDetail } from "@/providers/game-details";
 import { useEJSSaveState } from "@/queries/emulator-js/useEJSSaveState";
@@ -23,15 +22,16 @@ import { HotkeyIcon } from "@/components/fullscreen/hotkey-button";
 import { EllipsisVertical } from "lucide-react";
 import { FocusContainer } from "@/components/fullscreen/focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
+import { OverlayMenuItem } from "..";
 
-export const saveStateList: MenuItem = {
+export const saveStateList: OverlayMenuItem = {
   label: "Save State",
-  items: [{ Render: <StateList listKind="save" /> }],
+  items: [{ Render: () => <StateList listKind="save" /> }],
 };
 
-export const loadStateList: MenuItem = {
+export const loadStateList: OverlayMenuItem = {
   label: "Load State",
-  items: [{ Render: <StateList listKind="load" /> }],
+  items: [{ Render: () => <StateList listKind="load" /> }],
 };
 
 const Slots = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;

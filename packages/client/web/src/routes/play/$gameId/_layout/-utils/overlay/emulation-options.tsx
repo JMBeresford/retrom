@@ -1,12 +1,12 @@
 import { ConfigCheckbox } from "@/components/fullscreen/menubar/config-inputs/checkbox";
 import { ConfigInput } from "@/components/fullscreen/menubar/config-inputs/input";
-import { MenuItem } from "@/components/menubar";
 import { useEmulatorJS } from "@/providers/emulator-js";
 import { useCallback, useState } from "react";
+import { OverlayMenuItem } from ".";
 
-export const emulationOptions: MenuItem = {
+export const emulationOptions: OverlayMenuItem = {
   label: "Emulation Options",
-  items: [{ Render: <EmulationOptions /> }],
+  items: [{ Render: EmulationOptions }],
 };
 
 type EmulationOptions = {

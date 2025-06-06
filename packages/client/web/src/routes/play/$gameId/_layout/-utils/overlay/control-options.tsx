@@ -1,6 +1,5 @@
 import { ConfigCheckbox } from "@/components/fullscreen/menubar/config-inputs/checkbox";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
-import { MenuItem } from "@/components/menubar";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { EmulatorJSControlMap } from "@/lib/emulatorjs/gamepad";
@@ -24,10 +23,11 @@ import {
   useMemo,
   useState,
 } from "react";
+import { OverlayMenuItem } from ".";
 
 const { Player1, Player2, Player3, Player4 } = Player;
 
-export const controlOptions: MenuItem = {
+export const controlOptions: OverlayMenuItem = {
   label: "Control Options",
   items: [
     {
@@ -35,29 +35,29 @@ export const controlOptions: MenuItem = {
       groupItems: [
         {
           label: "Player 1",
-          items: [{ Render: <PlayerBindings player={Player1} /> }],
+          items: [{ Render: () => <PlayerBindings player={Player1} /> }],
         },
         {
           label: "Player 2",
-          items: [{ Render: <PlayerBindings player={Player2} /> }],
+          items: [{ Render: () => <PlayerBindings player={Player2} /> }],
         },
         {
           label: "Player 3",
-          items: [{ Render: <PlayerBindings player={Player3} /> }],
+          items: [{ Render: () => <PlayerBindings player={Player3} /> }],
         },
         {
           label: "Player 4",
-          items: [{ Render: <PlayerBindings player={Player4} /> }],
+          items: [{ Render: () => <PlayerBindings player={Player4} /> }],
         },
       ],
     },
     {
       label: "Other Control Options",
       groupItems: [
-        { label: "Virtual Gamepad", Render: <VirtualGamepad /> },
+        { label: "Virtual Gamepad", Render: VirtualGamepad },
         {
           label: "Reset Controls",
-          Render: <ResetControls />,
+          Render: ResetControls,
         },
       ],
     },

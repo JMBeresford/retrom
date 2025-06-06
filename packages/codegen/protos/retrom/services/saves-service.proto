@@ -23,10 +23,37 @@ service SavesService {
 }
 
 message BackupStats {
-  int32 backup_index = 1;
-  repeated retrom.files.FileStat backup_file_stats = 2;
-  google.protobuf.Timestamp created_at = 3;
-  string backup_path = 4;
+  repeated retrom.files.FileStat backup_file_stats = 1;
+  google.protobuf.Timestamp created_at = 2;
+  string backup_path = 3;
+}
+
+message SaveFilesStat {
+  repeated retrom.files.FileStat file_stats = 1;
+  repeated BackupStats backups = 2;
+  int32 game_id = 3;
+  optional int32 emulator_id = 4;
+  string save_path = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message SaveFiles {
+  repeated retrom.files.File files = 1;
+  int32 game_id = 2;
+  optional int32 emulator_id = 3;
+}
+
+message SaveStatesStat {
+  repeated retrom.files.FileStat file_stats = 1;
+  repeated BackupStats backups = 2;
+  int32 game_id = 3;
+  optional int32 emulator_id = 4;
+}
+
+message SaveStates {
+  repeated retrom.files.File files = 1;
+  int32 game_id = 2;
+  optional int32 emulator_id = 3;
 }
 
 message StatSaveFilesRequest {
@@ -44,14 +71,6 @@ message StatSaveFilesRequest {
 }
 
 message StatSaveFilesResponse {
-  message SaveFilesStat {
-    repeated retrom.files.FileStat file_stats = 1;
-    repeated BackupStats backups = 2;
-    int32 game_id = 3;
-    optional int32 emulator_id = 4;
-    string save_path = 5;
-  }
-
   repeated SaveFilesStat save_files_stats = 1;
 }
 
@@ -70,13 +89,6 @@ message StatSaveStatesRequest {
 }
 
 message StatSaveStatesResponse {
-  message SaveStatesStat {
-    repeated retrom.files.FileStat file_stats = 1;
-    repeated BackupStats backups = 2;
-    int32 game_id = 3;
-    optional int32 emulator_id = 4;
-  }
-
   repeated SaveStatesStat save_states_stats = 1;
 }
 
@@ -90,12 +102,6 @@ message GetSaveFilesRequest {
 }
 
 message GetSaveFilesResponse {
-  message SaveFiles {
-    repeated retrom.files.File files = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
-  }
-
   repeated SaveFiles save_files = 1;
 }
 
@@ -109,12 +115,6 @@ message GetSaveStatesRequest {
 }
 
 message GetSaveStatesResponse {
-  message SaveStates {
-    repeated retrom.files.File files = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
-  }
-
   repeated SaveStates save_states = 1;
 }
 
@@ -128,23 +128,7 @@ message UpdateSaveFilesRequest {
   repeated Selector save_files_selectors = 1;
 }
 
-message UpdateSaveFilesResponse {
-  message UpdatedSaveFiles {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
-  }
-
-  message NotUpdatedSaveFiles {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
-    optional string why = 4;
-  }
-
-  repeated UpdatedSaveFiles save_files_updated = 1;
-  repeated NotUpdatedSaveFiles save_files_not_updated = 2;
-}
+message UpdateSaveFilesResponse {}
 
 message UpdateSaveStatesRequest {
   message Selector {
@@ -156,23 +140,7 @@ message UpdateSaveStatesRequest {
   repeated Selector save_states_selectors = 1;
 }
 
-message UpdateSaveStatesResponse {
-  message UpdatedSaveStates {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
-  }
-
-  message NotUpdatedSaveStates {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
-    optional string why = 4;
-  }
-
-  repeated UpdatedSaveStates save_states_updated = 1;
-  repeated NotUpdatedSaveStates save_states_not_updated = 2;
-}
+message UpdateSaveStatesResponse {}
 
 message DeleteSaveFilesRequest {
   message Selector {
@@ -189,21 +157,7 @@ message DeleteSaveFilesRequest {
   optional Config config = 2;
 }
 
-message DeleteSaveFilesResponse {
-  message DeletedSaveFiles {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-  }
-
-  message NotDeletedSaveFiles {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-    optional string why = 3;
-  }
-
-  repeated DeletedSaveFiles save_files_deleted = 1;
-  repeated NotDeletedSaveFiles save_files_not_deleted = 2;
-}
+message DeleteSaveFilesResponse {}
 
 message DeleteSaveStatesRequest {
   message Selector {
@@ -220,26 +174,12 @@ message DeleteSaveStatesRequest {
   optional Config config = 2;
 }
 
-message DeleteSaveStatesResponse {
-  message DeletedSaveStates {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-  }
-
-  message NotDeletedSaveStates {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-    optional string why = 3;
-  }
-
-  repeated DeletedSaveStates save_states_deleted = 1;
-  repeated NotDeletedSaveStates save_states_not_deleted = 2;
-}
+message DeleteSaveStatesResponse {}
 
 message RestoreSaveFilesFromBackupRequest {
   message Selector {
     int32 game_id = 1;
-    int32 backup_index = 2;
+    BackupStats backup = 2;
     optional int32 emulator_id = 3;
   }
 
@@ -253,27 +193,13 @@ message RestoreSaveFilesFromBackupRequest {
 }
 
 message RestoreSaveFilesFromBackupResponse {
-  message RestoredSaveFiles {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
-  }
-
-  message NotRestoredSaveFiles {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
-    optional string why = 4;
-  }
-
-  repeated RestoredSaveFiles save_files_restored = 1;
-  repeated NotRestoredSaveFiles save_files_not_restored = 2;
+  repeated SaveFiles save_files = 1;
 }
 
 message RestoreSaveStatesFromBackupRequest {
   message Selector {
     int32 game_id = 1;
-    int32 backup_index = 2;
+    BackupStats backup = 2;
     optional int32 emulator_id = 3;
   }
 
@@ -286,20 +212,4 @@ message RestoreSaveStatesFromBackupRequest {
   optional Config config = 2;
 }
 
-message RestoreSaveStatesFromBackupResponse {
-  message RestoredSaveStates {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
-  }
-
-  message NotRestoredSaveStates {
-    repeated retrom.files.FileStat file_stats = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
-    optional string why = 4;
-  }
-
-  repeated RestoredSaveStates save_states_restored = 1;
-  repeated NotRestoredSaveStates save_states_not_restored = 2;
-}
+message RestoreSaveStatesFromBackupResponse {}

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn, getFileStub, Image } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
-import { memo, useCallback, useMemo } from "react";
+import { FC, memo, ReactNode, useCallback, useMemo } from "react";
 import { coreOptions } from "./core-options";
 import { Hotkey, useHotkeys } from "@/providers/hotkeys";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
@@ -31,24 +31,44 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEJSSessionState } from "@/providers/emulator-js/ejs-session";
 
-const overlayMenu: MenuRoot = {
+export type OverlayMenuItem = Omit<MenuItem, "items" | "Render"> & {
+  Render?: FC;
+  items?: (OverlayMenuItem | OverlayMenuItemGroup)[];
+  labelSub?: ReactNode;
+};
+
+export type OverlayMenuItemGroup = Omit<MenuItemGroup, "groupItems"> & {
+  groupItems: OverlayMenuItem[];
+};
+
+export type OverlayMenuRoot = Omit<MenuRoot, "items"> & {
+  items: (OverlayMenuItem | OverlayMenuItemGroup)[];
+};
+
+const overlayMenu: OverlayMenuRoot = {
   items: [
     {
       groupItems: [gameOptions, emulationOptions, coreOptions, controlOptions],
     },
-    { groupItems: [{ label: "Exit Game", Render: <ExitGame /> }] },
+    { groupItems: [{ label: "Exit Game", Render: ExitGame }] },
   ],
 };
 
-function OverlayMenuItem(props: { item: MenuItem }) {
+function OverlayMenuItem(props: { item: OverlayMenuItem }) {
   const { item } = props;
-  const { Render, action, items, label } = item;
+  const { Render, action, items, label, labelSub } = item;
 
   if (items) {
     return (
       <Sheet modal={false}>
         <SheetTrigger asChild>
-          <MenuEntryButton onClick={action}>{label}</MenuEntryButton>
+          {Render ? (
+            <Render />
+          ) : (
+            <MenuEntryButton label={labelSub} onClick={action}>
+              {label}
+            </MenuEntryButton>
+          )}
         </SheetTrigger>
 
         <OverlayMenuSubMenu item={item} />
@@ -57,17 +77,21 @@ function OverlayMenuItem(props: { item: MenuItem }) {
   }
 
   if (Render) {
-    return Render;
+    return <Render />;
   }
 
   if (typeof label === "string") {
-    return <MenuEntryButton onClick={action}>{label}</MenuEntryButton>;
+    return (
+      <MenuEntryButton label={labelSub} onClick={action}>
+        {label}
+      </MenuEntryButton>
+    );
   }
 
   return label;
 }
 
-function OverlayMenuSubMenu(props: { item: MenuItem }) {
+function OverlayMenuSubMenu(props: { item: OverlayMenuItem }) {
   const {
     item: { items = [], label },
   } = props;
@@ -84,8 +108,10 @@ function OverlayMenuSubMenu(props: { item: MenuItem }) {
           e.stopPropagation();
         }}
       >
-        <SheetHeader>
-          <SheetTitle>{label}</SheetTitle>
+        <SheetHeader className="px-3">
+          <SheetTitle asChild={typeof label === "function"}>
+            {typeof label === "function" ? <label /> : label}
+          </SheetTitle>
           <SheetDescription>Settings related to {label}</SheetDescription>
           <Separator className="mx-auto mt-4" />
         </SheetHeader>
@@ -95,7 +121,7 @@ function OverlayMenuSubMenu(props: { item: MenuItem }) {
           handlers={{
             BACK: {
               handler: () => setOpen(false),
-              actionBar: { label: "Back", position: "right" },
+              actionBar: { label: "Back", position: "left" },
             },
           }}
         >
@@ -124,7 +150,7 @@ function OverlayMenuSubMenu(props: { item: MenuItem }) {
   );
 }
 
-function OverlayMenuItemGroup(props: { group: MenuItemGroup }) {
+function OverlayMenuItemGroup(props: { group: OverlayMenuItemGroup }) {
   const {
     group: { groupItems, label },
   } = props;

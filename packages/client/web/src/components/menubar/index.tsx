@@ -136,7 +136,9 @@ function MainMenuItem(props: { item: MenuItem }) {
         className={cn(item.viewportContext === "mobile" ? "sm:hidden" : "")}
       >
         <MenubarSub>
-          <MenubarSubTrigger>{label}</MenubarSubTrigger>
+          <MenubarSubTrigger asChild={typeof label !== "string"}>
+            {label}
+          </MenubarSubTrigger>
           <MenubarSubContent>
             {items.map((sub, subIndex) =>
               "groupItems" in sub ? (

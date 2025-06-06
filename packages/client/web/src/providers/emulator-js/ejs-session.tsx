@@ -10,21 +10,26 @@ import { useEmulatorJS } from ".";
 import { File } from "@retrom/codegen/retrom/files";
 import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer";
 import { emitFromFrame } from "@/routes/play/$gameId/_layout/frame.lazy";
-import { toast } from "@/components/ui/use-toast";
-import { useRemoteFiles } from "@/routes/play/$gameId/_layout/-utils/useRemoteFiles";
 import { checkIsDesktop } from "@/lib/env";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useGameDetail } from "../game-details";
 import { millisToTimestamp } from "@/lib/utils";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
-import { Progress } from "@/components/ui/progress";
+import { useGetSaveFiles } from "@/queries/saveFiles";
+import { useUpdateSaveFiles } from "@/mutations/saveFiles";
+import { toast } from "@/components/ui/use-toast";
+import {
+  SaveFiles,
+  UpdateSaveFilesResponse,
+} from "@retrom/codegen/retrom/services/saves-service";
 
 export type EJSSessionState = Readonly<{
   extractSave: () => File | undefined;
-  saveSaveFile: () => Promise<void>;
+  saveSaveFile: () => Promise<UpdateSaveFilesResponse | undefined>;
   handleExit: () => Promise<void>;
-  loadSaveFiles: (files?: File[]) => Promise<void>;
-  downloadRemoteSaveFiles: () => Promise<File[]>;
+  loadSaveFiles: (files: SaveFiles) => void;
+  remoteSaveFiles: SaveFiles | undefined;
+  restart: () => void;
 }>;
 
 const EJSSessionStateContext = createContext<EJSSessionState | undefined>(
@@ -33,8 +38,13 @@ const EJSSessionStateContext = createContext<EJSSessionState | undefined>(
 
 export function EJSSessionStateProvider(props: PropsWithChildren) {
   const emulatorJS = useEmulatorJS();
-  const { gameMetadata } = useGameDetail();
-  const { uploadFiles, downloadFiles } = useRemoteFiles();
+  const { gameMetadata, game, emulator } = useGameDetail();
+  // const { uploadFiles, downloadFiles } = useRemoteFiles();
+  const { mutateAsync: updateSave } = useUpdateSaveFiles();
+  const saveFilesQuery = useGetSaveFiles({
+    saveFilesSelectors: [{ gameId: game.id, emulatorId: emulator?.id }],
+  });
+
   const startTime = useMemo(() => Date.now(), []);
   const { mutateAsync: updateGameMetadata } = useUpdateGameMetadata();
 
@@ -59,13 +69,14 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
     }
 
     const bytes = FS.readFile(fullPath);
-    const path = fullPath.replace("/data/", "");
     const time = Date.now();
 
     const updatedAt = {
       seconds: Math.floor(time / 1000),
       nanos: Math.floor((time % 1000) * 1e6),
     };
+
+    const path = fullPath.startsWith("/") ? fullPath.slice(1) : fullPath;
 
     return File.create({
       stat: {
@@ -81,75 +92,28 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
     const save = extractSave();
 
     if (save) {
-      const { update } = toast({
-        id: "upload-save-file",
-        title: "Uploading Save File",
-        description: <Progress />,
-        duration: Infinity,
+      console.log("Uploading save file:", save);
+      return updateSave({
+        saveFilesSelectors: [
+          { files: [save], gameId: game.id, emulatorId: emulator?.id },
+        ],
       });
-
-      await uploadFiles.mutateAsync([save], {
-        onSuccess: () => {
-          emitFromFrame("save-synced");
-
-          update({
-            title: "Save Uploaded",
-            description: "Your save has been uploaded successfully",
-          });
-        },
-        onError: (err) => {
-          update({
-            title: "Failed to upload save",
-            description: err.message,
-            variant: "destructive",
-          });
-        },
-      });
-    }
-  }, [uploadFiles, extractSave]);
-
-  const downloadRemoteSaveFiles = useCallback(async () => {
-    const savePath = emulatorJS.gameManager?.getSaveFilePath() ?? "";
-
-    const { update } = toast({
-      id: "download-remote-saves",
-      duration: Infinity,
-      title: "Downloading Save Files",
-      description: <Progress />,
-    });
-
-    try {
-      const res = await downloadFiles.mutateAsync(
-        savePath.replace("/data/", ""),
-        {
-          onError: (err) => {
-            throw err;
-          },
-        },
-      );
-
-      update({
-        id: "download-remote-saves",
-        title: "Save files downloaded",
-        description: "Your save files have been downloaded successfully",
-        duration: 5000,
-      });
-
-      return res;
-    } catch (err) {
-      update({
-        title: "Failed to download save",
-        description: err instanceof Error ? err.message : "Unknown error",
+    } else {
+      toast({
+        title: "Save File Not Uploaded",
+        description: "No save file found to upload.",
         variant: "destructive",
       });
 
-      return [];
+      return;
     }
-  }, [downloadFiles, emulatorJS]);
+  }, [updateSave, extractSave, game.id, emulator?.id]);
 
   const loadSaveFiles = useCallback(
-    async (_files?: File[]) => {
-      const files = _files ?? (await downloadRemoteSaveFiles()) ?? [];
+    (saveFiles: SaveFiles) => {
+      const { files } = saveFiles;
+
+      console.log("Loading save files:", files);
 
       const gameManager = emulatorJS.gameManager;
       if (!gameManager) {
@@ -163,7 +127,8 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
           continue;
         }
 
-        const path = `/data/${stat.path}`;
+        const { path } = stat;
+        console.log("Loading save file:", path);
 
         const parts = path.split("/").slice(1, -1);
         let dir = "";
@@ -183,8 +148,16 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
 
       gameManager.loadSaveFiles();
     },
-    [downloadRemoteSaveFiles, emulatorJS.gameManager],
+    [emulatorJS.gameManager],
   );
+
+  const restart = useCallback(() => {
+    const gameManager = emulatorJS.gameManager;
+
+    if (gameManager) {
+      gameManager.restart();
+    }
+  }, [emulatorJS.gameManager]);
 
   const handleExit = useCallback(async () => {
     if (checkIsDesktop()) {
@@ -212,10 +185,16 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
     }
   }, [updateGameMetadata, gameMetadata, startTime]);
 
+  const remoteSaveFiles = useMemo(
+    () => saveFilesQuery.data?.saveFiles.at(0),
+    [saveFilesQuery.data],
+  );
+
   useLayoutEffect(() => {
-    if (!emulatorJS.retromStarted) {
+    console.log({ remoteSaveFiles });
+    if (!emulatorJS.retromStarted && remoteSaveFiles !== undefined) {
       emulatorJS.retromStarted = true;
-      loadSaveFiles().catch(console.error);
+      loadSaveFiles(remoteSaveFiles);
     }
     // emulatorJS.on("saveSave", saveSaveFile);
     //
@@ -226,22 +205,24 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
     //     ].filter((f) => f !== saveSaveFile);
     //   }
     // };
-  }, [emulatorJS, saveSaveFile, loadSaveFiles]);
+  }, [emulatorJS, saveSaveFile, loadSaveFiles, remoteSaveFiles]);
 
   const value: EJSSessionState = useMemo(
     () => ({
       extractSave,
       saveSaveFile,
+      restart,
       handleExit,
       loadSaveFiles,
-      downloadRemoteSaveFiles,
+      remoteSaveFiles,
     }),
     [
       extractSave,
       saveSaveFile,
       handleExit,
       loadSaveFiles,
-      downloadRemoteSaveFiles,
+      remoteSaveFiles,
+      restart,
     ],
   );
 

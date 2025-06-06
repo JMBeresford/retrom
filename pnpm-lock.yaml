@@ -169,6 +169,9 @@ importers:
       '@tauri-apps/plugin-window-state':
         specifier: ^2.2.0
         version: 2.2.0
+      '@types/luxon':
+        specifier: ^3.6.2
+        version: 3.6.2
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
@@ -196,6 +199,9 @@ importers:
       lucide-react:
         specifier: ^0.376.0
         version: 0.376.0(react@18.3.1)
+      luxon:
+        specifier: ^3.6.1
+        version: 3.6.1
       maath:
         specifier: ^0.10.8
         version: 0.10.8(@types/three@0.169.0)(three@0.169.0)
@@ -2620,6 +2626,9 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
+  '@types/luxon@3.6.2':
+    resolution: {integrity: sha512-R/BdP7OxEMc44l2Ex5lSXHoIXTB2JLNa3y2QISIbr58U/YcsffyQrYW//hZSdrfxrjRZj3GcUoxMPGdO8gSYuw==}
+
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
 
@@ -4480,6 +4489,10 @@ packages:
     resolution: {integrity: sha512-g91IX3ERD6yUR1TL2dsL4BkcGygpZz/EsqjAeL/kcRQV0EApIOr/9eBfKhYOVyQIcGGuotFGjF3xKLHMEz+b7g==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0
+
+  luxon@3.6.1:
+    resolution: {integrity: sha512-tJLxrKJhO2ukZ5z0gyjY1zPh3Rh88Ej9P7jNrZiHMUXHae1yvI2imgOZtL1TO8TW6biMMKfTtAOoEJANgtWBMQ==}
+    engines: {node: '>=12'}
 
   maath@0.10.8:
     resolution: {integrity: sha512-tRvbDF0Pgqz+9XUa4jjfgAQ8/aPKmQdWXilFu2tMy4GWj4NOsx99HlULO4IeREfbO3a0sA145DZYyvXPkybm0g==}
@@ -8160,6 +8173,8 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/luxon@3.6.2': {}
+
   '@types/mdast@4.0.4':
     dependencies:
       '@types/unist': 3.0.3
@@ -10501,6 +10516,8 @@ snapshots:
   lucide-react@0.376.0(react@18.3.1):
     dependencies:
       react: 18.3.1
+
+  luxon@3.6.1: {}
 
   maath@0.10.8(@types/three@0.169.0)(three@0.169.0):
     dependencies:

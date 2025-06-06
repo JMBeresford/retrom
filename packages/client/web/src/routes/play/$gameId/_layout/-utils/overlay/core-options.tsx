@@ -2,21 +2,20 @@ import {
   ConfigSelect,
   ConfigSelectItem,
 } from "@/components/fullscreen/menubar/config-inputs/select";
-import { MenuItem } from "@/components/menubar";
 import {
   CoreOption,
   useCoreOptions,
 } from "@/providers/emulator-js/core-options";
 import { memo, useState } from "react";
+import { OverlayMenuItem } from ".";
 
-export const coreOptions: MenuItem = {
+export const coreOptions: OverlayMenuItem = {
   label: "Core Options",
-  items: [{ Render: <CoreOptions /> }],
+  items: [{ Render: CoreOptions }],
 };
 
 function CoreOptions() {
   const { coreOptions } = useCoreOptions();
-  console.log({ coreOptions });
 
   return (
     <>

@@ -6,6 +6,7 @@ import { LibraryServiceDefinition } from "@retrom/codegen/retrom/services/librar
 import { ClientServiceDefinition } from "@retrom/codegen/retrom/services/client-service";
 import { JobServiceDefinition } from "@retrom/codegen/retrom/services/job-service";
 import { ServerServiceDefinition } from "@retrom/codegen/retrom/services/server-service";
+import { SavesServiceDefinition } from "@retrom/codegen/retrom/services/saves-service";
 import { FileExplorerServiceDefinition } from "@retrom/codegen/retrom/services/file-explorer-service";
 import { createClient, createChannel } from "nice-grpc-web";
 
@@ -20,6 +21,7 @@ export class RetromClient {
   readonly serverClient;
   readonly jobClient;
   readonly fileExplorerClient;
+  readonly savesClient;
 
   constructor(host: string) {
     if (host.endsWith("/")) {
@@ -56,6 +58,11 @@ export class RetromClient {
 
     this.serverClient = createClient(
       ServerServiceDefinition,
+      createChannel(host),
+    );
+
+    this.savesClient = createClient(
+      SavesServiceDefinition,
       createChannel(host),
     );
 

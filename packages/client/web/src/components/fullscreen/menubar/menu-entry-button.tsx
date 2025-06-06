@@ -3,11 +3,12 @@ import { cn } from "@/lib/utils";
 import { HotkeyHandlers } from "@/providers/hotkeys";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useFocusable, UseFocusableConfig } from "../focus-container";
-import { forwardRef, useId, useImperativeHandle } from "react";
+import { forwardRef, ReactNode, useId, useImperativeHandle } from "react";
 
-type Props = ButtonProps & { handlers?: HotkeyHandlers } & {
-  label?: string;
+type Props = Omit<ButtonProps, "size"> & { handlers?: HotkeyHandlers } & {
+  label?: ReactNode;
   focusOpts?: UseFocusableConfig<HTMLButtonElement>;
+  size?: "sm";
 };
 
 export const MenuEntryButton = forwardRef<HTMLButtonElement, Props>(
@@ -21,6 +22,7 @@ export const MenuEntryButton = forwardRef<HTMLButtonElement, Props>(
       focusOpts,
       onFocus,
       label,
+      size,
       ...rest
     } = props;
 
@@ -56,6 +58,7 @@ export const MenuEntryButton = forwardRef<HTMLButtonElement, Props>(
           id={id}
           variant="ghost"
           type={type}
+          size={size}
           {...rest}
           onFocus={(e) => {
             if (!focused && e.target === e.currentTarget) {
@@ -65,7 +68,8 @@ export const MenuEntryButton = forwardRef<HTMLButtonElement, Props>(
             onFocus?.(e);
           }}
           className={cn(
-            "text-base font-semibold relative py-4 sm:py-3 pl-4 pr-8 h-max overflow-hidden w-full",
+            size === "sm" ? "text-sm py-1" : "text-base py-4 sm:py-3",
+            "font-semibold relative pl-4 pr-8 h-max overflow-hidden w-full",
             "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-offset-transparent",
             "justify-start focus-hover:bg-secondary/30 rounded-none transition-all",
             "text-foreground focus-hover:text-accent-text",

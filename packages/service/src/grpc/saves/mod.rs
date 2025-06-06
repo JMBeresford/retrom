@@ -2,18 +2,20 @@ use crate::config::ServerConfigManager;
 use diesel::query_dsl::methods::FindDsl;
 use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::{
-    get_save_files_response::SaveFiles, saves_service_server::SavesService,
-    update_save_files_response::NotUpdatedSaveFiles, DeleteSaveFilesRequest,
-    DeleteSaveFilesResponse, DeleteSaveStatesRequest, DeleteSaveStatesResponse, Game,
-    GetSaveFilesRequest, GetSaveFilesResponse, GetSaveStatesResponse,
-    RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
-    RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, StatSaveFilesRequest,
-    StatSaveFilesResponse, StatSaveStatesRequest, StatSaveStatesResponse, UpdateSaveFilesRequest,
-    UpdateSaveFilesResponse, UpdateSaveStatesRequest, UpdateSaveStatesResponse,
+    saves_service_server::SavesService, DeleteSaveFilesRequest, DeleteSaveFilesResponse,
+    DeleteSaveStatesRequest, DeleteSaveStatesResponse, Game, GetSaveFilesRequest,
+    GetSaveFilesResponse, GetSaveStatesResponse, RestoreSaveFilesFromBackupRequest,
+    RestoreSaveFilesFromBackupResponse, RestoreSaveStatesFromBackupRequest,
+    RestoreSaveStatesFromBackupResponse, SaveFiles, StatSaveFilesRequest, StatSaveFilesResponse,
+    StatSaveStatesRequest, StatSaveStatesResponse, UpdateSaveFilesRequest, UpdateSaveFilesResponse,
+    UpdateSaveStatesRequest, UpdateSaveStatesResponse,
 };
 use retrom_db::Pool;
 use save_file_manager::{GameSaveFileManager, SaveFileManager};
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tracing::instrument;
 
 pub mod save_file_manager;
@@ -70,10 +72,12 @@ impl SavesService for SavesServiceHandlers {
 
             let save_file_manager = GameSaveFileManager::new(game, db_pool, config);
 
-            let save_files = save_file_manager
+            let mut save_files = save_file_manager
                 .resolve_save_files(include_backups)
                 .await
                 .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+            save_files.retain(|sf| sf.emulator_id == selector.emulator_id);
 
             response.save_files_stats.extend(save_files);
         }
@@ -137,8 +141,19 @@ impl SavesService for SavesServiceHandlers {
                     files: vec![],
                 };
 
+                let save_dir = save_file_manager
+                    .get_saves_dir(emulator_id)
+                    .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
                 for file_stat in save_file_stat.file_stats.into_iter() {
-                    let file_path = PathBuf::from(&file_stat.path);
+                    let relative_path = PathBuf::from(&file_stat.path);
+                    if relative_path.is_absolute() {
+                        return Err(tonic::Status::invalid_argument(
+                            "File path must be relative",
+                        ));
+                    }
+
+                    let file_path = save_dir.join(&relative_path);
                     if !file_path.is_file() {
                         continue;
                     }
@@ -174,7 +189,7 @@ impl SavesService for SavesServiceHandlers {
         let request = request.into_inner();
         let selectors = request.save_files_selectors;
 
-        let mut response = UpdateSaveFilesResponse::default();
+        let response = UpdateSaveFilesResponse::default();
 
         for selector in selectors {
             let config = self.config_manager.clone();
@@ -206,41 +221,16 @@ impl SavesService for SavesServiceHandlers {
 
             let save_file_manager = GameSaveFileManager::new(game, db_pool, config);
 
-            let current_saves = save_file_manager
-                .resolve_save_files(false)
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
             let save = SaveFiles {
                 game_id,
                 emulator_id: Some(emulator_id),
                 files: selector.files,
             };
 
-            let updated = save_file_manager
+            save_file_manager
                 .update_save_files(save, false)
                 .await
                 .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let mut not_updated = NotUpdatedSaveFiles {
-                game_id,
-                emulator_id: Some(emulator_id),
-                file_stats: vec![],
-                ..Default::default()
-            };
-
-            for file_stat in current_saves
-                .into_iter()
-                .filter(|s| s.emulator_id == Some(emulator_id))
-                .flat_map(|s| s.file_stats)
-            {
-                if !updated.file_stats.iter().any(|f| f.path == file_stat.path) {
-                    not_updated.file_stats.push(file_stat);
-                }
-            }
-
-            response.save_files_updated.push(updated);
-            response.save_files_not_updated.push(not_updated);
         }
 
         Ok(tonic::Response::new(response))
@@ -257,7 +247,40 @@ impl SavesService for SavesServiceHandlers {
         &self,
         request: tonic::Request<DeleteSaveFilesRequest>,
     ) -> std::result::Result<tonic::Response<DeleteSaveFilesResponse>, tonic::Status> {
-        unimplemented!()
+        let request = request.into_inner();
+        let selectors = request.save_files_selectors;
+        let config = request.config;
+        let dry_run = config.as_ref().and_then(|c| c.dry_run).unwrap_or(false);
+
+        let res = DeleteSaveFilesResponse::default();
+        for selector in selectors {
+            let game_id = selector.game_id;
+            let pool = self.db_pool.clone();
+            let mut conn = pool
+                .get()
+                .await
+                .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+            let game = retrom_db::schema::games::table
+                .find(game_id)
+                .first::<Game>(&mut conn)
+                .await
+                .map_err(|e| {
+                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                })?;
+
+            drop(conn);
+
+            let save_file_manager =
+                GameSaveFileManager::new(game, self.db_pool.clone(), self.config_manager.clone());
+
+            save_file_manager
+                .delete_save_files(selector.emulator_id, dry_run)
+                .await
+                .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        }
+
+        Ok(tonic::Response::new(res))
     }
 
     async fn delete_save_states(
@@ -272,7 +295,94 @@ impl SavesService for SavesServiceHandlers {
         request: tonic::Request<RestoreSaveFilesFromBackupRequest>,
     ) -> std::result::Result<tonic::Response<RestoreSaveFilesFromBackupResponse>, tonic::Status>
     {
-        unimplemented!()
+        let request = request.into_inner();
+        let selectors = request.save_files_selectors;
+        let config = request.config;
+        let dry_run = config.as_ref().and_then(|c| c.dry_run).unwrap_or(false);
+        let reindex = config
+            .as_ref()
+            .and_then(|c| c.reindex_backups)
+            .unwrap_or(false);
+
+        let mut res = RestoreSaveFilesFromBackupResponse::default();
+        for selector in selectors {
+            let game_id = selector.game_id;
+            let emulator_id = selector.emulator_id;
+            let backup = match selector.backup {
+                Some(backup) => backup,
+                None => return Err(tonic::Status::invalid_argument("Backup must be provided")),
+            };
+
+            let pool = self.db_pool.clone();
+            let mut conn = pool
+                .get()
+                .await
+                .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+            let game = retrom_db::schema::games::table
+                .find(game_id)
+                .first::<Game>(&mut conn)
+                .await
+                .map_err(|e| {
+                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                })?;
+
+            drop(conn);
+
+            let save_file_manager =
+                GameSaveFileManager::new(game, self.db_pool.clone(), self.config_manager.clone());
+
+            save_file_manager
+                .restore_save_files_from_backup(backup, reindex, emulator_id, dry_run)
+                .await
+                .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+            let saves = save_file_manager
+                .resolve_save_files(false)
+                .await
+                .map_err(|e| tonic::Status::internal(e.to_string()))?
+                .into_iter()
+                .filter(|s| s.emulator_id == emulator_id)
+                .collect::<Vec<_>>();
+
+            let save = match saves.get(0) {
+                Some(save) => save.clone(),
+                None => {
+                    return Err(tonic::Status::internal(
+                        "No save files found after restoring backup",
+                    ));
+                }
+            };
+
+            let mut files = vec![];
+            let save_dir_path = PathBuf::from(&save.save_path);
+
+            for stat in save.file_stats {
+                let path = save_dir_path.join(&stat.path);
+                if !path.is_file() {
+                    continue;
+                } else {
+                    tracing::info!("Skipping non-file path: {}", path.display());
+                }
+
+                let content = tokio::fs::read(&path)
+                    .await
+                    .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+                files.push(retrom_codegen::retrom::files::File {
+                    content,
+                    stat: Some(stat),
+                });
+            }
+
+            res.save_files.push(SaveFiles {
+                game_id,
+                emulator_id,
+                files,
+            });
+        }
+
+        Ok(tonic::Response::new(res))
     }
 
     async fn restore_save_states_from_backup(
