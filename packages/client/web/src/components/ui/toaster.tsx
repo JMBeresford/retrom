@@ -18,6 +18,9 @@ const TitleIcon: Record<
   default: ({ className, ...props }: LucideProps) => (
     <InfoIcon {...props} className={cn(className, "text-primary")} />
   ),
+  warning: ({ className, ...props }: LucideProps) => (
+    <AlertCircleIcon {...props} className={cn(className, "text-yellow-400")} />
+  ),
   destructive: ({ className, ...props }: LucideProps) => (
     <AlertCircleIcon
       {...props}

@@ -15,6 +15,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { TooltipArrow } from "@radix-ui/react-tooltip";
+import { toast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
 
 export type EmuJsFrameEvent =
   | "exit"
@@ -40,6 +42,27 @@ function FrameComponent() {
   const { overlay } = ParentRoute.useSearch();
   const [showMenuBtn, setShowMenuBtn] = useState(false);
   const pointerMoveTimeout = useRef<number>();
+  const [_disclaimer] = useState(
+    toast({
+      title: "Disclaimer",
+      variant: "warning",
+      id: "emulatorjs-disclaimer",
+      duration: 5000,
+      description:
+        "In-browser emulation is experimental, please report any issues you encounter.",
+      action: (
+        <a
+          href="https://github.com/JMBeresford/retrom/issues/new/choose"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <Button variant="ghost" className="border">
+            Report
+          </Button>
+        </a>
+      ),
+    }),
+  );
 
   return (
     <div
