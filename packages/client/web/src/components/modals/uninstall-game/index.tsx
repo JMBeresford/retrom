@@ -54,7 +54,7 @@ export function UninstallGameModal() {
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="secondary">
-              <Link    to="." search={{ uninstallGameModal: { open: false } }}>
+              <Link to="." search={{ uninstallGameModal: { open: false } }}>
                 Cancel
               </Link>
             </Button>

@@ -160,7 +160,7 @@ export function Actions() {
           <DropdownMenuSeparator />
 
           <DropdownMenuItem asChild>
-            <Link    to="." search={{ updateMetadataModal: { open: true } }}>
+            <Link to="." search={{ updateMetadataModal: { open: true } }}>
               Edit
             </Link>
           </DropdownMenuItem>
@@ -174,7 +174,7 @@ export function Actions() {
 
           {installationState === InstallationStatus.INSTALLED && (
             <DropdownMenuItem asChild>
-              <Link    to="." search={{ uninstallGameModal: { open: true } }}>
+              <Link to="." search={{ uninstallGameModal: { open: true } }}>
                 Uninstall
               </Link>
             </DropdownMenuItem>
@@ -183,7 +183,7 @@ export function Actions() {
           <DropdownMenuSeparator />
 
           <DropdownMenuItem asChild>
-            <Link   
+            <Link
               to="."
               className="text-destructive-text"
               search={{ deleteGameModal: { open: true } }}

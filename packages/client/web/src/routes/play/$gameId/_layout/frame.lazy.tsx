@@ -72,7 +72,7 @@ function FrameComponent() {
           showMenuBtn ? "translate-x-0" : "-translate-x-full delay-200",
         )}
       >
-        <Link    to="." search={(prev) => ({ ...prev, overlay: true })}>
+        <Link to="." search={(prev) => ({ ...prev, overlay: true })}>
           <HotkeyButton hotkey="MENU">Menu</HotkeyButton>
         </Link>
       </div>

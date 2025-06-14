@@ -235,7 +235,7 @@ function DefaultEmulatorProfiles(props: {
           <p className="max-w-[60ch] text-pretty">
             If you are not seeing what you expect here, make sure you have
             configured your{" "}
-            <Link   
+            <Link
               className="text-accent-text underline"
               to="."
               search={(prev) => ({

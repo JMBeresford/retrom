@@ -124,7 +124,7 @@ function GroupEntry(props: { group: Group }) {
   }, [active, group]);
 
   return (
-    <Link   
+    <Link
       ref={ref}
       className={cn(
         "text-2xl font-medium px-4 transition-opacity uppercase",
