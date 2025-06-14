@@ -4,5 +4,9 @@ import { MenuItem } from "..";
 export const setupMenuItem: MenuItem = {
   label: "Setup",
   appContext: "desktop",
-  Render: <Link search={{ setupModal: { open: true } }}>Setup</Link>,
+  Render: (
+    <Link to="." search={{ setupModal: { open: true } }}>
+      Setup
+    </Link>
+  ),
 };

@@ -14,7 +14,7 @@ import { HotkeyHandlers } from "@/providers/hotkeys";
 import { MenuEntryButton } from "./menu-entry-button";
 import { HotkeyButton } from "../hotkey-button";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { FocusableElement, FocusContainer } from "../focus-container";
+import { FocusContainer } from "../focus-container";
 
 declare global {
   export interface HotkeyZones {
@@ -48,41 +48,49 @@ export function ExitFullscreen(props: ComponentProps<typeof SheetTrigger>) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <FocusableElement opts={{ focusKey: "exit-fullscreen-menu-open" }}>
-          <MenuEntryButton {...props}>Exit fullscreen</MenuEntryButton>
-        </FocusableElement>
+        <MenuEntryButton id="exit-fullscreen-menu-open" {...props}>
+          Exit fullscreen
+        </MenuEntryButton>
       </SheetTrigger>
 
       <SheetContent>
-        <FocusContainer
-          opts={{ focusKey: "exit-fullscreen-menu", isFocusBoundary: true }}
-        >
-          <HotkeyLayer id="exit-fullscreen-menu" handlers={handlers}>
-            <SheetHeader>
-              <SheetTitle>Exit Fullscreen</SheetTitle>
-              <SheetDescription>
-                Exit fullscreen mode and return to the desktop interface
-              </SheetDescription>
-            </SheetHeader>
+        <HotkeyLayer id="exit-fullscreen-menu" handlers={handlers}>
+          <SheetHeader>
+            <SheetTitle>Exit Fullscreen</SheetTitle>
+            <SheetDescription>Return to the desktop interface</SheetDescription>
+          </SheetHeader>
 
-            <FocusableElement
-              initialFocus
-              opts={{ focusKey: "exit-fullscreen-trap" }}
-            >
-              <button className="opacity-0"></button>
-            </FocusableElement>
-
-            <SheetFooter>
+          <FocusContainer
+            opts={{
+              focusKey: "exit-fullscreen-menu",
+              isFocusBoundary: true,
+              initialFocus: true,
+            }}
+            className="w-full"
+          >
+            <SheetFooter className="px-2 justify-between">
               <SheetClose asChild>
-                <HotkeyButton hotkey="BACK">back</HotkeyButton>
+                <HotkeyButton
+                  className="w-1/2"
+                  focusOpts={{ focusKey: "exit-fullscreen-menu-close" }}
+                  hotkey="BACK"
+                >
+                  back
+                </HotkeyButton>
               </SheetClose>
 
-              <HotkeyButton type="submit" hotkey="MENU" onClick={exit}>
+              <HotkeyButton
+                focusOpts={{ focusKey: "exit-fullscreen-menu-confirm" }}
+                className="w-1/2"
+                type="submit"
+                hotkey="MENU"
+                onClick={exit}
+              >
                 Exit
               </HotkeyButton>
             </SheetFooter>
-          </HotkeyLayer>
-        </FocusContainer>
+          </FocusContainer>
+        </HotkeyLayer>
       </SheetContent>
     </Sheet>
   );

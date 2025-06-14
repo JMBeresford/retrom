@@ -1,7 +1,7 @@
 import {
   GetDefaultEmulatorProfilesRequestSchema,
   GetDefaultEmulatorProfilesResponse,
-} from "@retrom/codegen/retrom/services_pb";
+} from "@retrom/codegen/retrom/services/emulator-service_pb";
 import { useConfig } from "@/providers/config";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,7 +26,7 @@ export function useDefaultEmulatorProfiles<
   const retromClient = useRetromClient();
 
   const headers = useMemo(() => {
-    const clientId = clientInfo?.id.toString() ?? "-1";
+    const clientId = clientInfo?.id?.toString() ?? "-1";
     const meta = new Headers({ "x-client-id": clientId });
 
     return meta;

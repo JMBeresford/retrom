@@ -1,4 +1,4 @@
-import { UpdateGameFilesRequestSchema } from "@retrom/codegen/retrom/services_pb";
+import { UpdateGameFilesRequestSchema } from "@retrom/codegen/retrom/services/game-service_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageInitShape } from "@bufbuild/protobuf";

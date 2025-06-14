@@ -5,6 +5,8 @@ import {
 } from "react";
 import { HotkeyZone, useHotkeyLayerContext } from "./layers";
 import { GAMEPAD_BUTTON_EVENT, GamepadButtonEvent } from "../gamepad/event";
+import { useInputDeviceContext } from "../input-device";
+import { useHotkeyMapping } from "./mapping";
 
 export type Hotkey = (typeof Hotkey)[number];
 export const Hotkey = [
@@ -20,54 +22,17 @@ export const Hotkey = [
   "PAGE_RIGHT",
 ] as const;
 
-export const HotkeyToKeyboardHotkey: Record<Hotkey, KeyboardEvent["key"]> = {
-  ACCEPT: "f",
-  BACK: "b",
-  MENU: "m",
-  OPTION: "t",
-  UP: "k",
-  LEFT: "h",
-  DOWN: "j",
-  RIGHT: "l",
-  PAGE_LEFT: "q",
-  PAGE_RIGHT: "e",
-} as const;
-
-export const KeyboardHotkeyToHotkey: Record<KeyboardEvent["key"], Hotkey> =
-  Object.fromEntries(
-    Object.entries(HotkeyToKeyboardHotkey).map(([key, value]) => [
-      value,
-      key as Hotkey,
-    ]),
-  );
-
-export const HotkeyToGamepadButton: Record<Hotkey, number> = {
-  ACCEPT: 0,
-  BACK: 1,
-  MENU: 9,
-  OPTION: 8,
-  UP: 12,
-  DOWN: 13,
-  LEFT: 14,
-  RIGHT: 15,
-  PAGE_LEFT: 4,
-  PAGE_RIGHT: 5,
-} as const;
-
-export const GamepadButtonToHotkey: Record<number, Hotkey> = Object.fromEntries(
-  Object.entries(HotkeyToGamepadButton).map(([key, value]) => [
-    value,
-    key as Hotkey,
-  ]),
-);
-
 export type HotkeyHandler = (
   event?: KeyboardEvent | ReactKeyboardEvent | GamepadButtonEvent,
 ) => unknown;
 
 export type HotkeyHandlerInfo = {
-  handler: HotkeyHandler | undefined;
+  handler?: HotkeyHandler | undefined;
   zone?: HotkeyZone;
+  actionBar?: {
+    label?: string;
+    position?: "left" | "right";
+  };
 };
 
 export type HotkeyHandlers = Partial<Record<Hotkey, HotkeyHandlerInfo>>;
@@ -78,6 +43,8 @@ export function useHotkeys(opts: {
 }) {
   const { handlers, enabled = true } = opts;
   const layerContext = useHotkeyLayerContext();
+  const { keyboardToHotkey, gamepadToHotkey } = useHotkeyMapping();
+  const [_, setInputDevice] = useInputDeviceContext();
 
   const handleHotkey = useCallback(
     (
@@ -96,9 +63,13 @@ export function useHotkeys(opts: {
         return;
       }
 
+      if (!(event instanceof GamepadButtonEvent)) {
+        setInputDevice("hotkeys");
+      }
+
       handler(event);
     },
-    [handlers, layerContext],
+    [handlers, layerContext, setInputDevice],
   );
 
   const onKeyDown = useCallback(
@@ -108,11 +79,11 @@ export function useHotkeys(opts: {
       }
 
       const pressed = event.key;
-      const hotkey = KeyboardHotkeyToHotkey[pressed];
+      const hotkey = keyboardToHotkey[pressed];
 
       handleHotkey(hotkey, event);
     },
-    [enabled, handleHotkey],
+    [enabled, handleHotkey, keyboardToHotkey],
   );
 
   const onGamepadButton = useCallback(
@@ -124,10 +95,10 @@ export function useHotkeys(opts: {
         return;
       }
 
-      const hotkey = GamepadButtonToHotkey[button];
+      const hotkey = gamepadToHotkey[button];
       handleHotkey(hotkey, event);
     },
-    [enabled, handleHotkey],
+    [enabled, handleHotkey, gamepadToHotkey],
   );
 
   useEffect(() => {

@@ -263,6 +263,7 @@ export function LibrariesConfig(props: {
         <Button
           onClick={() =>
             navigate({
+              to: ".",
               search: (prev) => ({ ...prev, configModal: undefined }),
             })
           }

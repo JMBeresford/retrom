@@ -1,8 +1,8 @@
 import { useToast } from "@/components/ui/use-toast";
-import { UpdateGameMetadataRequestSchema } from "@retrom/codegen/retrom/services_pb";
+import { UpdateGameMetadataRequestSchema } from "@retrom/codegen/retrom/services/metadata-service_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MessageInitShape } from "@bufbuild/protobuf";
+import { create, MessageInitShape } from "@bufbuild/protobuf";
 
 export function useUpdateGameMetadata() {
   const queryClient = useQueryClient();
@@ -21,9 +21,10 @@ export function useUpdateGameMetadata() {
     },
     mutationFn: async (
       req: MessageInitShape<typeof UpdateGameMetadataRequestSchema>,
-    ) => {
-      return await retromClient.metadataClient.updateGameMetadata(req);
-    },
+    ) =>
+      retromClient.metadataClient.updateGameMetadata(
+        create(UpdateGameMetadataRequestSchema, req),
+      ),
     onSuccess: () =>
       queryClient.invalidateQueries({
         predicate: (query) =>

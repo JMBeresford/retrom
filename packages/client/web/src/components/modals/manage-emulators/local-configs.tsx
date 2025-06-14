@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import {
   Emulator,
   LocalEmulatorConfig,
+  LocalEmulatorConfigJson,
 } from "@retrom/codegen/retrom/models/emulators_pb";
 import { cn } from "@/lib/utils";
 import { useCreateLocalEmulatorConfigs } from "@/mutations/useCreateLocalEmulatorConfig";
@@ -24,7 +25,7 @@ const configSchema = z.object({
 }) satisfies z.ZodObject<
   Record<
     keyof Omit<
-      LocalEmulatorConfig,
+      LocalEmulatorConfigJson,
       "createdAt" | "updatedAt" | "id" | "emulatorId" | "clientId" | "nickname"
     >,
     z.ZodType
@@ -48,19 +49,21 @@ export function LocalConfigs(props: {
           <Label>Executable Path</Label>
         </div>
 
-        {props.emulators.map((emulator) => {
-          const config = props.configs.find(
-            (c) => c.emulatorId === emulator.id,
-          );
+        {props.emulators
+          .filter((e) => !e.builtIn)
+          .map((emulator) => {
+            const config = props.configs.find(
+              (c) => c.emulatorId === emulator.id,
+            );
 
-          return (
-            <LocalConfigRow
-              key={emulator.id}
-              emulator={emulator}
-              config={config}
-            />
-          );
-        })}
+            return (
+              <LocalConfigRow
+                key={emulator.id}
+                emulator={emulator}
+                config={config}
+              />
+            );
+          })}
       </div>
 
       <DialogFooter className="border-none mt-8">

@@ -1,7 +1,7 @@
 import {
   GetClientsRequestSchema,
   GetClientsResponse,
-} from "@retrom/codegen/retrom/services_pb";
+} from "@retrom/codegen/retrom/services/client-service_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageInitShape } from "@bufbuild/protobuf";

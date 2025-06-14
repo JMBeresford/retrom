@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetIgdbGameSearchResultsRequest } from "@retrom/codegen/retrom/services_pb";
+import { GetIgdbGameSearchResultsRequest } from "@retrom/codegen/retrom/services/metadata-service_pb";
 import {
   Select,
   SelectContent,
@@ -175,6 +175,7 @@ export function IgdbTab() {
       });
     } finally {
       void navigate({
+        to: ".",
         search: (prev) => ({ ...prev, updateMetadataModal: undefined }),
       });
     }

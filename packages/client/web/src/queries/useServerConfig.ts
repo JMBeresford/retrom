@@ -1,7 +1,7 @@
 import {
   GetServerConfigRequestSchema,
   type GetServerConfigResponse,
-} from "@retrom/codegen/retrom/services_pb";
+} from "@retrom/codegen/retrom/services/server-service_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { MessageInitShape } from "@bufbuild/protobuf";

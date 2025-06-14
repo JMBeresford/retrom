@@ -10,27 +10,31 @@ import {
 import { GamepadButtonEvent } from "./event";
 import { ControllerMapping, getControllerMapping } from "./controller-ids";
 
-export type GamepadContext = {
+export interface RetromGamepad {
+  gamepad: Gamepad;
   controllerType: ControllerMapping;
-  gamepads: Gamepad[] | undefined;
+}
+
+export type GamepadContext = {
+  gamepads: RetromGamepad[] | undefined;
 };
 
 const context = createContext<GamepadContext | undefined>(undefined);
 
 export function GamepadProvider(props: PropsWithChildren) {
-  const [gamepads, setGamepads] = useState<Gamepad[]>([]);
+  const [gamepads, setGamepads] = useState<RetromGamepad[]>([]);
   const [inputCache, setInputCache] = useState<Map<number, boolean[]>>(
     new Map(),
   );
 
   const { toast } = useToast();
-  const [controllerMapping, setControllerMapping] =
-    useState<ControllerMapping>("xbox");
 
   const onDisconnect = useCallback(
     (e: GamepadEvent) => {
-      if (gamepads.some((pad) => pad.id === e.gamepad.id)) {
-        setGamepads((prev) => prev.filter((pad) => pad.id !== e.gamepad.id));
+      if (gamepads.some(({ gamepad }) => gamepad.id === e.gamepad.id)) {
+        setGamepads((prev) =>
+          prev.filter(({ gamepad }) => gamepad.id !== e.gamepad.id),
+        );
 
         const mapping = getControllerMapping(e.gamepad);
 
@@ -47,8 +51,12 @@ export function GamepadProvider(props: PropsWithChildren) {
     (e: GamepadEvent) => {
       const { buttons, index } = e.gamepad;
       const mapping = getControllerMapping(e.gamepad);
-      setControllerMapping(mapping);
-      setGamepads((prev) => [...prev, e.gamepad]);
+      const pad: RetromGamepad = {
+        gamepad: e.gamepad,
+        controllerType: mapping,
+      };
+
+      setGamepads((prev) => [...prev, pad]);
       const inputs = buttons.map((b) => b.pressed);
       setInputCache((map) => map.set(index, inputs));
 
@@ -66,7 +74,7 @@ export function GamepadProvider(props: PropsWithChildren) {
     const node = document.activeElement;
 
     for (const connectedPad of gamepads) {
-      const pad = navigator.getGamepads().at(connectedPad.index);
+      const pad = navigator.getGamepads().at(connectedPad.gamepad.index);
 
       if (pad) {
         const { buttons, index } = pad;
@@ -89,8 +97,6 @@ export function GamepadProvider(props: PropsWithChildren) {
         if (changed) {
           const inputs = buttons.map((b) => b.pressed);
           setInputCache((map) => map.set(index, inputs));
-          const mapping = getControllerMapping(pad);
-          setControllerMapping(mapping);
         }
       }
     }
@@ -116,12 +122,7 @@ export function GamepadProvider(props: PropsWithChildren) {
     };
   }, [onDisconnect, onConnect, pollGamepad]);
 
-  return (
-    <context.Provider
-      value={{ gamepads, controllerType: controllerMapping }}
-      {...props}
-    />
-  );
+  return <context.Provider value={{ gamepads }} {...props} />;
 }
 
 export function useGamepadContext() {

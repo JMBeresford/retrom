@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package retrom.files;
+
+import "google/protobuf/timestamp.proto";
+import "retrom/file-explorer.proto";
+
+message FileStat {
+  /* Relative path to the file from the public directory */
+  string path = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+  FilesystemNodeType node_type = 4;
+  optional uint64 byte_size = 5;
+}
+
+message File {
+  FileStat stat = 1;
+  bytes content = 2;
+}

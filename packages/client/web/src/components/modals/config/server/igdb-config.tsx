@@ -107,6 +107,7 @@ export function IgdbConfig(props: {
             <Button
               onClick={() =>
                 void navigate({
+                  to: ".",
                   search: (prev) => ({ ...prev, configModal: undefined }),
                 })
               }

@@ -41,7 +41,10 @@ export const PlayGameButton = forwardRef(
       }
 
       if (shouldAddEmulator) {
-        return navigate({ search: { manageEmulatorsModal: { open: true } } });
+        return navigate({
+          to: ".",
+          search: { manageEmulatorsModal: { open: true } },
+        });
       }
 
       toast({

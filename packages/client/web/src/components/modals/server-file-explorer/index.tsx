@@ -9,7 +9,7 @@ import {
 import { Fragment, ReactElement, useCallback, useMemo, useState } from "react";
 import { Route as RootRoute } from "@/routes/__root";
 import { useServerFilesystem } from "@/queries/useServerFilesystem";
-import { GetFilesystemNodeRequest } from "@retrom/codegen/retrom/services_pb";
+import { GetFilesystemNodeRequest } from "@retrom/codegen/retrom/services/file-explorer-service_pb";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -43,6 +43,7 @@ declare global {
   namespace RetromModals {
     export interface ModalActions {
       serverFileExplorerModal?: {
+        open?: boolean;
         title: string;
         description: string;
         onClose: (path: string | undefined) => void;

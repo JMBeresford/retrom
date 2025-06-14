@@ -14,7 +14,7 @@ import { HotkeyButton } from "../hotkey-button";
 import { useState } from "react";
 import { useHotkeys } from "@/providers/hotkeys";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { FocusableElement, FocusContainer } from "../focus-container";
+import { FocusContainer, useFocusable } from "../focus-container";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EllipsisVerticalIcon } from "lucide-react";
@@ -29,6 +29,9 @@ declare global {
 
 export function GameActions() {
   const [open, setOpen] = useState(false);
+  const { ref } = useFocusable<HTMLButtonElement>({
+    focusKey: "game-actions-open",
+  });
 
   useHotkeys({
     handlers: {
@@ -46,17 +49,16 @@ export function GameActions() {
         handlers={{ ACCEPT: { handler: () => setOpen(true) } }}
       >
         <SheetTrigger asChild>
-          <FocusableElement opts={{ focusKey: "game-actions-open" }}>
-            <Button
-              variant="accent"
-              className={cn(
-                "h-full rounded-none px-2 focus:ring-2 focus:ring-ring",
-                "opacity-80 focus-hover:opacity-100 transition-all",
-              )}
-            >
-              <EllipsisVerticalIcon size={28} />
-            </Button>
-          </FocusableElement>
+          <Button
+            ref={ref}
+            variant="accent"
+            className={cn(
+              "h-full rounded-none px-2 focus:ring-2 focus:ring-ring",
+              "opacity-80 focus-hover:opacity-100 transition-all",
+            )}
+          >
+            <EllipsisVerticalIcon size={28} />
+          </Button>
         </SheetTrigger>
       </HotkeyLayer>
 
@@ -72,8 +74,9 @@ export function GameActions() {
           }}
         >
           <FocusContainer
-            initialFocus
+            className="flex flex-col h-full"
             opts={{
+              initialFocus: true,
               focusKey: "game-actions",
               isFocusBoundary: true,
               forceFocus: true,

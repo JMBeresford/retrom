@@ -1,170 +1,106 @@
-import {
-  createRootRoute,
-  Navigate,
-  Outlet,
-  useLocation,
-} from "@tanstack/react-router";
-import { ConfigProvider, useConfigStore } from "../providers/config";
+import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { ConfigProvider } from "../providers/config";
 import { RetromClientProvider } from "../providers/retrom-client";
 import { QueryClientProvider } from "../providers/query-client";
 import { Prompts } from "../components/prompts";
 import { Toaster } from "../components/ui/toaster";
-import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import { z } from "zod";
+import { InputDeviceProvider } from "@/providers/input-device";
 
-const modalsSearchSchema = z.object({
-  configModal: z
-    .object({
-      open: z.boolean().catch(false),
-      tab: z.enum(["server", "client"]).catch("server"),
-    })
-    .optional(),
-  updateLibraryModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  cleanLibraryModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  matchPlatformsModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  defaultProfilesModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  downloadMetadataModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  deleteLibraryModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  manageEmulatorsModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  manageEmulatorProfilesModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  setupModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  checkForUpdateModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  versionInfoModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  serverFileExplorerModal: z
-    .object({
-      open: z.boolean().catch(false),
-      title: z.string().optional().catch(undefined),
-      description: z.string().optional().catch(undefined),
-    })
-    .optional(),
-  confirmModal: z
-    .object({
-      open: z.boolean().catch(false),
-      title: z.string().optional().catch(undefined),
-      description: z.string().optional().catch(undefined),
-    })
-    .optional(),
-  deletePlatformModal: z
-    .object({
-      open: z.boolean().catch(false),
-      title: z.string().optional().catch(undefined),
-      description: z.string().optional().catch(undefined),
+const modalsSearchSchema = z
+  .object({
+    configModal: z.object({
+      open: z.boolean().default(false),
+      tab: z.enum(["server", "client"]).default("server"),
+    }),
+    updateLibraryModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    cleanLibraryModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    matchPlatformsModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    defaultProfilesModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    downloadMetadataModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    deleteLibraryModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    manageEmulatorsModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    manageEmulatorProfilesModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    setupModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    checkForUpdateModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    versionInfoModal: z.object({
+      open: z.boolean().default(false),
+    }),
+    serverFileExplorerModal: z.object({
+      open: z.boolean().default(false),
+      title: z.string().optional(),
+      description: z.string().optional(),
+    }),
+    confirmModal: z.object({
+      open: z.boolean().default(false),
+      title: z.string().optional(),
+      description: z.string().optional(),
+    }),
+    deletePlatformModal: z.object({
+      open: z.boolean().default(false),
+      title: z.string().optional(),
+      description: z.string().optional(),
       platform: z.object({
         id: z.number(),
         name: z.string(),
         thirdParty: z.boolean(),
       }),
-    })
-    .optional()
-    .catch(undefined),
-  updatePlatformMetadataModal: z
-    .object({
+    }),
+    mobileSidebar: z.object({
+      open: z.boolean(),
+    }),
+    mobileMenu: z.object({
+      open: z.boolean(),
+    }),
+    exitModal: z.object({ open: z.boolean() }),
+    updatePlatformMetadataModal: z.object({
       open: z.boolean(),
       id: z.number(),
-    })
-    .optional()
-    .catch(undefined),
-  mobileSidebar: z
-    .object({
-      open: z.boolean(),
-    })
-    .optional()
-    .catch(undefined),
-  mobileMenu: z
-    .object({
-      open: z.boolean(),
-    })
-    .optional()
-    .catch(undefined),
-  exitModal: z.object({ open: z.boolean() }).optional().catch(undefined),
-});
+    }),
+  })
+  .partial();
 
 export const Route = createRootRoute({
-  validateSearch: zodSearchValidator(modalsSearchSchema),
+  validateSearch: zodValidator(modalsSearchSchema),
   component: RootComponent,
   errorComponent: (opts) => <div>Error: {String(opts.error)}</div>,
 });
 
 function RootComponent() {
   return (
-    <>
-      <QueryClientProvider>
-        <ConfigProvider>
-          <RetromClientProvider>
-            <HandleLayoutRedirect />
+    <InputDeviceProvider>
+      <ConfigProvider>
+        <RetromClientProvider>
+          <QueryClientProvider>
             <Outlet />
 
             <Prompts />
             <Toaster />
-          </RetromClientProvider>
-        </ConfigProvider>
-      </QueryClientProvider>
-    </>
-  );
-}
-
-function HandleLayoutRedirect() {
-  const path = useLocation().pathname;
-  const fullscreenByDefault =
-    useConfigStore().getState().config?.interface?.fullscreenByDefault;
-
-  if (path !== "/") {
-    return <></>;
-  }
-
-  return (
-    <>
-      {fullscreenByDefault ? (
-        <Navigate to="/fullscreen" replace={true} />
-      ) : (
-        <Navigate to="/home" replace={true} />
-      )}
-
-      <Outlet />
-    </>
+            {/* <TanStackRouterDevtools /> */}
+          </QueryClientProvider>
+        </RetromClientProvider>
+      </ConfigProvider>
+    </InputDeviceProvider>
   );
 }

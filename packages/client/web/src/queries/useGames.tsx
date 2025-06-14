@@ -3,7 +3,7 @@ import { useToast } from "@/components/ui/use-toast";
 import {
   type GetGamesResponse,
   GetGamesRequestSchema,
-} from "@retrom/codegen/retrom/services_pb";
+} from "@retrom/codegen/retrom/services/game-service_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -42,6 +42,7 @@ export function useGames<T = GetGamesResponse>(opts: {
               altText="open update library modal"
               onClick={() =>
                 void navigate({
+                  to: ".",
                   search: (prev) => ({
                     ...prev,
                     updateLibraryModal: { open: true },

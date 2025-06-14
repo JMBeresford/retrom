@@ -3,29 +3,36 @@ import { Code } from "@/components/ui/code";
 import { cn } from "@/lib/utils";
 import { useGamepadContext } from "@/providers/gamepad";
 import { getButtonMapValue } from "@/providers/gamepad/maps";
-import {
-  Hotkey,
-  HotkeyToGamepadButton,
-  HotkeyToKeyboardHotkey,
-} from "@/providers/hotkeys";
+import { Hotkey } from "@/providers/hotkeys";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useInputDeviceContext } from "@/providers/input-device";
-import { ComponentProps, forwardRef, useImperativeHandle, useRef } from "react";
+import { ComponentProps, forwardRef, useImperativeHandle } from "react";
+import { useFocusable, UseFocusableConfig } from "../focus-container";
+import { useHotkeyMapping } from "@/providers/hotkeys/mapping";
 
 export const HotkeyButton = forwardRef<
   HTMLButtonElement,
-  ButtonProps & { hotkey: Hotkey }
+  ButtonProps & {
+    hotkey: Hotkey;
+    focusOpts?: UseFocusableConfig<HTMLButtonElement>;
+  }
 >((props, forwardedRef) => {
-  const ref = useRef<HTMLButtonElement>(null!);
-  useImperativeHandle(forwardedRef, () => ref.current);
-  const { children, className, hotkey, ...rest } = props;
+  const {
+    children,
+    className,
+    hotkey,
+    focusOpts = { focusable: false },
+    ...rest
+  } = props;
+  const { ref } = useFocusable<HTMLButtonElement>(focusOpts);
+  useImperativeHandle(forwardedRef, () => ref.current!);
 
   return (
     <HotkeyLayer
       id={props.id}
       handlers={{
         ACCEPT: {
-          handler: () => ref.current.click(),
+          handler: () => ref.current?.click(),
         },
       }}
     >
@@ -40,7 +47,7 @@ export const HotkeyButton = forwardRef<
         {...rest}
       >
         <HotkeyIcon hotkey={hotkey} />
-        <span className="font-semibold text-xl leading-none h-min uppercase">
+        <span className="font-medium text-base leading-none h-min uppercase">
           {children}
         </span>
       </Button>
@@ -52,16 +59,19 @@ export function HotkeyIcon(
   props: ComponentProps<typeof Code> & { hotkey: Hotkey },
 ) {
   const { hotkey, className, ...rest } = props;
-  const { controllerType } = useGamepadContext();
-  const keyboardHotkeyRender = HotkeyToKeyboardHotkey[hotkey];
-  const gamepadButton = HotkeyToGamepadButton[hotkey];
+  const gamepad = useGamepadContext().gamepads?.at(0);
+  const { hotkeyToKeyboard, hotkeyToGamepadButton } = useHotkeyMapping();
+  const keyboardHotkeyRender = hotkeyToKeyboard[hotkey];
+  const gamepadButton = hotkeyToGamepadButton[hotkey];
+
   const [inputDevice] = useInputDeviceContext();
 
   const usingGamepad = inputDevice === "gamepad";
 
-  const hotkeyRender = usingGamepad
-    ? getButtonMapValue(gamepadButton, controllerType)
-    : keyboardHotkeyRender;
+  const hotkeyRender =
+    usingGamepad && gamepad?.controllerType
+      ? getButtonMapValue(gamepadButton, gamepad.controllerType)
+      : keyboardHotkeyRender;
 
   return (
     <Code
@@ -69,8 +79,8 @@ export function HotkeyIcon(
       style={{ aspectRatio: usingGamepad ? "unset" : "1/1" }}
       className={cn(
         "uppercase shadow-[0_0_5px_2px_hsl(var(--accent)_/_0.8)]",
-        "grid place-items-center",
-        "text-lg leading-[0] bg-primary/15 p-[8px]",
+        "grid place-items-center font-normal",
+        "leading-[0] bg-primary/15 p-[6px]",
         inputDevice === "gamepad" && "rounded-full py-[12px] px-[8px]",
         className,
       )}

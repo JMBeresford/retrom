@@ -4,12 +4,10 @@ import {
   QueryClientProvider as QueryClientProviderImpl,
 } from "@tanstack/react-query";
 import { PropsWithChildren, useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
 import { ConnectError, Code } from "@connectrpc/connect";
+import { toast } from "@/components/ui/use-toast";
 
 export function QueryClientProvider(props: PropsWithChildren) {
-  const { toast } = useToast();
-
   const [queryClient] = useState(
     () =>
       new QueryClient({

@@ -17,7 +17,7 @@ thiserror = "1.0"
 tracing = { workspace = true }
 retrom-codegen = { workspace = true }
 tokio = { workspace = true }
-tauri-plugin-opener = "2.0.0"
+tauri-plugin-opener = { workspace = true }
 steamlocate = "2.0.0"
 notify = { workspace = true }
 

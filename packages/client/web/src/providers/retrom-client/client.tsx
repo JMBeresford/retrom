@@ -1,15 +1,14 @@
-import {
-  ClientService,
-  EmulatorService,
-  FileExplorerService,
-  GameService,
-  JobService,
-  LibraryService,
-  MetadataService,
-  PlatformService,
-  ServerService,
-} from "@retrom/codegen/retrom/services_pb";
 import { createClient } from "@connectrpc/connect";
+import { GameService } from "@retrom/codegen/retrom/services/game-service_pb";
+import { PlatformService } from "@retrom/codegen/retrom/services/platform-service_pb";
+import { EmulatorService } from "@retrom/codegen/retrom/services/emulator-service_pb";
+import { MetadataService } from "@retrom/codegen/retrom/services/metadata-service_pb";
+import { LibraryService } from "@retrom/codegen/retrom/services/library-service_pb";
+import { ClientService } from "@retrom/codegen/retrom/services/client-service_pb";
+import { ServerService } from "@retrom/codegen/retrom/services/server-service_pb";
+import { JobService } from "@retrom/codegen/retrom/services/job-service_pb";
+import { FileExplorerService } from "@retrom/codegen/retrom/services/file-explorer-service_pb";
+import { SavesService } from "@retrom/codegen/retrom/services/saves-service_pb";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
 
 export class RetromClient {
@@ -23,6 +22,7 @@ export class RetromClient {
   readonly serverClient;
   readonly jobClient;
   readonly fileExplorerClient;
+  readonly savesClient;
 
   constructor(host: string) {
     if (host.endsWith("/")) {
@@ -46,6 +46,8 @@ export class RetromClient {
     this.libraryClient = createClient(LibraryService, transport);
 
     this.clientsClient = createClient(ClientService, transport);
+
+    this.savesClient = createClient(SavesService, transport);
 
     this.serverClient = createClient(ServerService, transport);
 

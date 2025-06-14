@@ -1,15 +1,16 @@
-use std::{ffi::OsStr, path::PathBuf};
+use std::{ffi::OsStr, path::PathBuf, sync::Arc};
 
 use prost::Message;
 use retrom_codegen::retrom::{
-    GamePlayStatusUpdate, GetGamePlayStatusPayload, GetLocalEmulatorConfigsRequest,
-    InstallationStatus, PlayGamePayload, PlayStatus, StopGamePayload,
+    emulator::OperatingSystem, GamePlayStatusUpdate, GetGamePlayStatusPayload,
+    GetLocalEmulatorConfigsRequest, InstallationStatus, PlayGamePayload, PlayStatus,
+    StopGamePayload,
 };
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_installer::InstallerExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
-use tauri::{command, AppHandle, Runtime};
+use tauri::{command, AppHandle, Runtime, WebviewUrl, WebviewWindow, WindowEvent};
 use tokio::sync::Mutex;
 use tracing::{info, instrument};
 use walkdir::WalkDir;
@@ -62,6 +63,70 @@ pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -
         .clone()
         .map(|file| file.path)
         .map(PathBuf::from);
+
+    if emulator.libretro_name.is_some()
+        && emulator
+            .operating_systems
+            .contains(&(OperatingSystem::Wasm as i32))
+    {
+        let (send, mut recv) = tokio::sync::mpsc::channel(1);
+        let send = Arc::new(Mutex::new(send));
+
+        launcher
+            .mark_game_as_running(
+                game_id,
+                GameProcess {
+                    send: send.clone(),
+                    start_time: std::time::SystemTime::now(),
+                },
+            )
+            .await?;
+
+        let app_inner = app.clone();
+        app.run_on_main_thread(move || {
+            tokio::spawn(async move {
+                let web_view = WebviewWindow::builder(
+                    &app_inner,
+                    "emulator-js",
+                    WebviewUrl::App(
+                        format!(
+                            "/play/{}/frame?coreName={}",
+                            game.id,
+                            emulator.libretro_name()
+                        )
+                        .into(),
+                    ),
+                )
+                .title(emulator.name)
+                .focused(true)
+                .build()
+                .expect("Failed to build webview window");
+
+                web_view.on_window_event(move |event| {
+                    let send = send.clone();
+                    if let WindowEvent::CloseRequested { .. } = event {
+                        tokio::spawn(async move {
+                            send.lock()
+                                .await
+                                .send(())
+                                .await
+                                .expect("Failed to send stop signal");
+                        });
+                    }
+                });
+            });
+        })?;
+
+        tokio::spawn(async move {
+            recv.recv().await;
+            app.launcher()
+                .mark_game_as_stopped(game_id)
+                .await
+                .expect("Error stopping game");
+        });
+
+        return Ok(());
+    }
 
     if !standalone
         && installer.get_game_installation_status(game_id).await != InstallationStatus::Installed
@@ -177,13 +242,13 @@ pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -
 
     let (send, mut recv) = tokio::sync::mpsc::channel(1);
     let mut process = cmd.spawn()?;
-    let send = Mutex::new(send);
+    let send = Arc::new(Mutex::new(send));
 
     launcher
         .mark_game_as_running(
             game_id,
             GameProcess {
-                send,
+                send: send.clone(),
                 start_time: std::time::SystemTime::now(),
             },
         )

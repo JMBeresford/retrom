@@ -43,7 +43,7 @@ export function GeneralConfig() {
       interface: {
         fullscreenByDefault: config?.interface?.fullscreenByDefault ?? false,
       },
-      installationDir: config?.installationDir,
+      installationDir: config?.installationDir ?? "",
     },
   });
 
@@ -181,6 +181,7 @@ export function GeneralConfig() {
             <Button
               onClick={() =>
                 void navigate({
+                  to: ".",
                   search: (prev) => ({ ...prev, configModal: undefined }),
                 })
               }

@@ -49,9 +49,15 @@ message SteamConfig {
   string user_id = 2;
 }
 
+message SavesConfig {
+  int32 max_save_files_backups = 1;
+  int32 max_save_states_backups = 2;
+}
+
 message ServerConfig {
   ConnectionConfig connection = 1;
   repeated ContentDirectory content_directories = 2;
   optional IGDBConfig igdb = 3;
   optional SteamConfig steam = 4;
+  optional SavesConfig saves = 5;
 }
