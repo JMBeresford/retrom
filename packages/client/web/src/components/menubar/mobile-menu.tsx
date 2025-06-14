@@ -1,4 +1,4 @@
-import { MenuRoot, MenuItem, canRender } from ".";
+import { MenuRoot, MenuItem, canRender, MenuItemGroup } from ".";
 import { Separator } from "../ui/separator";
 import {
   Sheet,
@@ -41,7 +41,7 @@ function MobileMainMenuItem(props: { item: MenuItem; lastInGroup?: boolean }) {
           <SheetContent
             userCanClose={false}
             side="top"
-            className="absolute h-auto"
+            className="absolute h-auto py-6 px-4"
           >
             <SheetHeader className="sr-only">
               <SheetTitle>{item.label} Menu</SheetTitle>
@@ -58,8 +58,8 @@ function MobileMainMenuItem(props: { item: MenuItem; lastInGroup?: boolean }) {
             </SheetClose>
 
             {items.map((sub, subIndex) =>
-              Array.isArray(sub) ? (
-                <MobileMainMenuGroup items={sub} key={subIndex} />
+              "groupItems" in sub ? (
+                <MobileMainMenuGroup group={sub} key={subIndex} />
               ) : (
                 <MobileMainMenuItem key={subIndex} item={sub} />
               ),
@@ -68,10 +68,7 @@ function MobileMainMenuItem(props: { item: MenuItem; lastInGroup?: boolean }) {
         </Sheet>
 
         <Separator
-          className={cn(
-            !lastInGroup && "hidden",
-            "w-[95%] mx-auto last:hidden",
-          )}
+          className={cn(!lastInGroup && "hidden", "mx-auto last:hidden")}
         />
       </span>
     );
@@ -100,15 +97,18 @@ function MobileMainMenuItem(props: { item: MenuItem; lastInGroup?: boolean }) {
       </Button>
 
       <Separator
-        className={cn(!lastInGroup && "hidden", "w-[95%] mx-auto last:hidden")}
+        className={cn(!lastInGroup && "hidden", "mx-auto last:hidden")}
       />
     </>
   );
 }
 
-function MobileMainMenuGroup(props: { items: MenuItem[] }) {
-  const { items } = props;
-  const renderableItems = items.filter(canRender);
+function MobileMainMenuGroup(props: { group: MenuItemGroup }) {
+  const {
+    group: { groupItems },
+  } = props;
+
+  const renderableItems = groupItems.filter(canRender);
 
   return renderableItems.map((item, index) => (
     <MobileMainMenuItem
@@ -150,7 +150,7 @@ export function MobileMenu(props: { root: MenuRoot }) {
         <SheetContent
           userCanClose={false}
           side="top"
-          className="bg-background absolute h-auto group"
+          className="bg-background absolute h-auto group py-6 px-4"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Menu</SheetTitle>
@@ -158,8 +158,8 @@ export function MobileMenu(props: { root: MenuRoot }) {
           </SheetHeader>
 
           {root.items.map((item, index) =>
-            Array.isArray(item) ? (
-              <MobileMainMenuGroup items={item} key={index} />
+            "groupItems" in item ? (
+              <MobileMainMenuGroup group={item} key={index} />
             ) : (
               <MobileMainMenuItem key={index} item={item} />
             ),

@@ -7,6 +7,14 @@ import { useRef, useState } from "react";
 import { Route as ParentRoute } from ".";
 import { Overlay } from "./-utils/overlay";
 import "./play.scss";
+import { ChevronRight } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { TooltipArrow } from "@radix-ui/react-tooltip";
 
 export type EmuJsFrameEvent =
   | "exit"
@@ -64,9 +72,10 @@ function FrameComponent() {
 
         <div id="game" className={cn("grid place-items-center")}></div>
       </FocusContainer>
+
       <div
         className={cn(
-          "fixed top-0 left-0",
+          "hidden sm:block fixed top-0 left-0",
           "bg-background border-r border-b rounded-br",
           "transition-transform",
           showMenuBtn ? "translate-x-0" : "-translate-x-full delay-200",
@@ -76,6 +85,38 @@ function FrameComponent() {
           <HotkeyButton hotkey="MENU">Menu</HotkeyButton>
         </Link>
       </div>
+
+      <MobileMenuButton />
     </div>
+  );
+}
+
+function MobileMenuButton() {
+  return (
+    <TooltipProvider>
+      <Tooltip open>
+        <TooltipTrigger asChild>
+          <Link
+            className="fixed top-2 sm:hidden py-1 rounded-r-sm bg-background"
+            to="."
+            search={(prev) => ({ ...prev, overlay: true })}
+          >
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </Link>
+        </TooltipTrigger>
+
+        <TooltipContent
+          className={cn(
+            "animate-out fill-mode-both fade-out duration-1000 delay-3000",
+            "data-[state=open]:animate-out",
+            "h-fit py-1 px-2 border-0",
+          )}
+          side="right"
+        >
+          <TooltipArrow />
+          <div className="animate-pulse">Open the menu</div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

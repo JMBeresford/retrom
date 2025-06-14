@@ -23,9 +23,11 @@ import { DownloadGameButton } from "@/components/action-button/download-game-but
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { PlayGameButton } from "@/components/action-button/play-game-button";
 import { InstallGameButton } from "@/components/action-button/install-game-button";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Name } from "./-components/name";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { Emulator_OperatingSystem } from "@retrom/codegen/retrom/models/emulators_pb";
+import { PlayIcon } from "lucide-react";
 
 export const Route = createLazyFileRoute(
   "/_fullscreenLayout/fullscreen/games/$gameId",
@@ -57,12 +59,16 @@ function onFocus(e: FocusEvent<HTMLButtonElement>) {
 }
 
 function Inner() {
-  const { gameMetadata, game } = useGameDetail();
+  const { gameMetadata, game, emulator } = useGameDetail();
   const { data: installationStatus } = useInstallationQuery(game);
   const navigate = useNavigate();
 
   const name = gameMetadata?.name || getFileStub(game.path);
   const url = gameMetadata?.backgroundUrl || gameMetadata?.coverUrl;
+
+  const playableInWeb =
+    emulator?.libretroName &&
+    emulator.operatingSystems.includes(Emulator_OperatingSystem.WASM);
 
   return (
     <HotkeyLayer
@@ -118,7 +124,9 @@ function Inner() {
                         <InstallButton />
                       )
                     }
-                    web={<DownloadButton />}
+                    web={
+                      playableInWeb ? <PlayInWebButton /> : <DownloadButton />
+                    }
                   />
                 </div>
 
@@ -134,6 +142,41 @@ function Inner() {
           </div>
         </FocusContainer>
       </ScrollArea>
+    </HotkeyLayer>
+  );
+}
+
+function PlayInWebButton() {
+  const { game } = useGameDetail();
+  const navigate = useNavigate();
+
+  const { ref } = useFocusable<HTMLButtonElement>({
+    initialFocus: true,
+    focusKey: "fullscreen-play-web-button",
+    onFocus: ({ node }) => {
+      node?.focus({ preventScroll: true });
+    },
+  });
+
+  return (
+    <HotkeyLayer
+      id="play-web-button"
+      handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
+    >
+      <Button
+        ref={ref}
+        onClick={() =>
+          navigate({
+            to: "/play/$gameId",
+            params: { gameId: game.id.toString() },
+          })
+        }
+        variant="accent"
+        className={cn(buttonStyles)}
+      >
+        <PlayIcon className="h-[1.2rem] w-[1.2rem] fill-current" />
+        Play
+      </Button>
     </HotkeyLayer>
   );
 }

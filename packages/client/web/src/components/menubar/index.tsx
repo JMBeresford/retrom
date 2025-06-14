@@ -1,4 +1,5 @@
-import { cn } from "@/lib/utils";
+import { cn, Image } from "@/lib/utils";
+import logo from "@/assets/img/LogoLong-NoBackground-ExtraSmall.png";
 import {
   MenubarContent,
   MenubarGroup,
@@ -21,7 +22,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { viewMenu } from "./view-menu";
 import { ConnectivityIndicator } from "./connectivity-indicator";
 import { Menu, X } from "lucide-react";
-import { FC, ReactNode } from "react";
+import { ReactNode } from "react";
 import { Button } from "../ui/button";
 import { Route as RootRoute } from "@/routes/__root";
 import { MobileMenu } from "./mobile-menu";
@@ -38,7 +39,7 @@ export interface MenuItem {
   label?: ReactNode;
   appContext?: ApplicationContext;
   viewportContext?: ViewportContext;
-  Render?: ReactNode | FC;
+  Render?: ReactNode;
   action?: () => void;
   items?: Array<MenuItem | MenuItemGroup>;
 }
@@ -112,7 +113,7 @@ function HomeButton() {
         "font-black grid place-items-center text-xl leading-[0] sm:ml-5",
       )}
     >
-      Retrom
+      <Image src={logo} alt="Logo" className="h-4" />
     </Link>
   );
 }
