@@ -97,14 +97,5 @@ export function FocusableElement<T extends HTMLElement>(props: {
   const { opts, render } = props;
   const { ref } = useFocusable(opts);
 
-  // const onClickHandler = useCallback(
-  //   (e: MouseEvent<T>) => {
-  //     focusSelf();
-  //     childProps.onClick?.(e);
-  //     onClick?.(e);
-  //   },
-  //   [onClick, focusSelf, childProps],
-  // );
-
   return <>{render(ref)}</>;
 }
