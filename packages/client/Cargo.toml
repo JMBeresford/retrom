@@ -44,7 +44,7 @@ pq-sys = { workspace = true }
 openssl-sys = { workspace = true }
 tauri-plugin-system-info = "2.0.8"
 tauri-plugin-single-instance = "2.0.0-rc.0"
-tauri-plugin-updater = "2.0.0-rc.2"
+tauri-plugin-updater = "2.7.1"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

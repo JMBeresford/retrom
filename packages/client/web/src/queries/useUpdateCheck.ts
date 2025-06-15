@@ -7,9 +7,13 @@ export function useUpdateCheck() {
     queryKey: ["update-check"],
     queryFn: async () => {
       if (checkIsDesktop()) {
-        const update = await check();
-
-        return update;
+        try {
+          const update = await check();
+          return update;
+        } catch (error) {
+          console.error("Error checking for updates:", error);
+          return null;
+        }
       } else {
         return null;
       }
