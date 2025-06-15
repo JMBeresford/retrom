@@ -48,9 +48,7 @@ export const emulatorSchema = z.object({
     .string()
     .min(1, "Emulator name must not be empty")
     .max(128, "Emulator name must not exceed 128 characters"),
-  supportedPlatforms: z
-    .array(z.number())
-    .min(1, "Select at least one platform"),
+  supportedPlatforms: z.array(z.number()),
   saveStrategy: z.nativeEnum(SaveStrategy, {
     message: "Select a save strategy",
   }),

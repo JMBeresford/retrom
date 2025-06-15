@@ -79,12 +79,13 @@ export function EmulatorList(props: {
 
   const form = useForm<ChangesetSchema>({
     resolver: zodResolver(changesetSchema),
-    defaultValues: {
-      emulators: emulators.reduce(
-        (acc, val) => ({ ...acc, [`${val.id}`]: val }),
-        {},
-      ),
-    },
+    defaultValues:
+      changesetSchema.safeParse({
+        emulators: emulators.reduce(
+          (acc, val) => ({ ...acc, [`${val.id}`]: val }),
+          {},
+        ),
+      }).data ?? {},
     mode: "all",
   });
 
