@@ -135,7 +135,7 @@ function MobileMenuButton() {
 
         <TooltipContent
           className={cn(
-            "animate-out fill-mode-both fade-out duration-1000 delay-3000",
+            "sm:hidden animate-out fill-mode-both fade-out duration-1000 delay-3000",
             "data-[state=open]:animate-out",
             "h-fit py-1 px-2 border-0",
           )}
