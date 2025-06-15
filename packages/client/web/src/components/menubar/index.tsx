@@ -188,7 +188,7 @@ function MainMenuGroup(props: { group: MenuItemGroup }) {
 
   return (
     <MenubarGroup className="group">
-      {groupItems.map((item, index) => (
+      {groupItems.filter(canRender).map((item, index) => (
         <MainMenuItem key={index} item={item} />
       ))}
 
