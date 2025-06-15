@@ -32,6 +32,7 @@ export function UninstallGameModal() {
       onOpenChange={(open) => {
         if (!open) {
           void navigate({
+            to: ".",
             search: (prev) => ({ ...prev, uninstallGameModal: undefined }),
           });
         }
@@ -53,7 +54,7 @@ export function UninstallGameModal() {
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="secondary">
-              <Link search={{ uninstallGameModal: { open: false } }}>
+              <Link to="." search={{ uninstallGameModal: { open: false } }}>
                 Cancel
               </Link>
             </Button>
@@ -68,7 +69,10 @@ export function UninstallGameModal() {
             onClick={() => {
               uninstall()
                 .then(() =>
-                  navigate({ search: { uninstallGameModal: undefined } }),
+                  navigate({
+                    to: ".",
+                    search: { uninstallGameModal: undefined },
+                  }),
                 )
                 .catch(console.error);
             }}

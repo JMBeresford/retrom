@@ -1,4 +1,4 @@
-import { GamepadContext } from ".";
+import { ControllerMapping } from "./controller-ids";
 
 export const XBOX_BUTTON_MAP = [
   "a",
@@ -82,7 +82,7 @@ export const DUALSHOCK_5_BUTTON_MAP = [
 
 export function getButtonMapValue(
   button: number,
-  controllerType: GamepadContext["controllerType"],
+  controllerType?: ControllerMapping,
 ) {
   switch (controllerType) {
     case "xbox": {

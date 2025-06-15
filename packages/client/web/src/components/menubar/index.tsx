@@ -1,4 +1,5 @@
-import { cn } from "@/lib/utils";
+import { cn, Image } from "@/lib/utils";
+import logo from "@/assets/img/LogoLong-NoBackground-ExtraSmall.png";
 import {
   MenubarContent,
   MenubarGroup,
@@ -28,25 +29,28 @@ import { MobileMenu } from "./mobile-menu";
 
 type ApplicationContext = "desktop" | "web";
 type ViewportContext = "desktop" | "mobile";
+
+export type MenuItemGroup = {
+  label?: ReactNode;
+  groupItems: MenuItem[];
+};
+
 export interface MenuItem {
-  label: ReactNode;
+  label?: ReactNode;
   appContext?: ApplicationContext;
   viewportContext?: ViewportContext;
   Render?: ReactNode;
   action?: () => void;
-  items?: MenuItem[] | MenuItem[][];
+  items?: Array<MenuItem | MenuItemGroup>;
 }
 
-export interface RootMenuItem extends MenuItem {
-  items: MenuItem[] | MenuItem[][];
-}
-
-export type MenuRoot = { items: RootMenuItem[] };
-const menuItems: MenuRoot = {
-  items: [fileMenu, libraryMenu, platformsMenu, emulatorsMenu, viewMenu],
-};
+export type MenuRoot = Required<Pick<MenuItem, "items">>;
 
 export function Menubar() {
+  const menuItems: MenuRoot = {
+    items: [fileMenu, libraryMenu, platformsMenu, emulatorsMenu, viewMenu],
+  };
+
   return (
     <header
       className={cn(
@@ -109,7 +113,7 @@ function HomeButton() {
         "font-black grid place-items-center text-xl leading-[0] sm:ml-5",
       )}
     >
-      Retrom
+      <Image src={logo} alt="Logo" className="h-4" />
     </Link>
   );
 }
@@ -134,11 +138,13 @@ function MainMenuItem(props: { item: MenuItem }) {
         className={cn(item.viewportContext === "mobile" ? "sm:hidden" : "")}
       >
         <MenubarSub>
-          <MenubarSubTrigger>{label}</MenubarSubTrigger>
+          <MenubarSubTrigger asChild={typeof label !== "string"}>
+            {label}
+          </MenubarSubTrigger>
           <MenubarSubContent>
             {items.map((sub, subIndex) =>
-              Array.isArray(sub) ? (
-                <MainMenuGroup items={sub} key={subIndex} />
+              "groupItems" in sub ? (
+                <MainMenuGroup group={sub} key={subIndex} />
               ) : (
                 <MainMenuItem key={subIndex} item={sub} />
               ),
@@ -153,7 +159,7 @@ function MainMenuItem(props: { item: MenuItem }) {
     return (
       <MenubarItem
         asChild
-        onSelect={action}
+        // onSelect={action}
         className={cn(item.viewportContext === "mobile" ? "sm:hidden" : "")}
       >
         {Render}
@@ -171,15 +177,18 @@ function MainMenuItem(props: { item: MenuItem }) {
   );
 }
 
-function MainMenuGroup(props: { items: MenuItem[] }) {
-  const { items } = props;
-  if (!items.some(canRender)) {
+function MainMenuGroup(props: { group: MenuItemGroup }) {
+  const {
+    group: { groupItems },
+  } = props;
+
+  if (!groupItems.some(canRender)) {
     return <></>;
   }
 
   return (
     <MenubarGroup className="group">
-      {items.map((item, index) => (
+      {groupItems.map((item, index) => (
         <MainMenuItem key={index} item={item} />
       ))}
 
@@ -193,7 +202,7 @@ function DesktopMenu(props: { root: MenuRoot }) {
 
   return (
     <MenubarImpl className="border-0 items-stretch w-full ml-4">
-      {root.items.filter(canRender).map((item, index) => (
+      {root.items.filter(canRender).map((item: MenuItem, index) => (
         <MenubarMenu key={index}>
           <MenubarTrigger
             className={cn(item.viewportContext === "mobile" ? "sm:hidden" : "")}
@@ -201,9 +210,9 @@ function DesktopMenu(props: { root: MenuRoot }) {
             {item.label}
           </MenubarTrigger>
           <MenubarContent>
-            {item.items.map((sub, subIndex) =>
-              Array.isArray(sub) ? (
-                <MainMenuGroup items={sub} key={subIndex} />
+            {item.items?.map((sub, subIndex) =>
+              "groupItems" in sub ? (
+                <MainMenuGroup group={sub} key={subIndex} />
               ) : (
                 <MainMenuItem key={subIndex} item={sub} />
               ),

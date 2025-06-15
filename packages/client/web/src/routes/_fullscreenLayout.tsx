@@ -3,7 +3,6 @@ import { useRef } from "react";
 import { FullscreenMenubar } from "../components/fullscreen/menubar";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
-import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import { GroupContextProvider } from "@/providers/fullscreen/group-context";
 import { GamepadProvider } from "@/providers/gamepad";
 import {
@@ -12,9 +11,10 @@ import {
   setKeyMap,
 } from "@noriginmedia/norigin-spatial-navigation";
 import { useHotkeys } from "@/providers/hotkeys";
-import { InputDeviceProvider } from "@/providers/input-device";
 import { checkIsDesktop } from "@/lib/env";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { FocusedHotkeyLayerProvider } from "@/providers/hotkeys/layers";
 
 declare global {
   export interface HotkeyZones {
@@ -28,7 +28,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_fullscreenLayout")({
   component: FullscreenLayout,
-  validateSearch: zodSearchValidator(searchSchema),
+  validateSearch: zodValidator(searchSchema),
   loader: async () => {
     if (checkIsDesktop() && !import.meta.env.DEV) {
       await getCurrentWindow().setFullscreen(true);
@@ -78,7 +78,7 @@ function FullscreenLayout() {
   });
 
   return (
-    <InputDeviceProvider>
+    <FocusedHotkeyLayerProvider>
       <GamepadProvider>
         <GroupContextProvider>
           <div
@@ -93,6 +93,6 @@ function FullscreenLayout() {
           </div>
         </GroupContextProvider>
       </GamepadProvider>
-    </InputDeviceProvider>
+    </FocusedHotkeyLayerProvider>
   );
 }

@@ -16,9 +16,9 @@ import { UpdateMetadataModal } from "@/components/modals/update-metadata";
 import { DeleteGameModal } from "@/components/modals/delete-game";
 import { UninstallGameModal } from "@/components/modals/uninstall-game";
 import { z } from "zod";
-import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import { DesktopOnly } from "@/lib/env";
 import { LaunchConfig } from "./-components/launch-config";
+import { zodValidator } from "@tanstack/zod-adapter";
 
 const modalsSchema = z.object({
   updateMetadataModal: z
@@ -39,7 +39,7 @@ const modalsSchema = z.object({
 });
 
 export const Route = createFileRoute("/(windowed)/_layout/games/$gameId/")({
-  validateSearch: zodSearchValidator(modalsSchema),
+  validateSearch: zodValidator(modalsSchema),
   component: Game,
 });
 

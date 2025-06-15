@@ -1,4 +1,4 @@
-import { UpdatePlatformsRequestSchema } from "@retrom/codegen/retrom/services_pb";
+import { UpdatePlatformsRequestSchema } from "@retrom/codegen/retrom/services/platform-service_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageInitShape } from "@bufbuild/protobuf";

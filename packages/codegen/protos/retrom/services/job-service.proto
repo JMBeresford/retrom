@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package retrom;
+
+import 'retrom/jobs.proto';
+
+service JobService {
+  rpc GetJobs(GetJobsRequest) returns (stream GetJobsResponse);
+  rpc GetJobSubscription(GetJobSubscriptionRequest) returns (stream GetJobSubscriptionResponse);
+}
+
+message GetJobsRequest {}
+
+message GetJobsResponse {
+  repeated JobProgress jobs = 1;
+}
+
+message GetJobSubscriptionRequest {
+  string job_id = 1;
+}
+
+message GetJobSubscriptionResponse {
+  JobProgress job = 1;
+}

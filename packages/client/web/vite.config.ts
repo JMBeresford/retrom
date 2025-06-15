@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { readConfigFile, readLocalCargoToml } from "./src/lib/node-utils.ts";
 import { glslify } from "vite-plugin-glslify";
 
@@ -40,6 +40,10 @@ export default defineConfig({
   server: {
     port: 3000,
     host: "0.0.0.0",
+    headers: {
+      "Cross-Origin-Embedder-Policy": "credentialless",
+      "Cross-Origin-Opener-Policy": "same-origin",
+    },
     proxy: {
       "/api": {
         target: localServiceHost,
@@ -51,6 +55,10 @@ export default defineConfig({
   preview: {
     port: 3000,
     host: "0.0.0.0",
+    headers: {
+      "Cross-Origin-Embedder-Policy": "credentialless",
+      "Cross-Origin-Opener-Policy": "same-origin",
+    },
     proxy: {
       "/api": {
         target: localServiceHost,
@@ -69,7 +77,23 @@ export default defineConfig({
       "opera75",
     ],
   },
-  plugins: [TanStackRouterVite(), react(), glslify()],
+  plugins: [
+    // {
+    //   name: "frame-cross-origin-isolated",
+    //   configureServer: (server) => {
+    //     server.middlewares.use((req, res, next) => {
+    //       if (req.url?.match(/^\/play\/.*\/frame/)) {
+    //         res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+    //         res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    //       }
+    //       next();
+    //     });
+    //   },
+    // },
+    tanstackRouter({ target: "react" }),
+    react(),
+    glslify(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

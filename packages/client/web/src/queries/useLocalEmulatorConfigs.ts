@@ -1,7 +1,7 @@
 import {
   GetLocalEmulatorConfigsRequestSchema,
   type GetLocalEmulatorConfigsResponse,
-} from "@retrom/codegen/retrom/services_pb";
+} from "@retrom/codegen/retrom/services/emulator-service_pb";
 import { useConfig } from "@/providers/config";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";

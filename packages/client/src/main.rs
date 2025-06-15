@@ -1,14 +1,9 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{fs::OpenOptions, str};
+use std::fs::OpenOptions;
 use tauri::Manager;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}!! You've been greeted from Rust!", name)
-}
 
 #[tokio::main]
 pub async fn main() {
@@ -92,7 +87,7 @@ pub async fn main() {
         .plugin(retrom_plugin_steam::init())
         .plugin(retrom_plugin_installer::init())
         .plugin(retrom_plugin_launcher::init().await)
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

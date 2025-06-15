@@ -33,7 +33,7 @@ import {
   GetIgdbSearchRequest_IgdbSearchType,
   UpdatePlatformMetadataRequest,
   UpdatePlatformMetadataRequestSchema,
-} from "@retrom/codegen/retrom/services_pb";
+} from "@retrom/codegen/retrom/services/metadata-service_pb";
 import { usePlatforms } from "@/queries/usePlatforms";
 import {
   PlatformMetadata,
@@ -179,6 +179,7 @@ export function MatchPlatformsModal() {
 
   const close = useCallback(() => {
     return navigate({
+      to: ".",
       search: (prev) => ({ ...prev, matchPlatformsModal: undefined }),
     });
   }, [navigate]);

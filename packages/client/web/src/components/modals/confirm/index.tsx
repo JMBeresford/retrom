@@ -4,14 +4,16 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog";
 import { Route as RootRoute } from "@/routes/__root";
-import { useCallback } from "react";
+import { ReactNode, useCallback } from "react";
 import { useModalAction } from "@/providers/modal-action";
 import { useMutation } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
 declare global {
   namespace RetromModals {
@@ -19,6 +21,7 @@ declare global {
       confirmModal?: {
         title: string;
         description: string;
+        content?: ReactNode;
         onConfirm: () => void | Promise<void>;
         onCancel?: () => void | Promise<void>;
       };
@@ -29,7 +32,7 @@ declare global {
 export function ConfirmModal() {
   const modalAction = useModalAction("confirmModal");
   const { confirmModal } = RootRoute.useSearch();
-  const navigate = RootRoute.useNavigate();
+  const navigate = useNavigate();
 
   const { mutate, status } = useMutation({
     mutationFn: async () => {
@@ -43,14 +46,18 @@ export function ConfirmModal() {
 
   const close = useCallback(
     async (confirmed: boolean = false) => {
-      if (confirmed) {
-        mutate();
-      } else if (!confirmed && modalAction.modalState?.onCancel) {
-        await modalAction.modalState.onCancel();
-      }
-
       return navigate({
-        search: (prev) => ({ ...prev, confirmModal: undefined }),
+        to: ".",
+        search: (prev) => ({
+          ...prev,
+          confirmModal: undefined,
+        }),
+      }).then(async () => {
+        if (confirmed) {
+          mutate();
+        } else if (!confirmed && modalAction.modalState?.onCancel) {
+          await modalAction.modalState.onCancel();
+        }
       });
     },
     [navigate, modalAction, mutate],
@@ -58,24 +65,29 @@ export function ConfirmModal() {
 
   return (
     <Dialog
-      open={confirmModal?.open}
+      open={!!confirmModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          void close();
+          close().catch(console.error);
         }
       }}
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{confirmModal?.title ?? "Are you sure?"}</DialogTitle>
+          <DialogTitle>
+            {modalAction.modalState?.title ?? "Are you sure?"}
+          </DialogTitle>
           <DialogDescription>
-            {confirmModal?.description ?? "This action cannot be undone."}
+            {modalAction.modalState?.description ??
+              "This action cannot be undone."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex justify-end gap-2 mt-4">
+        {modalAction.modalState?.content}
+
+        <DialogFooter className="flex justify-end gap-2 mt-4">
           <DialogClose asChild>
-            <Button>Cancel</Button>
+            <Button variant="secondary">Cancel</Button>
           </DialogClose>
 
           <Button
@@ -83,7 +95,7 @@ export function ConfirmModal() {
             variant="destructive"
             disabled={status === "pending"}
             onClick={() => {
-              void close(true);
+              close(true).catch(console.error);
             }}
           >
             {status === "pending" ? (
@@ -92,7 +104,7 @@ export function ConfirmModal() {
               "Confirm"
             )}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

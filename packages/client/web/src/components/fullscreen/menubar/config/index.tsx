@@ -5,22 +5,17 @@ import {
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetOverlay,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { MenuEntryButton } from "../menu-entry-button";
 import { ComponentProps, useCallback, useState } from "react";
-import {
-  Form,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { useForm, useFormContext } from "react-hook-form";
 import {
   InterfaceConfig_GameListEntryImage,
-  RetromClientConfig_Config,
+  RetromClientConfig_ConfigJson,
 } from "@retrom/codegen/retrom/client/client-config_pb";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,8 +26,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConfigSelect, ConfigSelectItem } from "../config-inputs/select";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useToast } from "@/components/ui/use-toast";
-import { FocusableElement, FocusContainer } from "../../focus-container";
+import { FocusContainer } from "../../focus-container";
 import { ConfigCheckbox } from "../config-inputs/checkbox";
+import { Separator } from "@/components/ui/separator";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
@@ -42,11 +38,11 @@ const formSchema = z.object({
       gridList: z.object({
         columns: z.coerce.number().min(1).max(10),
         gap: z.coerce.number().min(10).max(250),
-        imageType: z.nativeEnum(InterfaceConfig_GameListEntryImage),
+        imageType: z.enum(["COVER", "BACKGROUND"]),
       }),
     }),
   }),
-}) satisfies z.ZodSchema<RetromClientConfig_Config, z.ZodTypeDef, unknown>;
+}) satisfies z.ZodSchema<RetromClientConfig_ConfigJson, z.ZodTypeDef, unknown>;
 
 export function Config(props: ComponentProps<typeof SheetTrigger>) {
   const configStore = useConfigStore();
@@ -68,7 +64,7 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
             gap: config?.interface?.fullscreenConfig?.gridList?.gap ?? 20,
             imageType:
               config?.interface?.fullscreenConfig?.gridList?.imageType ??
-              InterfaceConfig_GameListEntryImage.COVER,
+              "COVER",
           },
         },
       },
@@ -114,13 +110,12 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
       }}
     >
       <SheetTrigger asChild>
-        <FocusableElement opts={{ focusKey: "config-menu-open" }}>
-          <MenuEntryButton id="config-menu-open" {...props}>
-            Config
-          </MenuEntryButton>
-        </FocusableElement>
+        <MenuEntryButton id="config-menu-open" {...props}>
+          Config
+        </MenuEntryButton>
       </SheetTrigger>
 
+      <SheetOverlay />
       <SheetContent>
         <HotkeyLayer
           id="config-menu"
@@ -129,20 +124,21 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
             MENU: { handler: () => form.handleSubmit(handleSubmit)() },
           }}
         >
+          <SheetHeader>
+            <SheetTitle>Configuration</SheetTitle>
+            <SheetDescription>Retrom fullscreen options</SheetDescription>
+          </SheetHeader>
+
+          <Separator className="w-[90%] mx-auto" />
+
           <FocusContainer
-            initialFocus
+            className="flex flex-col h-full"
             opts={{
+              initialFocus: true,
               focusKey: "config-menu",
               isFocusBoundary: true,
             }}
           >
-            <SheetHeader>
-              <SheetTitle>Configuration</SheetTitle>
-              <SheetDescription>
-                Retrom fullscreen configuration and options
-              </SheetDescription>
-            </SheetHeader>
-
             <ScrollArea className="h-full w-full">
               <Form {...form}>
                 <form
@@ -153,21 +149,21 @@ export function Config(props: ComponentProps<typeof SheetTrigger>) {
                 </form>
               </Form>
             </ScrollArea>
-
-            <SheetFooter>
-              <SheetClose asChild>
-                <HotkeyButton hotkey="BACK">back</HotkeyButton>
-              </SheetClose>
-
-              <HotkeyButton
-                disabled={disabled}
-                onClick={form.handleSubmit(handleSubmit)}
-                hotkey="MENU"
-              >
-                confirm
-              </HotkeyButton>
-            </SheetFooter>
           </FocusContainer>
+
+          <SheetFooter className="px-2 flex justify-between">
+            <SheetClose asChild>
+              <HotkeyButton hotkey="BACK">back</HotkeyButton>
+            </SheetClose>
+
+            <HotkeyButton
+              disabled={disabled}
+              onClick={form.handleSubmit(handleSubmit)}
+              hotkey="MENU"
+            >
+              confirm
+            </HotkeyButton>
+          </SheetFooter>
         </HotkeyLayer>
       </SheetContent>
     </Sheet>
@@ -178,7 +174,7 @@ function ConfigForm() {
   const form = useFormContext<FormSchema>();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col">
       <FormField
         control={form.control}
         name="interface.fullscreenByDefault"
@@ -191,16 +187,14 @@ function ConfigForm() {
                 checked={field.value}
                 onCheckedChange={field.onChange}
               >
-                <p className="text-sm text-muted-foreground">
-                  Enabling this will make Retrom start in fullscreen mode by
-                  default
-                </p>
+                Start Retrom in fullscreen mode
               </ConfigCheckbox>
             </FormItem>
           );
         }}
       />
 
+      <h2 className="text-lg font-semibold px-4 pb-2 mt-4">Game List</h2>
       <FormField
         control={form.control}
         name="interface.fullscreenConfig.gridList.columns"
@@ -213,9 +207,6 @@ function ConfigForm() {
               label="Columns"
             />
             <FormMessage />
-            <FormDescription>
-              Number of columns to display in game list
-            </FormDescription>
           </FormItem>
         )}
       />
@@ -232,7 +223,6 @@ function ConfigForm() {
               label="Gap"
             />
             <FormMessage />
-            <FormDescription>Gap between game list entries</FormDescription>
           </FormItem>
         )}
       />
@@ -243,31 +233,28 @@ function ConfigForm() {
         render={({ field }) => (
           <FormItem>
             <ConfigSelect
-              onValueChange={(value) => field.onChange(parseInt(value))}
+              onValueChange={(value) => field.onChange(value)}
               defaultValue={field.value.toString()}
               triggerProps={{
-                label: "Game Image Type",
+                label: "Image Type",
                 id: "config-image-type",
               }}
             >
               <ConfigSelectItem
                 id={`config-image-type-${InterfaceConfig_GameListEntryImage.COVER}`}
-                value={InterfaceConfig_GameListEntryImage.COVER.toString()}
+                value={"COVER"}
               >
                 Cover
               </ConfigSelectItem>
               <ConfigSelectItem
                 id={`config-image-type-${InterfaceConfig_GameListEntryImage.BACKGROUND}`}
-                value={InterfaceConfig_GameListEntryImage.BACKGROUND.toString()}
+                value={"BACKGROUND"}
               >
                 Background
               </ConfigSelectItem>
             </ConfigSelect>
 
             <FormMessage />
-            <FormDescription>
-              Which type of image to display in the game list
-            </FormDescription>
           </FormItem>
         )}
       />

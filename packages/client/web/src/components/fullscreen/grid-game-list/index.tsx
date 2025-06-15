@@ -1,22 +1,27 @@
 import { GameWithMetadata } from "@/components/game-list";
-import { InterfaceConfig_GameListEntryImage } from "@retrom/codegen/retrom/client/client-config_pb";
+import { InterfaceConfig_GameListEntryImageJson } from "@retrom/codegen/retrom/client/client-config_pb";
 import { cn, getFileStub } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { FocusContainer, useFocusable } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { useGroupContext } from "@/providers/fullscreen/group-context";
+import { Group, useGroupContext } from "@/providers/fullscreen/group-context";
 import { Separator } from "@/components/ui/separator";
 
-const { BACKGROUND, COVER } = InterfaceConfig_GameListEntryImage;
+function getFirstGameId(group: Group) {
+  const firstPartitionWithGames = group.partitionedGames.find(
+    ([_, games]) => !!games.length,
+  );
+
+  return firstPartitionWithGames?.[1][0].id;
+}
 
 export function GridGameList() {
   const { activeGroup, allGroups } = useGroupContext();
 
-  const { columns, gap } = useConfig(
-    (s) => s.config?.interface?.fullscreenConfig?.gridList,
-  ) ?? { columns: 4, gap: 20 };
+  const { columns = 4, gap = 20 } =
+    useConfig((s) => s.config?.interface?.fullscreenConfig?.gridList) ?? {};
 
   const getDelay = useCallback(
     (idx: number) => {
@@ -30,7 +35,7 @@ export function GridGameList() {
   return allGroups.map((group) =>
     group.id === activeGroup?.id ? (
       <FocusContainer
-        initialFocus
+        key={group.id}
         opts={{
           focusKey: `game-list-${group.id}`,
           saveLastFocusedChild: false,
@@ -96,7 +101,8 @@ export function GridGameList() {
                   >
                     <GameListItem
                       game={game}
-                      id={`game-list-${activeGroup.id}-${game.id}`}
+                      id={`game-list-${group.id}-${game.id}`}
+                      initialFocus={game.id === getFirstGameId(group)}
                     />
                   </div>
                 ))}
@@ -108,14 +114,18 @@ export function GridGameList() {
   );
 }
 
-function GameListItem(props: { game: GameWithMetadata; id: string }) {
-  const { game, id } = props;
+function GameListItem(props: {
+  game: GameWithMetadata;
+  id: string;
+  initialFocus?: boolean;
+}) {
+  const { game, id, initialFocus } = props;
   const navigate = useNavigate();
   const { ref } = useFocusable<HTMLDivElement>({
     focusKey: id,
     forceFocus: true,
+    initialFocus,
     onFocus: ({ node }) => {
-      node?.focus({ preventScroll: true });
       node?.scrollIntoView({
         behavior: "smooth",
         block: "center",
@@ -124,9 +134,8 @@ function GameListItem(props: { game: GameWithMetadata; id: string }) {
     },
   });
 
-  const { imageType } = useConfig(
-    (s) => s.config?.interface?.fullscreenConfig?.gridList,
-  ) ?? { imageType: COVER };
+  const { imageType = "COVER" } =
+    useConfig((s) => s.config?.interface?.fullscreenConfig?.gridList) ?? {};
 
   return (
     <div
@@ -160,11 +169,11 @@ function GameListItem(props: { game: GameWithMetadata; id: string }) {
 
 function GameImage(props: {
   game: GameWithMetadata;
-  kind: InterfaceConfig_GameListEntryImage;
+  kind: InterfaceConfig_GameListEntryImageJson;
 }) {
   const { game } = props;
   const imageSrc =
-    props.kind === BACKGROUND
+    props.kind === "BACKGROUND"
       ? game.metadata?.backgroundUrl
       : game.metadata?.coverUrl;
 
@@ -176,7 +185,7 @@ function GameImage(props: {
     <div
       key={game.id}
       className={cn(
-        props.kind === BACKGROUND ? "aspect-video" : "aspect-[3/4]",
+        props.kind === "BACKGROUND" ? "aspect-video" : "aspect-[3/4]",
         "rounded overflow-hidden relative",
         "h-fit w-fit min-w-full min-h-full",
       )}
@@ -202,7 +211,7 @@ function GameImage(props: {
           "absolute inset-0",
           "bg-gradient-to-t from-card",
           "ring-ring ring-inset group-focus-within:ring-4",
-          props.kind === BACKGROUND ? "text-lg py-2 px-4" : "text-2xl p-4",
+          props.kind === "BACKGROUND" ? "text-lg py-2 px-4" : "text-2xl p-4",
           "flex items-end font-black",
         )}
       >

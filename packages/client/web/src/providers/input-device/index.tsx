@@ -3,21 +3,45 @@ import {
   Dispatch,
   SetStateAction,
   useContext,
+  useEffect,
+  useMemo,
   useState,
 } from "react";
 
 type RetromInputDevice = (typeof RetromInputDevice)[number];
-const RetromInputDevice = ["keyboard", "gamepad"] as const;
+const RetromInputDevice = [
+  "keyboard-mouse",
+  "gamepad",
+  "hotkeys",
+  "touch",
+] as const;
 
-type InputDeviceContext = [
-  RetromInputDevice,
-  Dispatch<SetStateAction<RetromInputDevice>>,
-];
+type InputDeviceContext = Readonly<
+  [RetromInputDevice, Dispatch<SetStateAction<RetromInputDevice>>]
+>;
 
 const context = createContext<InputDeviceContext | undefined>(undefined);
 
 export function InputDeviceProvider(props: { children: React.ReactNode }) {
-  const value = useState<RetromInputDevice>("keyboard");
+  const [inputDevice, setInputDevice] =
+    useState<RetromInputDevice>("keyboard-mouse");
+
+  useEffect(() => {
+    function handler() {
+      setInputDevice("touch");
+    }
+
+    window.addEventListener("touchstart", handler, { passive: true });
+
+    return () => {
+      window.removeEventListener("touchstart", handler);
+    };
+  }, []);
+
+  const value = useMemo(
+    () => [inputDevice, setInputDevice] as const,
+    [inputDevice, setInputDevice],
+  );
 
   return <context.Provider value={value}>{props.children}</context.Provider>;
 }

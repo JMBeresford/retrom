@@ -42,7 +42,7 @@ export function Announcements() {
                 description: announcement.message,
                 action: announcement.url ? (
                   <Button asChild>
-                    <Link href={announcement.url} target="_blank">
+                    <Link to="." href={announcement.url} target="_blank">
                       Learn More
                     </Link>
                   </Button>

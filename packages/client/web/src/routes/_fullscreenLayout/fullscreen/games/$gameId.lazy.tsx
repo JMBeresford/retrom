@@ -1,6 +1,6 @@
 import {
-  FocusableElement,
   FocusContainer,
+  useFocusable,
 } from "@/components/fullscreen/focus-container";
 import { Scene } from "@/components/fullscreen/scene";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,15 +17,17 @@ import { Description } from "./-components/description";
 import { ExtraInfo } from "./-components/extra-info";
 import { SimilarGames } from "./-components/similar-games";
 import { GameActions } from "@/components/fullscreen/game-actions";
-import { FocusEvent, memo, useRef } from "react";
+import { FocusEvent, memo } from "react";
 import { PlatformDependent } from "@/lib/env";
 import { DownloadGameButton } from "@/components/action-button/download-game-button";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { PlayGameButton } from "@/components/action-button/play-game-button";
 import { InstallGameButton } from "@/components/action-button/install-game-button";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Name } from "./-components/name";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { Emulator_OperatingSystem } from "@retrom/codegen/retrom/models/emulators_pb";
+import { PlayIcon } from "lucide-react";
 
 export const Route = createLazyFileRoute(
   "/_fullscreenLayout/fullscreen/games/$gameId",
@@ -57,12 +59,16 @@ function onFocus(e: FocusEvent<HTMLButtonElement>) {
 }
 
 function Inner() {
-  const { gameMetadata, game } = useGameDetail();
+  const { gameMetadata, game, emulator } = useGameDetail();
   const { data: installationStatus } = useInstallationQuery(game);
   const navigate = useNavigate();
 
   const name = gameMetadata?.name || getFileStub(game.path);
   const url = gameMetadata?.backgroundUrl || gameMetadata?.coverUrl;
+
+  const playableInWeb =
+    emulator?.libretroName &&
+    emulator.operatingSystems.includes(Emulator_OperatingSystem.WASM);
 
   return (
     <HotkeyLayer
@@ -118,7 +124,9 @@ function Inner() {
                         <InstallButton />
                       )
                     }
-                    web={<DownloadButton />}
+                    web={
+                      playableInWeb ? <PlayInWebButton /> : <DownloadButton />
+                    }
                   />
                 </div>
 
@@ -138,85 +146,107 @@ function Inner() {
   );
 }
 
+function PlayInWebButton() {
+  const { game } = useGameDetail();
+  const navigate = useNavigate();
+
+  const { ref } = useFocusable<HTMLButtonElement>({
+    initialFocus: true,
+    focusKey: "fullscreen-play-web-button",
+    onFocus: ({ node }) => {
+      node?.focus({ preventScroll: true });
+    },
+  });
+
+  return (
+    <HotkeyLayer
+      id="play-web-button"
+      handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
+    >
+      <Button
+        ref={ref}
+        onClick={() =>
+          navigate({
+            to: "/play/$gameId",
+            params: { gameId: game.id.toString() },
+          })
+        }
+        variant="accent"
+        className={cn(buttonStyles)}
+      >
+        <PlayIcon className="h-[1.2rem] w-[1.2rem] fill-current" />
+        Play
+      </Button>
+    </HotkeyLayer>
+  );
+}
+
 const PlayButton = memo(() => {
-  const ref = useRef<HTMLButtonElement>(null!);
+  const { ref } = useFocusable<HTMLButtonElement>({
+    focusKey: "fullscreen-play-button",
+    initialFocus: true,
+    onFocus: ({ node }) => {
+      node?.focus({ preventScroll: true });
+    },
+  });
 
   return (
     <HotkeyLayer
       id="play-button"
       handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
     >
-      <FocusableElement
-        ref={ref}
-        initialFocus
-        opts={{
-          focusKey: "fullscreen-play-button",
-          onFocus: ({ node }) => {
-            node?.focus({ preventScroll: true });
-          },
-        }}
-      >
-        <PlayGameButton onFocus={onFocus} className={buttonStyles} />
-      </FocusableElement>
+      <PlayGameButton ref={ref} onFocus={onFocus} className={buttonStyles} />
     </HotkeyLayer>
   );
 });
 
 const InstallButton = memo(() => {
-  const ref = useRef<HTMLButtonElement>(null!);
+  const { ref } = useFocusable<HTMLButtonElement>({
+    focusKey: "fullscreen-install-button",
+    initialFocus: true,
+    onFocus: ({ node }) => {
+      node?.focus({ preventScroll: true });
+    },
+  });
 
   return (
     <HotkeyLayer
       id="install-button"
       handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
     >
-      <FocusableElement
+      <InstallGameButton
         ref={ref}
-        initialFocus
-        opts={{
-          focusKey: "fullscreen-install-button",
-          onFocus: ({ node }) => {
-            node?.focus({ preventScroll: true });
-          },
-        }}
-      >
-        <InstallGameButton
-          onFocus={onFocus}
-          className={cn(
-            buttonStyles,
-            '[&_div[role="progressbar"]]:w-[6ch] [&_div[role="progressbar"]_>_*]:bg-primary-foreground',
-          )}
-        />
-      </FocusableElement>
+        onFocus={onFocus}
+        className={cn(
+          buttonStyles,
+          '[&_div[role="progressbar"]]:w-[6ch] [&_div[role="progressbar"]_>_*]:bg-primary-foreground',
+        )}
+      />
     </HotkeyLayer>
   );
 });
 
 function DownloadButton() {
-  const ref = useRef<HTMLButtonElement>(null!);
   const { game } = useGameDetail();
+  const { ref } = useFocusable<HTMLButtonElement>({
+    focusKey: "fullscreen-download-button",
+    initialFocus: true,
+    onFocus: ({ node }) => {
+      node?.focus({ preventScroll: true });
+    },
+  });
 
   return (
     <HotkeyLayer
       id="download-button"
       handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
     >
-      <FocusableElement
+      <DownloadGameButton
         ref={ref}
-        initialFocus
-        opts={{
-          focusKey: "fullscreen-download-button",
-          onFocus: ({ node }) => {
-            node?.focus({ preventScroll: true });
-          },
-        }}
-      >
-        <DownloadGameButton
-          onFocus={onFocus}
-          game={game}
-          className={buttonStyles}
-        />
-      </FocusableElement>
+        onFocus={onFocus}
+        game={game}
+        className={buttonStyles}
+      />
     </HotkeyLayer>
   );
 }

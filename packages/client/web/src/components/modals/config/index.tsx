@@ -10,11 +10,9 @@ import { ClientConfigTab } from "./client";
 export function ConfigModal() {
   const navigate = useNavigate();
   const { configModal } = RootRoute.useSearch();
+  type Tab = NonNullable<typeof configModal>["tab"];
 
-  const tabItems: Record<
-    NonNullable<typeof configModal>["tab"],
-    { value: string; name: string }
-  > = {
+  const tabItems: Record<Tab, { value: Tab; name: string }> = {
     server: { value: "server", name: "Server" },
     client: { value: "client", name: "Client" },
   };
@@ -25,6 +23,7 @@ export function ConfigModal() {
       onOpenChange={(open) => {
         if (!open) {
           void navigate({
+            to: ".",
             search: (prev) => ({ ...prev, configModal: undefined }),
           });
         }
@@ -46,9 +45,13 @@ export function ConfigModal() {
         <Tabs
           value={configModal?.tab}
           onValueChange={(tab) => {
-            void navigate({
-              search: (prev) => ({ ...prev, configModal: { open: true, tab } }),
-            });
+            navigate({
+              to: ".",
+              search: (prev) => ({
+                ...prev,
+                configModal: { open: true, tab: tab as Tab },
+              }),
+            }).catch(console.error);
           }}
           orientation="vertical"
         >

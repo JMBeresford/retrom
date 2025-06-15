@@ -1,11 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { MenuItem, RootMenuItem } from "..";
+import { MenuItem } from "..";
 
 const manageEmulatorsMenuItem: MenuItem = {
   label: "Manage Emulators",
-  appContext: "desktop",
   Render: (
-    <Link search={{ manageEmulatorsModal: { open: true } }}>
+    <Link to="." search={{ manageEmulatorsModal: { open: true } }}>
       Manage Emulators
     </Link>
   ),
@@ -15,14 +14,13 @@ const manageEmulatorProfilesMenuItem: MenuItem = {
   label: "Manage Profiles",
   appContext: "desktop",
   Render: (
-    <Link search={{ manageEmulatorProfilesModal: { open: true } }}>
+    <Link to="." search={{ manageEmulatorProfilesModal: { open: true } }}>
       Manage Profiles
     </Link>
   ),
 };
 
-export const emulatorsMenu: RootMenuItem = {
+export const emulatorsMenu: MenuItem = {
   label: "Emulators",
-  appContext: "desktop",
   items: [manageEmulatorsMenuItem, manageEmulatorProfilesMenuItem],
 };

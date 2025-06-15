@@ -14,9 +14,10 @@ use retrom_codegen::retrom::{
     file_explorer_service_server::FileExplorerServiceServer,
     game_service_server::GameServiceServer, job_service_server::JobServiceServer,
     library_service_server::LibraryServiceServer, metadata_service_server::MetadataServiceServer,
-    platform_service_server::PlatformServiceServer, server_service_server::ServerServiceServer,
-    FILE_DESCRIPTOR_SET,
+    platform_service_server::PlatformServiceServer, saves_service_server::SavesServiceServer,
+    server_service_server::ServerServiceServer, FILE_DESCRIPTOR_SET,
 };
+use saves::SavesServiceHandlers;
 use tonic::transport::{server::Routes, Server};
 use tower_http::cors::{AllowOrigin, Cors, CorsLayer};
 
@@ -33,6 +34,7 @@ pub mod jobs;
 pub mod library;
 pub mod metadata;
 pub mod platforms;
+mod saves;
 pub mod server;
 
 const DEFAULT_MAX_AGE: Duration = Duration::from_secs(24 * 60 * 60);
@@ -118,6 +120,11 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> C
     let job_service = JobServiceServer::new(JobServiceHandlers::new(job_manager.clone()));
     let file_explorer_service = FileExplorerServiceServer::new(FileExplorerServiceHandlers::new());
 
+    let saves_service = SavesServiceServer::new(SavesServiceHandlers::new(
+        shared_pool.clone(),
+        config_manager.clone(),
+    ));
+
     Server::builder()
         .trace_fn(|_| tracing::info_span!("service"))
         .accept_http1(true)
@@ -139,5 +146,6 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> C
         .add_service(tonic_web::enable(emulator_service))
         .add_service(tonic_web::enable(job_service))
         .add_service(tonic_web::enable(file_explorer_service))
+        .add_service(tonic_web::enable(saves_service))
         .into_service()
 }

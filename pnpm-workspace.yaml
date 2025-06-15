@@ -3,6 +3,7 @@ syncInjectedDepsAfterScripts: ["build", "build:desktop"]
 packages:
   - packages/*
   - packages/client/web
+  - packages/codegen
   - plugins/*
 onlyBuiltDependencies:
   - "@bufbuild/buf"

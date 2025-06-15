@@ -61,8 +61,11 @@ const DropdownMenuContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content> & {
     portal?: boolean;
   }
->(({ className, sideOffset = 4, portal = true, ...props }, ref) => {
-  const Common = () => (
+>(({ portal = true, ...props }, ref) => {
+  const Common = React.forwardRef<
+    React.ElementRef<typeof DropdownMenuPrimitive.Content>,
+    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content> & {}
+  >(({ className, sideOffset = 4, ...props }, ref) => (
     <DropdownMenuPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
@@ -72,14 +75,14 @@ const DropdownMenuContent = React.forwardRef<
       )}
       {...props}
     />
-  );
+  ));
 
   return portal ? (
     <DropdownMenuPrimitive.Portal>
-      <Common />
+      <Common ref={ref} {...props} />
     </DropdownMenuPrimitive.Portal>
   ) : (
-    <Common />
+    <Common ref={ref} {...props} />
   );
 });
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;

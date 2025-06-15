@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, sync::Arc};
 
 use retrom_codegen::retrom::{
     GamePlayStatusUpdate, GetGameMetadataRequest, PlayStatus, UpdateGameMetadataRequest,
@@ -22,7 +22,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 
 type GameId = i32;
 pub struct GameProcess {
-    pub send: Mutex<tokio::sync::mpsc::Sender<()>>,
+    pub send: Arc<Mutex<tokio::sync::mpsc::Sender<()>>>,
     pub start_time: std::time::SystemTime,
 }
 
@@ -164,7 +164,7 @@ impl<R: Runtime> Launcher<R> {
     pub(crate) fn get_open_cmd(&self, program: &str) -> Command {
         #[cfg(target_os = "macos")]
         {
-            let path: PathBuf = PathBuf::from(program);
+            let path = std::path::PathBuf::from(program);
             let program = if path.extension().is_some_and(|ext| ext == "app") {
                 path.join("Contents/MacOS/").join(path.file_stem().unwrap())
             } else {
@@ -184,7 +184,7 @@ impl<R: Runtime> Launcher<R> {
         }
         #[cfg(target_os = "linux")]
         {
-            let mut cmd = Command::new(program);
+            let cmd = Command::new(program);
 
             cmd
         }

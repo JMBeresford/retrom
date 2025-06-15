@@ -14,5 +14,6 @@
     "@tauri-apps/cli": "2.4.1",
     "@types/node": "^20",
     "execa": "^9.3.0"
-  }
+  },
+  "packageManager": "pnpm@10.7.0"
 }
