@@ -1,6 +1,22 @@
 {
   "announcements": [
     {
+      "versions": [
+        "0.7.15",
+        "0.7.16",
+        "0.7.17",
+        "0.7.18",
+        "0.7.19",
+        "0.7.20",
+        "0.7.21",
+        "0.7.22",
+        "0.7.23"
+      ],
+      "level": "error",
+      "message": "This version of Retrom may not be correctly able to detect updates. If you are not seeing prompts to update, please manually update to the latest version.",
+      "url": "https://github.com/JMBeresford/retrom/releases/latest"
+    },
+    {
       "versions": ["0.7.14"],
       "level": "error",
       "message": "The 'latest' tag of the retrom service docker image has been corrupted on this release. This will be remedied within 24 hours, but if you are encountering issues you should manually tag your service container to 'ghcr.io/jmberesford/retrom-service:retrom-v0.7.14'"
