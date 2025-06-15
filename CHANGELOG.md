@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.22](https://github.com/JMBeresford/retrom/compare/v0.7.21...v0.7.22) - 2025-06-15
+
+### Newly Added
+- initial emulatorJS and cloud save support
+
+    It's happening! Built-in, browser-based emulation is now possible in Retrom via EmulatorJS. Configure the newly added built-in emulators to support the platforms in your library and simply click the play button!
+
+    The following features are coming with this initial release:
+
+    1. In-browser emulation (of course!)
+    2. Managed, cloud save files for supported emulators/cores
+    3. Managed, cloud save states for supported emulators/cores
+    4. Configurable, automated backups of both cloud save files and save states
+    5. In-game overlay, for easy configuration of the emulation experience and control schemes (gamepads too!)
+    6. Import/export your save files and save states straight from the in-game overlay
+
+    EmulatorJS-based emulation is still considered experimental, so you may encounter bugs -- please file an issue on GitHub or reach out via Discord if you have any issues or questions!
+
+
+
+
 ## [0.7.21](https://github.com/JMBeresford/retrom/compare/v0.7.20...v0.7.21) - 2025-05-03
 
 ### Bug Fixes
