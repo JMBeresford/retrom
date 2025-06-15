@@ -123,6 +123,7 @@ export function GameDetailProvider(
   const { data: emulators, status: emulatorsStatus } = useEmulators({
     enabled: platformData?.platform !== undefined,
     request: {
+      ids: [],
       supportedPlatformIds:
         platformData?.platform?.id !== undefined
           ? [platformData.platform.id]
@@ -142,7 +143,7 @@ export function GameDetailProvider(
       defaultEmulatorProfileStatus === "success",
     selectFn: (data) => data.profiles,
     request: {
-      ids: defaultProfileId !== undefined ? [defaultProfileId] : [],
+      ids: [],
       emulatorIds: emulators?.length
         ? emulators.map((emulator) => emulator.id)
         : [-1],
