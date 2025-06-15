@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.23](https://github.com/JMBeresford/retrom/compare/v0.7.22...v0.7.23) - 2025-06-15
+
+### Bug Fixes
+- 'play with' drop down shows all valid emulators
+
+- in-game overlay menu open button now works
+
+- disclaimer no longer re-renders
+
+
 ## [0.7.22](https://github.com/JMBeresford/retrom/compare/v0.7.21...v0.7.22) - 2025-06-15
 
 ### Newly Added
