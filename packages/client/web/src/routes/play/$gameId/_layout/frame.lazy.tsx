@@ -3,7 +3,7 @@ import { HotkeyButton } from "@/components/fullscreen/hotkey-button";
 import { cn } from "@/lib/utils";
 import { EmulatorJSProvider } from "@/providers/emulator-js";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Route as ParentRoute } from ".";
 import { Overlay } from "./-utils/overlay";
 import "./play.scss";
@@ -42,8 +42,9 @@ function FrameComponent() {
   const { overlay } = ParentRoute.useSearch();
   const [showMenuBtn, setShowMenuBtn] = useState(false);
   const pointerMoveTimeout = useRef<number>();
-  const [_disclaimer] = useState(
-    toast({
+
+  useLayoutEffect(() => {
+    const { dismiss } = toast({
       title: "Disclaimer",
       variant: "warning",
       id: "emulatorjs-disclaimer",
@@ -61,8 +62,12 @@ function FrameComponent() {
           </Button>
         </a>
       ),
-    }),
-  );
+    });
+
+    return () => {
+      dismiss();
+    };
+  }, []);
 
   return (
     <div
