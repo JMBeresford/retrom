@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.25](https://github.com/JMBeresford/retrom/compare/v0.7.24...v0.7.25) - 2025-06-17
+
+### Bug Fixes
+- steam playtime now updated in metadata jobs
+
+- server config tab not saving
+
+    fixes [#326](https://github.com/JMBeresford/retrom/pull/326)
+
+
+
+- content directory management
+
+    fixes [#324](https://github.com/JMBeresford/retrom/pull/324)
+
+
+
+
 ## [0.7.24](https://github.com/JMBeresford/retrom/compare/v0.7.23...v0.7.24) - 2025-06-15
 
 ### Bug Fixes
