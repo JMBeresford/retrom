@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router";
 import {
   createContext,
   PropsWithChildren,
@@ -36,7 +35,9 @@ export type ModalActionContext = {
   modals: ModalMap;
   setModalState: <T extends keyof RetromModals.ModalActions>(
     modal: T,
-    state: RetromModals.ModalActions[T],
+    cb:
+      | RetromModals.ModalActions[T]
+      | ((prev: RetromModals.ModalActions[T]) => RetromModals.ModalActions[T]),
   ) => void;
 };
 
@@ -46,9 +47,11 @@ export function ModalActionProvider(props: PropsWithChildren) {
   const [modals, setModals] = useState<ModalMap>({});
 
   const setModalState: ModalActionContext["setModalState"] = useCallback(
-    (modal, state) => {
+    (modal, cb) => {
       setModals((prev) => {
-        prev[modal] = state;
+        const next = typeof cb === "function" ? cb(prev[modal]) : cb;
+        prev[modal] = next;
+
         return { ...prev };
       });
     },
@@ -72,25 +75,25 @@ export function useModalAction<T extends keyof RetromModals.ModalActions>(
   }
 
   const { modals, setModalState } = modalContext;
-  const navigate = useNavigate();
 
   const openModal = useCallback(
-    (props: RetromModals.ModalActions[T]) => {
-      setModalState(modal, props);
-
-      navigate({
-        reloadDocument: false,
-        to: ".",
-        search: (prev) => ({
-          ...prev,
-          [modal]: { open: true },
-        }),
-      }).catch(console.error);
+    (props: RetromModals.ModalActions[T] & { open?: never }) => {
+      setModalState(modal, (prev) => ({ ...prev, ...props, open: true }));
     },
-    [navigate, modal, setModalState],
+    [modal, setModalState],
+  );
+
+  const closeModal = useCallback(
+    (props?: RetromModals.ModalActions[T] & { open?: never }) => {
+      setModalState(modal, (prev) => ({ ...prev, ...props, open: false }));
+    },
+    [setModalState, modal],
   );
 
   const modalState = useMemo(() => modals[modal], [modal, modals]);
 
-  return useMemo(() => ({ openModal, modalState }), [openModal, modalState]);
+  return useMemo(
+    () => ({ openModal, modalState, closeModal }),
+    [openModal, modalState, closeModal],
+  );
 }

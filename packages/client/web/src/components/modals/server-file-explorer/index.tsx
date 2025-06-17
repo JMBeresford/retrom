@@ -7,7 +7,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Fragment, ReactElement, useCallback, useMemo, useState } from "react";
-import { Route as RootRoute } from "@/routes/__root";
 import { useServerFilesystem } from "@/queries/useServerFilesystem";
 import { GetFilesystemNodeRequest } from "@retrom/codegen/retrom/services/file-explorer-service_pb";
 import { Button } from "@/components/ui/button";
@@ -38,6 +37,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useModalAction } from "@/providers/modal-action";
+import { RawMessage } from "@/utils/protos";
 
 declare global {
   namespace RetromModals {
@@ -65,7 +65,7 @@ const FilesystemNodeIcon: Record<
       {...props}
     />
   ),
-  [FilesystemNodeType.UNRECOGNIZED]: () => <></>,
+  [FilesystemNodeType.UNKNOWN]: () => <></>,
 };
 
 const MAX_CRUMBS = 3;
@@ -74,12 +74,14 @@ export function ServerFileExplorerModal() {
   const [path, setPath] = useState<string>("./");
   const [selectedPath, setSelectedPath] = useState<string | undefined>();
   const modalAction = useModalAction("serverFileExplorerModal");
-  const { serverFileExplorerModal } = RootRoute.useSearch();
-  const navigate = RootRoute.useNavigate();
+  const { modalState, closeModal } = modalAction;
 
-  const request: GetFilesystemNodeRequest = useMemo(() => ({ path }), [path]);
+  const request: RawMessage<GetFilesystemNodeRequest> = useMemo(
+    () => ({ path }),
+    [path],
+  );
+
   const { data, status } = useServerFilesystem({ request });
-
   const pending = status === "pending";
   const error = status === "error";
 
@@ -87,7 +89,7 @@ export function ServerFileExplorerModal() {
 
   const close = useCallback(
     (path?: string) => {
-      const action = modalAction.modalState?.onClose;
+      const action = modalState?.onClose;
       if (action) {
         action(path);
       }
@@ -96,16 +98,15 @@ export function ServerFileExplorerModal() {
         setPath("./");
       }
 
-      navigate({
-        search: (prev) => ({ ...prev, serverFileExplorerModal: undefined }),
-      }).catch(console.error);
+      closeModal();
     },
-    [modalAction?.modalState, navigate],
+    [modalState, closeModal],
   );
 
   return (
     <Dialog
-      open={serverFileExplorerModal?.open}
+      modal
+      open={!!modalState?.open}
       onOpenChange={(value) => {
         if (!value) {
           close();
@@ -114,11 +115,9 @@ export function ServerFileExplorerModal() {
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {serverFileExplorerModal?.title || <>Server Files</>}
-          </DialogTitle>
+          <DialogTitle>{modalState?.title || <>Server Files</>}</DialogTitle>
           <DialogDescription className="max-w-[65ch]">
-            {serverFileExplorerModal?.description || (
+            {modalState?.description || (
               <>
                 These are the files on the Retrom server. If you are using
                 standalone mode, then these are also the files on your computer.

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
 import {
+  ContentDirectorySchema,
   ServerConfig,
   StorageType,
 } from "@retrom/codegen/retrom/server/config_pb";
@@ -29,6 +30,8 @@ import {
   libraryDefinitionValidator,
 } from "./custom-library-definition";
 import { InferSchema } from "@/lib/utils";
+import { RawMessage } from "@/utils/protos";
+import { create } from "@bufbuild/protobuf";
 
 export const contentDirectorySchema = z.object({
   path: z.string().min(1),
@@ -42,7 +45,9 @@ export const contentDirectorySchema = z.object({
       patterns: z.string().array(),
     })
     .default({ patterns: [] }),
-}) satisfies InferSchema<ServerConfig["contentDirectories"][number]>;
+}) satisfies InferSchema<
+  RawMessage<ServerConfig>["contentDirectories"][number]
+>;
 
 const librariesSchema = z.object({
   contentDirectories: z.array(
@@ -58,7 +63,7 @@ const librariesSchema = z.object({
       },
     ),
   ),
-}) satisfies InferSchema<Pick<ServerConfig, "contentDirectories">>;
+}) satisfies InferSchema<Pick<RawMessage<ServerConfig>, "contentDirectories">>;
 
 export type LibrariesSchema = z.infer<typeof librariesSchema>;
 export function LibrariesConfig(props: {
@@ -86,7 +91,14 @@ export function LibrariesConfig(props: {
       );
 
       try {
-        const res = await save({ ...props.currentConfig, contentDirectories });
+        const next = {
+          ...props.currentConfig,
+          contentDirectories: contentDirectories.map((cd) =>
+            create(ContentDirectorySchema, cd),
+          ),
+        };
+
+        const res = await save({ config: next });
         form.reset(librariesSchema.parse(res.configUpdated));
       } catch (error) {
         console.error(error);

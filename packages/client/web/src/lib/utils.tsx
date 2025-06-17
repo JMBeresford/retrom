@@ -1,11 +1,14 @@
+import { RawMessage } from "@/utils/protos";
 import { Timestamp, timestampDate } from "@bufbuild/protobuf/wkt";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
 export type InferSchema<T extends object> = z.ZodObject<{
-  [K in keyof T]: T[K] extends object & { length?: never }
-    ? InferSchema<T[K]>
+  [K in keyof T]: T[K] extends object
+    ? T[K] extends unknown[]
+      ? z.ZodType<T[K]>
+      : InferSchema<T[K]>
     : z.ZodType<T[K]>;
 }>;
 
@@ -80,8 +83,8 @@ export function getFileName(path: string) {
   return name + (extension ? `.${extension}` : "");
 }
 
-export function millisToTimestamp(millis: number): Timestamp {
-  const seconds = Math.floor(millis / 1000);
+export function millisToTimestamp(millis: number): RawMessage<Timestamp> {
+  const seconds = BigInt(Math.floor(millis / 1000));
   const nanos = Math.floor((millis % 1000) * 1000000);
 
   return { seconds, nanos };

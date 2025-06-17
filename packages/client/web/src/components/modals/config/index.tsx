@@ -19,6 +19,7 @@ export function ConfigModal() {
 
   return (
     <Dialog
+      modal
       open={!!configModal?.open}
       onOpenChange={(open) => {
         if (!open) {

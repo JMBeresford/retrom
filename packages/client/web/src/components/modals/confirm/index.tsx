@@ -13,7 +13,6 @@ import { ReactNode, useCallback } from "react";
 import { useModalAction } from "@/providers/modal-action";
 import { useMutation } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
 
 declare global {
   namespace RetromModals {
@@ -32,7 +31,6 @@ declare global {
 export function ConfirmModal() {
   const modalAction = useModalAction("confirmModal");
   const { confirmModal } = RootRoute.useSearch();
-  const navigate = useNavigate();
 
   const { mutate, status } = useMutation({
     mutationFn: async () => {
@@ -46,21 +44,15 @@ export function ConfirmModal() {
 
   const close = useCallback(
     async (confirmed: boolean = false) => {
-      return navigate({
-        to: ".",
-        search: (prev) => ({
-          ...prev,
-          confirmModal: undefined,
-        }),
-      }).then(async () => {
-        if (confirmed) {
-          mutate();
-        } else if (!confirmed && modalAction.modalState?.onCancel) {
-          await modalAction.modalState.onCancel();
-        }
-      });
+      if (confirmed) {
+        mutate();
+      } else if (!confirmed && modalAction.modalState?.onCancel) {
+        await modalAction.modalState.onCancel();
+      }
+
+      modalAction.closeModal();
     },
-    [navigate, modalAction, mutate],
+    [modalAction, mutate],
   );
 
   return (
