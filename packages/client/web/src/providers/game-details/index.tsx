@@ -53,6 +53,7 @@ export function GameDetailProvider(
   const fullscreenByDefault = useConfig(
     (s) => s.config?.interface?.fullscreenByDefault,
   );
+
   const retromClient = useRetromClient();
 
   const {
@@ -85,6 +86,7 @@ export function GameDetailProvider(
       const response = await retromClient.metadataClient.getGameMetadata({
         gameIds: [gameId],
       });
+
       return response;
     },
   });

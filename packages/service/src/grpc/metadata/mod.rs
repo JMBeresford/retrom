@@ -1,39 +1,52 @@
-use std::{collections::HashMap, sync::Arc};
-
 use crate::providers::{
     igdb::provider::{IGDBProvider, IgdbSearchData},
+    steam::provider::SteamWebApiProvider,
     GameMetadataProvider, MetadataProvider, PlatformMetadataProvider,
 };
+use chrono::DateTime;
 use diesel::prelude::*;
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use retrom_codegen::retrom::{
-    self,
-    get_game_metadata_response::{GameGenres, SimilarGames},
-    get_igdb_search_request::IgdbSearchType,
-    get_igdb_search_response::SearchResults,
-    metadata_service_server::MetadataService,
-    Game, GameGenre, GameGenreMap, GetGameMetadataRequest, GetGameMetadataResponse,
-    GetIgdbGameSearchResultsRequest, GetIgdbGameSearchResultsResponse,
-    GetIgdbPlatformSearchResultsRequest, GetIgdbPlatformSearchResultsResponse,
-    GetIgdbSearchRequest, GetIgdbSearchResponse, GetPlatformMetadataRequest,
-    GetPlatformMetadataResponse, IgdbSearchGameResponse, IgdbSearchPlatformResponse,
-    SimilarGameMap, UpdateGameMetadataRequest, UpdateGameMetadataResponse,
-    UpdatePlatformMetadataRequest, UpdatePlatformMetadataResponse,
+use futures::future;
+use retrom_codegen::{
+    retrom::{
+        self,
+        get_game_metadata_response::{GameGenres, SimilarGames},
+        get_igdb_search_request::IgdbSearchType,
+        get_igdb_search_response::SearchResults,
+        metadata_service_server::MetadataService,
+        Game, GameGenre, GameGenreMap, GetGameMetadataRequest, GetGameMetadataResponse,
+        GetIgdbGameSearchResultsRequest, GetIgdbGameSearchResultsResponse,
+        GetIgdbPlatformSearchResultsRequest, GetIgdbPlatformSearchResultsResponse,
+        GetIgdbSearchRequest, GetIgdbSearchResponse, GetPlatformMetadataRequest,
+        GetPlatformMetadataResponse, IgdbSearchGameResponse, IgdbSearchPlatformResponse,
+        SimilarGameMap, SyncSteamMetadataRequest, SyncSteamMetadataResponse,
+        UpdateGameMetadataRequest, UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
+        UpdatePlatformMetadataResponse, UpdatedGameMetadata,
+    },
+    timestamp::Timestamp,
 };
 use retrom_db::{schema, Pool};
+use std::{collections::HashMap, sync::Arc};
+use tokio::sync::RwLock;
 use tonic::{Request, Response, Status};
-use tracing::{error, Level};
+use tracing::{error, Instrument, Level};
 
 pub struct MetadataServiceHandlers {
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,
+    steam_provider: Arc<SteamWebApiProvider>,
 }
 
 impl MetadataServiceHandlers {
-    pub fn new(db_pool: Arc<Pool>, igdb_client: Arc<IGDBProvider>) -> Self {
+    pub fn new(
+        db_pool: Arc<Pool>,
+        igdb_client: Arc<IGDBProvider>,
+        steam_provider: Arc<SteamWebApiProvider>,
+    ) -> Self {
         Self {
             db_pool,
             igdb_client,
+            steam_provider,
         }
     }
 }
@@ -380,5 +393,122 @@ impl MetadataService for MetadataServiceHandlers {
         .into();
 
         Ok(Response::new(GetIgdbSearchResponse { search_results }))
+    }
+
+    #[tracing::instrument(level = Level::DEBUG, skip_all)]
+    async fn sync_steam_metadata(
+        &self,
+        request: Request<SyncSteamMetadataRequest>,
+    ) -> Result<Response<SyncSteamMetadataResponse>, Status> {
+        let request = request.into_inner();
+        let selectors = request.selectors;
+
+        let steam_provider = self.steam_provider.clone();
+        let pool = self.db_pool.clone();
+
+        let game_ids = selectors.iter().map(|s| s.game_id).collect::<Vec<_>>();
+
+        let mut conn = pool
+            .get()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let games: Vec<retrom::Game> = match schema::games::table
+            .filter(schema::games::id.eq_any(&game_ids))
+            .filter(schema::games::steam_app_id.is_not_null())
+            .load(&mut conn)
+            .await
+        {
+            Ok(games) => games,
+            Err(why) => {
+                return Err(Status::internal(why.to_string()));
+            }
+        };
+
+        drop(conn);
+
+        let steam_games = Arc::new(RwLock::new(
+            steam_provider
+                .get_owned_games()
+                .await
+                .map_err(|why| {
+                    error!("Failed to fetch owned games from Steam: {}", why);
+                    Status::internal(why.to_string())
+                })?
+                .response
+                .games,
+        ));
+
+        let tasks = games
+            .into_iter()
+            .map(|game| {
+                let pool = pool.clone();
+                let steam_games = steam_games.clone();
+
+                async move {
+                    if let Some(steam_game) = steam_games
+                        .read()
+                        .await
+                        .iter()
+                        .find(|g| g.appid == game.steam_app_id() as u32)
+                    {
+                        let last_played = if steam_game.rtime_last_played > 0 {
+                            let dt = DateTime::from_timestamp(steam_game.rtime_last_played, 0);
+
+                            dt.map(|dt| Timestamp {
+                                seconds: dt.timestamp(),
+                                nanos: 0,
+                            })
+                        } else {
+                            None
+                        };
+
+                        let minutes_played = if steam_game.playtime_forever > 0 {
+                            Some(steam_game.playtime_forever)
+                        } else {
+                            None
+                        };
+
+                        let updated_meta = UpdatedGameMetadata {
+                            last_played,
+                            minutes_played,
+                            ..Default::default()
+                        };
+
+                        let mut conn = match pool.get().await {
+                            Ok(conn) => conn,
+                            Err(why) => {
+                                return Err(Status::internal(why.to_string()));
+                            }
+                        };
+
+                        diesel::update(schema::game_metadata::table)
+                            .filter(schema::game_metadata::game_id.eq(game.id))
+                            .set(&updated_meta)
+                            .execute(&mut conn)
+                            .await
+                            .map_err(|why| Status::internal(why.to_string()))?;
+
+                        Ok(Some(updated_meta))
+                    } else {
+                        Ok(None)
+                    }
+                }
+                .instrument(tracing::info_span!("steam_sync_thread"))
+            })
+            .collect::<Vec<_>>();
+
+        let res = future::join_all(tasks)
+            .await
+            .into_iter()
+            .collect::<Vec<_>>();
+
+        res.iter().for_each(|result| {
+            if let Err(e) = result {
+                tracing::warn!("Failed to update game metadata: {:?}", e);
+            }
+        });
+
+        Ok(Response::new(SyncSteamMetadataResponse {}))
     }
 }

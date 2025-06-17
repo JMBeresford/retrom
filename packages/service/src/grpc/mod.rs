@@ -101,6 +101,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> C
     let metadata_service = MetadataServiceServer::new(MetadataServiceHandlers::new(
         shared_pool.clone(),
         igdb_client.clone(),
+        steam_web_api_client.clone(),
     ));
 
     let game_service = GameServiceServer::new(GameServiceHandlers::new(shared_pool.clone()));

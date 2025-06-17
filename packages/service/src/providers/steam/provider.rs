@@ -120,10 +120,7 @@ impl SteamWebApiProvider {
         }
 
         let cover_url = app_details.steam_appid.map(|id| {
-            format!(
-                "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_600x900_2x.jpg",
-                id
-            )
+            format!("https://steamcdn-a.akamaihd.net/steam/apps/{id}/library_600x900_2x.jpg")
         });
 
         let icon_url = app.img_icon_url.map(|icon_id| {

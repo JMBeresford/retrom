@@ -17,6 +17,8 @@ service MetadataService {
   rpc GetIgdbSearch(GetIgdbSearchRequest) returns (GetIgdbSearchResponse);
   rpc GetIgdbGameSearchResults(GetIgdbGameSearchResultsRequest) returns (GetIgdbGameSearchResultsResponse);
   rpc GetIgdbPlatformSearchResults(GetIgdbPlatformSearchResultsRequest) returns (GetIgdbPlatformSearchResultsResponse);
+
+  rpc SyncSteamMetadata(SyncSteamMetadataRequest) returns (SyncSteamMetadataResponse);
 }
 
 message GetGameMetadataRequest {
@@ -105,3 +107,13 @@ message GetIgdbSearchResponse {
     IgdbSearchPlatformResponse platform_matches = 2;
   }
 }
+
+message SyncSteamMetadataRequest {
+  message Selector {
+    int32 game_id = 1;
+  }
+
+  repeated Selector selectors = 1;
+}
+
+message SyncSteamMetadataResponse {}
