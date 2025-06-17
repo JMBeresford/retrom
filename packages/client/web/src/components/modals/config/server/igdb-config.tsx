@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
-import { ServerConfig } from "@retrom/codegen/retrom/server/config_pb";
+import {
+  IGDBConfigSchema,
+  ServerConfig,
+} from "@retrom/codegen/retrom/server/config_pb";
 import { useUpdateServerConfig } from "@/mutations/useUpdateServerConfig";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
@@ -18,9 +21,12 @@ import { LoaderCircleIcon } from "lucide-react";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { RawMessage } from "@/utils/protos";
+import { create } from "@bufbuild/protobuf";
+import { UpdateServerConfigRequestSchema } from "@retrom/codegen/retrom/services/server-service_pb";
 
 type IgdbConfigShape = Record<
-  keyof NonNullable<ServerConfig["igdb"]>,
+  keyof NonNullable<RawMessage<ServerConfig["igdb"]>>,
   z.ZodTypeAny
 >;
 const igdbSchema = z.object({
@@ -41,7 +47,15 @@ export function IgdbConfig(props: {
   const handleSubmit = useCallback(
     (values: z.infer<typeof igdbSchema>) => {
       try {
-        update({ ...props.currentConfig, igdb: values });
+        update(
+          create(UpdateServerConfigRequestSchema, {
+            config: {
+              ...props.currentConfig,
+              igdb: create(IGDBConfigSchema, values),
+            },
+          }),
+        );
+
         form.reset(values);
       } catch (error) {
         console.error(error);

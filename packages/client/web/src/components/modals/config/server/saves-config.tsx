@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
-import { ServerConfig } from "@retrom/codegen/retrom/server/config_pb";
+import {
+  SavesConfigSchema,
+  ServerConfig,
+} from "@retrom/codegen/retrom/server/config_pb";
 import { useUpdateServerConfig } from "@/mutations/useUpdateServerConfig";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
@@ -19,6 +22,7 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { RawMessage } from "@/utils/protos";
+import { create } from "@bufbuild/protobuf";
 
 type SavesConfigShape = Record<
   keyof NonNullable<RawMessage<ServerConfig["saves"]>>,
@@ -46,7 +50,13 @@ export function SavesConfig(props: {
   const handleSubmit = useCallback(
     (values: z.infer<typeof savesSchema>) => {
       try {
-        update({ ...props.currentConfig, saves: values });
+        update({
+          config: {
+            ...props.currentConfig,
+            saves: create(SavesConfigSchema, values),
+          },
+        });
+
         form.reset(values);
       } catch (error) {
         console.error(error);

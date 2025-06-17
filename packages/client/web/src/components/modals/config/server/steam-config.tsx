@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
-import { ServerConfig } from "@retrom/codegen/retrom/server/config_pb";
+import {
+  ServerConfig,
+  SteamConfigSchema,
+} from "@retrom/codegen/retrom/server/config_pb";
 import { useUpdateServerConfig } from "@/mutations/useUpdateServerConfig";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
@@ -18,9 +21,11 @@ import { LoaderCircleIcon } from "lucide-react";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { RawMessage } from "@/utils/protos";
+import { create } from "@bufbuild/protobuf";
 
 type SteamConfigShape = Record<
-  keyof NonNullable<ServerConfig["steam"]>,
+  keyof NonNullable<RawMessage<ServerConfig>["steam"]>,
   z.ZodTypeAny
 >;
 const steamSchema = z.object({
@@ -42,7 +47,13 @@ export function SteamConfig(props: {
   const handleSubmit = useCallback(
     (values: z.infer<typeof steamSchema>) => {
       try {
-        update({ ...props.currentConfig, steam: values });
+        update({
+          config: {
+            ...props.currentConfig,
+            steam: create(SteamConfigSchema, values),
+          },
+        });
+
         form.reset(values);
       } catch (error) {
         console.error(error);
