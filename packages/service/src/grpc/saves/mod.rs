@@ -84,6 +84,7 @@ impl SavesService for SavesServiceHandlers {
         Ok(tonic::Response::new(response))
     }
 
+    #[instrument(skip_all)]
     async fn stat_save_states(
         &self,
         request: tonic::Request<StatSaveStatesRequest>,
@@ -215,6 +216,7 @@ impl SavesService for SavesServiceHandlers {
         Ok(tonic::Response::new(response))
     }
 
+    #[instrument(skip_all)]
     async fn get_save_states(
         &self,
         request: tonic::Request<retrom_codegen::retrom::GetSaveStatesRequest>,
@@ -297,6 +299,7 @@ impl SavesService for SavesServiceHandlers {
         Ok(tonic::Response::new(response))
     }
 
+    #[instrument(skip_all)]
     async fn update_save_files(
         &self,
         request: tonic::Request<UpdateSaveFilesRequest>,
@@ -351,6 +354,7 @@ impl SavesService for SavesServiceHandlers {
         Ok(tonic::Response::new(response))
     }
 
+    #[instrument(skip_all)]
     async fn update_save_states(
         &self,
         request: tonic::Request<UpdateSaveStatesRequest>,
@@ -405,6 +409,7 @@ impl SavesService for SavesServiceHandlers {
         Ok(tonic::Response::new(response))
     }
 
+    #[instrument(skip_all)]
     async fn delete_save_files(
         &self,
         request: tonic::Request<DeleteSaveFilesRequest>,
@@ -445,6 +450,7 @@ impl SavesService for SavesServiceHandlers {
         Ok(tonic::Response::new(res))
     }
 
+    #[instrument(skip_all)]
     async fn delete_save_states(
         &self,
         request: tonic::Request<DeleteSaveStatesRequest>,
@@ -485,6 +491,7 @@ impl SavesService for SavesServiceHandlers {
         Ok(tonic::Response::new(res))
     }
 
+    #[instrument(skip_all)]
     async fn restore_save_files_from_backup(
         &self,
         request: tonic::Request<RestoreSaveFilesFromBackupRequest>,
@@ -580,6 +587,7 @@ impl SavesService for SavesServiceHandlers {
         Ok(tonic::Response::new(res))
     }
 
+    #[instrument(skip_all)]
     async fn restore_save_states_from_backup(
         &self,
         request: tonic::Request<RestoreSaveStatesFromBackupRequest>,

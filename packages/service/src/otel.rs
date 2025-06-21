@@ -6,6 +6,7 @@ use opentelemetry::{
     KeyValue,
 };
 use opentelemetry_http::HeaderExtractor;
+use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
 use opentelemetry_sdk::{
     metrics::{MeterProviderBuilder, PeriodicReader, SdkMeterProvider},
     propagation::TraceContextPropagator,
@@ -18,7 +19,8 @@ use tracing::field::Empty;
 use tracing_opentelemetry::{MetricsLayer, OpenTelemetryLayer, OpenTelemetrySpanExt};
 use tracing_subscriber::{layer::SubscriberExt, prelude::*, util::SubscriberInitExt};
 
-pub fn init_tracing_subscriber() {
+#[tracing::instrument]
+pub async fn init_tracing_subscriber() {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
     let fmt_layer = tracing_subscriber::fmt::layer()
@@ -28,16 +30,23 @@ pub fn init_tracing_subscriber() {
 
     let mut layers = vec![fmt_layer];
 
-    if cfg!(debug_assertions) {
-        let tracer_provider = get_tracer_provider();
-        let meter_provider = init_meter_provider();
-        let tracer = tracer_provider.tracer("main");
+    if let Ok(config) = crate::config::ServerConfigManager::new() {
+        if config
+            .get_config()
+            .await
+            .telemetry
+            .is_some_and(|t| t.enabled)
+        {
+            let tracer_provider = get_tracer_provider();
+            let meter_provider = init_meter_provider();
+            let tracer = tracer_provider.tracer("main");
 
-        let metrics_layer = MetricsLayer::new(meter_provider).boxed();
-        let telemetry_layer = OpenTelemetryLayer::new(tracer).boxed();
+            let metrics_layer = MetricsLayer::new(meter_provider).boxed();
+            let telemetry_layer = OpenTelemetryLayer::new(tracer).boxed();
 
-        layers.push(metrics_layer);
-        layers.push(telemetry_layer);
+            layers.push(metrics_layer);
+            layers.push(telemetry_layer);
+        }
     }
 
     let log_file = OpenOptions::new()
@@ -124,6 +133,11 @@ fn get_tracer_provider() -> SdkTracerProvider {
         .build();
 
     global::set_tracer_provider(tracer_provider.clone());
+
+    tracing::info!(
+        "OpenTelemetry Tracer Provider initialized: {}",
+        OTEL_EXPORTER_OTLP_ENDPOINT
+    );
 
     tracer_provider
 }

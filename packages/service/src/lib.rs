@@ -2,6 +2,7 @@ use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
+use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
 use otel::{init_tracing_subscriber, span_from_grpc_request};
 use retrom_db::run_migrations;
 use retry::retry;
@@ -44,9 +45,20 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
         }
     };
 
-    let config = config_manager.get_config().await;
-    if config.telemetry.is_some_and(|t| t.enabled) {
-        init_tracing_subscriber();
+    init_tracing_subscriber().await;
+
+    if config_manager
+        .get_config()
+        .await
+        .telemetry
+        .is_some_and(|t| t.enabled)
+    {
+        tracing::info!(
+            "OpenTelemetry Tracing enabled: {:#?}",
+            std::env::var(OTEL_EXPORTER_OTLP_ENDPOINT).unwrap_or("endpoint unset".into())
+        );
+    } else {
+        tracing::warn!("OpenTelemetry Tracing is disabled, no telemetry data will be collected.");
     }
 
     let (mut port, mut db_url) = (DEFAULT_PORT, DEFAULT_DB_URL.to_string());
