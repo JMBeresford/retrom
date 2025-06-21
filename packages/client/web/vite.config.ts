@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => {
     ...loadEnv(mode, process.cwd()),
   };
 
+  console.log(process.env);
+
   let localVersion = "0.0.0";
   try {
     const cargoTomlVersion = readLocalCargoToml();
@@ -39,9 +41,13 @@ export default defineConfig(({ mode }) => {
     process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
     "http://localhost:4318";
 
+  const uptraceDsn =
+    process.env.VITE_UPTRACE_DSN || process.env.UPTRACE_DSN || "";
+
   // https://vitejs.dev/config/
   return {
     define: {
+      "import.meta.env.VITE_UPTRACE_DSN": JSON.stringify(uptraceDsn),
       "import.meta.env.VITE_RETROM_VERSION": JSON.stringify(localVersion),
       "import.meta.env.VITE_RETROM_LOCAL_SERVICE_HOST":
         JSON.stringify(localServiceHost),

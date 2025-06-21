@@ -37,6 +37,9 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 COPY --from=project /app /app
 WORKDIR /app
 
+ENV UPTRACE_DSN=https://KgFBXOxX2RFeJurwr7R-4w@api.uptrace.dev?grpc=4317
+ENV VITE_UPTRACE_DSN=${UPTRACE_DSN}
+
 RUN pnpm install --frozen-lockfile && \
   pnpm turbo --filter @retrom/client-web build && \
   pnpm deploy --filter=@retrom/client-web /web && \
