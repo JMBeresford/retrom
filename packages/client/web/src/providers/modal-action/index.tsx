@@ -9,7 +9,8 @@ import {
 
 declare global {
   namespace RetromModals {
-    export interface ModalActions {
+    export interface ModalActions
+      extends Partial<Record<string, BaseModalActionProps>> {
       unused?: BaseModalActionProps;
     }
   }

@@ -3,6 +3,6 @@
 
   "identifier": "com.retrom.client",
   "bundle": {
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": false
   }
 }

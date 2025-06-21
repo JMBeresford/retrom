@@ -25,6 +25,10 @@ message InterfaceConfig {
 }
 
 message RetromClientConfig {
+  message TelemetryConfig {
+    bool enabled = 1;
+  }
+
   message Server {
     string hostname = 1;
     optional int32 port = 2;
@@ -39,9 +43,11 @@ message RetromClientConfig {
 
   message FlowCompletions {
     bool setup_complete = 1;
+    bool telemetry_enabled = 2;
   }
 
   Server server = 1;
   Config config = 2;
   FlowCompletions flow_completions = 3;
+  optional TelemetryConfig telemetry = 4;
 }

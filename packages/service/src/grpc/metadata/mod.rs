@@ -53,7 +53,6 @@ impl MetadataServiceHandlers {
 
 #[tonic::async_trait]
 impl MetadataService for MetadataServiceHandlers {
-    #[tracing::instrument(level = Level::DEBUG, skip_all)]
     async fn get_game_metadata(
         &self,
         request: Request<GetGameMetadataRequest>,
@@ -139,7 +138,6 @@ impl MetadataService for MetadataServiceHandlers {
         }))
     }
 
-    #[tracing::instrument(level = Level::DEBUG, skip_all)]
     async fn update_game_metadata(
         &self,
         request: Request<UpdateGameMetadataRequest>,
@@ -179,7 +177,6 @@ impl MetadataService for MetadataServiceHandlers {
         }))
     }
 
-    #[tracing::instrument(level = Level::DEBUG, skip_all)]
     async fn get_platform_metadata(
         &self,
         request: Request<GetPlatformMetadataRequest>,
@@ -208,7 +205,6 @@ impl MetadataService for MetadataServiceHandlers {
         Ok(Response::new(GetPlatformMetadataResponse { metadata }))
     }
 
-    #[tracing::instrument(level = Level::DEBUG, skip_all)]
     async fn update_platform_metadata(
         &self,
         request: Request<UpdatePlatformMetadataRequest>,
@@ -253,7 +249,6 @@ impl MetadataService for MetadataServiceHandlers {
         })
     }
 
-    #[tracing::instrument(skip_all)]
     async fn get_igdb_game_search_results(
         &self,
         request: Request<GetIgdbGameSearchResultsRequest>,
@@ -297,7 +292,6 @@ impl MetadataService for MetadataServiceHandlers {
         Ok(Response::new(GetIgdbGameSearchResultsResponse { metadata }))
     }
 
-    #[tracing::instrument(level = Level::DEBUG, skip_all)]
     async fn get_igdb_platform_search_results(
         &self,
         request: Request<GetIgdbPlatformSearchResultsRequest>,
@@ -346,7 +340,6 @@ impl MetadataService for MetadataServiceHandlers {
         }
     }
 
-    #[tracing::instrument(level = Level::DEBUG, skip_all)]
     async fn get_igdb_search(
         &self,
         request: Request<GetIgdbSearchRequest>,

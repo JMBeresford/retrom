@@ -5,6 +5,8 @@ const _Vars = [
   "RETROM_HOST",
   "RETROM_HOSTNAME",
   "RETROM_VERSION",
+  "UPTRACE_DSN",
+  "OTEL_SERVICE_NAME",
 ] as const;
 
 type Env = (typeof _Vars)[number] | `VITE_${(typeof _Vars)[number]}`;

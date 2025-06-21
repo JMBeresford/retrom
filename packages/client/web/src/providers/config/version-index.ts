@@ -43,3 +43,12 @@ export type ConfigV3 = ConfigV2 & {
 export type ConfigV4 = ConfigV3 & {
   config?: { installationDir?: string };
 };
+
+export type ConfigV5 = ConfigV4 & {
+  flowCompletions?: ConfigV4["flowCompletions"] & {
+    telemetryEnabled: boolean;
+  };
+  telemetry?: {
+    enabled: boolean;
+  };
+};

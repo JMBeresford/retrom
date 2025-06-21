@@ -2,3 +2,4 @@ src/ssl
 config.dev.json
 config.dev.json5
 retrom.log
+uptrace.sh

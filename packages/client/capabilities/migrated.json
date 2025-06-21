@@ -3,7 +3,12 @@
   "description": "permissions that were migrated from v1",
   "local": true,
   "remote": {
-    "urls": ["https://*", "http://localhost:*"]
+    "urls": [
+      "https://*",
+      "http://localhost:*",
+      "http://*.local",
+      "http://*.local:*"
+    ]
   },
   "windows": ["main", "emulator-js"],
   "permissions": [

@@ -8,6 +8,7 @@ import { IgdbConfig } from "./igdb-config";
 import { SteamConfig } from "./steam-config";
 import { SavesConfig } from "./saves-config";
 import { LibrariesConfig } from "./libraries-config";
+import { TelemetryConfig } from "./telemetry-config";
 
 type ServerTabs = Exclude<keyof ServerConfigJson, "connection">;
 
@@ -20,6 +21,7 @@ export function ServerConfigTab() {
     igdb: { value: "igdb", name: "IGDB" },
     steam: { value: "steam", name: "Steam" },
     saves: { value: "saves", name: "Cloud Saves" },
+    telemetry: { value: "telemetry", name: "Telemetry" },
   };
 
   const { data, status } = useServerConfig();
@@ -83,6 +85,7 @@ export function ServerConfigTab() {
           <IgdbConfig currentConfig={data.config} />
           <SteamConfig currentConfig={data.config} />
           <SavesConfig currentConfig={data.config} />
+          <TelemetryConfig />
         </Tabs>
       )}
     </TabsContent>

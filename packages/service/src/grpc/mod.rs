@@ -43,12 +43,15 @@ const DEFAULT_EXPOSED_HEADERS: [HeaderName; 3] = [
     HeaderName::from_static("grpc-message"),
     HeaderName::from_static("grpc-status-details-bin"),
 ];
-const DEFAULT_ALLOW_HEADERS: [HeaderName; 5] = [
+
+const DEFAULT_ALLOW_HEADERS: [HeaderName; 7] = [
     HeaderName::from_static("x-grpc-web"),
     http::header::CONTENT_TYPE,
     HeaderName::from_static("x-user-agent"),
     HeaderName::from_static("grpc-timeout"),
     HeaderName::from_static("x-client-id"),
+    HeaderName::from_static("traceparent"),
+    HeaderName::from_static("tracestate"),
 ];
 
 pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> Cors<Routes> {
@@ -127,8 +130,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> C
     ));
 
     Server::builder()
-        .trace_fn(|_| tracing::info_span!("service"))
-        .accept_http1(true)
+        // .accept_http1(true)
         .layer(
             CorsLayer::new()
                 .allow_origin(AllowOrigin::mirror_request())

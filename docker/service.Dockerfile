@@ -37,6 +37,9 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 COPY --from=project /app /app
 WORKDIR /app
 
+ENV UPTRACE_DSN=https://KgFBXOxX2RFeJurwr7R-4w@api.uptrace.dev?grpc=4317
+ENV VITE_UPTRACE_DSN=${UPTRACE_DSN}
+
 RUN pnpm install --frozen-lockfile && \
   pnpm turbo --filter @retrom/client-web build && \
   pnpm deploy --filter=@retrom/client-web /web && \
@@ -61,13 +64,22 @@ ENV PUID=1000
 ENV PGID=1000
 ENV UMASK=002
 ENV TZ=Etc/UTC
+
 # Service env
+ENV UPTRACE_DSN=https://KgFBXOxX2RFeJurwr7R-4w@api.uptrace.dev?grpc=4317
+ENV OTEL_EXPORTER_OTLP_ENDPOINT="https://api.uptrace.dev"
+ENV OTEL_EXPORTER_OTLP_HEADERS="uptrace-dsn=https://KgFBXOxX2RFeJurwr7R-4w@api.uptrace.dev?grpc=4317"
+ENV OTEL_EXPORTER_OTLP_COMPRESSION=gzip
+ENV OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION=BASE2_EXPONENTIAL_BUCKET_HISTOGRAM
+ENV OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=DELTA
 ENV RETROM_CONFIG=/app/config/config.json
 ENV PORT=5101
 ENV RETROM_WEB_PORT=3000
 ENV EMBEDDED_DB_OPTS="?data_dir=/app/data/db&password_file=/app/data/pgpass.conf&installation_dir=/app/psql"
+
 # Web env
 ENV NODE_ENV=production
+ENV VITE_UPTRACE_DSN=${UPTRACE_DSN}
 
 # remove the provided node user for clarity, as it uses 1000:1000 as well
 RUN groupmod -g 1500 node

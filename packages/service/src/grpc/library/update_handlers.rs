@@ -11,7 +11,6 @@ use super::{
     LibraryServiceHandlers,
 };
 
-#[tracing::instrument(skip_all)]
 pub(super) async fn update_library(
     state: &LibraryServiceHandlers,
     _request: Request<UpdateLibraryRequest>,

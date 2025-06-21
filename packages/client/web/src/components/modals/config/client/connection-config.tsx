@@ -27,6 +27,7 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { clearInstallationDir } from "@retrom/plugin-installer";
 import { z } from "zod";
+import { RawMessage } from "@/utils/protos";
 
 export function ConnectionConfig() {
   const { openModal: confirm } = useModalAction("confirmModal");
@@ -128,7 +129,7 @@ export function ConnectionConfig() {
 }
 
 type ConfigShape = Record<
-  Exclude<keyof RetromClientConfig_Server, "standalone">,
+  Exclude<keyof RawMessage<RetromClientConfig_Server>, "standalone">,
   z.ZodTypeAny
 >;
 const connectionSchema = z.object({

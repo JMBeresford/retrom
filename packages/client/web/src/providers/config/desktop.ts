@@ -4,11 +4,24 @@ import { create, fromJsonString, toJsonString } from "@bufbuild/protobuf";
 import { RetromClientConfigSchema } from "@retrom/codegen/retrom/client/client-config_pb";
 import { LocalConfig } from ".";
 
+async function retry<T>(fn: () => Promise<T>, count = 5): Promise<T> {
+  let attempts = 0;
+
+  while (attempts < count) {
+    try {
+      const res = await fn();
+      return res;
+    } catch {
+      attempts += 1;
+    }
+  }
+
+  throw new Error("Failed to get config");
+}
+
 export const desktopStorage: StateStorage = {
   getItem: async (_key: string) => {
-    const clientConfig = await ConfigFile.getConfig();
-
-    console.log({ clientConfig });
+    const clientConfig = await retry(ConfigFile.getConfig, 5);
 
     return toJsonString(
       RetromClientConfigSchema,
@@ -18,7 +31,6 @@ export const desktopStorage: StateStorage = {
 
   setItem: async (_key: string, value: string) => {
     const parsed = JSON.parse(value) as { state: LocalConfig };
-    console.log({ parsed });
 
     const config = fromJsonString(
       RetromClientConfigSchema,
@@ -27,7 +39,6 @@ export const desktopStorage: StateStorage = {
         ignoreUnknownFields: true,
       },
     );
-    console.log("Setting config", parsed.state);
 
     await ConfigFile.setConfig(config);
   },

@@ -55,9 +55,14 @@ message SavesConfig {
 }
 
 message ServerConfig {
+  message TelemetryConfig {
+    bool enabled = 1;
+  }
+
   ConnectionConfig connection = 1;
   repeated ContentDirectory content_directories = 2;
   optional IGDBConfig igdb = 3;
   optional SteamConfig steam = 4;
   optional SavesConfig saves = 5;
+  optional TelemetryConfig telemetry = 6;
 }

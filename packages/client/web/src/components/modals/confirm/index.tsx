@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog";
-import { Route as RootRoute } from "@/routes/__root";
 import { ReactNode, useCallback } from "react";
 import { useModalAction } from "@/providers/modal-action";
 import { useMutation } from "@tanstack/react-query";
@@ -18,6 +17,7 @@ declare global {
   namespace RetromModals {
     export interface ModalActions {
       confirmModal?: {
+        open?: boolean;
         title: string;
         description: string;
         content?: ReactNode;
@@ -30,7 +30,6 @@ declare global {
 
 export function ConfirmModal() {
   const modalAction = useModalAction("confirmModal");
-  const { confirmModal } = RootRoute.useSearch();
 
   const { mutate, status } = useMutation({
     mutationFn: async () => {
@@ -57,7 +56,7 @@ export function ConfirmModal() {
 
   return (
     <Dialog
-      open={!!confirmModal?.open}
+      open={!!modalAction.modalState?.open}
       onOpenChange={(open) => {
         if (!open) {
           close().catch(console.error);
