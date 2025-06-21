@@ -33,7 +33,6 @@ impl<R: Runtime> ConfigManager<R> {
             false => {
                 let default_config = RetromClientConfig::default();
                 let data = serde_json::to_vec_pretty(&default_config)?;
-                let default_config = RetromClientConfig::default();
 
                 std::fs::write(&config_path, data)?;
 
@@ -65,7 +64,9 @@ impl<R: Runtime> ConfigManager<R> {
     }
 
     fn read_config_file(path: &str) -> crate::Result<RetromClientConfig> {
-        let builder = Config::builder().add_source(File::with_name(path));
+        let mut builder = Config::builder()
+            .add_source(File::with_name(path))
+            .set_default("flowCompletions.telemetryEnabled", false)?;
 
         let config = builder.build()?.try_deserialize()?;
 

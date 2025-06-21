@@ -1,3 +1,9 @@
+import {
+  WebTracerProvider,
+  BatchSpanProcessor,
+} from "@opentelemetry/sdk-trace-web";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { configureOpentelemetry } from "@uptrace/web";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import {
   ATTR_SERVICE_NAME,
@@ -7,21 +13,18 @@ import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from "@opentelemetry/semantic-conven
 import { ZoneContextManager } from "@opentelemetry/context-zone";
 import { DocumentLoadInstrumentation } from "@opentelemetry/instrumentation-document-load";
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
-import { configStore } from "./providers/config";
 
-const contextManager = new ZoneContextManager();
-const documentLoadInstrumentation = new DocumentLoadInstrumentation();
-const dsn = import.meta.env.VITE_UPTRACE_DSN;
+export function initOtel() {
+  const contextManager = new ZoneContextManager();
+  const documentLoadInstrumentation = new DocumentLoadInstrumentation();
+  const dsn = import.meta.env.VITE_UPTRACE_DSN;
 
-const version = import.meta.env.VITE_RETROM_VERSION;
+  const version = import.meta.env.VITE_RETROM_VERSION;
 
-const serviceName =
-  import.meta.env.VITE_OTEL_SERVICE_NAME ||
-  (import.meta.env.VITE_IS_DESKTOP ? "retrom-client" : "retrom-client-web");
+  const serviceName =
+    import.meta.env.VITE_OTEL_SERVICE_NAME ||
+    (import.meta.env.VITE_IS_DESKTOP ? "retrom-client" : "retrom-client-web");
 
-const enabled = configStore.getState().telemetry?.enabled;
-
-if (enabled) {
   const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: serviceName,
     [ATTR_SERVICE_VERSION]: version,
@@ -30,11 +33,6 @@ if (enabled) {
 
   if (dsn) {
     console.log("Using Uptrace OpenTelemetry configuration");
-    const { configureOpentelemetry } = await import("@uptrace/web").then(
-      ({ configureOpentelemetry }) => ({
-        configureOpentelemetry,
-      }),
-    );
 
     configureOpentelemetry({
       dsn: import.meta.env.VITE_UPTRACE_DSN,
@@ -43,9 +41,6 @@ if (enabled) {
     });
   } else {
     console.log("Using custom OpenTelemetry configuration");
-    const OTLPTraceExporter = await import(
-      "@opentelemetry/exporter-trace-otlp-http"
-    ).then(({ OTLPTraceExporter }) => OTLPTraceExporter);
 
     const url = new URL("http://localhost:3000/v1/traces").toString();
 
@@ -53,13 +48,10 @@ if (enabled) {
       url,
     });
 
-    const provider = await import("@opentelemetry/sdk-trace-web").then(
-      ({ WebTracerProvider, BatchSpanProcessor }) =>
-        new WebTracerProvider({
-          spanProcessors: [new BatchSpanProcessor(exporter)],
-          resource,
-        }),
-    );
+    const provider = new WebTracerProvider({
+      spanProcessors: [new BatchSpanProcessor(exporter)],
+      resource,
+    });
 
     provider.register({
       contextManager,

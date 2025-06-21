@@ -24,12 +24,23 @@ export const otelInterceptor: Interceptor = (next) => (req) => {
       const output: { traceparent?: string; tracestate?: string } = {};
       propagation.inject(context.active(), output);
 
+      const reqHeaders = [];
       if (output.traceparent) {
+        reqHeaders.push("traceparent");
         req.header.set("traceparent", output.traceparent);
       }
 
       if (output.tracestate) {
+        reqHeaders.push("tracestate");
         req.header.set("tracestate", output.tracestate);
+      }
+
+      if (reqHeaders.length) {
+        const curValue = req.header.get("Access-Control-Request-Headers") ?? "";
+        req.header.set(
+          "Access-Control-Request-Headers",
+          `${reqHeaders.join(", ")}${curValue ? `${curValue}` : ""}`,
+        );
       }
 
       next(req)
