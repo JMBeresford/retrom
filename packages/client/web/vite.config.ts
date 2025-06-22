@@ -11,8 +11,6 @@ export default defineConfig(({ mode }) => {
     ...loadEnv(mode, process.cwd()),
   };
 
-  console.log(process.env);
-
   let localVersion = "0.0.0";
   try {
     const cargoTomlVersion = readLocalCargoToml();
