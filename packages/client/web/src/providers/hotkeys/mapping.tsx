@@ -18,7 +18,7 @@ const DefaultHotkeyToKeyboardHotkey: Record<Hotkey, KeyboardEvent["key"]> = {
 const DefaultHotkeyToGamepadButton: Record<Hotkey, number> = {
   ACCEPT: 0,
   BACK: 1,
-  MENU: 9,
+  MENU: 16,
   OPTION: 8,
   UP: 12,
   DOWN: 13,
