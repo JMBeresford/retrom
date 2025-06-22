@@ -83,8 +83,6 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
         let config_db_url = conn_config.and_then(|conn| conn.db_url);
 
         if config_db_url.is_none() {
-            use retrom_db::embedded::PgCtlFailsafeOperations;
-
             let mut db_url_with_params = db_url.clone();
             if let Some(db_params) = db_params {
                 db_url_with_params.push_str(db_params);
@@ -236,24 +234,25 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
 
     let port = server.local_addr();
 
-    let handle: JoinHandle<()> = tokio::spawn(async move {
-        if let Err(why) = server.await {
-            tracing::error!("Server error: {}", why);
-        }
-
-        #[cfg(feature = "embedded_db")]
-        if let Some(psql_running) = psql {
-            use retrom_db::embedded::PgCtlFailsafeOperations;
-
-            if let Err(why) = psql_running.failsafe_stop().await {
-                tracing::error!("Could not stop embedded db: {}", why);
+    let handle: JoinHandle<()> = tokio::spawn(
+        async move {
+            if let Err(why) = server.await {
+                tracing::error!("Server error: {}", why);
             }
 
-            tracing::info!("Embedded db stopped");
-        }
+            #[cfg(feature = "embedded_db")]
+            if let Some(psql_running) = psql {
+                if let Err(why) = psql_running.stop().await {
+                    tracing::error!("Could not stop embedded db: {}", why);
+                }
 
-        tracing::info!("Server stopped");
-    });
+                tracing::info!("Embedded db stopped");
+            }
+
+            tracing::info!("Server stopped");
+        }
+        .instrument(tracing::info_span!("server_task")),
+    );
 
     (handle, port)
 }
