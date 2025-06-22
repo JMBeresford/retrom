@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.26](https://github.com/JMBeresford/retrom/compare/v0.7.25...v0.7.26) - 2025-06-22
+
+### Bug Fixes
+- default menu button binding
+
+    The default gamepad button for opening Retrom menus
+    is now mapped to the home (xbox/playstation) button rather
+    than what is usually considered the start button. This
+    removes the collision w/ in-game usage of the start button
+    in-game.
+
+    partially resolves [#330](https://github.com/JMBeresford/retrom/pull/330)
+
+
+
+
+
+### Newly Added
+- init application performance metrics ([#307](https://github.com/JMBeresford/retrom/pull/307))
+
+    Retrom now has optional, **opt-in** anonymous telemetry
+    to help with identifying and improving performance
+    issues in both the server and the client. Nothing is sent by
+    default, you must explicitly enable this collection -- if you
+    would like to help Retrom improve then please consider enabling
+    this feature!
+
+
+
+
 ## [0.7.25](https://github.com/JMBeresford/retrom/compare/v0.7.24...v0.7.25) - 2025-06-17
 
 ### Bug Fixes
