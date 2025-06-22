@@ -54,6 +54,10 @@ impl<R: Runtime> ConfigManager<R> {
         self.config.read().await.clone()
     }
 
+    pub fn get_config_blocking(&self) -> RetromClientConfig {
+        tokio::task::block_in_place(|| self.config.blocking_read().clone())
+    }
+
     pub async fn update_config(&self, new_config: RetromClientConfig) -> crate::Result<()> {
         let data = serde_json::to_vec_pretty(&new_config)?;
         tokio::fs::write(&self.config_path, data).await?;
@@ -64,7 +68,7 @@ impl<R: Runtime> ConfigManager<R> {
     }
 
     fn read_config_file(path: &str) -> crate::Result<RetromClientConfig> {
-        let mut builder = Config::builder()
+        let builder = Config::builder()
             .add_source(File::with_name(path))
             .set_default("flowCompletions.telemetryEnabled", false)?;
 

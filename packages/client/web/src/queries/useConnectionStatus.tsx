@@ -1,7 +1,10 @@
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { versionToString } from "@/lib/version-utils";
+import { configStore } from "@/providers/config";
 import { useRetromClient } from "@/providers/retrom-client";
 import { QueryStatus, useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 export type ConnectionStatus = "CONNECTED" | "NOT_CONNECTED" | "CONNECTING";
@@ -20,6 +23,34 @@ export function useConnectionStatus() {
     queryFn: () => serverClient.getServerInfo({}),
     queryKey: ["connectionStatus"],
     retry: (count, err) => {
+      if (configStore.getState().server === undefined) {
+        const { dismiss } = toast({
+          id: "no-server-configured",
+          title: "No server configured",
+          description:
+            "In order to use Retrom, you need to either connect to a server or enable standalone mode.",
+          action: (
+            <Button size="sm" asChild onClick={() => dismiss()}>
+              <Link
+                to="."
+                search={(prev) => ({
+                  ...prev,
+                  configModal: {
+                    open: true,
+                    tab: "client",
+                    clientTab: "connection",
+                  },
+                })}
+              >
+                Connect
+              </Link>
+            </Button>
+          ),
+        });
+
+        return false;
+      }
+
       if (count > 3) {
         console.error(err);
         toast({

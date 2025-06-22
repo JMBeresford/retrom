@@ -1,32 +1,55 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use retrom_plugin_config::ConfigExt;
 use std::fs::OpenOptions;
 use tauri::Manager;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_opentelemetry::{MetricsLayer, OpenTelemetryLayer};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Layer};
 
 #[tokio::main]
 pub async fn main() {
     dotenvy::dotenv().ok();
 
-    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| "info,".into())
-        .add_directive("app=warn".parse().unwrap());
-
-    let fmt_layer = tracing_subscriber::fmt::layer()
-        .pretty()
-        .without_time()
-        .with_target(false)
-        .with_ansi(true);
-
-    let registry = tracing_subscriber::registry()
-        .with(env_filter)
-        .with(fmt_layer);
-
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
     tauri::Builder::default()
+        .plugin(retrom_plugin_config::init())
         .setup(|app| {
+            let mut layers = vec![];
+
+            let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "info,".into())
+                .add_directive("app=warn".parse().unwrap());
+
+            let fmt_layer = tracing_subscriber::fmt::layer()
+                .pretty()
+                .without_time()
+                .with_target(false)
+                .with_ansi(true)
+                .boxed();
+
+            layers.push(fmt_layer);
+
+            let config = app.config_manager().get_config_blocking();
+
+            if config.telemetry.is_some_and(|t| t.enabled) {
+                use opentelemetry::trace::TracerProvider;
+
+                let tracer_provider = retrom_service::trace::get_tracer_provider();
+                let meter_provider = retrom_service::trace::init_meter_provider();
+
+                let tracer = tracer_provider.tracer("main");
+
+                let metrics_layer = MetricsLayer::new(meter_provider).boxed();
+                let telemetry_layer = OpenTelemetryLayer::new(tracer).boxed();
+
+                layers.push(metrics_layer);
+                layers.push(telemetry_layer);
+            }
+
+            let registry = tracing_subscriber::registry().with(layers).with(env_filter);
+
             let log_dir = app.path().app_log_dir().expect("failed to get log dir");
 
             if !log_dir.exists() {
@@ -64,7 +87,6 @@ pub async fn main() {
 
             Ok(())
         })
-        .plugin(retrom_plugin_config::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(retrom_plugin_standalone::init())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {

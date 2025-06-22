@@ -6,6 +6,7 @@ import {
 import { PropsWithChildren, useState } from "react";
 import { ConnectError, Code } from "@connectrpc/connect";
 import { toast } from "@/components/ui/use-toast";
+import { configStore } from "../config";
 
 export function QueryClientProvider(props: PropsWithChildren) {
   const [queryClient] = useState(
@@ -23,8 +24,13 @@ export function QueryClientProvider(props: PropsWithChildren) {
         },
         queryCache: new QueryCache({
           onError: (error) => {
-            console.error(error);
             if (error instanceof ConnectError) {
+              const server = configStore.getState().server;
+
+              if (server === undefined) {
+                return;
+              }
+
               const description = (
                 <span className="text-wrap break-all">{error.message}</span>
               );
@@ -32,6 +38,7 @@ export function QueryClientProvider(props: PropsWithChildren) {
               switch (error.code) {
                 case Code.Unauthenticated: {
                   toast({
+                    id: error.message,
                     variant: "destructive",
                     title: "Unauthenticated",
                     description,
@@ -42,6 +49,7 @@ export function QueryClientProvider(props: PropsWithChildren) {
 
                 case Code.Internal: {
                   toast({
+                    id: error.message,
                     variant: "destructive",
                     title: "Internal server error",
                     description,
@@ -55,6 +63,8 @@ export function QueryClientProvider(props: PropsWithChildren) {
                 }
               }
             }
+
+            console.error(error);
           },
         }),
       }),

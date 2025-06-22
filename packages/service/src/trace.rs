@@ -75,7 +75,7 @@ pub async fn init_tracing_subscriber() {
         .init();
 }
 
-fn resource() -> Resource {
+pub fn resource() -> Resource {
     let environment = if cfg!(debug_assertions) {
         "debug"
     } else {
@@ -96,7 +96,7 @@ fn resource() -> Resource {
         .build()
 }
 
-fn init_meter_provider() -> SdkMeterProvider {
+pub fn init_meter_provider() -> SdkMeterProvider {
     let exporter = opentelemetry_otlp::MetricExporter::builder()
         .with_http()
         .with_temporality(opentelemetry_sdk::metrics::Temporality::default())
@@ -117,7 +117,7 @@ fn init_meter_provider() -> SdkMeterProvider {
     meter_provider
 }
 
-fn get_tracer_provider() -> SdkTracerProvider {
+pub fn get_tracer_provider() -> SdkTracerProvider {
     let exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_http()
         .build()

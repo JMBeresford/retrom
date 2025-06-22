@@ -32,10 +32,10 @@ import { RawMessage } from "@/utils/protos";
 export function ConnectionConfig() {
   const { openModal: confirm } = useModalAction("confirmModal");
   const serverConfig = useConfig((s) => s.server);
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const { mutateAsync: enable, status: enableStatus } =
     useEnableStandaloneMode();
-  const { toast } = useToast();
+
   const { mutateAsync: disable, status: disableStatus } =
     useDisableStandaloneMode();
 
@@ -44,8 +44,6 @@ export function ConnectionConfig() {
   const toggleStandaloneMode = useCallback(async () => {
     if (serverConfig?.standalone) {
       await disable(undefined);
-
-      await queryClient.resetQueries();
     } else {
       confirm({
         title: "Are you sure?",
@@ -65,12 +63,10 @@ export function ConnectionConfig() {
 
             return;
           }
-
-          await queryClient.resetQueries();
         },
       });
     }
-  }, [disable, enable, serverConfig, confirm, toast, queryClient]);
+  }, [disable, enable, serverConfig, confirm, toast]);
 
   return (
     <TabsContent value="connection" className="relative">

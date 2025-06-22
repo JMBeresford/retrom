@@ -51,7 +51,7 @@ impl<R: Runtime> RetromPluginServiceClient<R> {
             let mut host = server.hostname.to_string();
 
             if let Some(port) = server.port {
-                host.push_str(&format!(":{}", port));
+                host.push_str(&format!(":{port}"));
             }
 
             host

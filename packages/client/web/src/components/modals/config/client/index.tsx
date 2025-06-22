@@ -8,9 +8,21 @@ import { GeneralConfig } from "./general-config";
 import { ConnectionConfig } from "./connection-config";
 import { checkIsDesktop, DesktopOnly } from "@/lib/env";
 import { cn } from "@/lib/utils";
+import { z } from "zod";
+import { Route as RootRoute } from "@/routes/__root";
+
+export const clientConfigTabSchema = z
+  .enum(["general", "connection"])
+  .default("general");
 
 export function ClientConfigTab() {
-  const tabItems = [
+  const tab = RootRoute.useSearch({ select: (s) => s.configModal?.clientTab });
+
+  const tabItems: Array<{
+    value: z.infer<typeof clientConfigTabSchema>;
+    name: string;
+    modes: string[];
+  }> = [
     { value: "general", name: "General", modes: ["desktop", "web"] },
     { value: "connection", name: "Connection", modes: ["desktop"] },
   ];
@@ -32,7 +44,7 @@ export function ClientConfigTab() {
         </DialogDescription>
       </DialogHeader>
 
-      <Tabs defaultValue="general">
+      <Tabs defaultValue={tab}>
         <TabsList className={cn("w-full", mode === "web" && "hidden")}>
           {tabItems.map(({ value, name, modes }) => (
             <TabsTrigger

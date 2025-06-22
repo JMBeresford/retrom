@@ -9,22 +9,34 @@ import { SteamConfig } from "./steam-config";
 import { SavesConfig } from "./saves-config";
 import { LibrariesConfig } from "./libraries-config";
 import { TelemetryConfig } from "./telemetry-config";
+import { z } from "zod";
+import { Route as RootRoute } from "@/routes/__root";
 
 type ServerTabs = Exclude<keyof ServerConfigJson, "connection">;
+export const serverConfigTabSchema = z
+  .enum([
+    "contentDirectories",
+    "igdb",
+    "steam",
+    "saves",
+    "telemetry",
+  ] as const satisfies ServerTabs[])
+  .default("contentDirectories");
+
+const tabItems: Record<ServerTabs, { value: ServerTabs; name: string }> = {
+  contentDirectories: {
+    value: "contentDirectories",
+    name: "Content Directories",
+  },
+  igdb: { value: "igdb", name: "IGDB" },
+  steam: { value: "steam", name: "Steam" },
+  saves: { value: "saves", name: "Cloud Saves" },
+  telemetry: { value: "telemetry", name: "Telemetry" },
+};
 
 export function ServerConfigTab() {
-  const tabItems: Record<ServerTabs, { value: ServerTabs; name: string }> = {
-    contentDirectories: {
-      value: "contentDirectories",
-      name: "Content Directories",
-    },
-    igdb: { value: "igdb", name: "IGDB" },
-    steam: { value: "steam", name: "Steam" },
-    saves: { value: "saves", name: "Cloud Saves" },
-    telemetry: { value: "telemetry", name: "Telemetry" },
-  };
-
   const { data, status } = useServerConfig();
+  const tab = RootRoute.useSearch({ select: (s) => s.configModal?.serverTab });
 
   function LoadingState() {
     return (
@@ -63,7 +75,7 @@ export function ServerConfigTab() {
       ) : status === "error" || !data?.config ? (
         <ErrorState />
       ) : (
-        <Tabs defaultValue="contentDirectories" className="w-full">
+        <Tabs defaultValue={tab ?? "contentDirectories"} className="w-full">
           <TabsList className="w-full">
             {Object.values(tabItems).map(({ value, name }) => (
               <TabsTrigger

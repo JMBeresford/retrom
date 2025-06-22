@@ -5084,6 +5084,8 @@ dependencies = [
  "dotenvy",
  "futures",
  "openssl-sys",
+ "opentelemetry",
+ "opentelemetry_sdk",
  "pq-sys",
  "prost 0.12.6",
  "retrom-codegen",
@@ -5093,6 +5095,7 @@ dependencies = [
  "retrom-plugin-service-client",
  "retrom-plugin-standalone",
  "retrom-plugin-steam",
+ "retrom-service",
  "serde",
  "serde_json",
  "tauri",
@@ -5110,6 +5113,7 @@ dependencies = [
  "tokio-util",
  "tonic 0.11.0",
  "tracing",
+ "tracing-opentelemetry",
  "tracing-subscriber",
 ]
 

@@ -7,12 +7,16 @@ import { Prompts } from "../components/prompts";
 import { Toaster } from "../components/ui/toaster";
 import { z } from "zod";
 import { InputDeviceProvider } from "@/providers/input-device";
+import { serverConfigTabSchema } from "@/components/modals/config/server";
+import { clientConfigTabSchema } from "@/components/modals/config/client";
 
 const modalsSearchSchema = z
   .object({
     configModal: z.object({
       open: z.boolean().default(false),
       tab: z.enum(["server", "client"]).default("server"),
+      clientTab: clientConfigTabSchema,
+      serverTab: serverConfigTabSchema,
     }),
     updateLibraryModal: z.object({
       open: z.boolean().default(false),

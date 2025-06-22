@@ -264,7 +264,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let diesel_macro_clause = get_diesel_macro(table_name, primary_key, belongs_to);
 
         build = build.type_attribute(
-            format!("retrom.{}", model_name),
+            format!("retrom.{model_name}"),
             format!("{derives}\n{diesel_macro_clause}",),
         );
     }
@@ -280,7 +280,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let diesel_macro_clause = get_diesel_macro(table_name, primary_key, belongs_to);
 
         build = build.type_attribute(
-            format!("retrom.{}", model_name),
+            format!("retrom.{model_name}"),
             format!("{derives}\n{diesel_macro_clause}",),
         );
     }

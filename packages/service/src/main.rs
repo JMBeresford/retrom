@@ -1,7 +1,9 @@
-use retrom_service::get_server;
+use retrom_service::{get_server, trace::init_tracing_subscriber};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    init_tracing_subscriber().await;
+
     if cfg!(debug_assertions) {
         dotenvy::dotenv().ok();
     }

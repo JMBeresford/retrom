@@ -6,12 +6,14 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { useConfig } from "@/providers/config";
 import {
   ConnectionStatus,
   useConnectionStatus,
 } from "@/queries/useConnectionStatus";
 import { PopoverProps } from "@radix-ui/react-popover";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { LucideProps, Server, ServerCog, ServerOff } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -27,6 +29,7 @@ const IconMap: Record<ConnectionStatus, (props: LucideProps) => ReactNode> = {
 
 export function ConnectivityIndicator(props: PopoverProps) {
   const { connectionStatus, connectionInfo } = useConnectionStatus();
+  const server = useConfig((s) => s.server);
   const queryClient = useQueryClient();
 
   const Icon = IconMap[connectionStatus];
@@ -64,21 +67,39 @@ export function ConnectivityIndicator(props: PopoverProps) {
               </p>
             </div>
           ) : connectionStatus === "NOT_CONNECTED" ? (
-            <div className="text-muted-foreground flex flex-col gap-2">
-              <p>Not connected</p>
+            <div className="flex flex-col gap-2">
+              <p className="text-muted-foreground text-center">Not connected</p>
 
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-foreground"
-                onClick={() =>
-                  queryClient.invalidateQueries({
-                    predicate: (q) => q.queryKey.includes("connectionStatus"),
-                  })
-                }
-              >
-                Attempt to reconnect
-              </Button>
+              {server === undefined ? (
+                <Button variant="outline">
+                  <Link
+                    to="."
+                    search={(s) => ({
+                      ...s,
+                      configModal: {
+                        open: true,
+                        tab: "client",
+                        clientTab: "connection",
+                      },
+                    })}
+                  >
+                    Manage Connection
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-foreground"
+                  onClick={() =>
+                    queryClient.invalidateQueries({
+                      predicate: (q) => q.queryKey.includes("connectionStatus"),
+                    })
+                  }
+                >
+                  Attempt to reconnect
+                </Button>
+              )}
             </div>
           ) : null}
         </div>

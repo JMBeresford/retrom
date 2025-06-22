@@ -3,7 +3,6 @@ use either::Either;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
 use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
-use otel::{init_tracing_subscriber, span_from_grpc_request};
 use retrom_db::run_migrations;
 use retry::retry;
 use std::{
@@ -16,6 +15,7 @@ use std::{
 };
 use tokio::task::JoinHandle;
 use tower::Service;
+use trace::span_from_grpc_request;
 use tracing::Instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
@@ -26,9 +26,9 @@ pub mod config;
 pub mod emulator_js;
 mod grpc;
 pub mod meta;
-pub mod otel;
 mod providers;
 mod rest;
+pub mod trace;
 
 pub const DEFAULT_PORT: i32 = 5101;
 pub const DEFAULT_DB_URL: &str = "postgres://postgres:postgres@localhost/retrom";
@@ -44,8 +44,6 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
             exit(1)
         }
     };
-
-    init_tracing_subscriber().await;
 
     if config_manager
         .get_config()
