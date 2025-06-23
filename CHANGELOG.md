@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.27](https://github.com/JMBeresford/retrom/compare/v0.7.26...v0.7.27) - 2025-06-23
+
+### Newly Added
+- initial switch gamepad mapping
+
+    Initial support for the following switch gamepads
+    and their respective default mappings have been added:
+
+    Switch Pro Controller, Switch JoyCons, Switch N64 Controller
+
+    resolves [#330](https://github.com/JMBeresford/retrom/pull/330)
+
+
+
+
 ## [0.7.26](https://github.com/JMBeresford/retrom/compare/v0.7.25...v0.7.26) - 2025-06-22
 
 ### Bug Fixes
