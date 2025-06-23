@@ -8,7 +8,8 @@ import {
   useState,
 } from "react";
 import { GamepadButtonEvent } from "./event";
-import { ControllerMapping, getControllerMapping } from "./controller-ids";
+import { getControllerMapping } from "./controller-ids";
+import { ControllerMapping } from "./maps";
 
 export interface RetromGamepad {
   gamepad: Gamepad;

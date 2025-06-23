@@ -1,4 +1,22 @@
-import { ControllerMapping } from "./controller-ids";
+export const GENERIC_BUTTON_MAP = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "lb",
+  "rb",
+  "lt",
+  "rt",
+  "back",
+  "start",
+  "ls",
+  "rs",
+  "up",
+  "down",
+  "left",
+  "right",
+  "home",
+] as const;
 
 export const XBOX_BUTTON_MAP = [
   "a",
@@ -80,25 +98,113 @@ export const DUALSHOCK_5_BUTTON_MAP = [
   "ps",
 ] as const;
 
+export const SWITCH_JOYCON_RIGHT_BUTTON_MAP = [
+  "a",
+  "x",
+  "b",
+  "y",
+  "sl",
+  "sr",
+  undefined,
+  "zr",
+  "r",
+  "plus",
+  "r3",
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  "home",
+] as const;
+
+export const SWITCH_PRO_BUTTON_MAP = [
+  "a",
+  "b",
+  "y",
+  "x",
+  "l",
+  "r",
+  "zl",
+  "zr",
+  "minus",
+  "plus",
+  "l3",
+  "r3",
+  "up",
+  "down",
+  "left",
+  "right",
+  "home",
+  "capture",
+] as const;
+
+export const SWITCH_NSO_N64_BUTTON_MAP = [
+  "a",
+  "b",
+  "c left",
+  "c down",
+  "l",
+  "r",
+  "z",
+  "zr",
+  "c up",
+  "start",
+  undefined,
+  undefined,
+  "up",
+  "down",
+  "left",
+  "right",
+  "home",
+  "c right",
+  "capture",
+] as const;
+
+export const SWITCH_JOYCON_DUAL_BUTTON_MAP = [
+  "a",
+  "b",
+  "y",
+  "x",
+  "l",
+  "r",
+  "zl",
+  "zr",
+  "minus",
+  "plus",
+  "l3",
+  "r3",
+  "up",
+  "down",
+  "left",
+  "right",
+  "home",
+  "capture",
+  "left sl",
+  "left sr",
+  "right sl",
+  "right sr",
+] as const;
+
+export type ControllerMapping = keyof typeof gamepadButtonMap;
+export const gamepadButtonMap = {
+  generic: GENERIC_BUTTON_MAP,
+  xbox: XBOX_BUTTON_MAP,
+  "dualshock 3": DUALSHOCK_3_BUTTON_MAP,
+  "dualshock 4": DUALSHOCK_4_BUTTON_MAP,
+  "dualshock 5": DUALSHOCK_5_BUTTON_MAP,
+  switch_joycon_right: SWITCH_JOYCON_RIGHT_BUTTON_MAP,
+  switch_pro: SWITCH_PRO_BUTTON_MAP,
+  switch_joycon_dual: SWITCH_JOYCON_DUAL_BUTTON_MAP,
+} as const;
+
 export function getButtonMapValue(
   button: number,
   controllerType?: ControllerMapping,
 ) {
-  switch (controllerType) {
-    case "xbox": {
-      return XBOX_BUTTON_MAP[button];
-    }
-    case "dualshock 3": {
-      return DUALSHOCK_3_BUTTON_MAP[button];
-    }
-    case "dualshock 4": {
-      return DUALSHOCK_4_BUTTON_MAP[button];
-    }
-    case "dualshock 5": {
-      return DUALSHOCK_5_BUTTON_MAP[button];
-    }
-    default: {
-      return button.toString();
-    }
+  if (controllerType !== undefined) {
+    return gamepadButtonMap[controllerType]?.[button] ?? button.toString();
   }
+
+  return button.toString();
 }

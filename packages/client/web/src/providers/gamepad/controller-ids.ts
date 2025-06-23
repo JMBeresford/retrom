@@ -1,14 +1,15 @@
-type Vendor = (typeof Vendor)[number];
-const Vendor = ["microsoft", "sony"] as const;
+import { ControllerMapping } from "./maps";
 
-const vendorIds: Record<Vendor, number[]> = {
+export type Vendor = keyof typeof vendorIds;
+
+const vendorIds = {
   microsoft: [0x045e],
   sony: [0x054c],
-};
+  nintendo: [0x057e],
+} as const;
 
-type Product = (typeof Product)[number];
-const Product = [
-  // xbox controllers
+type MicrosoftProduct = (typeof microsoftProducts)[number];
+export const microsoftProducts = [
   "xbox",
   "xbox_elite",
   "xbox_s",
@@ -17,14 +18,21 @@ const Product = [
   "xbox_x_elite",
   "xbox_xs",
   "xbox_xs_elite",
-
-  // playstation controllers
-  "ps3",
-  "ps4",
-  "ps5",
 ] as const;
 
-const productIds: Record<Product, number[]> = {
+type SonyProduct = (typeof sonyProducts)[number];
+export const sonyProducts = ["ps3", "ps4", "ps5"] as const;
+
+type NintendoProduct = (typeof nintendoProducts)[number];
+export const nintendoProducts = [
+  "switch_joycon_left",
+  "switch_joycon_right",
+  "switch_pro",
+  "switch_joycon_dual",
+  "switch_nso_n64",
+] as const;
+
+const microsoftProductIds: Record<MicrosoftProduct, number[]> = {
   xbox: [0x02d1],
   xbox_elite: [0x02dd],
   xbox_s: [0x0b00],
@@ -33,18 +41,21 @@ const productIds: Record<Product, number[]> = {
   xbox_x_elite: [0x0b14],
   xbox_xs: [0x0b13],
   xbox_xs_elite: [0x0b15],
+};
+
+const sonyProductIds: Record<SonyProduct, number[]> = {
   ps3: [0x0268],
   ps4: [0x05c4, 0x09cc, 0x0ba0],
   ps5: [0x0ce6],
 };
 
-export type ControllerMapping = (typeof ControllerMapping)[number];
-export const ControllerMapping = [
-  "xbox",
-  "dualshock 3",
-  "dualshock 4",
-  "dualshock 5",
-] as const;
+const nintendoProductIds: Record<NintendoProduct, number[]> = {
+  switch_joycon_left: [0x2006],
+  switch_joycon_right: [0x2007],
+  switch_pro: [0x2009],
+  switch_joycon_dual: [0x200e],
+  switch_nso_n64: [0x2019], // Nintendo Switch Online N64 controller
+};
 
 type ParsedControllerId = {
   vendorId?: number;
@@ -72,7 +83,7 @@ export function getControllerMapping(gamepad: Gamepad): ControllerMapping {
     }
   }
 
-  return "xbox";
+  return "generic";
 }
 
 function parseMozillaSpec(id: string): ParsedControllerId | undefined {
@@ -95,9 +106,9 @@ function parseMozillaSpec(id: string): ParsedControllerId | undefined {
 
 function parseGenericSpec(id: string): ParsedControllerId | undefined {
   try {
-    const genericIdSpec = id.match(
-      /vendor: 0x([0-9a-f]+) product: 0x([0-9a-f]+)/,
-    );
+    const genericIdSpec =
+      id.match(/vendor: 0x([0-9a-f]+) product: 0x([0-9a-f]+)/) ??
+      id.match(/vendor: ([0-9a-f]+) product: ([0-9a-f]+)/);
 
     if (genericIdSpec) {
       return {
@@ -119,17 +130,22 @@ function matchByParsedId(
     return undefined;
   }
 
-  if (vendorIds.microsoft.includes(vendorId)) {
+  if (vendorIds.microsoft.some((v) => v === vendorId)) {
     return matchMicrosoftController(productId);
   }
 
-  if (vendorIds.sony.includes(vendorId)) {
+  if (vendorIds.sony.some((v) => v === vendorId)) {
     return matchSonyController(productId);
+  }
+
+  if (vendorIds.nintendo.some((v) => v === vendorId)) {
+    return matchNintendoController(productId);
   }
 }
 
 // naive fallback to guess controller type by generic id contents
 function guessControllerName(id: string): ControllerMapping | undefined {
+  id = id.toLowerCase();
   if (id.includes("xbox")) {
     return "xbox";
   }
@@ -145,23 +161,18 @@ function guessControllerName(id: string): ControllerMapping | undefined {
   if (id.includes("dualshock 5")) {
     return "dualshock 5";
   }
+
+  if (id.includes("pro controller")) {
+    return "switch_pro";
+  }
 }
 
 function matchMicrosoftController(
   productId: number,
 ): ControllerMapping | undefined {
-  const xboxControllers = [
-    productIds.xbox,
-    productIds.xbox_elite,
-    productIds.xbox_s,
-    productIds.xbox_s_elite,
-    productIds.xbox_x,
-    productIds.xbox_x_elite,
-    productIds.xbox_xs,
-    productIds.xbox_xs_elite,
-  ];
-
-  if (xboxControllers.some((ids) => ids.includes(productId))) {
+  if (
+    Object.values(microsoftProductIds).some((ids) => ids.includes(productId))
+  ) {
     return "xbox";
   }
 
@@ -169,16 +180,34 @@ function matchMicrosoftController(
 }
 
 function matchSonyController(productId: number): ControllerMapping | undefined {
-  if (productIds.ps3.includes(productId)) {
+  if (sonyProductIds.ps3.includes(productId)) {
     return "dualshock 3";
   }
 
-  if (productIds.ps4.includes(productId)) {
+  if (sonyProductIds.ps4.includes(productId)) {
     return "dualshock 4";
   }
 
-  if (productIds.ps5.includes(productId)) {
+  if (sonyProductIds.ps5.includes(productId)) {
     return "dualshock 5";
+  }
+
+  return undefined;
+}
+
+function matchNintendoController(
+  productId: number,
+): ControllerMapping | undefined {
+  if (nintendoProductIds.switch_joycon_right.includes(productId)) {
+    return "switch_joycon_right";
+  }
+
+  if (nintendoProductIds.switch_pro.includes(productId)) {
+    return "switch_pro";
+  }
+
+  if (nintendoProductIds.switch_joycon_dual.includes(productId)) {
+    return "switch_joycon_dual";
   }
 
   return undefined;
