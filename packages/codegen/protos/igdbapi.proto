@@ -270,6 +270,20 @@ message Artwork {
   string url = 7;
   int32 width = 8;
   string checksum = 9;
+  ArtworkType artwork_type = 10;
+}
+
+message ArtworkTypeResult {
+  repeated ArtworkType artworktypes = 1;
+}
+
+message ArtworkType {
+  uint64 id = 1;
+  string slug = 2;
+  string name = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  string checksum = 6;
 }
 
 message CharacterResult {
