@@ -547,6 +547,7 @@ impl SavesService for SavesServiceHandlers {
                 .filter(|s| s.emulator_id == emulator_id)
                 .collect::<Vec<_>>();
 
+            #[allow(clippy::get_first)]
             let save = match saves.get(0) {
                 Some(save) => save.clone(),
                 None => {
@@ -643,6 +644,7 @@ impl SavesService for SavesServiceHandlers {
                 .filter(|s| s.emulator_id == emulator_id)
                 .collect::<Vec<_>>();
 
+            #[allow(clippy::get_first)]
             let states = match all_states.get(0) {
                 Some(states) => states.clone(),
                 None => {

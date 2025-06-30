@@ -248,7 +248,7 @@ impl JobManager {
             loop {
                 {
                     let progress = job_progress.read().await;
-                    let all_progress = progress.iter().map(|(_, v)| v.clone()).collect::<Vec<_>>();
+                    let all_progress = progress.values().cloned().collect::<Vec<_>>();
 
                     let no_running_jobs = all_progress
                         .iter()

@@ -2,8 +2,8 @@ use futures::TryStreamExt;
 use prost::Message;
 use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{
-    GetPlatformsRequest, InstallGamePayload, InstallationState, InstallationStatus, StorageType,
-    UninstallGamePayload,
+    GetGamesRequest, GetPlatformsRequest, InstallGamePayload, InstallationState,
+    InstallationStatus, StorageType, UninstallGamePayload,
 };
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
@@ -47,7 +47,8 @@ pub async fn install_game<R: Runtime>(
                 ids: vec![game.platform_id()],
                 ..Default::default()
             })
-            .await?
+            .await
+            .map_err(|e| crate::Error::Tonic(e.code()))?
             .into_inner();
 
         let platform = platform_res.platforms.into_iter().next();
@@ -239,6 +240,17 @@ pub async fn get_installation_state<R: Runtime>(
     app_handle: AppHandle<R>,
 ) -> crate::Result<Vec<u8>> {
     let installer = app_handle.installer();
+    let server_config = app_handle.config_manager().get_config().await.server;
+    let standalone = server_config
+        .as_ref()
+        .map(|s| s.standalone())
+        .unwrap_or(false);
+
+    let install_in_standalone = server_config
+        .as_ref()
+        .map(|s| s.install_games_in_standalone())
+        .unwrap_or(false);
+
     let mut installation_state: HashMap<i32, i32> = HashMap::new();
 
     for game_id in installer.installed_games.read().await.iter() {
@@ -247,6 +259,27 @@ pub async fn get_installation_state<R: Runtime>(
 
     for game_id in installer.currently_installing.read().await.keys() {
         installation_state.insert(*game_id, InstallationStatus::Installing.into());
+    }
+
+    // installation disabled for standalone mode,
+    // consider all games installed
+    if standalone && !install_in_standalone {
+        let mut game_client = app_handle.get_game_client().await;
+        let games = game_client
+            .get_games(GetGamesRequest::default())
+            .await
+            .map_err(|e| crate::Error::Tonic(e.code()))?
+            .into_inner()
+            .games;
+
+        games
+            .into_iter()
+            .filter(|g| !g.third_party)
+            .for_each(|game| {
+                installation_state.insert(game.id, InstallationStatus::Installed.into());
+            });
+
+        tracing::info!("Installed: {:?}", installation_state);
     }
 
     let res = InstallationState { installation_state };

@@ -17,7 +17,7 @@ import { RetromClientConfig_Server } from "@retrom/codegen/retrom/client/client-
 import { cn } from "@/lib/utils";
 import { useDisableStandaloneMode } from "@/mutations/useDisableStandaloneMode";
 import { useEnableStandaloneMode } from "@/mutations/useEnableStandaloneMode";
-import { useConfig, useConfigStore } from "@/providers/config";
+import { configStore, useConfig, useConfigStore } from "@/providers/config";
 import { useModalAction } from "@/providers/modal-action";
 import { RetromClient } from "@/providers/retrom-client/client";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +31,7 @@ import { RawMessage } from "@/utils/protos";
 
 export function ConnectionConfig() {
   const { openModal: confirm } = useModalAction("confirmModal");
+  const queryClient = useQueryClient();
   const serverConfig = useConfig((s) => s.server);
   const { toast } = useToast();
   const { mutateAsync: enable, status: enableStatus } =
@@ -68,6 +69,26 @@ export function ConnectionConfig() {
     }
   }, [disable, enable, serverConfig, confirm, toast]);
 
+  const toggleInstallInStandalone = useCallback(
+    (value: boolean) => {
+      configStore.setState((prev) => {
+        prev.server = {
+          ...prev.server,
+          installGamesInStandalone: value,
+        };
+
+        return { ...prev };
+      });
+
+      queryClient
+        .invalidateQueries({
+          predicate: ({ queryKey }) => queryKey.includes("installation-state"),
+        })
+        .catch(console.error);
+    },
+    [queryClient],
+  );
+
   return (
     <TabsContent value="connection" className="relative">
       <div className={cn("flex flex-col gap-4")}>
@@ -93,6 +114,28 @@ export function ConnectionConfig() {
               <LoaderCircle className="animate-spin text-primary h-full w-auto" />
             </div>
           ) : null}
+        </div>
+
+        <div className="flex items-top gap-2">
+          <Checkbox
+            id="install-in-standalone"
+            checked={!!serverConfig?.installGamesInStandalone}
+            onCheckedChange={(value) => toggleInstallInStandalone(!!value)}
+          />
+
+          <div className={cn("grid gap-1 leading-none")}>
+            <label htmlFor="install-in-standalone">
+              Install Games in Standalone Mode
+            </label>
+
+            <p className="text-sm text-muted-foreground max-w-[65ch]">
+              Standalone mode will generally operate under the assumption that
+              your library files are local. If, for example, you store your
+              library on a network drive, you may want to enable this option to
+              enable installing games in standalone mode to ensure you have a
+              truly local copy.
+            </p>
+          </div>
         </div>
 
         <Separator />
@@ -125,7 +168,7 @@ export function ConnectionConfig() {
 }
 
 type ConfigShape = Record<
-  Exclude<keyof RawMessage<RetromClientConfig_Server>, "standalone">,
+  keyof Pick<RawMessage<RetromClientConfig_Server>, "hostname" | "port">,
   z.ZodTypeAny
 >;
 const connectionSchema = z.object({

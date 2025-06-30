@@ -109,7 +109,6 @@ impl SaveStateManager for GameSaveStateManager {
             let file_stats: Vec<FileStat> = if states_dir.exists() {
                 states_dir
                     .read_dir()?
-                    .into_iter()
                     .filter_map(|d| d.ok()?.path().try_into().ok())
                     .filter_map(|mut fs: FileStat| {
                         let path = PathBuf::from(&fs.path)

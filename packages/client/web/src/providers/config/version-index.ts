@@ -52,3 +52,9 @@ export type ConfigV5 = ConfigV4 & {
     enabled: boolean;
   };
 };
+
+export type ConfigV6 = ConfigV5 & {
+  server?: ConfigV5["server"] & {
+    installGamesInStandalone?: boolean;
+  };
+};

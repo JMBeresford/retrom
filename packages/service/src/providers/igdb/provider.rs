@@ -249,10 +249,8 @@ impl IGDBProvider {
         req.headers_mut()
             .insert("Client-ID", user.client_id.parse().unwrap());
 
-        req.headers_mut().insert(
-            "Authorization",
-            format!("Bearer {}", token).parse().unwrap(),
-        );
+        req.headers_mut()
+            .insert("Authorization", format!("Bearer {token}").parse().unwrap());
 
         req.body_mut().replace(query.clone().into());
 

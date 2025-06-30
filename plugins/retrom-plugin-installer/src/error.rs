@@ -17,8 +17,8 @@ pub enum Error {
     ToStr(#[from] ToStrError),
     #[error(transparent)]
     ParseInt(#[from] ParseIntError),
-    #[error(transparent)]
-    Tonic(#[from] tonic::Status),
+    #[error("Tonic Error: {0}")]
+    Tonic(tonic::Code),
     #[error("No third party data found")]
     ThirdPartyNotFound,
     #[error(transparent)]

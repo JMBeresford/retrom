@@ -55,7 +55,7 @@ impl std::fmt::Display for ContentMacro {
                 .collect(),
         };
 
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 

@@ -53,10 +53,7 @@ impl EmulatorJs {
 
     #[tracing::instrument(skip_all)]
     pub async fn download_release(&self) {
-        let url = format!(
-            "{}{}/{}.7z",
-            EMULATOR_JS_RELEASE_URL, EMULATOR_JS_VER, EMULATOR_JS_VER
-        );
+        let url = format!("{EMULATOR_JS_RELEASE_URL}{EMULATOR_JS_VER}/{EMULATOR_JS_VER}.7z");
 
         tokio::fs::create_dir_all(&self.dir)
             .await

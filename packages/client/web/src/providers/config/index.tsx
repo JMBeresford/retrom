@@ -30,6 +30,7 @@ const defaultConfig: RetromClientConfigJson = {
     hostname: defaultAPIHostname(),
     port: defaultAPIPort(),
     standalone: false,
+    installGamesInStandalone: false,
   },
   config: {
     clientInfo: checkIsDesktop()
@@ -68,7 +69,7 @@ if (checkIsDesktop()) {
   }
 
   configFile = await ConfigFile.getConfig();
-  console.log("Config file loaded", configFile);
+  console.log("Config file loaded");
 }
 
 const initialConfig = configFile
@@ -79,7 +80,7 @@ export const configStore = create<LocalConfig>()(
   subscribeWithSelector(
     persist(() => initialConfig, {
       name: STORAGE_KEY,
-      version: 5,
+      version: 6,
       migrate,
       skipHydration: checkIsDesktop(),
       onRehydrateStorage: (state) => {
@@ -87,10 +88,7 @@ export const configStore = create<LocalConfig>()(
       },
       storage: checkIsDesktop()
         ? createJSONStorage(() => desktopStorage, {
-            replacer: (_, v) => {
-              console.log(v);
-              return typeof v === "bigint" ? v.toString() : v;
-            },
+            replacer: (_, v) => (typeof v === "bigint" ? v.toString() : v),
           })
         : createJSONStorage(() => localStorage, {
             replacer: (_, v) => (typeof v === "bigint" ? v.toString() : v),

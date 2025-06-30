@@ -1,12 +1,8 @@
 use std::path::PathBuf;
 
-use retrom_codegen::{
-    retrom::{
-        file_explorer_service_server::FileExplorerService, files::FileStat, FilesystemNode,
-        FilesystemNodeType, GetFilesystemNodeRequest, GetFilesystemNodeResponse, GetStatRequest,
-        GetStatResponse,
-    },
-    timestamp::Timestamp,
+use retrom_codegen::retrom::{
+    file_explorer_service_server::FileExplorerService, files::FileStat, FilesystemNode,
+    GetFilesystemNodeRequest, GetFilesystemNodeResponse, GetStatRequest, GetStatResponse,
 };
 use walkdir::WalkDir;
 

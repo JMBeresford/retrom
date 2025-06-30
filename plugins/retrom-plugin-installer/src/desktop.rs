@@ -104,15 +104,6 @@ impl<R: Runtime> Installer<R> {
 
     #[instrument(skip(self))]
     pub(crate) async fn init_installation_index(&self) -> crate::Result<()> {
-        let standalone = self
-            .app_handle
-            .config_manager()
-            .get_config()
-            .await
-            .server
-            .and_then(|s| s.standalone)
-            .unwrap_or(false);
-
         let install_dir = self.get_installation_dir().await?;
 
         let mut installed_games = HashSet::new();
@@ -125,19 +116,6 @@ impl<R: Runtime> Installer<R> {
 
             if dir.path().is_dir() {
                 installed_games.insert(game_id);
-            }
-        }
-
-        if standalone {
-            let mut game_client = self.app_handle.get_game_client().await;
-            let games = game_client
-                .get_games(GetGamesRequest::default())
-                .await?
-                .into_inner()
-                .games;
-
-            for game in games.into_iter().filter(|g| !g.third_party) {
-                installed_games.insert(game.id);
             }
         }
 
@@ -160,7 +138,8 @@ impl<R: Runtime> Installer<R> {
         let mut game_client = self.app_handle.get_game_client().await;
         let games = game_client
             .get_games(GetGamesRequest::default())
-            .await?
+            .await
+            .map_err(|e| crate::Error::Tonic(e.code()))?
             .into_inner()
             .games;
 

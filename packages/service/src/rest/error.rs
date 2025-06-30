@@ -18,13 +18,13 @@ pub async fn handle_rejection(
     match err.find::<Error>() {
         Some(Error::StatusCode(code, _)) => {
             return Ok(warp::reply::with_status(
-                warp::reply::json(&format!("{:#?}", err)),
+                warp::reply::json(&format!("{err:#?}")),
                 *code,
             ));
         }
         Some(err) => {
             return Ok(warp::reply::with_status(
-                warp::reply::json(&format!("{:#?}", err)),
+                warp::reply::json(&format!("{err:#?}")),
                 warp::http::StatusCode::INTERNAL_SERVER_ERROR,
             ));
         }
