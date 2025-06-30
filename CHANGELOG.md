@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.28](https://github.com/JMBeresford/retrom/compare/v0.7.27...v0.7.28) - 2025-06-30
+
+### Newly Added
+- opt-in installation of games in standalone mode
+
+    You can now configure standalone mode to require 'installing'
+    games as if they were hosted on a dedicated Retrom server. This
+    is useful in cases where you are running standalone mode but accessing
+    a library from a network drive. Installing in such cases ensures you
+    have a truly local copy of your installed games.
+
+    This also fixes a bug where in some cases standalone mode was
+    unconditionally requiring installation of games.
+
+
+
+
 ## [0.7.27](https://github.com/JMBeresford/retrom/compare/v0.7.26...v0.7.27) - 2025-06-23
 
 ### Newly Added
