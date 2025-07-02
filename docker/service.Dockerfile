@@ -1,15 +1,7 @@
 FROM node:20-bookworm-slim AS common
 
 FROM common AS project
-COPY ./packages/. /app/packages
-COPY ./plugins/. /app/plugins
-COPY  ./Cargo.lock \
-  ./Cargo.toml \
-  ./turbo.json \
-  ./package.json \
-  ./pnpm-lock.yaml \
-  ./pnpm-workspace.yaml \
-  /app/
+COPY . /app/
 
 ### WEB CLIENT
 FROM common AS web-deps
@@ -39,11 +31,12 @@ WORKDIR /app
 
 ENV UPTRACE_DSN=https://KgFBXOxX2RFeJurwr7R-4w@api.uptrace.dev?grpc=4317
 ENV VITE_UPTRACE_DSN=${UPTRACE_DSN}
+ENV NX_DAEMON=false
 
 RUN pnpm install --frozen-lockfile && \
-  pnpm turbo --filter @retrom/client-web build && \
+  pnpm nx build retrom-client-web && \
   pnpm deploy --filter=@retrom/client-web /web && \
-  mv /app/packages/client/web/dist /web/dist
+  mv /app/packages/client-web/dist /web/dist
 
 ### SERVICE BINARY
 FROM rust:slim-bookworm AS service-deps

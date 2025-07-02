@@ -1,0 +1,98 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "parallel": 5,
+  "targetDefaults": {
+    "dev": {
+      "syncGenerators": ["@nx/js:typescript-sync"]
+    },
+    "build": {
+      "syncGenerators": ["@nx/js:typescript-sync"]
+    },
+    "prettier:format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm prettier --write .",
+        "cwd": "{projectRoot}"
+      },
+      "configurations": {
+        "check": {
+          "command": "pnpm prettier --check"
+        }
+      }
+    },
+    "buf:format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm buf format --write",
+        "cwd": "{projectRoot}"
+      },
+      "configurations": {
+        "check": {
+          "command": "pnpm buf format --diff --exit-code"
+        }
+      }
+    },
+    "cargo:format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "cargo fmt"
+      },
+      "configurations": {
+        "check": {
+          "command": "cargo fmt -- --check"
+        }
+      }
+    },
+    "cargo:run": {
+      "executor": "@monodon/rust:run",
+      "dependsOn": ["^cargo:build"],
+      "continuous": true
+    },
+    "cargo:lint": {
+      "dependsOn": ["^cargo:lint"],
+      "executor": "@monodon/rust:lint",
+      "configurations": {
+        "fix": {
+          "args": ["--fix"]
+        }
+      }
+    },
+    "eslint:lint": {
+      "configurations": {
+        "fix": {
+          "args": ["--fix"]
+        }
+      }
+    },
+    "cargo:build": {
+      "dependsOn": ["^cargo:build"],
+      "executor": "@monodon/rust:build",
+      "configurations": {
+        "release": {
+          "release": true
+        }
+      }
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "eslint:lint"
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {}
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "build": false,
+        "typecheck": false
+      }
+    },
+    "@monodon/rust"
+  ]
+}

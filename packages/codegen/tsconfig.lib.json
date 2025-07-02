@@ -1,0 +1,13 @@
+{
+  "extends": "@retrom/configs/tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "types": ["vite/client"]
+  },
+  "include": ["**/*.ts"],
+  "references": [
+    {
+      "path": "../configs/tsconfig.lib.json"
+    }
+  ]
+}

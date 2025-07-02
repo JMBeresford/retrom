@@ -1,20 +1,12 @@
-import js from "@eslint/js";
-import turbo from "eslint-plugin-turbo";
 import tseslint from "typescript-eslint";
 
-/**
- * Shared ESLint configuration for TypeScript projects.
- *
- * @type {import("typescript-eslint").ConfigArray}
- */
-export const config = tseslint.config(
-  js.configs.recommended,
-  turbo.configs["flat/recommended"],
+/** @type {import("typescript-eslint").ConfigArray} */
+const config = tseslint.config(
   ...tseslint.configs.recommendedTypeChecked,
   {
     languageOptions: {
       parserOptions: {
-        project: true,
+        projectService: true,
       },
     },
   },
@@ -45,3 +37,6 @@ export const config = tseslint.config(
   },
   { ignores: ["dist/**"] },
 );
+
+export { config };
+export default config;

@@ -1,8 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["./packages/*", "./plugins/*"]
-exclude = ["**/node_modules", "./packages/client/web", "./packages/configs"]
-
+exclude = ["**/node_modules", "./packages/client-web", "./packages/configs"]
 
 [workspace.package]
 edition = "2021"
@@ -13,7 +12,7 @@ readme = "./README.md"
 repository = "https://github.com/JMBeresford/retrom"
 
 [workspace.dependencies]
-tauri = { version = "2.0.0-rc.8", features = ["tracing"] }
+tauri = { version = "2.4.0", features = ["tracing"] }
 tauri-plugin-dialog = "2.0.0-rc"
 tauri-plugin-opener = "2.2.6"
 diesel = { version = "^2.2.0", features = [

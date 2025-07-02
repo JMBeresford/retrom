@@ -6,12 +6,8 @@ import tanstackQuery from "@tanstack/eslint-plugin-query";
 import tseslint from "typescript-eslint";
 import { config as baseConfig } from "./base.config.js";
 
-/**
- * Shared ESLint configuration for TypeScript projects.
- *
- * @type {import("typescript-eslint").ConfigArray}
- */
-export const config = tseslint.config(
+/** @type {import("typescript-eslint").ConfigArray} */
+const config = tseslint.config(
   baseConfig,
   tanstackQuery.configs["flat/recommended"],
   {
@@ -43,3 +39,6 @@ export const config = tseslint.config(
     extends: tanstackQuery.configs["flat/recommended"],
   },
 );
+
+export { config };
+export default config;

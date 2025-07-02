@@ -1,10 +1,10 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { ServerConfigSchema } from "@retrom/codegen/retrom/server/config_pb";
-import { fromJson } from "@bufbuild/protobuf";
+import { fromJson, JsonValue } from "@bufbuild/protobuf";
 
 export function readLocalCargoToml(): string {
-  const path = resolve(process.cwd(), "../../../Cargo.toml");
+  const path = resolve(process.cwd(), "../../../client/Cargo.toml");
 
   const data = readFileSync(path);
 
@@ -25,7 +25,7 @@ export function readConfigFile(path?: string) {
     const data = readFileSync(path).toString();
 
     const parsed = JSON.parse(data) as unknown;
-    return fromJson(ServerConfigSchema, parsed as object);
+    return fromJson(ServerConfigSchema, parsed as JsonValue);
   } catch (e) {
     console.error("Failed to read config file:", e);
     return undefined;

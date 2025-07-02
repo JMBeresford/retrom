@@ -1,0 +1,25 @@
+{
+  "extends": "@retrom/configs/tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "types": ["vite/client"]
+  },
+  "include": ["./**/*.ts", "./eslint.config.js", "package.json"],
+  "references": [
+    {
+      "path": "../../packages/configs/tsconfig.lib.json"
+    },
+    {
+      "path": "../retrom-plugin-steam/tsconfig.lib.json"
+    },
+    {
+      "path": "../retrom-plugin-service-client/tsconfig.lib.json"
+    },
+    {
+      "path": "../retrom-plugin-config/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/codegen/tsconfig.lib.json"
+    }
+  ]
+}

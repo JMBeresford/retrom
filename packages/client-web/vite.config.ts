@@ -1,9 +1,9 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import { readConfigFile, readLocalCargoToml } from "./src/lib/node-utils.ts";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import { glslify } from "vite-plugin-glslify";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 
 export default defineConfig(({ mode }) => {
   process.env = {
@@ -11,23 +11,11 @@ export default defineConfig(({ mode }) => {
     ...loadEnv(mode, process.cwd()),
   };
 
-  let localVersion = "0.0.0";
-  try {
-    const cargoTomlVersion = readLocalCargoToml();
-    localVersion = cargoTomlVersion;
-  } catch (e) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Failed to read local Cargo.toml:", e);
-    }
-  }
-
-  let localServicePort = "5101";
+  const localServicePort = "5101";
   const localServiceHostname = "http://localhost";
 
-  const config = readConfigFile();
-  if (config?.connection?.port) {
-    localServicePort = config.connection.port.toString();
-  }
+  const localVersion =
+    process.env.VITE_RETROM_VERSION || process.env.RETROM_VERSION || "0.0.0";
 
   const localServiceHost =
     process.env.VITE_RETROM_LOCAL_SERVICE_HOST ||
@@ -88,7 +76,7 @@ export default defineConfig(({ mode }) => {
         "opera75",
       ],
     },
-    plugins: [tanstackRouter({ target: "react" }), react(), glslify()],
+    plugins: [TanStackRouterVite(), react(), glslify(), nxViteTsPaths()],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

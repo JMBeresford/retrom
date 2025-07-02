@@ -1,4 +1,5 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "composite": true,
     "baseUrl": ".",
@@ -25,5 +26,24 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [
+    {
+      "path": "../../plugins/retrom-plugin-standalone/tsconfig.lib.json"
+    },
+    {
+      "path": "../../plugins/retrom-plugin-launcher/tsconfig.lib.json"
+    },
+    {
+      "path": "../../plugins/retrom-plugin-installer/tsconfig.lib.json"
+    },
+    {
+      "path": "../../plugins/retrom-plugin-config/tsconfig.lib.json"
+    },
+    {
+      "path": "../codegen/tsconfig.lib.json"
+    },
+    {
+      "path": "../configs/tsconfig.lib.json"
+    }
+  ]
 }

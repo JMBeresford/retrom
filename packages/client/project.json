@@ -1,0 +1,32 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "retrom-client",
+  "implicitDependencies": ["retrom-client-web"],
+  "targets": {
+    "cargo:lint": {},
+    "cargo:format": {},
+    "dev": {
+      "dependsOn": ["retrom-client-web:dev:desktop"],
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "cargo tauri dev",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "build": {
+      "dependsOn": ["retrom-client-web:build:desktop"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cargo tauri build --debug",
+        "cwd": "{projectRoot}"
+      },
+      "configurations": {
+        "prod": {
+          "command": "cargo tauri build",
+          "args": ["--config", "tauri.build.conf.json"]
+        }
+      }
+    }
+  }
+}
