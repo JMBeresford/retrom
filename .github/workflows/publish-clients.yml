@@ -150,6 +150,9 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install
 
+      - name: install tauri cli
+        run: cargo install tauri-cli --version "^2.0.0" --locked
+
       - name: build release client
         if: ${{ env.RELEASE_BUILDS == 'true' }}
         run: |
