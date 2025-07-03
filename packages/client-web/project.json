@@ -12,7 +12,10 @@
       "dependsOn": ["^build", "retrom-service:cargo:run"],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "VITE_IS_DESKTOP=true vite"
+        "command": "vite dev",
+        "env": {
+          "VITE_IS_DESKTOP": "true"
+        }
       }
     },
     "build:desktop": {
@@ -21,7 +24,10 @@
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",
-        "command": "VITE_IS_DESKTOP=true vite build"
+        "command": "vite build",
+        "env": {
+          "VITE_IS_DESKTOP": "true"
+        }
       }
     }
   }

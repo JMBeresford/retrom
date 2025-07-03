@@ -30,6 +30,10 @@ export default defineConfig(({ mode }) => {
   const uptraceDsn =
     process.env.VITE_UPTRACE_DSN || process.env.UPTRACE_DSN || "";
 
+  if (process.env.VITE_IS_DESKTOP) {
+    console.log("Using desktop environment configuration");
+  }
+
   // https://vitejs.dev/config/
   return {
     define: {
