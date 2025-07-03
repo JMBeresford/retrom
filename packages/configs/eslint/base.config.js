@@ -6,9 +6,7 @@ const config = tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ["*.js"],
-        },
+        projectService: true,
       },
     },
   },

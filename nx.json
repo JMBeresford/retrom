@@ -59,6 +59,7 @@
       }
     },
     "eslint:lint": {
+      "dependsOn": ["^build"],
       "configurations": {
         "fix": {
           "args": ["--fix"]
