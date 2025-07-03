@@ -28,7 +28,9 @@ export default defineConfig(() => ({
     },
     lib: {
       entry: Object.fromEntries(
-        globSync(resolve(__dirname, "generated/**/*.ts")).map((f) => [
+        globSync(resolve(__dirname, "generated/**/*.ts"), {
+          windowsPathsNoEscape: true,
+        }).map((f) => [
           relative("generated", f.slice(0, f.length - extname(f).length)),
           resolve(__dirname, f),
         ]),
