@@ -21,7 +21,7 @@ export const definePluginConfig = (_config) => {
       }),
     ],
     build: {
-      outDir: join(__dirname, "./dist"),
+      outDir: "dist",
       emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {

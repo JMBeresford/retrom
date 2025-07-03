@@ -2,6 +2,16 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "retrom-configs",
   "targets": {
-    "prettier:format": {}
+    "prettier:format": {},
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["{projectRoot}/**/*"],
+      "outputs": ["{projectRoot}/dist/**/*"],
+      "options": {
+        "command": "pnpm tsc --build",
+        "cwd": "{projectRoot}"
+      }
+    }
   }
 }

@@ -4,12 +4,12 @@
   "targets": {
     "prettier:format": {},
     "dev": {
-      "dependsOn": ["build-deps", "retrom-service:cargo:run"]
+      "dependsOn": ["^build", "retrom-service:cargo:run"]
     },
     "dev:desktop": {
       "executor": "nx:run-commands",
       "continuous": true,
-      "dependsOn": ["build-deps", "retrom-service:cargo:run"],
+      "dependsOn": ["^build", "retrom-service:cargo:run"],
       "options": {
         "cwd": "{projectRoot}",
         "command": "VITE_IS_DESKTOP=true vite"
@@ -17,7 +17,7 @@
     },
     "build:desktop": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build-deps"],
+      "dependsOn": ["^build"],
       "cache": true,
       "options": {
         "cwd": "{projectRoot}",

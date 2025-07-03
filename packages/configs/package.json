@@ -1,6 +1,12 @@
 {
   "name": "@retrom/configs",
   "type": "module",
+  "exports": {
+    "./*": {
+      "types": "./dist/*",
+      "default": "./*"
+    }
+  },
   "files": [
     "eslint/**",
     "tsconfig/**",

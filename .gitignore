@@ -12,7 +12,7 @@ config.dev.*
 *.tsbuildinfo
 .lazy.lua
 .turbo
-/dist
+**/dist
 retrom.log
 
 .nx/cache
