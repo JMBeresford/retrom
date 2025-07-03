@@ -62,7 +62,7 @@ export default defineConfig(({ mode }) => {
     preview: {
       port: 3000,
       host: "0.0.0.0",
-      allowedHosts: ["*"],
+      allowedHosts: true,
       proxy: {
         "/api": {
           target: localServiceHost,
