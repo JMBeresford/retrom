@@ -1,0 +1,10 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "retrom-plugin-service-client",
+  "targets": {
+    "prettier:format": {},
+    "cargo:lint": {},
+    "cargo:format": {},
+    "cargo:build": {}
+  }
+}

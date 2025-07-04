@@ -8,22 +8,12 @@
   "files": [
     "dist/**"
   ],
-  "scripts": {
-    "build": "tsc",
-    "cargo-build": "cargo build",
-    "format": "prettier ./guest-js/**/*.ts --write && cargo fmt",
-    "format:check": "prettier ./guest-js/**/*.ts --check && cargo fmt --check",
-    "lint": "eslint ./guest-js/ && cargo clippy",
-    "lint:fix": "eslint ./guest-js/ --fix && cargo clippy --fix"
-  },
   "dependencies": {
     "@tauri-apps/api": ">=2.0.0-beta.6",
+    "@retrom/codegen": "workspace:*",
     "@bufbuild/protobuf": "2.4.0"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^11.1.6",
-    "@retrom/codegen": "workspace:*",
-    "rollup": "^4.9.6",
     "typescript": "^5.3.3",
     "tslib": "^2.6.2",
     "@retrom/configs": "workspace:*"

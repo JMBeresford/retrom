@@ -1,8 +1,24 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
+  "files": [],
+  "references": [
+    {
+      "path": "../../packages/codegen"
+    },
+    {
+      "path": "../../packages/configs"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ],
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "guest-js"
-  },
-  "include": ["./**/*.ts"]
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  }
 }

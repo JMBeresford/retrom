@@ -29,7 +29,7 @@
     }
   },
   "build": {
-    "frontendDist": "./web/dist",
+    "frontendDist": "../client-web/dist",
     "devUrl": "http://localhost:3000"
   },
   "productName": "Retrom",

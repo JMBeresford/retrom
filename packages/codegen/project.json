@@ -1,0 +1,26 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "retrom-codegen",
+  "targets": {
+    "buf:format": {},
+    "cargo:lint": {},
+    "cargo:build": {},
+    "generate": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "pnpm buf generate",
+        "cwd": "{projectRoot}"
+      },
+      "inputs": [
+        "{projectRoot}/protos/**/*",
+        "{projectRoot}/buf.gen.yaml",
+        "{projectRoot}/buf.yaml"
+      ],
+      "outputs": ["{projectRoot}/generated/**/*"]
+    },
+    "build": {
+      "dependsOn": ["generate"]
+    }
+  }
+}

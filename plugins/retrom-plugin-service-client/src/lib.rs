@@ -86,7 +86,7 @@ impl<R: Runtime, T: Manager<R>> crate::RetromPluginServiceClientExt<R> for T {
 /// Initializes the plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("retrom-plugin-service-client")
-        // .invoke_handler(tauri::generate_handler![commands::ping])
+        .invoke_handler(tauri::generate_handler![])
         .setup(|app, api| {
             let retrom_plugin_service_client = desktop::init(app, api)?;
             app.manage(retrom_plugin_service_client);

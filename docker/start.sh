@@ -9,7 +9,7 @@ trap 'on_error $LINENO' ERR
 
 # Start the web server
 cd /app/web
-pnpm preview &
+pnpm vite preview &
 
 # Start the API server
 cd /app

@@ -8,14 +8,6 @@
   "files": [
     "dist/**"
   ],
-  "scripts": {
-    "build": "tsc",
-    "cargo-build": "cargo build",
-    "format": "prettier ./guest-js/**/*.ts --write && cargo fmt",
-    "format:check": "prettier ./guest-js/**/*.ts --check && cargo fmt --check",
-    "lint": "eslint ./guest-js/ && cargo clippy",
-    "lint:fix": "eslint ./guest-js/ --fix && cargo clippy --fix"
-  },
   "dependencies": {
     "@tauri-apps/api": ">=2.0.0-beta.6",
     "@bufbuild/protobuf": "2.4.0",

@@ -1,0 +1,33 @@
+{
+  "extends": "@retrom/configs/tsconfig/base.json",
+  "files": [],
+  "references": [
+    {
+      "path": "./plugins/retrom-plugin-service-client"
+    },
+    {
+      "path": "./plugins/retrom-plugin-standalone"
+    },
+    {
+      "path": "./plugins/retrom-plugin-installer"
+    },
+    {
+      "path": "./plugins/retrom-plugin-launcher"
+    },
+    {
+      "path": "./plugins/retrom-plugin-config"
+    },
+    {
+      "path": "./plugins/retrom-plugin-steam"
+    },
+    {
+      "path": "./packages/client-web"
+    },
+    {
+      "path": "./packages/codegen"
+    },
+    {
+      "path": "./packages/configs"
+    }
+  ]
+}

@@ -1,29 +1,40 @@
 {
   "name": "retrom",
   "type": "module",
-  "scripts": {
-    "start:desktop": "pnpm turbo --filter @retrom/client --filter @retrom/service dev --filter @retrom/client-web dev:desktop",
-    "start:web": "pnpm turbo --filter @retrom/client-web --filter @retrom/service dev"
-  },
   "devDependencies": {
+    "@monodon/rust": "^2.3.0",
+    "@nx/eslint": "21.2.1",
+    "@nx/js": "21.2.1",
+    "@nx/vite": "21.2.1",
+    "@nx/web": "21.2.1",
     "@opentelemetry/context-zone": "^2.0.1",
     "@opentelemetry/instrumentation": "^0.201.0",
     "@opentelemetry/instrumentation-fetch": "^0.201.0",
+    "@retrom/configs": "workspace:*",
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
     "@tauri-apps/cli": "^2.4.1",
-    "@turbo/gen": "^2.5.0",
     "@uptrace/web": "^1.23.0",
+    "@vitest/ui": "^3.0.0",
     "dotenv": "^16.5.0",
     "eslint": "^9.25.1",
+    "jiti": "2.4.2",
+    "jsdom": "~22.1.0",
+    "nx": "21.2.1",
     "prettier": "^3.5.3",
     "tslib": "^2.8.1",
-    "turbo": "^2.5.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vite": "^6.0.0",
+    "vite-plugin-dts": "~4.5.0",
+    "vitest": "^3.0.0"
   },
   "overrides": {
     "typescript": "$typescript",
     "tslib": "$tslib",
     "prettier": "$prettier",
-    "eslint": "$eslint"
+    "eslint": "$eslint",
+    "@nx/vite": "$nx/vite"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",

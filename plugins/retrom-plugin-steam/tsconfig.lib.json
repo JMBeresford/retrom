@@ -1,0 +1,15 @@
+{
+  "extends": "@retrom/configs/tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "./dist"
+  },
+  "include": ["./**/*.ts", "./eslint.config.js", "package.json"],
+  "references": [
+    {
+      "path": "../../packages/configs/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/codegen/tsconfig.lib.json"
+    }
+  ]
+}

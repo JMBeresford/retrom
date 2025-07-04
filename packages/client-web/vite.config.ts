@@ -1,9 +1,10 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import { readConfigFile, readLocalCargoToml } from "./src/lib/node-utils.ts";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import { glslify } from "vite-plugin-glslify";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { readLocalCargoToml } from "./src/lib/node-utils";
 
 export default defineConfig(({ mode }) => {
   process.env = {
@@ -11,22 +12,17 @@ export default defineConfig(({ mode }) => {
     ...loadEnv(mode, process.cwd()),
   };
 
-  let localVersion = "0.0.0";
-  try {
-    const cargoTomlVersion = readLocalCargoToml();
-    localVersion = cargoTomlVersion;
-  } catch (e) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Failed to read local Cargo.toml:", e);
-    }
-  }
-
-  let localServicePort = "5101";
+  const localServicePort = "5101";
   const localServiceHostname = "http://localhost";
 
-  const config = readConfigFile();
-  if (config?.connection?.port) {
-    localServicePort = config.connection.port.toString();
+  let localVersion = "0.0.0";
+  try {
+    const cargoTomlversion = readLocalCargoToml();
+    localVersion = cargoTomlversion;
+  } catch (e) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("Failed to read local Cargo.toml version:", e);
+    }
   }
 
   const localServiceHost =
@@ -41,6 +37,10 @@ export default defineConfig(({ mode }) => {
 
   const uptraceDsn =
     process.env.VITE_UPTRACE_DSN || process.env.UPTRACE_DSN || "";
+
+  if (process.env.VITE_IS_DESKTOP) {
+    console.log("Using desktop environment configuration");
+  }
 
   // https://vitejs.dev/config/
   return {
@@ -70,6 +70,7 @@ export default defineConfig(({ mode }) => {
     preview: {
       port: 3000,
       host: "0.0.0.0",
+      allowedHosts: true,
       proxy: {
         "/api": {
           target: localServiceHost,
@@ -88,7 +89,7 @@ export default defineConfig(({ mode }) => {
         "opera75",
       ],
     },
-    plugins: [tanstackRouter({ target: "react" }), react(), glslify()],
+    plugins: [TanStackRouterVite(), react(), glslify(), nxViteTsPaths()],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

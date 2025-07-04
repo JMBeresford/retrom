@@ -1,8 +1,36 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
+  "files": [],
+  "references": [
+    {
+      "path": "../../packages/configs"
+    },
+    {
+      "path": "../retrom-plugin-steam"
+    },
+    {
+      "path": "../retrom-plugin-service-client"
+    },
+    {
+      "path": "../retrom-plugin-installer"
+    },
+    {
+      "path": "../retrom-plugin-config"
+    },
+    {
+      "path": "../../packages/codegen"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ],
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "guest-js"
-  },
-  "include": ["./**/*.ts"]
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  }
 }

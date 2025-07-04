@@ -1,0 +1,16 @@
+{
+  "extends": "@retrom/configs/tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "types": ["vite/client"]
+  },
+  "files": ["./guest-js/index.ts", "./vite.config.ts", "./eslint.config.js"],
+  "references": [
+    {
+      "path": "../../packages/codegen/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/configs/tsconfig.lib.json"
+    }
+  ]
+}

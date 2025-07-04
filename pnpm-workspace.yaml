@@ -1,13 +1,17 @@
 injectWorkspacePackages: true
-syncInjectedDepsAfterScripts: ["build", "build:desktop"]
+syncInjectedDepsAfterScripts:
+  - build
+  - build:desktop
 packages:
   - packages/*
-  - packages/client/web
-  - packages/codegen
   - plugins/*
 onlyBuiltDependencies:
-  - "@bufbuild/buf"
+  - '@bufbuild/buf'
+  - '@swc/core'
   - core-js-pure
   - esbuild
   - grpc-tools
+  - nx
   - protobufjs
+ignoredBuiltDependencies:
+  - '@parcel/watcher'

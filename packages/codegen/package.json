@@ -10,15 +10,6 @@
   "files": [
     "dist/**"
   ],
-  "scripts": {
-    "build": "tsc",
-    "cargo-build": "cargo build",
-    "generate": "buf generate",
-    "format": "buf format -w && cargo fmt",
-    "format:check": "buf format --diff --exit-code && cargo fmt --check",
-    "lint": "cargo clippy",
-    "lint:fix": "cargo clippy --fix"
-  },
   "dependencies": {
     "@bufbuild/protobuf": "2.4.0",
     "@bufbuild/protoc-gen-es": "2.4.0",
@@ -28,6 +19,7 @@
     "@bufbuild/buf": "^1.53.0",
     "@retrom/configs": "workspace:*",
     "@types/node": "^22.14.1",
+    "glob": "^11.0.3",
     "globals": "^16.0.0"
   }
 }
