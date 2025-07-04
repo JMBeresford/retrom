@@ -40,6 +40,7 @@ concurrency:
 
 env:
   CACHE_VERSION: 6
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
 jobs:
   build-desktop-clients:
@@ -96,6 +97,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: "pnpm"
 
       - name: install Rust stable
         id: rust
@@ -148,7 +150,7 @@ jobs:
           arch -x86_64 /usr/local/bin/brew install postgresql@17
 
       - name: install frontend dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: install tauri cli
         run: cargo install tauri-cli --version "^2.0.0" --locked

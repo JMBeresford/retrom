@@ -7,6 +7,8 @@ publish_no_verify = true
 changelog_update = false
 changelog_path = "./CHANGELOG.md"
 pr_name = "Release: v{{ version }}"
+pr_branch_prefix = 'release/'
+pr_labels = ["release"]
 
 [[package]]
 name = "retrom-service"
