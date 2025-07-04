@@ -12,9 +12,9 @@ additional information in their own `README.md` files.
 
 - `docs/`: markdown documentation for the github wiki, user-facing documentation, is a git submodule
 - `packages/`: Top level package directory for the workspace
-  - `client/`: Top level client workspace package, a tauri-based desktop application
+  - `client/`: rust workspace package, a tauri-based desktop application
     - `src/`: rust code for the desktop tauri application, which wraps the web client
-    - `web/`: typescript nested workspace package for the web client, which is a React application
+  - `client-web/`: typescript workspace package for the web client, which is a React application
   - `codegen/`: workspace package for code generation tools, outputs both Rust and Typescript code
     - `protos/`: the protobuf definitions used for the code generation
     - `src/`: rust code that extends the codegen with some extra functionality
@@ -43,20 +43,19 @@ additional information in their own `README.md` files.
   - rarely called directly, there are package scripts for running them
 - `prettier` and `rustfmt` are used for formatting the Typescript and Rust code respectively
   - rarely called directly, there are package scripts for running them
-- `turborepo` is used for managing the monorepo and running commands across packages
-  - `pnpm turbo run <command>` or `pnpm turbo <command>` runs a command across all supported packages
-  - `pnpm turbo run --filter <package1> --filter <package2> <command>` runs a command across a
-    subset of packages
-  - `pnpm turbo lint` will lint the entire monorepo (calls `eslint` and `clippy`)
-  - `pnpm turbo format` will format the entire monorepo (calls `prettier` and `rustfmt`)
-  - `pnpm turbo build` will build the web application
-  - `pnpm turbo build:desktop` will build the desktop application, which wraps the web application
-
-Sometimes the rust-based tooling can take a while to run, so you can directly run the Typescript
-linter for a package by sidestepping `turbo` entriely. For example,
-`pnpm --filter @retrom/client-web lint` will run eslint for the web client package. This ensures
-that the correct configuration is used as well. Do not execute `eslint`, `prettier`,
-`cargo clippy` or `rustfmt` directly.
+- `nx` is used for managing the monorepo and running commands (targets) across packages
+  - `pnpm nx <target> <package>` or `pnpm nx run <package>:<target>` runs a target for a given package
+  - `pnpm nx run-many -t <target1> <target2>` runs any amount of targets across all valid packages
+  - `pnpm nx run-many -t <target1> <target2> -p <package1> <package2>` runs any amount of targets across specific packages
+  - 'configurations' for a target can be executed in the following ways:
+    - `pnpm nx run <package>:<target>:<configuration>` runs a specific configuration for a target in a package
+    - `pnpm nx <target> <package> --configuration <configuration>` runs a specific configuration for a target in a package
+    - `pnpm nx run-many -t <target1> <target2> -p <package1> <package2> --configuration <configuration>` runs a specific configuration for any number of valid targets in any number of valid packages
+  - formatter targets are defined as `<formatter>:format` and linter targets are defined as `<linter>:lint`
+    - e.g. `pnpm nx run-many -t eslint:lint -p client-web codegen` will run the `eslint:lint` target for the `client-web` and `codegen` packages
+    - e.g. `pnpm nx run-many -t prettier:format -p client-web codegen` will run the `prettier:format` target for the `client-web` and `codegen` packages
+  - formatter targets all have a `check` configuration that will check if the code is formatted correctly
+    - e.g. `pnpm nx run-many -t prettier:format -p client-web codegen --configuration check` will check if the code is formatted correctly for the `client-web` and `codegen` packages
 
 ## Code Standards
 
