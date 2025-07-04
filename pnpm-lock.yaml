@@ -508,6 +508,115 @@ importers:
         specifier: ^8.31.0
         version: 8.34.1(eslint@9.29.0(jiti@2.4.2))(typescript@5.8.3)
 
+  packages/ui:
+    dependencies:
+      '@radix-ui/react-accordion':
+        specifier: ^1.1.2
+        version: 1.2.11(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-checkbox':
+        specifier: ^1.1.1
+        version: 1.3.2(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-collapsible':
+        specifier: ^1.0.3
+        version: 1.1.11(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-dialog':
+        specifier: ^1.1.1
+        version: 1.1.14(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-dropdown-menu':
+        specifier: ^2.0.6
+        version: 2.1.15(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-label':
+        specifier: ^2.0.2
+        version: 2.1.7(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-menubar':
+        specifier: ^1.0.4
+        version: 1.1.15(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-popover':
+        specifier: ^1.0.7
+        version: 1.1.14(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-progress':
+        specifier: ^1.0.3
+        version: 1.1.7(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-scroll-area':
+        specifier: ^1.0.5
+        version: 1.2.9(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-select':
+        specifier: ^2.0.0
+        version: 2.2.5(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-separator':
+        specifier: ^1.0.3
+        version: 1.1.7(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-slot':
+        specifier: ^1.1.0
+        version: 1.2.3(@types/react@18.3.23)(react@18.3.1)
+      '@radix-ui/react-tabs':
+        specifier: ^1.0.4
+        version: 1.1.12(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-toast':
+        specifier: ^1.1.5
+        version: 1.2.14(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-tooltip':
+        specifier: ^1.0.7
+        version: 1.2.7(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-visually-hidden':
+        specifier: ^1.1.1
+        version: 1.2.3(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      class-variance-authority:
+        specifier: ^0.7.0
+        version: 0.7.1
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      cmdk:
+        specifier: ^1.0.0
+        version: 1.1.1(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      embla-carousel-react:
+        specifier: ^8.1.6
+        version: 8.6.0(react@18.3.1)
+      lucide-react:
+        specifier: ^0.376.0
+        version: 0.376.0(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-hook-form:
+        specifier: ^7.54.2
+        version: 7.58.1(react@18.3.1)
+      react-resizable-panels:
+        specifier: ^2.0.19
+        version: 2.1.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      tailwind-merge:
+        specifier: ^2.3.0
+        version: 2.6.0
+      vaul:
+        specifier: ^1.1.2
+        version: 1.1.2(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    devDependencies:
+      '@retrom/configs':
+        specifier: workspace:*
+        version: link:../configs
+      '@types/node':
+        specifier: ^22.14.1
+        version: 22.15.32
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.23
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.23)
+      typescript:
+        specifier: ^5.5.3
+        version: 5.8.3
+      vite:
+        specifier: ^5.4.1
+        version: 5.4.19(@types/node@22.15.32)(lightningcss@1.30.1)(sass@1.89.2)(terser@5.36.0)
+      vite-plugin-dts:
+        specifier: ^4.0.0
+        version: 4.5.4(@types/node@22.15.32)(rollup@4.44.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.15.32)(lightningcss@1.30.1)(sass@1.89.2)(terser@5.36.0))
+
   plugins/retrom-plugin-config:
     dependencies:
       '@bufbuild/protobuf':
@@ -9840,11 +9949,37 @@ snapshots:
 
   '@mediapipe/tasks-vision@0.10.17': {}
 
+  '@microsoft/api-extractor-model@7.30.6(@types/node@22.15.32)':
+    dependencies:
+      '@microsoft/tsdoc': 0.15.1
+      '@microsoft/tsdoc-config': 0.17.1
+      '@rushstack/node-core-library': 5.13.1(@types/node@22.15.32)
+    transitivePeerDependencies:
+      - '@types/node'
+
   '@microsoft/api-extractor-model@7.30.6(@types/node@24.0.10)':
     dependencies:
       '@microsoft/tsdoc': 0.15.1
       '@microsoft/tsdoc-config': 0.17.1
       '@rushstack/node-core-library': 5.13.1(@types/node@24.0.10)
+    transitivePeerDependencies:
+      - '@types/node'
+
+  '@microsoft/api-extractor@7.52.8(@types/node@22.15.32)':
+    dependencies:
+      '@microsoft/api-extractor-model': 7.30.6(@types/node@22.15.32)
+      '@microsoft/tsdoc': 0.15.1
+      '@microsoft/tsdoc-config': 0.17.1
+      '@rushstack/node-core-library': 5.13.1(@types/node@22.15.32)
+      '@rushstack/rig-package': 0.5.3
+      '@rushstack/terminal': 0.15.3(@types/node@22.15.32)
+      '@rushstack/ts-command-line': 5.0.1(@types/node@22.15.32)
+      lodash: 4.17.21
+      minimatch: 3.0.8
+      resolve: 1.22.10
+      semver: 7.5.4
+      source-map: 0.6.1
+      typescript: 5.8.2
     transitivePeerDependencies:
       - '@types/node'
 
@@ -11466,6 +11601,19 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.44.0':
     optional: true
 
+  '@rushstack/node-core-library@5.13.1(@types/node@22.15.32)':
+    dependencies:
+      ajv: 8.13.0
+      ajv-draft-04: 1.0.0(ajv@8.13.0)
+      ajv-formats: 3.0.1(ajv@8.13.0)
+      fs-extra: 11.3.0
+      import-lazy: 4.0.0
+      jju: 1.4.0
+      resolve: 1.22.10
+      semver: 7.5.4
+    optionalDependencies:
+      '@types/node': 22.15.32
+
   '@rushstack/node-core-library@5.13.1(@types/node@24.0.10)':
     dependencies:
       ajv: 8.13.0
@@ -11484,12 +11632,28 @@ snapshots:
       resolve: 1.22.10
       strip-json-comments: 3.1.1
 
+  '@rushstack/terminal@0.15.3(@types/node@22.15.32)':
+    dependencies:
+      '@rushstack/node-core-library': 5.13.1(@types/node@22.15.32)
+      supports-color: 8.1.1
+    optionalDependencies:
+      '@types/node': 22.15.32
+
   '@rushstack/terminal@0.15.3(@types/node@24.0.10)':
     dependencies:
       '@rushstack/node-core-library': 5.13.1(@types/node@24.0.10)
       supports-color: 8.1.1
     optionalDependencies:
       '@types/node': 24.0.10
+
+  '@rushstack/ts-command-line@5.0.1(@types/node@22.15.32)':
+    dependencies:
+      '@rushstack/terminal': 0.15.3(@types/node@22.15.32)
+      '@types/argparse': 1.0.38
+      argparse: 1.0.10
+      string-argv: 0.3.2
+    transitivePeerDependencies:
+      - '@types/node'
 
   '@rushstack/ts-command-line@5.0.1(@types/node@24.0.10)':
     dependencies:
@@ -11946,7 +12110,7 @@ snapshots:
 
   '@types/cors@2.8.19':
     dependencies:
-      '@types/node': 22.15.32
+      '@types/node': 24.0.10
 
   '@types/debug@4.1.12':
     dependencies:
@@ -13061,7 +13225,7 @@ snapshots:
   engine.io@6.6.4:
     dependencies:
       '@types/cors': 2.8.19
-      '@types/node': 22.15.32
+      '@types/node': 24.0.10
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.7.2
@@ -16429,6 +16593,25 @@ snapshots:
       - tsx
       - yaml
 
+  vite-plugin-dts@4.5.4(@types/node@22.15.32)(rollup@4.44.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.15.32)(lightningcss@1.30.1)(sass@1.89.2)(terser@5.36.0)):
+    dependencies:
+      '@microsoft/api-extractor': 7.52.8(@types/node@22.15.32)
+      '@rollup/pluginutils': 5.2.0(rollup@4.44.0)
+      '@volar/typescript': 2.4.16
+      '@vue/language-core': 2.2.0(typescript@5.8.3)
+      compare-versions: 6.1.1
+      debug: 4.4.1
+      kolorist: 1.8.0
+      local-pkg: 1.1.1
+      magic-string: 0.30.17
+      typescript: 5.8.3
+    optionalDependencies:
+      vite: 5.4.19(@types/node@22.15.32)(lightningcss@1.30.1)(sass@1.89.2)(terser@5.36.0)
+    transitivePeerDependencies:
+      - '@types/node'
+      - rollup
+      - supports-color
+
   vite-plugin-dts@4.5.4(@types/node@24.0.10)(rollup@4.44.0)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.10)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.89.2)(terser@5.36.0)(tsx@4.20.3)(yaml@2.8.0)):
     dependencies:
       '@microsoft/api-extractor': 7.52.8(@types/node@24.0.10)
@@ -16464,6 +16647,18 @@ snapshots:
       rollup: 4.44.0
     optionalDependencies:
       '@types/node': 20.19.1
+      fsevents: 2.3.3
+      lightningcss: 1.30.1
+      sass: 1.89.2
+      terser: 5.36.0
+
+  vite@5.4.19(@types/node@22.15.32)(lightningcss@1.30.1)(sass@1.89.2)(terser@5.36.0):
+    dependencies:
+      esbuild: 0.21.5
+      postcss: 8.5.6
+      rollup: 4.44.0
+    optionalDependencies:
+      '@types/node': 22.15.32
       fsevents: 2.3.3
       lightningcss: 1.30.1
       sass: 1.89.2

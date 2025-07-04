@@ -1,0 +1,41 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "retrom-ui",
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist",
+        "configFile": "{projectRoot}/vite.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["src/**/*.{js,ts,tsx}"]
+      }
+    },
+    "prettier:format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --write .",
+        "cwd": "{projectRoot}"
+      },
+      "configurations": {
+        "check": {
+          "command": "prettier --check .",
+          "cwd": "{projectRoot}"
+        }
+      }
+    },
+    "eslint:lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["src/**/*.{js,ts,tsx}"]
+      }
+    }
+  }
+}
