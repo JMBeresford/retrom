@@ -1,7 +1,0 @@
-# whitelist by ignoring everything first
-*
-
-# whitelist specific files
-!*.json
-!README.md
-!pnpm-workspace.yaml

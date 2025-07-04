@@ -22,6 +22,8 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^build"],
       "cache": true,
+      "inputs": ["default", "^default", { "externalDependencies": ["vite"] }],
+      "outputs": ["{projectRoot}/dist"],
       "options": {
         "cwd": "{projectRoot}",
         "command": "vite build",
