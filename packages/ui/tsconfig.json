@@ -1,0 +1,29 @@
+{
+  "extends": "@retrom/configs/tsconfig/base.json",
+  "files": [],
+  "references": [
+    {
+      "path": "../configs"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ],
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  }
+}
