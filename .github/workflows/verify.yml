@@ -52,7 +52,7 @@ jobs:
         run: cargo test
 
       - name: run formatter
-        run: pnpm nx run-many -t cargo:format:check prettier:format:check buf:format:check
+        run: pnpm nx run-many -t cargo:format prettier:format buf:format --configuration check
 
       - name: run linter
         run: pnpm nx run-many -t cargo:lint eslint:lint
