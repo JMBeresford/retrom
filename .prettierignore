@@ -1,5 +1,7 @@
-# Add files here to ignore them from prettier formatting
-/dist
-/coverage
-/.nx/cache
-/.nx/workspace-data
+# whitelist by ignoring everything first
+*
+
+# whitelist specific files
+!*.json
+!README.md
+!pnpm-workspace.yaml

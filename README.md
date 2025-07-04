@@ -2,19 +2,19 @@
   
   ![Banner][banner-link]
   
-  ### A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.
+### A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere
 
-  ---
+---
 
-  ### Check out the [quick start guide](https://github.com/JMBeresford/retrom/wiki/Quick-Start) or the full [wiki](https://github.com/JMBeresford/retrom/wiki)
+### Check out the [quick start guide](https://github.com/JMBeresford/retrom/wiki/Quick-Start) or the full [wiki](https://github.com/JMBeresford/retrom/wiki)
 
-  ### [Download the latest Client](https://github.com/JMBeresford/retrom/releases/latest)
+### [Download the latest Client](https://github.com/JMBeresford/retrom/releases/latest)
 
-  ---
+---
 
   <h6>Join the Discord server:</h6>
 
-  [![discord-badge]][discord-link]
+[![discord-badge]][discord-link]
 
 </div>
 
@@ -63,7 +63,7 @@ sort of _self-hosted Steam_ for your DRM-free game library.
 <div align='center'>
   <img src="https://github.com/user-attachments/assets/bb7015d1-823a-4247-8c7c-b0e6e0450018" />
   <span>
-    <img width='49%' src="https://github.com/user-attachments/assets/653ef3fa-94d4-42cb-a319-d53673893601" /> 
+    <img width='49%' src="https://github.com/user-attachments/assets/653ef3fa-94d4-42cb-a319-d53673893601" />
     <img width='49%' src="https://github.com/user-attachments/assets/d7afce18-e2b2-47fa-bd0d-0d89b30fff8a" />
   </span>
   <span>

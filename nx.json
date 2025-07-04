@@ -3,14 +3,10 @@
   "parallel": 5,
   "targetDefaults": {
     "dev": {
-      "syncGenerators": [
-        "@nx/js:typescript-sync"
-      ]
+      "syncGenerators": ["@nx/js:typescript-sync"]
     },
     "build": {
-      "syncGenerators": [
-        "@nx/js:typescript-sync"
-      ]
+      "syncGenerators": ["@nx/js:typescript-sync"]
     },
     "prettier:format": {
       "executor": "nx:run-commands",
@@ -20,7 +16,7 @@
       },
       "configurations": {
         "check": {
-          "command": "pnpm prettier --check"
+          "command": "pnpm prettier --check ."
         }
       }
     },
@@ -50,40 +46,28 @@
     },
     "cargo:run": {
       "executor": "@monodon/rust:run",
-      "dependsOn": [
-        "^cargo:build"
-      ],
+      "dependsOn": ["^cargo:build"],
       "continuous": true
     },
     "cargo:lint": {
-      "dependsOn": [
-        "^cargo:lint"
-      ],
+      "dependsOn": ["^cargo:lint"],
       "executor": "@monodon/rust:lint",
       "configurations": {
         "fix": {
-          "args": [
-            "--fix"
-          ]
+          "args": ["--fix"]
         }
       }
     },
     "eslint:lint": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "configurations": {
         "fix": {
-          "args": [
-            "--fix"
-          ]
+          "args": ["--fix"]
         }
       }
     },
     "cargo:build": {
-      "dependsOn": [
-        "^cargo:build"
-      ],
+      "dependsOn": ["^cargo:build"],
       "executor": "@monodon/rust:build",
       "configurations": {
         "release": {

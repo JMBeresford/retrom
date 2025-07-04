@@ -6,12 +6,12 @@ packages:
   - packages/*
   - plugins/*
 onlyBuiltDependencies:
-  - '@bufbuild/buf'
-  - '@swc/core'
+  - "@bufbuild/buf"
+  - "@swc/core"
   - core-js-pure
   - esbuild
   - grpc-tools
   - nx
   - protobufjs
 ignoredBuiltDependencies:
-  - '@parcel/watcher'
+  - "@parcel/watcher"
