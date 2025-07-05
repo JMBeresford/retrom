@@ -607,6 +607,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.0
         version: 18.3.7(@types/react@18.3.23)
+      glob:
+        specifier: ^11.0.3
+        version: 11.0.3
       typescript:
         specifier: ^5.5.3
         version: 5.8.3
