@@ -2,13 +2,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "retrom-ui",
   "targets": {
-    "prettier:format": {},
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["components/**/*.{js,ts,tsx}"]
-      }
-    }
+    "prettier:format": {}
   }
 }
