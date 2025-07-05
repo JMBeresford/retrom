@@ -28,7 +28,6 @@ export default defineConfig(() => ({
         globSync(resolve(__dirname, "components/**/*.{ts,tsx}"), {
           windowsPathsNoEscape: true,
         })
-          .filter(f => !f.includes('index.ts')) // Exclude index files
           .map((f) => [
             relative("components", f.slice(0, f.length - extname(f).length)),
             resolve(__dirname, f),
