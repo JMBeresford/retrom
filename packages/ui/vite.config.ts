@@ -3,7 +3,8 @@ import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
-import { resolve } from "node:path";
+import { resolve, relative, extname } from "node:path";
+import { globSync } from "glob";
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -11,7 +12,7 @@ export default defineConfig(() => ({
     nxViteTsPaths(),
     nxCopyAssetsPlugin(["*.md"]),
     dts({
-      entryRoot: "src",
+      entryRoot: "components",
       tsconfigPath: resolve(__dirname, "tsconfig.lib.json"),
     }),
   ],
@@ -23,9 +24,16 @@ export default defineConfig(() => ({
       transformMixedEsModules: true,
     },
     lib: {
-      entry: {
-        index: resolve(__dirname, "src/index.ts"),
-      },
+      entry: Object.fromEntries(
+        globSync(resolve(__dirname, "components/**/*.{ts,tsx}"), {
+          windowsPathsNoEscape: true,
+        })
+          .filter(f => !f.includes('index.ts')) // Exclude index files
+          .map((f) => [
+            relative("components", f.slice(0, f.length - extname(f).length)),
+            resolve(__dirname, f),
+          ]),
+      ),
       name: "@retrom/ui",
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
