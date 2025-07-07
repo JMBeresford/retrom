@@ -5,19 +5,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@retrom/ui/components/form";
+import { Input } from "@retrom/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from "@retrom/ui/components/select";
+import { cn } from "@retrom/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { PlusIcon } from "lucide-react";
 import { emulatorSchema, EmulatorSchema, PlatformWithMetadata } from ".";
 import { useCallback } from "react";

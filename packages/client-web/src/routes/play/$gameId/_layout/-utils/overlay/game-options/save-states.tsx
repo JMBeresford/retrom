@@ -5,16 +5,17 @@ import { useCallback, useRef, useState } from "react";
 import { useSaveEJSState } from "@/mutations/emulator-js/useSaveEJSState";
 import { useImportEJSState } from "@/mutations/emulator-js/useImportEJSState";
 import { useExportEJSState } from "@/mutations/emulator-js/useExportEJSState";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@retrom/ui/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@retrom/ui/components/dropdown-menu";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
-import { cn, Image, timestampToDate } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Image, timestampToDate } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
+import { Skeleton } from "@retrom/ui/components/skeleton";
 import { HotkeyIcon } from "@/components/fullscreen/hotkey-button";
 import { EllipsisVertical } from "lucide-react";
 import { FocusContainer } from "@/components/fullscreen/focus-container";

@@ -2,6 +2,9 @@
   "extends": "@retrom/configs/tsconfig/base.json",
   "files": [],
   "include": ["*.config.ts", "*.config.js"],
+  "compilerOptions": {
+    "noEmit": true
+  },
   "references": [
     {
       "path": "../configs"
@@ -9,21 +12,5 @@
     {
       "path": "./tsconfig.lib.json"
     }
-  ],
-  "compilerOptions": {
-    "composite": true,
-    "strict": true,
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "esnext",
-    "skipLibCheck": true,
-    "allowJs": true,
-    "moduleResolution": "bundler",
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true
-  }
+  ]
 }

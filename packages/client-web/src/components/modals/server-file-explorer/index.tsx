@@ -5,11 +5,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@retrom/ui/components/dialog";
 import { Fragment, ReactElement, useCallback, useMemo, useState } from "react";
 import { useServerFilesystem } from "@/queries/useServerFilesystem";
 import { GetFilesystemNodeRequest } from "@retrom/codegen/retrom/services/file-explorer-service_pb";
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@retrom/ui/components/table";
 import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer_pb";
 import {
   FileIcon,
@@ -26,7 +26,7 @@ import {
   LucideProps,
   Slash,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -34,20 +34,18 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useModalAction } from "@/providers/modal-action";
+} from "@retrom/ui/components/breadcrumb";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
+import { BaseModalActionProps, useModalAction } from "@/providers/modal-action";
 import { RawMessage } from "@/utils/protos";
 
 declare global {
   namespace RetromModals {
     export interface ModalActions {
-      serverFileExplorerModal?: {
-        open?: boolean;
-        title: string;
-        description: string;
-        onClose: (path: string | undefined) => void;
-      };
+      serverFileExplorerModal: BaseModalActionProps<
+        undefined,
+        (path: string | undefined) => void
+      >;
     }
   }
 }

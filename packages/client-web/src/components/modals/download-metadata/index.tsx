@@ -6,15 +6,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
-import { Button } from "../../ui/button";
+} from "@retrom/ui/components/dialog";
+import { Button } from "@retrom/ui/components/button";
 import { LoaderCircleIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useUpdateLibraryMetadata } from "@/mutations/useUpdateLibraryMetadata";
 import { useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
 import { useCallback, useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@retrom/ui/components/checkbox";
 
 export function DownloadMetadataModal() {
   const navigate = useNavigate();

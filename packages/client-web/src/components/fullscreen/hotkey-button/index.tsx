@@ -1,6 +1,6 @@
-import { Button, ButtonProps } from "@/components/ui/button";
-import { Code } from "@/components/ui/code";
-import { cn } from "@/lib/utils";
+import { Button, ButtonProps } from "@retrom/ui/components/button";
+import { Code } from "@retrom/ui/components/code";
+import { cn } from "@retrom/ui/lib/utils";
 import { useGamepadContext } from "@/providers/gamepad";
 import { getButtonMapValue } from "@/providers/gamepad/maps";
 import { Hotkey } from "@/providers/hotkeys";

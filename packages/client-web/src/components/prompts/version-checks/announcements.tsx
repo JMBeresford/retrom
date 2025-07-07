@@ -1,10 +1,10 @@
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { parseVersion, versionCompare } from "@/lib/version-utils";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { VersionAnnouncementsPayloadSchema } from "@retrom/codegen/retrom/utils_pb";
 import { useClientVersion } from "@/queries/useClientVersion";
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { fromJson, JsonValue } from "@bufbuild/protobuf";
 
 const url =

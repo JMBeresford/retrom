@@ -7,8 +7,8 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@retrom/ui/components/resizable";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { CheckForUpdateModal } from "@/components/modals/check-for-update";
 import { DefaultProfilesModal } from "@/components/modals/default-profiles";
@@ -31,7 +31,7 @@ import { ConfirmModal } from "@/components/modals/confirm";
 import { DeletePlatformModal } from "@/components/modals/delete-platform";
 import { CleanLibraryModal } from "@/components/modals/clean-library";
 import { UpdatePlatformMetadataModal } from "@/components/modals/update-platform-metadata";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { ExitModal } from "@/components/modals/exit";
 
 export const Route = createFileRoute("/(windowed)/_layout")({

@@ -3,13 +3,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@retrom/ui/components/dialog";
 import { useSetupModal } from "./context";
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { useCreateClient } from "@/mutations/useCreateClient";
 import { useCallback } from "react";
 import { LoaderCircleIcon } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { useClientInfo } from "@/queries/useClientInfo";
 import { useConfigStore } from "@/providers/config";
 import { useQueryClient } from "@tanstack/react-query";

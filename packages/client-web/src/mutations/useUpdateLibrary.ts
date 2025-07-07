@@ -1,4 +1,4 @@
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { JobStatus } from "@retrom/codegen/retrom/jobs_pb";
 import { GetJobSubscriptionResponse } from "@retrom/codegen/retrom/services/job-service_pb";
 import { useRetromClient } from "@/providers/retrom-client";

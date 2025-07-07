@@ -7,8 +7,9 @@ import {
   SheetTitle,
   SheetTrigger,
   useSheetOpen,
-} from "@/components/ui/sheet";
-import { cn, getFileStub, Image } from "@/lib/utils";
+} from "@retrom/ui/components/sheet";
+import { getFileStub, Image } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
 import { FC, memo, ReactNode, useCallback, useMemo } from "react";
 import { coreOptions } from "./core-options";
@@ -18,7 +19,7 @@ import { FocusContainer } from "@/components/fullscreen/focus-container";
 import { gameOptions } from "./game-options";
 import logo from "@/assets/img/Logo.png";
 import logoLong from "@/assets/img/LogoLong-NoBackground-Small.png";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@retrom/ui/components/separator";
 import { emulationOptions } from "./emulation-options";
 import { HotkeyButton } from "@/components/fullscreen/hotkey-button";
 import { controlOptions } from "./control-options";
@@ -27,8 +28,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useSearch } from "@tanstack/react-router";
 import { useEmulatorJS } from "@/providers/emulator-js";
 import { MenuItem, MenuItemGroup, MenuRoot } from "@/components/menubar";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@retrom/ui/components/label";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { useEJSSessionState } from "@/providers/emulator-js/ejs-session";
 import { configOptions } from "./config";
 import { useControlOptions } from "@/providers/emulator-js/control-options";

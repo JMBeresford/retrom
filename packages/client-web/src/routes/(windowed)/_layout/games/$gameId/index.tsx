@@ -4,7 +4,7 @@ import { CoverImage } from "./-components/cover-image";
 import { Actions } from "./-components/actions";
 import { GeneralInfo } from "./-components/general-info";
 import { Genres } from "./-components/genres";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { Title } from "./-components/title";
 import { Description } from "./-components/description";
 import { Links } from "./-components/links";

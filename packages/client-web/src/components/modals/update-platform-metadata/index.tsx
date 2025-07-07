@@ -5,8 +5,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
+} from "@retrom/ui/components/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@retrom/ui/components/tabs";
 import { IgdbTab } from "./igdb-tab";
 import { Route as RootRoute } from "@/routes/__root";
 import { usePlatforms } from "@/queries/usePlatforms";

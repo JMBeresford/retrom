@@ -1,8 +1,8 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@retrom/ui/components/card";
 import { useGameDetail } from "@/providers/game-details";
 import { InfoItem } from "./general-info";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+import { Separator } from "@retrom/ui/components/separator";
+import { Button } from "@retrom/ui/components/button";
 import { Link } from "@tanstack/react-router";
 
 export function LaunchConfig() {

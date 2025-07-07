@@ -9,7 +9,7 @@ import {
   SheetPortal,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@retrom/ui/components/sheet";
 import { ExitFullscreen } from "./exit-fullscreen";
 import { Config } from "./config";
 import { HotkeyButton } from "../hotkey-button";
@@ -18,8 +18,8 @@ import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useState } from "react";
 import { useHotkeys } from "@/providers/hotkeys";
 import { FocusContainer } from "../focus-container";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
+import { Separator } from "@retrom/ui/components/separator";
 
 declare global {
   export interface HotkeyZones {

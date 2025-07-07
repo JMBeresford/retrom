@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "@retrom/configs/tsconfig/base.json",
   "compilerOptions": {
     "composite": true,
     "baseUrl": ".",
@@ -27,6 +27,9 @@
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx"],
   "references": [
+    {
+      "path": "../ui/tsconfig.lib.json"
+    },
     {
       "path": "../../plugins/retrom-plugin-standalone/tsconfig.lib.json"
     },

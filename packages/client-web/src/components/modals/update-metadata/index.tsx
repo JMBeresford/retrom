@@ -5,8 +5,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
+} from "@retrom/ui/components/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@retrom/ui/components/tabs";
 import { IgdbTab } from "./igdb-tab";
 import { ManualTab } from "./manual-tab";
 import { Route } from "@/routes/(windowed)/_layout/games/$gameId";

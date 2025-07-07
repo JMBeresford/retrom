@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
-import { Input, InputStyles } from "../ui/input";
+import { cn } from "@retrom/ui/lib/utils";
+import { Input, InputStyles } from "@retrom/ui/components/input";
 import { SearchIcon, SortAscIcon, SortDescIcon } from "lucide-react";
 import {
   GameSortKey,
@@ -13,17 +13,17 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Button } from "../ui/button";
-import { Label } from "../ui/label";
+} from "@retrom/ui/components/select";
+import { Button } from "@retrom/ui/components/button";
+import { Label } from "@retrom/ui/components/label";
 import { ReactNode } from "react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "../ui/accordion";
-import { Checkbox } from "../ui/checkbox";
+} from "@retrom/ui/components/accordion";
+import { Checkbox } from "@retrom/ui/components/checkbox";
 
 export function FiltersAndSorting() {
   const {

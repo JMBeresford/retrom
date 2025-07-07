@@ -1,4 +1,4 @@
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@retrom/ui/hooks/use-toast";
 import { getFileName } from "@/lib/utils";
 import { RawMessage } from "@/utils/protos";
 import { File } from "@retrom/codegen/retrom/files_pb";

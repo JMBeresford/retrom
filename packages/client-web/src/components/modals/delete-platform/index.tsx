@@ -1,5 +1,5 @@
-import { useToast } from "@/components/ui/use-toast";
-import { cn } from "@/lib/utils";
+import { useToast } from "@retrom/ui/hooks/use-toast";
+import { cn } from "@retrom/ui/lib/utils";
 import { useCallback, useState } from "react";
 import {
   DialogContent,
@@ -9,9 +9,9 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+} from "@retrom/ui/components/dialog";
+import { Checkbox } from "@retrom/ui/components/checkbox";
+import { Button } from "@retrom/ui/components/button";
 import { LoaderCircleIcon } from "lucide-react";
 import { useDeletePlatforms } from "@/mutations/useDeletePlatforms";
 import { Route as RootRoute } from "@/routes/__root";

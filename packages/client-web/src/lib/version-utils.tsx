@@ -1,4 +1,4 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import {
   Version,
   VersionSchema,
@@ -6,8 +6,8 @@ import {
 import { Update } from "@tauri-apps/plugin-updater";
 import Markdown from "react-markdown";
 import classes from "./version-utils.module.scss";
-import { cn } from "./utils";
 import { create } from "@bufbuild/protobuf";
+import { cn } from "@retrom/ui/lib/utils";
 
 export function versionCompare(a: Version, b: Version): number {
   const { major: aMajor, minor: aMinor } = a;

@@ -1,6 +1,6 @@
 import { useFocusable } from "@/components/fullscreen/focus-container";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
+import { cn } from "@retrom/ui/lib/utils";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 
 export function Description(props: { description: string }) {

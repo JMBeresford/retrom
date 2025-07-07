@@ -1,4 +1,4 @@
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@retrom/ui/hooks/use-toast";
 import { useEmulatorJS } from "@/providers/emulator-js";
 import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer_pb";
 import { File } from "@retrom/codegen/retrom/files_pb";
