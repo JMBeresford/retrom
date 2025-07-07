@@ -2,7 +2,8 @@ import { JobsIndicator } from "@/components/menubar/jobs-indicator";
 import { useEffect, useState } from "react";
 import { MenuSheet } from "./menu-sheet";
 import { useSystemInfo } from "@/queries/useSystemInfo";
-import { cn, Image } from "@/lib/utils";
+import { Image } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import logo from "@/assets/img/LogoLong-NoBackground-Small.png";
 
 export function FullscreenMenubar(props: JSX.IntrinsicElements["div"]) {

@@ -1,5 +1,5 @@
-import { ToastAction } from "@/components/ui/toast";
-import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "@retrom/ui/components/toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import {
   type GetGamesResponse,
   GetGamesRequestSchema,

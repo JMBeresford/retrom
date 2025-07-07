@@ -2,17 +2,17 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@retrom/ui/components/dialog";
 import { useSetupModal } from "./context";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "@retrom/ui/components/button";
+import { cn } from "@retrom/ui/lib/utils";
 import { AlertCircle, Cloud, LoaderCircle, Server } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@retrom/ui/components/tooltip";
 import { useEnableStandaloneMode } from "@/mutations/useEnableStandaloneMode";
 import { useDisableStandaloneMode } from "@/mutations/useDisableStandaloneMode";
 

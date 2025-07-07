@@ -1,9 +1,9 @@
 import { ForwardedRef, forwardRef, useImperativeHandle, useRef } from "react";
-import { Button, ButtonProps } from "../ui/button";
+import { Button, ButtonProps } from "@retrom/ui/components/button";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { checkIsDesktop } from "@/lib/env";
 import { useConfigStore } from "@/providers/config";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { DownloadIcon } from "lucide-react";
 
 export const DownloadGameButton = forwardRef(

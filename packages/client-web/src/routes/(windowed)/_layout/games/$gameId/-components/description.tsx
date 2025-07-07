@@ -1,6 +1,6 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { useRehypeRemark } from "@/lib/markdown";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
 import Markdown from "react-markdown";
 

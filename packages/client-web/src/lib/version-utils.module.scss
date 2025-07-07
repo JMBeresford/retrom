@@ -1,49 +1,53 @@
-.markdown {
-  h1 {
-    font-size: 2em;
-  }
+@tailwind base;
 
-  h2 {
-    font-size: 1.5em;
-  }
+@layer base {
+  .markdown {
+    h1 {
+      font-size: 2em;
+    }
 
-  h3 {
-    font-size: 1.25em;
-  }
+    h2 {
+      font-size: 1.5em;
+    }
 
-  h4 {
-    font-size: 1em;
-  }
+    h3 {
+      font-size: 1.25em;
+    }
 
-  h5 {
-    font-size: 0.83em;
-  }
+    h4 {
+      font-size: 1em;
+    }
 
-  h6 {
-    font-size: 0.67em;
-  }
+    h5 {
+      font-size: 0.83em;
+    }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-black text-2xl mb-2 uppercase text-primary;
-  }
+    h6 {
+      font-size: 0.67em;
+    }
 
-  ul {
-    list-style: none;
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      @apply font-black text-2xl mb-2 uppercase text-primary;
+    }
 
-    li {
-      margin-bottom: 1rem;
+    ul {
+      list-style: none;
 
-      > *:first-child {
-        @apply font-bold mb-1 relative w-fit;
-      }
+      li {
+        margin-bottom: 1rem;
 
-      > *:not(:first-child) {
-        @apply text-sm;
+        > *:first-child {
+          @apply font-bold mb-1 relative w-fit;
+        }
+
+        > *:not(:first-child) {
+          @apply text-sm;
+        }
       }
     }
   }

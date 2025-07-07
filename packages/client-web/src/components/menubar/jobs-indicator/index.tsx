@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+} from "@retrom/ui/components/popover";
+import { Progress } from "@retrom/ui/components/progress";
+import { Separator } from "@retrom/ui/components/separator";
 import { JobStatus } from "@retrom/codegen/retrom/jobs_pb";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useJobProgress } from "@/queries/useJobProgress";
 import { LoaderCircleIcon } from "lucide-react";
 import { Fragment } from "react";

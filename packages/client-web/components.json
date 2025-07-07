@@ -12,6 +12,9 @@
   },
   "aliases": {
     "components": "@/components",
-    "utils": "@/lib/utils"
+    "hooks": "@/hooks",
+    "lib": "@/lib",
+    "utils": "@retrom/ui/utils",
+    "ui": "@retrom/ui/components"
   }
 }

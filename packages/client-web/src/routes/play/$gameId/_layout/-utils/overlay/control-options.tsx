@@ -1,9 +1,10 @@
 import { ConfigCheckbox } from "@/components/fullscreen/menubar/config-inputs/checkbox";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
-import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/use-toast";
+import { Label } from "@retrom/ui/components/label";
+import { toast } from "@retrom/ui/hooks/use-toast";
 import { EmulatorJSControlMap } from "@/lib/emulatorjs/gamepad";
-import { cn, toTitleCase } from "@/lib/utils";
+import { toTitleCase } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useEmulatorJS } from "@/providers/emulator-js";
 import {
   Player,

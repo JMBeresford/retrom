@@ -1,6 +1,6 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { ReactNode } from "react";
-import { Separator } from "../ui/separator";
+import { Separator } from "@retrom/ui/components/separator";
 import { InfoIcon, LucideProps, CircleAlertIcon } from "lucide-react";
 import { cva, VariantProps } from "class-variance-authority";
 

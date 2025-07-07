@@ -5,9 +5,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
+} from "@retrom/ui/components/dialog";
 import { LoaderCircleIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useEmulators } from "@/queries/useEmulators";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
@@ -22,7 +22,12 @@ import { z } from "zod";
 import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
 import { useNavigate } from "@tanstack/react-router";
 import { useLocalEmulatorConfigs } from "@/queries/useLocalEmulatorConfigs";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@retrom/ui/components/tabs";
 import { LocalConfigs } from "./local-configs";
 
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
@@ -40,7 +45,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@retrom/ui/components/tooltip";
 
 export type EmulatorSchema = z.infer<typeof emulatorSchema>;
 export const emulatorSchema = z.object({

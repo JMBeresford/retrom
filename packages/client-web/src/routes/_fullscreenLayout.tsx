@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useRef } from "react";
 import { FullscreenMenubar } from "../components/fullscreen/menubar";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { z } from "zod";
 import { GroupContextProvider } from "@/providers/fullscreen/group-context";
 import { GamepadProvider } from "@/providers/gamepad";

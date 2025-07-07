@@ -1,5 +1,5 @@
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { Button } from "../ui/button";
+import { Button } from "@retrom/ui/components/button";
 import {
   CircleAlertIcon,
   DownloadCloudIcon,
@@ -7,9 +7,9 @@ import {
 } from "lucide-react";
 import { useInstallGame } from "@/mutations/useInstallGame";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
-import { Progress } from "../ui/progress";
+import { Progress } from "@retrom/ui/components/progress";
 import { ComponentProps, ForwardedRef, forwardRef } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
 
 export const InstallGameButton = forwardRef(

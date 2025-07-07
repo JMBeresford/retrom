@@ -1,4 +1,4 @@
-import { useToast } from "../../ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import {
   Dialog,
   DialogClose,
@@ -7,22 +7,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
-import { Button } from "../../ui/button";
+} from "@retrom/ui/components/dialog";
+import { Button } from "@retrom/ui/components/button";
 import { ChevronsUpDown, LoaderCircleIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
 import { useModalAction } from "@/providers/modal-action";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
+import { Separator } from "@retrom/ui/components/separator";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@retrom/ui/components/collapsible";
 
 export function CleanLibraryModal() {
   const { toast } = useToast();

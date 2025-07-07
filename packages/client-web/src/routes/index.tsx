@@ -1,4 +1,5 @@
-import { cn, Image } from "@/lib/utils";
+import { Image } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import banner from "@/assets/img/LogoLong-NoBackground.png";
 import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
 import { useConfigStore } from "@/providers/config";

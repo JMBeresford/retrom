@@ -1,4 +1,5 @@
-import { cn, getFileStub, timestampToDate } from "@/lib/utils";
+import { getFileStub, timestampToDate } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
 import { useMemo } from "react";
 

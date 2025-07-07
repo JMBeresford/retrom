@@ -1,7 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { cn, getFileName } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@retrom/ui/components/card";
+import { Button } from "@retrom/ui/components/button";
+import { Separator } from "@retrom/ui/components/separator";
+import { getFileName } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useCallback, useState } from "react";
 import {
   Select,
@@ -9,18 +15,18 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@retrom/ui/components/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@retrom/ui/components/dropdown-menu";
 import { EllipsisVerticalIcon, LoaderCircleIcon } from "lucide-react";
 import { useDeleteGameFiles } from "@/mutations/useDeleteGameFile";
 import { useUpdateGameFiles } from "@/mutations/useUpdateGameFiles";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import {
   Dialog,
   DialogClose,
@@ -30,11 +36,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@retrom/ui/components/dialog";
+import { Checkbox } from "@retrom/ui/components/checkbox";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@retrom/ui/components/badge";
+import { Input } from "@retrom/ui/components/input";
 import { useGameDetail } from "@/providers/game-details";
 
 export function GameFiles() {

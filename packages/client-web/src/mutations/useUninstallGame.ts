@@ -1,4 +1,4 @@
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { uninstallGame } from "@retrom/plugin-installer";

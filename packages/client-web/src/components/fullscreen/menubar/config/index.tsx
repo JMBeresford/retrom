@@ -8,10 +8,15 @@ import {
   SheetOverlay,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@retrom/ui/components/sheet";
 import { MenuEntryButton } from "../menu-entry-button";
 import { ComponentProps, useCallback, useState } from "react";
-import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@retrom/ui/components/form";
 import { useForm, useFormContext } from "react-hook-form";
 import {
   InterfaceConfig_GameListEntryImage,
@@ -22,13 +27,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useConfig, useConfigStore } from "@/providers/config";
 import { ConfigInput } from "../config-inputs/input";
 import { HotkeyButton } from "../../hotkey-button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { ConfigSelect, ConfigSelectItem } from "../config-inputs/select";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { FocusContainer } from "../../focus-container";
 import { ConfigCheckbox } from "../config-inputs/checkbox";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@retrom/ui/components/separator";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({

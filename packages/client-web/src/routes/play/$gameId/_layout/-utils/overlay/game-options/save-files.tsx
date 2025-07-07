@@ -15,7 +15,7 @@ import {
   BackupStats,
   SaveFilesStat,
 } from "@retrom/codegen/retrom/services/saves-service_pb";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@retrom/ui/hooks/use-toast";
 
 function useStats() {
   const {

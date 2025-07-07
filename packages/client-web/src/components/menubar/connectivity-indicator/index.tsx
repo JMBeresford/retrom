@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+} from "@retrom/ui/components/popover";
+import { Separator } from "@retrom/ui/components/separator";
+import { cn } from "@retrom/ui/lib/utils";
 import { useConfig } from "@/providers/config";
 import {
   ConnectionStatus,

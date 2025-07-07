@@ -17,7 +17,7 @@ import { millisToTimestamp } from "@/lib/utils";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 import { useGetSaveFiles } from "@/queries/saveFiles";
 import { useUpdateSaveFiles } from "@/mutations/saveFiles";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@retrom/ui/hooks/use-toast";
 import {
   SaveFiles,
   UpdateSaveFilesResponse,
@@ -175,7 +175,11 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
           const durationMillis = Date.now() - startTime;
           const durationMinutes = durationMillis / 1000 / 60;
 
-          meta.lastPlayed = millisToTimestamp(startTime);
+          meta.lastPlayed = {
+            ...millisToTimestamp(startTime),
+            $typeName: "google.protobuf.Timestamp",
+          };
+
           meta.minutesPlayed = Math.floor(
             (meta.minutesPlayed ?? 0) + durationMinutes,
           );

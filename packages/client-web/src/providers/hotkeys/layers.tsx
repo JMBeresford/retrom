@@ -13,7 +13,7 @@ import {
 import { Hotkey, HotkeyHandlerInfo, HotkeyHandlers } from ".";
 import { GAMEPAD_BUTTON_EVENT, GamepadButtonEvent } from "../gamepad/event";
 import { useInputDeviceContext } from "../input-device";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useHotkeyMapping } from "./mapping";
 
 declare global {

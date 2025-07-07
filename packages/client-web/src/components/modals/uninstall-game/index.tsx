@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import {
   DialogContent,
   DialogHeader,
@@ -7,9 +7,10 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-} from "@/components/ui/dialog";
+} from "@retrom/ui/components/dialog";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
-import { cn, getFileStub } from "@/lib/utils";
+import { getFileStub } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useUninstallGame } from "@/mutations/useUninstallGame";
 import { useGameDetail } from "@/providers/game-details";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";

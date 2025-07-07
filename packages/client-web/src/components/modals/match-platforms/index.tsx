@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { useToast } from "../../ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import {
   Dialog,
   DialogClose,
@@ -8,10 +8,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
-import { Button } from "../../ui/button";
+} from "@retrom/ui/components/dialog";
+import { Button } from "@retrom/ui/components/button";
 import { AlertCircleIcon, LoaderCircleIcon } from "lucide-react";
-import { cn, getFileName, getFileStub } from "@/lib/utils";
+import { getFileName, getFileStub } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import {
@@ -20,12 +21,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "@retrom/ui/components/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@retrom/ui/components/popover";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
@@ -40,7 +41,7 @@ import {
   PlatformMetadataSchema,
   UpdatedPlatformMetadataSchema,
 } from "@retrom/codegen/retrom/models/metadata_pb";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@retrom/ui/components/checkbox";
 import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";
 import { useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
@@ -51,7 +52,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@retrom/ui/components/table";
 import { create } from "@bufbuild/protobuf";
 
 export type PlatformAndMetadata = Platform & { metadata: PlatformMetadata };

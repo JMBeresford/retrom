@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@retrom/ui/components/badge";
 import {
   DialogClose,
   DialogContent,
@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   useDialogOpen,
-} from "@/components/ui/dialog";
+} from "@retrom/ui/components/dialog";
 import {
   Form,
   FormControl,
@@ -14,18 +14,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input, InputStyles } from "@/components/ui/input";
+} from "@retrom/ui/components/form";
+import { Input, InputStyles } from "@retrom/ui/components/input";
 import {
   Emulator,
   EmulatorProfile,
   NewEmulatorProfileSchema,
 } from "@retrom/codegen/retrom/models/emulators_pb";
-import { cn, InferSchema } from "@/lib/utils";
+import { InferSchema } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { useCallback } from "react";
 import { useCreateEmulatorProfiles } from "@/mutations/useCreateEmulatorProfile";
 import { useUpdateEmulatorProfiles } from "@/mutations/useUpdateEmulatorProfiles";
@@ -88,6 +89,7 @@ export function EditProfileDialog(props: Props) {
         const profile = {
           ...existingProfile,
           ...values,
+          $typeName: undefined,
         };
 
         updateProfiles({

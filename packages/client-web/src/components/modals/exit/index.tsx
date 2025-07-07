@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   Dialog,
@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@retrom/ui/components/dialog";
 import { Route as RootRoute } from "@/routes/__root";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
@@ -18,6 +18,7 @@ export function ExitModal() {
 
   const close = useCallback(() => {
     navigate({
+      to: ".",
       search: (prev) => ({ ...prev, exitModal: undefined }),
     }).catch(console.error);
   }, [navigate]);

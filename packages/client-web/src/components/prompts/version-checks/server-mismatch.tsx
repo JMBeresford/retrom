@@ -1,9 +1,9 @@
 import { useServerInfo } from "@/queries/useServerInfo";
 import { useClientVersion } from "@/queries/useClientVersion";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { useEffect } from "react";
 import { isBreakingChange, versionCompare } from "@/lib/version-utils";
-import { ToastAction } from "@/components/ui/toast";
+import { ToastAction } from "@retrom/ui/components/toast";
 import { Link } from "@tanstack/react-router";
 
 export function ServerMismatch() {

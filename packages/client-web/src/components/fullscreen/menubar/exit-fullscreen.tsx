@@ -7,7 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@retrom/ui/components/sheet";
 import { ComponentProps, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { HotkeyHandlers } from "@/providers/hotkeys";

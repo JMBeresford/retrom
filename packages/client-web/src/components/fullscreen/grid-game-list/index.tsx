@@ -1,13 +1,14 @@
 import { GameWithMetadata } from "@/components/game-list";
 import { InterfaceConfig_GameListEntryImageJson } from "@retrom/codegen/retrom/client/client-config_pb";
-import { cn, getFileStub } from "@/lib/utils";
+import { getFileStub } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { FocusContainer, useFocusable } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { Group, useGroupContext } from "@/providers/fullscreen/group-context";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@retrom/ui/components/separator";
+import { cn } from "@retrom/ui/lib/utils";
 
 function getFirstGameId(group: Group) {
   const firstPartitionWithGames = group.partitionedGames.find(
