@@ -1,17 +1,18 @@
-import { Image, cn, getFileName, getFileStub } from "@/lib/utils";
+import { Image, getFileName, getFileStub } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useMemo } from "react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@retrom/ui/components/tooltip";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@retrom/ui/components/accordion";
 import { usePlatforms } from "@/queries/usePlatforms";
 import { useGames } from "@/queries/useGames";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
@@ -22,13 +23,13 @@ import {
 import { Link, useLocation } from "@tanstack/react-router";
 import { useFilterAndSort } from "./filter-sort-context";
 import { FiltersAndSorting } from "./filters-and-sorting";
-import { Separator } from "../ui/separator";
+import { Separator } from "@retrom/ui/components/separator";
 import { filterName, sortGames, sortPlatforms } from "./utils";
-import { ScrollArea } from "../ui/scroll-area";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { useInstallationStateQuery } from "@/queries/useInstallationState";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@retrom/ui/components/skeleton";
 import { EllipsisVertical } from "lucide-react";
 import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
 import {
@@ -36,9 +37,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "@retrom/ui/components/dropdown-menu";
 import { DropdownMenuTriggerProps } from "@radix-ui/react-dropdown-menu";
-import { Button } from "../ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 
 type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };

@@ -1,4 +1,4 @@
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { UpdateGameMetadataRequestSchema } from "@retrom/codegen/retrom/services/metadata-service_pb";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

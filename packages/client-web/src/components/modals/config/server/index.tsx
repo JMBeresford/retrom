@@ -1,5 +1,10 @@
-import { DialogDescription, DialogHeader } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DialogDescription, DialogHeader } from "@retrom/ui/components/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@retrom/ui/components/tabs";
 import { ServerConfigJson } from "@retrom/codegen/retrom/server/config_pb";
 import { useServerConfig } from "@/queries/useServerConfig";
 import { DialogTitle } from "@radix-ui/react-dialog";

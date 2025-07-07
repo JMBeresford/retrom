@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,8 +9,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+} from "@retrom/ui/components/dropdown-menu";
+import { cn } from "@retrom/ui/lib/utils";
 import { EllipsisVertical } from "lucide-react";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
@@ -24,7 +24,7 @@ import {
   Emulator_OperatingSystem,
   EmulatorProfile,
 } from "@retrom/codegen/retrom/models/emulators_pb";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@retrom/ui/components/badge";
 import { usePlayGame } from "@/mutations/usePlayGame";
 import { checkIsDesktop } from "@/lib/env";
 import { useNavigate } from "@tanstack/react-router";

@@ -1,5 +1,6 @@
-import { useToast } from "@/components/ui/use-toast";
-import { cn, getFileStub } from "@/lib/utils";
+import { useToast } from "@retrom/ui/hooks/use-toast";
+import { getFileStub } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useDeleteGames } from "@/mutations/useDeleteGames";
 import { useGameDetail } from "@/providers/game-details";
 import { useCallback, useState } from "react";
@@ -11,9 +12,9 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+} from "@retrom/ui/components/dialog";
+import { Checkbox } from "@retrom/ui/components/checkbox";
+import { Button } from "@retrom/ui/components/button";
 import { LoaderCircleIcon } from "lucide-react";
 import { Route } from "@/routes/(windowed)/_layout/games/$gameId/index";
 import { useNavigate } from "@tanstack/react-router";

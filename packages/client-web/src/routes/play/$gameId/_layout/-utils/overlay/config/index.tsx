@@ -1,8 +1,9 @@
 import { useHotkeyMapping } from "@/providers/hotkeys/mapping";
 import { OverlayMenuItem } from "..";
 import { Hotkey } from "@/providers/hotkeys";
-import { cn, toTitleCase } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
+import { toTitleCase } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
+import { Label } from "@retrom/ui/components/label";
 import { Gamepad2, Keyboard } from "lucide-react";
 import { KeyboardEvent, useCallback, useLayoutEffect, useState } from "react";
 import {

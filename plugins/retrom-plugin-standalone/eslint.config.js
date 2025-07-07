@@ -1,4 +1,6 @@
-import { config } from "@retrom/configs/eslint/base.config.js";
+import { config as base } from "@retrom/configs/eslint/base.config.js";
 
 /** @type {import("eslint").Linter.Config} */
-export default [...config];
+const config = [...base];
+
+export default config;

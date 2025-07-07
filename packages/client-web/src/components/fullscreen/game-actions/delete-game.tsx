@@ -7,7 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@retrom/ui/components/sheet";
 import { MenuEntryButton } from "../menubar/menu-entry-button";
 import { HotkeyButton } from "../hotkey-button";
 import { useCallback, useState } from "react";
@@ -19,7 +19,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { FocusContainer } from "../focus-container";
 import { Info } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
 
 declare global {
   export interface HotkeyZones {

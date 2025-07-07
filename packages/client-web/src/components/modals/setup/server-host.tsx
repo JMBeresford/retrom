@@ -1,25 +1,25 @@
-import { Input } from "@/components/ui/input";
+import { Input } from "@retrom/ui/components/input";
 import { useSetupModal } from "./context";
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
   TooltipProvider,
-} from "@/components/ui/tooltip";
+} from "@retrom/ui/components/tooltip";
 import { InfoIcon, LoaderCircleIcon, XCircleIcon } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { RetromClient } from "@/providers/retrom-client/client";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@retrom/ui/components/dialog";
 import { useCallback, useState } from "react";
 import { useConfigStore } from "@/providers/config";
-import { Label } from "@/components/ui/label";
+import { Label } from "@retrom/ui/components/label";
 
 export function ServerHostStep() {
   const { previousStep } = useSetupModal();

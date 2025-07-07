@@ -1,7 +1,7 @@
 import { useGroupContext } from "@/providers/fullscreen/group-context";
 import { GridGameList } from "@/components/fullscreen/grid-game-list";
 import { CatchBoundary, createLazyFileRoute } from "@tanstack/react-router";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { Scrollbar } from "@radix-ui/react-scroll-area";
 import { GroupMenu } from "@/components/fullscreen/group-menu";
 import { ActionBar } from "@/components/fullscreen/action-bar";
@@ -10,8 +10,8 @@ import {
   FocusContainer,
   useFocusable,
 } from "@/components/fullscreen/focus-container";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from "@retrom/ui/lib/utils";
+import { Button } from "@retrom/ui/components/button";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useMemo } from "react";
 

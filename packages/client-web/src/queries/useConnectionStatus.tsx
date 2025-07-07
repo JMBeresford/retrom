@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@retrom/ui/components/button";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { versionToString } from "@/lib/version-utils";
 import { configStore } from "@/providers/config";
 import { useRetromClient } from "@/providers/retrom-client";

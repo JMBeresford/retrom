@@ -1,7 +1,7 @@
 import { Callout } from "@/components/callout";
-import { Checkbox } from "@/components/ui/checkbox";
-import { TabsContent } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { Checkbox } from "@retrom/ui/components/checkbox";
+import { TabsContent } from "@retrom/ui/components/tabs";
+import { cn } from "@retrom/ui/lib/utils";
 import { useUpdateServerConfig } from "@/mutations/useUpdateServerConfig";
 import { useServerConfig } from "@/queries/useServerConfig";
 import { create } from "@bufbuild/protobuf";

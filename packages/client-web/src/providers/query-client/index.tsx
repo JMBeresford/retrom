@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { PropsWithChildren, useState } from "react";
 import { ConnectError, Code } from "@connectrpc/connect";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@retrom/ui/hooks/use-toast";
 import { configStore } from "../config";
 
 export function QueryClientProvider(props: PropsWithChildren) {

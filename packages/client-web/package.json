@@ -36,6 +36,7 @@
     "@retrom/plugin-installer": "workspace:*",
     "@retrom/plugin-launcher": "workspace:*",
     "@retrom/plugin-standalone": "workspace:*",
+    "@retrom/ui": "workspace:*",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/vite": "^4.1.11",

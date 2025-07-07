@@ -3,6 +3,9 @@
   "files": [],
   "references": [
     {
+      "path": "../ui"
+    },
+    {
       "path": "../../plugins/retrom-plugin-standalone"
     },
     {

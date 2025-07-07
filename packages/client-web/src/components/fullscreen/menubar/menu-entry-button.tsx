@@ -1,5 +1,5 @@
-import { Button, ButtonProps } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button, ButtonProps } from "@retrom/ui/components/button";
+import { cn } from "@retrom/ui/lib/utils";
 import { HotkeyLayer, HotkeyLayerProps } from "@/providers/hotkeys/layers";
 import { useFocusable, UseFocusableConfig } from "../focus-container";
 import { forwardRef, ReactNode, useId, useImperativeHandle } from "react";

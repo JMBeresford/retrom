@@ -1,5 +1,5 @@
 import { MenuRoot, MenuItem, canRender, MenuItemGroup } from ".";
-import { Separator } from "../ui/separator";
+import { Separator } from "@retrom/ui/components/separator";
 import {
   Sheet,
   SheetClose,
@@ -10,11 +10,11 @@ import {
   SheetPortal,
   SheetTitle,
   SheetTrigger,
-} from "../ui/sheet";
+} from "@retrom/ui/components/sheet";
 import { getPanelElement } from "react-resizable-panels";
 import { useNavigate } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
-import { Button } from "../ui/button";
+import { cn } from "@retrom/ui/lib/utils";
+import { Button } from "@retrom/ui/components/button";
 import { Route as RootRoute } from "@/routes/__root";
 import { ArrowLeft, Ellipsis, X } from "lucide-react";
 

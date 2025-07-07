@@ -3,9 +3,9 @@ import {
   FocusContainer,
   useFocusable,
 } from "@/components/fullscreen/focus-container";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@retrom/ui/components/scroll-area";
 import { GameMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useGameMetadata } from "@/queries/useGameMetadata";

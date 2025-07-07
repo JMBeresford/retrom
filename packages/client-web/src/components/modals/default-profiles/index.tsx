@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import {
   Command,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "@retrom/ui/components/command";
 import {
   Dialog,
   DialogClose,
@@ -15,13 +15,18 @@ import {
   DialogHeader,
   DialogTitle,
   useDialogOpen,
-} from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+} from "@retrom/ui/components/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+} from "@retrom/ui/components/form";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@retrom/ui/components/popover";
 import {
   DefaultEmulatorProfile,
   Emulator,
@@ -29,7 +34,8 @@ import {
   EmulatorProfile,
   UpdatedDefaultEmulatorProfile,
 } from "@retrom/codegen/retrom/models/emulators_pb";
-import { cn, getFileStub, InferSchema } from "@/lib/utils";
+import { getFileStub, InferSchema } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useUpdateDefaultEmulatorProfiles } from "@/mutations/useUpdateDefaultEmulatorProfiles";
 import { useDefaultEmulatorProfiles } from "@/queries/useDefaultEmulatorProfiles";
 import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
@@ -49,10 +55,11 @@ import { z } from "zod";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Route as RootRoute } from "@/routes/__root";
 import { useConfig } from "@/providers/config";
-import { Label } from "@/components/ui/label";
+import { Label } from "@retrom/ui/components/label";
 import { PlatformWithMetadata } from "../manage-emulators";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@retrom/ui/components/separator";
 import { checkIsDesktop } from "@/lib/env";
+import { RawMessage } from "@/utils/protos";
 
 export function DefaultProfilesModal() {
   const navigate = useNavigate();
@@ -144,7 +151,7 @@ const formSchema = z.object({
       platformId: z.number(),
       emulatorProfileId: z.number().optional(),
     }) satisfies InferSchema<
-      Omit<UpdatedDefaultEmulatorProfile, "emulatorProfileId"> & {
+      Omit<RawMessage<UpdatedDefaultEmulatorProfile>, "emulatorProfileId"> & {
         emulatorProfileId?: number;
       }
     >,

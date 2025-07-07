@@ -1,4 +1,4 @@
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@retrom/ui/hooks/use-toast";
 import {
   Emulator,
   EmulatorProfile,

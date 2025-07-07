@@ -7,7 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@retrom/ui/components/sheet";
 import { ComponentProps, useState } from "react";
 import { MenuEntryButton } from "../menu-entry-button";
 import { HotkeyButton } from "../../hotkey-button";

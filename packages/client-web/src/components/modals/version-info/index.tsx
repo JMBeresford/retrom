@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Code } from "@/components/ui/code";
+import { Button } from "@retrom/ui/components/button";
+import { Code } from "@retrom/ui/components/code";
 import {
   Dialog,
   DialogClose,
@@ -8,11 +8,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+} from "@retrom/ui/components/dialog";
+import { Label } from "@retrom/ui/components/label";
+import { Separator } from "@retrom/ui/components/separator";
 import { Version } from "@retrom/codegen/retrom/server/server-info_pb";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import {
   isBreakingChange,
   versionCompare,

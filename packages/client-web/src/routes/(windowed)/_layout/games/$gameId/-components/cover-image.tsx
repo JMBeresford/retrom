@@ -1,4 +1,5 @@
-import { cn, getFileStub, Image } from "@/lib/utils";
+import { getFileStub, Image } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import logo from "@/assets/img/LogoLong-NoBackground.png";
 import { useGameDetail } from "@/providers/game-details";
 

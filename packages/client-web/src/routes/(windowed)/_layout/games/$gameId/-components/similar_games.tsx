@@ -1,7 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@retrom/ui/components/card";
 import { useGameMetadata } from "@/queries/useGameMetadata";
-import { cn, Image } from "@/lib/utils";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Image } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
+import { ScrollArea, ScrollBar } from "@retrom/ui/components/scroll-area";
 import { useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
 

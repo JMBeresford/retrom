@@ -28,6 +28,9 @@
     },
     {
       "path": "./packages/configs"
+    },
+    {
+      "path": "./packages/ui"
     }
   ]
 }

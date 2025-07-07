@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@retrom/ui/components/dialog";
 import { SetupModalProvider } from "./context";
 import { SetupModalSteps } from "./steps";
 import { Route as RootRoute } from "@/routes/__root";

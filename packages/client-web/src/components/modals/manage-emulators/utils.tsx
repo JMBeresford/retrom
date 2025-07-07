@@ -4,13 +4,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "@retrom/ui/components/command";
 import {
   Emulator_OperatingSystem,
   SaveStrategy,
 } from "@retrom/codegen/retrom/models/emulators_pb";
 import { PlatformWithMetadata } from ".";
-import { cn, getFileStub } from "@/lib/utils";
+import { getFileStub } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { Check } from "lucide-react";
 
 export const saveStrategyDisplayMap: Record<SaveStrategy, string> = {

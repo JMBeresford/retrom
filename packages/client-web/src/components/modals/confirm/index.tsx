@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import {
   Dialog,
   DialogClose,
@@ -7,21 +7,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
+} from "@retrom/ui/components/dialog";
 import { ReactNode, useCallback } from "react";
-import { useModalAction } from "@/providers/modal-action";
+import { BaseModalActionProps, useModalAction } from "@/providers/modal-action";
 import { useMutation } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 
 declare global {
   namespace RetromModals {
     export interface ModalActions {
-      confirmModal?: {
-        open?: boolean;
-        title: string;
-        description: string;
+      confirmModal: BaseModalActionProps & {
         content?: ReactNode;
-        onConfirm: () => void | Promise<void>;
+        onConfirm?: () => void | Promise<void>;
         onCancel?: () => void | Promise<void>;
       };
     }

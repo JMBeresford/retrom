@@ -2,9 +2,9 @@ import {
   FormControl,
   FormLabel,
   useMaybeFormField,
-} from "@/components/ui/form";
-import { Input, InputProps } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+} from "@retrom/ui/components/form";
+import { Input, InputProps } from "@retrom/ui/components/input";
+import { cn } from "@retrom/ui/lib/utils";
 import { forwardRef, useId, useImperativeHandle } from "react";
 import { ControllerRenderProps } from "react-hook-form";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";

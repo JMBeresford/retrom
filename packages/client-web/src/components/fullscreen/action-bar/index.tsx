@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 
 export function ActionBar(props: JSX.IntrinsicElements["div"]) {
   const { children, className, ...rest } = props;

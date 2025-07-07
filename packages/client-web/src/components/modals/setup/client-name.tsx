@@ -3,19 +3,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@retrom/ui/components/dialog";
 import { useSetupModal } from "./context";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
+import { Button } from "@retrom/ui/components/button";
+import { Separator } from "@retrom/ui/components/separator";
+import { cn } from "@retrom/ui/lib/utils";
+import { Input } from "@retrom/ui/components/input";
 import { useCallback, useMemo, useState } from "react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@retrom/ui/components/tooltip";
 import { InfoIcon, LoaderCircleIcon } from "lucide-react";
 import {
   Select,
@@ -23,7 +23,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@retrom/ui/components/select";
 import { useClientInfo } from "@/queries/useClientInfo";
 import { useConfigStore } from "@/providers/config";
 import { timestampNow, TimestampSchema } from "@bufbuild/protobuf/wkt";

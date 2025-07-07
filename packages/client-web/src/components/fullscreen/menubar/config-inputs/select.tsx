@@ -1,19 +1,16 @@
-import { ButtonProps } from "@/components/ui/button";
-import { FormLabel } from "@/components/ui/form";
+import { ButtonProps } from "@retrom/ui/components/button";
+import { FormLabel } from "@retrom/ui/components/form";
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectValue,
   SelectItem,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from "@retrom/ui/components/select";
+import { cn } from "@retrom/ui/lib/utils";
+import { SelectItemProps, SelectValueProps } from "@radix-ui/react-select";
 import {
-  SelectItemProps,
-  SelectProps,
-  SelectValueProps,
-} from "@radix-ui/react-select";
-import {
+  ComponentProps,
   forwardRef,
   useCallback,
   useId,
@@ -28,7 +25,7 @@ type TriggerProps = ButtonProps & { label?: string };
 
 const ConfigSelect = forwardRef<
   HTMLButtonElement,
-  SelectProps & { triggerProps: TriggerProps }
+  ComponentProps<typeof Select> & { triggerProps: TriggerProps }
 >(
   (
     { children, triggerProps, open: openProp, defaultOpen = false, ...props },
@@ -94,7 +91,9 @@ const ConfigSelect = forwardRef<
             handlers={{
               ACCEPT: {
                 handler: () => onOpenChange(true),
-                label: "Select",
+                actionBar: {
+                  label: "Select",
+                },
               },
             }}
           >
@@ -119,7 +118,10 @@ const ConfigSelect = forwardRef<
               <HotkeyLayer
                 id={`${id}-content`}
                 handlers={{
-                  BACK: { handler: () => onOpenChange(false), label: "Back" },
+                  BACK: {
+                    handler: () => onOpenChange(false),
+                    actionBar: { label: "Back" },
+                  },
                 }}
               >
                 {children}
@@ -131,6 +133,8 @@ const ConfigSelect = forwardRef<
     );
   },
 );
+
+ConfigSelect.displayName = "ConfigSelect";
 
 const ConfigSelectValue = forwardRef<HTMLDivElement, SelectValueProps>(
   (props, ref) => {
@@ -171,7 +175,9 @@ const ConfigSelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
                 }),
               );
             },
-            label: "Confirm",
+            actionBar: {
+              label: "Confirm",
+            },
           },
         }}
       >

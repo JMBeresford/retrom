@@ -7,7 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@retrom/ui/components/sheet";
 import { MenuEntryButton } from "../menubar/menu-entry-button";
 import { HotkeyButton } from "../hotkey-button";
 import { useUninstallGame } from "@/mutations/useUninstallGame";

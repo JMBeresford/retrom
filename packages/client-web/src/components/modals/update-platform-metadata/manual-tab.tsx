@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback } from "react";
-import { Button } from "../../ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { UseFormReturn, useForm } from "react-hook-form";
 import {
   Form,
@@ -10,18 +10,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../../ui/form";
-import { Input } from "../../ui/input";
+} from "@retrom/ui/components/form";
+import { Input } from "@retrom/ui/components/input";
 import { LoaderCircleIcon } from "lucide-react";
-import { cn, getFileName, InferSchema } from "@/lib/utils";
-import { DialogClose, DialogFooter } from "../../ui/dialog";
-import { Textarea } from "../../ui/textarea";
+import { getFileName, InferSchema } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
+import { DialogClose, DialogFooter } from "@retrom/ui/components/dialog";
+import { Textarea } from "@retrom/ui/components/textarea";
 import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
 import { useUpdatePlatformMetadata } from "@/mutations/useUpdatePlatformMetadata";
 import { useNavigate } from "@tanstack/react-router";
 import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@retrom/ui/components/checkbox";
 import { useUpdatePlatforms } from "@/mutations/useUpdatePlatforms";
+import { RawMessage } from "@/utils/protos";
 
 type FormFieldRenderer = ({
   form,
@@ -45,7 +47,7 @@ const formSchema = z.object({
     .literal("")
     .or(z.string().url({ message: "Logo URL must be a valid URL" })),
   renameDirectory: z.boolean().optional(),
-}) satisfies InferSchema<EditablePlatformMetadata>;
+}) satisfies InferSchema<RawMessage<EditablePlatformMetadata>>;
 
 export function ManualTab(props: {
   platform: Platform;
@@ -173,7 +175,10 @@ export function ManualTab(props: {
   );
 }
 
-const fields: Record<keyof EditablePlatformMetadata, FormFieldRenderer> = {
+const fields: Record<
+  keyof RawMessage<EditablePlatformMetadata>,
+  FormFieldRenderer
+> = {
   name: ({ form }) => (
     <FormField
       name="name"

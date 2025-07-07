@@ -1,6 +1,7 @@
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn, timestampToDate } from "@/lib/utils";
+import { ScrollArea, ScrollBar } from "@retrom/ui/components/scroll-area";
+import { Skeleton } from "@retrom/ui/components/skeleton";
+import { timestampToDate } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useGames } from "@/queries/useGames";
 import { useMemo } from "react";
 import { GameList, GameWithMetadata } from "./game-list";

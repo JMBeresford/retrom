@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@retrom/ui/components/card";
 import { ReactNode, useMemo } from "react";
 import { getFileStub, timestampToDate } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";

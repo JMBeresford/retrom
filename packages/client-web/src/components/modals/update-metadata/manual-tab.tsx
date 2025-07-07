@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useState } from "react";
-import { Button } from "../../ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { UseFormReturn, useForm } from "react-hook-form";
 import {
   Form,
@@ -10,19 +10,21 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../../ui/form";
-import { Input } from "../../ui/input";
+} from "@retrom/ui/components/form";
+import { Input } from "@retrom/ui/components/input";
 import { LoaderCircleIcon } from "lucide-react";
-import { cn, getFileName, InferSchema } from "@/lib/utils";
-import { DialogClose, DialogFooter } from "../../ui/dialog";
-import { Textarea } from "../../ui/textarea";
+import { getFileName, InferSchema } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
+import { DialogClose, DialogFooter } from "@retrom/ui/components/dialog";
+import { Textarea } from "@retrom/ui/components/textarea";
 import { GameMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
-import { Checkbox } from "../../ui/checkbox";
+import { Checkbox } from "@retrom/ui/components/checkbox";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";
 import { useNavigate } from "@tanstack/react-router";
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
+import { RawMessage } from "@/utils/protos";
 
 type FormFieldRenderer = ({
   form,
@@ -71,7 +73,7 @@ const formSchema = z.object({
   // screenshotUrls: z.array(
   //   z.string().url({ message: "Screenshot URL must be a valid URL" }),
   // ),
-}) satisfies InferSchema<EditableGameMetadata>;
+}) satisfies InferSchema<RawMessage<EditableGameMetadata>>;
 
 export function ManualTab() {
   const { game, gameMetadata } = useGameDetail();
@@ -224,7 +226,10 @@ export function ManualTab() {
   );
 }
 
-const fields: Record<keyof EditableGameMetadata, FormFieldRenderer> = {
+const fields: Record<
+  keyof RawMessage<EditableGameMetadata>,
+  FormFieldRenderer
+> = {
   name: ({ form }) => (
     <FormField
       name="name"
