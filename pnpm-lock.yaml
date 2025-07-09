@@ -94,6 +94,9 @@ importers:
       nx:
         specifier: 21.2.1
         version: 21.2.1(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.23)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17))
+      nx-mcp:
+        specifier: ^0.3.0
+        version: 0.3.0
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
@@ -1255,155 +1258,158 @@ packages:
   '@emnapi/wasi-threads@1.0.2':
     resolution: {integrity: sha512-5n3nTJblwRi8LlXkJ9eBzu+kZR8Yxcc7ubakyQTFzPMtIhFpUBRbsnc2Dv88IZDIbCDlBiWrknhB4Lsz7mg6BA==}
 
-  '@emulatorjs/core-81@4.2.2':
-    resolution: {integrity: sha512-Vx3gVYqOf2L81jFGj14eeQ/IMw5NCL92+PcoMRngO2kBSEhZMGy5uq5/+Mp4hfsrlDXlW5u4Rosavj9HTRmWnw==}
+  '@emulatorjs/core-81@4.2.3':
+    resolution: {integrity: sha512-oPQEqjpR3z7Yedte4u3sOXDZ4NXAykNcbENjYcB+x3QshF8I+3MQCo8kINOT2lsqqgx91WR4kmEaYQqU39YsDA==}
 
-  '@emulatorjs/core-a5200@4.2.2':
-    resolution: {integrity: sha512-rQTQlBo5iSqDJ1U4l8F1H9Mg3LnhFhFQzF7MKNNKkfY5aTntdztpl6GSv/zdQUNhIokv6o4Hjxb3nC03FU7EXw==}
+  '@emulatorjs/core-a5200@4.2.3':
+    resolution: {integrity: sha512-/9yS0/MKHp/wO9iuxWfWTGUwiVNKykEOb7fEN5UM9BfIVQ1SAqep4Ji+TigmYW4weH/mASvYzON9ett3dmD6oQ==}
 
-  '@emulatorjs/core-beetle_vb@4.2.2':
-    resolution: {integrity: sha512-5SOkNrb8IMZ7J/KZntjVMTU9H7fjA5mvulOczoHkknMK8O5fIYbUCZ+05cutPjf/meGqURxEXeoj/G/mcTAXqA==}
+  '@emulatorjs/core-beetle_vb@4.2.3':
+    resolution: {integrity: sha512-/e6qkA/spYw27qDmzxMiMW5ic36N5W1AVU3Qki8BTZGWKXDseZtNuV/zlPts9rwtTuH8k4+fsQLF+dHp905+/Q==}
 
-  '@emulatorjs/core-cap32@4.2.2':
-    resolution: {integrity: sha512-sGWxFz7ki3vgQyc2/haFh00uwY1/0iTdGqgO0xiavRvJ4q5J7HJUjsZHzUiT5pEPYSFbFl+n1ynJptATSWUFKA==}
+  '@emulatorjs/core-cap32@4.2.3':
+    resolution: {integrity: sha512-RkEpGVsOo3S0ZEdDzhfZ5qjeYWYEeK6rGjyvJhYVUnmpPGSQFXvPu0POtIKFyTk9XQrlicllep8ZHzEC7Nngsg==}
 
-  '@emulatorjs/core-crocods@4.2.2':
-    resolution: {integrity: sha512-2M/8yeRHFnjZEeEQ0LAev62rmBdn62rEM7UccNQMOCzy2k7t2AuRBr5vmhGORFRNpsOwjMl0jHm2NDgIjuhPDQ==}
+  '@emulatorjs/core-crocods@4.2.3':
+    resolution: {integrity: sha512-p536fgB5ROd2CjOeDxGxB8YVKrZ1sGS9X0lYBahCmk6unkz4FL8bU20/TQk4XdKMIsSkhiyonvBg8JZZbs5mWg==}
 
-  '@emulatorjs/core-desmume2015@4.2.2':
-    resolution: {integrity: sha512-azTtr+LoJJFI6XDETtux5w7uwZJ8irfu1DTS/EkooMoiyFWkG8f67SCXisXwT8LOBJXnx7zl1UbUuu1NOXcWTA==}
+  '@emulatorjs/core-desmume2015@4.2.3':
+    resolution: {integrity: sha512-GpSuu7/q4yIEbBGrZUlJV3CHoH/b+cNs9Xn0PnC2WTkIuQgEcD5FxUFLup+v208tEKB3bPxXeaLX72i13bkspQ==}
 
-  '@emulatorjs/core-desmume@4.2.2':
-    resolution: {integrity: sha512-U5r6URoAPeRhJZgZOfPpvBPCCPO3nvcTPqH4p3ySOqHnCDijnhQNdL00htS3MUbtdHDtkTi8TIUiUb3pxMlrRA==}
+  '@emulatorjs/core-desmume@4.2.3':
+    resolution: {integrity: sha512-3WgGPBWzjZJWPDKVOaK/Jmg34as0nMY9ClfmrGEiMFUfa3tocpQvL9unJ8Oh4ofWEDTf+45bak/PZ7wp2xwekA==}
 
-  '@emulatorjs/core-dosbox_pure@4.2.2':
-    resolution: {integrity: sha512-v8qRuF7EMIlerix1ok90nHu6rdaE5yFsSfItIrCYKmWbMXU87gjXP6+q8iKe86YtY47xWSYGLkHWQbPBdWKHdg==}
+  '@emulatorjs/core-dosbox_pure@4.2.3':
+    resolution: {integrity: sha512-48CT0ztvnh/M+NRLtHS+pSysdnvH+p+6tgMLJU3+jvfPXdX1dlksiq8PvHPwtpuEF3d9mt2yECCBY9Vq6nkgdw==}
 
-  '@emulatorjs/core-fbalpha2012_cps1@4.2.2':
-    resolution: {integrity: sha512-l9Ij1zOe1uMSe0VJkRaDwlnntkuLVs4cK5Q9iYn0ZW159goYmTTqplLIWfQc+zEYdMltjP6Xu/wBb/qVHa/ndA==}
+  '@emulatorjs/core-fbalpha2012_cps1@4.2.3':
+    resolution: {integrity: sha512-GeAEX/mJcWskcMnEZ1OjjefftL2vznmE+Lms19XyRRSwfJ23/wc8p1mt7P82QCR/aB0925gksjJqOX2WBvKV6A==}
 
-  '@emulatorjs/core-fbalpha2012_cps2@4.2.2':
-    resolution: {integrity: sha512-iqoYADiQfxx0OyoYzMqE/klboxURQn3efDzT24fdxPenYKVoLVhbqMQ+HzaKzN03ZKjOipIlLhuHoh+ijYqhEw==}
+  '@emulatorjs/core-fbalpha2012_cps2@4.2.3':
+    resolution: {integrity: sha512-RqmLd0J/Gh8dkyjnpGN7YGIRS1fJjtCKqBs8r54Uz35KmHxw4Qs/ghCc836DRXP/IrIYX871jMxVvsOIOdCB/g==}
 
-  '@emulatorjs/core-fbneo@4.2.2':
-    resolution: {integrity: sha512-5JcFjDEMfw4GrqtgplZ4pZ3/UraxH5nETh5S9glHS0iqQ8AANiccmSAwA0pOjZbq4ZnEdcwPGKQIld1U9W6PIA==}
+  '@emulatorjs/core-fbneo@4.2.3':
+    resolution: {integrity: sha512-54Yx8Kcq8DH42caTakws3pMUZc6UkBNqtZgg7Q04lNmWWc/W0wPGN0gHxG90xmlOFGHHtxp9QnicBb1NXMjGWg==}
 
-  '@emulatorjs/core-fceumm@4.2.2':
-    resolution: {integrity: sha512-pNWdRw7qpRfuoByI77fVugNySOgL5KIRklqk/3bVIojDJZJ1Oi13gMUatPKRDJHnMHXB+MkXTGLqdYx2jUYvhg==}
+  '@emulatorjs/core-fceumm@4.2.3':
+    resolution: {integrity: sha512-XX9Vv2N/hzp0TstNMCTSppEs+sg+1lpJpPdSDuRqIO/cwdt7dUcF+WjNX1yQJLRbP5+XwcNHZ6K4BKy8CJpndQ==}
 
-  '@emulatorjs/core-fuse@4.2.2':
-    resolution: {integrity: sha512-hwWpc0fx57Ta0Bt+otP3gt2KZeM+ZAcf0hEHkl3v1xo+qIGs+4RWGS4PzojJZEVTWB2ZoRFYm/m2Gm6p6av68Q==}
+  '@emulatorjs/core-fuse@4.2.3':
+    resolution: {integrity: sha512-LIu2Zc9ALYWoLN5iSanA0LJWsDx9w/OeIu6oueVEpKpej064vf2OKIYYlQz9v6CwwmhsnmY0bURbBPS70gkgCQ==}
 
-  '@emulatorjs/core-gambatte@4.2.2':
-    resolution: {integrity: sha512-YbjnZEuzjWBTr3pUNfFmBAtLfqJH02r3jfiOZeF0U2JcVT/IvMBi/R6/Dqbt8tnKmQ1gS76KzIt9pzJUKUJVIw==}
+  '@emulatorjs/core-gambatte@4.2.3':
+    resolution: {integrity: sha512-Oq3AJL9SKnMsNAmtAP2eN934TQts3NHeaAe0z1BO9Lx/L3xDZKLpxL+XwgcSXIrl4Sx1oXxYEUwD7JjPEQ0DGg==}
 
-  '@emulatorjs/core-gearcoleco@4.2.2':
-    resolution: {integrity: sha512-eLmGRzFtpf9nGYv0E/M5CNlBxJfJNdDNPYv5dw7wNsWOiqGF7oUFd6tpdXqP47WoMH0GN4XfbmLJoWN+g0+7Kw==}
+  '@emulatorjs/core-gearcoleco@4.2.3':
+    resolution: {integrity: sha512-todwg9FhUzIBe1xkut+HOKmXvwIHgLSNKwERJm2yfJMY7gx/S1MHITHWWUHL3qxSmApacEucr9nZfpuTqVcjpA==}
 
-  '@emulatorjs/core-genesis_plus_gx@4.2.2':
-    resolution: {integrity: sha512-5I4oxv01z9D386hIBFZR4IDxXdRtGCG+iJTjYg8r9VcKpCEArZyOrAoTV7cVbMYGpahbB5YfHNOQqencI/P9aA==}
+  '@emulatorjs/core-genesis_plus_gx@4.2.3':
+    resolution: {integrity: sha512-D1e2XA2CPRAjfr0JurpXJgR9dePxl/xHtaE8v1T9BqD9A3DLfobIFWsWU9jCFS4NfUxCvcLdTYdY/We3QzvcTw==}
 
-  '@emulatorjs/core-handy@4.2.2':
-    resolution: {integrity: sha512-THgtV8+WvooRDb/B7P3ASEeV6ylp7EAxBI/W7TrC9KA/78kfgd/uPny33n23xqmyv2otOfptTvu6pPsmTUND8Q==}
+  '@emulatorjs/core-handy@4.2.3':
+    resolution: {integrity: sha512-miv2nSSVIIHFcGeEdeO7BpYKsljL1j+0an4BO7xw44s9iUp2PZnHiY1mHWUIOzf4o22VuiXd/TvHOKUGaEYMNw==}
 
-  '@emulatorjs/core-mame2003@4.2.2':
-    resolution: {integrity: sha512-ffwQZnBGgxNm+EafL5XrV8hetPEY6Kmytm5APE4omnqmc/wD+HFq6aoU7AlaqaLmTd7Vc2j6RvCMwDwB28Tm1w==}
+  '@emulatorjs/core-mame2003@4.2.3':
+    resolution: {integrity: sha512-ZfcNooiHvkY45ZDgBkWlIFUY2RRQ1U+aesTvmsWUdDJBWMkyIdK0HUQLWUY7kKdz52sjL97cBqG0dL8xM+MAig==}
 
-  '@emulatorjs/core-mame2003_plus@4.2.2':
-    resolution: {integrity: sha512-nbXrGRfa7LlxIbfifZ5PkWFTKsrSlyVFx3EloThv2mMzOKi0UtZWQKerbgq2N5n+2NBKSFsFvGe1vT/anA0KgA==}
+  '@emulatorjs/core-mame2003_plus@4.2.3':
+    resolution: {integrity: sha512-z37RxbT4R6dJe4r+/+GGN0gDW7d3K+DACJPowqJDSYO8TQK9RQBWPl0nsgp1aiLYkRL7yspbJn2tu2inBMWZow==}
 
-  '@emulatorjs/core-mednafen_ngp@4.2.2':
-    resolution: {integrity: sha512-2Hr7962xl+ukGa3IprtFyg7J6vRs65N/Qsuh59AXx+1SvIAiDGG7k4vDC5hCBE3Us2NQin8GhrjM6a48vesG6w==}
+  '@emulatorjs/core-mednafen_ngp@4.2.3':
+    resolution: {integrity: sha512-q/BhrhIk1+yGQ8zXPHaRXMm7Bqgu+7RkRTwbnUSlH3E/ybj8npA3SOP8tvA8TK2ceZU2F5pWdDAwp3dzR3iikg==}
 
-  '@emulatorjs/core-mednafen_pce@4.2.2':
-    resolution: {integrity: sha512-rE6vRaqZ0j7xyVIPZF6Dzg8fmT8M+gsc5Xckj5HLrgddNM+fZAibpSbu2aYWjA3pWDpg2QzkRv3l58XZz//3vw==}
+  '@emulatorjs/core-mednafen_pce@4.2.3':
+    resolution: {integrity: sha512-PwnQAKKxWT8m8dUscH4VX8jcClvgxgR/NkE6FxNE8qiRDyBH3Jze7+tF9+UdWLoJRBwssR5knd7o/Es9xIlU6A==}
 
-  '@emulatorjs/core-mednafen_pcfx@4.2.2':
-    resolution: {integrity: sha512-8WfYRzN9nVcm7/ombuvdDpc/UtgB3KLAR29LCetbrhu3HQoXRgue+B0MN7bKuH31S/2ZIdUFJcFzCetDPo2c8A==}
+  '@emulatorjs/core-mednafen_pcfx@4.2.3':
+    resolution: {integrity: sha512-o7AfEktQ7xjH8Dj6Np9J4EyGfXgHCcsKqc32vCL6Wts1luCsSApMR+ZcGX5n0u231GtZMU3UJaesNKmSocFXLw==}
 
-  '@emulatorjs/core-mednafen_psx_hw@4.2.2':
-    resolution: {integrity: sha512-ykE4ztl2SAheYzbuLm7GmIsJJYTkmcvQqs2IOh2X3zUgxd8+Kq26nR0oV+N7rf0kcvkapA8i/tcXuFzuXQiGqA==}
+  '@emulatorjs/core-mednafen_psx_hw@4.2.3':
+    resolution: {integrity: sha512-SzNrmaqMqBknf/0hTvPg3pIACQeLb6PVSfaJKjYI4i6u0mpAhgsIW4PJiLOHn5RfLtTpy+eIWQJvC1DQGApfeQ==}
 
-  '@emulatorjs/core-mednafen_wswan@4.2.2':
-    resolution: {integrity: sha512-Rd1vHNFDpS7BSY5akssLZlsH5mHxOqzo2Jpl+NajfmdVb345P7KvV8LvomzudfDSVhlulRFamFnf1EhgWzLWCA==}
+  '@emulatorjs/core-mednafen_wswan@4.2.3':
+    resolution: {integrity: sha512-ePj0OoSTErXS171PCUsiZl3OrfPJVwupvRYFiMSzu6K2UaQjK3ESThWf8Rh1niJt1F1OQyjQENAeElSm0IcojQ==}
 
-  '@emulatorjs/core-melonds@4.2.2':
-    resolution: {integrity: sha512-HiGt6M992Gs6OnZLKkbpOvBO6PpTSmuCRJskhoRHkwVmpK6ijnRw7WZMpQ6faMLWu3lvv/3XiW7RWfewtnSqxQ==}
+  '@emulatorjs/core-melonds@4.2.3':
+    resolution: {integrity: sha512-IjsEBNLPPbqU2GSeWEoEkOgAonK3JEyzvoYR3ucgOXu6InzDNdfuA5kP/mMh3d6DwCUbOwfnqGZuZXMTyNE2wA==}
 
-  '@emulatorjs/core-mgba@4.2.2':
-    resolution: {integrity: sha512-GwwvlEBmq37Lj7KKNRQRQpEBSCBBHtTBQozYMkE2qPnzwg7lm/B3MY26S1Y8350KXaj6Ktdz68l+oyVKu4qn2A==}
+  '@emulatorjs/core-mgba@4.2.3':
+    resolution: {integrity: sha512-daiHzZQKEr+P9fra7j5YoEAXiyYUEtBhFQ8EAV/SeCtrkvqtayU7GQ9LYgoSgzkKSwsbNSskApqGuA9EGARYPA==}
 
-  '@emulatorjs/core-mupen64plus_next@4.2.2':
-    resolution: {integrity: sha512-p28a7T+cYlO/9kFBy9U0kYsF9zxt4xyxVw3Vhe3A4HYn5dJfDo4lFzcfQIcT6Q7XJkuAP1EeNS03wIG7cwLRAg==}
+  '@emulatorjs/core-mupen64plus_next@4.2.3':
+    resolution: {integrity: sha512-HnnEXbOEpYxD7f2wUJQLxWUpEB0bT2kC56u5s7PLyj/xNI5ckQKka5+ay1QhU2fOv2BuPRwjjhlzmVJmk5e3hw==}
 
-  '@emulatorjs/core-nestopia@4.2.2':
-    resolution: {integrity: sha512-nKxEjUtQV2TER1puoCS0HDwvlWFJ2mjY6wuEE5fl6XU+vsa+XSkxqG66lklmivkWZzkSzuKoaKbjCRE+Gs+aiQ==}
+  '@emulatorjs/core-nestopia@4.2.3':
+    resolution: {integrity: sha512-Flz0+Sebpn5sgjJvghhQydZ5OM+Jf4jwa+E6tG1TuZGQ4+5sYeJFB3FA5zHAIXZuFBS91cWnIXRbpOUennf8Fw==}
 
-  '@emulatorjs/core-opera@4.2.2':
-    resolution: {integrity: sha512-UDDDJQQtMo/cqZHu3VGrqpA/dppWGXSoPgxgXBNcZwAJiZmTaOIT0qz5gkXGMwMAMG/Ykfa8fcM77K7OC53xvA==}
+  '@emulatorjs/core-opera@4.2.3':
+    resolution: {integrity: sha512-cJSZXUAtHF2DLznDEFfo5Owuc9YQh5pg1qCb1TDhtkDZ4Q4za1dTIM0WZYbARd7IN83OX1UB2wd03BSDmCQAFQ==}
 
-  '@emulatorjs/core-parallel_n64@4.2.2':
-    resolution: {integrity: sha512-n5idpIHaXNX6USara9uz5QyX3vozhF1CDi+wKk24OpuyaI08um7KiPy1/fxyLeGZljcSIGR5ZsccZncTkcy1jw==}
+  '@emulatorjs/core-parallel_n64@4.2.3':
+    resolution: {integrity: sha512-leRDMzJ36HdLyJ7gpvocaT2gA8SHiPALhEVlR8tHOpiV2vph9hPpNCGmiJL2CbP2eI5DW6A1PY1zFuIXbJnEJw==}
 
-  '@emulatorjs/core-pcsx_rearmed@4.2.2':
-    resolution: {integrity: sha512-flHS2893Vertic2dUHG3tM/5vipoBFRCsS8bOuU7C70RGneD+Yu7EDL8ZTWjJnS8mdvpHYqiwasKa5PmP7Gu4w==}
+  '@emulatorjs/core-pcsx_rearmed@4.2.3':
+    resolution: {integrity: sha512-mMbl/NszCryFI15X5QniOqLNL7YGZ6tLP24gr5y1q2ekFOIbtc39BcVTMDEwRndNGovh2nPoCcMjB+W3fgQCog==}
 
-  '@emulatorjs/core-picodrive@4.2.2':
-    resolution: {integrity: sha512-QpIHfQj3rAahcDFq7ZjBsax6imbyHTFpwH3++jrkVZ+/XVXyJ/HBZQRpNQbpw+gLEN9wGJHYQ0iTnUTk6YWvqw==}
+  '@emulatorjs/core-picodrive@4.2.3':
+    resolution: {integrity: sha512-FUxeHeJIIKi4XG+UdOoCARDjH7hV11XLb6LFUO644F7Ri08veGqMQkOJAoCP8uXGxa/JdgS7SXqc0a40+vLv2w==}
 
-  '@emulatorjs/core-ppsspp@4.2.2-1':
-    resolution: {integrity: sha512-NKpPYXgXXOuNmviSsHLJj1ztnm1X3xnZokg1MenbKfbi9f7N31JG+qYejoe/Fc6cRNPoIgXFL0pCFLVhrYmlQg==}
+  '@emulatorjs/core-ppsspp@4.2.3':
+    resolution: {integrity: sha512-jSCvK+74PYFwpqbEWzAkuDalK1TQXYogVXUxs24wn0SJcMhykQuziNggn4QQgM7+4wy60Jkh0Xb00PM9fLlWvA==}
 
-  '@emulatorjs/core-prboom@4.2.2':
-    resolution: {integrity: sha512-nypheXrr7cKEnu/3u/gllRHSfYm9ahEAbONuYOPFYgG5GhZPKfuCWuo48Ly7SQl/1LLRpwuJ+/bEvN1hroVbkA==}
+  '@emulatorjs/core-prboom@4.2.3':
+    resolution: {integrity: sha512-raqb5bZE1xrhnZkwY+NoiGyd9MG9pOlXsl2x0+2499NrEqow1946BB8xxzz1HHkbAkZ9fGxu+Xif2cbm9toVlw==}
 
-  '@emulatorjs/core-prosystem@4.2.2':
-    resolution: {integrity: sha512-wJBV0me/0NxxS6niQBE6aqY0I18ekoZ2xjjF2wlSBd/wK6sTDTEGr7V4FKlfF/kARLz0NptqKU8olTTKlyYf+A==}
+  '@emulatorjs/core-prosystem@4.2.3':
+    resolution: {integrity: sha512-Dd+gkjtXzzO4vNRKh1AtwUL8iKveQgz3Oy+ENx7uUvpUYAoQc/UT5aDfKP5vwgJJOg6ErwDH1ShC0WW100YvZQ==}
 
-  '@emulatorjs/core-puae@4.2.2':
-    resolution: {integrity: sha512-+iLR+38bW55FGmtFnlqFMGbkCPDjZiLDnE/5bEWeNWgoyfsA90zMtCmgg6xVXt67ViepKquaTqhIzTM8OhouvA==}
+  '@emulatorjs/core-puae@4.2.3':
+    resolution: {integrity: sha512-at/pvoBtpVsMlUyG3LCFOX6iGP4wQzbSaiATrJe8ydiuJVTH/2Eta6veMX6VUsEKd6ClU8SnTMOjqXn70qIqPg==}
 
-  '@emulatorjs/core-same_cdi@4.2.2':
-    resolution: {integrity: sha512-Ek4qWq601aHrlEpf+L9o25GYn1Wk3JUmOKcj/3Uq26vQuQoR6IJmo0b8r933B1XYMRLvZZ16WlcfZS119XBrjQ==}
+  '@emulatorjs/core-same_cdi@4.2.3':
+    resolution: {integrity: sha512-Rh0TgLmpr8MnTyJtIsUYjj8CtAO3hitkZ/iDuvgnCDHSuVZrUo0oA1lnWgbzIPg16ThahB+X1t8kxIOmZapiiw==}
 
-  '@emulatorjs/core-smsplus@4.2.2':
-    resolution: {integrity: sha512-s4sBCaaj2a4lESNSWHFzeTcV6FPXkWjJ/Wo457Z5lAWMk+qgZJrEeTbttdl9fjc1kLj6R03eZqK223P0BJ/YkQ==}
+  '@emulatorjs/core-smsplus@4.2.3':
+    resolution: {integrity: sha512-93G2pY9HJVl5pImoIQbDhtswVkX9aIgrrihdGTFHqurhisYHl74XCpzmCoMzdB5UMx09nFW12S+n+bLTIuiLrA==}
 
-  '@emulatorjs/core-snes9x@4.2.2':
-    resolution: {integrity: sha512-tsQk34xE/IOiAbEA8QpjMOXH7N3CQMQlE0bJKPYDOT1P4UzzysOAfHN1aGBnWm7uy7ucTkwQbmMAFMIN2qv6Cw==}
+  '@emulatorjs/core-snes9x@4.2.3':
+    resolution: {integrity: sha512-JTe9Rv9eOuCkgkG4ILwuCZUqNcVI3m9ju1NHTTjridUlFgJSqL4DUqF/vLKN9olCpsqlJFfcCayAOoikJxefwA==}
 
-  '@emulatorjs/core-stella2014@4.2.2':
-    resolution: {integrity: sha512-z5uAWnMTGOKKfDkT7zI+MtI8KZ2sXSytUXpxnLnUqU3iRuiXQ/JgC/X/oHAL8xzfWYwoookf39gVofHC6rjk7g==}
+  '@emulatorjs/core-stella2014@4.2.3':
+    resolution: {integrity: sha512-bs5az26pMrM6jswhZ5YxBXLpIwclwfdnWVbaEpip7yjJFQHactL7KYH7hVLts0JWDnfEK2lNxh4zlTfI6HAHmQ==}
 
-  '@emulatorjs/core-vice_x128@4.2.2':
-    resolution: {integrity: sha512-QwhWn7TXSBunzhtKRi3p31AB2JILBjCtWahvMtAOppvx047NT2e3A0c5GgA+hZn38GeIL2ZpDm3Dv4MV09am6Q==}
+  '@emulatorjs/core-vice_x128@4.2.3':
+    resolution: {integrity: sha512-3wmM8O764qdrWHzpHIcihYEYFH6n/BhzB+6Cng8epa298KObF4uklW3jPG/HJyDjWWJsdTlSgo52h6NQC3j/rw==}
 
-  '@emulatorjs/core-vice_x64@4.2.2':
-    resolution: {integrity: sha512-UVM0uX1xqbwm9XmjiH9fiqf3HoU3mGxTb/MWLRQOMWIE+ATE3M4JOSq5QpRBDChSoT3AXiLdjnKvt0MV+RaWiA==}
+  '@emulatorjs/core-vice_x64@4.2.3':
+    resolution: {integrity: sha512-y9ea8mPNS9rWBIBYwBuG/rzDApndW9JOL2Bs3qrBRhUeRPFEkQlGPaXKgOCyaV2Iuhy3Zrb3SmtoG0+hn67vOw==}
 
-  '@emulatorjs/core-vice_x64sc@4.2.2':
-    resolution: {integrity: sha512-ujsG8jnfrSZKzoAoSDad1IwG2GSyCEZ2l62tQpEzTu16Hw+4XHNUTuBtW/DGjNkWQQse1CCqDNUN77hhRB20AQ==}
+  '@emulatorjs/core-vice_x64sc@4.2.3':
+    resolution: {integrity: sha512-gNnVRa/aXmzMXp1+7WXdlW7nIx21O2lS2j4eFt5dun8U6XnSKsqSpsyguJiotlKxzEGtzuE0BZRdSnh/YJQdFA==}
 
-  '@emulatorjs/core-vice_xpet@4.2.2':
-    resolution: {integrity: sha512-W+jgzRrOpS+5hwvclE6Z9t1q9IyFn2OXYpwW+8TVir9dbFP4myseVHOGjXcat8XVVxD8iwhI2ItjhH46pcnPpQ==}
+  '@emulatorjs/core-vice_xpet@4.2.3':
+    resolution: {integrity: sha512-jCGjMuU7CXAlxbGHYgVSGLpBFgCaERrnqYi2krDwX8jkubZjpkgE3gdO6wqQrMm9de6icnyk7fkwsRFTMfjwug==}
 
-  '@emulatorjs/core-vice_xplus4@4.2.2':
-    resolution: {integrity: sha512-wKzfyLYy1mUTHr83nvfVBsuQ3hFEDYNAKPymuI4J6Zuh8Wp8pJQo5hIW+nG3UhnPn2duTRMmUNh0v34ClgWeHg==}
+  '@emulatorjs/core-vice_xplus4@4.2.3':
+    resolution: {integrity: sha512-9ZeW5adQpqHbp28Z8dPkM7ouPiSX+qGe3mfyXBj6FhBdNrUPrBvbl+A3tLJVYiPX03d9ZLYcxeVn3i60a0WsgQ==}
 
-  '@emulatorjs/core-vice_xvic@4.2.2':
-    resolution: {integrity: sha512-X0uBvra84cXfq7WNfbHmAa4PjW3HPq1i+756L64xxP/woR1ovXvMXmPCSDRHTkxGw/kicXiNbtHEiAuwTIV0LQ==}
+  '@emulatorjs/core-vice_xvic@4.2.3':
+    resolution: {integrity: sha512-7YFTY1Wa4cjNTsZl+oHecq+OAHskVPEHd29MEKbYQ9jruMmcEXlchuLjjjiEbUs0YLsOr8Gbg3RPBf/wxVi+fA==}
 
-  '@emulatorjs/core-virtualjaguar@4.2.2':
-    resolution: {integrity: sha512-i0ZomfG6URshG5VhV0Ev35AWAjTEvG09IVdljRB5l2hwWEeX9TMLfTQ3UitnIveI+M3RiarY9xlPbfviuotdLw==}
+  '@emulatorjs/core-virtualjaguar@4.2.3':
+    resolution: {integrity: sha512-aZ5oWVrLrXwyVByK11jgcrcdqKM4MfhDucucuBk4duO2blHB8TS8f1XYUDbz0/N44Wl5+sphc5U5IaiXgvdFQw==}
 
-  '@emulatorjs/core-yabause@4.2.2':
-    resolution: {integrity: sha512-eoYCgEBU0FL6iYzykoD3u4H/ICONIfehF71m8fpFFC4Y2OwlVIoMqX+j7ohKgJbyhn2Jxn820JZEH+w1ve1lhQ==}
+  '@emulatorjs/core-yabause@4.2.3':
+    resolution: {integrity: sha512-12JwbgwoS1l4+KbsQ0jcIU71jVhn5XgXN80/1Fc8aZE4i4sEQatYKU3dZSMBlIJZaWgRN76PEjQymASMJA9/4w==}
 
-  '@emulatorjs/cores@4.2.2':
-    resolution: {integrity: sha512-8heTSE1Q/wJZgsVL08+3HBHkKWkXXFQNN2is4RACYVeK9OgMC5nLEKmOF8jPyaBrmNi/6zuNnP8FWBDM/+ghmQ==}
+  '@emulatorjs/cores@4.2.3':
+    resolution: {integrity: sha512-1JxUjVMvEAM7ijUErkzgRSvWjibpjavaUtLlbqWicac4m6NQjKgi+Oc3Po4dcVH+ZPkS1Jt4LHb1WGpGmSIjwA==}
 
   '@emulatorjs/emulatorjs@4.2.2':
     resolution: {integrity: sha512-wAxrNNSJX3FjJON6m6yn6vpVFKhyFGR5geRI9c+vk3fVJmz6FfyHWqvP/mXL1/zZeVIpwhVQLgVfpD6L3aKqHA==}
+
+  '@emulatorjs/emulatorjs@4.2.3':
+    resolution: {integrity: sha512-7z3qaA4LwyurhuGvdMUDF9xJpEbxC3SNy9+E9tSaOsRo8FCS2QXam/0k/lc9kqHWRFIlLKWahNjPAStyL0rFnw==}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -6289,6 +6295,10 @@ packages:
   nwsapi@2.2.20:
     resolution: {integrity: sha512-/ieB+mDe4MrrKMT8z+mQL8klXydZWGR5Dowt4RAGKbJ3kIGEx3X4ljUo+6V73IXtUPWgfOlU5B9MlGxFO5T+cA==}
 
+  nx-mcp@0.3.0:
+    resolution: {integrity: sha512-K07PlZhIuAXXrSrEtRt4jc1Z5IYbnor0iOQ3g8/sXpa3Ugydc4q1lQn5v11ScknDXJbL0Zmn+KujebJ2H3lrkg==}
+    hasBin: true
+
   nx@21.2.1:
     resolution: {integrity: sha512-wwLa9BSb/wH2KI6CrM356DerDxf8hnzqXx/OvXuKgWsPtOciUdULisJEzdCvehZYg/l2RH84jOLmMVq7OWNuaw==}
     hasBin: true
@@ -8674,9 +8684,9 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@emulatorjs/core-81@4.2.2':
+  '@emulatorjs/core-81@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8684,9 +8694,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-a5200@4.2.2':
+  '@emulatorjs/core-a5200@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8694,9 +8704,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-beetle_vb@4.2.2':
+  '@emulatorjs/core-beetle_vb@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8704,9 +8714,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-cap32@4.2.2':
+  '@emulatorjs/core-cap32@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8714,9 +8724,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-crocods@4.2.2':
+  '@emulatorjs/core-crocods@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8724,9 +8734,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-desmume2015@4.2.2':
+  '@emulatorjs/core-desmume2015@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8734,9 +8744,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-desmume@4.2.2':
+  '@emulatorjs/core-desmume@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8744,9 +8754,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-dosbox_pure@4.2.2':
+  '@emulatorjs/core-dosbox_pure@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8754,9 +8764,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-fbalpha2012_cps1@4.2.2':
+  '@emulatorjs/core-fbalpha2012_cps1@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8764,9 +8774,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-fbalpha2012_cps2@4.2.2':
+  '@emulatorjs/core-fbalpha2012_cps2@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8774,9 +8784,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-fbneo@4.2.2':
+  '@emulatorjs/core-fbneo@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8784,9 +8794,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-fceumm@4.2.2':
+  '@emulatorjs/core-fceumm@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8794,9 +8804,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-fuse@4.2.2':
+  '@emulatorjs/core-fuse@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8804,9 +8814,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-gambatte@4.2.2':
+  '@emulatorjs/core-gambatte@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8814,9 +8824,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-gearcoleco@4.2.2':
+  '@emulatorjs/core-gearcoleco@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8824,9 +8834,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-genesis_plus_gx@4.2.2':
+  '@emulatorjs/core-genesis_plus_gx@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8834,9 +8844,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-handy@4.2.2':
+  '@emulatorjs/core-handy@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8844,9 +8854,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-mame2003@4.2.2':
+  '@emulatorjs/core-mame2003@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8854,9 +8864,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-mame2003_plus@4.2.2':
+  '@emulatorjs/core-mame2003_plus@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8864,9 +8874,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-mednafen_ngp@4.2.2':
+  '@emulatorjs/core-mednafen_ngp@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8874,9 +8884,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-mednafen_pce@4.2.2':
+  '@emulatorjs/core-mednafen_pce@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8884,9 +8894,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-mednafen_pcfx@4.2.2':
+  '@emulatorjs/core-mednafen_pcfx@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8894,9 +8904,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-mednafen_psx_hw@4.2.2':
+  '@emulatorjs/core-mednafen_psx_hw@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8904,9 +8914,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-mednafen_wswan@4.2.2':
+  '@emulatorjs/core-mednafen_wswan@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8914,9 +8924,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-melonds@4.2.2':
+  '@emulatorjs/core-melonds@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8924,9 +8934,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-mgba@4.2.2':
+  '@emulatorjs/core-mgba@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8934,9 +8944,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-mupen64plus_next@4.2.2':
+  '@emulatorjs/core-mupen64plus_next@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8944,9 +8954,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-nestopia@4.2.2':
+  '@emulatorjs/core-nestopia@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8954,9 +8964,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-opera@4.2.2':
+  '@emulatorjs/core-opera@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8964,9 +8974,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-parallel_n64@4.2.2':
+  '@emulatorjs/core-parallel_n64@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8974,9 +8984,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-pcsx_rearmed@4.2.2':
+  '@emulatorjs/core-pcsx_rearmed@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8984,9 +8994,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-picodrive@4.2.2':
+  '@emulatorjs/core-picodrive@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8994,9 +9004,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-ppsspp@4.2.2-1':
+  '@emulatorjs/core-ppsspp@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9004,9 +9014,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-prboom@4.2.2':
+  '@emulatorjs/core-prboom@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9014,9 +9024,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-prosystem@4.2.2':
+  '@emulatorjs/core-prosystem@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9024,9 +9034,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-puae@4.2.2':
+  '@emulatorjs/core-puae@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9034,9 +9044,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-same_cdi@4.2.2':
+  '@emulatorjs/core-same_cdi@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9044,9 +9054,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-smsplus@4.2.2':
+  '@emulatorjs/core-smsplus@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9054,9 +9064,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-snes9x@4.2.2':
+  '@emulatorjs/core-snes9x@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9064,9 +9074,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-stella2014@4.2.2':
+  '@emulatorjs/core-stella2014@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9074,9 +9084,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-vice_x128@4.2.2':
+  '@emulatorjs/core-vice_x128@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9084,9 +9094,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-vice_x64@4.2.2':
+  '@emulatorjs/core-vice_x64@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9094,9 +9104,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-vice_x64sc@4.2.2':
+  '@emulatorjs/core-vice_x64sc@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9104,9 +9114,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-vice_xpet@4.2.2':
+  '@emulatorjs/core-vice_xpet@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9114,9 +9124,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-vice_xplus4@4.2.2':
+  '@emulatorjs/core-vice_xplus4@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9124,9 +9134,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-vice_xvic@4.2.2':
+  '@emulatorjs/core-vice_xvic@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9134,9 +9144,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-virtualjaguar@4.2.2':
+  '@emulatorjs/core-virtualjaguar@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9144,9 +9154,9 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/core-yabause@4.2.2':
+  '@emulatorjs/core-yabause@4.2.3':
     dependencies:
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9154,57 +9164,57 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@emulatorjs/cores@4.2.2':
+  '@emulatorjs/cores@4.2.3':
     dependencies:
-      '@emulatorjs/core-81': 4.2.2
-      '@emulatorjs/core-a5200': 4.2.2
-      '@emulatorjs/core-beetle_vb': 4.2.2
-      '@emulatorjs/core-cap32': 4.2.2
-      '@emulatorjs/core-crocods': 4.2.2
-      '@emulatorjs/core-desmume': 4.2.2
-      '@emulatorjs/core-desmume2015': 4.2.2
-      '@emulatorjs/core-dosbox_pure': 4.2.2
-      '@emulatorjs/core-fbalpha2012_cps1': 4.2.2
-      '@emulatorjs/core-fbalpha2012_cps2': 4.2.2
-      '@emulatorjs/core-fbneo': 4.2.2
-      '@emulatorjs/core-fceumm': 4.2.2
-      '@emulatorjs/core-fuse': 4.2.2
-      '@emulatorjs/core-gambatte': 4.2.2
-      '@emulatorjs/core-gearcoleco': 4.2.2
-      '@emulatorjs/core-genesis_plus_gx': 4.2.2
-      '@emulatorjs/core-handy': 4.2.2
-      '@emulatorjs/core-mame2003': 4.2.2
-      '@emulatorjs/core-mame2003_plus': 4.2.2
-      '@emulatorjs/core-mednafen_ngp': 4.2.2
-      '@emulatorjs/core-mednafen_pce': 4.2.2
-      '@emulatorjs/core-mednafen_pcfx': 4.2.2
-      '@emulatorjs/core-mednafen_psx_hw': 4.2.2
-      '@emulatorjs/core-mednafen_wswan': 4.2.2
-      '@emulatorjs/core-melonds': 4.2.2
-      '@emulatorjs/core-mgba': 4.2.2
-      '@emulatorjs/core-mupen64plus_next': 4.2.2
-      '@emulatorjs/core-nestopia': 4.2.2
-      '@emulatorjs/core-opera': 4.2.2
-      '@emulatorjs/core-parallel_n64': 4.2.2
-      '@emulatorjs/core-pcsx_rearmed': 4.2.2
-      '@emulatorjs/core-picodrive': 4.2.2
-      '@emulatorjs/core-ppsspp': 4.2.2-1
-      '@emulatorjs/core-prboom': 4.2.2
-      '@emulatorjs/core-prosystem': 4.2.2
-      '@emulatorjs/core-puae': 4.2.2
-      '@emulatorjs/core-same_cdi': 4.2.2
-      '@emulatorjs/core-smsplus': 4.2.2
-      '@emulatorjs/core-snes9x': 4.2.2
-      '@emulatorjs/core-stella2014': 4.2.2
-      '@emulatorjs/core-vice_x128': 4.2.2
-      '@emulatorjs/core-vice_x64': 4.2.2
-      '@emulatorjs/core-vice_x64sc': 4.2.2
-      '@emulatorjs/core-vice_xpet': 4.2.2
-      '@emulatorjs/core-vice_xplus4': 4.2.2
-      '@emulatorjs/core-vice_xvic': 4.2.2
-      '@emulatorjs/core-virtualjaguar': 4.2.2
-      '@emulatorjs/core-yabause': 4.2.2
-      '@emulatorjs/emulatorjs': 4.2.2
+      '@emulatorjs/core-81': 4.2.3
+      '@emulatorjs/core-a5200': 4.2.3
+      '@emulatorjs/core-beetle_vb': 4.2.3
+      '@emulatorjs/core-cap32': 4.2.3
+      '@emulatorjs/core-crocods': 4.2.3
+      '@emulatorjs/core-desmume': 4.2.3
+      '@emulatorjs/core-desmume2015': 4.2.3
+      '@emulatorjs/core-dosbox_pure': 4.2.3
+      '@emulatorjs/core-fbalpha2012_cps1': 4.2.3
+      '@emulatorjs/core-fbalpha2012_cps2': 4.2.3
+      '@emulatorjs/core-fbneo': 4.2.3
+      '@emulatorjs/core-fceumm': 4.2.3
+      '@emulatorjs/core-fuse': 4.2.3
+      '@emulatorjs/core-gambatte': 4.2.3
+      '@emulatorjs/core-gearcoleco': 4.2.3
+      '@emulatorjs/core-genesis_plus_gx': 4.2.3
+      '@emulatorjs/core-handy': 4.2.3
+      '@emulatorjs/core-mame2003': 4.2.3
+      '@emulatorjs/core-mame2003_plus': 4.2.3
+      '@emulatorjs/core-mednafen_ngp': 4.2.3
+      '@emulatorjs/core-mednafen_pce': 4.2.3
+      '@emulatorjs/core-mednafen_pcfx': 4.2.3
+      '@emulatorjs/core-mednafen_psx_hw': 4.2.3
+      '@emulatorjs/core-mednafen_wswan': 4.2.3
+      '@emulatorjs/core-melonds': 4.2.3
+      '@emulatorjs/core-mgba': 4.2.3
+      '@emulatorjs/core-mupen64plus_next': 4.2.3
+      '@emulatorjs/core-nestopia': 4.2.3
+      '@emulatorjs/core-opera': 4.2.3
+      '@emulatorjs/core-parallel_n64': 4.2.3
+      '@emulatorjs/core-pcsx_rearmed': 4.2.3
+      '@emulatorjs/core-picodrive': 4.2.3
+      '@emulatorjs/core-ppsspp': 4.2.3
+      '@emulatorjs/core-prboom': 4.2.3
+      '@emulatorjs/core-prosystem': 4.2.3
+      '@emulatorjs/core-puae': 4.2.3
+      '@emulatorjs/core-same_cdi': 4.2.3
+      '@emulatorjs/core-smsplus': 4.2.3
+      '@emulatorjs/core-snes9x': 4.2.3
+      '@emulatorjs/core-stella2014': 4.2.3
+      '@emulatorjs/core-vice_x128': 4.2.3
+      '@emulatorjs/core-vice_x64': 4.2.3
+      '@emulatorjs/core-vice_x64sc': 4.2.3
+      '@emulatorjs/core-vice_xpet': 4.2.3
+      '@emulatorjs/core-vice_xplus4': 4.2.3
+      '@emulatorjs/core-vice_xvic': 4.2.3
+      '@emulatorjs/core-virtualjaguar': 4.2.3
+      '@emulatorjs/core-yabause': 4.2.3
+      '@emulatorjs/emulatorjs': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9223,12 +9233,31 @@ snapshots:
       node-fetch: 3.3.2
       socket.io: 4.8.1
     optionalDependencies:
-      '@emulatorjs/cores': 4.2.2
+      '@emulatorjs/cores': 4.2.3
     transitivePeerDependencies:
       - bufferutil
       - debug
       - supports-color
       - utf-8-validate
+
+  '@emulatorjs/emulatorjs@4.2.3':
+    dependencies:
+      '@node-minify/clean-css': 9.0.1
+      '@node-minify/core': 9.0.2
+      '@node-minify/terser': 9.0.1
+      http-server: 14.1.1
+      nipplejs: 0.10.2
+      node-7z: 3.0.0
+      node-fetch: 3.3.2
+      socket.io: 4.8.1
+    optionalDependencies:
+      '@emulatorjs/cores': 4.2.3
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+    optional: true
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
@@ -11959,7 +11988,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.1)(@vitest/ui@3.2.4)(jiti@2.4.2)(jsdom@22.1.0)(sass@1.89.2)(terser@5.36.0)(tsx@4.20.3)(yaml@2.8.0)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.0.10)(@vitest/ui@3.2.4)(jiti@2.4.2)(jsdom@22.1.0)(sass@1.89.2)(terser@5.36.0)(tsx@4.20.3)(yaml@2.8.0)
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -14533,6 +14562,8 @@ snapshots:
       boolbase: 1.0.0
 
   nwsapi@2.2.20: {}
+
+  nx-mcp@0.3.0: {}
 
   nx@21.2.1(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.23)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)):
     dependencies:

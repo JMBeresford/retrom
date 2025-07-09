@@ -54,6 +54,9 @@ jobs:
       - name: run tests
         run: cargo test
 
+      - name: check NX workspace sync status
+        run: pnpm nx sync:check
+
       - name: run formatter
         run: pnpm nx run-many -t cargo:format prettier:format buf:format --configuration check
 

@@ -44,6 +44,7 @@ additional information in their own `README.md` files.
 - `prettier` and `rustfmt` are used for formatting the Typescript and Rust code respectively
   - rarely called directly, there are package scripts for running them
 - `nx` is used for managing the monorepo and running commands (targets) across packages
+  - `pnpm nx sync` syncs the NX workspace, ensuring dependencies and targets are up to date
   - `pnpm nx <target> <package>` or `pnpm nx run <package>:<target>` runs a target for a given package
   - `pnpm nx run-many -t <target1> <target2>` runs any amount of targets across all valid packages
   - `pnpm nx run-many -t <target1> <target2> -p <package1> <package2>` runs any amount of targets across specific packages
@@ -61,7 +62,10 @@ additional information in their own `README.md` files.
 
 ### Required Before Each Commit
 
+- Ensure the NX workspace is synced (refer to [tooling](#tooling))
 - Ensure all code is formatted correctly (refer to [tooling](#tooling))
 - Ensure all code is linted correctly (refer to [tooling](#tooling))
+- Ensure all typescript code is type-checked
+  - `pnpm nx run-many -t typecheck` will run type checking across all packages
 - Ensure all documentation is up to date, if the changes alter
   something that is documented

@@ -75,17 +75,24 @@ This project uses several tools to manage development workflows:
 
 ### Common commands
 
+- Sync the NX workspace:
+
+  ```bash
+  pnpm nx sync
+  ```
+
 - Build all packages:
 
   ```bash
   pnpm nx run-many -t build
   ```
 
-- Run linters:
+- Run linters and type checking:
 
   ```bash
   pnpm nx run-many -t eslint:lint
   pnpm nx run-many -t clippy:lint
+  pnpm nx run-many -t typecheck
   ```
 
 - Format code:
@@ -126,6 +133,7 @@ We follow strict code quality standards to maintain a consistent and maintainabl
 
 Before committing changes, ensure:
 
+- The NX workspace is synced
 - All code is formatted correctly
 - All linter checks pass
 - Documentation is updated if necessary
@@ -146,7 +154,8 @@ Before committing changes, ensure:
 4. **Run pre-commit checks**:
 
    ```bash
-   pnpm nx run-many -t prettier:format eslint:lint clippy:lint rustfmt:format buf:format
+   pnpm nx sync
+   pnpm nx run-many -t prettier:format eslint:lint clippy:lint rustfmt:format typecheck buf:format
    ```
 
 5. **Submit a pull request**: When your feature is complete, submit a pull request for review
