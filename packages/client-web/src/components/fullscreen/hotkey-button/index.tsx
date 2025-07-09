@@ -78,7 +78,7 @@ export function HotkeyIcon(
       {...rest}
       style={{ aspectRatio: usingGamepad ? "unset" : "1/1" }}
       className={cn(
-        "uppercase shadow-[0_0_5px_2px_hsl(var(--accent)_/_0.8)]",
+        "uppercase outline-accent/80 outline",
         "grid place-items-center font-normal",
         "leading-[0] bg-primary/15 p-[6px]",
         inputDevice === "gamepad" && "rounded-full py-[12px] px-[8px]",

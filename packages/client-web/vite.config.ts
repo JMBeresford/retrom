@@ -5,6 +5,7 @@ import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import { glslify } from "vite-plugin-glslify";
 import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import { readLocalCargoToml } from "./src/lib/node-utils";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig(({ mode }) => {
   process.env = {
@@ -89,7 +90,13 @@ export default defineConfig(({ mode }) => {
         "opera75",
       ],
     },
-    plugins: [TanStackRouterVite(), react(), glslify(), nxViteTsPaths()],
+    plugins: [
+      tailwindcss(),
+      TanStackRouterVite(),
+      react(),
+      glslify(),
+      nxViteTsPaths(),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

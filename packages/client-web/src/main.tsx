@@ -1,7 +1,7 @@
 import { StrictMode, CSSProperties as ReactCSSProperties } from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
-import "./globals.scss";
+import "./globals.css";
 
 declare module "react" {
   interface CSSProperties {

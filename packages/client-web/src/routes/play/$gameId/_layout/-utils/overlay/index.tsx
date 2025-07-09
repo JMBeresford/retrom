@@ -212,7 +212,7 @@ export const OverlayMenu = memo(function OverlayMenu(props: {
           <Image src={imgSrc} className="w-16 min-w-0" />
 
           <div className="text-pretty w-fit">
-            <SheetTitle className="font-black whitespace-nowrap overflow-hidden overflow-ellipsis">
+            <SheetTitle className="font-black whitespace-nowrap overflow-hidden text-ellipsis">
               {name}
             </SheetTitle>
             <SheetDescription className="text-foreground text-base font-semibold mb-1">
@@ -295,7 +295,7 @@ export function Overlay() {
     <Sheet open={open} onOpenChange={toggleOpen}>
       <div
         className={cn(
-          "fixed inset-0 z-[90] grid grid-rows-[1fr,auto]",
+          "fixed inset-0 z-[90] grid grid-rows-[1fr_auto]",
           "transition-colors ease-in-out duration-200",
           open
             ? "bg-black/80 pointer-events-auto touch-auto"

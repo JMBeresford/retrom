@@ -261,7 +261,7 @@ export function SideBar() {
                           )}
                         >
                           <div className="flex w-full">
-                            <h3 className="text-left text-lg sm:text-base whitespace-nowrap overflow-ellipsis overflow-hidden">
+                            <h3 className="text-left text-lg sm:text-base whitespace-nowrap text-ellipsis overflow-hidden">
                               {name}
                             </h3>
                             <span className="sr-only">Toggle</span>
@@ -306,7 +306,7 @@ export function SideBar() {
                                         isInstalled && "text-muted-foreground",
                                         isCurrentGame &&
                                           "before:opacity-100 text-primary-foreground border-accent border-l-4",
-                                        "max-w-full w-full overflow-hidden overflow-ellipsis px-2 py-0.5",
+                                        "max-w-full w-full overflow-hidden text-ellipsis px-2 py-0.5",
                                       )}
                                     >
                                       <Link
@@ -324,7 +324,7 @@ export function SideBar() {
                                             />
                                           )}
                                         </div>
-                                        <span className="whitespace-nowrap overflow-hidden overflow-ellipsis">
+                                        <span className="whitespace-nowrap overflow-hidden text-ellipsis">
                                           <span>{gameName}</span>
                                         </span>
                                       </Link>

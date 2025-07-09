@@ -24,6 +24,7 @@ function FullscreenComponent() {
     <div className="h-full grid grid-flow-row grid-rows-[1fr_auto]">
       <div className="relative flex gap-4 w-full overflow-hidden">
         <PartitionList />
+
         <div className="absolute inset-0 z-[-1]">
           <CatchBoundary
             getResetKey={() => "resetScene"}
@@ -125,7 +126,7 @@ function PartitionItem(props: { partitionKey: string }) {
         }}
         className={cn(
           "w-full h-min flex items-center justify-center",
-          "text-foreground font-bold opacity-30",
+          "text-foreground font-bold opacity-50",
           "transition-all ease-in-out duration-200 p-2.5",
           "focus-hover:opacity-100 focus-hover:bg-foreground/10",
           "disabled:opacity-15 leading-none",

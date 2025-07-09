@@ -112,7 +112,7 @@ function PlayerBindings(props: { player: Player }) {
   return (
     <div
       className={cn(
-        "grid grid-cols-[min-content,1fr,1fr] auto-rows-fr w-fit h-full",
+        "grid grid-cols-[min-content_1fr_1fr] auto-rows-fr w-fit h-full",
       )}
     >
       <div
@@ -129,7 +129,7 @@ function PlayerBindings(props: { player: Player }) {
         </Label>
         <Label className="flex gap-2 overflow-hidden w-full max-w-full">
           <Gamepad2Icon size={24} className="min-w-min" />
-          <span className="text-sm muted font-light text-nowrap overflow-hidden overflow-ellipsis w-min">
+          <span className="text-sm muted font-light text-nowrap overflow-hidden text-ellipsis w-min">
             {connectedGamepad?.gamepad.id}
           </span>
         </Label>

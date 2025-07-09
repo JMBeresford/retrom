@@ -62,7 +62,7 @@ export function BrowseButton<T extends FieldValues>(props: {
                   {...field}
                   placeholder="Select a directory..."
                   className={cn(
-                    "text-xs text-muted-foreground transition-colors sm:w-[350px] overflow-hidden overflow-ellipsis",
+                    "text-xs text-muted-foreground transition-colors sm:w-[350px] overflow-hidden text-ellipsis",
                     "sm:border-none font-mono placeholder:italic bg-transparent",
                     fieldState.isDirty && "text-foreground",
                   )}
