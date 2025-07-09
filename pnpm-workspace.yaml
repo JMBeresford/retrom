@@ -8,10 +8,10 @@ packages:
 onlyBuiltDependencies:
   - "@bufbuild/buf"
   - "@swc/core"
+  - "@tailwindcss/oxide"
   - core-js-pure
   - esbuild
   - grpc-tools
   - nx
-  - protobufjs
-ignoredBuiltDependencies:
   - "@parcel/watcher"
+  - protobufjs

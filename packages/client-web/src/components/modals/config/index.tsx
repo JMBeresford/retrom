@@ -1,10 +1,14 @@
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Route as RootRoute } from "@/routes/__root";
 import { useNavigate } from "@tanstack/react-router";
 import { ServerConfigTab } from "./server";
-import { DialogDescription } from "@radix-ui/react-dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ClientConfigTab } from "./client";
 
 export function ConfigModal() {
@@ -30,18 +34,14 @@ export function ConfigModal() {
         }
       }}
     >
-      <DialogContent className="sm:pl-0 sm:py-0 overflow-hidden">
-        {/* Allow the tabs to define their own headers, visually.
-        Keep this for screen readers, accessibility etc but hide it */}
-        <VisuallyHidden>
-          <DialogTitle className="text-xl font-extrabold">
-            Retrom Configuration
-          </DialogTitle>
+      <DialogContent className="gap-0">
+        <DialogHeader>
+          <DialogTitle>Retrom Configuration</DialogTitle>
 
           <DialogDescription>
             This is where you can configure your Retrom settings.
           </DialogDescription>
-        </VisuallyHidden>
+        </DialogHeader>
 
         <Tabs
           value={configModal?.tab}
@@ -56,20 +56,18 @@ export function ConfigModal() {
           }}
           orientation="vertical"
         >
-          <div className="flex flex-col sm:grid grid-cols-[min-content,1fr] w-full">
-            <div className="pt-4 sm:p-4 sm:bg-muted sm:mr-4">
-              <TabsList className="flex sm:flex-col gap-2 h-fit w-full">
-                {Object.values(tabItems).map(({ value, name }) => (
-                  <TabsTrigger
-                    key={value}
-                    value={value}
-                    className="text-md px-5 py-2 w-full"
-                  >
-                    {name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
+          <div className="flex flex-col w-full">
+            <TabsList className="flex gap-2 h-fit w-full">
+              {Object.values(tabItems).map(({ value, name }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="text-md w-full"
+                >
+                  {name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
             <div className="py-4">
               <ServerConfigTab />

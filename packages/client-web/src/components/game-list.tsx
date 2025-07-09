@@ -56,10 +56,10 @@ export function GameList(props: { games: GameWithMetadata[] }) {
               >
                 <div
                   className={cn(
-                    "absolute left-3 bottom-3 w-[90%] overflow-hidden overflow-ellipsis",
+                    "absolute left-3 bottom-3 w-[90%] overflow-hidden text-ellipsis",
                   )}
                 >
-                  <h3 className="whitespace-nowrap text-lg font-bold overflow-hidden overflow-ellipsis">
+                  <h3 className="whitespace-nowrap text-lg font-bold overflow-hidden text-ellipsis">
                     {game.metadata?.name || getFileStub(game.path)}
                   </h3>
 

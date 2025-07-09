@@ -193,7 +193,7 @@ export function GameFiles() {
                 className={cn(
                   selectedFile === undefined && "text-muted-foreground",
                   "text-left rounded-r-none w-full whitespace-nowrap",
-                  "overflow-hidden overflow-ellipsis",
+                  "overflow-hidden text-ellipsis",
                 )}
               >
                 <SelectValue

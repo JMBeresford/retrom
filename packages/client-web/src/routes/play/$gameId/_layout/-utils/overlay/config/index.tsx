@@ -48,7 +48,7 @@ function GamepadHotkeysRender() {
         </Label>
         <Label className="overflow-hidden w-fit max-w-full">
           <Gamepad2 size={24} className="min-w-min" />
-          <span className="pl-2 text-sm muted font-light text-nowrap overflow-hidden overflow-ellipsis w-min">
+          <span className="pl-2 text-sm muted font-light text-nowrap overflow-hidden text-ellipsis w-min">
             {connectedGamepad?.gamepad.id}
           </span>
         </Label>
