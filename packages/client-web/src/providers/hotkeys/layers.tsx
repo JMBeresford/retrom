@@ -11,7 +11,10 @@ import {
   useMemo,
 } from "react";
 import { Hotkey, HotkeyHandlerInfo, HotkeyHandlers } from ".";
-import { GAMEPAD_BUTTON_EVENT, GamepadButtonEvent } from "../gamepad/event";
+import {
+  GamepadButtonDownEvent,
+  GamepadAxisActiveEvent,
+} from "../gamepad/event";
 import { useInputDeviceContext } from "../input-device";
 import { cn } from "@retrom/ui/lib/utils";
 import { useHotkeyMapping } from "./mapping";
@@ -176,7 +179,7 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
   const handleHotkey = useCallback(
     (
       hotkey: Hotkey,
-      event: KeyboardEvent | ReactKeyboardEvent | GamepadButtonEvent,
+      event: KeyboardEvent | ReactKeyboardEvent | GamepadButtonDownEvent,
     ) => {
       const handlerInfo = getHandler(hotkey);
 
@@ -184,7 +187,7 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
       const zoneActive = isZoneActive(zone);
 
       if (handler && zoneActive) {
-        if (event instanceof GamepadButtonEvent) {
+        if (event instanceof GamepadButtonDownEvent || GamepadAxisActiveEvent) {
           setInputDevice("gamepad");
         } else {
           setInputDevice("hotkeys");
@@ -221,28 +224,33 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
   );
 
   const handleGamepadButton = useCallback(
-    (event: GamepadButtonEvent) => {
-      const button = event.detail.button;
-      const pressed = !!event.detail.gamepad.buttons.at(button)?.pressed;
+    (event: GamepadButtonDownEvent | GamepadAxisActiveEvent) => {
+      if (event instanceof GamepadButtonDownEvent) {
+        const button = event.detail.button;
 
-      if (!pressed) {
-        return;
+        const hotkey = gamepadMap[button];
+        handleHotkey(hotkey, event);
       }
-
-      const hotkey = gamepadMap[button];
-
-      handleHotkey(hotkey, event);
     },
     [handleHotkey, gamepadMap],
   );
 
   useEffect(() => {
+    const gamepadEvents = [
+      GamepadButtonDownEvent,
+      GamepadAxisActiveEvent,
+    ] as const;
+
     const node = ref.current;
 
-    node.addEventListener(GAMEPAD_BUTTON_EVENT, handleGamepadButton);
+    gamepadEvents.forEach(({ EVENT_NAME }) => {
+      node.addEventListener(EVENT_NAME, handleGamepadButton);
+    });
 
     return () => {
-      node.removeEventListener(GAMEPAD_BUTTON_EVENT, handleGamepadButton);
+      gamepadEvents.forEach(({ EVENT_NAME }) => {
+        node.removeEventListener(EVENT_NAME, handleGamepadButton);
+      });
     };
   }, [handleGamepadButton]);
 

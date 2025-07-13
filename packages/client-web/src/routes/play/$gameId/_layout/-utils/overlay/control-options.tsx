@@ -12,8 +12,8 @@ import {
   usePlayerControls,
 } from "@/providers/emulator-js/control-options";
 import {
-  GAMEPAD_BUTTON_EVENT,
-  GamepadButtonEvent,
+  GamepadButtonDownEvent,
+  GamepadAxisActiveEvent,
 } from "@/providers/gamepad/event";
 import { KeyboardIcon, Gamepad2Icon } from "lucide-react";
 import {
@@ -26,6 +26,8 @@ import {
 } from "react";
 import { OverlayMenuItem } from ".";
 import { useGamepadContext } from "@/providers/gamepad";
+
+const gamepadEvents = [GamepadButtonDownEvent, GamepadAxisActiveEvent] as const;
 
 const { Player1, Player2, Player3, Player4 } = Player;
 
@@ -235,37 +237,45 @@ const RecordInput = memo(function RecordInput(props: {
   );
 
   const handleGamepad = useCallback(
-    (e: GamepadButtonEvent) => {
+    (e: InstanceType<(typeof gamepadEvents)[number]>) => {
       if (!recording || !gamepad) return;
 
       e.stopPropagation();
 
-      const { button } = e.detail;
-      if (!e.detail.gamepad.buttons[button]?.pressed) return;
+      if (e instanceof GamepadButtonDownEvent) {
+        const { button } = e.detail;
+        if (!e.detail.gamepad.buttons[button]?.pressed) return;
 
-      const label = getButtonLabel(button);
-      if (label) {
-        setBinding(label);
+        const label = getButtonLabel(button);
+        if (label) {
+          setBinding(label);
+        }
+        setRecording(false);
       }
-      setRecording(false);
     },
     [recording, gamepad, setBinding, getButtonLabel],
   );
 
   useLayoutEffect(() => {
     if (recording) {
-      window.addEventListener(GAMEPAD_BUTTON_EVENT, handleGamepad, {
-        capture: true,
+      gamepadEvents.forEach((event) => {
+        window.addEventListener(event.EVENT_NAME, handleGamepad, {
+          capture: true,
+        });
       });
     } else {
-      window.removeEventListener(GAMEPAD_BUTTON_EVENT, handleGamepad, {
-        capture: true,
+      gamepadEvents.forEach((event) => {
+        window.removeEventListener(event.EVENT_NAME, handleGamepad, {
+          capture: true,
+        });
       });
     }
 
     return () => {
-      window.removeEventListener(GAMEPAD_BUTTON_EVENT, handleGamepad, {
-        capture: true,
+      gamepadEvents.forEach((event) => {
+        window.removeEventListener(event.EVENT_NAME, handleGamepad, {
+          capture: true,
+        });
       });
     };
   }, [handleGamepad, recording]);

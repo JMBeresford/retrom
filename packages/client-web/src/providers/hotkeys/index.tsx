@@ -4,7 +4,7 @@ import {
   useEffect,
 } from "react";
 import { HotkeyZone, useHotkeyLayerContext } from "./layers";
-import { GAMEPAD_BUTTON_EVENT, GamepadButtonEvent } from "../gamepad/event";
+import { GamepadButtonDownEvent } from "../gamepad/event";
 import { useInputDeviceContext } from "../input-device";
 import { useHotkeyMapping } from "./mapping";
 
@@ -23,7 +23,7 @@ export const Hotkey = [
 ] as const;
 
 export type HotkeyHandler = (
-  event?: KeyboardEvent | ReactKeyboardEvent | GamepadButtonEvent,
+  event?: KeyboardEvent | ReactKeyboardEvent | GamepadButtonDownEvent,
 ) => unknown;
 
 export type HotkeyHandlerInfo = {
@@ -49,7 +49,7 @@ export function useHotkeys(opts: {
   const handleHotkey = useCallback(
     (
       hotkey: Hotkey,
-      event?: KeyboardEvent | ReactKeyboardEvent | GamepadButtonEvent,
+      event?: KeyboardEvent | ReactKeyboardEvent | GamepadButtonDownEvent,
     ) => {
       const handlerInfo = handlers[hotkey];
       if (!handlerInfo) {
@@ -63,7 +63,7 @@ export function useHotkeys(opts: {
         return;
       }
 
-      if (!(event instanceof GamepadButtonEvent)) {
+      if (!(event instanceof GamepadButtonDownEvent)) {
         setInputDevice("hotkeys");
       }
 
@@ -87,7 +87,7 @@ export function useHotkeys(opts: {
   );
 
   const onGamepadButton = useCallback(
-    (event: GamepadButtonEvent) => {
+    (event: GamepadButtonDownEvent) => {
       const button = event.detail.button;
       const pressed = event.detail.gamepad.buttons.at(button)?.pressed;
 
@@ -103,11 +103,17 @@ export function useHotkeys(opts: {
 
   useEffect(() => {
     document.addEventListener("keydown", onKeyDown);
-    document.addEventListener(GAMEPAD_BUTTON_EVENT, onGamepadButton);
+    document.addEventListener(
+      GamepadButtonDownEvent.EVENT_NAME,
+      onGamepadButton,
+    );
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener(GAMEPAD_BUTTON_EVENT, onGamepadButton);
+      document.removeEventListener(
+        GamepadButtonDownEvent.EVENT_NAME,
+        onGamepadButton,
+      );
     };
   }, [onKeyDown, onGamepadButton]);
 }

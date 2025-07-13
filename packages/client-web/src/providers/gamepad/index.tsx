@@ -5,9 +5,15 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
-import { GamepadButtonEvent } from "./event";
+import {
+  GamepadButtonUpEvent,
+  GamepadButtonDownEvent,
+  GamepadAxisActiveEvent,
+  GamepadAxisInactiveEvent,
+} from "./event";
 import { getControllerMapping } from "./controller-ids";
 import { ControllerMapping } from "./maps";
 
@@ -20,13 +26,22 @@ export type GamepadContext = {
   gamepads: RetromGamepad[] | undefined;
 };
 
+type GamepadInputCache = {
+  /** Map of gamepad index to button states */
+  buttons: Map<number, boolean[]>;
+
+  /** Map of gamepad index to axes states */
+  axes: Map<number, number[]>;
+};
+
 const context = createContext<GamepadContext | undefined>(undefined);
 
 export function GamepadProvider(props: PropsWithChildren) {
   const [gamepads, setGamepads] = useState<RetromGamepad[]>([]);
-  const [inputCache, setInputCache] = useState<Map<number, boolean[]>>(
-    new Map(),
-  );
+  const [inputCache, setInputCache] = useState<GamepadInputCache>({
+    buttons: new Map(),
+    axes: new Map(),
+  });
 
   const { toast } = useToast();
 
@@ -48,29 +63,6 @@ export function GamepadProvider(props: PropsWithChildren) {
     [gamepads, toast],
   );
 
-  const onConnect = useCallback(
-    (e: GamepadEvent) => {
-      const { buttons, index } = e.gamepad;
-      const mapping = getControllerMapping(e.gamepad);
-      const pad: RetromGamepad = {
-        gamepad: e.gamepad,
-        controllerType: mapping,
-      };
-
-      setGamepads((prev) => [...prev, pad]);
-      const inputs = buttons.map((b) => b.pressed);
-      setInputCache((map) => map.set(index, inputs));
-
-      console.log(`Gamepad connected: ${e.gamepad.id}`);
-
-      toast({
-        title: "Gamepad connected",
-        description: `Now using your ${mapping} controller`,
-      });
-    },
-    [toast],
-  );
-
   const pollGamepad = useCallback(() => {
     const node = document.activeElement;
 
@@ -79,29 +71,100 @@ export function GamepadProvider(props: PropsWithChildren) {
 
       if (pad) {
         const { buttons, index } = pad;
-        const currentInputs = inputCache.get(index);
+        const currentButtonInputs = inputCache.buttons.get(index);
         let changed = false;
 
         for (let i = 0; i < buttons.length; i++) {
-          if (buttons.at(i)?.pressed !== currentInputs?.at(i)) {
+          const currentlyPressed = buttons.at(i)?.pressed;
+          const previouslyPressed = currentButtonInputs?.at(i);
+
+          if (
+            currentlyPressed !== previouslyPressed &&
+            currentlyPressed !== undefined
+          ) {
             changed = true;
 
-            node?.dispatchEvent(
-              new GamepadButtonEvent({
-                gamepad: pad,
-                button: i,
-              }),
-            );
+            if (currentlyPressed) {
+              node?.dispatchEvent(
+                new GamepadButtonDownEvent({
+                  gamepad: pad,
+                  button: i,
+                }),
+              );
+            } else {
+              node?.dispatchEvent(
+                new GamepadButtonUpEvent({
+                  gamepad: pad,
+                  button: i,
+                }),
+              );
+            }
+          }
+        }
+
+        for (let i = 0; i < pad.axes.length; i++) {
+          const value = pad.axes.at(i) ?? 0;
+          const cachedValue = inputCache.axes.get(index)?.at(i) ?? 0;
+          const currentlyActive = value >= 0.5;
+          const previouslyActive = cachedValue >= 0.5;
+
+          if (currentlyActive !== previouslyActive) {
+            changed = true;
+
+            if (currentlyActive) {
+              node?.dispatchEvent(
+                new GamepadAxisActiveEvent({
+                  gamepad: pad,
+                  axis: i,
+                  value,
+                }),
+              );
+            } else {
+              node?.dispatchEvent(
+                new GamepadAxisInactiveEvent({
+                  gamepad: pad,
+                  axis: i,
+                  value,
+                }),
+              );
+            }
           }
         }
 
         if (changed) {
-          const inputs = buttons.map((b) => b.pressed);
-          setInputCache((map) => map.set(index, inputs));
+          const buttonInputs = buttons.map((b) => b.pressed);
+          const axesInputs = pad.axes.map((a) => a);
+          setInputCache((cache) => {
+            cache.buttons.set(index, buttonInputs);
+            cache.axes.set(index, axesInputs);
+
+            return { ...cache };
+          });
         }
       }
     }
   }, [inputCache, gamepads]);
+
+  const onConnect = useCallback(
+    (e: GamepadEvent) => {
+      const mapping = getControllerMapping(e.gamepad);
+      const pad: RetromGamepad = {
+        gamepad: e.gamepad,
+        controllerType: mapping,
+      };
+
+      setGamepads((prev) => [...prev, pad]);
+      pollGamepad();
+
+      console.log(`Gamepad connected: ${e.gamepad.id}`);
+
+      toast({
+        title: "Gamepad connected",
+        description: `Now using your ${mapping} controller`,
+      });
+    },
+    [toast, pollGamepad],
+  );
 
   useEffect(() => {
     let frame: number;
@@ -123,7 +186,12 @@ export function GamepadProvider(props: PropsWithChildren) {
     };
   }, [onDisconnect, onConnect, pollGamepad]);
 
-  return <context.Provider value={{ gamepads }} {...props} />;
+  return (
+    <context.Provider
+      value={useMemo(() => ({ gamepads }), [gamepads])}
+      {...props}
+    />
+  );
 }
 
 export function useGamepadContext() {

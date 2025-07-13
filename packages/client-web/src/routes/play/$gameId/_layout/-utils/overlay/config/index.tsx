@@ -7,12 +7,14 @@ import { Label } from "@retrom/ui/components/label";
 import { Gamepad2, Keyboard } from "lucide-react";
 import { KeyboardEvent, useCallback, useLayoutEffect, useState } from "react";
 import {
-  GAMEPAD_BUTTON_EVENT,
-  GamepadButtonEvent,
+  GamepadButtonDownEvent,
+  GamepadAxisActiveEvent,
 } from "@/providers/gamepad/event";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
 import { useGamepadContext } from "@/providers/gamepad";
 import { getButtonMapValue } from "@/providers/gamepad/maps";
+
+const gamepadEvents = [GamepadButtonDownEvent, GamepadAxisActiveEvent] as const;
 
 export const configOptions: OverlayMenuItem = {
   label: "Retrom Configuration",
@@ -139,34 +141,42 @@ const RecordInput = function RecordInput(props: {
   );
 
   const handleGamepad = useCallback(
-    (e: GamepadButtonEvent) => {
+    (e: InstanceType<(typeof gamepadEvents)[number]>) => {
       if (!recording || !gamepad) return;
 
       e.stopPropagation();
 
-      const { button } = e.detail;
-      if (!e.detail.gamepad.buttons[button]?.pressed) return;
+      if (e instanceof GamepadButtonDownEvent) {
+        const { button } = e.detail;
+        if (!e.detail.gamepad.buttons[button]?.pressed) return;
 
-      setRecording(false);
-      setBinding(button);
+        setRecording(false);
+        setBinding(button);
+      }
     },
     [recording, gamepad, setBinding],
   );
 
   useLayoutEffect(() => {
     if (recording) {
-      window.addEventListener(GAMEPAD_BUTTON_EVENT, handleGamepad, {
-        capture: true,
+      gamepadEvents.forEach((event) => {
+        window.addEventListener(event.EVENT_NAME, handleGamepad, {
+          capture: true,
+        });
       });
     } else {
-      window.removeEventListener(GAMEPAD_BUTTON_EVENT, handleGamepad, {
-        capture: true,
+      gamepadEvents.forEach((event) => {
+        window.removeEventListener(event.EVENT_NAME, handleGamepad, {
+          capture: true,
+        });
       });
     }
 
     return () => {
-      window.removeEventListener(GAMEPAD_BUTTON_EVENT, handleGamepad, {
-        capture: true,
+      gamepadEvents.forEach((event) => {
+        window.removeEventListener(event.EVENT_NAME, handleGamepad, {
+          capture: true,
+        });
       });
     };
   }, [handleGamepad, recording]);
