@@ -10,7 +10,7 @@ import { Description } from "./-components/description";
 import { Links } from "./-components/links";
 import { GameFiles } from "./-components/game-files";
 import { Media } from "./-components/media";
-import { SimilarGames } from "./-components/similar_games";
+import { SimilarGames } from "./-components/similar-games";
 import { GameDetailProvider } from "@/providers/game-details";
 import { UpdateMetadataModal } from "@/components/modals/update-metadata";
 import { DeleteGameModal } from "@/components/modals/delete-game";
