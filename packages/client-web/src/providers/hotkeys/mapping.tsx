@@ -15,6 +15,10 @@ const DefaultHotkeyToKeyboardHotkey: Record<Hotkey, KeyboardEvent["key"]> = {
   PAGE_RIGHT: "e",
 } as const;
 
+/**
+ * Follows the standard mapping defined in the Gamepad API spec
+ * @see https://w3c.github.io/gamepad/#dfn-standard-gamepad
+ **/
 const DefaultHotkeyToGamepadButton: Record<Hotkey, number> = {
   ACCEPT: 0,
   BACK: 1,
@@ -69,8 +73,6 @@ export const useHotkeyMapping = create<HotkeyMappingState>()(
 
       setKeyboardMap: (cb) => {
         const next = cb(get().hotkeyToKeyboard);
-
-        console.log({ next });
 
         return set({
           hotkeyToKeyboard: next,
