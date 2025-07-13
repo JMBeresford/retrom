@@ -1,7 +1,3 @@
-injectWorkspacePackages: true
-syncInjectedDepsAfterScripts:
-  - build
-  - build:desktop
 packages:
   - packages/*
   - plugins/*

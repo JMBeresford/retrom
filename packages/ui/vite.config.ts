@@ -11,9 +11,9 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig(() => ({
   root: __dirname,
   plugins: [
+    nxViteTsPaths(),
     react(),
     tailwindcss(),
-    nxViteTsPaths(),
     nxCopyAssetsPlugin([
       "*.md",
       { glob: "**/*", input: "src/styles", output: "styles" },
