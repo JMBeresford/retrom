@@ -2,6 +2,10 @@
   "name": "@retrom/client-web",
   "private": true,
   "type": "module",
+  "files": [
+    "./dist/**",
+    "./vite.config.ts"
+  ],
   "dependencies": {
     "@bufbuild/protobuf": "2.4.0",
     "@connectrpc/connect": "2.0.2",
