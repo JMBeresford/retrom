@@ -6,8 +6,8 @@ export declare class GamepadHandler {
   updateGamepadState(): void;
   dispatchEvent(name: unknown, arg: unknown): void;
   on(name: unknown, cb: unknown): void;
-  getButtonLabel(index: unknown): null | string;
-  getAxisLabel(axis: unknown, value: unknown): string;
+  getButtonLabel(index: number): null | string;
+  getAxisLabel(axis: string, value: number): string | null;
 }
 
 declare global {

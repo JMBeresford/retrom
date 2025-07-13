@@ -16,6 +16,7 @@ import {
 } from "./event";
 import { getControllerMapping } from "./controller-ids";
 import { ControllerMapping } from "./maps";
+import { axisValueToAxisState, GamepadAxisState } from "./utils";
 
 export interface RetromGamepad {
   gamepad: Gamepad;
@@ -105,13 +106,14 @@ export function GamepadProvider(props: PropsWithChildren) {
         for (let i = 0; i < pad.axes.length; i++) {
           const value = pad.axes.at(i) ?? 0;
           const cachedValue = inputCache.axes.get(index)?.at(i) ?? 0;
-          const currentlyActive = value >= 0.5;
-          const previouslyActive = cachedValue >= 0.5;
 
-          if (currentlyActive !== previouslyActive) {
+          const currentState = axisValueToAxisState(value);
+          const previousState = axisValueToAxisState(cachedValue);
+
+          if (currentState !== previousState) {
             changed = true;
 
-            if (currentlyActive) {
+            if (currentState !== GamepadAxisState.Neutral) {
               node?.dispatchEvent(
                 new GamepadAxisActiveEvent({
                   gamepad: pad,
