@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { open } from "@tauri-apps/plugin-dialog";
 import { FolderOpenIcon, LoaderCircleIcon, SaveIcon } from "lucide-react";
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "@retrom/ui/components/form";
 import { z } from "zod";
 
 type ConfigSchema = z.infer<typeof configSchema>;

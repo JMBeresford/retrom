@@ -11,12 +11,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@retrom/ui/components/sheet";
-import { getPanelElement } from "react-resizable-panels";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@retrom/ui/lib/utils";
 import { Button } from "@retrom/ui/components/button";
 import { Route as RootRoute } from "@/routes/__root";
 import { ArrowLeft, Ellipsis, X } from "lucide-react";
+import { getPanelElement } from "@retrom/ui/components/resizable";
 
 function MobileMainMenuItem(props: { item: MenuItem; lastInGroup?: boolean }) {
   const { item, lastInGroup } = props;

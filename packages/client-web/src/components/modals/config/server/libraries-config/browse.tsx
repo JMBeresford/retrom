@@ -15,7 +15,7 @@ import {
   ControllerFieldState,
   ControllerRenderProps,
   FieldValues,
-} from "react-hook-form";
+} from "@retrom/ui/components/form";
 
 export function BrowseButton<T extends FieldValues>(props: {
   field: ControllerRenderProps<T>;

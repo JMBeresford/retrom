@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useState } from "react";
 import { Button } from "@retrom/ui/components/button";
-import { UseFormReturn, useForm } from "react-hook-form";
+import { UseFormReturn, useForm } from "@retrom/ui/components/form";
 import {
   Form,
   FormControl,

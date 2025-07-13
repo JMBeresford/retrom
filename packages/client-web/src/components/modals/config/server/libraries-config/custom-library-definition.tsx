@@ -8,7 +8,7 @@ import {
   ControllerFieldState,
   ControllerRenderProps,
   useWatch,
-} from "react-hook-form";
+} from "@retrom/ui/components/form";
 import { LibrariesSchema } from ".";
 import { Button } from "@retrom/ui/components/button";
 import { Settings2 } from "lucide-react";

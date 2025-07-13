@@ -13,8 +13,8 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  TooltipArrow,
 } from "@retrom/ui/components/tooltip";
-import { TooltipArrow } from "@radix-ui/react-tooltip";
 import { toast } from "@retrom/ui/hooks/use-toast";
 import { Button } from "@retrom/ui/components/button";
 

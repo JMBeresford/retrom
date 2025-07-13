@@ -3,6 +3,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  PopoverProps,
 } from "@retrom/ui/components/popover";
 import { Separator } from "@retrom/ui/components/separator";
 import { cn } from "@retrom/ui/lib/utils";
@@ -11,7 +12,6 @@ import {
   ConnectionStatus,
   useConnectionStatus,
 } from "@/queries/useConnectionStatus";
-import { PopoverProps } from "@radix-ui/react-popover";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { LucideProps, Server, ServerCog, ServerOff } from "lucide-react";

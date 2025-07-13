@@ -20,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { Plus, Trash, Undo } from "lucide-react";
 import { useCallback } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "@retrom/ui/components/form";
 import { z } from "zod";
 import { BrowseButton } from "./browse";
 import { IgnorePatternsInput, IgnorePatternsTooltip } from "./ignore-patterns";

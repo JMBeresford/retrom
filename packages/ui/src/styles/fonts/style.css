@@ -1,0 +1,32 @@
+@font-face {
+  font-family: "Exo2";
+  src:
+    local("Exo2"),
+    url("./Exo2.ttf") format("truetype");
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: "Exo2";
+  src:
+    local("Exo2"),
+    url("./Exo2-italic.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Exo2 Fixed";
+  src:
+    local("Exo2 Fixed"),
+    url("./Exo2-fixed.ttf") format("truetype");
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: "Exo2 Fixed";
+  src:
+    local("Exo2 Fixed"),
+    url("./Exo2-fixed-bold.ttf") format("truetype");
+  font-weight: 700;
+}

@@ -16,8 +16,9 @@ import {
   FormField,
   FormItem,
   FormMessage,
+  useForm,
+  useFormContext,
 } from "@retrom/ui/components/form";
-import { useForm, useFormContext } from "react-hook-form";
 import {
   InterfaceConfig_GameListEntryImage,
   RetromClientConfig_ConfigJson,

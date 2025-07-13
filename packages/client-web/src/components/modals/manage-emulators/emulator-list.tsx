@@ -23,7 +23,7 @@ import {
 } from "@retrom/codegen/retrom/models/emulators_pb";
 import { CreateEmulator } from "./create-emulator";
 import { Button } from "@retrom/ui/components/button";
-import { useForm } from "react-hook-form";
+import { useForm } from "@retrom/ui/components/form";
 import { useUpdateEmulators } from "@/mutations/useUpdateEmulators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {

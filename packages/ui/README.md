@@ -15,7 +15,7 @@ This package includes components based on [shadcn/ui](https://ui.shadcn.com/) wh
 ## Usage
 
 ```tsx
-import { Button, Dialog, DialogContent, DialogTrigger } from '@retrom/ui';
+import { Button, Dialog, DialogContent, DialogTrigger } from "@retrom/ui";
 
 function MyComponent() {
   return (

@@ -24,7 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, LoaderCircle } from "lucide-react";
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "@retrom/ui/components/form";
 import { clearInstallationDir } from "@retrom/plugin-installer";
 import { z } from "zod";
 import { RawMessage } from "@/utils/protos";

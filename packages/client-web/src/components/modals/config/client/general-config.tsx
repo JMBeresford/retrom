@@ -20,7 +20,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { open } from "@tauri-apps/plugin-dialog";
 import { FolderOpenIcon } from "lucide-react";
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "@retrom/ui/components/form";
 import { migrateInstallationDir } from "@retrom/plugin-installer";
 import { z } from "zod";
 import { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config_pb";

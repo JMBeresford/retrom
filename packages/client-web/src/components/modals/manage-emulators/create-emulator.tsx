@@ -16,7 +16,7 @@ import {
 } from "@retrom/ui/components/select";
 import { cn } from "@retrom/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm } from "@retrom/ui/components/form";
 import { Button } from "@retrom/ui/components/button";
 import { PlusIcon } from "lucide-react";
 import { emulatorSchema, EmulatorSchema, PlatformWithMetadata } from ".";

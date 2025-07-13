@@ -1,6 +1,8 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogHeader,
   DialogTitle,
 } from "@retrom/ui/components/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@retrom/ui/components/tabs";

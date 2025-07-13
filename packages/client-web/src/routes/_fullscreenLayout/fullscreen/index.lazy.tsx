@@ -1,8 +1,7 @@
 import { useGroupContext } from "@/providers/fullscreen/group-context";
 import { GridGameList } from "@/components/fullscreen/grid-game-list";
 import { CatchBoundary, createLazyFileRoute } from "@tanstack/react-router";
-import { ScrollArea } from "@retrom/ui/components/scroll-area";
-import { Scrollbar } from "@radix-ui/react-scroll-area";
+import { ScrollArea, ScrollBar } from "@retrom/ui/components/scroll-area";
 import { GroupMenu } from "@/components/fullscreen/group-menu";
 import { ActionBar } from "@/components/fullscreen/action-bar";
 import { Background, Scene } from "@/components/fullscreen/scene";
@@ -43,7 +42,7 @@ function FullscreenComponent() {
         <ScrollArea className="max-h-full grow">
           <GridGameList />
 
-          <Scrollbar orientation="vertical" className="z-[100]" />
+          <ScrollBar orientation="vertical" className="z-[100]" />
         </ScrollArea>
       </div>
 
@@ -80,7 +79,7 @@ function PartitionList() {
           ))}
         </FocusContainer>
 
-        <Scrollbar orientation="vertical" className="opacity-0" />
+        <ScrollBar orientation="vertical" className="opacity-0" />
       </ScrollArea>
     ) : null,
   );

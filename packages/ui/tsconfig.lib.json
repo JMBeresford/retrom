@@ -2,9 +2,10 @@
   "extends": "@retrom/configs/tsconfig/base.json",
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./src",
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*", "postcss.config.ts"],
+  "include": ["src/**/*"],
   "references": [
     {
       "path": "../configs/tsconfig.lib.json"

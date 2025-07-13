@@ -3,11 +3,19 @@ import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
 import {
   Controller,
+  ControllerFieldState,
+  ControllerRenderProps,
   ControllerProps,
   FieldPath,
   FieldValues,
   FormProvider,
   useFormContext,
+  useController,
+  useForm,
+  UseFormReturn,
+  useFieldArray,
+  useWatch,
+  useFormState,
 } from "react-hook-form";
 
 import { cn } from "../lib/utils";
@@ -179,6 +187,12 @@ FormMessage.displayName = "FormMessage";
 
 export {
   useFormField,
+  useFieldArray,
+  useForm,
+  useWatch,
+  useFormState,
+  useController,
+  useFormContext,
   Form,
   FormItem,
   FormLabel,
@@ -187,4 +201,11 @@ export {
   FormMessage,
   FormField,
   FormFieldContext,
+};
+
+export type {
+  ControllerRenderProps,
+  ControllerFieldState,
+  UseFormReturn,
+  FieldValues,
 };

@@ -1,6 +1,6 @@
 import { Image, getFileName, getFileStub } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
-import { useMemo } from "react";
+import { ComponentPropsWithoutRef, useMemo } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +26,7 @@ import { FiltersAndSorting } from "./filters-and-sorting";
 import { Separator } from "@retrom/ui/components/separator";
 import { filterName, sortGames, sortPlatforms } from "./utils";
 import { ScrollArea } from "@retrom/ui/components/scroll-area";
-import { TooltipPortal } from "@radix-ui/react-tooltip";
+import { TooltipPortal } from "@retrom/ui/components/tooltip";
 import { useInstallationStateQuery } from "@/queries/useInstallationState";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 import { Skeleton } from "@retrom/ui/components/skeleton";
@@ -38,7 +38,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@retrom/ui/components/dropdown-menu";
-import { DropdownMenuTriggerProps } from "@radix-ui/react-dropdown-menu";
 import { Button } from "@retrom/ui/components/button";
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 
@@ -364,7 +363,9 @@ export function SideBar() {
 }
 
 function PlatformContextMenu(
-  props: DropdownMenuTriggerProps & { platform: PlatformWithMetadata },
+  props: ComponentPropsWithoutRef<typeof DropdownMenuTrigger> & {
+    platform: PlatformWithMetadata;
+  },
 ) {
   const { platform, ...rest } = props;
 

@@ -15,7 +15,10 @@ import {
 } from "@retrom/ui/components/tooltip";
 import { Info, X } from "lucide-react";
 import { CSSProperties, useCallback, useRef } from "react";
-import { ControllerFieldState, ControllerRenderProps } from "react-hook-form";
+import {
+  ControllerFieldState,
+  ControllerRenderProps,
+} from "@retrom/ui/components/form";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import theme from "react-syntax-highlighter/dist/esm/styles/prism/nord";
 import { LibrariesSchema } from ".";

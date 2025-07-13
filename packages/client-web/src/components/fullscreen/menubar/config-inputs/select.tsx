@@ -6,9 +6,10 @@ import {
   SelectContent,
   SelectValue,
   SelectItem,
+  type SelectItemProps,
+  type SelectValueProps,
 } from "@retrom/ui/components/select";
 import { cn } from "@retrom/ui/lib/utils";
-import { SelectItemProps, SelectValueProps } from "@radix-ui/react-select";
 import {
   ComponentProps,
   forwardRef,

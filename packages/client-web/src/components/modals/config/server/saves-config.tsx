@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { LoaderCircleIcon } from "lucide-react";
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "@retrom/ui/components/form";
 import { z } from "zod";
 import { RawMessage } from "@/utils/protos";
 import { create } from "@bufbuild/protobuf";

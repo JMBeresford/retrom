@@ -1,4 +1,8 @@
-import { DialogDescription, DialogHeader } from "@retrom/ui/components/dialog";
+import {
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@retrom/ui/components/dialog";
 import {
   Tabs,
   TabsContent,
@@ -7,7 +11,6 @@ import {
 } from "@retrom/ui/components/tabs";
 import { ServerConfigJson } from "@retrom/codegen/retrom/server/config_pb";
 import { useServerConfig } from "@/queries/useServerConfig";
-import { DialogTitle } from "@radix-ui/react-dialog";
 import { LoaderCircle } from "lucide-react";
 import { IgdbConfig } from "./igdb-config";
 import { SteamConfig } from "./steam-config";

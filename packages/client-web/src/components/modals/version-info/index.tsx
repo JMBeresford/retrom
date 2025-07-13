@@ -84,7 +84,7 @@ export function VersionInfoModal() {
         <div className="flex flex-col gap-2 sm:block text-center">
           <Label>Learn more:</Label>
           <div className="sm:contents">
-            <Button variant="link" className="text-accent-text">
+            <Button asChild variant="link" className="text-accent-text">
               <a
                 target="_blank"
                 href="https://github.com/JMBeresford/retrom/wiki/Updating#updating-the-server"
@@ -93,7 +93,7 @@ export function VersionInfoModal() {
               </a>
             </Button>
 
-            <Button variant="link" className="text-accent-text">
+            <Button asChild variant="link" className="text-accent-text">
               <a
                 target="_blank"
                 href="https://github.com/JMBeresford/retrom/wiki/Updating#updating-the-client"

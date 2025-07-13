@@ -1,0 +1,2 @@
+@custom-variant focus-hover
+  (&: is(: focus, : hover));
