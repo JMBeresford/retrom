@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { FormControl, FormItem, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Button } from "@retrom/ui/components/button";
+import { FormControl, FormItem, FormLabel } from "@retrom/ui/components/form";
+import { Input } from "@retrom/ui/components/input";
 import {
   TooltipProvider,
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+} from "@retrom/ui/components/tooltip";
+import { cn } from "@retrom/ui/lib/utils";
 import { useModalAction } from "@/providers/modal-action";
 import { FolderOpen } from "lucide-react";
 import { useCallback } from "react";
@@ -15,7 +15,7 @@ import {
   ControllerFieldState,
   ControllerRenderProps,
   FieldValues,
-} from "react-hook-form";
+} from "@retrom/ui/components/form";
 
 export function BrowseButton<T extends FieldValues>(props: {
   field: ControllerRenderProps<T>;

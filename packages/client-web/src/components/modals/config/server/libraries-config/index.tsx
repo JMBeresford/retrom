@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
-import { Form, FormField } from "@/components/ui/form";
+import { Button } from "@retrom/ui/components/button";
+import { DialogFooter } from "@retrom/ui/components/dialog";
+import { Form, FormField } from "@retrom/ui/components/form";
 import {
   Table,
   TableBody,
@@ -8,8 +8,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { TabsContent } from "@/components/ui/tabs";
+} from "@retrom/ui/components/table";
+import { TabsContent } from "@retrom/ui/components/tabs";
 import {
   ContentDirectorySchema,
   ServerConfig,
@@ -20,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { Plus, Trash, Undo } from "lucide-react";
 import { useCallback } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "@retrom/ui/components/form";
 import { z } from "zod";
 import { BrowseButton } from "./browse";
 import { IgnorePatternsInput, IgnorePatternsTooltip } from "./ignore-patterns";

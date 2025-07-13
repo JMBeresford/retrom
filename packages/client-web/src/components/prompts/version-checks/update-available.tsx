@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@retrom/ui/components/button";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { useEffect } from "react";
 import { useUpdateCheck } from "@/queries/useUpdateCheck";
 import { useClientVersion } from "@/queries/useClientVersion";
-import { ToastAction } from "@/components/ui/toast";
+import { ToastAction } from "@retrom/ui/components/toast";
 import { useNavigate } from "@tanstack/react-router";
 
 export function UpdateAvailable() {

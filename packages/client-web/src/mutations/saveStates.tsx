@@ -1,5 +1,5 @@
-import { Progress } from "@/components/ui/progress";
-import { toast } from "@/components/ui/use-toast";
+import { Progress } from "@retrom/ui/components/progress";
+import { toast } from "@retrom/ui/hooks/use-toast";
 import { useRetromClient } from "@/providers/retrom-client";
 import { RawMessage } from "@/utils/protos";
 import {

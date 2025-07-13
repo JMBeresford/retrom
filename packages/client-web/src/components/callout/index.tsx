@@ -1,8 +1,8 @@
-import { cn } from "@/lib/utils";
-import { ReactNode } from "react";
-import { Separator } from "../ui/separator";
-import { InfoIcon, LucideProps, CircleAlertIcon } from "lucide-react";
+import { cn } from "@retrom/ui/lib/utils";
 import { cva, VariantProps } from "class-variance-authority";
+import { ReactNode } from "react";
+import { Separator } from "@retrom/ui/components/separator";
+import { InfoIcon, LucideProps, CircleAlertIcon } from "lucide-react";
 
 export type CalloutProps = {
   title?: string;

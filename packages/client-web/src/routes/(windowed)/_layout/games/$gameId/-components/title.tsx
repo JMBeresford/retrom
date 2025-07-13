@@ -1,4 +1,5 @@
-import { cn, getFileStub } from "@/lib/utils";
+import { getFileStub } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
 
 export function Title() {

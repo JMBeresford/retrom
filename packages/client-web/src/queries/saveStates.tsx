@@ -5,8 +5,8 @@ import {
   GetSaveStatesResponseSchema,
   StatSaveStatesRequest,
 } from "@retrom/codegen/retrom/services/saves-service_pb";
-import { toast } from "@/components/ui/use-toast";
-import { Progress } from "@/components/ui/progress";
+import { toast } from "@retrom/ui/hooks/use-toast";
+import { Progress } from "@retrom/ui/components/progress";
 import { RawMessage } from "@/utils/protos";
 import { create } from "@bufbuild/protobuf";
 

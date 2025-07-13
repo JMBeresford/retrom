@@ -1,11 +1,11 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@retrom/ui/components/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@retrom/ui/components/tabs";
 import { Route as RootRoute } from "@/routes/__root";
 import { useNavigate } from "@tanstack/react-router";
 import { ServerConfigTab } from "./server";

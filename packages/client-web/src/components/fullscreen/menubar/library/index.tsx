@@ -8,16 +8,16 @@ import {
   SheetOverlay,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@retrom/ui/components/sheet";
 import { MenuEntryButton } from "../menu-entry-button";
 import { useState } from "react";
 import { HotkeyButton } from "../../hotkey-button";
-import { UpdateLibrary } from "./update-libary";
+import { UpdateLibrary } from "./update-library";
 import { DownloadMetadata } from "./download-metadata";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { FocusContainer } from "../../focus-container";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
+import { Separator } from "@retrom/ui/components/separator";
 
 export function Library(props: JSX.IntrinsicElements["button"]) {
   const [open, setOpen] = useState(false);

@@ -4,7 +4,7 @@ import { ConfigProvider } from "../providers/config";
 import { RetromClientProvider } from "../providers/retrom-client";
 import { QueryClientProvider } from "../providers/query-client";
 import { Prompts } from "../components/prompts";
-import { Toaster } from "../components/ui/toaster";
+import { Toaster } from "@retrom/ui/components/toaster";
 import { z } from "zod";
 import { InputDeviceProvider } from "@/providers/input-device";
 import { serverConfigTabSchema } from "@/components/modals/config/server";

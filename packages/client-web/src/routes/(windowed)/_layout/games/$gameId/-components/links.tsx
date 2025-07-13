@@ -1,6 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@retrom/ui/components/card";
+import { cn } from "@retrom/ui/lib/utils";
+import { ScrollArea, ScrollBar } from "@retrom/ui/components/scroll-area";
 import { ExternalLinkIcon } from "lucide-react";
 import { useGameDetail } from "@/providers/game-details";
 import { useMemo } from "react";

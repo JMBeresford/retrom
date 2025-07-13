@@ -7,7 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@retrom/ui/components/sheet";
 import { UninstallGameAction } from "./uninstall-game";
 import { DeleteGameAction } from "./delete-game";
 import { HotkeyButton } from "../hotkey-button";
@@ -15,8 +15,8 @@ import { useState } from "react";
 import { useHotkeys } from "@/providers/hotkeys";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { FocusContainer, useFocusable } from "../focus-container";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "@retrom/ui/components/button";
+import { cn } from "@retrom/ui/lib/utils";
 import { EllipsisVerticalIcon } from "lucide-react";
 import { DesktopOnly } from "@/lib/env";
 

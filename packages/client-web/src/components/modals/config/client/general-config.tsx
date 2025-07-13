@@ -1,25 +1,26 @@
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@retrom/ui/components/button";
+import { Checkbox } from "@retrom/ui/components/checkbox";
+import { DialogFooter } from "@retrom/ui/components/dialog";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { TabsContent } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+} from "@retrom/ui/components/form";
+import { Input } from "@retrom/ui/components/input";
+import { TabsContent } from "@retrom/ui/components/tabs";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { checkIsDesktop } from "@/lib/env";
-import { cn, InferSchema } from "@/lib/utils";
+import { InferSchema } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useConfigStore } from "@/providers/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { open } from "@tauri-apps/plugin-dialog";
 import { FolderOpenIcon } from "lucide-react";
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "@retrom/ui/components/form";
 import { migrateInstallationDir } from "@retrom/plugin-installer";
 import { z } from "zod";
 import { RetromClientConfig } from "@retrom/codegen/retrom/client/client-config_pb";

@@ -1,8 +1,8 @@
 import { CircleAlertIcon, LoaderCircleIcon } from "lucide-react";
 import { ProfileList } from "./profile-list";
-import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Accordion } from "@/components/ui/accordion";
+import { Button } from "@retrom/ui/components/button";
+import { ScrollArea, ScrollBar } from "@retrom/ui/components/scroll-area";
+import { Accordion } from "@retrom/ui/components/accordion";
 import {
   Dialog,
   DialogClose,
@@ -11,7 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@retrom/ui/components/dialog";
 import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
 import { useEmulators } from "@/queries/useEmulators";
 import { useNavigate } from "@tanstack/react-router";

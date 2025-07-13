@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { usePlayGame } from "@/mutations/usePlayGame";
 import { usePlayStatusQuery } from "@/queries/usePlayStatus";
 import { PlayStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
@@ -7,7 +7,7 @@ import { ComponentProps, ForwardedRef, forwardRef, useCallback } from "react";
 import { LoaderCircleIcon, PlayIcon, PlusIcon, Square } from "lucide-react";
 import { useGameDetail } from "@/providers/game-details";
 import { useMatch, useNavigate } from "@tanstack/react-router";
-import { useToast } from "../ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 
 export const PlayGameButton = forwardRef(
   (

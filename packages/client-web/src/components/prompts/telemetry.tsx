@@ -1,7 +1,7 @@
 import { configStore, useConfig } from "@/providers/config";
 import { useCallback, useLayoutEffect } from "react";
-import { toast } from "../ui/use-toast";
-import { Button } from "../ui/button";
+import { toast } from "@retrom/ui/hooks/use-toast";
+import { Button } from "@retrom/ui/components/button";
 import { useUpdateServerConfig } from "@/mutations/useUpdateServerConfig";
 import { useServerConfig } from "@/queries/useServerConfig";
 import { create } from "@bufbuild/protobuf";

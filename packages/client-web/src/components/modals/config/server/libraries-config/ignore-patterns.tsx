@@ -1,21 +1,24 @@
-import { Button } from "@/components/ui/button";
-import { FormControl, FormItem, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Button } from "@retrom/ui/components/button";
+import { FormControl, FormItem, FormLabel } from "@retrom/ui/components/form";
+import { Input } from "@retrom/ui/components/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
+} from "@retrom/ui/components/popover";
+import { Separator } from "@retrom/ui/components/separator";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@retrom/ui/components/tooltip";
 import { Info, X } from "lucide-react";
 import { CSSProperties, useCallback, useRef } from "react";
-import { ControllerFieldState, ControllerRenderProps } from "react-hook-form";
+import {
+  ControllerFieldState,
+  ControllerRenderProps,
+} from "@retrom/ui/components/form";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import theme from "react-syntax-highlighter/dist/esm/styles/prism/nord";
 import { LibrariesSchema } from ".";

@@ -3,22 +3,22 @@ import {
   PopoverClose,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@retrom/ui/components/popover";
 import {
   ControllerFieldState,
   ControllerRenderProps,
   useWatch,
-} from "react-hook-form";
+} from "@retrom/ui/components/form";
 import { LibrariesSchema } from ".";
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { Settings2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { FormControl, FormItem, FormMessage } from "@/components/ui/form";
+import { Input } from "@retrom/ui/components/input";
+import { FormControl, FormItem, FormMessage } from "@retrom/ui/components/form";
 import { z } from "zod";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useLayoutEffect, useMemo } from "react";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@retrom/ui/components/separator";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 
 export function CustomLibraryDefinitionInput<

@@ -3,8 +3,9 @@ import {
   useFocusable,
 } from "@/components/fullscreen/focus-container";
 import { Scene } from "@/components/fullscreen/scene";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn, getFileStub } from "@/lib/utils";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
+import { getFileStub } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { GameDetailProvider, useGameDetail } from "@/providers/game-details";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import {
@@ -23,7 +24,7 @@ import { DownloadGameButton } from "@/components/action-button/download-game-but
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
 import { PlayGameButton } from "@/components/action-button/play-game-button";
 import { InstallGameButton } from "@/components/action-button/install-game-button";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@retrom/ui/components/button";
 import { Name } from "./-components/name";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 import { Emulator_OperatingSystem } from "@retrom/codegen/retrom/models/emulators_pb";

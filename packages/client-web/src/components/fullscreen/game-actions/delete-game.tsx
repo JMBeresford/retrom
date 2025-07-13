@@ -7,19 +7,19 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@retrom/ui/components/sheet";
 import { MenuEntryButton } from "../menubar/menu-entry-button";
 import { HotkeyButton } from "../hotkey-button";
 import { useCallback, useState } from "react";
 import { ConfigCheckbox } from "../menubar/config-inputs/checkbox";
-import { CheckedState } from "@radix-ui/react-checkbox";
 import { useDeleteGames } from "@/mutations/useDeleteGames";
 import { useGameDetail } from "@/providers/game-details";
 import { useNavigate } from "@tanstack/react-router";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { FocusContainer } from "../focus-container";
 import { Info } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
+import { CheckedState } from "@retrom/ui/components/checkbox";
 
 declare global {
   export interface HotkeyZones {

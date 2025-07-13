@@ -1,5 +1,5 @@
 import { MenuRoot, MenuItem, canRender, MenuItemGroup } from ".";
-import { Separator } from "../ui/separator";
+import { Separator } from "@retrom/ui/components/separator";
 import {
   Sheet,
   SheetClose,
@@ -10,13 +10,13 @@ import {
   SheetPortal,
   SheetTitle,
   SheetTrigger,
-} from "../ui/sheet";
-import { getPanelElement } from "react-resizable-panels";
+} from "@retrom/ui/components/sheet";
 import { useNavigate } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
-import { Button } from "../ui/button";
+import { cn } from "@retrom/ui/lib/utils";
+import { Button } from "@retrom/ui/components/button";
 import { Route as RootRoute } from "@/routes/__root";
 import { ArrowLeft, Ellipsis, X } from "lucide-react";
+import { getPanelElement } from "@retrom/ui/components/resizable";
 
 function MobileMainMenuItem(props: { item: MenuItem; lastInGroup?: boolean }) {
   const { item, lastInGroup } = props;

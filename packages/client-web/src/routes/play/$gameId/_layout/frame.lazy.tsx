@@ -1,6 +1,6 @@
 import { FocusContainer } from "@/components/fullscreen/focus-container";
 import { HotkeyButton } from "@/components/fullscreen/hotkey-button";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { EmulatorJSProvider } from "@/providers/emulator-js";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -13,10 +13,10 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { TooltipArrow } from "@radix-ui/react-tooltip";
-import { toast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
+  TooltipArrow,
+} from "@retrom/ui/components/tooltip";
+import { toast } from "@retrom/ui/hooks/use-toast";
+import { Button } from "@retrom/ui/components/button";
 
 export type EmuJsFrameEvent =
   | "exit"

@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DialogClose, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@retrom/ui/components/button";
+import { Checkbox } from "@retrom/ui/components/checkbox";
+import { DialogClose, DialogFooter } from "@retrom/ui/components/dialog";
 import {
   Form,
   FormControl,
@@ -8,13 +8,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { TabsContent } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+} from "@retrom/ui/components/form";
+import { Input } from "@retrom/ui/components/input";
+import { Separator } from "@retrom/ui/components/separator";
+import { TabsContent } from "@retrom/ui/components/tabs";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { RetromClientConfig_Server } from "@retrom/codegen/retrom/client/client-config_pb";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useDisableStandaloneMode } from "@/mutations/useDisableStandaloneMode";
 import { useEnableStandaloneMode } from "@/mutations/useEnableStandaloneMode";
 import { configStore, useConfig, useConfigStore } from "@/providers/config";
@@ -24,7 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, LoaderCircle } from "lucide-react";
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "@retrom/ui/components/form";
 import { clearInstallationDir } from "@retrom/plugin-installer";
 import { z } from "zod";
 import { RawMessage } from "@/utils/protos";

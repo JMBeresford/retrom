@@ -1,5 +1,5 @@
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
+import { ScrollArea, ScrollBar } from "@retrom/ui/components/scroll-area";
+import { cn } from "@retrom/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Group, useGroupContext } from "@/providers/fullscreen/group-context";
 import { useEffect, useMemo, useRef } from "react";

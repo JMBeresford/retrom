@@ -1,5 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@retrom/ui/components/card";
+import { Badge } from "@retrom/ui/components/badge";
 import { useGameDetail } from "@/providers/game-details";
 
 export function Genres() {

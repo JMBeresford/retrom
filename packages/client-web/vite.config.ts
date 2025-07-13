@@ -4,8 +4,18 @@ import path from "path";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import { glslify } from "vite-plugin-glslify";
 import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
-import { readLocalCargoToml } from "./src/lib/node-utils";
 import tailwindcss from "@tailwindcss/vite";
+
+let localVersion = "0.0.0";
+try {
+  const { readLocalCargoToml } = await import("./src/lib/node-utils");
+  const cargoTomlversion = readLocalCargoToml();
+  localVersion = cargoTomlversion;
+} catch (e) {
+  if (process.env.NODE_ENV === "development") {
+    console.error("Failed to read local Cargo.toml version:", e);
+  }
+}
 
 export default defineConfig(({ mode }) => {
   process.env = {
@@ -15,16 +25,6 @@ export default defineConfig(({ mode }) => {
 
   const localServicePort = "5101";
   const localServiceHostname = "http://localhost";
-
-  let localVersion = "0.0.0";
-  try {
-    const cargoTomlversion = readLocalCargoToml();
-    localVersion = cargoTomlversion;
-  } catch (e) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Failed to read local Cargo.toml version:", e);
-    }
-  }
 
   const localServiceHost =
     process.env.VITE_RETROM_LOCAL_SERVICE_HOST ||

@@ -2,12 +2,17 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@retrom/ui/components/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@retrom/ui/components/tabs";
 import { GeneralConfig } from "./general-config";
 import { ConnectionConfig } from "./connection-config";
 import { checkIsDesktop, DesktopOnly } from "@/lib/env";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { z } from "zod";
 import { Route as RootRoute } from "@/routes/__root";
 

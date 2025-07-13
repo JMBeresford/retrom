@@ -1,7 +1,5 @@
 import { RawMessage } from "@/utils/protos";
 import { Timestamp, timestampDate } from "@bufbuild/protobuf/wkt";
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
 export type InferSchema<T extends object> = z.ZodObject<{
@@ -17,10 +15,6 @@ export type DeepRequired<T> = Required<{
     ? DeepRequired<Required<T[K]>>
     : T[K];
 }>;
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 export function toInitials(toInitialize?: string) {
   if (!toInitialize) {

@@ -2,8 +2,8 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
+} from "@retrom/ui/components/accordion";
+import { Button } from "@retrom/ui/components/button";
 import {
   Dialog,
   DialogClose,
@@ -11,7 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@retrom/ui/components/dialog";
 import {
   Emulator,
   EmulatorProfile,
@@ -25,8 +25,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+} from "@retrom/ui/components/table";
+import { Badge } from "@retrom/ui/components/badge";
 import { useDeleteEmulatorProfiles } from "@/mutations/useDeleteEmulatorProfile";
 
 type Props = {

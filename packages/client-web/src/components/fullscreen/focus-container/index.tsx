@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useInputDeviceContext } from "@/providers/input-device";
 import {
   FocusContext,

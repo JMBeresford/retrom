@@ -1,3 +1,4 @@
+import { Prettify } from "@/utils/typescript";
 import {
   createContext,
   PropsWithChildren,
@@ -9,20 +10,18 @@ import {
 
 declare global {
   namespace RetromModals {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     export interface ModalActions
-      extends Partial<Record<string, BaseModalActionProps>> {
-      unused?: BaseModalActionProps;
-    }
+      extends Record<string, BaseModalActionProps<unknown, unknown>> {}
   }
 }
 
-type ModalActionCallback<T> = T extends (args: infer U) => infer V
-  ? (args: U) => V
-  : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (...args: any[]) => any;
+type ModalActionCallback<T> = T extends (...args: infer Args) => infer Return
+  ? (...args: Args) => Return
+  : (...args: unknown[]) => unknown;
 
 export type BaseModalActionProps<Open = undefined, Close = undefined> = {
-  open: boolean;
+  open?: boolean;
   title?: string;
   description?: string;
   onOpen?: ModalActionCallback<Open>;
@@ -32,13 +31,14 @@ export type BaseModalActionProps<Open = undefined, Close = undefined> = {
 type ModalMap = {
   [K in keyof RetromModals.ModalActions]?: RetromModals.ModalActions[K];
 };
+
 export type ModalActionContext = {
   modals: ModalMap;
   setModalState: <T extends keyof RetromModals.ModalActions>(
     modal: T,
     cb:
       | RetromModals.ModalActions[T]
-      | ((prev: RetromModals.ModalActions[T]) => RetromModals.ModalActions[T]),
+      | ((prev?: RetromModals.ModalActions[T]) => RetromModals.ModalActions[T]),
   ) => void;
 };
 
@@ -78,14 +78,14 @@ export function useModalAction<T extends keyof RetromModals.ModalActions>(
   const { modals, setModalState } = modalContext;
 
   const openModal = useCallback(
-    (props: RetromModals.ModalActions[T] & { open?: never }) => {
+    (props: Prettify<Omit<RetromModals.ModalActions[T], "open">>) => {
       setModalState(modal, (prev) => ({ ...prev, ...props, open: true }));
     },
     [modal, setModalState],
   );
 
   const closeModal = useCallback(
-    (props?: RetromModals.ModalActions[T] & { open?: never }) => {
+    (props?: Prettify<Omit<RetromModals.ModalActions[T], "open">>) => {
       setModalState(modal, (prev) => ({ ...prev, ...props, open: false }));
     },
     [setModalState, modal],

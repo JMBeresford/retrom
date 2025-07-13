@@ -1,14 +1,19 @@
-import { Button } from "@/components/ui/button";
-import { DialogClose, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@retrom/ui/components/button";
+import { DialogClose, DialogFooter } from "@retrom/ui/components/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+} from "@retrom/ui/components/form";
+import { Input } from "@retrom/ui/components/input";
+import { Label } from "@retrom/ui/components/label";
 import {
   Emulator,
   LocalEmulatorConfig,
   LocalEmulatorConfigJson,
 } from "@retrom/codegen/retrom/models/emulators_pb";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useCreateLocalEmulatorConfigs } from "@/mutations/useCreateLocalEmulatorConfig";
 import { useUpdateLocalEmulatorConfig } from "@/mutations/useUpdateLocalEmulatorConfigs";
 import { useConfigStore } from "@/providers/config";
@@ -16,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { open } from "@tauri-apps/plugin-dialog";
 import { FolderOpenIcon, LoaderCircleIcon, SaveIcon } from "lucide-react";
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "@retrom/ui/components/form";
 import { z } from "zod";
 
 type ConfigSchema = z.infer<typeof configSchema>;

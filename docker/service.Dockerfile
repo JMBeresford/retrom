@@ -35,8 +35,7 @@ ENV NX_DAEMON=false
 
 RUN pnpm install --frozen-lockfile && \
   pnpm nx build retrom-client-web && \
-  pnpm deploy --filter=@retrom/client-web /web && \
-  mv /app/packages/client-web/dist /web/dist
+  pnpm deploy --legacy --filter=@retrom/client-web /web
 
 ### SERVICE BINARY
 FROM rust:slim-bookworm AS service-deps

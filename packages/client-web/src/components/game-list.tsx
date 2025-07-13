@@ -1,6 +1,7 @@
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { GameMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
-import { cn, getFileStub, Image } from "@/lib/utils";
+import { getFileStub, Image } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { ActionButton } from "../components/action-button";
 import { GameDetailProvider } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";

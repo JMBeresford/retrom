@@ -1,0 +1,14 @@
+{
+  "extends": "@retrom/configs/tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../configs/tsconfig.lib.json"
+    }
+  ]
+}

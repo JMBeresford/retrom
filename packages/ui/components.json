@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@retrom/ui/components",
+    "hooks": "@retrom/ui/hooks",
+    "lib": "@retrom/ui/lib",
+    "utils": "@retrom/ui/lib/utils",
+    "ui": "@retrom/ui/components"
+  }
+}

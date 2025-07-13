@@ -1,4 +1,5 @@
-import { cn, Image } from "@/lib/utils";
+import { Image } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import logo from "@/assets/img/LogoLong-NoBackground-ExtraSmall.png";
 import {
   MenubarContent,
@@ -11,7 +12,7 @@ import {
   MenubarSubContent,
   MenubarSubTrigger,
   MenubarTrigger,
-} from "@/components/ui/menubar";
+} from "@retrom/ui/components/menubar";
 import { libraryMenu } from "./library-menu";
 import { platformsMenu } from "./platforms-menu";
 import { emulatorsMenu } from "./emulators-menu";
@@ -23,7 +24,7 @@ import { viewMenu } from "./view-menu";
 import { ConnectivityIndicator } from "./connectivity-indicator";
 import { Menu, X } from "lucide-react";
 import { ReactNode } from "react";
-import { Button } from "../ui/button";
+import { Button } from "@retrom/ui/components/button";
 import { Route as RootRoute } from "@/routes/__root";
 import { MobileMenu } from "./mobile-menu";
 

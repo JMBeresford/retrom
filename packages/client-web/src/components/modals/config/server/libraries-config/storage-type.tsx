@@ -1,15 +1,18 @@
-import { ControllerFieldState, ControllerRenderProps } from "react-hook-form";
+import {
+  ControllerFieldState,
+  ControllerRenderProps,
+} from "@retrom/ui/components/form";
 import { LibrariesSchema } from ".";
-import { FormControl, FormItem, FormLabel } from "@/components/ui/form";
+import { FormControl, FormItem, FormLabel } from "@retrom/ui/components/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+} from "@retrom/ui/components/select";
+import { cn } from "@retrom/ui/lib/utils";
+import { Badge } from "@retrom/ui/components/badge";
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 
 export function StorageTypeSelect<

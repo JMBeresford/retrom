@@ -1,4 +1,4 @@
-import { useToast } from "../../ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import {
   Dialog,
   DialogClose,
@@ -7,10 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
-import { Button } from "../../ui/button";
+} from "@retrom/ui/components/dialog";
+import { Button } from "@retrom/ui/components/button";
 import { LoaderCircleIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useNavigate } from "@tanstack/react-router";

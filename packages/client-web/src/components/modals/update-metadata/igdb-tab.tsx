@@ -7,10 +7,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../ui/select";
+} from "@retrom/ui/components/select";
 import { useCallback, useState } from "react";
-import { Button } from "../../ui/button";
-import { useForm } from "react-hook-form";
+import { Button } from "@retrom/ui/components/button";
+import { useForm } from "@retrom/ui/components/form";
 import {
   Form,
   FormControl,
@@ -18,26 +18,30 @@ import {
   FormField,
   FormItem,
   FormLabel,
-} from "../../ui/form";
-import { Input } from "../../ui/input";
-import { useToast } from "../../ui/use-toast";
-import { Separator } from "../../ui/separator";
+} from "@retrom/ui/components/form";
+import { Input } from "@retrom/ui/components/input";
+import { useToast } from "@retrom/ui/hooks/use-toast";
+import { Separator } from "@retrom/ui/components/separator";
 import { LoaderCircleIcon } from "lucide-react";
-import { cn, getFileStub } from "@/lib/utils";
-import { DialogClose, DialogFooter } from "../../ui/dialog";
+import { getFileStub } from "@/lib/utils";
+import { cn } from "@retrom/ui/lib/utils";
+import { DialogClose, DialogFooter } from "@retrom/ui/components/dialog";
 import { useRetromClient } from "@/providers/retrom-client";
 import { useQuery } from "@tanstack/react-query";
-import { Checkbox } from "../../ui/checkbox";
+import { Checkbox } from "@retrom/ui/components/checkbox";
 import { useUpdateGameMetadata } from "@/mutations/useUpdateGameMetadata";
 import { useUpdateGames } from "@/mutations/useUpdateGames";
 import { useGameDetail } from "@/providers/game-details";
 import { useNavigate } from "@tanstack/react-router";
+import { RawMessage } from "@/utils/protos";
+import { create } from "@bufbuild/protobuf";
+import { UpdatedGameMetadataSchema } from "@retrom/codegen/retrom/models/metadata_pb";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z
   .object({
     search: z.string().max(255),
-    igdbId: z.coerce.number().optional(),
+    igdbId: z.coerce.bigint().optional(),
     restrictToCurrentPlatform: z.boolean(),
   })
   .refine((data) => data.igdbId || data.search, {
@@ -57,19 +61,20 @@ export function IgdbTab() {
   const navigate = useNavigate();
   const retromClient = useRetromClient();
 
-  const [searchRequest, setSearchRequest] =
-    useState<GetIgdbGameSearchResultsRequest>({
-      query: {
-        search: {
-          value: currentMetadata?.name ?? getFileStub(game.path),
-        },
-        gameId: game.id,
-        fields: {
-          platform: platformMetadata?.igdbId,
-          id: currentMetadata?.igdbId,
-        },
+  const [searchRequest, setSearchRequest] = useState<
+    RawMessage<GetIgdbGameSearchResultsRequest>
+  >({
+    query: {
+      search: {
+        value: currentMetadata?.name ?? getFileStub(game.path),
       },
-    });
+      gameId: game.id,
+      fields: {
+        platform: platformMetadata?.igdbId,
+        id: currentMetadata?.igdbId,
+      },
+    },
+  });
 
   const { data: matches, isPending: searchPending } = useQuery({
     enabled: !!searchRequest,
@@ -137,9 +142,11 @@ export function IgdbTab() {
       return;
     }
 
-    const match = matches.find((m) => m.igdbId?.toString() === selectedMatch);
+    const matchMessage = matches.find(
+      (m) => m.igdbId?.toString() === selectedMatch,
+    );
 
-    if (!match) {
+    if (!matchMessage) {
       toast({
         title: "Error updating metadata",
         description: "Something went wrong, please try again",
@@ -148,9 +155,13 @@ export function IgdbTab() {
       return;
     }
 
+    const { $typeName: _, ...match } = matchMessage;
+
     try {
       const res = await updateMetadata({
-        metadata: [{ ...match, gameId: game.id }],
+        metadata: [
+          create(UpdatedGameMetadataSchema, { ...match, gameId: game.id }),
+        ],
       });
 
       if (renameDirectory) {
@@ -214,11 +225,11 @@ export function IgdbTab() {
             <FormField
               control={form.control}
               name="igdbId"
-              render={({ field }) => (
+              render={({ field: { value, ...field } }) => (
                 <FormItem>
                   <FormLabel>IGDB ID</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} value={value?.toString()} />
                   </FormControl>
                 </FormItem>
               )}

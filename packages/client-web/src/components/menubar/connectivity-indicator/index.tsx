@@ -1,17 +1,17 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@retrom/ui/components/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+  PopoverProps,
+} from "@retrom/ui/components/popover";
+import { Separator } from "@retrom/ui/components/separator";
+import { cn } from "@retrom/ui/lib/utils";
 import { useConfig } from "@/providers/config";
 import {
   ConnectionStatus,
   useConnectionStatus,
 } from "@/queries/useConnectionStatus";
-import { PopoverProps } from "@radix-ui/react-popover";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { LucideProps, Server, ServerCog, ServerOff } from "lucide-react";

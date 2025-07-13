@@ -1,4 +1,4 @@
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { EmulatorJS } from "@/lib/emulatorjs/emulator";
 import {
   EJSControlConfig,

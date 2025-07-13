@@ -1,7 +1,6 @@
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { CheckboxProps } from "@radix-ui/react-checkbox";
+import { Checkbox, CheckboxProps } from "@retrom/ui/components/checkbox";
+import { Label } from "@retrom/ui/components/label";
+import { cn } from "@retrom/ui/lib/utils";
 import {
   ElementRef,
   forwardRef,

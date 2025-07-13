@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@retrom/ui/components/button";
+import { DialogFooter } from "@retrom/ui/components/dialog";
 import {
   Form,
   FormControl,
@@ -7,9 +7,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { TabsContent } from "@/components/ui/tabs";
+} from "@retrom/ui/components/form";
+import { Input } from "@retrom/ui/components/input";
+import { TabsContent } from "@retrom/ui/components/tabs";
 import {
   IGDBConfigSchema,
   ServerConfig,
@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { LoaderCircleIcon } from "lucide-react";
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "@retrom/ui/components/form";
 import { z } from "zod";
 import { RawMessage } from "@/utils/protos";
 import { create } from "@bufbuild/protobuf";

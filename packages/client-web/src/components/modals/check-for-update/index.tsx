@@ -6,26 +6,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "@retrom/ui/components/dialog";
+import { Button } from "@retrom/ui/components/button";
 import { useCallback, useState } from "react";
 import { useUpdateCheck } from "@/queries/useUpdateCheck";
 import { useClientVersion } from "@/queries/useClientVersion";
-import { Code } from "@/components/ui/code";
+import { Code } from "@retrom/ui/components/code";
 import {
   Changelog,
   isBreakingChange,
   parseVersion,
   versionToString,
 } from "@/lib/version-utils";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@retrom/ui/components/progress";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { AlertCircle, LoaderCircleIcon } from "lucide-react";
 import { Route as RootRoute } from "@/routes/__root";
 import { useNavigate } from "@tanstack/react-router";
 import { Version } from "@retrom/codegen/retrom/server/server-info_pb";
 import { Update } from "@tauri-apps/plugin-updater";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@retrom/ui/components/separator";
 
 type Progress = {
   downloaded: number;
