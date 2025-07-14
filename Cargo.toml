@@ -1,7 +1,12 @@
 [workspace]
 resolver = "2"
 members = ["./packages/*", "./plugins/*"]
-exclude = ["**/node_modules", "./packages/client-web", "./packages/ui", "./packages/configs"]
+exclude = [
+  "**/node_modules",
+  "./packages/client-web",
+  "./packages/ui",
+  "./packages/configs",
+]
 
 [workspace.package]
 edition = "2021"
