@@ -359,7 +359,6 @@ export function EmulatorList(props: {
 
                             <FormField
                               control={form.control}
-                              disabled={builtIn}
                               name={
                                 `emulators.${emulator.id}.operatingSystems` as const
                               }
@@ -370,7 +369,7 @@ export function EmulatorList(props: {
                                     <FormControl>
                                       <PopoverTrigger asChild>
                                         <Button
-                                          disabled={field.disabled}
+                                          disabled={builtIn}
                                           variant="outline"
                                           role="combobox"
                                           className={cn(
