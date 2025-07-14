@@ -69,9 +69,13 @@
     "cargo:build": {
       "dependsOn": ["^cargo:build"],
       "executor": "@monodon/rust:build",
+      "defaultConfiguration": "release",
       "configurations": {
         "release": {
           "release": true
+        },
+        "debug": {
+          "release": false
         }
       }
     }
