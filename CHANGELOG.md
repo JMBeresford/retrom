@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.29](https://github.com/JMBeresford/retrom/compare/v0.7.28...v0.7.29) - 2025-07-14
+
+### Bug Fixes
+- mapping gamepad sticks
+
+    Gamepad sticks are now mappable in web-based emulation
+
+    resolves [#338](https://github.com/JMBeresford/retrom/pull/338)
+
+
+
+- stop overwriting OS of builtin emulators
+
+
 ## [0.7.28](https://github.com/JMBeresford/retrom/compare/v0.7.27...v0.7.28) - 2025-06-30
 
 ### Newly Added
