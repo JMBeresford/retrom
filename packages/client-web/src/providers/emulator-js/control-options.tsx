@@ -46,6 +46,10 @@ export type ControlOptions = {
   keyLookup: EmulatorJS["keyLookup"];
   getKeyLabel: (key: number) => string;
   getButtonLabel: GamepadHandler["getButtonLabel"];
+  getAxisLabel: (
+    axis: number,
+    value: number,
+  ) => ReturnType<GamepadHandler["getAxisLabel"]>;
   pauseInput: () => void;
   resumeInput: () => void;
 };
@@ -192,6 +196,24 @@ export function ControlOptionsProvider(props: PropsWithChildren) {
     [emulatorJS],
   );
 
+  const getAxisLabel = useCallback(
+    (axis: number, _value: number) => {
+      const axisName = [
+        "LEFT_STICK_X",
+        "LEFT_STICK_Y",
+        "RIGHT_STICK_X",
+        "RIGHT_STICK_Y",
+      ][axis];
+
+      // EJS requires axis values have a magnitude of 0.5 for this helper
+      // method to return a label, so we multiply by 10 to include anything
+      // reasonable. Thresholds should be queried prior to this call.
+      const value = _value * 10;
+      return emulatorJS.gamepad.getAxisLabel(axisName, value);
+    },
+    [emulatorJS],
+  );
+
   const pauseInput = useCallback(() => {
     emulatorJS.gamepad.on("axischanged", () => {});
     emulatorJS.gamepad.on("buttondown", () => {});
@@ -222,6 +244,7 @@ export function ControlOptionsProvider(props: PropsWithChildren) {
       keyLookup,
       getKeyLabel,
       getButtonLabel,
+      getAxisLabel,
       pauseInput,
       resumeInput,
     }),
@@ -236,6 +259,7 @@ export function ControlOptionsProvider(props: PropsWithChildren) {
       keyLookup,
       getKeyLabel,
       getButtonLabel,
+      getAxisLabel,
       pauseInput,
       resumeInput,
     ],

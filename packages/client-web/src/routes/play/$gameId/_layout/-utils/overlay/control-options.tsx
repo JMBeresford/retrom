@@ -172,7 +172,7 @@ const RecordInput = memo(function RecordInput(props: {
   const [recording, setRecording] = useState(false);
   const { player, buttonId, gamepad } = props;
   const { gamepads } = useGamepadContext();
-  const { setBindings, keyLookup, getKeyLabel, getButtonLabel } =
+  const { setBindings, keyLookup, getKeyLabel, getButtonLabel, getAxisLabel } =
     useControlOptions();
   const bindings = usePlayerControls(player);
 
@@ -244,16 +244,23 @@ const RecordInput = memo(function RecordInput(props: {
 
       if (e instanceof GamepadButtonDownEvent) {
         const { button } = e.detail;
-        if (!e.detail.gamepad.buttons[button]?.pressed) return;
 
         const label = getButtonLabel(button);
         if (label) {
           setBinding(label);
         }
         setRecording(false);
+      } else if (e instanceof GamepadAxisActiveEvent) {
+        const { axis, value } = e.detail;
+
+        const label = getAxisLabel(axis, value);
+        if (label) {
+          setBinding(label);
+        }
+        setRecording(false);
       }
     },
-    [recording, gamepad, setBinding, getButtonLabel],
+    [recording, gamepad, setBinding, getButtonLabel, getAxisLabel],
   );
 
   useLayoutEffect(() => {
