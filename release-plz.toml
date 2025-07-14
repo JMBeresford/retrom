@@ -11,8 +11,17 @@ pr_branch_prefix = 'release/'
 pr_labels = ["release"]
 
 [[package]]
-name = "retrom"
+name = "retrom-service"
 changelog_update = true
+changelog_include = [
+  'retrom-client',
+  'retrom-plugin-installer',
+  'retrom-plugin-launcher',
+  'retrom-plugin-config',
+  'retrom-plugin-service-client',
+  'retrom-plugin-standalone',
+  'retrom-plugin-steam',
+]
 git_release_enable = true
 git_tag_enable = true
 git_release_name = "v{{ version }}"

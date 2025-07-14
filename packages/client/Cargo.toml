@@ -7,7 +7,6 @@ license.workspace = true
 edition.workspace = true
 description = "The Retrom video game library client"
 rust-version = "1.80"
-exclude = ["./node_modules", "./web/node_modules/", "./web/dist/"]
 
 [[bin]]
 name = "Retrom"

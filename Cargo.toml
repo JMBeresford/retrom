@@ -1,22 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["./packages/*", "./plugins/*"]
-exclude = ["**/node_modules", "./packages/client-web", "./packages/ui", "./packages/configs"]
-
-[package]
-name = 'retrom'
-version.workspace = true
-authors.workspace = true
-repository.workspace = true
-license.workspace = true
-edition.workspace = true
-description = "The root Retrom workspace"
-publish = false
-rust-version = "1.80"
-
-[lib]
-name = 'root'
-path = "./packages/service/src/lib.rs"
+exclude = ["./packages/client-web", "./packages/ui", "./packages/configs"]
 
 [workspace.package]
 edition = "2021"
