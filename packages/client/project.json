@@ -24,12 +24,10 @@
       "defaultConfiguration": "release",
       "configurations": {
         "release": {
-          "command": "cargo tauri build",
-          "args": ["--config", "tauri.build.conf.json"]
+          "command": "cargo tauri build --config tauri.build.conf.json"
         },
         "debug": {
-          "command": "cargo tauri build --debug",
-          "args": []
+          "command": "cargo tauri build --debug"
         }
       }
     }

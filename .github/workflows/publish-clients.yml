@@ -158,12 +158,12 @@ jobs:
       - name: build release client
         if: ${{ env.RELEASE_BUILDS == 'true' }}
         run: |
-          pnpm nx build retrom-client "$TARGET_ARG"
+          pnpm nx build retrom-client --args="$TARGET_ARG"
 
       - name: build debug client
         if: ${{ env.DEBUG_BUILDS == 'true' }}
         run: |
-          pnpm nx build retrom-client "$TARGET_ARG" --debug
+          pnpm nx build retrom-client --args="$TARGET_ARG" --configuration="debug"
 
       - name: upload artifacts to release
         if: ${{ github.event_name != 'pull_request' }}
