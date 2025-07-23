@@ -1353,6 +1353,7 @@ message ReleaseDate {
   ReleaseDateStatus status = 13;
   DateFormat date_format = 14;
   ReleaseDateRegion release_region = 15;
+  int32 d = 16;
 }
 
 message ReleaseDateRegionResult {
