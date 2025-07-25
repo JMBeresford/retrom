@@ -8,24 +8,30 @@ use warp::{
     http::{HeaderMap, HeaderValue},
     Filter,
 };
+use web::web;
 
 pub mod error;
 pub mod file;
 pub mod game;
 mod public;
+mod web;
 
 pub fn rest_service(
     pool: Arc<Pool>,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     let mut headers = HeaderMap::new();
-    headers.insert(
-        "Cross-Origin-Opener-Policy",
-        HeaderValue::from_static("same-origin"),
-    );
-    headers.insert(
-        "Cross-Origin-Embedder-Policy",
-        HeaderValue::from_static("require-corp"),
-    );
+
+    // TODO: Re-enable after solving cross-origin isolation problems:
+    // 1. impl metadata cache, served from service
+    // 2. eventual oauth / OIDC support requiring cross-origin access
+    // headers.insert(
+    //     "Cross-Origin-Opener-Policy",
+    //     HeaderValue::from_static("same-origin"),
+    // );
+    // headers.insert(
+    //     "Cross-Origin-Embedder-Policy",
+    //     HeaderValue::from_static("require-corp"),
+    // );
     headers.insert(
         "Cross-Origin-Resource-Policy",
         HeaderValue::from_static("cross-origin"),
@@ -33,7 +39,11 @@ pub fn rest_service(
 
     let headers = warp::reply::with::headers(headers);
 
-    let routes = file(pool.clone()).or(game(pool.clone())).or(public());
+    let routes = file(pool.clone())
+        .or(game(pool.clone()))
+        .or(public())
+        .or(web());
+
     let cors = warp::cors().allow_any_origin();
 
     warp::path("rest").and(routes).with(cors).with(headers)

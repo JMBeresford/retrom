@@ -4,8 +4,10 @@ const _Vars = [
   "RETROM_PORT",
   "RETROM_HOST",
   "RETROM_HOSTNAME",
+  "RETROM_LOCAL_SERVICE_HOST",
   "RETROM_VERSION",
   "UPTRACE_DSN",
+  "BASE_URL",
   "OTEL_SERVICE_NAME",
 ] as const;
 

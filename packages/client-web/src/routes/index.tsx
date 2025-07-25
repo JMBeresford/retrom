@@ -1,7 +1,7 @@
 import { Image } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import banner from "@/assets/img/LogoLong-NoBackground.png";
-import { createFileRoute, Navigate, useLocation } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useConfigStore } from "@/providers/config";
 
 export const Route = createFileRoute("/")({
@@ -28,13 +28,8 @@ function RouteComponent() {
 }
 
 function HandleLayoutRedirect() {
-  const path = useLocation().pathname;
   const fullscreenByDefault =
     useConfigStore().getState().config?.interface?.fullscreenByDefault;
-
-  if (path !== "/") {
-    return <></>;
-  }
 
   return (
     <>
