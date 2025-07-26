@@ -59,7 +59,7 @@ impl RetromDirs {
 
         if !public_dir.exists() {
             if let Err(why) = std::fs::create_dir_all(&public_dir) {
-                tracing::error!("Failed to create data directory: {}", why);
+                tracing::error!("Failed to create public directory: {}", why);
             }
         }
 
