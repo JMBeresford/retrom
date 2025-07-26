@@ -13,7 +13,7 @@ export function LegacyEntry() {
       }
 
       try {
-        const res = await fetch("./magoo");
+        const res = await fetch("./");
         for (const header of res.headers.keys()) {
           if (header.toLowerCase() === "x-retrom-legacy-entry") {
             return true;
@@ -34,6 +34,7 @@ export function LegacyEntry() {
     if (usingLegacyEntry) {
       dismiss = toast({
         title: "Using Legacy Web Entry",
+        duration: Infinity,
         description: (
           <p>
             This way of accessing the web client is deprecated and will be
@@ -43,7 +44,10 @@ export function LegacyEntry() {
         ),
         action: (
           <Button>
-            <a href="https://github.com/JMBeresford/retrom/wiki/Migration-Guides#v0730">
+            <a
+              target="_blank"
+              href="https://github.com/JMBeresford/retrom/wiki/Migration-Guides#v0730"
+            >
               Read more
             </a>
           </Button>

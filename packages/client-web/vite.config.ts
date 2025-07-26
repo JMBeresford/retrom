@@ -55,11 +55,6 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: "0.0.0.0",
-      headers: {
-        "access-control-allow-headers": "x-retrom-legacy-entry",
-        "access-control-expose-headers": "x-retrom-legacy-entry",
-        "x-retrom-legacy-entry": "true",
-      },
       proxy: {
         "/v1/traces": {
           target: localTracesEndpoint,
@@ -71,29 +66,21 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: "0.0.0.0",
       allowedHosts: true,
-      headers: {
-        "x-retrom-legacy-entry": "true",
-      },
       proxy: {
-        "/api": {
-          target: localServiceHost,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ""),
-        },
         "^/rest/web/.*": {
-          target: localServiceHost ? new URL(localServiceHost) : "/",
-          changeOrigin: true,
-        },
-        "^.*": {
-          target: localServiceHost ? new URL(localServiceHost) : "/",
-          changeOrigin: true,
+          target: localServiceHost || "/",
           bypass: (_req, res) => {
             res.setHeader("x-retrom-legacy-entry", "true");
           },
-          headers: {
-            "access-control-request-headers": "x-retrom-legacy-entry",
-            "x-retrom-legacy-entry": "true",
-          },
+          changeOrigin: true,
+        },
+        "^/retrom.*": {
+          target: localServiceHost || "/",
+          changeOrigin: true,
+        },
+        "^/.*": {
+          target: localServiceHost || "/",
+          changeOrigin: true,
           rewrite: (path) => `/rest/web/${path.replace(/^\//, "")}`,
         },
       },

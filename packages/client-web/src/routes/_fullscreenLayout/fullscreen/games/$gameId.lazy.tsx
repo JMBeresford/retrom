@@ -99,7 +99,7 @@ function Inner() {
               <div className="relative h-[75dvh] row-start-1 row-end-3 -z-[1] overflow-hidden">
                 <CatchBoundary
                   getResetKey={() => "resetBg"}
-                  onCatch={(error) => console.error("MAGOO", error)}
+                  onCatch={(error) => console.error(error)}
                   errorComponent={() => (
                     <div className="absolute inset-0 grid place-items-center">
                       <img src={url} className=""></img>
