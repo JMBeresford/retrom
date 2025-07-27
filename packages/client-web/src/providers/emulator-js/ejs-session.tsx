@@ -94,7 +94,6 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
     const save = extractSave();
 
     if (save) {
-      console.log("Uploading save file:", save);
       return updateSave({
         saveFilesSelectors: [
           { files: [save], gameId: game.id, emulatorId: emulator?.id },
@@ -115,8 +114,6 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
     (saveFiles: SaveFiles) => {
       const { files } = saveFiles;
 
-      console.log("Loading save files:", files);
-
       const gameManager = emulatorJS.gameManager;
       if (!gameManager) {
         console.warn("No game manager found, is the emulator running?");
@@ -130,7 +127,6 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
         }
 
         const { path } = stat;
-        console.log("Loading save file:", path);
 
         const parts = path.split("/").slice(1, -1);
         let dir = "";
@@ -200,7 +196,6 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
   );
 
   useLayoutEffect(() => {
-    console.log({ remoteSaveFiles });
     if (!emulatorJS.retromStarted && remoteSaveFiles !== undefined) {
       emulatorJS.retromStarted = true;
       loadSaveFiles(remoteSaveFiles);
