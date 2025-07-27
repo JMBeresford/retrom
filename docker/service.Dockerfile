@@ -30,7 +30,7 @@ COPY --from=project /app /app
 WORKDIR /app
 
 ENV UPTRACE_DSN=https://KgFBXOxX2RFeJurwr7R-4w@api.uptrace.dev?grpc=4317
-ENV VITE_BASE_URL=/rest/web
+ENV VITE_BASE_URL=/web
 ENV VITE_UPTRACE_DSN=${UPTRACE_DSN}
 ENV NX_DAEMON=false
 

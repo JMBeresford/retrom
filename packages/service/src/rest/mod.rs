@@ -39,14 +39,13 @@ pub fn rest_service(
 
     let headers = warp::reply::with::headers(headers);
 
-    let routes = file(pool.clone())
-        .or(game(pool.clone()))
-        .or(public())
+    let routes = warp::path("rest")
+        .and(file(pool.clone()).or(game(pool.clone())).or(public()))
         .or(web());
 
     let cors = warp::cors().allow_any_origin();
 
-    warp::path("rest").and(routes).with(cors).with(headers)
+    routes.with(cors).with(headers)
 }
 
 pub fn with_db_pool(

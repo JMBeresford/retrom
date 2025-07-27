@@ -67,7 +67,7 @@ export default defineConfig(({ mode }) => {
       host: "0.0.0.0",
       allowedHosts: true,
       proxy: {
-        "^/rest/web/.*": {
+        "^/web/.*": {
           target: localServiceHost || "/",
           bypass: (_req, res) => {
             res.setHeader("x-retrom-legacy-entry", "true");
@@ -81,7 +81,7 @@ export default defineConfig(({ mode }) => {
         "^/.*": {
           target: localServiceHost || "/",
           changeOrigin: true,
-          rewrite: (path) => `/rest/web/${path.replace(/^\//, "")}`,
+          rewrite: (path) => `/web/${path.replace(/^\//, "")}`,
         },
       },
     },
