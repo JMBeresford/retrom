@@ -82,7 +82,7 @@ export const MenuEntryButton = forwardRef<HTMLButtonElement, Props>(
             "focus-hover:before:bg-accent focus-hover:before:w-1",
             "data-[state=active]:before:w-1",
             "data-[state=active]:text-accent-text",
-            label && "flex flex-col items-start",
+            label && "flex flex-col items-start sm:py-2",
             className,
           )}
         >

@@ -5,6 +5,7 @@ import { OverlayMenuItem } from "..";
 
 export const gameOptions: OverlayMenuItem = {
   label: "Game Options",
+  labelSub: "Gameplay and save related options",
   items: [
     { label: "Gameplay Options", groupItems: [playPause, restartGame] },
     { label: "Save States", groupItems: [saveStateList, loadStateList] },

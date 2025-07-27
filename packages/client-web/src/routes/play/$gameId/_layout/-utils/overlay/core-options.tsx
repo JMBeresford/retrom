@@ -11,6 +11,7 @@ import { OverlayMenuItem } from ".";
 
 export const coreOptions: OverlayMenuItem = {
   label: "Core Options",
+  labelSub: "Configure the current emulator core",
   items: [{ Render: CoreOptions }],
 };
 

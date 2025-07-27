@@ -6,6 +6,7 @@ import { OverlayMenuItem } from ".";
 
 export const emulationOptions: OverlayMenuItem = {
   label: "Emulation Options",
+  labelSub: "Options related to emulation, e.g. speed and audio",
   items: [{ Render: EmulationOptions }],
 };
 
@@ -18,7 +19,7 @@ export function EmulationOptions() {
   const emulatorJS = useEmulatorJS();
   const [volume, setVolume] = useState(Math.floor(emulatorJS.volume * 100));
   const [fastForward, _setFastForward] = useState(emulatorJS.isFastForward);
-  const [ffRatio, setFFRatio] = useState(
+  const [ffRatio, _setFFRatio] = useState(
     emulatorJS.settings["ff-ratio"] ?? "3.0",
   );
 
@@ -44,6 +45,19 @@ export function EmulationOptions() {
       // emulatorJS.menuOptionChanged(key, value);
     },
     [emulatorJS],
+  );
+
+  const setFFRatio = useCallback(
+    (value: string | number) => {
+      const ratio = Number(value);
+      if (isNaN(ratio) || ratio <= 1) {
+        return;
+      }
+
+      setSetting("ff-ratio", String(ratio));
+      _setFFRatio(String(ratio));
+    },
+    [setSetting],
   );
 
   const setFastForward = useCallback(
@@ -93,7 +107,6 @@ export function EmulationOptions() {
         onChange={(e) => {
           if (typeof e === "number" || typeof e === "string") {
             setFFRatio(e);
-            setSetting("ff-ratio", e);
           }
         }}
         min={1.25}
