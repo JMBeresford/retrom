@@ -67,7 +67,7 @@ function GamepadHotkeysRender() {
         >
           <div className="border-r px-4 flex items-center">
             <p className="text-sm text-muted-foreground font-medium">
-              {toTitleCase(hotkey.replace("_", " "))}:
+              {toTitleCase(hotkey.replace("_", " "))}
             </p>
           </div>
 
@@ -96,10 +96,12 @@ const RecordInput = function RecordInput(props: {
   const connectedGamepad = gamepads?.at(0);
 
   const value = gamepad
-    ? getButtonMapValue(
-        hotkeyToGamepadButton[hotkey],
-        connectedGamepad?.controllerType,
-      )
+    ? connectedGamepad
+      ? getButtonMapValue(
+          hotkeyToGamepadButton[hotkey],
+          connectedGamepad?.controllerType,
+        )
+      : ""
     : hotkeyToKeyboard[hotkey];
 
   const setBinding = useCallback(
@@ -218,7 +220,7 @@ const RecordInput = function RecordInput(props: {
         recording && "text-accent-text text-sm italic animate-pulse",
       )}
     >
-      {recording ? "recording..." : (value ?? "-")}
+      {recording ? "recording..." : value || "-"}
     </MenuEntryButton>
   );
 };

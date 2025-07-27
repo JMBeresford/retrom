@@ -116,7 +116,7 @@ function PlayerBindings(props: { player: Player }) {
   return (
     <div
       className={cn(
-        "grid grid-cols-[min-content_1fr_1fr] auto-rows-fr w-fit h-full",
+        "grid grid-cols-[min-content_1fr_1fr] auto-rows-fr w-full h-full",
       )}
     >
       <div
@@ -183,13 +183,13 @@ const RecordInput = memo(function RecordInput(props: {
     const values = bindings[buttonId];
 
     if (gamepad) {
-      return values?.value2 ?? "";
+      return connectedGamepad ? (values?.value2 ?? "") : "";
     }
 
     return values?.value !== undefined
       ? getKeyLabel(values.value).toString()
       : "";
-  }, [bindings, buttonId, gamepad, getKeyLabel]);
+  }, [bindings, buttonId, gamepad, getKeyLabel, connectedGamepad]);
 
   const setBinding = useCallback(
     (value: string) => {
