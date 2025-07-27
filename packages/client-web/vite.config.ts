@@ -23,13 +23,10 @@ export default defineConfig(({ mode }) => {
     ...loadEnv(mode, process.cwd()),
   };
 
-  const localServicePort = "5101";
-  const localServiceHostname = "http://localhost";
-
   const localServiceHost =
     process.env.VITE_RETROM_LOCAL_SERVICE_HOST ||
     process.env.RETROM_LOCAL_SERVICE_HOST ||
-    `${localServiceHostname}:${localServicePort}`;
+    "";
 
   const localTracesEndpoint =
     process.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT ||
@@ -43,25 +40,22 @@ export default defineConfig(({ mode }) => {
     console.log("Using desktop environment configuration");
   }
 
+  const baseUrl = process.env.VITE_BASE_URL || "/";
+
   // https://vitejs.dev/config/
   return {
     define: {
+      "import.meta.env.VITE_BASE_URL": JSON.stringify(baseUrl),
       "import.meta.env.VITE_UPTRACE_DSN": JSON.stringify(uptraceDsn),
       "import.meta.env.VITE_RETROM_VERSION": JSON.stringify(localVersion),
       "import.meta.env.VITE_RETROM_LOCAL_SERVICE_HOST":
         JSON.stringify(localServiceHost),
-      "import.meta.env.VITE_RETROM_LOCAL_SERVICE_PORT":
-        JSON.stringify(localServicePort),
     },
+    base: baseUrl,
     server: {
       port: 3000,
       host: "0.0.0.0",
       proxy: {
-        "/api": {
-          target: localServiceHost,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ""),
-        },
         "/v1/traces": {
           target: localTracesEndpoint,
           changeOrigin: true,
@@ -73,10 +67,21 @@ export default defineConfig(({ mode }) => {
       host: "0.0.0.0",
       allowedHosts: true,
       proxy: {
-        "/api": {
-          target: localServiceHost,
+        "^/rest/web/.*": {
+          target: localServiceHost || "/",
+          bypass: (_req, res) => {
+            res.setHeader("x-retrom-legacy-entry", "true");
+          },
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ""),
+        },
+        "^/retrom.*": {
+          target: localServiceHost || "/",
+          changeOrigin: true,
+        },
+        "^/.*": {
+          target: localServiceHost || "/",
+          changeOrigin: true,
+          rewrite: (path) => `/rest/web/${path.replace(/^\//, "")}`,
         },
       },
     },

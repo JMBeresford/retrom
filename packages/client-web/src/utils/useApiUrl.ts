@@ -7,7 +7,8 @@ export function useApiUrl() {
 
   return useMemo(() => {
     if (!checkIsDesktop()) {
-      const url = new URL("/api/", window.location.href);
+      const host = import.meta.env.VITE_RETROM_LOCAL_SERVICE_HOST;
+      const url = host ? new URL(host) : new URL("/", window.location.href);
       return url;
     }
 

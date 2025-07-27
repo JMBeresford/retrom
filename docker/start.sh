@@ -9,7 +9,7 @@ trap 'on_error $LINENO' ERR
 
 # Start the web server
 cd /app/web
-pnpm vite preview &
+VITE_RETROM_LOCAL_SERVICE_HOST=http://localhost:5101 pnpm vite preview &
 
 # Start the API server
 cd /app
