@@ -9,12 +9,7 @@ import {
 } from "react";
 
 type RetromInputDevice = (typeof RetromInputDevice)[number];
-const RetromInputDevice = [
-  "keyboard-mouse",
-  "gamepad",
-  "hotkeys",
-  "touch",
-] as const;
+const RetromInputDevice = ["gamepad", "hotkeys", "touch"] as const;
 
 type InputDeviceContext = Readonly<
   [RetromInputDevice, Dispatch<SetStateAction<RetromInputDevice>>]
@@ -23,8 +18,7 @@ type InputDeviceContext = Readonly<
 const context = createContext<InputDeviceContext | undefined>(undefined);
 
 export function InputDeviceProvider(props: { children: React.ReactNode }) {
-  const [inputDevice, setInputDevice] =
-    useState<RetromInputDevice>("keyboard-mouse");
+  const [inputDevice, setInputDevice] = useState<RetromInputDevice>("hotkeys");
 
   useEffect(() => {
     function handler() {

@@ -187,7 +187,10 @@ export function HotkeyLayer(props: HotkeyLayerProps) {
       const zoneActive = isZoneActive(zone);
 
       if (handler && zoneActive) {
-        if (event instanceof GamepadButtonDownEvent || GamepadAxisActiveEvent) {
+        if (
+          event instanceof GamepadButtonDownEvent ||
+          event instanceof GamepadAxisActiveEvent
+        ) {
           setInputDevice("gamepad");
         } else {
           setInputDevice("hotkeys");
