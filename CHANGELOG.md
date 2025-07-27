@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.30](https://github.com/JMBeresford/retrom/compare/v0.7.29...v0.7.30) - 2025-07-27
+
+### Newly Added
+- serve web client directly from service ([#356](https://github.com/JMBeresford/retrom/pull/356))
+
+    The web client is now served directly by the main Retrom service. This means that the web client can now be accessed under the same port that the service listens on. This also sets the Retrom service up for distribution methods other than docker. Keep your eyes open for native binaries for Windows / MacOS / Linux in the future!
+
+
+
+
 ## [0.7.29](https://github.com/JMBeresford/retrom/compare/v0.7.28...v0.7.29) - 2025-07-14
 
 ### Bug Fixes
