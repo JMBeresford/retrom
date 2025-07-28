@@ -57,9 +57,10 @@ jobs:
       - name: check NX cloud access
         id: nx-check
         continue-on-error: true
-        run: pnpm nx login
+        run: pnpm nx noop
 
       - name: disable NX cloud
+        if: steps.nx-check.outcome != 'success'
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
       - name: check NX workspace sync status

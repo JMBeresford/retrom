@@ -1,6 +1,16 @@
 {
   "name": "retrom",
   "type": "module",
+  "nx": {
+    "targets": {
+      "noop": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm --version"
+        }
+      }
+    }
+  },
   "devDependencies": {
     "@monodon/rust": "^2.3.0",
     "@nx/eslint": "21.2.1",
