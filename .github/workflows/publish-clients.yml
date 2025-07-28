@@ -157,8 +157,12 @@ jobs:
         continue-on-error: true
         run: pnpm nx noop
 
-      - name: disable NX cloud
-        if: steps.nx-check.outcome != 'success'
+      - name: disable NX cloud (non-Windows)
+        if: steps.nx-check.outcome != 'success' && matrix.platform != 'windows-latest'
+        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+
+      - name: disable NX cloud (Windows)
+        if: steps.nx-check.outcome != 'success' && matrix.platform == 'windows-latest'
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
 
       - name: install tauri cli
