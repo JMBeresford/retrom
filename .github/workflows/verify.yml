@@ -51,9 +51,6 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: run tests
-        run: cargo test
-
       - name: check NX cloud access
         id: nx-check
         continue-on-error: true
@@ -62,6 +59,9 @@ jobs:
       - name: disable NX cloud
         if: steps.nx-check.outcome != 'success'
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+
+      - name: run tests
+        run: cargo test
 
       - name: check NX workspace sync status
         run: pnpm nx sync:check
