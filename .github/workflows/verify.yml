@@ -54,6 +54,14 @@ jobs:
       - name: run tests
         run: cargo test
 
+      - name: check NX cloud access
+        id: nx-check
+        continue-on-error: true
+        run: pnpm nx login
+
+      - name: disable NX cloud
+        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+
       - name: check NX workspace sync status
         run: pnpm nx sync:check
 
