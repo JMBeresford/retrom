@@ -163,7 +163,7 @@ jobs:
 
       - name: disable NX cloud (Windows)
         if: steps.nx-check.outcome != 'success' && matrix.platform == 'windows-latest'
-        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+        run: echo "NX_NO_CLOUD=true" >> $env:GITHUB_ENV
 
       - name: install tauri cli
         run: cargo install tauri-cli --version "^2.0.0" --locked
