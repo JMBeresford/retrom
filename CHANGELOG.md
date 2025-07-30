@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.31](https://github.com/JMBeresford/retrom/compare/v0.7.30...v0.7.31) - 2025-07-30
+
+### Bug Fixes
+- controller binding menu tweaks
+
+    The menu UI for binding in-game controls has been
+    tweaked for better visual clarity
+
+
+
+
 ## [0.7.30](https://github.com/JMBeresford/retrom/compare/v0.7.29...v0.7.30) - 2025-07-27
 
 ### Newly Added

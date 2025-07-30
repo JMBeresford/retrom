@@ -5,7 +5,7 @@ exclude = ["./packages/client-web", "./packages/ui", "./packages/configs"]
 
 [workspace.package]
 edition = "2021"
-version = "0.7.30"
+version = "0.7.31"
 authors = ["John Beresford <jberesford@volcaus.com>"]
 license = "GPL-3.0"
 readme = "./README.md"
@@ -44,15 +44,15 @@ tracing-subscriber = { version = "0.3.18", features = [
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-util = { version = "0.7.11", features = ["io", "compat"] }
 dotenvy = "0.15.7"
-retrom-db = { path = "./packages/db", version = "^0.7.30" }
-retrom-service = { path = "./packages/service", version = "^0.7.30" }
-retrom-codegen = { path = "./packages/codegen", version = "^0.7.30" }
-retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "^0.7.30" }
-retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "^0.7.30" }
-retrom-plugin-service-client = { path = "./plugins/retrom-plugin-service-client", version = "^0.7.30" }
-retrom-plugin-steam = { path = "./plugins/retrom-plugin-steam", version = "^0.7.30" }
-retrom-plugin-config = { path = "./plugins/retrom-plugin-config", version = "^0.7.30" }
-retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone", version = "^0.7.30" }
+retrom-db = { path = "./packages/db", version = "^0.7.31" }
+retrom-service = { path = "./packages/service", version = "^0.7.31" }
+retrom-codegen = { path = "./packages/codegen", version = "^0.7.31" }
+retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "^0.7.31" }
+retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "^0.7.31" }
+retrom-plugin-service-client = { path = "./plugins/retrom-plugin-service-client", version = "^0.7.31" }
+retrom-plugin-steam = { path = "./plugins/retrom-plugin-steam", version = "^0.7.31" }
+retrom-plugin-config = { path = "./plugins/retrom-plugin-config", version = "^0.7.31" }
+retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone", version = "^0.7.31" }
 config = { version = "0.13.4", features = ["json5"] }
 futures = "0.3.30"
 bytes = "1.6.0"
