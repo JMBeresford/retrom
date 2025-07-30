@@ -35,7 +35,7 @@ const config = tseslint.config(
       ],
     },
   },
-  { ignores: ["dist/**", "**/vite.config..ts.timestamp*"] },
+  { ignores: ["dist/**", "**/vite.config.ts.timestamp*"] },
 );
 
 export { config };
