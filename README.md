@@ -56,9 +56,8 @@ sort of _self-hosted Steam_ for your DRM-free game library.
 
 ## Screenshots
 
-<details>
-  
-<summary>Home Screen</summary>
+ 
+### Home Screen
 
 <div align='center'>
   <img src="https://github.com/user-attachments/assets/bb7015d1-823a-4247-8c7c-b0e6e0450018" />
@@ -72,11 +71,8 @@ sort of _self-hosted Steam_ for your DRM-free game library.
   </span>
 </div>
 
-</details>
 
-<details>
-  
-<summary>Game Details</summary>
+### Game Details
 
 <div align='center'>
   <img src="https://github.com/user-attachments/assets/1518d684-e40e-4927-9065-cbe05f96c7c9" />
@@ -90,7 +86,19 @@ sort of _self-hosted Steam_ for your DRM-free game library.
   </span>
 </div>
 
-</details>
+### In Game
+
+<div align='center'>
+  <img src="https://github.com/user-attachments/assets/a19be565-098e-4335-b67b-ec2c87051e6e" />
+  <span>
+    <img width="49%" src="https://github.com/user-attachments/assets/d3ffa9b2-420b-4677-b930-dd7a1c0f272c" />
+    <img width="49%" src="https://github.com/user-attachments/assets/0c47e301-af72-492b-b753-7b4d034a9f72" />
+  </span>
+  <span>
+    <img width="49%" src="https://github.com/user-attachments/assets/9e254ea3-9ccb-453c-819c-49c26d40a57b" />
+    <img width="49%" src="https://github.com/user-attachments/assets/a0b7f048-0206-47c5-8126-b7b03ffba896" />
+  </span>
+</div>
 
 ## Roadmap
 
@@ -118,7 +126,7 @@ sort of _self-hosted Steam_ for your DRM-free game library.
   - [x] Fullscreen mode + controller support
 - [x] Web (browser) client functionality (in addition to Basic functionality)
   - [x] Download games
-  - [ ] In-browser emulation via [EmulatorJS](https://github.com/EmulatorJS/EmulatorJS)
+  - [x] In-browser emulation via [EmulatorJS](https://github.com/EmulatorJS/EmulatorJS)
 - [ ] Desktop client functionality (in addition to Basic functionality)
   - [x] Install/uninstall games
   - [x] Configure locally available emulators
