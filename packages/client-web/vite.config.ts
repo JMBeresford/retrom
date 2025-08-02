@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
   const localServiceHost =
     process.env.VITE_RETROM_LOCAL_SERVICE_HOST ||
     process.env.RETROM_LOCAL_SERVICE_HOST ||
-    "http://localhost:5101";
+    "";
 
   const localTracesEndpoint =
     process.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT ||
