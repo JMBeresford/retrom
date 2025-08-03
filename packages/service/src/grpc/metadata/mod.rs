@@ -1,7 +1,10 @@
-use crate::providers::{
-    igdb::provider::{IGDBProvider, IgdbSearchData},
-    steam::provider::SteamWebApiProvider,
-    GameMetadataProvider, MetadataProvider, PlatformMetadataProvider,
+use crate::{
+    media_cache::MediaCache,
+    providers::{
+        igdb::provider::{IGDBProvider, IgdbSearchData},
+        steam::provider::SteamWebApiProvider,
+        GameMetadataProvider, MetadataProvider, PlatformMetadataProvider,
+    },
 };
 use chrono::DateTime;
 use diesel::prelude::*;
@@ -35,6 +38,7 @@ pub struct MetadataServiceHandlers {
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,
     steam_provider: Arc<SteamWebApiProvider>,
+    media_cache: Arc<MediaCache>,
 }
 
 impl MetadataServiceHandlers {
@@ -42,11 +46,13 @@ impl MetadataServiceHandlers {
         db_pool: Arc<Pool>,
         igdb_client: Arc<IGDBProvider>,
         steam_provider: Arc<SteamWebApiProvider>,
+        media_cache: Arc<MediaCache>,
     ) -> Self {
         Self {
             db_pool,
             igdb_client,
             steam_provider,
+            media_cache,
         }
     }
 }
@@ -155,11 +161,53 @@ impl MetadataService for MetadataServiceHandlers {
         let mut metadata_updated: Vec<retrom::GameMetadata> = vec![];
 
         for metadata_row in metadata_to_update {
+            // First, get the platform_id for this game to determine cache directory
+            let game_id = metadata_row.game_id;
+            let platform_id = match schema::games::table
+                .find(game_id)
+                .select(schema::games::platform_id)
+                .first::<Option<i32>>(&mut conn)
+                .await
+            {
+                Ok(Some(platform_id)) => platform_id,
+                Ok(None) => {
+                    tracing::warn!("Game {} has no platform_id, skipping media caching", game_id);
+                    // Store metadata without caching
+                    let updated_row = match diesel::insert_into(retrom_db::schema::game_metadata::table)
+                        .values(&metadata_row)
+                        .on_conflict(retrom_db::schema::game_metadata::game_id)
+                        .do_update()
+                        .set(&metadata_row)
+                        .get_result::<retrom::GameMetadata>(&mut conn)
+                        .await
+                    {
+                        Ok(row) => row,
+                        Err(why) => {
+                            return Err(Status::internal(why.to_string()));
+                        }
+                    };
+                    metadata_updated.push(updated_row);
+                    continue;
+                }
+                Err(why) => {
+                    return Err(Status::internal(why.to_string()));
+                }
+            };
+
+            // Cache media files and get updated metadata with local URLs
+            let cached_metadata = match self.media_cache.cache_updated_game_metadata_media(&metadata_row, platform_id).await {
+                Ok(cached) => cached,
+                Err(e) => {
+                    tracing::warn!("Failed to cache media for game {}: {}, using original metadata", game_id, e);
+                    metadata_row // Use original metadata if caching fails
+                }
+            };
+
             let updated_row = match diesel::insert_into(retrom_db::schema::game_metadata::table)
-                .values(&metadata_row)
+                .values(&cached_metadata)
                 .on_conflict(retrom_db::schema::game_metadata::game_id)
                 .do_update()
-                .set(&metadata_row)
+                .set(&cached_metadata)
                 .get_result::<retrom::GameMetadata>(&mut conn)
                 .await
             {
@@ -219,11 +267,25 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
+        // Cache media files outside of transaction
+        let mut cached_metadata_list = Vec::new();
+        for metadata_row in metadata_to_update {
+            // Cache media files and get updated metadata with local URLs
+            let cached_metadata = match self.media_cache.cache_updated_platform_metadata_media(&metadata_row).await {
+                Ok(cached) => cached,
+                Err(e) => {
+                    tracing::warn!("Failed to cache media for platform {}: {}, using original metadata", metadata_row.platform_id, e);
+                    metadata_row // Use original metadata if caching fails
+                }
+            };
+            cached_metadata_list.push(cached_metadata);
+        }
+
         conn.transaction(|mut conn| {
             async move {
                 let mut metadata_updated: Vec<retrom::PlatformMetadata> = vec![];
 
-                for metadata_row in metadata_to_update {
+                for metadata_row in cached_metadata_list {
                     let updated_row =
                         diesel::insert_into(retrom_db::schema::platform_metadata::table)
                             .values(&metadata_row)
