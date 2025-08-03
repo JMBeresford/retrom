@@ -51,15 +51,9 @@ export type OverlayMenuRoot = Omit<MenuRoot, "items"> & {
 const overlayMenu: OverlayMenuRoot = {
   items: [
     {
-      groupItems: [
-        gameOptions,
-        emulationOptions,
-        coreOptions,
-        controlOptions,
-        configOptions,
-      ],
+      groupItems: [gameOptions, emulationOptions, coreOptions, controlOptions],
     },
-    { groupItems: [{ label: "Exit Game", Render: ExitGame }] },
+    { groupItems: [configOptions, { label: "Exit Game", Render: ExitGame }] },
   ],
 };
 
@@ -349,7 +343,7 @@ function ExitGame() {
         await saveSaveFile();
         handleExit().catch(console.error);
       }}
-      label="Return to your Retrom library."
+      label="Return to your Retrom library"
     >
       Exit Game
     </MenuEntryButton>

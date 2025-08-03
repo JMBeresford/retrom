@@ -160,7 +160,9 @@ function SyncToCloudRender() {
   const { saveSaveFile } = useEJSSessionState();
 
   return (
-    <MenuEntryButton onClick={saveSaveFile}>Sync Save to Cloud</MenuEntryButton>
+    <MenuEntryButton onClick={saveSaveFile} label="Upload current save file">
+      Sync Save to Cloud
+    </MenuEntryButton>
   );
 }
 

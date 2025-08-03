@@ -18,6 +18,7 @@ const gamepadEvents = [GamepadButtonDownEvent, GamepadAxisActiveEvent] as const;
 
 export const configOptions: OverlayMenuItem = {
   label: "Retrom Configuration",
+  labelSub: "General configuration options",
   items: [
     {
       label: "Gamepad and Hotkeys",

@@ -32,7 +32,8 @@ const gamepadEvents = [GamepadButtonDownEvent, GamepadAxisActiveEvent] as const;
 const { Player1, Player2, Player3, Player4 } = Player;
 
 export const controlOptions: OverlayMenuItem = {
-  label: "Control Options",
+  label: "Controller Options",
+  labelSub: "In-game gamepad and keyboard bindings",
   items: [
     {
       label: "Player Bindings",
