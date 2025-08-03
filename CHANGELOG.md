@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.31](https://github.com/JMBeresford/retrom/compare/v0.7.30...v0.7.31) - 2025-08-03
+
+### Newly Added
+- improved server connect experience
+
+    The server connection dialog will now tell you if you are attempting to
+    use a malformed URL (e.g. not including "http://"), hopefully reducing confusion when
+    connections fail.
+
+    resolves [#313](https://github.com/JMBeresford/retrom/pull/313)
+
+
+
+
 ## [0.7.30](https://github.com/JMBeresford/retrom/compare/v0.7.29...v0.7.30) - 2025-07-27
 
 ### Newly Added
