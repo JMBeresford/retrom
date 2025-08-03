@@ -17,18 +17,45 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@retrom/ui/components/dialog";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useConfigStore } from "@/providers/config";
-import { Label } from "@retrom/ui/components/label";
+import z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  useForm,
+  useFormContext,
+} from "@retrom/ui/components/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Code } from "@retrom/ui/components/code";
 
+type FormSchema = z.infer<typeof formSchema>;
+const formSchema = z.object({
+  hostname: z
+    .string()
+    .url({ message: "Must be in the form: http(s)://ipaddress-or-domain" }),
+  port: z.coerce.number().optional(),
+});
 export function ServerHostStep() {
   const { previousStep } = useSetupModal();
   const initialState = useConfigStore().getState();
-  const [hostname, setHostname] = useState(initialState.server?.hostname ?? "");
-  const [port, setPort] = useState(initialState.server?.port?.toString() ?? "");
+
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(formSchema),
+    reValidateMode: "onChange",
+    mode: "all",
+    defaultValues: {
+      hostname: initialState.server?.hostname ?? "http://localhost",
+      port: initialState.server?.port ?? 5101,
+    },
+  });
 
   return (
-    <>
+    <Form {...form}>
       <DialogHeader>
         <DialogTitle>Connect to Retrom Server</DialogTitle>
         <DialogDescription>
@@ -40,50 +67,67 @@ export function ServerHostStep() {
       <div className="space-y-2">
         <TooltipProvider>
           <Tooltip>
-            <div className="grid grid-cols-[400px_10ch_auto] grid-flow-col">
-              <div>
-                <div className="flex gap-2 items-center mb-2">
-                  <Label htmlFor="hostname">Server Hostname</Label>
-                </div>
+            <form className="grid grid-cols-[400px_15ch] grid-rows-1 grid-flow-col">
+              <FormField
+                control={form.control}
+                name="hostname"
+                render={({ field }) => {
+                  return (
+                    <FormItem>
+                      <FormLabel>Server Hostname</FormLabel>
+                      <FormControl>
+                        <Input
+                          autoFocus={true}
+                          className="rounded-none rounded-l-md ring-inset"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
 
-                <Input
-                  id="hostname"
-                  autoFocus={true}
-                  className="rounded-none rounded-l-md ring-inset"
-                  placeholder="Enter hostname..."
-                  value={hostname}
-                  onChange={({ target: { value } }) =>
-                    setHostname(value.trim())
-                  }
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="port" className="flex gap-2 items-center mb-2">
-                  Port
-                  <TooltipTrigger>
-                    <InfoIcon className="w-[0.875rem] h-[0.875rem] text-muted-foreground" />
-                  </TooltipTrigger>
-                </Label>
-
-                <Input
-                  id="port"
-                  className="rounded-none rounded-r-md border-l-0 ring-inset"
-                  type="number"
-                  value={port}
-                  onChange={({ target: { value } }) => {
-                    setPort(value.trim());
-                  }}
-                />
-              </div>
-            </div>
+              <FormField
+                control={form.control}
+                name="port"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Port
+                      <TooltipTrigger type="button">
+                        <InfoIcon className="ml-1 w-[0.875rem] h-[0.875rem]" />
+                      </TooltipTrigger>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        className="rounded-none rounded-r-md border-l-0 ring-inset"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
 
             <TooltipContent>
               <div className="flex flex-col gap-2 text-sm max-w-[60ch]">
                 <p>
-                  If you are hosting the server at a domain (e.g.
-                  https://my-retrom-domain.com), then you can leave the port
-                  empty and it will be inferred based on the protocol used.
+                  The default server port is 5101, however if you are hosting
+                  the server at a domain (e.g.{" "}
+                  <Code className="text-xs">https://my-retrom-domain.com</Code>
+                  ), then you can leave the port empty and it will be inferred
+                  based on the protocol used:
+                </p>
+
+                <p>
+                  <Code className="text-xs">http</Code> will default to port 80
+                </p>
+                <p>
+                  <Code className="text-xs">https</Code> will default to port
+                  443
                 </p>
               </div>
             </TooltipContent>
@@ -98,23 +142,24 @@ export function ServerHostStep() {
           </Button>
         )}
 
-        <TestButton hostname={hostname} port={port} />
+        <TestButton />
       </DialogFooter>
-    </>
+    </Form>
   );
 }
 
-function TestButton(props: { hostname: string; port?: string }) {
+function TestButton() {
   const { nextStep } = useSetupModal();
+  const { getValues, formState } = useFormContext<FormSchema>();
   const config = useConfigStore();
 
   const { mutateAsync: checkServer, status } = useMutation({
-    mutationFn: (vars: { hostname: string; port?: string }) => {
+    mutationFn: (vars: { hostname: string; port?: string | number }) => {
       const { hostname, port } = vars;
 
       const host = new URL(hostname);
       if (port) {
-        host.port = port;
+        host.port = port.toString();
       }
 
       const client = new RetromClient(host.toString());
@@ -125,14 +170,10 @@ function TestButton(props: { hostname: string; port?: string }) {
 
   const testConnection = useCallback(async () => {
     try {
-      const { hostname, port } = props;
+      const { hostname, port } = getValues();
       await checkServer({ hostname, port });
 
-      const portActual = port
-        ? parseInt(port)
-        : hostname.startsWith("https")
-          ? 443
-          : 80;
+      const portActual = port ? port : hostname.startsWith("https") ? 443 : 80;
 
       config.setState({
         server: { hostname, port: portActual, standalone: false },
@@ -144,7 +185,7 @@ function TestButton(props: { hostname: string; port?: string }) {
     } catch (error) {
       console.error(error);
     }
-  }, [checkServer, config, nextStep, props]);
+  }, [checkServer, config, nextStep, getValues]);
 
   if (status === "pending") {
     return (
@@ -167,7 +208,11 @@ function TestButton(props: { hostname: string; port?: string }) {
   }
 
   return (
-    <Button className={cn("ml-2")} onClick={testConnection}>
+    <Button
+      className={cn("ml-2")}
+      onClick={testConnection}
+      disabled={!formState.isValid}
+    >
       Next
     </Button>
   );

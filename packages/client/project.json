@@ -10,7 +10,7 @@
       "executor": "nx:run-commands",
       "continuous": true,
       "options": {
-        "command": "cargo tauri dev",
+        "command": "cargo tauri dev --no-watch",
         "cwd": "{projectRoot}"
       }
     },
