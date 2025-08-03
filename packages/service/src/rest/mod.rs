@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use file::file;
 use game::game;
+use media::media;
 use public::public;
 use retrom_db::Pool;
 use warp::{
@@ -13,6 +14,7 @@ use web::web;
 pub mod error;
 pub mod file;
 pub mod game;
+mod media;
 mod public;
 mod web;
 
@@ -41,7 +43,8 @@ pub fn rest_service(
 
     let routes = warp::path("rest")
         .and(file(pool.clone()).or(game(pool.clone())).or(public()))
-        .or(web());
+        .or(web())
+        .or(media());
 
     let cors = warp::cors().allow_any_origin();
 

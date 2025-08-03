@@ -298,3 +298,67 @@ impl MediaCache {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    #[tokio::test]
+    async fn test_media_cache_basic_functionality() {
+        // Create a temporary directory for testing
+        let temp_dir = TempDir::new().unwrap();
+        let cache = MediaCache::new(temp_dir.path().to_path_buf());
+
+        // Test that cache directories are created correctly
+        let platform_id = 1;
+        let game_id = 42;
+        let cache_dir = cache.get_cache_dir(platform_id, game_id);
+        
+        assert_eq!(
+            cache_dir,
+            temp_dir.path().join("metadata").join("1").join("42")
+        );
+
+        let platform_cache_dir = cache.get_platform_cache_dir(platform_id);
+        assert_eq!(
+            platform_cache_dir,
+            temp_dir.path().join("metadata").join("1").join("platform")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_url_to_public_path_conversion() {
+        let temp_dir = TempDir::new().unwrap();
+        let cache = MediaCache::new(temp_dir.path().to_path_buf());
+        
+        let test_path = temp_dir.path().join("metadata").join("1").join("42").join("image.jpg");
+        let public_url = cache.get_public_url(&test_path);
+        
+        assert_eq!(public_url, "/media/metadata/1/42/image.jpg");
+    }
+
+    #[test]
+    fn test_hash_generation_is_deterministic() {
+        let url1 = "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/abcd1234.jpg";
+        let url2 = "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/abcd1234.jpg";
+        let url3 = "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/different.jpg";
+
+        let filename1 = utils::generate_cache_filename(url1).unwrap();
+        let filename2 = utils::generate_cache_filename(url2).unwrap();
+        let filename3 = utils::generate_cache_filename(url3).unwrap();
+
+        // Same URL should generate same filename
+        assert_eq!(filename1, filename2);
+        
+        // Different URL should generate different filename
+        assert_ne!(filename1, filename3);
+        
+        // Should preserve file extension
+        assert!(filename1.ends_with(".jpg"));
+        assert!(filename3.ends_with(".jpg"));
+        
+        // Should be 16 characters + extension
+        assert_eq!(filename1.len(), 20); // 16 + ".jpg" = 20
+    }
+}
