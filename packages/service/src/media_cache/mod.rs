@@ -29,23 +29,23 @@ pub type Result<T> = std::result::Result<T, MediaCacheError>;
 /// Trait for metadata types that can be cached
 pub trait CacheableMetadata: Clone + Send + Sync {
     /// Get the cache directory for this metadata
-    fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf;
+    fn get_cache_dir(&self) -> PathBuf;
 
     /// Cache all media files for this metadata and return updated metadata with local paths
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self>;
 
     /// Clean up cached files for this metadata
-    async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()>;
+    async fn clean_cache(&self) -> Result<()>;
 }
 
 impl CacheableMetadata for GameMetadata {
-    fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
-        cache.dirs.media_dir().join("games").join(self.game_id.to_string())
+    fn get_cache_dir(&self) -> PathBuf {
+        RetromDirs::new().media_dir().join("games").join(self.game_id.to_string())
     }
 
     #[instrument(level = "info", skip(cache))]
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self> {
-        let cache_dir = self.get_cache_dir(&cache);
+        let cache_dir = self.get_cache_dir();
         let mut updated_metadata = self.clone();
 
         if let Some(ref cover_url) = self.cover_url {
@@ -89,8 +89,8 @@ impl CacheableMetadata for GameMetadata {
         Ok(updated_metadata)
     }
 
-    async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
-        let cache_dir = cache.dirs.media_dir().join("games").join(self.game_id.to_string());
+    async fn clean_cache(&self) -> Result<()> {
+        let cache_dir = RetromDirs::new().media_dir().join("games").join(self.game_id.to_string());
         if cache_dir.exists() {
             debug!("Cleaning up cache directory: {:?}", cache_dir);
             fs::remove_dir_all(&cache_dir).await?;
@@ -100,13 +100,13 @@ impl CacheableMetadata for GameMetadata {
 }
 
 impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
-    fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
-        cache.dirs.media_dir().join("games").join(self.game_id.to_string())
+    fn get_cache_dir(&self) -> PathBuf {
+        RetromDirs::new().media_dir().join("games").join(self.game_id.to_string())
     }
 
     #[instrument(level = "info", skip(cache))]
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self> {
-        let cache_dir = self.get_cache_dir(&cache);
+        let cache_dir = self.get_cache_dir();
         let mut updated_metadata = self.clone();
 
         if let Some(ref cover_url) = self.cover_url {
@@ -150,8 +150,8 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
         Ok(updated_metadata)
     }
 
-    async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
-        let cache_dir = cache.dirs.media_dir().join("games").join(self.game_id.to_string());
+    async fn clean_cache(&self) -> Result<()> {
+        let cache_dir = RetromDirs::new().media_dir().join("games").join(self.game_id.to_string());
         if cache_dir.exists() {
             debug!("Cleaning up cache directory: {:?}", cache_dir);
             fs::remove_dir_all(&cache_dir).await?;
@@ -161,13 +161,13 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
 }
 
 impl CacheableMetadata for PlatformMetadata {
-    fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
-        cache.dirs.media_dir().join("platforms").join(self.platform_id.to_string())
+    fn get_cache_dir(&self) -> PathBuf {
+        RetromDirs::new().media_dir().join("platforms").join(self.platform_id.to_string())
     }
 
     #[instrument(level = "info", skip(cache))]
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self> {
-        let cache_dir = self.get_cache_dir(&cache);
+        let cache_dir = self.get_cache_dir();
         let mut updated_metadata = self.clone();
 
         if let Some(ref background_url) = self.background_url {
@@ -185,8 +185,8 @@ impl CacheableMetadata for PlatformMetadata {
         Ok(updated_metadata)
     }
 
-    async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
-        let cache_dir = cache.dirs.media_dir().join("platforms").join(self.platform_id.to_string());
+    async fn clean_cache(&self) -> Result<()> {
+        let cache_dir = RetromDirs::new().media_dir().join("platforms").join(self.platform_id.to_string());
         if cache_dir.exists() {
             debug!("Cleaning up platform cache directory: {:?}", cache_dir);
             fs::remove_dir_all(&cache_dir).await?;
@@ -196,13 +196,13 @@ impl CacheableMetadata for PlatformMetadata {
 }
 
 impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
-    fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
-        cache.dirs.media_dir().join("platforms").join(self.platform_id.to_string())
+    fn get_cache_dir(&self) -> PathBuf {
+        RetromDirs::new().media_dir().join("platforms").join(self.platform_id.to_string())
     }
 
     #[instrument(level = "info", skip(cache))]
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self> {
-        let cache_dir = self.get_cache_dir(&cache);
+        let cache_dir = self.get_cache_dir();
         let mut updated_metadata = self.clone();
 
         if let Some(ref background_url) = self.background_url {
@@ -220,8 +220,8 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
         Ok(updated_metadata)
     }
 
-    async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
-        let cache_dir = cache.dirs.media_dir().join("platforms").join(self.platform_id.to_string());
+    async fn clean_cache(&self) -> Result<()> {
+        let cache_dir = RetromDirs::new().media_dir().join("platforms").join(self.platform_id.to_string());
         if cache_dir.exists() {
             debug!("Cleaning up platform cache directory: {:?}", cache_dir);
             fs::remove_dir_all(&cache_dir).await?;
@@ -327,7 +327,7 @@ mod integration_tests {
         // Create a temporary directory for testing
         let temp_dir = TempDir::new().unwrap();
         let dirs = create_test_retrom_dirs(&temp_dir);
-        let cache = MediaCache::new(dirs);
+        let _cache = MediaCache::new(dirs);
 
         // Test that cache directories are created correctly using trait implementations
         let game_metadata = GameMetadata {
@@ -349,7 +349,7 @@ mod integration_tests {
             minutes_played: Some(0),
         };
         
-        let cache_dir = game_metadata.get_cache_dir(&cache);
+        let cache_dir = game_metadata.get_cache_dir();
         assert_eq!(
             cache_dir,
             temp_dir.path().join("public").join("media").join("games").join("42")
@@ -366,7 +366,7 @@ mod integration_tests {
             updated_at: None,
         };
         
-        let platform_cache_dir = platform_metadata.get_cache_dir(&cache);
+        let platform_cache_dir = platform_metadata.get_cache_dir();
         assert_eq!(
             platform_cache_dir,
             temp_dir.path().join("public").join("media").join("platforms").join("1")
