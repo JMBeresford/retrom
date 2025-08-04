@@ -40,7 +40,7 @@ pub trait CacheableMetadata: Clone + Send + Sync {
 
 impl CacheableMetadata for GameMetadata {
     fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
-        cache.get_game_cache_dir(self.game_id)
+        cache.dirs.media_dir().join("games").join(self.game_id.to_string())
     }
 
     #[instrument(level = "info", skip(cache))]
@@ -90,13 +90,18 @@ impl CacheableMetadata for GameMetadata {
     }
 
     async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
-        cache.cleanup_game_cache(self.game_id).await
+        let cache_dir = cache.dirs.media_dir().join("games").join(self.game_id.to_string());
+        if cache_dir.exists() {
+            debug!("Cleaning up cache directory: {:?}", cache_dir);
+            fs::remove_dir_all(&cache_dir).await?;
+        }
+        Ok(())
     }
 }
 
 impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
     fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
-        cache.get_game_cache_dir(self.game_id)
+        cache.dirs.media_dir().join("games").join(self.game_id.to_string())
     }
 
     #[instrument(level = "info", skip(cache))]
@@ -146,13 +151,18 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
     }
 
     async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
-        cache.cleanup_game_cache(self.game_id).await
+        let cache_dir = cache.dirs.media_dir().join("games").join(self.game_id.to_string());
+        if cache_dir.exists() {
+            debug!("Cleaning up cache directory: {:?}", cache_dir);
+            fs::remove_dir_all(&cache_dir).await?;
+        }
+        Ok(())
     }
 }
 
 impl CacheableMetadata for PlatformMetadata {
     fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
-        cache.get_platform_cache_dir(self.platform_id)
+        cache.dirs.media_dir().join("platforms").join(self.platform_id.to_string())
     }
 
     #[instrument(level = "info", skip(cache))]
@@ -176,13 +186,18 @@ impl CacheableMetadata for PlatformMetadata {
     }
 
     async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
-        cache.cleanup_platform_cache(self.platform_id).await
+        let cache_dir = cache.dirs.media_dir().join("platforms").join(self.platform_id.to_string());
+        if cache_dir.exists() {
+            debug!("Cleaning up platform cache directory: {:?}", cache_dir);
+            fs::remove_dir_all(&cache_dir).await?;
+        }
+        Ok(())
     }
 }
 
 impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
     fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
-        cache.get_platform_cache_dir(self.platform_id)
+        cache.dirs.media_dir().join("platforms").join(self.platform_id.to_string())
     }
 
     #[instrument(level = "info", skip(cache))]
@@ -206,12 +221,17 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
     }
 
     async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
-        cache.cleanup_platform_cache(self.platform_id).await
+        let cache_dir = cache.dirs.media_dir().join("platforms").join(self.platform_id.to_string());
+        if cache_dir.exists() {
+            debug!("Cleaning up platform cache directory: {:?}", cache_dir);
+            fs::remove_dir_all(&cache_dir).await?;
+        }
+        Ok(())
     }
 }
 
 pub struct MediaCache {
-    dirs: RetromDirs,
+    pub dirs: RetromDirs,
     client: reqwest::Client,
 }
 
@@ -223,16 +243,6 @@ impl MediaCache {
             .unwrap_or_else(|_| reqwest::Client::new());
 
         Self { dirs, client }
-    }
-
-    /// Get the cache directory for a specific game
-    pub fn get_game_cache_dir(&self, game_id: i32) -> PathBuf {
-        self.dirs.media_dir().join("games").join(game_id.to_string())
-    }
-
-    /// Get the cache directory for platform metadata
-    pub fn get_platform_cache_dir(&self, platform_id: i32) -> PathBuf {
-        self.dirs.media_dir().join("platforms").join(platform_id.to_string())
     }
 
     /// Ensure the cache directory exists
@@ -298,28 +308,6 @@ impl MediaCache {
             format!("/media/{}", cache_path.file_name().unwrap_or_default().to_string_lossy())
         }
     }
-
-    /// Clean up cached files for a game
-    #[instrument(level = "debug", skip(self))]
-    pub async fn cleanup_game_cache(&self, game_id: i32) -> Result<()> {
-        let cache_dir = self.get_game_cache_dir(game_id);
-        if cache_dir.exists() {
-            debug!("Cleaning up cache directory: {:?}", cache_dir);
-            fs::remove_dir_all(&cache_dir).await?;
-        }
-        Ok(())
-    }
-
-    /// Clean up cached files for a platform
-    #[instrument(level = "debug", skip(self))]
-    pub async fn cleanup_platform_cache(&self, platform_id: i32) -> Result<()> {
-        let cache_dir = self.get_platform_cache_dir(platform_id);
-        if cache_dir.exists() {
-            debug!("Cleaning up platform cache directory: {:?}", cache_dir);
-            fs::remove_dir_all(&cache_dir).await?;
-        }
-        Ok(())
-    }
 }
 
 #[cfg(test)]
@@ -341,17 +329,44 @@ mod integration_tests {
         let dirs = create_test_retrom_dirs(&temp_dir);
         let cache = MediaCache::new(dirs);
 
-        // Test that cache directories are created correctly
-        let game_id = 42;
-        let cache_dir = cache.get_game_cache_dir(game_id);
+        // Test that cache directories are created correctly using trait implementations
+        let game_metadata = GameMetadata {
+            game_id: 42,
+            name: Some("Test Game".to_string()),
+            description: None,
+            cover_url: None,
+            background_url: None,
+            icon_url: None,
+            igdb_id: None,
+            created_at: None,
+            updated_at: None,
+            links: vec![],
+            video_urls: vec![],
+            screenshot_urls: vec![],
+            artwork_urls: vec![],
+            release_date: None,
+            last_played: None,
+            minutes_played: Some(0),
+        };
         
+        let cache_dir = game_metadata.get_cache_dir(&cache);
         assert_eq!(
             cache_dir,
             temp_dir.path().join("public").join("media").join("games").join("42")
         );
 
-        let platform_id = 1;
-        let platform_cache_dir = cache.get_platform_cache_dir(platform_id);
+        let platform_metadata = PlatformMetadata {
+            platform_id: 1,
+            name: Some("Test Platform".to_string()),
+            description: None,
+            background_url: None,
+            logo_url: None,
+            igdb_id: None,
+            created_at: None,
+            updated_at: None,
+        };
+        
+        let platform_cache_dir = platform_metadata.get_cache_dir(&cache);
         assert_eq!(
             platform_cache_dir,
             temp_dir.path().join("public").join("media").join("platforms").join("1")
