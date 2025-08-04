@@ -5,7 +5,7 @@ use warp::{filters::BoxedFilter, Filter, Reply};
 #[tracing::instrument]
 pub fn media() -> BoxedFilter<(impl Reply,)> {
     let retrom_dirs = RetromDirs::new();
-    let media_dir = retrom_dirs.data_dir().join("metadata");
+    let media_dir = retrom_dirs.media_dir();
 
     warp::path("media")
         .and(warp::get())

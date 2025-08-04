@@ -5,6 +5,8 @@ use thiserror::Error;
 use tokio::fs;
 use tracing::{debug, instrument, warn};
 
+use crate::meta::RetromDirs;
+
 pub mod utils;
 
 #[derive(Error, Debug)]
@@ -24,34 +26,28 @@ pub enum MediaCacheError {
 pub type Result<T> = std::result::Result<T, MediaCacheError>;
 
 pub struct MediaCache {
-    data_dir: PathBuf,
+    dirs: RetromDirs,
     client: reqwest::Client,
 }
 
 impl MediaCache {
-    pub fn new(data_dir: PathBuf) -> Self {
+    pub fn new(dirs: RetromDirs) -> Self {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
             .unwrap_or_else(|_| reqwest::Client::new());
 
-        Self { data_dir, client }
+        Self { dirs, client }
     }
 
-    /// Get the cache directory for a specific platform and game
-    pub fn get_cache_dir(&self, platform_id: i32, game_id: i32) -> PathBuf {
-        self.data_dir
-            .join("metadata")
-            .join(platform_id.to_string())
-            .join(game_id.to_string())
+    /// Get the cache directory for a specific game
+    pub fn get_game_cache_dir(&self, game_id: i32) -> PathBuf {
+        self.dirs.media_dir().join("games").join(game_id.to_string())
     }
 
     /// Get the cache directory for platform metadata
     pub fn get_platform_cache_dir(&self, platform_id: i32) -> PathBuf {
-        self.data_dir
-            .join("metadata")
-            .join(platform_id.to_string())
-            .join("platform")
+        self.dirs.media_dir().join("platforms").join(platform_id.to_string())
     }
 
     /// Ensure the cache directory exists
@@ -69,7 +65,7 @@ impl MediaCache {
     }
 
     /// Download and cache a media file, return the local file path
-    #[instrument(level = "debug", skip(self))]
+    #[instrument(level = "info", skip(self))]
     pub async fn cache_media_file(&self, url: &str, cache_dir: &PathBuf) -> Result<PathBuf> {
         self.ensure_cache_dir(cache_dir).await?;
 
@@ -84,28 +80,36 @@ impl MediaCache {
 
         debug!("Downloading media file: {} -> {:?}", url, cache_path);
 
-        // Download the file
-        let response = self.client.get(url).send().await?;
-        if !response.status().is_success() {
-            warn!("Failed to download media file: {} (status: {})", url, response.status());
-            return Err(MediaCacheError::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("HTTP error: {}", response.status()),
-            )));
-        }
+        // Use retry logic with exponential backoff
+        let retry_strategy = tokio_retry::strategy::ExponentialBackoff::from_millis(500)
+            .max_delay(std::time::Duration::from_secs(10))
+            .take(3); // 3 attempts total
 
-        let bytes = response.bytes().await?;
-        fs::write(&cache_path, bytes).await?;
+        let result = tokio_retry::Retry::spawn(retry_strategy, || async {
+            let response = self.client.get(url).send().await?;
+            if !response.status().is_success() {
+                warn!("Failed to download media file: {} (status: {})", url, response.status());
+                return Err(MediaCacheError::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("HTTP error: {}", response.status()),
+                )));
+            }
+            
+            let bytes = response.bytes().await?;
+            Ok(bytes)
+        }).await?;
+
+        fs::write(&cache_path, result).await?;
 
         debug!("Media file cached successfully: {:?}", cache_path);
         Ok(cache_path)
     }
 
     /// Cache all media files for game metadata and return updated metadata with local paths
-    #[instrument(level = "debug", skip(self))]
-    pub async fn cache_game_metadata_media(&self, metadata: &GameMetadata, platform_id: i32) -> Result<GameMetadata> {
+    #[instrument(level = "info", skip(self))]
+    pub async fn cache_game_metadata_media(&self, metadata: &GameMetadata) -> Result<GameMetadata> {
         let game_id = metadata.game_id;
-        let cache_dir = self.get_cache_dir(platform_id, game_id);
+        let cache_dir = self.get_game_cache_dir(game_id);
         let mut updated_metadata = metadata.clone();
 
             // Cache cover image
@@ -160,10 +164,10 @@ impl MediaCache {
     }
 
     /// Cache all media files for updated game metadata and return updated metadata with local paths
-    #[instrument(level = "debug", skip(self))]
-    pub async fn cache_updated_game_metadata_media(&self, metadata: &retrom_codegen::retrom::UpdatedGameMetadata, platform_id: i32) -> Result<retrom_codegen::retrom::UpdatedGameMetadata> {
+    #[instrument(level = "info", skip(self))]
+    pub async fn cache_updated_game_metadata_media(&self, metadata: &retrom_codegen::retrom::UpdatedGameMetadata) -> Result<retrom_codegen::retrom::UpdatedGameMetadata> {
         let game_id = metadata.game_id;
-        let cache_dir = self.get_cache_dir(platform_id, game_id);
+        let cache_dir = self.get_game_cache_dir(game_id);
         let mut updated_metadata = metadata.clone();
 
         // Cache cover image
@@ -218,7 +222,7 @@ impl MediaCache {
     }
 
     /// Cache all media files for platform metadata and return updated metadata with local paths
-    #[instrument(level = "debug", skip(self))]
+    #[instrument(level = "info", skip(self))]
     pub async fn cache_platform_metadata_media(&self, metadata: &PlatformMetadata) -> Result<PlatformMetadata> {
         let platform_id = metadata.platform_id;
         let cache_dir = self.get_platform_cache_dir(platform_id);
@@ -242,7 +246,7 @@ impl MediaCache {
     }
 
     /// Cache all media files for updated platform metadata and return updated metadata with local paths
-    #[instrument(level = "debug", skip(self))]
+    #[instrument(level = "info", skip(self))]
     pub async fn cache_updated_platform_metadata_media(&self, metadata: &retrom_codegen::retrom::UpdatedPlatformMetadata) -> Result<retrom_codegen::retrom::UpdatedPlatformMetadata> {
         let platform_id = metadata.platform_id;
         let cache_dir = self.get_platform_cache_dir(platform_id);
@@ -267,8 +271,9 @@ impl MediaCache {
 
     /// Convert a local cache path to a public URL that can be served by the web server
     fn get_public_url(&self, cache_path: &PathBuf) -> String {
-        // Convert absolute cache path to relative path from data_dir
-        if let Ok(relative_path) = cache_path.strip_prefix(&self.data_dir) {
+        // Convert absolute cache path to relative path from media_dir
+        let media_dir = self.dirs.media_dir();
+        if let Ok(relative_path) = cache_path.strip_prefix(&media_dir) {
             format!("/media/{}", relative_path.to_string_lossy().replace('\\', "/"))
         } else {
             // Fallback: use just the filename
@@ -278,8 +283,8 @@ impl MediaCache {
 
     /// Clean up cached files for a game
     #[instrument(level = "debug", skip(self))]
-    pub async fn cleanup_game_cache(&self, platform_id: i32, game_id: i32) -> Result<()> {
-        let cache_dir = self.get_cache_dir(platform_id, game_id);
+    pub async fn cleanup_game_cache(&self, game_id: i32) -> Result<()> {
+        let cache_dir = self.get_game_cache_dir(game_id);
         if cache_dir.exists() {
             debug!("Cleaning up cache directory: {:?}", cache_dir);
             fs::remove_dir_all(&cache_dir).await?;
@@ -302,40 +307,50 @@ impl MediaCache {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
+    use crate::meta::RetromDirs;
     use tempfile::TempDir;
+    use std::env;
+
+    fn create_test_retrom_dirs(temp_dir: &TempDir) -> RetromDirs {
+        // Set environment variables to use our temp directory
+        env::set_var("RETROM_DATA_DIR", temp_dir.path());
+        RetromDirs::new()
+    }
 
     #[tokio::test]
     async fn test_media_cache_basic_functionality() {
         // Create a temporary directory for testing
         let temp_dir = TempDir::new().unwrap();
-        let cache = MediaCache::new(temp_dir.path().to_path_buf());
+        let dirs = create_test_retrom_dirs(&temp_dir);
+        let cache = MediaCache::new(dirs);
 
         // Test that cache directories are created correctly
-        let platform_id = 1;
         let game_id = 42;
-        let cache_dir = cache.get_cache_dir(platform_id, game_id);
+        let cache_dir = cache.get_game_cache_dir(game_id);
         
         assert_eq!(
             cache_dir,
-            temp_dir.path().join("metadata").join("1").join("42")
+            temp_dir.path().join("public").join("media").join("games").join("42")
         );
 
+        let platform_id = 1;
         let platform_cache_dir = cache.get_platform_cache_dir(platform_id);
         assert_eq!(
             platform_cache_dir,
-            temp_dir.path().join("metadata").join("1").join("platform")
+            temp_dir.path().join("public").join("media").join("platforms").join("1")
         );
     }
 
     #[tokio::test]
     async fn test_url_to_public_path_conversion() {
         let temp_dir = TempDir::new().unwrap();
-        let cache = MediaCache::new(temp_dir.path().to_path_buf());
+        let dirs = create_test_retrom_dirs(&temp_dir);
+        let cache = MediaCache::new(dirs);
         
-        let test_path = temp_dir.path().join("metadata").join("1").join("42").join("image.jpg");
+        let test_path = temp_dir.path().join("public").join("media").join("games").join("42").join("image.jpg");
         let public_url = cache.get_public_url(&test_path);
         
-        assert_eq!(public_url, "/media/metadata/1/42/image.jpg");
+        assert_eq!(public_url, "/media/games/42/image.jpg");
     }
 
     #[test]

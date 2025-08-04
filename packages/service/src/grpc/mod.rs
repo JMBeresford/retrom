@@ -88,9 +88,9 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> C
     let igdb_client = Arc::new(IGDBProvider::new(config_manager.clone()));
     let steam_web_api_client = Arc::new(SteamWebApiProvider::new(config_manager.clone()));
 
-    // Create media cache using the data directory
+    // Create media cache using RetromDirs
     let retrom_dirs = RetromDirs::new();
-    let media_cache = Arc::new(MediaCache::new(retrom_dirs.data_dir().clone()));
+    let media_cache = Arc::new(MediaCache::new(retrom_dirs));
 
     let job_manager = Arc::new(JobManager::new());
 

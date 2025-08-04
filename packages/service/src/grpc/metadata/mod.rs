@@ -161,41 +161,10 @@ impl MetadataService for MetadataServiceHandlers {
         let mut metadata_updated: Vec<retrom::GameMetadata> = vec![];
 
         for metadata_row in metadata_to_update {
-            // First, get the platform_id for this game to determine cache directory
             let game_id = metadata_row.game_id;
-            let platform_id = match schema::games::table
-                .find(game_id)
-                .select(schema::games::platform_id)
-                .first::<Option<i32>>(&mut conn)
-                .await
-            {
-                Ok(Some(platform_id)) => platform_id,
-                Ok(None) => {
-                    tracing::warn!("Game {} has no platform_id, skipping media caching", game_id);
-                    // Store metadata without caching
-                    let updated_row = match diesel::insert_into(retrom_db::schema::game_metadata::table)
-                        .values(&metadata_row)
-                        .on_conflict(retrom_db::schema::game_metadata::game_id)
-                        .do_update()
-                        .set(&metadata_row)
-                        .get_result::<retrom::GameMetadata>(&mut conn)
-                        .await
-                    {
-                        Ok(row) => row,
-                        Err(why) => {
-                            return Err(Status::internal(why.to_string()));
-                        }
-                    };
-                    metadata_updated.push(updated_row);
-                    continue;
-                }
-                Err(why) => {
-                    return Err(Status::internal(why.to_string()));
-                }
-            };
 
             // Cache media files and get updated metadata with local URLs
-            let cached_metadata = match self.media_cache.cache_updated_game_metadata_media(&metadata_row, platform_id).await {
+            let cached_metadata = match self.media_cache.cache_updated_game_metadata_media(&metadata_row).await {
                 Ok(cached) => cached,
                 Err(e) => {
                     tracing::warn!("Failed to cache media for game {}: {}, using original metadata", game_id, e);
