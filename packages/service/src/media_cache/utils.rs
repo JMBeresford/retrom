@@ -53,22 +53,6 @@ pub fn extract_extension_from_url(url: &str) -> Option<String> {
     }
 }
 
-/// Check if a file extension represents a supported image format
-pub fn is_image_extension(extension: &str) -> bool {
-    matches!(
-        extension.to_lowercase().as_str(),
-        "jpg" | "jpeg" | "png" | "gif" | "webp" | "bmp" | "tiff" | "ico"
-    )
-}
-
-/// Check if a file extension represents a supported video format
-pub fn is_video_extension(extension: &str) -> bool {
-    matches!(
-        extension.to_lowercase().as_str(),
-        "mp4" | "avi" | "mov" | "mkv" | "webm" | "flv" | "wmv" | "m4v"
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -119,23 +103,5 @@ mod tests {
             extract_extension_from_url("https://example.com/path/without/extension"),
             None
         );
-    }
-
-    #[test]
-    fn test_is_image_extension() {
-        assert!(is_image_extension("jpg"));
-        assert!(is_image_extension("PNG"));
-        assert!(is_image_extension("webp"));
-        assert!(!is_image_extension("mp4"));
-        assert!(!is_image_extension("txt"));
-    }
-
-    #[test]
-    fn test_is_video_extension() {
-        assert!(is_video_extension("mp4"));
-        assert!(is_video_extension("AVI"));
-        assert!(is_video_extension("webm"));
-        assert!(!is_video_extension("jpg"));
-        assert!(!is_video_extension("txt"));
     }
 }

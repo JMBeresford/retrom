@@ -1,5 +1,5 @@
 use crate::{
-    media_cache::MediaCache,
+    media_cache::{MediaCache, CacheableMetadata},
     providers::{
         igdb::provider::{IGDBProvider, IgdbSearchData},
         steam::provider::SteamWebApiProvider,
@@ -164,7 +164,7 @@ impl MetadataService for MetadataServiceHandlers {
             let game_id = metadata_row.game_id;
 
             // Cache media files and get updated metadata with local URLs
-            let cached_metadata = match self.media_cache.cache_updated_game_metadata_media(&metadata_row).await {
+            let cached_metadata = match metadata_row.cache_metadata(self.media_cache.clone()).await {
                 Ok(cached) => cached,
                 Err(e) => {
                     tracing::warn!("Failed to cache media for game {}: {}, using original metadata", game_id, e);
@@ -240,7 +240,7 @@ impl MetadataService for MetadataServiceHandlers {
         let mut cached_metadata_list = Vec::new();
         for metadata_row in metadata_to_update {
             // Cache media files and get updated metadata with local URLs
-            let cached_metadata = match self.media_cache.cache_updated_platform_metadata_media(&metadata_row).await {
+            let cached_metadata = match metadata_row.cache_metadata(self.media_cache.clone()).await {
                 Ok(cached) => cached,
                 Err(e) => {
                     tracing::warn!("Failed to cache media for platform {}: {}, using original metadata", metadata_row.platform_id, e);

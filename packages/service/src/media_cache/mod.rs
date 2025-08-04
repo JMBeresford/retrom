@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use retrom_codegen::retrom::{GameMetadata, PlatformMetadata};
 use thiserror::Error;
@@ -24,6 +25,190 @@ pub enum MediaCacheError {
 }
 
 pub type Result<T> = std::result::Result<T, MediaCacheError>;
+
+/// Trait for metadata types that can be cached
+pub trait CacheableMetadata: Clone + Send + Sync {
+    /// Get the cache directory for this metadata
+    fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf;
+
+    /// Cache all media files for this metadata and return updated metadata with local paths
+    async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self>;
+
+    /// Clean up cached files for this metadata
+    async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()>;
+}
+
+impl CacheableMetadata for GameMetadata {
+    fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
+        cache.get_game_cache_dir(self.game_id)
+    }
+
+    #[instrument(level = "info", skip(cache))]
+    async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self> {
+        let cache_dir = self.get_cache_dir(&cache);
+        let mut updated_metadata = self.clone();
+
+        if let Some(ref cover_url) = self.cover_url {
+            if let Ok(cached_path) = cache.cache_media_file(cover_url, &cache_dir).await {
+                updated_metadata.cover_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        if let Some(ref background_url) = self.background_url {
+            if let Ok(cached_path) = cache.cache_media_file(background_url, &cache_dir).await {
+                updated_metadata.background_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        if let Some(ref icon_url) = self.icon_url {
+            if let Ok(cached_path) = cache.cache_media_file(icon_url, &cache_dir).await {
+                updated_metadata.icon_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        let mut cached_artwork_urls = Vec::new();
+        for artwork_url in &self.artwork_urls {
+            if let Ok(cached_path) = cache.cache_media_file(artwork_url, &cache_dir).await {
+                cached_artwork_urls.push(cache.get_public_url(&cached_path));
+            } else {
+                cached_artwork_urls.push(artwork_url.clone());
+            }
+        }
+        updated_metadata.artwork_urls = cached_artwork_urls;
+
+        let mut cached_screenshot_urls = Vec::new();
+        for screenshot_url in &self.screenshot_urls {
+            if let Ok(cached_path) = cache.cache_media_file(screenshot_url, &cache_dir).await {
+                cached_screenshot_urls.push(cache.get_public_url(&cached_path));
+            } else {
+                cached_screenshot_urls.push(screenshot_url.clone());
+            }
+        }
+        updated_metadata.screenshot_urls = cached_screenshot_urls;
+
+        Ok(updated_metadata)
+    }
+
+    async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
+        cache.cleanup_game_cache(self.game_id).await
+    }
+}
+
+impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
+    fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
+        cache.get_game_cache_dir(self.game_id)
+    }
+
+    #[instrument(level = "info", skip(cache))]
+    async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self> {
+        let cache_dir = self.get_cache_dir(&cache);
+        let mut updated_metadata = self.clone();
+
+        if let Some(ref cover_url) = self.cover_url {
+            if let Ok(cached_path) = cache.cache_media_file(cover_url, &cache_dir).await {
+                updated_metadata.cover_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        if let Some(ref background_url) = self.background_url {
+            if let Ok(cached_path) = cache.cache_media_file(background_url, &cache_dir).await {
+                updated_metadata.background_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        if let Some(ref icon_url) = self.icon_url {
+            if let Ok(cached_path) = cache.cache_media_file(icon_url, &cache_dir).await {
+                updated_metadata.icon_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        let mut cached_artwork_urls = Vec::new();
+        for artwork_url in &self.artwork_urls {
+            if let Ok(cached_path) = cache.cache_media_file(artwork_url, &cache_dir).await {
+                cached_artwork_urls.push(cache.get_public_url(&cached_path));
+            } else {
+                cached_artwork_urls.push(artwork_url.clone());
+            }
+        }
+        updated_metadata.artwork_urls = cached_artwork_urls;
+
+        let mut cached_screenshot_urls = Vec::new();
+        for screenshot_url in &self.screenshot_urls {
+            if let Ok(cached_path) = cache.cache_media_file(screenshot_url, &cache_dir).await {
+                cached_screenshot_urls.push(cache.get_public_url(&cached_path));
+            } else {
+                cached_screenshot_urls.push(screenshot_url.clone());
+            }
+        }
+        updated_metadata.screenshot_urls = cached_screenshot_urls;
+
+        Ok(updated_metadata)
+    }
+
+    async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
+        cache.cleanup_game_cache(self.game_id).await
+    }
+}
+
+impl CacheableMetadata for PlatformMetadata {
+    fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
+        cache.get_platform_cache_dir(self.platform_id)
+    }
+
+    #[instrument(level = "info", skip(cache))]
+    async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self> {
+        let cache_dir = self.get_cache_dir(&cache);
+        let mut updated_metadata = self.clone();
+
+        if let Some(ref background_url) = self.background_url {
+            if let Ok(cached_path) = cache.cache_media_file(background_url, &cache_dir).await {
+                updated_metadata.background_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        if let Some(ref logo_url) = self.logo_url {
+            if let Ok(cached_path) = cache.cache_media_file(logo_url, &cache_dir).await {
+                updated_metadata.logo_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        Ok(updated_metadata)
+    }
+
+    async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
+        cache.cleanup_platform_cache(self.platform_id).await
+    }
+}
+
+impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
+    fn get_cache_dir(&self, cache: &MediaCache) -> PathBuf {
+        cache.get_platform_cache_dir(self.platform_id)
+    }
+
+    #[instrument(level = "info", skip(cache))]
+    async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self> {
+        let cache_dir = self.get_cache_dir(&cache);
+        let mut updated_metadata = self.clone();
+
+        if let Some(ref background_url) = self.background_url {
+            if let Ok(cached_path) = cache.cache_media_file(background_url, &cache_dir).await {
+                updated_metadata.background_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        if let Some(ref logo_url) = self.logo_url {
+            if let Ok(cached_path) = cache.cache_media_file(logo_url, &cache_dir).await {
+                updated_metadata.logo_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        Ok(updated_metadata)
+    }
+
+    async fn clean_cache(&self, cache: Arc<MediaCache>) -> Result<()> {
+        cache.cleanup_platform_cache(self.platform_id).await
+    }
+}
 
 pub struct MediaCache {
     dirs: RetromDirs,
@@ -80,10 +265,9 @@ impl MediaCache {
 
         debug!("Downloading media file: {} -> {:?}", url, cache_path);
 
-        // Use retry logic with exponential backoff
         let retry_strategy = tokio_retry::strategy::ExponentialBackoff::from_millis(500)
             .max_delay(std::time::Duration::from_secs(10))
-            .take(3); // 3 attempts total
+            .take(3);
 
         let result = tokio_retry::Retry::spawn(retry_strategy, || async {
             let response = self.client.get(url).send().await?;
@@ -105,178 +289,12 @@ impl MediaCache {
         Ok(cache_path)
     }
 
-    /// Cache all media files for game metadata and return updated metadata with local paths
-    #[instrument(level = "info", skip(self))]
-    pub async fn cache_game_metadata_media(&self, metadata: &GameMetadata) -> Result<GameMetadata> {
-        let game_id = metadata.game_id;
-        let cache_dir = self.get_game_cache_dir(game_id);
-        let mut updated_metadata = metadata.clone();
-
-            // Cache cover image
-            if let Some(ref cover_url) = metadata.cover_url {
-                if let Ok(cached_path) = self.cache_media_file(cover_url, &cache_dir).await {
-                    updated_metadata.cover_url = Some(self.get_public_url(&cached_path));
-                }
-            }
-
-            // Cache background image
-            if let Some(ref background_url) = metadata.background_url {
-                if let Ok(cached_path) = self.cache_media_file(background_url, &cache_dir).await {
-                    updated_metadata.background_url = Some(self.get_public_url(&cached_path));
-                }
-            }
-
-            // Cache icon image
-            if let Some(ref icon_url) = metadata.icon_url {
-                if let Ok(cached_path) = self.cache_media_file(icon_url, &cache_dir).await {
-                    updated_metadata.icon_url = Some(self.get_public_url(&cached_path));
-                }
-            }
-
-            // Cache artwork images
-            let mut cached_artwork_urls = Vec::new();
-            for artwork_url in &metadata.artwork_urls {
-                if let Ok(cached_path) = self.cache_media_file(artwork_url, &cache_dir).await {
-                    cached_artwork_urls.push(self.get_public_url(&cached_path));
-                } else {
-                    // Keep original URL if caching fails
-                    cached_artwork_urls.push(artwork_url.clone());
-                }
-            }
-            updated_metadata.artwork_urls = cached_artwork_urls;
-
-            // Cache screenshot images
-            let mut cached_screenshot_urls = Vec::new();
-            for screenshot_url in &metadata.screenshot_urls {
-                if let Ok(cached_path) = self.cache_media_file(screenshot_url, &cache_dir).await {
-                    cached_screenshot_urls.push(self.get_public_url(&cached_path));
-                } else {
-                    // Keep original URL if caching fails
-                    cached_screenshot_urls.push(screenshot_url.clone());
-                }
-            }
-            updated_metadata.screenshot_urls = cached_screenshot_urls;
-
-        // Note: video_urls are typically YouTube embeds, so we don't cache them
-        // They remain unchanged in the updated metadata
-
-        Ok(updated_metadata)
-    }
-
-    /// Cache all media files for updated game metadata and return updated metadata with local paths
-    #[instrument(level = "info", skip(self))]
-    pub async fn cache_updated_game_metadata_media(&self, metadata: &retrom_codegen::retrom::UpdatedGameMetadata) -> Result<retrom_codegen::retrom::UpdatedGameMetadata> {
-        let game_id = metadata.game_id;
-        let cache_dir = self.get_game_cache_dir(game_id);
-        let mut updated_metadata = metadata.clone();
-
-        // Cache cover image
-        if let Some(ref cover_url) = metadata.cover_url {
-            if let Ok(cached_path) = self.cache_media_file(cover_url, &cache_dir).await {
-                updated_metadata.cover_url = Some(self.get_public_url(&cached_path));
-            }
-        }
-
-        // Cache background image
-        if let Some(ref background_url) = metadata.background_url {
-            if let Ok(cached_path) = self.cache_media_file(background_url, &cache_dir).await {
-                updated_metadata.background_url = Some(self.get_public_url(&cached_path));
-            }
-        }
-
-        // Cache icon image
-        if let Some(ref icon_url) = metadata.icon_url {
-            if let Ok(cached_path) = self.cache_media_file(icon_url, &cache_dir).await {
-                updated_metadata.icon_url = Some(self.get_public_url(&cached_path));
-            }
-        }
-
-        // Cache artwork images
-        let mut cached_artwork_urls = Vec::new();
-        for artwork_url in &metadata.artwork_urls {
-            if let Ok(cached_path) = self.cache_media_file(artwork_url, &cache_dir).await {
-                cached_artwork_urls.push(self.get_public_url(&cached_path));
-            } else {
-                // Keep original URL if caching fails
-                cached_artwork_urls.push(artwork_url.clone());
-            }
-        }
-        updated_metadata.artwork_urls = cached_artwork_urls;
-
-        // Cache screenshot images
-        let mut cached_screenshot_urls = Vec::new();
-        for screenshot_url in &metadata.screenshot_urls {
-            if let Ok(cached_path) = self.cache_media_file(screenshot_url, &cache_dir).await {
-                cached_screenshot_urls.push(self.get_public_url(&cached_path));
-            } else {
-                // Keep original URL if caching fails
-                cached_screenshot_urls.push(screenshot_url.clone());
-            }
-        }
-        updated_metadata.screenshot_urls = cached_screenshot_urls;
-
-        // Note: video_urls are typically YouTube embeds, so we don't cache them
-        // They remain unchanged in the updated metadata
-
-        Ok(updated_metadata)
-    }
-
-    /// Cache all media files for platform metadata and return updated metadata with local paths
-    #[instrument(level = "info", skip(self))]
-    pub async fn cache_platform_metadata_media(&self, metadata: &PlatformMetadata) -> Result<PlatformMetadata> {
-        let platform_id = metadata.platform_id;
-        let cache_dir = self.get_platform_cache_dir(platform_id);
-        let mut updated_metadata = metadata.clone();
-
-            // Cache background image
-            if let Some(ref background_url) = metadata.background_url {
-                if let Ok(cached_path) = self.cache_media_file(background_url, &cache_dir).await {
-                    updated_metadata.background_url = Some(self.get_public_url(&cached_path));
-                }
-            }
-
-            // Cache logo image
-            if let Some(ref logo_url) = metadata.logo_url {
-                if let Ok(cached_path) = self.cache_media_file(logo_url, &cache_dir).await {
-                    updated_metadata.logo_url = Some(self.get_public_url(&cached_path));
-                }
-            }
-
-        Ok(updated_metadata)
-    }
-
-    /// Cache all media files for updated platform metadata and return updated metadata with local paths
-    #[instrument(level = "info", skip(self))]
-    pub async fn cache_updated_platform_metadata_media(&self, metadata: &retrom_codegen::retrom::UpdatedPlatformMetadata) -> Result<retrom_codegen::retrom::UpdatedPlatformMetadata> {
-        let platform_id = metadata.platform_id;
-        let cache_dir = self.get_platform_cache_dir(platform_id);
-        let mut updated_metadata = metadata.clone();
-
-        // Cache background image
-        if let Some(ref background_url) = metadata.background_url {
-            if let Ok(cached_path) = self.cache_media_file(background_url, &cache_dir).await {
-                updated_metadata.background_url = Some(self.get_public_url(&cached_path));
-            }
-        }
-
-        // Cache logo image
-        if let Some(ref logo_url) = metadata.logo_url {
-            if let Ok(cached_path) = self.cache_media_file(logo_url, &cache_dir).await {
-                updated_metadata.logo_url = Some(self.get_public_url(&cached_path));
-            }
-        }
-
-        Ok(updated_metadata)
-    }
-
     /// Convert a local cache path to a public URL that can be served by the web server
-    fn get_public_url(&self, cache_path: &PathBuf) -> String {
-        // Convert absolute cache path to relative path from media_dir
+    pub fn get_public_url(&self, cache_path: &PathBuf) -> String {
         let media_dir = self.dirs.media_dir();
         if let Ok(relative_path) = cache_path.strip_prefix(&media_dir) {
             format!("/media/{}", relative_path.to_string_lossy().replace('\\', "/"))
         } else {
-            // Fallback: use just the filename
             format!("/media/{}", cache_path.file_name().unwrap_or_default().to_string_lossy())
         }
     }
@@ -312,7 +330,6 @@ mod integration_tests {
     use std::env;
 
     fn create_test_retrom_dirs(temp_dir: &TempDir) -> RetromDirs {
-        // Set environment variables to use our temp directory
         env::set_var("RETROM_DATA_DIR", temp_dir.path());
         RetromDirs::new()
     }
