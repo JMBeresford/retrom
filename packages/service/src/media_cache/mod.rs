@@ -230,6 +230,102 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
     }
 }
 
+impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
+    fn get_cache_dir(&self) -> PathBuf {
+        RetromDirs::new().media_dir().join("games").join(self.game_id.unwrap_or(0).to_string())
+    }
+
+    #[instrument(level = "info", skip(cache))]
+    async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self> {
+        let cache_dir = self.get_cache_dir();
+        let mut updated_metadata = self.clone();
+
+        if let Some(ref cover_url) = self.cover_url {
+            if let Ok(cached_path) = cache.cache_media_file(cover_url, &cache_dir).await {
+                updated_metadata.cover_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        if let Some(ref background_url) = self.background_url {
+            if let Ok(cached_path) = cache.cache_media_file(background_url, &cache_dir).await {
+                updated_metadata.background_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        if let Some(ref icon_url) = self.icon_url {
+            if let Ok(cached_path) = cache.cache_media_file(icon_url, &cache_dir).await {
+                updated_metadata.icon_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        let mut cached_artwork_urls = Vec::new();
+        for artwork_url in &self.artwork_urls {
+            if let Ok(cached_path) = cache.cache_media_file(artwork_url, &cache_dir).await {
+                cached_artwork_urls.push(cache.get_public_url(&cached_path));
+            } else {
+                cached_artwork_urls.push(artwork_url.clone());
+            }
+        }
+        updated_metadata.artwork_urls = cached_artwork_urls;
+
+        let mut cached_screenshot_urls = Vec::new();
+        for screenshot_url in &self.screenshot_urls {
+            if let Ok(cached_path) = cache.cache_media_file(screenshot_url, &cache_dir).await {
+                cached_screenshot_urls.push(cache.get_public_url(&cached_path));
+            } else {
+                cached_screenshot_urls.push(screenshot_url.clone());
+            }
+        }
+        updated_metadata.screenshot_urls = cached_screenshot_urls;
+
+        Ok(updated_metadata)
+    }
+
+    async fn clean_cache(&self) -> Result<()> {
+        let cache_dir = RetromDirs::new().media_dir().join("games").join(self.game_id.unwrap_or(0).to_string());
+        if cache_dir.exists() {
+            debug!("Cleaning up cache directory: {:?}", cache_dir);
+            fs::remove_dir_all(&cache_dir).await?;
+        }
+        Ok(())
+    }
+}
+
+impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
+    fn get_cache_dir(&self) -> PathBuf {
+        RetromDirs::new().media_dir().join("platforms").join(self.platform_id.unwrap_or(0).to_string())
+    }
+
+    #[instrument(level = "info", skip(cache))]
+    async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<Self> {
+        let cache_dir = self.get_cache_dir();
+        let mut updated_metadata = self.clone();
+
+        if let Some(ref background_url) = self.background_url {
+            if let Ok(cached_path) = cache.cache_media_file(background_url, &cache_dir).await {
+                updated_metadata.background_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        if let Some(ref logo_url) = self.logo_url {
+            if let Ok(cached_path) = cache.cache_media_file(logo_url, &cache_dir).await {
+                updated_metadata.logo_url = Some(cache.get_public_url(&cached_path));
+            }
+        }
+
+        Ok(updated_metadata)
+    }
+
+    async fn clean_cache(&self) -> Result<()> {
+        let cache_dir = RetromDirs::new().media_dir().join("platforms").join(self.platform_id.unwrap_or(0).to_string());
+        if cache_dir.exists() {
+            debug!("Cleaning up platform cache directory: {:?}", cache_dir);
+            fs::remove_dir_all(&cache_dir).await?;
+        }
+        Ok(())
+    }
+}
+
 pub struct MediaCache {
     client: reqwest::Client,
 }
@@ -325,7 +421,7 @@ mod integration_tests {
     async fn test_media_cache_basic_functionality() {
         // Create a temporary directory for testing
         let temp_dir = TempDir::new().unwrap();
-        let dirs = create_test_retrom_dirs(&temp_dir);
+        let _dirs = create_test_retrom_dirs(&temp_dir);
         let _cache = MediaCache::new();
 
         // Test that cache directories are created correctly using trait implementations
@@ -375,10 +471,12 @@ mod integration_tests {
     #[tokio::test]
     async fn test_url_to_public_path_conversion() {
         let temp_dir = TempDir::new().unwrap();
-        let dirs = create_test_retrom_dirs(&temp_dir);
+        let _dirs = create_test_retrom_dirs(&temp_dir);
         let cache = MediaCache::new();
         
-        let test_path = temp_dir.path().join("public").join("media").join("games").join("42").join("image.jpg");
+        // Use the actual media directory from RetromDirs::new() (which uses the test env)
+        let media_dir = RetromDirs::new().media_dir();
+        let test_path = media_dir.join("games").join("42").join("image.jpg");
         let public_url = cache.get_public_url(&test_path);
         
         assert_eq!(public_url, "/media/games/42/image.jpg");
