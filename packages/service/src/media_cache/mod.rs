@@ -231,18 +231,17 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
 }
 
 pub struct MediaCache {
-    pub dirs: RetromDirs,
     client: reqwest::Client,
 }
 
 impl MediaCache {
-    pub fn new(dirs: RetromDirs) -> Self {
+    pub fn new() -> Self {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
             .unwrap_or_else(|_| reqwest::Client::new());
 
-        Self { dirs, client }
+        Self { client }
     }
 
     /// Ensure the cache directory exists
@@ -301,7 +300,7 @@ impl MediaCache {
 
     /// Convert a local cache path to a public URL that can be served by the web server
     pub fn get_public_url(&self, cache_path: &PathBuf) -> String {
-        let media_dir = self.dirs.media_dir();
+        let media_dir = RetromDirs::new().media_dir();
         if let Ok(relative_path) = cache_path.strip_prefix(&media_dir) {
             format!("/media/{}", relative_path.to_string_lossy().replace('\\', "/"))
         } else {
@@ -327,7 +326,7 @@ mod integration_tests {
         // Create a temporary directory for testing
         let temp_dir = TempDir::new().unwrap();
         let dirs = create_test_retrom_dirs(&temp_dir);
-        let _cache = MediaCache::new(dirs);
+        let _cache = MediaCache::new();
 
         // Test that cache directories are created correctly using trait implementations
         let game_metadata = GameMetadata {
@@ -377,7 +376,7 @@ mod integration_tests {
     async fn test_url_to_public_path_conversion() {
         let temp_dir = TempDir::new().unwrap();
         let dirs = create_test_retrom_dirs(&temp_dir);
-        let cache = MediaCache::new(dirs);
+        let cache = MediaCache::new();
         
         let test_path = temp_dir.path().join("public").join("media").join("games").join("42").join("image.jpg");
         let public_url = cache.get_public_url(&test_path);
