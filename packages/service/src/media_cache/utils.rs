@@ -30,6 +30,21 @@ pub fn generate_cache_filename(url: &str) -> Result<String> {
     Ok(format!("{}.{}", short_hash, extension))
 }
 
+/// Generate a semantic filename for first-class media types using the semantic name and URL extension
+pub fn generate_semantic_filename(url: &str, semantic_name: &str) -> Result<String> {
+    // Parse the URL to extract the extension
+    let parsed_url = Url::parse(url)?;
+    let path = parsed_url.path();
+    
+    // Extract file extension from the URL path
+    let extension = Path::new(path)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .unwrap_or("bin"); // Default extension if none found
+
+    Ok(format!("{}.{}", semantic_name, extension))
+}
+
 /// Validate that a URL is safe to cache (basic security checks)
 pub fn is_cacheable_url(url: &str) -> bool {
     if let Ok(parsed_url) = Url::parse(url) {
@@ -78,6 +93,25 @@ mod tests {
         
         // Should use "bin" as default extension
         assert!(filename.ends_with(".bin"));
+    }
+
+    #[test]
+    fn test_generate_semantic_filename() {
+        let url = "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/abcd1234.jpg";
+        let filename = generate_semantic_filename(url, "cover").unwrap();
+        
+        // Should be the semantic name followed by the extension
+        assert_eq!(filename, "cover.jpg");
+        
+        // Test with different extension
+        let url_png = "https://example.com/background.png";
+        let filename_png = generate_semantic_filename(url_png, "background").unwrap();
+        assert_eq!(filename_png, "background.png");
+        
+        // Test with no extension
+        let url_no_ext = "https://example.com/icon";
+        let filename_no_ext = generate_semantic_filename(url_no_ext, "icon").unwrap();
+        assert_eq!(filename_no_ext, "icon.bin");
     }
 
     #[test]
