@@ -25,6 +25,7 @@ use retrom_db::embedded::DB_NAME;
 pub mod config;
 pub mod emulator_js;
 mod grpc;
+pub mod media_cache;
 pub mod meta;
 mod providers;
 mod rest;

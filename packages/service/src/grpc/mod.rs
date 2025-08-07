@@ -23,6 +23,8 @@ use tower_http::cors::{AllowOrigin, Cors, CorsLayer};
 
 use crate::{
     config::ServerConfigManager,
+    media_cache::MediaCache,
+    meta::RetromDirs,
     providers::{igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider},
 };
 
@@ -86,6 +88,9 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> C
     let igdb_client = Arc::new(IGDBProvider::new(config_manager.clone()));
     let steam_web_api_client = Arc::new(SteamWebApiProvider::new(config_manager.clone()));
 
+    let _retrom_dirs = RetromDirs::new();
+    let media_cache = Arc::new(MediaCache::new());
+
     let job_manager = Arc::new(JobManager::new());
 
     let reflection_service = tonic_reflection::server::Builder::configure()
@@ -99,12 +104,14 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> C
         steam_web_api_client.clone(),
         job_manager.clone(),
         config_manager.clone(),
+        media_cache.clone(),
     ));
 
     let metadata_service = MetadataServiceServer::new(MetadataServiceHandlers::new(
         shared_pool.clone(),
         igdb_client.clone(),
         steam_web_api_client.clone(),
+        media_cache.clone(),
     ));
 
     let game_service = GameServiceServer::new(GameServiceHandlers::new(shared_pool.clone()));

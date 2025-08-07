@@ -6,6 +6,7 @@ use std::{
 
 use crate::{
     grpc::jobs::job_manager::JobOptions,
+    media_cache::CacheableMetadata,
     providers::{
         igdb::provider::IgdbSearchData, GameMetadataProvider, MetadataProvider,
         PlatformMetadataProvider,
@@ -60,6 +61,7 @@ pub async fn update_metadata(
         .map(|platform| {
             let igdb_provider = state.igdb_client.clone();
             let db_pool = db_pool.clone();
+            let media_cache = state.media_cache.clone();
 
             async move {
                 let mut conn = match db_pool.get().await {
@@ -106,6 +108,12 @@ pub async fn update_metadata(
                 };
 
                 if let Some(metadata) = metadata {
+                    // Cache media files outside of transaction
+                    let _cached_result = metadata.cache_metadata(media_cache.clone()).await;
+                    if let Err(e) = _cached_result {
+                        tracing::warn!("Failed to cache media for platform {:?}: {}, storing original metadata", metadata.platform_id, e);
+                    }
+
                     diesel::insert_into(schema::platform_metadata::table)
                         .values(&metadata)
                         .on_conflict(schema::platform_metadata::platform_id)
@@ -142,6 +150,7 @@ pub async fn update_metadata(
         .map(|game| {
             let igdb_provider = state.igdb_client.clone();
             let db_pool = db_pool.clone();
+            let media_cache = state.media_cache.clone();
 
             async move {
                 let mut conn = match db_pool.get().await {
@@ -204,6 +213,12 @@ pub async fn update_metadata(
                 };
 
                 if let Some(metadata) = metadata {
+                    // Cache media files outside of transaction
+                    let _cached_result = metadata.cache_metadata(media_cache.clone()).await;
+                    if let Err(e) = _cached_result {
+                        tracing::warn!("Failed to cache media for game {:?}: {}, storing original metadata", metadata.game_id, e);
+                    }
+
                     if let Err(e) = diesel::insert_into(schema::game_metadata::table)
                         .values(&metadata)
                         .on_conflict(schema::game_metadata::game_id)
@@ -472,6 +487,7 @@ pub async fn update_metadata(
             let steam_provider = steam_provider.clone();
             let db_pool = db_pool.clone();
             let steam_games = steam_games.clone();
+            let media_cache = state.media_cache.clone();
 
             let steam_appid = app.appid;
 
@@ -535,6 +551,12 @@ pub async fn update_metadata(
                         };
 
                         return Ok(());
+                    }
+
+                    // Cache media files outside of transaction
+                    let _cached_result = metadata.cache_metadata(media_cache.clone()).await;
+                    if let Err(e) = _cached_result {
+                        tracing::warn!("Failed to cache media for Steam game {}: {}, storing original metadata", game_id, e);
                     }
 
                     if let Err(why) = diesel::insert_into(schema::game_metadata::table)
