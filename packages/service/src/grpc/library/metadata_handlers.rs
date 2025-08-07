@@ -108,20 +108,17 @@ pub async fn update_metadata(
                 };
 
                 if let Some(metadata) = metadata {
-                    // Cache media files before inserting into database
-                    let cached_metadata = match metadata.cache_metadata(media_cache.clone()).await {
-                        Ok(cached) => cached,
-                        Err(e) => {
-                            tracing::warn!("Failed to cache media for platform {:?}: {}, using original metadata", metadata.platform_id, e);
-                            metadata // Use original metadata if caching fails
-                        }
-                    };
+                    // Cache media files outside of transaction
+                    let _cached_result = metadata.cache_metadata(media_cache.clone()).await;
+                    if let Err(e) = _cached_result {
+                        tracing::warn!("Failed to cache media for platform {:?}: {}, storing original metadata", metadata.platform_id, e);
+                    }
 
                     diesel::insert_into(schema::platform_metadata::table)
-                        .values(&cached_metadata)
+                        .values(&metadata)
                         .on_conflict(schema::platform_metadata::platform_id)
                         .do_update()
-                        .set(&cached_metadata)
+                        .set(&metadata)
                         .execute(&mut conn)
                         .await
                         .map_err(|e| {
@@ -216,20 +213,17 @@ pub async fn update_metadata(
                 };
 
                 if let Some(metadata) = metadata {
-                    // Cache media files before inserting into database
-                    let cached_metadata = match metadata.cache_metadata(media_cache.clone()).await {
-                        Ok(cached) => cached,
-                        Err(e) => {
-                            tracing::warn!("Failed to cache media for game {:?}: {}, using original metadata", metadata.game_id, e);
-                            metadata // Use original metadata if caching fails
-                        }
-                    };
+                    // Cache media files outside of transaction
+                    let _cached_result = metadata.cache_metadata(media_cache.clone()).await;
+                    if let Err(e) = _cached_result {
+                        tracing::warn!("Failed to cache media for game {:?}: {}, storing original metadata", metadata.game_id, e);
+                    }
 
                     if let Err(e) = diesel::insert_into(schema::game_metadata::table)
-                        .values(&cached_metadata)
+                        .values(&metadata)
                         .on_conflict(schema::game_metadata::game_id)
                         .do_update()
-                        .set(&cached_metadata)
+                        .set(&metadata)
                         .get_results::<retrom::GameMetadata>(&mut conn)
                         .await
                         .optional()
@@ -559,17 +553,14 @@ pub async fn update_metadata(
                         return Ok(());
                     }
 
-                    // Cache media files before inserting into database
-                    let cached_metadata = match metadata.cache_metadata(media_cache.clone()).await {
-                        Ok(cached) => cached,
-                        Err(e) => {
-                            tracing::warn!("Failed to cache media for Steam game {}: {}, using original metadata", game_id, e);
-                            metadata // Use original metadata if caching fails
-                        }
-                    };
+                    // Cache media files outside of transaction
+                    let _cached_result = metadata.cache_metadata(media_cache.clone()).await;
+                    if let Err(e) = _cached_result {
+                        tracing::warn!("Failed to cache media for Steam game {}: {}, storing original metadata", game_id, e);
+                    }
 
                     if let Err(why) = diesel::insert_into(schema::game_metadata::table)
-                        .values(&cached_metadata)
+                        .values(&metadata)
                         .on_conflict_do_nothing()
                         .execute(&mut conn)
                         .await

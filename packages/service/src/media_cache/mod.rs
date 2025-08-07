@@ -66,9 +66,10 @@ impl CacheableMetadata for GameMetadata {
             }
         }
 
+        let artwork_cache_dir = cache_dir.join("artwork");
         let mut cached_artwork_urls = Vec::new();
         for artwork_url in &self.artwork_urls {
-            if let Ok(cached_path) = cache.cache_media_file(artwork_url, &cache_dir, None).await {
+            if let Ok(cached_path) = cache.cache_media_file(artwork_url, &artwork_cache_dir, None).await {
                 cached_artwork_urls.push(cache.get_public_url(&cached_path));
             } else {
                 cached_artwork_urls.push(artwork_url.clone());
@@ -76,9 +77,10 @@ impl CacheableMetadata for GameMetadata {
         }
         updated_metadata.artwork_urls = cached_artwork_urls;
 
+        let screenshot_cache_dir = cache_dir.join("screenshots");
         let mut cached_screenshot_urls = Vec::new();
         for screenshot_url in &self.screenshot_urls {
-            if let Ok(cached_path) = cache.cache_media_file(screenshot_url, &cache_dir, None).await {
+            if let Ok(cached_path) = cache.cache_media_file(screenshot_url, &screenshot_cache_dir, None).await {
                 cached_screenshot_urls.push(cache.get_public_url(&cached_path));
             } else {
                 cached_screenshot_urls.push(screenshot_url.clone());
@@ -127,9 +129,10 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
             }
         }
 
+        let artwork_cache_dir = cache_dir.join("artwork");
         let mut cached_artwork_urls = Vec::new();
         for artwork_url in &self.artwork_urls {
-            if let Ok(cached_path) = cache.cache_media_file(artwork_url, &cache_dir, None).await {
+            if let Ok(cached_path) = cache.cache_media_file(artwork_url, &artwork_cache_dir, None).await {
                 cached_artwork_urls.push(cache.get_public_url(&cached_path));
             } else {
                 cached_artwork_urls.push(artwork_url.clone());
@@ -137,9 +140,10 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
         }
         updated_metadata.artwork_urls = cached_artwork_urls;
 
+        let screenshot_cache_dir = cache_dir.join("screenshots");
         let mut cached_screenshot_urls = Vec::new();
         for screenshot_url in &self.screenshot_urls {
-            if let Ok(cached_path) = cache.cache_media_file(screenshot_url, &cache_dir, None).await {
+            if let Ok(cached_path) = cache.cache_media_file(screenshot_url, &screenshot_cache_dir, None).await {
                 cached_screenshot_urls.push(cache.get_public_url(&cached_path));
             } else {
                 cached_screenshot_urls.push(screenshot_url.clone());
@@ -258,9 +262,10 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
             }
         }
 
+        let artwork_cache_dir = cache_dir.join("artwork");
         let mut cached_artwork_urls = Vec::new();
         for artwork_url in &self.artwork_urls {
-            if let Ok(cached_path) = cache.cache_media_file(artwork_url, &cache_dir, None).await {
+            if let Ok(cached_path) = cache.cache_media_file(artwork_url, &artwork_cache_dir, None).await {
                 cached_artwork_urls.push(cache.get_public_url(&cached_path));
             } else {
                 cached_artwork_urls.push(artwork_url.clone());
@@ -268,9 +273,10 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
         }
         updated_metadata.artwork_urls = cached_artwork_urls;
 
+        let screenshot_cache_dir = cache_dir.join("screenshots");
         let mut cached_screenshot_urls = Vec::new();
         for screenshot_url in &self.screenshot_urls {
-            if let Ok(cached_path) = cache.cache_media_file(screenshot_url, &cache_dir, None).await {
+            if let Ok(cached_path) = cache.cache_media_file(screenshot_url, &screenshot_cache_dir, None).await {
                 cached_screenshot_urls.push(cache.get_public_url(&cached_path));
             } else {
                 cached_screenshot_urls.push(screenshot_url.clone());
@@ -525,5 +531,53 @@ mod integration_tests {
         let background_filename = utils::generate_semantic_filename(url, "background").unwrap();
         assert_eq!(background_filename, "background.jpg");
         assert_ne!(semantic_filename, background_filename);
+    }
+
+    #[tokio::test]
+    async fn test_subdirectory_organization() {
+        let temp_dir = TempDir::new().unwrap();
+        let _dirs = create_test_retrom_dirs(&temp_dir);
+        let cache = MediaCache::new();
+
+        // Create test game metadata with artwork and screenshot URLs
+        let game_metadata = GameMetadata {
+            game_id: 123,
+            name: Some("Test Game".to_string()),
+            description: None,
+            cover_url: None,
+            background_url: None,
+            icon_url: None,
+            igdb_id: None,
+            created_at: None,
+            updated_at: None,
+            links: vec![],
+            video_urls: vec![],
+            screenshot_urls: vec!["https://example.com/screenshot1.png".to_string()],
+            artwork_urls: vec!["https://example.com/artwork1.jpg".to_string()],
+            release_date: None,
+            last_played: None,
+            minutes_played: Some(0),
+        };
+
+        let cache_dir = game_metadata.get_cache_dir();
+        
+        // Verify subdirectories would be created at the right paths
+        let artwork_cache_dir = cache_dir.join("artwork");
+        let screenshot_cache_dir = cache_dir.join("screenshots");
+        
+        // Check paths are structured correctly
+        assert!(cache_dir.to_string_lossy().ends_with("public/media/games/123"));
+        assert!(artwork_cache_dir.to_string_lossy().ends_with("public/media/games/123/artwork"));
+        assert!(screenshot_cache_dir.to_string_lossy().ends_with("public/media/games/123/screenshots"));
+        
+        // Verify URL conversion for subdirectories would work
+        let test_artwork_path = artwork_cache_dir.join("test.jpg");
+        let test_screenshot_path = screenshot_cache_dir.join("test.png");
+        
+        let artwork_url = cache.get_public_url(&test_artwork_path);
+        let screenshot_url = cache.get_public_url(&test_screenshot_path);
+        
+        assert_eq!(artwork_url, "/media/games/123/artwork/test.jpg");
+        assert_eq!(screenshot_url, "/media/games/123/screenshots/test.png");
     }
 }
