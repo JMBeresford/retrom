@@ -19,7 +19,7 @@ Thank you for considering contributing to Retrom! This document provides a high-
 1. Clone the repository
 
    ```bash
-   git clone https://github.com/your-organization/retrom.git
+   git clone https://github.com/JMBeresford/retrom.git
    cd retrom
    ```
 
