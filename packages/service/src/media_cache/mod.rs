@@ -4,6 +4,8 @@ use caesium::parameters::CSParameters;
 use rayon::ThreadPool;
 use reqwest::StatusCode;
 use retrom_codegen::retrom::{GameMetadata, PlatformMetadata};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use thiserror::Error;
@@ -47,6 +49,19 @@ impl From<reqwest::Error> for MediaCacheError {
 }
 
 pub type Result<T> = std::result::Result<T, MediaCacheError>;
+
+/// Metadata index entry for a cached media file
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IndexEntry {
+    /// The remote URL this file was cached from
+    pub remote_url: Option<String>,
+    /// Timestamp when the file was last updated/cached
+    pub updated_at: i64, // Unix timestamp
+}
+
+/// Sidecar index file that tracks metadata for cached files
+/// Keys are relative paths to media files from the index directory
+pub type MetadataIndex = HashMap<String, IndexEntry>;
 
 /// Trait for metadata types that can be cached
 pub trait CacheableMetadata: Clone + Send + Sync {
@@ -580,6 +595,92 @@ impl MediaCache {
         Ok(())
     }
 
+    /// Get the path to the index file for a cache directory
+    fn get_index_path(&self, cache_dir: &Path) -> PathBuf {
+        cache_dir.join("index.json")
+    }
+
+    /// Read the index file for a cache directory
+    #[instrument(level = "debug", skip(self))]
+    async fn read_index(&self, cache_dir: &Path) -> Result<MetadataIndex> {
+        let index_path = self.get_index_path(cache_dir);
+
+        if !index_path.exists() {
+            debug!(
+                "Index file does not exist, returning empty index: {:?}",
+                index_path
+            );
+            return Ok(HashMap::new());
+        }
+
+        let index_content = fs::read_to_string(&index_path).await?;
+        let index: MetadataIndex = serde_json::from_str(&index_content).map_err(|e| {
+            MediaCacheError::Io(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+        })?;
+
+        debug!(
+            "Read index with {} entries from: {:?}",
+            index.len(),
+            index_path
+        );
+        Ok(index)
+    }
+
+    /// Write the index file for a cache directory
+    #[instrument(level = "debug", skip(self, index))]
+    async fn write_index(&self, cache_dir: &Path, index: &MetadataIndex) -> Result<()> {
+        let index_path = self.get_index_path(cache_dir);
+        let index_content = serde_json::to_string_pretty(index).map_err(|e| {
+            MediaCacheError::Io(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+        })?;
+
+        fs::write(&index_path, index_content).await?;
+        debug!(
+            "Wrote index with {} entries to: {:?}",
+            index.len(),
+            index_path
+        );
+        Ok(())
+    }
+
+    /// Update the index with a new or updated cache entry
+    #[instrument(level = "debug", skip(self))]
+    async fn update_index_entry(
+        &self,
+        cache_dir: &Path,
+        relative_path: &str,
+        remote_url: &str,
+    ) -> Result<()> {
+        let mut index = self.read_index(cache_dir).await?;
+
+        let entry = IndexEntry {
+            remote_url: Some(remote_url.to_string()),
+            updated_at: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs() as i64)
+                .unwrap_or(0),
+        };
+
+        index.insert(relative_path.to_string(), entry);
+        self.write_index(cache_dir, &index).await?;
+
+        debug!("Updated index entry: {} -> {}", relative_path, remote_url);
+        Ok(())
+    }
+
+    /// Remove an entry from the index
+    #[instrument(level = "debug", skip(self))]
+    async fn remove_index_entry(&self, cache_dir: &Path, relative_path: &str) -> Result<()> {
+        let mut index = self.read_index(cache_dir).await?;
+
+        if index.remove(relative_path).is_some() {
+            self.write_index(cache_dir, &index).await?;
+            debug!("Removed index entry: {}", relative_path);
+        }
+
+        Ok(())
+    }
+
     /// Download and cache a media file, return the local file path
     /// If semantic_name is provided, uses semantic filename (e.g., "cover.jpg")
     /// Otherwise uses hashed filename for uniqueness
@@ -599,9 +700,11 @@ impl MediaCache {
 
         let cache_path = cache_dir.join(&filename);
 
-        // If file already exists, return the cached path
+        // If file already exists, update the index and return the cached path
         if cache_path.exists() {
             debug!("Media file already cached: {:?}", cache_path);
+            // Update the index entry to ensure it's tracked
+            self.update_index_entry(cache_dir, &filename, url).await?;
             return Ok(cache_path);
         }
 
@@ -642,6 +745,9 @@ impl MediaCache {
         params.keep_metadata = false;
 
         self.compress_media(&cache_path, params).await?;
+
+        // Update the index with the new cache entry
+        self.update_index_entry(cache_dir, &filename, url).await?;
 
         debug!("Media file cached successfully: {:?}", cache_path);
         Ok(cache_path)
@@ -692,6 +798,27 @@ impl MediaCache {
                 )))
             }
         }
+    }
+
+    /// Delete a cached file and remove it from the index
+    #[instrument(skip(self))]
+    pub async fn delete_cached_file(&self, cache_dir: &Path, filename: &str) -> Result<()> {
+        let cache_path = cache_dir.join(filename);
+
+        if cache_path.exists() {
+            fs::remove_file(&cache_path).await?;
+            debug!("Deleted cached file: {:?}", cache_path);
+        }
+
+        // Remove from index
+        self.remove_index_entry(cache_dir, filename).await?;
+
+        Ok(())
+    }
+
+    /// Get the metadata index for a cache directory
+    pub async fn get_index(&self, cache_dir: &Path) -> Result<MetadataIndex> {
+        self.read_index(cache_dir).await
     }
 
     /// Convert a local cache path to a public URL that can be served by the web server
@@ -891,5 +1018,95 @@ mod integration_tests {
 
         assert_eq!(artwork_url, "/media/games/123/artwork/test.jpg");
         assert_eq!(screenshot_url, "/media/games/123/screenshots/test.png");
+    }
+
+    #[tokio::test]
+    async fn test_index_management() {
+        let temp_dir = TempDir::new().unwrap();
+        let _dirs = create_test_retrom_dirs(&temp_dir);
+        let cache = MediaCache::new();
+
+        let cache_dir = temp_dir.path().join("test_cache");
+        fs::create_dir_all(&cache_dir).await.unwrap();
+
+        // Test empty index
+        let index = cache.get_index(&cache_dir).await.unwrap();
+        assert!(index.is_empty());
+
+        // Test updating index entry
+        let url = "https://example.com/image.jpg";
+        cache
+            .update_index_entry(&cache_dir, "image.jpg", url)
+            .await
+            .unwrap();
+
+        // Verify index has the entry
+        let index = cache.get_index(&cache_dir).await.unwrap();
+        assert_eq!(index.len(), 1);
+        let entry = index.get("image.jpg").unwrap();
+        assert_eq!(entry.remote_url, Some(url.to_string()));
+        assert!(entry.updated_at > 0);
+
+        // Test updating existing entry
+        let new_url = "https://example.com/updated.jpg";
+        cache
+            .update_index_entry(&cache_dir, "image.jpg", new_url)
+            .await
+            .unwrap();
+
+        let index = cache.get_index(&cache_dir).await.unwrap();
+        assert_eq!(index.len(), 1);
+        let entry = index.get("image.jpg").unwrap();
+        assert_eq!(entry.remote_url, Some(new_url.to_string()));
+
+        // Test removing entry
+        cache
+            .remove_index_entry(&cache_dir, "image.jpg")
+            .await
+            .unwrap();
+
+        let index = cache.get_index(&cache_dir).await.unwrap();
+        assert!(index.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_index_persistence() {
+        let temp_dir = TempDir::new().unwrap();
+        let _dirs = create_test_retrom_dirs(&temp_dir);
+        let cache_dir = temp_dir.path().join("test_cache");
+        fs::create_dir_all(&cache_dir).await.unwrap();
+
+        // Create cache and add entry
+        {
+            let cache = MediaCache::new();
+            cache
+                .update_index_entry(&cache_dir, "test.jpg", "https://example.com/test.jpg")
+                .await
+                .unwrap();
+        }
+
+        // Create new cache instance and verify entry persists
+        {
+            let cache = MediaCache::new();
+            let index = cache.get_index(&cache_dir).await.unwrap();
+            assert_eq!(index.len(), 1);
+            let entry = index.get("test.jpg").unwrap();
+            assert_eq!(
+                entry.remote_url,
+                Some("https://example.com/test.jpg".to_string())
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_index_file_location() {
+        let temp_dir = TempDir::new().unwrap();
+        let _dirs = create_test_retrom_dirs(&temp_dir);
+        let cache = MediaCache::new();
+
+        let cache_dir = temp_dir.path().join("test_cache");
+        let expected_index_path = cache_dir.join("index.json");
+
+        assert_eq!(cache.get_index_path(&cache_dir), expected_index_path);
     }
 }
