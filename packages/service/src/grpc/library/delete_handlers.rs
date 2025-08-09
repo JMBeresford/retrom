@@ -2,13 +2,16 @@ use std::{collections::HashSet, path::PathBuf, str::FromStr};
 
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
+use futures::future::join_all;
 use retrom_codegen::retrom::{
     DeleteLibraryRequest, DeleteLibraryResponse, DeleteMissingEntriesRequest,
-    DeleteMissingEntriesResponse, Game, GameFile, Platform,
+    DeleteMissingEntriesResponse, Game, GameFile, GameMetadata, Platform, PlatformMetadata,
 };
 use retrom_db::schema;
 use tonic::Status;
 use tracing::error;
+
+use crate::media_cache::CacheableMetadata;
 
 use super::LibraryServiceHandlers;
 
@@ -24,6 +27,20 @@ pub async fn delete_library(
     match conn
         .transaction(|conn| {
             async move {
+                let platform_metadata: Vec<PlatformMetadata> =
+                    retrom_db::schema::platform_metadata::table
+                        .load(conn)
+                        .await
+                        .unwrap_or_default();
+
+                let game_metadata: Vec<GameMetadata> = retrom_db::schema::game_metadata::table
+                    .load(conn)
+                    .await
+                    .unwrap_or_default();
+
+                join_all(platform_metadata.iter().map(|m| m.clean_cache())).await;
+                join_all(game_metadata.iter().map(|m| m.clean_cache())).await;
+
                 diesel::delete(retrom_db::schema::platforms::table)
                     .filter(retrom_db::schema::platforms::third_party.eq(false))
                     .execute(conn)

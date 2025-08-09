@@ -99,20 +99,22 @@ pub async fn update_metadata(
                     .get_platform_metadata(platform, Some(query))
                     .await;
 
-                let mut conn = match db_pool.get().await {
-                    Ok(conn) => conn,
-                    Err(why) => {
-                        tracing::error!("Failed to get connection: {}", why);
-                        return Err(why.to_string());
-                    }
-                };
-
                 if let Some(metadata) = metadata {
-                    // Cache media files outside of transaction
-                    let _cached_result = metadata.cache_metadata(media_cache.clone()).await;
-                    if let Err(e) = _cached_result {
-                        tracing::warn!("Failed to cache media for platform {:?}: {}, storing original metadata", metadata.platform_id, e);
-                    }
+                    if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
+                        tracing::warn!(
+                            "Failed to cache media for platform {:?}: {}",
+                            metadata.platform_id,
+                            e
+                        );
+                    };
+
+                    let mut conn = match db_pool.get().await {
+                        Ok(conn) => conn,
+                        Err(why) => {
+                            tracing::error!("Failed to get connection: {}", why);
+                            return Err(why.to_string());
+                        }
+                    };
 
                     diesel::insert_into(schema::platform_metadata::table)
                         .values(&metadata)
@@ -205,19 +207,22 @@ pub async fn update_metadata(
                 // to be rate limited
                 drop(conn);
                 let metadata = igdb_provider.get_game_metadata(game, Some(query)).await;
-                let mut conn = match db_pool.get().await {
-                    Ok(conn) => conn,
-                    Err(why) => {
-                        return Err(why.to_string());
-                    }
-                };
 
                 if let Some(metadata) = metadata {
-                    // Cache media files outside of transaction
-                    let _cached_result = metadata.cache_metadata(media_cache.clone()).await;
-                    if let Err(e) = _cached_result {
-                        tracing::warn!("Failed to cache media for game {:?}: {}, storing original metadata", metadata.game_id, e);
+                    if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
+                        tracing::warn!(
+                            "Failed to cache media for game {:?}: {}",
+                            metadata.game_id,
+                            e
+                        );
                     }
+
+                    let mut conn = match db_pool.get().await {
+                        Ok(conn) => conn,
+                        Err(why) => {
+                            return Err(why.to_string());
+                        }
+                    };
 
                     if let Err(e) = diesel::insert_into(schema::game_metadata::table)
                         .values(&metadata)
@@ -527,6 +532,10 @@ pub async fn update_metadata(
                         }
                     };
 
+                    if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
+                        tracing::warn!("Failed to cache media for Steam game {}: {}", game_id, e);
+                    }
+
                     let mut conn = db_pool.get().await.expect("Failed to get connection");
 
                     if existing.is_ok() && !overwrite {
@@ -551,12 +560,6 @@ pub async fn update_metadata(
                         };
 
                         return Ok(());
-                    }
-
-                    // Cache media files outside of transaction
-                    let _cached_result = metadata.cache_metadata(media_cache.clone()).await;
-                    if let Err(e) = _cached_result {
-                        tracing::warn!("Failed to cache media for Steam game {}: {}, storing original metadata", game_id, e);
                     }
 
                     if let Err(why) = diesel::insert_into(schema::game_metadata::table)

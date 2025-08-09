@@ -1,5 +1,5 @@
 use crate::{
-    media_cache::{MediaCache, CacheableMetadata},
+    media_cache::{CacheableMetadata, MediaCache},
     providers::{
         igdb::provider::{IGDBProvider, IgdbSearchData},
         steam::provider::SteamWebApiProvider,
@@ -9,7 +9,7 @@ use crate::{
 use chrono::DateTime;
 use diesel::prelude::*;
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use futures::future;
+use futures::future::join_all;
 use retrom_codegen::{
     retrom::{
         self,
@@ -151,6 +151,19 @@ impl MetadataService for MetadataServiceHandlers {
         let request = request.into_inner();
         let metadata_to_update = request.metadata;
 
+        join_all(metadata_to_update.iter().map(|metadata| async {
+            let cache = self.media_cache.clone();
+            if let Err(e) = metadata.clean_cache().await {
+                error!("Failed to clean cache for metadata: {}", e);
+                return;
+            }
+
+            if let Err(e) = metadata.cache_metadata(cache).await {
+                error!("Failed to cache metadata: {}", e);
+            }
+        }))
+        .await;
+
         let mut conn = match self.db_pool.get().await {
             Ok(conn) => conn,
             Err(why) => {
@@ -161,22 +174,11 @@ impl MetadataService for MetadataServiceHandlers {
         let mut metadata_updated: Vec<retrom::GameMetadata> = vec![];
 
         for metadata_row in metadata_to_update {
-            let game_id = metadata_row.game_id;
-
-            // Cache media files and get updated metadata with local URLs
-            let cached_metadata = match metadata_row.cache_metadata(self.media_cache.clone()).await {
-                Ok(cached) => cached,
-                Err(e) => {
-                    tracing::warn!("Failed to cache media for game {}: {}, using original metadata", game_id, e);
-                    metadata_row // Use original metadata if caching fails
-                }
-            };
-
             let updated_row = match diesel::insert_into(retrom_db::schema::game_metadata::table)
-                .values(&cached_metadata)
+                .values(&metadata_row)
                 .on_conflict(retrom_db::schema::game_metadata::game_id)
                 .do_update()
-                .set(&cached_metadata)
+                .set(&metadata_row)
                 .get_result::<retrom::GameMetadata>(&mut conn)
                 .await
             {
@@ -229,6 +231,21 @@ impl MetadataService for MetadataServiceHandlers {
         let request = request.into_inner();
         let metadata_to_update = request.metadata;
 
+        join_all(metadata_to_update.iter().map(|metadata| {
+            let cache = self.media_cache.clone();
+            async move {
+                if let Err(e) = metadata.clean_cache().await {
+                    error!("Failed to clean cache for platform metadata: {}", e);
+                    return;
+                }
+
+                if let Err(e) = metadata.cache_metadata(cache).await {
+                    error!("Failed to cache platform metadata: {}", e);
+                }
+            }
+        }))
+        .await;
+
         let mut conn = match self.db_pool.get().await {
             Ok(conn) => conn,
             Err(why) => {
@@ -236,25 +253,11 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        // Cache media files outside of transaction
-        let mut cached_metadata_list = Vec::new();
-        for metadata_row in metadata_to_update {
-            // Cache media files and get updated metadata with local URLs
-            let cached_metadata = match metadata_row.cache_metadata(self.media_cache.clone()).await {
-                Ok(cached) => cached,
-                Err(e) => {
-                    tracing::warn!("Failed to cache media for platform {}: {}, using original metadata", metadata_row.platform_id, e);
-                    metadata_row // Use original metadata if caching fails
-                }
-            };
-            cached_metadata_list.push(cached_metadata);
-        }
-
         conn.transaction(|mut conn| {
             async move {
                 let mut metadata_updated: Vec<retrom::PlatformMetadata> = vec![];
 
-                for metadata_row in cached_metadata_list {
+                for metadata_row in metadata_to_update {
                     let updated_row =
                         diesel::insert_into(retrom_db::schema::platform_metadata::table)
                             .values(&metadata_row)
@@ -522,10 +525,7 @@ impl MetadataService for MetadataServiceHandlers {
             })
             .collect::<Vec<_>>();
 
-        let res = future::join_all(tasks)
-            .await
-            .into_iter()
-            .collect::<Vec<_>>();
+        let res = join_all(tasks).await.into_iter().collect::<Vec<_>>();
 
         res.iter().for_each(|result| {
             if let Err(e) = result {

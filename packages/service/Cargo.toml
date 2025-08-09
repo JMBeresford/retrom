@@ -11,6 +11,8 @@ description = "The Retrom video game library service"
 [dependencies]
 retry = { workspace = true }
 serde = { workspace = true }
+libcaesium = "0.17.4"
+rayon = "1.10.0"
 dotenvy = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
