@@ -20,6 +20,8 @@ pub mod utils;
 pub enum MediaCacheError {
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+    #[error("Cannot cache item: {0}")]
+    NonCacheableItem(String),
     #[error("HTTP request error: {status:?}")]
     Http {
         status: StatusCode,
@@ -49,7 +51,7 @@ pub type Result<T> = std::result::Result<T, MediaCacheError>;
 /// Trait for metadata types that can be cached
 pub trait CacheableMetadata: Clone + Send + Sync {
     /// Get the cache directory for this metadata
-    fn get_cache_dir(&self) -> PathBuf;
+    fn get_cache_dir(&self) -> Option<PathBuf>;
 
     /// Cache all media files for this metadata and return updated metadata with local paths
     fn cache_metadata(
@@ -58,23 +60,44 @@ pub trait CacheableMetadata: Clone + Send + Sync {
     ) -> impl std::future::Future<Output = Result<()>>;
 
     /// Clean up cached files for this metadata
-    fn clean_cache(&self) -> impl std::future::Future<Output = Result<()>>;
+    fn clean_cache(&self) -> impl std::future::Future<Output = Result<()>> + Send {
+        async {
+            let cache_dir = self
+                .get_cache_dir()
+                .ok_or(MediaCacheError::NonCacheableItem(
+                    "No cache directory available".to_string(),
+                ))?;
+
+            if cache_dir.exists() {
+                debug!("Cleaning up cache directory: {:?}", cache_dir);
+                fs::remove_dir_all(&cache_dir).await?;
+            }
+
+            Ok(())
+        }
+    }
 }
 
 impl CacheableMetadata for GameMetadata {
-    fn get_cache_dir(&self) -> PathBuf {
+    fn get_cache_dir(&self) -> Option<PathBuf> {
         RetromDirs::new()
             .media_dir()
             .join("games")
             .join(self.game_id.to_string())
+            .into()
     }
 
     #[instrument(skip_all)]
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<()> {
         let mut join_set = JoinSet::new();
+        let cache_dir = self
+            .get_cache_dir()
+            .ok_or(MediaCacheError::NonCacheableItem(
+                "No cache directory available".to_string(),
+            ))?;
 
         if let Some(cover_url) = self.cover_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -85,7 +108,7 @@ impl CacheableMetadata for GameMetadata {
         }
 
         if let Some(background_url) = self.background_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -96,7 +119,7 @@ impl CacheableMetadata for GameMetadata {
         }
 
         if let Some(icon_url) = self.icon_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -107,7 +130,7 @@ impl CacheableMetadata for GameMetadata {
         }
 
         for artwork_url in self.artwork_urls.clone() {
-            let artwork_cache_dir = self.get_cache_dir().join("artwork");
+            let artwork_cache_dir = cache_dir.join("artwork");
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -118,7 +141,7 @@ impl CacheableMetadata for GameMetadata {
         }
 
         for screenshot_url in self.screenshot_urls.clone() {
-            let screenshot_cache_dir = self.get_cache_dir().join("screenshots");
+            let screenshot_cache_dir = cache_dir.join("screenshots");
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -140,36 +163,31 @@ impl CacheableMetadata for GameMetadata {
             }
         }
 
-        Ok(())
-    }
-
-    async fn clean_cache(&self) -> Result<()> {
-        let cache_dir = RetromDirs::new()
-            .media_dir()
-            .join("games")
-            .join(self.game_id.to_string());
-        if cache_dir.exists() {
-            debug!("Cleaning up cache directory: {:?}", cache_dir);
-            fs::remove_dir_all(&cache_dir).await?;
-        }
         Ok(())
     }
 }
 
 impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
-    fn get_cache_dir(&self) -> PathBuf {
+    fn get_cache_dir(&self) -> Option<PathBuf> {
         RetromDirs::new()
             .media_dir()
             .join("games")
             .join(self.game_id.to_string())
+            .into()
     }
 
     #[instrument(skip_all)]
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<()> {
+        let cache_dir = self
+            .get_cache_dir()
+            .ok_or(MediaCacheError::NonCacheableItem(
+                "No cache directory available".to_string(),
+            ))?;
+
         let mut join_set = JoinSet::new();
 
         if let Some(cover_url) = self.cover_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -180,7 +198,7 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
         }
 
         if let Some(background_url) = self.background_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -191,7 +209,7 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
         }
 
         if let Some(icon_url) = self.icon_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -202,7 +220,7 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
         }
 
         for artwork_url in self.artwork_urls.clone() {
-            let artwork_cache_dir = self.get_cache_dir().join("artwork");
+            let artwork_cache_dir = cache_dir.join("artwork");
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -213,7 +231,7 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
         }
 
         for screenshot_url in self.screenshot_urls.clone() {
-            let screenshot_cache_dir = self.get_cache_dir().join("screenshots");
+            let screenshot_cache_dir = cache_dir.join("screenshots");
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -234,38 +252,31 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
                 }
             }
         }
-        Ok(())
-    }
-
-    async fn clean_cache(&self) -> Result<()> {
-        let cache_dir = RetromDirs::new()
-            .media_dir()
-            .join("games")
-            .join(self.game_id.to_string());
-
-        if cache_dir.exists() {
-            debug!("Cleaning up cache directory: {:?}", cache_dir);
-            fs::remove_dir_all(&cache_dir).await?;
-        }
-
         Ok(())
     }
 }
 
 impl CacheableMetadata for PlatformMetadata {
-    fn get_cache_dir(&self) -> PathBuf {
+    fn get_cache_dir(&self) -> Option<PathBuf> {
         RetromDirs::new()
             .media_dir()
             .join("platforms")
             .join(self.platform_id.to_string())
+            .into()
     }
 
     #[instrument(skip_all)]
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<()> {
+        let cache_dir = self
+            .get_cache_dir()
+            .ok_or(MediaCacheError::NonCacheableItem(
+                "No cache directory available".to_string(),
+            ))?;
+
         let mut join_set = JoinSet::new();
 
         if let Some(background_url) = self.background_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -276,7 +287,7 @@ impl CacheableMetadata for PlatformMetadata {
         }
 
         if let Some(logo_url) = self.logo_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -298,36 +309,31 @@ impl CacheableMetadata for PlatformMetadata {
             }
         }
 
-        Ok(())
-    }
-
-    async fn clean_cache(&self) -> Result<()> {
-        let cache_dir = RetromDirs::new()
-            .media_dir()
-            .join("platforms")
-            .join(self.platform_id.to_string());
-        if cache_dir.exists() {
-            debug!("Cleaning up platform cache directory: {:?}", cache_dir);
-            fs::remove_dir_all(&cache_dir).await?;
-        }
         Ok(())
     }
 }
 
 impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
-    fn get_cache_dir(&self) -> PathBuf {
+    fn get_cache_dir(&self) -> Option<PathBuf> {
         RetromDirs::new()
             .media_dir()
             .join("platforms")
             .join(self.platform_id.to_string())
+            .into()
     }
 
     #[instrument(skip_all)]
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<()> {
+        let cache_dir = self
+            .get_cache_dir()
+            .ok_or(MediaCacheError::NonCacheableItem(
+                "No cache directory available".to_string(),
+            ))?;
+
         let mut join_set = JoinSet::new();
 
         if let Some(background_url) = self.background_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -338,7 +344,7 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
         }
 
         if let Some(logo_url) = self.logo_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -362,34 +368,29 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
 
         Ok(())
     }
-
-    async fn clean_cache(&self) -> Result<()> {
-        let cache_dir = RetromDirs::new()
-            .media_dir()
-            .join("platforms")
-            .join(self.platform_id.to_string());
-        if cache_dir.exists() {
-            debug!("Cleaning up platform cache directory: {:?}", cache_dir);
-            fs::remove_dir_all(&cache_dir).await?;
-        }
-        Ok(())
-    }
 }
 
 impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
-    fn get_cache_dir(&self) -> PathBuf {
+    fn get_cache_dir(&self) -> Option<PathBuf> {
         RetromDirs::new()
             .media_dir()
             .join("games")
             .join(self.game_id.unwrap_or(0).to_string())
+            .into()
     }
 
     #[instrument(skip_all)]
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<()> {
+        let cache_dir = self
+            .get_cache_dir()
+            .ok_or(MediaCacheError::NonCacheableItem(
+                "No cache directory available".to_string(),
+            ))?;
+
         let mut join_set = JoinSet::new();
 
         if let Some(cover_url) = self.cover_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -400,7 +401,7 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
         }
 
         if let Some(background_url) = self.background_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -411,7 +412,7 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
         }
 
         if let Some(icon_url) = self.icon_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -422,7 +423,7 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
         }
 
         for artwork_url in self.artwork_urls.clone() {
-            let artwork_cache_dir = self.get_cache_dir().join("artwork");
+            let artwork_cache_dir = cache_dir.join("artwork");
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -433,7 +434,7 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
         }
 
         for screenshot_url in self.screenshot_urls.clone() {
-            let screenshot_cache_dir = self.get_cache_dir().join("screenshots");
+            let screenshot_cache_dir = cache_dir.join("screenshots");
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -457,34 +458,29 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
 
         Ok(())
     }
-
-    async fn clean_cache(&self) -> Result<()> {
-        let cache_dir = RetromDirs::new()
-            .media_dir()
-            .join("games")
-            .join(self.game_id.unwrap_or(0).to_string());
-        if cache_dir.exists() {
-            debug!("Cleaning up cache directory: {:?}", cache_dir);
-            fs::remove_dir_all(&cache_dir).await?;
-        }
-        Ok(())
-    }
 }
 
 impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
-    fn get_cache_dir(&self) -> PathBuf {
+    fn get_cache_dir(&self) -> Option<PathBuf> {
         RetromDirs::new()
             .media_dir()
             .join("platforms")
             .join(self.platform_id.unwrap_or(0).to_string())
+            .into()
     }
 
     #[instrument(skip_all)]
     async fn cache_metadata(&self, cache: Arc<MediaCache>) -> Result<()> {
+        let cache_dir = self
+            .get_cache_dir()
+            .ok_or(MediaCacheError::NonCacheableItem(
+                "No cache directory available".to_string(),
+            ))?;
+
         let mut join_set = JoinSet::new();
 
         if let Some(background_url) = self.background_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -495,7 +491,7 @@ impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
         }
 
         if let Some(logo_url) = self.logo_url.clone() {
-            let cache_dir = self.get_cache_dir();
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
@@ -517,18 +513,6 @@ impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
             }
         }
 
-        Ok(())
-    }
-
-    async fn clean_cache(&self) -> Result<()> {
-        let cache_dir = RetromDirs::new()
-            .media_dir()
-            .join("platforms")
-            .join(self.platform_id.unwrap_or(0).to_string());
-        if cache_dir.exists() {
-            debug!("Cleaning up platform cache directory: {:?}", cache_dir);
-            fs::remove_dir_all(&cache_dir).await?;
-        }
         Ok(())
     }
 }
@@ -772,7 +756,7 @@ mod integration_tests {
             minutes_played: Some(0),
         };
 
-        let cache_dir = game_metadata.get_cache_dir();
+        let cache_dir = game_metadata.get_cache_dir().unwrap();
         // Check that the cache dir has the correct structure (ends with correct path)
         assert!(cache_dir
             .to_string_lossy()
@@ -789,7 +773,7 @@ mod integration_tests {
             updated_at: None,
         };
 
-        let platform_cache_dir = platform_metadata.get_cache_dir();
+        let platform_cache_dir = platform_metadata.get_cache_dir().unwrap();
         // Check that the platform cache dir has the correct structure
         assert!(platform_cache_dir
             .to_string_lossy()
@@ -881,7 +865,7 @@ mod integration_tests {
             minutes_played: Some(0),
         };
 
-        let cache_dir = game_metadata.get_cache_dir();
+        let cache_dir = game_metadata.get_cache_dir().unwrap();
 
         // Verify subdirectories would be created at the right paths
         let artwork_cache_dir = cache_dir.join("artwork");
