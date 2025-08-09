@@ -1,13 +1,16 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use futures::future::join_all;
 use retrom_codegen::retrom::{
     self, platform_service_server::PlatformService, DeletePlatformsRequest,
-    DeletePlatformsResponse, GameFile, GetPlatformsRequest, GetPlatformsResponse,
-    UpdatePlatformsRequest, UpdatePlatformsResponse,
+    DeletePlatformsResponse, GameFile, GameMetadata, GetPlatformsRequest, GetPlatformsResponse,
+    PlatformMetadata, UpdatePlatformsRequest, UpdatePlatformsResponse,
 };
 use retrom_db::{schema, Pool};
 use std::{path::PathBuf, sync::Arc};
 use tonic::{Code, Request, Response, Status};
+
+use crate::media_cache::CacheableMetadata;
 
 #[derive(Clone)]
 pub struct PlatformServiceHandlers {
@@ -223,6 +226,40 @@ impl PlatformService for PlatformServiceHandlers {
         let request = request.into_inner();
         let delete_from_disk = request.delete_from_disk;
         let blacklist_entries = request.blacklist_entries;
+
+        {
+            let mut conn = match self.db_pool.get().await {
+                Ok(conn) => conn,
+                Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
+            };
+
+            let platforms: Vec<retrom::Platform> = schema::platforms::table
+                .filter(schema::platforms::id.eq_any(&request.ids))
+                .load(&mut conn)
+                .await
+                .unwrap_or_default();
+
+            let games: Vec<retrom::Game> = retrom::Game::belonging_to(&platforms)
+                .load(&mut conn)
+                .await
+                .unwrap_or_default();
+
+            let platform_metadata: Vec<retrom::PlatformMetadata> =
+                PlatformMetadata::belonging_to(&platforms)
+                    .load(&mut conn)
+                    .await
+                    .unwrap_or_default();
+
+            let game_metadata: Vec<GameMetadata> = GameMetadata::belonging_to(&games)
+                .load(&mut conn)
+                .await
+                .unwrap_or_default();
+
+            drop(conn);
+
+            join_all(platform_metadata.iter().map(|m| m.clean_cache())).await;
+            join_all(game_metadata.iter().map(|m| m.clean_cache())).await;
+        }
 
         let mut conn = match self.db_pool.get().await {
             Ok(conn) => conn,

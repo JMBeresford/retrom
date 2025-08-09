@@ -25,6 +25,7 @@ use retrom_db::embedded::DB_NAME;
 pub mod config;
 pub mod emulator_js;
 mod grpc;
+pub mod media_cache;
 pub mod meta;
 mod providers;
 mod rest;
@@ -174,58 +175,52 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
 
                 match is_grpc_request(&req) {
                     false => Either::Left({
-                        let res = span.in_scope(|| rest_service.call(req));
+                        let res = rest_service.call(req);
 
-                        Box::pin(
-                            async move {
-                                let res = res.await.map(|res| res.map(EitherBody::Left))?;
-                                Ok::<_, Error>(res)
-                            }
-                            .instrument(span),
-                        )
+                        Box::pin(async move {
+                            let res = res.await.map(|res| res.map(EitherBody::Left))?;
+                            Ok::<_, Error>(res)
+                        })
                     }),
                     true => Either::Right({
                         let res = span.in_scope(|| grpc_service.call(req));
 
-                        Box::pin(
-                            async move {
-                                let res = res.await.map(|res| {
-                                    let grpc_status = res
-                                        .headers()
-                                        .get("grpc-status")
-                                        .and_then(|h| h.to_str().ok())
-                                        .map(|h| h.to_string());
+                        Box::pin(async move {
+                            let res = res.await.map(|res| {
+                                let grpc_status = res
+                                    .headers()
+                                    .get("grpc-status")
+                                    .and_then(|h| h.to_str().ok())
+                                    .map(|h| h.to_string());
 
-                                    let grpc_message = res
-                                        .headers()
-                                        .get("grpc-message")
-                                        .and_then(|h| h.to_str().ok())
-                                        .map(|h| h.to_string());
+                                let grpc_message = res
+                                    .headers()
+                                    .get("grpc-message")
+                                    .and_then(|h| h.to_str().ok())
+                                    .map(|h| h.to_string());
 
-                                    if let Some(ref grpc_message) = grpc_message {
-                                        span.record(
-                                            "rpc.grpc.metadata.messages",
-                                            format!("{:#?}", vec![&grpc_message]),
-                                        );
+                                if let Some(ref grpc_message) = grpc_message {
+                                    span.record(
+                                        "rpc.grpc.metadata.messages",
+                                        format!("{:#?}", vec![&grpc_message]),
+                                    );
+                                }
+
+                                if let Some(grpc_status) = grpc_status {
+                                    span.record("rpc.grpc.status_code", &grpc_status);
+
+                                    if grpc_status != "0" {
+                                        span.set_status(opentelemetry::trace::Status::error(
+                                            grpc_message.unwrap_or_default(),
+                                        ));
                                     }
+                                }
 
-                                    if let Some(grpc_status) = grpc_status {
-                                        span.record("rpc.grpc.status_code", &grpc_status);
+                                res.map(EitherBody::Right)
+                            })?;
 
-                                        if grpc_status != "0" {
-                                            span.set_status(opentelemetry::trace::Status::error(
-                                                grpc_message.unwrap_or_default(),
-                                            ));
-                                        }
-                                    }
-
-                                    res.map(EitherBody::Right)
-                                })?;
-
-                                Ok::<_, Error>(res)
-                            }
-                            .in_current_span(),
-                        )
+                            Ok::<_, Error>(res)
+                        })
                     }),
                 }
             },
