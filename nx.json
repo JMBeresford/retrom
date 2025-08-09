@@ -49,6 +49,10 @@
       "dependsOn": ["^cargo:build"],
       "continuous": true
     },
+    "cargo:test": {
+      "executor": "@monodon/rust:test",
+      "dependsOn": ["^cargo:build"]
+    },
     "cargo:lint": {
       "dependsOn": ["^cargo:lint"],
       "executor": "@monodon/rust:lint",
