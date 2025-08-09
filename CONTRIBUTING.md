@@ -11,6 +11,8 @@ Thank you for considering contributing to Retrom! This document provides a high-
 - [PNPM](https://pnpm.io/installation) for JavaScript package management
 - [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) (comes with Rust) for Rust package management
 - [PostgreSQL](https://www.postgresql.org/download/) (required for the database package)
+- [Perl](https://www.perl.org/) Required to compile some of the Rust packages. On Windows, Strawberry Perl is recommended.
+- [Protobuf](https://protobuf.dev/) Required to compile some of the Rust packages.
 
 ### Initial setup
 
@@ -27,11 +29,17 @@ Thank you for considering contributing to Retrom! This document provides a high-
    pnpm install
    ```
 
-3. Build the project
+3. Run the project. This will spawn both the Rust backend service and the React web client.
 
    ```bash
-   pnpm nx run-many -t build
+   pnpm nx dev retrom-client-web
    ```
+
+### Troubleshooting
+
+#### Build task for the retrom-service Rust app exits midway without error
+
+If when using NX to start the `retrom-service` Rust app the compiling job exits midway without displaying an error message, navigate to the `packages\service` directory and run the `cargo build` command directly from there. The build command might display additional information on why the Rust build is failing.
 
 ## Monorepo structure
 
@@ -107,6 +115,12 @@ This project uses several tools to manage development workflows:
   ```bash
   pnpm nx run-many -t prettier:format --configuration check
   pnpm nx run-many -t rustfmt:format --configuration check
+  ```
+
+- Run only the Rust backend service
+
+  ```bash
+  pnpm nx cargo:run retrom-service
   ```
 
 For more details on available commands, see the [Tooling](#tooling) section in the repository documentation.
