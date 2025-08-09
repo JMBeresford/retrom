@@ -92,6 +92,10 @@ impl RetromDirs {
     pub fn web_dir(&self) -> &PathBuf {
         &self.web_dir
     }
+
+    pub fn media_dir(&self) -> PathBuf {
+        self.public_dir.join("media")
+    }
 }
 
 impl Default for RetromDirs {

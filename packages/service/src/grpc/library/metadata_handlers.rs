@@ -6,6 +6,7 @@ use std::{
 
 use crate::{
     grpc::jobs::job_manager::JobOptions,
+    media_cache::CacheableMetadata,
     providers::{
         igdb::provider::IgdbSearchData, GameMetadataProvider, MetadataProvider,
         PlatformMetadataProvider,
@@ -60,6 +61,7 @@ pub async fn update_metadata(
         .map(|platform| {
             let igdb_provider = state.igdb_client.clone();
             let db_pool = db_pool.clone();
+            let media_cache = state.media_cache.clone();
 
             async move {
                 let mut conn = match db_pool.get().await {
@@ -97,15 +99,23 @@ pub async fn update_metadata(
                     .get_platform_metadata(platform, Some(query))
                     .await;
 
-                let mut conn = match db_pool.get().await {
-                    Ok(conn) => conn,
-                    Err(why) => {
-                        tracing::error!("Failed to get connection: {}", why);
-                        return Err(why.to_string());
-                    }
-                };
-
                 if let Some(metadata) = metadata {
+                    if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
+                        tracing::warn!(
+                            "Failed to cache media for platform {:?}: {}",
+                            metadata.platform_id,
+                            e
+                        );
+                    };
+
+                    let mut conn = match db_pool.get().await {
+                        Ok(conn) => conn,
+                        Err(why) => {
+                            tracing::error!("Failed to get connection: {}", why);
+                            return Err(why.to_string());
+                        }
+                    };
+
                     diesel::insert_into(schema::platform_metadata::table)
                         .values(&metadata)
                         .on_conflict(schema::platform_metadata::platform_id)
@@ -142,6 +152,7 @@ pub async fn update_metadata(
         .map(|game| {
             let igdb_provider = state.igdb_client.clone();
             let db_pool = db_pool.clone();
+            let media_cache = state.media_cache.clone();
 
             async move {
                 let mut conn = match db_pool.get().await {
@@ -196,14 +207,23 @@ pub async fn update_metadata(
                 // to be rate limited
                 drop(conn);
                 let metadata = igdb_provider.get_game_metadata(game, Some(query)).await;
-                let mut conn = match db_pool.get().await {
-                    Ok(conn) => conn,
-                    Err(why) => {
-                        return Err(why.to_string());
-                    }
-                };
 
                 if let Some(metadata) = metadata {
+                    if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
+                        tracing::warn!(
+                            "Failed to cache media for game {:?}: {}",
+                            metadata.game_id,
+                            e
+                        );
+                    }
+
+                    let mut conn = match db_pool.get().await {
+                        Ok(conn) => conn,
+                        Err(why) => {
+                            return Err(why.to_string());
+                        }
+                    };
+
                     if let Err(e) = diesel::insert_into(schema::game_metadata::table)
                         .values(&metadata)
                         .on_conflict(schema::game_metadata::game_id)
@@ -472,6 +492,7 @@ pub async fn update_metadata(
             let steam_provider = steam_provider.clone();
             let db_pool = db_pool.clone();
             let steam_games = steam_games.clone();
+            let media_cache = state.media_cache.clone();
 
             let steam_appid = app.appid;
 
@@ -510,6 +531,10 @@ pub async fn update_metadata(
                             return Ok(());
                         }
                     };
+
+                    if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
+                        tracing::warn!("Failed to cache media for Steam game {}: {}", game_id, e);
+                    }
 
                     let mut conn = db_pool.get().await.expect("Failed to get connection");
 

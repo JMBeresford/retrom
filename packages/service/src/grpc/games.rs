@@ -1,12 +1,15 @@
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use futures::future::join_all;
 use retrom_codegen::retrom::{
     self, game_service_server::GameService, DeleteGamesRequest, DeleteGamesResponse, Game,
-    GameFile, GetGamesRequest, GetGamesResponse, StorageType,
+    GameFile, GameMetadata, GetGamesRequest, GetGamesResponse, StorageType,
 };
 use retrom_db::{schema, Pool};
 use std::{path::PathBuf, sync::Arc};
 use tonic::{Code, Request, Response, Status};
+
+use crate::media_cache::CacheableMetadata;
 
 #[derive(Clone)]
 pub struct GameServiceHandlers {
@@ -106,6 +109,23 @@ impl GameService for GameServiceHandlers {
         let request = request.into_inner();
         let delete_from_disk = request.delete_from_disk;
         let blacklist_entries = request.blacklist_entries;
+
+        {
+            let mut conn = match self.db_pool.get().await {
+                Ok(conn) => conn,
+                Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
+            };
+
+            let metadata: Vec<GameMetadata> = schema::game_metadata::table
+                .filter(schema::game_metadata::game_id.eq_any(&request.ids))
+                .load(&mut conn)
+                .await
+                .unwrap_or_default();
+
+            drop(conn);
+
+            join_all(metadata.iter().map(|m| m.clean_cache())).await;
+        }
 
         let mut conn = match self.db_pool.get().await {
             Ok(conn) => conn,

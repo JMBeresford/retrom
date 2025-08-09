@@ -1,12 +1,15 @@
-use crate::providers::{
-    igdb::provider::{IGDBProvider, IgdbSearchData},
-    steam::provider::SteamWebApiProvider,
-    GameMetadataProvider, MetadataProvider, PlatformMetadataProvider,
+use crate::{
+    media_cache::{CacheableMetadata, MediaCache},
+    providers::{
+        igdb::provider::{IGDBProvider, IgdbSearchData},
+        steam::provider::SteamWebApiProvider,
+        GameMetadataProvider, MetadataProvider, PlatformMetadataProvider,
+    },
 };
 use chrono::DateTime;
 use diesel::prelude::*;
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use futures::future;
+use futures::future::join_all;
 use retrom_codegen::{
     retrom::{
         self,
@@ -35,6 +38,7 @@ pub struct MetadataServiceHandlers {
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,
     steam_provider: Arc<SteamWebApiProvider>,
+    media_cache: Arc<MediaCache>,
 }
 
 impl MetadataServiceHandlers {
@@ -42,11 +46,13 @@ impl MetadataServiceHandlers {
         db_pool: Arc<Pool>,
         igdb_client: Arc<IGDBProvider>,
         steam_provider: Arc<SteamWebApiProvider>,
+        media_cache: Arc<MediaCache>,
     ) -> Self {
         Self {
             db_pool,
             igdb_client,
             steam_provider,
+            media_cache,
         }
     }
 }
@@ -145,6 +151,19 @@ impl MetadataService for MetadataServiceHandlers {
         let request = request.into_inner();
         let metadata_to_update = request.metadata;
 
+        join_all(metadata_to_update.iter().map(|metadata| async {
+            let cache = self.media_cache.clone();
+            if let Err(e) = metadata.clean_cache().await {
+                error!("Failed to clean cache for metadata: {}", e);
+                return;
+            }
+
+            if let Err(e) = metadata.cache_metadata(cache).await {
+                error!("Failed to cache metadata: {}", e);
+            }
+        }))
+        .await;
+
         let mut conn = match self.db_pool.get().await {
             Ok(conn) => conn,
             Err(why) => {
@@ -211,6 +230,21 @@ impl MetadataService for MetadataServiceHandlers {
     ) -> Result<Response<UpdatePlatformMetadataResponse>, Status> {
         let request = request.into_inner();
         let metadata_to_update = request.metadata;
+
+        join_all(metadata_to_update.iter().map(|metadata| {
+            let cache = self.media_cache.clone();
+            async move {
+                if let Err(e) = metadata.clean_cache().await {
+                    error!("Failed to clean cache for platform metadata: {}", e);
+                    return;
+                }
+
+                if let Err(e) = metadata.cache_metadata(cache).await {
+                    error!("Failed to cache platform metadata: {}", e);
+                }
+            }
+        }))
+        .await;
 
         let mut conn = match self.db_pool.get().await {
             Ok(conn) => conn,
@@ -491,10 +525,7 @@ impl MetadataService for MetadataServiceHandlers {
             })
             .collect::<Vec<_>>();
 
-        let res = future::join_all(tasks)
-            .await
-            .into_iter()
-            .collect::<Vec<_>>();
+        let res = join_all(tasks).await.into_iter().collect::<Vec<_>>();
 
         res.iter().for_each(|result| {
             if let Err(e) = result {
