@@ -735,16 +735,18 @@ impl MediaCache {
 
         let cache_path = storage_dir.join(&filename);
 
+        let relative_path = self
+            .index_manager
+            .get_relative_path(&opts.cache_dir, &cache_path)?;
+
         if cache_path.exists() {
             debug!("Media file already cached: {:?}", cache_path);
-
-            let relative_path = self
-                .index_manager
-                .get_relative_path(&opts.cache_dir, &cache_path)?;
 
             let index = self.index_manager.read_index(&opts.cache_dir).await?;
             if let Some(existing_entry) = index.entries.get(&relative_path) {
                 if let Some(existing_url) = &existing_entry.remote_url {
+                    // TODO: Use hash comparison (store url hash in index) or similar
+                    // for improved performance for large libraries
                     if existing_url == &opts.remote_url {
                         if let Err(e) = self
                             .index_manager
@@ -807,10 +809,6 @@ impl MediaCache {
         params.keep_metadata = false;
 
         self.compress_media(&cache_path, params).await?;
-
-        let relative_path = self
-            .index_manager
-            .get_relative_path(&opts.cache_dir, &cache_path)?;
 
         if let Err(e) = self
             .index_manager
