@@ -665,7 +665,6 @@ impl MediaCache {
 
         self.compress_media(&cache_path, params).await?;
 
-        // Update the index with the new file
         let relative_path = self
             .index_manager
             .get_relative_path(cache_dir, &cache_path)?;
