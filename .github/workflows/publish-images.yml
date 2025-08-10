@@ -111,6 +111,9 @@ jobs:
 
   merge-digests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     env:
       DOCKER_METADATA_OUTPUT_JSON: ${{ needs.build-images.outputs.metadata-json }}
       VERSION: ${{ fromJSON(needs.build-images.outputs.metadata-json).labels['org.opencontainers.image.version'] }}
