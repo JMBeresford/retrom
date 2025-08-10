@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.32](https://github.com/JMBeresford/retrom/compare/v0.7.31...v0.7.32) - 2025-08-10
+
+### Bug Fixes
+- download game button
+
+    The download game button now uses the correct
+    download URL.
+
+    fixes [#377](https://github.com/JMBeresford/retrom/pull/377)
+
+
+
+
+
+### Newly Added
+- download game from drop-down
+
+    There is now a drop-down option to download
+    a game on its details page.
+
+    fixes [#377](https://github.com/JMBeresford/retrom/pull/377)
+
+
+
+
 ## [0.7.31](https://github.com/JMBeresford/retrom/compare/v0.7.30...v0.7.31) - 2025-08-03
 
 ### Newly Added
