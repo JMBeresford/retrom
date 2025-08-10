@@ -9,6 +9,9 @@ on:
 jobs:
   update-igdb-api:
     name: Update IGDB API
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.RELEASE_PLZ_GH_TOKEN }}
