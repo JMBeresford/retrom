@@ -711,14 +711,14 @@ impl MediaCache {
     /// Otherwise uses hashed filename for uniqueness
     #[instrument(skip(self))]
     pub async fn cache_media_file(&self, opts: CacheMediaOpts) -> Result<PathBuf> {
-        // Validate base_dir is not absolute
         if let Some(ref base_dir) = opts.base_dir {
             if base_dir.is_absolute() {
-                return Err(MediaCacheError::AbsoluteBasePath(base_dir.display().to_string()));
+                return Err(MediaCacheError::AbsoluteBasePath(
+                    base_dir.display().to_string(),
+                ));
             }
         }
 
-        // Determine the actual directory where the file will be stored
         let storage_dir = match opts.base_dir {
             Some(ref base_dir) => opts.cache_dir.join(base_dir),
             None => opts.cache_dir.clone(),
@@ -727,26 +727,25 @@ impl MediaCache {
         self.ensure_cache_dir(&storage_dir).await?;
 
         let filename = match opts.semantic_name {
-            Some(ref name) => utils::generate_semantic_filename(&opts.remote_url, name, Some("jpg"))?,
+            Some(ref name) => {
+                utils::generate_semantic_filename(&opts.remote_url, name, Some("jpg"))?
+            }
             None => utils::generate_cache_filename(&opts.remote_url, Some("jpg"))?,
         };
 
         let cache_path = storage_dir.join(&filename);
 
-        // Check if file already exists and verify the remote URL matches
         if cache_path.exists() {
             debug!("Media file already cached: {:?}", cache_path);
-            
+
             let relative_path = self
                 .index_manager
                 .get_relative_path(&opts.cache_dir, &cache_path)?;
-                
-            // Check if the existing file has the same remote URL
+
             let index = self.index_manager.read_index(&opts.cache_dir).await?;
             if let Some(existing_entry) = index.entries.get(&relative_path) {
                 if let Some(existing_url) = &existing_entry.remote_url {
                     if existing_url == &opts.remote_url {
-                        // Same URL, just update timestamp and return
                         if let Err(e) = self
                             .index_manager
                             .update_entry(&opts.cache_dir, &relative_path, Some(&opts.remote_url))
@@ -756,14 +755,12 @@ impl MediaCache {
                                 "Failed to update index for existing file {}: {}",
                                 relative_path, e
                             );
-                            // Don't fail the operation if index update fails
                         }
                         return Ok(cache_path);
                     }
                 }
             }
-            
-            // Different URL or no existing entry, proceed with download to overwrite
+
             debug!(
                 "Remote URL changed for cached file {:?}, will overwrite",
                 cache_path
@@ -811,7 +808,6 @@ impl MediaCache {
 
         self.compress_media(&cache_path, params).await?;
 
-        // Always use the root cache_dir for the index, not the storage_dir
         let relative_path = self
             .index_manager
             .get_relative_path(&opts.cache_dir, &cache_path)?;
@@ -1219,9 +1215,7 @@ mod integration_tests {
         // Manually create a test file to simulate an existing cached file
         let test_file_path = cache_dir.join("cover.jpg");
         let original_content = b"original image data";
-        fs::write(&test_file_path, original_content)
-            .await
-            .unwrap();
+        fs::write(&test_file_path, original_content).await.unwrap();
 
         // Update the index to simulate the file was cached from URL A
         let original_url = "https://example.com/original.jpg";
@@ -1240,7 +1234,7 @@ mod integration_tests {
         assert_eq!(index.entries.len(), 1);
         let entry = &index.entries["cover.jpg"];
         assert_eq!(entry.remote_url, Some(original_url.to_string()));
-        
+
         // Verify file content is original
         let content = fs::read(&test_file_path).await.unwrap();
         assert_eq!(content, original_content);
@@ -1249,7 +1243,7 @@ mod integration_tests {
         // The file should NOT be overwritten if URL matches
         let cache_path_exists = test_file_path.exists();
         assert!(cache_path_exists);
-        
+
         // Read index and check if URLs match
         let index = cache.index_manager().read_index(&cache_dir).await.unwrap();
         if let Some(existing_entry) = index.entries.get(&relative_path) {
@@ -1265,17 +1259,15 @@ mod integration_tests {
         // Now test with different URL - simulate what would happen
         let new_url = "https://example.com/new.jpg";
         let different_content = b"new image data";
-        
+
         // Read index and check if URLs differ
         let index = cache.index_manager().read_index(&cache_dir).await.unwrap();
         if let Some(existing_entry) = index.entries.get(&relative_path) {
             if let Some(existing_url) = &existing_entry.remote_url {
                 if existing_url != new_url {
                     // URLs differ - should proceed with "download" (we'll simulate by writing new content)
-                    fs::write(&test_file_path, different_content)
-                        .await
-                        .unwrap();
-                    
+                    fs::write(&test_file_path, different_content).await.unwrap();
+
                     // Update index with new URL
                     cache
                         .index_manager()
@@ -1289,7 +1281,7 @@ mod integration_tests {
         // Verify the file was overwritten and index was updated
         let content = fs::read(&test_file_path).await.unwrap();
         assert_eq!(content, different_content);
-        
+
         let updated_index = cache.index_manager().read_index(&cache_dir).await.unwrap();
         assert_eq!(updated_index.entries.len(), 1);
         let updated_entry = &updated_index.entries["cover.jpg"];

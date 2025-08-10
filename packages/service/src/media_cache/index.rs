@@ -106,7 +106,6 @@ impl IndexManager {
             Ok(index) => Ok(index),
             Err(e) => {
                 warn!("Failed to parse index file {:?}: {}", index_path, e);
-                // Return empty index if parsing fails, don't fail the operation
                 Ok(MetadataIndex {
                     version: 1,
                     entries: HashMap::new(),
@@ -129,15 +128,11 @@ impl IndexManager {
 
         let content = serde_json::to_string_pretty(index).map_err(|e| {
             MediaCacheError::Io(std::io::Error::other(format!(
-                "JSON serialization failed: {}",
-                e
+                "JSON serialization failed: {e}"
             )))
         })?;
 
-        // Write to temp file first
         fs::write(&temp_path, content).await?;
-
-        // Atomic rename
         fs::rename(temp_path, index_path).await?;
 
         Ok(())
@@ -191,8 +186,7 @@ impl IndexManager {
     pub fn get_relative_path(&self, cache_dir: &Path, file_path: &Path) -> Result<String> {
         let relative = file_path.strip_prefix(cache_dir).map_err(|_| {
             MediaCacheError::Io(std::io::Error::other(format!(
-                "File path {:?} is not within cache directory {:?}",
-                file_path, cache_dir
+                "File path {file_path:?} is not within cache directory {cache_dir:?}"
             )))
         })?;
 
