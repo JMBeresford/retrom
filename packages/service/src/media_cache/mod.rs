@@ -676,7 +676,6 @@ impl MediaCache {
             .await
         {
             warn!("Failed to update index for {}: {}", relative_path, e);
-            // Don't fail the entire operation if index update fails
         }
 
         debug!("Media file cached successfully: {:?}", cache_path);
