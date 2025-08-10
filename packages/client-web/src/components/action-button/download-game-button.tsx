@@ -1,29 +1,34 @@
-import { ForwardedRef, forwardRef, useImperativeHandle, useRef } from "react";
+import {
+  ForwardedRef,
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
 import { Button, ButtonProps } from "@retrom/ui/components/button";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
-import { checkIsDesktop } from "@/lib/env";
-import { useConfigStore } from "@/providers/config";
 import { cn } from "@retrom/ui/lib/utils";
 import { DownloadIcon } from "lucide-react";
+import { useApiUrl } from "@/utils/useApiUrl";
 
 export const DownloadGameButton = forwardRef(
   (
     props: ButtonProps & { game: Game },
     forwardedRef: ForwardedRef<HTMLButtonElement>,
   ) => {
+    const { game, className, ...rest } = props;
+
     const ref = useRef<HTMLButtonElement>(null!);
+    const apiUrl = useApiUrl();
+    const downloadUrl = useMemo(
+      () => new URL(`rest/game/${game.id}`, apiUrl),
+      [apiUrl, game.id],
+    );
+
     useImperativeHandle(forwardedRef, () => ref.current);
 
-    const { game, className, ...rest } = props;
-    const configStore = useConfigStore();
-    const server = configStore((store) => store.server);
-
-    const restHost = checkIsDesktop()
-      ? `${server?.hostname}:${server?.port}/rest`
-      : "/api/rest";
-
     return (
-      <form action={`${restHost}/game/${game.id}`} className="w-full">
+      <form action={downloadUrl.href} className="w-full">
         <Button
           ref={ref}
           type="submit"
