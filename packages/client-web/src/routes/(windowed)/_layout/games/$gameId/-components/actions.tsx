@@ -26,9 +26,10 @@ import {
 } from "@retrom/codegen/retrom/models/emulators_pb";
 import { Badge } from "@retrom/ui/components/badge";
 import { usePlayGame } from "@/mutations/usePlayGame";
-import { checkIsDesktop } from "@/lib/env";
+import { checkIsDesktop, PlatformDependent } from "@/lib/env";
 import { useNavigate } from "@tanstack/react-router";
 import { Core } from "@/lib/emulatorjs";
+import { useApiUrl } from "@/utils/useApiUrl";
 
 export function Actions() {
   const { game, validEmulators, validProfiles, defaultProfile, gameFiles } =
@@ -37,6 +38,11 @@ export function Actions() {
   const { data: installationState } = useInstallationQuery(game);
   const { mutate: playGame } = usePlayGame(game);
   const navigate = useNavigate();
+  const apiUrl = useApiUrl();
+  const downloadUrl = useMemo(
+    () => new URL(`rest/game/${game.id}`, apiUrl),
+    [apiUrl, game.id],
+  );
 
   const playWithOptions = useMemo(() => {
     return validProfiles.reduce(
@@ -156,6 +162,16 @@ export function Actions() {
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+
+          <PlatformDependent
+            web={
+              <DropdownMenuItem asChild>
+                <a href={downloadUrl.href} target="_blank">
+                  Download
+                </a>
+              </DropdownMenuItem>
+            }
+          />
 
           <DropdownMenuSeparator />
 
