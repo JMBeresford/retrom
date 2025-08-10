@@ -55,16 +55,16 @@ pub type Result<T> = std::result::Result<T, MediaCacheError>;
 
 /// Options for caching media files
 #[derive(Debug)]
-pub struct CacheMediaOpts<'a> {
+pub struct CacheMediaOpts {
     /// The remote URL to cache
-    pub remote_url: &'a str,
+    pub remote_url: String,
     /// The base cache directory (where index.json will be stored)
-    pub cache_dir: &'a PathBuf,
+    pub cache_dir: PathBuf,
     /// Optional semantic name for the cached file (e.g., "cover", "background")
-    pub semantic_name: Option<&'a str>,
+    pub semantic_name: Option<String>,
     /// Optional base directory within cache_dir for organizing files (e.g., "artwork", "screenshots")
     /// Must be a relative path - absolute paths will return an error
-    pub base_dir: Option<&'a str>,
+    pub base_dir: Option<PathBuf>,
 }
 
 /// Trait for metadata types that can be cached
@@ -122,9 +122,9 @@ impl CacheableMetadata for GameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &cover_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("cover"),
+                        remote_url: cover_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("cover".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -138,9 +138,9 @@ impl CacheableMetadata for GameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &background_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("background"),
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -154,9 +154,9 @@ impl CacheableMetadata for GameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &icon_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("icon"),
+                        remote_url: icon_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("icon".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -170,10 +170,10 @@ impl CacheableMetadata for GameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &artwork_url,
-                        cache_dir: &cache_dir,
+                        remote_url: artwork_url,
+                        cache_dir: cache_dir.clone(),
                         semantic_name: None,
-                        base_dir: Some("artwork"),
+                        base_dir: Some(PathBuf::from("artwork")),
                     })
                     .await
             });
@@ -186,10 +186,10 @@ impl CacheableMetadata for GameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &screenshot_url,
-                        cache_dir: &cache_dir,
+                        remote_url: screenshot_url,
+                        cache_dir: cache_dir.clone(),
                         semantic_name: None,
-                        base_dir: Some("screenshots"),
+                        base_dir: Some(PathBuf::from("screenshots")),
                     })
                     .await
             });
@@ -237,9 +237,9 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &cover_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("cover"),
+                        remote_url: cover_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("cover".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -253,9 +253,9 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &background_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("background"),
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -269,9 +269,9 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &icon_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("icon"),
+                        remote_url: icon_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("icon".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -285,10 +285,10 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &artwork_url,
-                        cache_dir: &cache_dir,
+                        remote_url: artwork_url,
+                        cache_dir: cache_dir.clone(),
                         semantic_name: None,
-                        base_dir: Some("artwork"),
+                        base_dir: Some(PathBuf::from("artwork")),
                     })
                     .await
             });
@@ -301,10 +301,10 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &screenshot_url,
-                        cache_dir: &cache_dir,
+                        remote_url: screenshot_url,
+                        cache_dir: cache_dir.clone(),
                         semantic_name: None,
-                        base_dir: Some("screenshots"),
+                        base_dir: Some(PathBuf::from("screenshots")),
                     })
                     .await
             });
@@ -351,9 +351,9 @@ impl CacheableMetadata for PlatformMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &background_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("background"),
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -367,9 +367,9 @@ impl CacheableMetadata for PlatformMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &logo_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("logo"),
+                        remote_url: logo_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("logo".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -418,9 +418,9 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &background_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("background"),
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -434,9 +434,9 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &logo_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("logo"),
+                        remote_url: logo_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("logo".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -485,9 +485,9 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &cover_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("cover"),
+                        remote_url: cover_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("cover".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -501,9 +501,9 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &background_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("background"),
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -517,9 +517,9 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &icon_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("icon"),
+                        remote_url: icon_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("icon".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -533,10 +533,10 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &artwork_url,
-                        cache_dir: &cache_dir,
+                        remote_url: artwork_url,
+                        cache_dir: cache_dir.clone(),
                         semantic_name: None,
-                        base_dir: Some("artwork"),
+                        base_dir: Some(PathBuf::from("artwork")),
                     })
                     .await
             });
@@ -549,10 +549,10 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &screenshot_url,
-                        cache_dir: &cache_dir,
+                        remote_url: screenshot_url,
+                        cache_dir: cache_dir.clone(),
                         semantic_name: None,
-                        base_dir: Some("screenshots"),
+                        base_dir: Some(PathBuf::from("screenshots")),
                     })
                     .await
             });
@@ -600,9 +600,9 @@ impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &background_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("background"),
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -616,9 +616,9 @@ impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
             join_set.spawn(async move {
                 cache
                     .cache_media_file(CacheMediaOpts {
-                        remote_url: &logo_url,
-                        cache_dir: &cache_dir,
-                        semantic_name: Some("logo"),
+                        remote_url: logo_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("logo".to_string()),
                         base_dir: None,
                     })
                     .await
@@ -710,25 +710,25 @@ impl MediaCache {
     /// If semantic_name is provided, uses semantic filename (e.g., "cover.jpg")
     /// Otherwise uses hashed filename for uniqueness
     #[instrument(skip(self))]
-    pub async fn cache_media_file(&self, opts: CacheMediaOpts<'_>) -> Result<PathBuf> {
+    pub async fn cache_media_file(&self, opts: CacheMediaOpts) -> Result<PathBuf> {
         // Validate base_dir is not absolute
-        if let Some(base_dir) = opts.base_dir {
-            if Path::new(base_dir).is_absolute() {
-                return Err(MediaCacheError::AbsoluteBasePath(base_dir.to_string()));
+        if let Some(ref base_dir) = opts.base_dir {
+            if base_dir.is_absolute() {
+                return Err(MediaCacheError::AbsoluteBasePath(base_dir.display().to_string()));
             }
         }
 
         // Determine the actual directory where the file will be stored
         let storage_dir = match opts.base_dir {
-            Some(base_dir) => opts.cache_dir.join(base_dir),
+            Some(ref base_dir) => opts.cache_dir.join(base_dir),
             None => opts.cache_dir.clone(),
         };
 
         self.ensure_cache_dir(&storage_dir).await?;
 
         let filename = match opts.semantic_name {
-            Some(name) => utils::generate_semantic_filename(opts.remote_url, name, Some("jpg"))?,
-            None => utils::generate_cache_filename(opts.remote_url, Some("jpg"))?,
+            Some(ref name) => utils::generate_semantic_filename(&opts.remote_url, name, Some("jpg"))?,
+            None => utils::generate_cache_filename(&opts.remote_url, Some("jpg"))?,
         };
 
         let cache_path = storage_dir.join(&filename);
@@ -741,10 +741,10 @@ impl MediaCache {
             // Always use the root cache_dir for the index, not the storage_dir
             let relative_path = self
                 .index_manager
-                .get_relative_path(opts.cache_dir, &cache_path)?;
+                .get_relative_path(&opts.cache_dir, &cache_path)?;
             if let Err(e) = self
                 .index_manager
-                .update_entry(opts.cache_dir, &relative_path, Some(opts.remote_url))
+                .update_entry(&opts.cache_dir, &relative_path, Some(&opts.remote_url))
                 .await
             {
                 warn!(
@@ -771,7 +771,7 @@ impl MediaCache {
         let response = tokio_retry::RetryIf::spawn(
             strategy,
             || async {
-                let response = self.client.get(opts.remote_url).send().await?;
+                let response = self.client.get(&opts.remote_url).send().await?;
 
                 if !response.status().is_success() {
                     warn!(
@@ -801,11 +801,11 @@ impl MediaCache {
         // Always use the root cache_dir for the index, not the storage_dir
         let relative_path = self
             .index_manager
-            .get_relative_path(opts.cache_dir, &cache_path)?;
+            .get_relative_path(&opts.cache_dir, &cache_path)?;
 
         if let Err(e) = self
             .index_manager
-            .update_entry(opts.cache_dir, &relative_path, Some(opts.remote_url))
+            .update_entry(&opts.cache_dir, &relative_path, Some(&opts.remote_url))
             .await
         {
             warn!("Failed to update index for {}: {}", relative_path, e);
@@ -1169,10 +1169,10 @@ mod integration_tests {
         // Test with absolute path should return error
         let result = cache
             .cache_media_file(CacheMediaOpts {
-                remote_url: "https://example.com/test.jpg",
-                cache_dir: &cache_dir,
-                semantic_name: Some("test"),
-                base_dir: Some("/absolute/path"),
+                remote_url: "https://example.com/test.jpg".to_string(),
+                cache_dir: cache_dir.clone(),
+                semantic_name: Some("test".to_string()),
+                base_dir: Some(PathBuf::from("/absolute/path")),
             })
             .await;
 
@@ -1181,10 +1181,10 @@ mod integration_tests {
         // Test with relative path should work (would fail on HTTP but that's not tested here)
         let result = cache
             .cache_media_file(CacheMediaOpts {
-                remote_url: "https://example.com/test.jpg",
-                cache_dir: &cache_dir,
-                semantic_name: Some("test"),
-                base_dir: Some("relative/path"),
+                remote_url: "https://example.com/test.jpg".to_string(),
+                cache_dir: cache_dir.clone(),
+                semantic_name: Some("test".to_string()),
+                base_dir: Some(PathBuf::from("relative/path")),
             })
             .await;
 
