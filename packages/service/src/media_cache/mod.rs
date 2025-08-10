@@ -14,7 +14,10 @@ use tracing::{debug, info, instrument, warn};
 
 use crate::meta::RetromDirs;
 
+pub mod index;
 pub mod utils;
+
+use index::IndexManager;
 
 #[derive(Error, Debug)]
 pub enum MediaCacheError {
@@ -520,6 +523,7 @@ impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
 pub struct MediaCache {
     client: reqwest::Client,
     compression_threads: ThreadPool,
+    index_manager: IndexManager,
 }
 
 struct RetryCondition {}
@@ -563,6 +567,7 @@ impl MediaCache {
         Self {
             client,
             compression_threads,
+            index_manager: IndexManager::new(),
         }
     }
 
@@ -599,9 +604,26 @@ impl MediaCache {
 
         let cache_path = cache_dir.join(&filename);
 
-        // If file already exists, return the cached path
+        // If file already exists, still update the index and return the cached path
         if cache_path.exists() {
             debug!("Media file already cached: {:?}", cache_path);
+
+            // Update the index even for existing files to track the source URL
+            let relative_path = self
+                .index_manager
+                .get_relative_path(cache_dir, &cache_path)?;
+            if let Err(e) = self
+                .index_manager
+                .update_entry(cache_dir, &relative_path, Some(url))
+                .await
+            {
+                warn!(
+                    "Failed to update index for existing file {}: {}",
+                    relative_path, e
+                );
+                // Don't fail the operation if index update fails
+            }
+
             return Ok(cache_path);
         }
 
@@ -642,6 +664,19 @@ impl MediaCache {
         params.keep_metadata = false;
 
         self.compress_media(&cache_path, params).await?;
+
+        // Update the index with the new file
+        let relative_path = self
+            .index_manager
+            .get_relative_path(cache_dir, &cache_path)?;
+        if let Err(e) = self
+            .index_manager
+            .update_entry(cache_dir, &relative_path, Some(url))
+            .await
+        {
+            warn!("Failed to update index for {}: {}", relative_path, e);
+            // Don't fail the entire operation if index update fails
+        }
 
         debug!("Media file cached successfully: {:?}", cache_path);
         Ok(cache_path)
@@ -708,6 +743,11 @@ impl MediaCache {
                 cache_path.file_name().unwrap_or_default().to_string_lossy()
             )
         }
+    }
+
+    /// Get access to the index manager for advanced index operations
+    pub fn index_manager(&self) -> &IndexManager {
+        &self.index_manager
     }
 }
 
@@ -891,5 +931,99 @@ mod integration_tests {
 
         assert_eq!(artwork_url, "/media/games/123/artwork/test.jpg");
         assert_eq!(screenshot_url, "/media/games/123/screenshots/test.png");
+    }
+
+    #[tokio::test]
+    async fn test_index_integration_with_cache_operations() {
+        let temp_dir = TempDir::new().unwrap();
+        let _dirs = create_test_retrom_dirs(&temp_dir);
+        let cache = MediaCache::new();
+
+        // Create a test cache directory
+        let cache_dir = RetromDirs::new().media_dir().join("games").join("456");
+
+        // Simulate caching a file (without actual HTTP request)
+        // First create the cache directory structure that would be created by cache_media_file
+        fs::create_dir_all(&cache_dir).await.unwrap();
+
+        // Manually create a test file to simulate successful caching
+        let test_file_path = cache_dir.join("cover.jpg");
+        fs::write(&test_file_path, b"fake image data")
+            .await
+            .unwrap();
+
+        // Manually update the index (simulating what cache_media_file does)
+        let relative_path = cache
+            .index_manager()
+            .get_relative_path(&cache_dir, &test_file_path)
+            .unwrap();
+        cache
+            .index_manager()
+            .update_entry(
+                &cache_dir,
+                &relative_path,
+                Some("https://example.com/cover.jpg"),
+            )
+            .await
+            .unwrap();
+
+        // Verify the index was created and contains the entry
+        let index = cache.index_manager().read_index(&cache_dir).await.unwrap();
+        assert_eq!(index.len(), 1);
+        assert!(index.contains_key("cover.jpg"));
+
+        let entry = &index["cover.jpg"];
+        assert_eq!(
+            entry.remote_url,
+            Some("https://example.com/cover.jpg".to_string())
+        );
+
+        // Add another file to a subdirectory
+        let artwork_dir = cache_dir.join("artwork");
+        fs::create_dir_all(&artwork_dir).await.unwrap();
+        let artwork_file = artwork_dir.join("artwork1.jpg");
+        fs::write(&artwork_file, b"fake artwork data")
+            .await
+            .unwrap();
+
+        let artwork_relative_path = cache
+            .index_manager()
+            .get_relative_path(&cache_dir, &artwork_file)
+            .unwrap();
+        cache
+            .index_manager()
+            .update_entry(
+                &cache_dir,
+                &artwork_relative_path,
+                Some("https://example.com/artwork1.jpg"),
+            )
+            .await
+            .unwrap();
+
+        // Verify the index now contains both entries
+        let updated_index = cache.index_manager().read_index(&cache_dir).await.unwrap();
+        assert_eq!(updated_index.len(), 2);
+        assert!(updated_index.contains_key("cover.jpg"));
+        assert!(updated_index.contains_key("artwork/artwork1.jpg"));
+
+        // Test index cleanup
+        cache
+            .index_manager()
+            .remove_entry(&cache_dir, "cover.jpg")
+            .await
+            .unwrap();
+        let final_index = cache.index_manager().read_index(&cache_dir).await.unwrap();
+        assert_eq!(final_index.len(), 1);
+        assert!(!final_index.contains_key("cover.jpg"));
+        assert!(final_index.contains_key("artwork/artwork1.jpg"));
+
+        // Test complete index removal
+        cache
+            .index_manager()
+            .remove_index(&cache_dir)
+            .await
+            .unwrap();
+        let index_path = cache.index_manager().get_index_path(&cache_dir);
+        assert!(!index_path.exists());
     }
 }
