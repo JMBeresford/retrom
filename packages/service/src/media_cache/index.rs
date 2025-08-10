@@ -104,25 +104,13 @@ impl IndexManager {
 
         match serde_json::from_str::<MetadataIndex>(&content) {
             Ok(index) => Ok(index),
-            Err(_) => {
-                // Try to parse as legacy format (HashMap<String, IndexEntry>)
-                match serde_json::from_str::<HashMap<String, IndexEntry>>(&content) {
-                    Ok(legacy_entries) => {
-                        debug!("Migrating legacy index format to versioned format");
-                        Ok(MetadataIndex {
-                            version: 1,
-                            entries: legacy_entries,
-                        })
-                    }
-                    Err(e) => {
-                        warn!("Failed to parse index file {:?}: {}", index_path, e);
-                        // Return empty index if parsing fails, don't fail the operation
-                        Ok(MetadataIndex {
-                            version: 1,
-                            entries: HashMap::new(),
-                        })
-                    }
-                }
+            Err(e) => {
+                warn!("Failed to parse index file {:?}: {}", index_path, e);
+                // Return empty index if parsing fails, don't fail the operation
+                Ok(MetadataIndex {
+                    version: 1,
+                    entries: HashMap::new(),
+                })
             }
         }
     }
