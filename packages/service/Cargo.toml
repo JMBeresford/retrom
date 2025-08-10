@@ -30,7 +30,7 @@ tonic = { workspace = true }
 tonic-web = { workspace = true }
 tonic-reflection = { workspace = true }
 prost = { workspace = true }
-prost-types = { workspace = true }
+
 futures = { workspace = true }
 deunicode = "1.4.4"
 bigdecimal = "0.4.3"

@@ -8,18 +8,21 @@
 //!
 //! ```json
 //! {
-//!   "cover.jpg": {
-//!     "remote_url": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/abcd1234.jpg",
-//!     "updated_at": {
-//!       "seconds": 1672531200,
-//!       "nanos": 0
-//!     }
-//!   },
-//!   "artwork/artwork1.jpg": {
-//!     "remote_url": "https://example.com/artwork1.jpg",
-//!     "updated_at": {
-//!       "seconds": 1672531200,
-//!       "nanos": 0
+//!   "version": 1,
+//!   "entries": {
+//!     "cover.jpg": {
+//!       "remote_url": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/abcd1234.jpg",
+//!       "updated_at": {
+//!         "seconds": 1672531200,
+//!         "nanos": 0
+//!       }
+//!     },
+//!     "artwork/artwork1.jpg": {
+//!       "remote_url": "https://example.com/artwork1.jpg",
+//!       "updated_at": {
+//!         "seconds": 1672531200,
+//!         "nanos": 0
+//!       }
 //!     }
 //!   }
 //! }
@@ -49,9 +52,12 @@ pub struct IndexEntry {
     pub updated_at: Timestamp,
 }
 
-/// Index of all media files in a cache directory
-/// Keys are file paths relative to the index location
-pub type MetadataIndex = HashMap<String, IndexEntry>;
+/// Index of all media files in a cache directory with versioning support
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct MetadataIndex {
+    pub version: i32,
+    pub entries: HashMap<String, IndexEntry>,
+}
 
 /// Manages sidecar index files for media cache directories
 pub struct IndexManager {
@@ -87,18 +93,36 @@ impl IndexManager {
                 "Index file not found, returning empty index: {:?}",
                 index_path
             );
-            return Ok(HashMap::new());
+            return Ok(MetadataIndex {
+                version: 1,
+                entries: HashMap::new(),
+            });
         }
 
         debug!("Reading index file: {:?}", index_path);
         let content = fs::read_to_string(&index_path).await?;
 
-        match serde_json::from_str(&content) {
+        match serde_json::from_str::<MetadataIndex>(&content) {
             Ok(index) => Ok(index),
-            Err(e) => {
-                warn!("Failed to parse index file {:?}: {}", index_path, e);
-                // Return empty index if parsing fails, don't fail the operation
-                Ok(HashMap::new())
+            Err(_) => {
+                // Try to parse as legacy format (HashMap<String, IndexEntry>)
+                match serde_json::from_str::<HashMap<String, IndexEntry>>(&content) {
+                    Ok(legacy_entries) => {
+                        debug!("Migrating legacy index format to versioned format");
+                        Ok(MetadataIndex {
+                            version: 1,
+                            entries: legacy_entries,
+                        })
+                    }
+                    Err(e) => {
+                        warn!("Failed to parse index file {:?}: {}", index_path, e);
+                        // Return empty index if parsing fails, don't fail the operation
+                        Ok(MetadataIndex {
+                            version: 1,
+                            entries: HashMap::new(),
+                        })
+                    }
+                }
             }
         }
     }
@@ -146,7 +170,7 @@ impl IndexManager {
         };
 
         debug!("Updating index entry: {} -> {:?}", relative_path, entry);
-        index.insert(relative_path.to_string(), entry);
+        index.entries.insert(relative_path.to_string(), entry);
 
         self.write_index(cache_dir, &index).await
     }
@@ -155,7 +179,7 @@ impl IndexManager {
     pub async fn remove_entry(&self, cache_dir: &Path, relative_path: &str) -> Result<()> {
         let mut index = self.read_index(cache_dir).await?;
 
-        if index.remove(relative_path).is_some() {
+        if index.entries.remove(relative_path).is_some() {
             debug!("Removing index entry: {}", relative_path);
             self.write_index(cache_dir, &index).await?;
         }
@@ -202,26 +226,33 @@ mod tests {
 
         // Reading non-existent index should return empty map
         let index = manager.read_index(cache_dir).await.unwrap();
-        assert!(index.is_empty());
+        assert!(index.entries.is_empty());
+        assert_eq!(index.version, 1);
 
         // Create and write an index
-        let mut test_index = HashMap::new();
-        test_index.insert(
+        let mut entries = HashMap::new();
+        entries.insert(
             "cover.jpg".to_string(),
             IndexEntry {
                 remote_url: Some("https://example.com/cover.jpg".to_string()),
                 updated_at: SystemTime::now().into(),
             },
         );
+        
+        let test_index = MetadataIndex {
+            version: 1,
+            entries,
+        };
 
         manager.write_index(cache_dir, &test_index).await.unwrap();
 
         // Read it back
         let read_index = manager.read_index(cache_dir).await.unwrap();
-        assert_eq!(read_index.len(), 1);
-        assert!(read_index.contains_key("cover.jpg"));
+        assert_eq!(read_index.entries.len(), 1);
+        assert!(read_index.entries.contains_key("cover.jpg"));
+        assert_eq!(read_index.version, 1);
 
-        let entry = &read_index["cover.jpg"];
+        let entry = &read_index.entries["cover.jpg"];
         assert_eq!(
             entry.remote_url,
             Some("https://example.com/cover.jpg".to_string())
@@ -245,8 +276,8 @@ mod tests {
             .unwrap();
 
         let index = manager.read_index(cache_dir).await.unwrap();
-        assert_eq!(index.len(), 1);
-        assert!(index.contains_key("cover.jpg"));
+        assert_eq!(index.entries.len(), 1);
+        assert!(index.entries.contains_key("cover.jpg"));
 
         // Update the same entry
         manager
@@ -259,8 +290,8 @@ mod tests {
             .unwrap();
 
         let updated_index = manager.read_index(cache_dir).await.unwrap();
-        assert_eq!(updated_index.len(), 1);
-        let entry = &updated_index["cover.jpg"];
+        assert_eq!(updated_index.entries.len(), 1);
+        let entry = &updated_index.entries["cover.jpg"];
         assert_eq!(
             entry.remote_url,
             Some("https://example.com/new-cover.jpg".to_string())
@@ -287,7 +318,7 @@ mod tests {
         manager.remove_entry(cache_dir, "cover.jpg").await.unwrap();
 
         let index = manager.read_index(cache_dir).await.unwrap();
-        assert!(index.is_empty());
+        assert!(index.entries.is_empty());
     }
 
     #[tokio::test]
@@ -339,10 +370,10 @@ mod tests {
         let new_manager = IndexManager::new();
         let index = new_manager.read_index(cache_dir).await.unwrap();
 
-        assert_eq!(index.len(), 3);
-        assert!(index.contains_key("cover.jpg"));
-        assert!(index.contains_key("background.png"));
-        assert!(index.contains_key("artwork/art1.jpg"));
+        assert_eq!(index.entries.len(), 3);
+        assert!(index.entries.contains_key("cover.jpg"));
+        assert!(index.entries.contains_key("background.png"));
+        assert!(index.entries.contains_key("artwork/art1.jpg"));
     }
 
     #[tokio::test]
@@ -358,7 +389,7 @@ mod tests {
 
         // Should return empty index instead of failing
         let index = manager.read_index(cache_dir).await.unwrap();
-        assert!(index.is_empty());
+        assert!(index.entries.is_empty());
     }
 
     #[tokio::test]
@@ -376,7 +407,7 @@ mod tests {
         let after = SystemTime::now();
 
         let index = manager.read_index(cache_dir).await.unwrap();
-        let entry = &index["test.jpg"];
+        let entry = &index.entries["test.jpg"];
 
         // Verify the timestamp is roughly within the expected range (seconds precision)
         let before_timestamp: Timestamp = before.into();
@@ -397,7 +428,7 @@ mod tests {
             .unwrap();
 
         let updated_index = manager.read_index(cache_dir).await.unwrap();
-        let updated_entry = &updated_index["test.jpg"];
+        let updated_entry = &updated_index.entries["test.jpg"];
 
         // Verify the timestamp was updated (should be at least equal, usually greater)
         assert!(updated_entry.updated_at.seconds >= entry.updated_at.seconds);

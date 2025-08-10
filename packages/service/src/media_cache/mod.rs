@@ -669,6 +669,7 @@ impl MediaCache {
         let relative_path = self
             .index_manager
             .get_relative_path(cache_dir, &cache_path)?;
+            
         if let Err(e) = self
             .index_manager
             .update_entry(cache_dir, &relative_path, Some(url))
@@ -969,10 +970,10 @@ mod integration_tests {
 
         // Verify the index was created and contains the entry
         let index = cache.index_manager().read_index(&cache_dir).await.unwrap();
-        assert_eq!(index.len(), 1);
-        assert!(index.contains_key("cover.jpg"));
+        assert_eq!(index.entries.len(), 1);
+        assert!(index.entries.contains_key("cover.jpg"));
 
-        let entry = &index["cover.jpg"];
+        let entry = &index.entries["cover.jpg"];
         assert_eq!(
             entry.remote_url,
             Some("https://example.com/cover.jpg".to_string())
@@ -1002,9 +1003,9 @@ mod integration_tests {
 
         // Verify the index now contains both entries
         let updated_index = cache.index_manager().read_index(&cache_dir).await.unwrap();
-        assert_eq!(updated_index.len(), 2);
-        assert!(updated_index.contains_key("cover.jpg"));
-        assert!(updated_index.contains_key("artwork/artwork1.jpg"));
+        assert_eq!(updated_index.entries.len(), 2);
+        assert!(updated_index.entries.contains_key("cover.jpg"));
+        assert!(updated_index.entries.contains_key("artwork/artwork1.jpg"));
 
         // Test index cleanup
         cache
@@ -1013,9 +1014,9 @@ mod integration_tests {
             .await
             .unwrap();
         let final_index = cache.index_manager().read_index(&cache_dir).await.unwrap();
-        assert_eq!(final_index.len(), 1);
-        assert!(!final_index.contains_key("cover.jpg"));
-        assert!(final_index.contains_key("artwork/artwork1.jpg"));
+        assert_eq!(final_index.entries.len(), 1);
+        assert!(!final_index.entries.contains_key("cover.jpg"));
+        assert!(final_index.entries.contains_key("artwork/artwork1.jpg"));
 
         // Test complete index removal
         cache
