@@ -226,7 +226,7 @@ mod tests {
                 updated_at: SystemTime::now().into(),
             },
         );
-        
+
         let test_index = MetadataIndex {
             version: 1,
             entries,
