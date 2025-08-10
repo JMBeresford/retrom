@@ -744,7 +744,6 @@ impl MediaCache {
         }
     }
 
-    /// Get access to the index manager for advanced index operations
     pub fn index_manager(&self) -> &IndexManager {
         &self.index_manager
     }
