@@ -8,6 +8,8 @@ name: release
 jobs:
   release-plz:
     name: Release-plz
+    permissions:
+      contents: write
     outputs:
       released: ${{ steps.release.outputs.releases_created }}
     runs-on: ubuntu-latest
