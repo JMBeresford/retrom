@@ -181,7 +181,15 @@ impl MetadataService for MetadataServiceHandlers {
                         // Note: video_urls not currently populated as the current system doesn't cache videos
                     }
 
-                    media_paths.insert(meta.game_id, paths);
+                    // Only include games that actually have cached media
+                    if paths.cover_url.is_some()
+                        || paths.background_url.is_some()
+                        || !paths.artwork_urls.is_empty()
+                        || !paths.screenshot_urls.is_empty()
+                        || !paths.video_urls.is_empty()
+                    {
+                        media_paths.insert(meta.game_id, paths);
+                    }
                 }
             }
         }
