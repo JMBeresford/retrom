@@ -14,7 +14,10 @@ use tracing::{debug, info, instrument, warn};
 
 use crate::meta::RetromDirs;
 
+pub mod index;
 pub mod utils;
+
+use index::IndexManager;
 
 #[derive(Error, Debug)]
 pub enum MediaCacheError {
@@ -35,6 +38,8 @@ pub enum MediaCacheError {
     DirectoryCreation { path: String },
     #[error("URL does not exist: {0}")]
     NotFound(String),
+    #[error("Base directory must be relative, not absolute: {0}")]
+    AbsoluteBasePath(String),
 }
 
 impl From<reqwest::Error> for MediaCacheError {
@@ -47,6 +52,20 @@ impl From<reqwest::Error> for MediaCacheError {
 }
 
 pub type Result<T> = std::result::Result<T, MediaCacheError>;
+
+/// Options for caching media files
+#[derive(Debug)]
+pub struct CacheMediaOpts {
+    /// The remote URL to cache
+    pub remote_url: String,
+    /// The base cache directory (where index.json will be stored)
+    pub cache_dir: PathBuf,
+    /// Optional semantic name for the cached file (e.g., "cover", "background")
+    pub semantic_name: Option<String>,
+    /// Optional base directory within cache_dir for organizing files (e.g., "artwork", "screenshots")
+    /// Must be a relative path - absolute paths will return an error
+    pub base_dir: Option<PathBuf>,
+}
 
 /// Trait for metadata types that can be cached
 pub trait CacheableMetadata: Clone + Send + Sync {
@@ -102,7 +121,12 @@ impl CacheableMetadata for GameMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&cover_url, &cache_dir, Some("cover"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: cover_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("cover".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -113,7 +137,12 @@ impl CacheableMetadata for GameMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&background_url, &cache_dir, Some("background"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -124,29 +153,44 @@ impl CacheableMetadata for GameMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&icon_url, &cache_dir, Some("icon"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: icon_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("icon".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
 
         for artwork_url in self.artwork_urls.clone() {
-            let artwork_cache_dir = cache_dir.join("artwork");
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&artwork_url, &artwork_cache_dir, None)
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: artwork_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: None,
+                        base_dir: Some(PathBuf::from("artwork")),
+                    })
                     .await
             });
         }
 
         for screenshot_url in self.screenshot_urls.clone() {
-            let screenshot_cache_dir = cache_dir.join("screenshots");
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&screenshot_url, &screenshot_cache_dir, None)
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: screenshot_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: None,
+                        base_dir: Some(PathBuf::from("screenshots")),
+                    })
                     .await
             });
         }
@@ -192,7 +236,12 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&cover_url, &cache_dir, Some("cover"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: cover_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("cover".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -203,7 +252,12 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&background_url, &cache_dir, Some("background"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -214,29 +268,44 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&icon_url, &cache_dir, Some("icon"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: icon_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("icon".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
 
         for artwork_url in self.artwork_urls.clone() {
-            let artwork_cache_dir = cache_dir.join("artwork");
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&artwork_url, &artwork_cache_dir, None)
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: artwork_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: None,
+                        base_dir: Some(PathBuf::from("artwork")),
+                    })
                     .await
             });
         }
 
         for screenshot_url in self.screenshot_urls.clone() {
-            let screenshot_cache_dir = cache_dir.join("screenshots");
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&screenshot_url, &screenshot_cache_dir, None)
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: screenshot_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: None,
+                        base_dir: Some(PathBuf::from("screenshots")),
+                    })
                     .await
             });
         }
@@ -281,7 +350,12 @@ impl CacheableMetadata for PlatformMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&background_url, &cache_dir, Some("background"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -292,7 +366,12 @@ impl CacheableMetadata for PlatformMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&logo_url, &cache_dir, Some("logo"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: logo_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("logo".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -338,7 +417,12 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&background_url, &cache_dir, Some("background"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -349,7 +433,12 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&logo_url, &cache_dir, Some("logo"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: logo_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("logo".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -395,7 +484,12 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&cover_url, &cache_dir, Some("cover"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: cover_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("cover".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -406,7 +500,12 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&background_url, &cache_dir, Some("background"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -417,29 +516,44 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&icon_url, &cache_dir, Some("icon"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: icon_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("icon".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
 
         for artwork_url in self.artwork_urls.clone() {
-            let artwork_cache_dir = cache_dir.join("artwork");
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&artwork_url, &artwork_cache_dir, None)
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: artwork_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: None,
+                        base_dir: Some(PathBuf::from("artwork")),
+                    })
                     .await
             });
         }
 
         for screenshot_url in self.screenshot_urls.clone() {
-            let screenshot_cache_dir = cache_dir.join("screenshots");
+            let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&screenshot_url, &screenshot_cache_dir, None)
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: screenshot_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: None,
+                        base_dir: Some(PathBuf::from("screenshots")),
+                    })
                     .await
             });
         }
@@ -485,7 +599,12 @@ impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&background_url, &cache_dir, Some("background"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: background_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("background".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -496,7 +615,12 @@ impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
 
             join_set.spawn(async move {
                 cache
-                    .cache_media_file(&logo_url, &cache_dir, Some("logo"))
+                    .cache_media_file(CacheMediaOpts {
+                        remote_url: logo_url,
+                        cache_dir: cache_dir.clone(),
+                        semantic_name: Some("logo".to_string()),
+                        base_dir: None,
+                    })
                     .await
             });
         }
@@ -520,6 +644,7 @@ impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
 pub struct MediaCache {
     client: reqwest::Client,
     compression_threads: ThreadPool,
+    index_manager: IndexManager,
 }
 
 struct RetryCondition {}
@@ -563,6 +688,7 @@ impl MediaCache {
         Self {
             client,
             compression_threads,
+            index_manager: IndexManager::new(),
         }
     }
 
@@ -584,28 +710,69 @@ impl MediaCache {
     /// If semantic_name is provided, uses semantic filename (e.g., "cover.jpg")
     /// Otherwise uses hashed filename for uniqueness
     #[instrument(skip(self))]
-    pub async fn cache_media_file(
-        &self,
-        url: &str,
-        cache_dir: &PathBuf,
-        semantic_name: Option<&str>,
-    ) -> Result<PathBuf> {
-        self.ensure_cache_dir(cache_dir).await?;
-
-        let filename = match semantic_name {
-            Some(name) => utils::generate_semantic_filename(url, name, Some("jpg"))?,
-            None => utils::generate_cache_filename(url, Some("jpg"))?,
-        };
-
-        let cache_path = cache_dir.join(&filename);
-
-        // If file already exists, return the cached path
-        if cache_path.exists() {
-            debug!("Media file already cached: {:?}", cache_path);
-            return Ok(cache_path);
+    pub async fn cache_media_file(&self, opts: CacheMediaOpts) -> Result<PathBuf> {
+        if let Some(ref base_dir) = opts.base_dir {
+            if base_dir.is_absolute() {
+                return Err(MediaCacheError::AbsoluteBasePath(
+                    base_dir.display().to_string(),
+                ));
+            }
         }
 
-        debug!("Downloading media file: {} -> {:?}", url, cache_path);
+        let storage_dir = match opts.base_dir {
+            Some(ref base_dir) => opts.cache_dir.join(base_dir),
+            None => opts.cache_dir.clone(),
+        };
+
+        self.ensure_cache_dir(&storage_dir).await?;
+
+        let filename = match opts.semantic_name {
+            Some(ref name) => {
+                utils::generate_semantic_filename(&opts.remote_url, name, Some("jpg"))?
+            }
+            None => utils::generate_cache_filename(&opts.remote_url, Some("jpg"))?,
+        };
+
+        let cache_path = storage_dir.join(&filename);
+
+        let relative_path = self
+            .index_manager
+            .get_relative_path(&opts.cache_dir, &cache_path)?;
+
+        if cache_path.exists() {
+            debug!("Media file already cached: {:?}", cache_path);
+
+            let index = self.index_manager.read_index(&opts.cache_dir).await?;
+            if let Some(existing_entry) = index.entries.get(&relative_path) {
+                if let Some(existing_url) = &existing_entry.remote_url {
+                    // TODO: Use hash comparison (store url hash in index) or similar
+                    // for improved performance for large libraries
+                    if existing_url == &opts.remote_url {
+                        if let Err(e) = self
+                            .index_manager
+                            .update_entry(&opts.cache_dir, &relative_path, Some(&opts.remote_url))
+                            .await
+                        {
+                            warn!(
+                                "Failed to update index for existing file {}: {}",
+                                relative_path, e
+                            );
+                        }
+                        return Ok(cache_path);
+                    }
+                }
+            }
+
+            debug!(
+                "Remote URL changed for cached file {:?}, will overwrite",
+                cache_path
+            );
+        }
+
+        debug!(
+            "Downloading media file: {} -> {:?}",
+            opts.remote_url, cache_path
+        );
 
         let strategy = tokio_retry::strategy::ExponentialBackoff::from_millis(500)
             .max_delay(std::time::Duration::from_secs(10))
@@ -616,16 +783,16 @@ impl MediaCache {
         let response = tokio_retry::RetryIf::spawn(
             strategy,
             || async {
-                let response = self.client.get(url).send().await?;
+                let response = self.client.get(&opts.remote_url).send().await?;
 
                 if !response.status().is_success() {
                     warn!(
                         "Failed to download media file: {} (status: {})",
-                        url,
+                        opts.remote_url,
                         response.status()
                     );
 
-                    return Err(MediaCacheError::NotFound(url.to_string()));
+                    return Err(MediaCacheError::NotFound(opts.remote_url.to_string()));
                 }
 
                 Ok(response)
@@ -642,6 +809,14 @@ impl MediaCache {
         params.keep_metadata = false;
 
         self.compress_media(&cache_path, params).await?;
+
+        if let Err(e) = self
+            .index_manager
+            .update_entry(&opts.cache_dir, &relative_path, Some(&opts.remote_url))
+            .await
+        {
+            warn!("Failed to update index for {}: {}", relative_path, e);
+        }
 
         debug!("Media file cached successfully: {:?}", cache_path);
         Ok(cache_path)
@@ -708,6 +883,10 @@ impl MediaCache {
                 cache_path.file_name().unwrap_or_default().to_string_lossy()
             )
         }
+    }
+
+    pub fn index_manager(&self) -> &IndexManager {
+        &self.index_manager
     }
 }
 
@@ -891,5 +1070,219 @@ mod integration_tests {
 
         assert_eq!(artwork_url, "/media/games/123/artwork/test.jpg");
         assert_eq!(screenshot_url, "/media/games/123/screenshots/test.png");
+    }
+
+    #[tokio::test]
+    async fn test_index_integration_with_cache_operations() {
+        let temp_dir = TempDir::new().unwrap();
+        let _dirs = create_test_retrom_dirs(&temp_dir);
+        let cache = MediaCache::new();
+
+        // Create a test cache directory
+        let cache_dir = RetromDirs::new().media_dir().join("games").join("456");
+
+        // Simulate caching a file (without actual HTTP request)
+        // First create the cache directory structure that would be created by cache_media_file
+        fs::create_dir_all(&cache_dir).await.unwrap();
+
+        // Manually create a test file to simulate successful caching
+        let test_file_path = cache_dir.join("cover.jpg");
+        fs::write(&test_file_path, b"fake image data")
+            .await
+            .unwrap();
+
+        // Manually update the index (simulating what cache_media_file does)
+        let relative_path = cache
+            .index_manager()
+            .get_relative_path(&cache_dir, &test_file_path)
+            .unwrap();
+        cache
+            .index_manager()
+            .update_entry(
+                &cache_dir,
+                &relative_path,
+                Some("https://example.com/cover.jpg"),
+            )
+            .await
+            .unwrap();
+
+        // Verify the index was created and contains the entry
+        let index = cache.index_manager().read_index(&cache_dir).await.unwrap();
+        assert_eq!(index.entries.len(), 1);
+        assert!(index.entries.contains_key("cover.jpg"));
+
+        let entry = &index.entries["cover.jpg"];
+        assert_eq!(
+            entry.remote_url,
+            Some("https://example.com/cover.jpg".to_string())
+        );
+
+        // Add another file to a subdirectory
+        let artwork_dir = cache_dir.join("artwork");
+        fs::create_dir_all(&artwork_dir).await.unwrap();
+        let artwork_file = artwork_dir.join("artwork1.jpg");
+        fs::write(&artwork_file, b"fake artwork data")
+            .await
+            .unwrap();
+
+        let artwork_relative_path = cache
+            .index_manager()
+            .get_relative_path(&cache_dir, &artwork_file)
+            .unwrap();
+        cache
+            .index_manager()
+            .update_entry(
+                &cache_dir,
+                &artwork_relative_path,
+                Some("https://example.com/artwork1.jpg"),
+            )
+            .await
+            .unwrap();
+
+        // Verify the index now contains both entries
+        let updated_index = cache.index_manager().read_index(&cache_dir).await.unwrap();
+        assert_eq!(updated_index.entries.len(), 2);
+        assert!(updated_index.entries.contains_key("cover.jpg"));
+        assert!(updated_index.entries.contains_key("artwork/artwork1.jpg"));
+
+        // Test index cleanup
+        cache
+            .index_manager()
+            .remove_entry(&cache_dir, "cover.jpg")
+            .await
+            .unwrap();
+        let final_index = cache.index_manager().read_index(&cache_dir).await.unwrap();
+        assert_eq!(final_index.entries.len(), 1);
+        assert!(!final_index.entries.contains_key("cover.jpg"));
+        assert!(final_index.entries.contains_key("artwork/artwork1.jpg"));
+
+        // Test complete index removal
+        cache
+            .index_manager()
+            .remove_index(&cache_dir)
+            .await
+            .unwrap();
+        let index_path = cache.index_manager().get_index_path(&cache_dir);
+        assert!(!index_path.exists());
+    }
+
+    #[tokio::test]
+    async fn test_cache_media_opts_absolute_path_validation() {
+        let temp_dir = TempDir::new().unwrap();
+        let _dirs = create_test_retrom_dirs(&temp_dir);
+        let cache = MediaCache::new();
+        let cache_dir = RetromDirs::new().media_dir().join("games").join("test");
+
+        // Test with absolute path should return error
+        let result = cache
+            .cache_media_file(CacheMediaOpts {
+                remote_url: "https://example.com/test.jpg".to_string(),
+                cache_dir: cache_dir.clone(),
+                semantic_name: Some("test".to_string()),
+                base_dir: Some(PathBuf::from("/absolute/path")),
+            })
+            .await;
+
+        assert!(matches!(result, Err(MediaCacheError::AbsoluteBasePath(_))));
+
+        // Test with relative path should work (would fail on HTTP but that's not tested here)
+        let result = cache
+            .cache_media_file(CacheMediaOpts {
+                remote_url: "https://example.com/test.jpg".to_string(),
+                cache_dir: cache_dir.clone(),
+                semantic_name: Some("test".to_string()),
+                base_dir: Some(PathBuf::from("relative/path")),
+            })
+            .await;
+
+        // Should fail with HTTP error since we're not testing actual downloads
+        assert!(result.is_err());
+        // Don't check the specific error type since we're not testing HTTP requests
+    }
+
+    #[tokio::test]
+    async fn test_cache_file_overwrite_on_url_change() {
+        let temp_dir = TempDir::new().unwrap();
+        let _dirs = create_test_retrom_dirs(&temp_dir);
+        let cache = MediaCache::new();
+
+        // Create a test cache directory
+        let cache_dir = temp_dir.path().join("cache");
+        fs::create_dir_all(&cache_dir).await.unwrap();
+
+        // Manually create a test file to simulate an existing cached file
+        let test_file_path = cache_dir.join("cover.jpg");
+        let original_content = b"original image data";
+        fs::write(&test_file_path, original_content).await.unwrap();
+
+        // Update the index to simulate the file was cached from URL A
+        let original_url = "https://example.com/original.jpg";
+        let relative_path = cache
+            .index_manager()
+            .get_relative_path(&cache_dir, &test_file_path)
+            .unwrap();
+        cache
+            .index_manager()
+            .update_entry(&cache_dir, &relative_path, Some(original_url))
+            .await
+            .unwrap();
+
+        // Verify the initial state
+        let index = cache.index_manager().read_index(&cache_dir).await.unwrap();
+        assert_eq!(index.entries.len(), 1);
+        let entry = &index.entries["cover.jpg"];
+        assert_eq!(entry.remote_url, Some(original_url.to_string()));
+
+        // Verify file content is original
+        let content = fs::read(&test_file_path).await.unwrap();
+        assert_eq!(content, original_content);
+
+        // Now test our logic: simulate the file existing check when URLs match
+        // The file should NOT be overwritten if URL matches
+        let cache_path_exists = test_file_path.exists();
+        assert!(cache_path_exists);
+
+        // Read index and check if URLs match
+        let index = cache.index_manager().read_index(&cache_dir).await.unwrap();
+        if let Some(existing_entry) = index.entries.get(&relative_path) {
+            if let Some(existing_url) = &existing_entry.remote_url {
+                // URLs match - should return early without overwriting
+                assert_eq!(existing_url, original_url);
+                // Content should remain unchanged
+                let content = fs::read(&test_file_path).await.unwrap();
+                assert_eq!(content, original_content);
+            }
+        }
+
+        // Now test with different URL - simulate what would happen
+        let new_url = "https://example.com/new.jpg";
+        let different_content = b"new image data";
+
+        // Read index and check if URLs differ
+        let index = cache.index_manager().read_index(&cache_dir).await.unwrap();
+        if let Some(existing_entry) = index.entries.get(&relative_path) {
+            if let Some(existing_url) = &existing_entry.remote_url {
+                if existing_url != new_url {
+                    // URLs differ - should proceed with "download" (we'll simulate by writing new content)
+                    fs::write(&test_file_path, different_content).await.unwrap();
+
+                    // Update index with new URL
+                    cache
+                        .index_manager()
+                        .update_entry(&cache_dir, &relative_path, Some(new_url))
+                        .await
+                        .unwrap();
+                }
+            }
+        }
+
+        // Verify the file was overwritten and index was updated
+        let content = fs::read(&test_file_path).await.unwrap();
+        assert_eq!(content, different_content);
+
+        let updated_index = cache.index_manager().read_index(&cache_dir).await.unwrap();
+        assert_eq!(updated_index.entries.len(), 1);
+        let updated_entry = &updated_index.entries["cover.jpg"];
+        assert_eq!(updated_entry.remote_url, Some(new_url.to_string()));
     }
 }

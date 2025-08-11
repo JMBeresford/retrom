@@ -8,23 +8,19 @@ use super::Result;
 /// Generate a stable filename for a cached media file based on the original URL
 /// Uses SHA256 hash of the URL combined with the original file extension
 pub fn generate_cache_filename(url: &str, fallback_extension: Option<&str>) -> Result<String> {
-    // Parse the URL to extract the path and extension
     let parsed_url = Url::parse(url)?;
     let path = parsed_url.path();
 
-    // Extract file extension from the URL path
     let extension = Path::new(path)
         .extension()
         .and_then(|ext| ext.to_str())
         .unwrap_or(fallback_extension.unwrap_or("bin"));
 
-    // Generate SHA256 hash of the full URL
     let mut hasher = Sha256::new();
     hasher.update(url.as_bytes());
     let hash = hasher.finalize();
     let hash_hex = format!("{hash:x}");
 
-    // Take first 16 characters of hash for shorter filenames
     let short_hash = &hash_hex[..16];
 
     Ok(format!("{short_hash}.{extension}"))
@@ -36,11 +32,9 @@ pub fn generate_semantic_filename(
     semantic_name: &str,
     fallback_extension: Option<&str>,
 ) -> Result<String> {
-    // Parse the URL to extract the extension
     let parsed_url = Url::parse(url)?;
     let path = parsed_url.path();
 
-    // Extract file extension from the URL path
     let extension = Path::new(path)
         .extension()
         .and_then(|ext| ext.to_str())
@@ -52,7 +46,6 @@ pub fn generate_semantic_filename(
 /// Validate that a URL is safe to cache (basic security checks)
 pub fn is_cacheable_url(url: &str) -> bool {
     if let Ok(parsed_url) = Url::parse(url) {
-        // Only allow HTTP and HTTPS schemes
         matches!(parsed_url.scheme(), "http" | "https")
     } else {
         false
