@@ -10,6 +10,7 @@ jobs:
     name: Release-plz
     permissions:
       contents: write
+      pull-requests: write
     outputs:
       released: ${{ steps.release.outputs.releases_created }}
     runs-on: ubuntu-latest
