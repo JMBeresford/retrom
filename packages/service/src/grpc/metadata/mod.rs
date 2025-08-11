@@ -137,10 +137,53 @@ impl MetadataService for MetadataServiceHandlers {
             })
             .collect();
 
+        // Build media paths for each game from the local cache
+        let mut media_paths: HashMap<i32, retrom::MediaPaths> = HashMap::new();
+        
+        for meta in &metadata {
+            if let Some(cache_dir) = meta.get_cache_dir() {
+                if cache_dir.exists() {
+                    let index = match self.media_cache.index_manager().read_index(&cache_dir).await {
+                        Ok(index) => index,
+                        Err(_) => continue, // Skip games without valid index
+                    };
+
+                    let mut paths = retrom::MediaPaths {
+                        cover_url: None,
+                        background_url: None,
+                        video_urls: vec![],
+                        screenshot_urls: vec![],
+                        artwork_urls: vec![],
+                    };
+
+                    // Process index entries to build media paths
+                    for (relative_path, _entry) in index.entries {
+                        let cache_path = cache_dir.join(&relative_path);
+                        let public_url = self.media_cache.get_public_url(&cache_path);
+
+                        // Map based on file structure and naming
+                        if relative_path == "cover.jpg" || relative_path == "cover.png" {
+                            paths.cover_url = Some(public_url);
+                        } else if relative_path == "background.jpg" || relative_path == "background.png" {
+                            paths.background_url = Some(public_url);
+                        } else if relative_path.starts_with("artwork/") {
+                            paths.artwork_urls.push(public_url);
+                        } else if relative_path.starts_with("screenshots/") {
+                            paths.screenshot_urls.push(public_url);
+                        }
+                        // Note: video_urls not currently populated as the current system doesn't cache videos
+                    }
+
+                    media_paths.insert(meta.game_id, paths);
+                }
+            }
+        }
+
         Ok(Response::new(GetGameMetadataResponse {
             metadata,
             genres,
             similar_games,
+            media_paths,
         }))
     }
 

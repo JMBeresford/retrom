@@ -25,6 +25,15 @@ message GetGameMetadataRequest {
   repeated int32 game_ids = 1;
 }
 
+// paths to media assets, relative to the global metadata dir or served HTTP endpoints
+message MediaPaths {
+  optional string cover_url = 1;
+  optional string background_url = 2;
+  repeated string video_urls = 3;
+  repeated string screenshot_urls = 4;
+  repeated string artwork_urls = 5;
+}
+
 message GetGameMetadataResponse {
   message GameGenres {
     repeated GameGenre value = 1;
@@ -37,6 +46,7 @@ message GetGameMetadataResponse {
   repeated GameMetadata metadata = 1;
   map<int32, SimilarGames> similar_games = 2;
   map<int32, GameGenres> genres = 3;
+  map<int32, MediaPaths> media_paths = 4;
 }
 
 message GetPlatformMetadataRequest {
