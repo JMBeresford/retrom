@@ -139,11 +139,16 @@ impl MetadataService for MetadataServiceHandlers {
 
         // Build media paths for each game from the local cache
         let mut media_paths: HashMap<i32, retrom::MediaPaths> = HashMap::new();
-        
+
         for meta in &metadata {
             if let Some(cache_dir) = meta.get_cache_dir() {
                 if cache_dir.exists() {
-                    let index = match self.media_cache.index_manager().read_index(&cache_dir).await {
+                    let index = match self
+                        .media_cache
+                        .index_manager()
+                        .read_index(&cache_dir)
+                        .await
+                    {
                         Ok(index) => index,
                         Err(_) => continue, // Skip games without valid index
                     };
@@ -164,7 +169,9 @@ impl MetadataService for MetadataServiceHandlers {
                         // Map based on file structure and naming
                         if relative_path == "cover.jpg" || relative_path == "cover.png" {
                             paths.cover_url = Some(public_url);
-                        } else if relative_path == "background.jpg" || relative_path == "background.png" {
+                        } else if relative_path == "background.jpg"
+                            || relative_path == "background.png"
+                        {
                             paths.background_url = Some(public_url);
                         } else if relative_path.starts_with("artwork/") {
                             paths.artwork_urls.push(public_url);
