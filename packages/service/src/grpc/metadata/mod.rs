@@ -13,7 +13,7 @@ use futures::future::join_all;
 use retrom_codegen::{
     retrom::{
         self,
-        get_game_metadata_response::{GameGenres, SimilarGames},
+        get_game_metadata_response::{GameGenres, MediaPaths, SimilarGames},
         get_igdb_search_request::IgdbSearchType,
         get_igdb_search_response::SearchResults,
         metadata_service_server::MetadataService,
@@ -138,7 +138,7 @@ impl MetadataService for MetadataServiceHandlers {
             .collect();
 
         // Build media paths for each game from the local cache
-        let mut media_paths: HashMap<i32, retrom::MediaPaths> = HashMap::new();
+        let mut media_paths: HashMap<i32, MediaPaths> = HashMap::new();
 
         for meta in &metadata {
             if let Some(cache_dir) = meta.get_cache_dir() {
@@ -153,7 +153,7 @@ impl MetadataService for MetadataServiceHandlers {
                         Err(_) => continue, // Skip games without valid index
                     };
 
-                    let mut paths = retrom::MediaPaths {
+                    let mut paths = MediaPaths {
                         cover_url: None,
                         background_url: None,
                         video_urls: vec![],
@@ -166,16 +166,22 @@ impl MetadataService for MetadataServiceHandlers {
                         let cache_path = cache_dir.join(&relative_path);
                         let public_url = self.media_cache.get_public_url(&cache_path);
 
-                        // Map based on file structure and naming
-                        if relative_path == "cover.jpg" || relative_path == "cover.png" {
+                        // Map based on file structure and naming using PathBuf methods
+                        let path = std::path::Path::new(&relative_path);
+                        let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+                        let parent_name = path
+                            .parent()
+                            .and_then(|p| p.file_name())
+                            .and_then(|n| n.to_str())
+                            .unwrap_or("");
+
+                        if file_stem == "cover" {
                             paths.cover_url = Some(public_url);
-                        } else if relative_path == "background.jpg"
-                            || relative_path == "background.png"
-                        {
+                        } else if file_stem == "background" {
                             paths.background_url = Some(public_url);
-                        } else if relative_path.starts_with("artwork/") {
+                        } else if parent_name == "artwork" {
                             paths.artwork_urls.push(public_url);
-                        } else if relative_path.starts_with("screenshots/") {
+                        } else if parent_name == "screenshots" {
                             paths.screenshot_urls.push(public_url);
                         }
                         // Note: video_urls not currently populated as the current system doesn't cache videos
