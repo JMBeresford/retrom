@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS auth.auth_method_password_bcrypt;
