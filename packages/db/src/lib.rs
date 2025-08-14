@@ -4,6 +4,9 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use std::fmt::Debug;
 
 pub mod schema;
+pub mod schemas {
+    pub mod auth_schema;
+}
 
 #[cfg(feature = "embedded")]
 pub mod embedded;
