@@ -6,5 +6,9 @@ file = "src/schema.rs"
 patch_file = "src/schema.patch"
 custom_type_derives = ["diesel::query_builder::QueryId"]
 
+[print_schema.auth]
+file = "src/schemas/auth_schema.rs"
+schema = "auth"
+
 [migrations_directory]
 dir = "migrations"
