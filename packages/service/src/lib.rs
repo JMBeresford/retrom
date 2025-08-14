@@ -29,6 +29,7 @@ pub mod meta;
 mod providers;
 mod rest;
 pub mod trace;
+pub mod auth;
 
 pub const DEFAULT_PORT: i32 = 5101;
 pub const DEFAULT_DB_URL: &str = "postgres://postgres:postgres@localhost/retrom";
