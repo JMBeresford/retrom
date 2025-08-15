@@ -213,7 +213,7 @@ impl MetadataService for MetadataServiceHandlers {
                                 meta_clone.game_id
                             );
                         }
-                    });
+                    }.in_current_span());
                 }
             }
         }
