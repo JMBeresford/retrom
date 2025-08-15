@@ -196,6 +196,24 @@ impl MetadataService for MetadataServiceHandlers {
                     {
                         media_paths.insert(meta.game_id, paths);
                     }
+                } else {
+                    // Media is not currently cached, spawn background task to cache it
+                    let meta_clone = meta.clone();
+                    let cache_clone = self.media_cache.clone();
+                    tokio::task::spawn(async move {
+                        if let Err(e) = meta_clone.cache_metadata(cache_clone).await {
+                            tracing::warn!(
+                                "Failed to cache media for game {}: {}",
+                                meta_clone.game_id,
+                                e
+                            );
+                        } else {
+                            tracing::debug!(
+                                "Successfully cached media for game {}",
+                                meta_clone.game_id
+                            );
+                        }
+                    });
                 }
             }
         }
