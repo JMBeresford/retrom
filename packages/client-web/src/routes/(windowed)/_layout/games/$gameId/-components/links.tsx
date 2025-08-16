@@ -31,7 +31,7 @@ export function Links() {
     [gameMetadata?.links],
   );
 
-  if (!gameMetadata?.links?.length) {
+  if (!links?.length) {
     return null;
   }
 
