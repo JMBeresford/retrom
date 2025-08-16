@@ -3,6 +3,7 @@
 @theme {
   --animate-accordion-down: accordion-down 0.2s ease-in-out;
   --animate-accordion-up: accordion-up 0.2s ease-in-out;
+  --animate-translate-x: translate-x 1s linear infinite;
 
   @keyframes accordion-down {
     from {
@@ -19,6 +20,15 @@
     }
     to {
       height: 0;
+    }
+  }
+
+  @keyframes translate-x {
+    from {
+      transform: translateX(-300%);
+    }
+    to {
+      transform: translateX(300%);
     }
   }
 }

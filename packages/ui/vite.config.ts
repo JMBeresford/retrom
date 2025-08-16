@@ -45,13 +45,20 @@ export default defineConfig(() => ({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ["react", "react/jsx-runtime", "react-dom", "tailwindcss"],
+      external: [
+        "react",
+        "react/jsx-runtime",
+        "react-dom",
+        "tailwindcss",
+        "tw-animate-css",
+      ],
       output: {
         globals: {
           react: "React",
           "react/jsx-runtime": "react/jsx-runtime",
           "react-dom": "ReactDOM",
           tailwindcss: "tailwindcss",
+          "tw-animate-css": "tw-animate-css",
         },
       },
     },
