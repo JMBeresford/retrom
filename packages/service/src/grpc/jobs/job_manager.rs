@@ -105,97 +105,94 @@ impl JobManager {
         let job_progress = self.job_progress.clone();
         let mut maybe_wait_ids = maybe_wait_ids.clone();
 
-        tokio::spawn(
-            async move {
-                let mut depend_join_set = JoinSet::new();
-                for (id, mut listener) in listeners.into_iter() {
-                    depend_join_set.spawn(async move {
-                        while let Ok(progress) = listener.recv().await {
-                            match JobStatus::try_from(progress.status) {
-                                Ok(JobStatus::Success) => break,
-                                Ok(JobStatus::Failure) => break,
-                                _ => {}
-                            }
+        tokio::spawn(async move {
+            let mut depend_join_set = JoinSet::new();
+            for (id, mut listener) in listeners.into_iter() {
+                depend_join_set.spawn(async move {
+                    while let Ok(progress) = listener.recv().await {
+                        match JobStatus::try_from(progress.status) {
+                            Ok(JobStatus::Success) => break,
+                            Ok(JobStatus::Failure) => break,
+                            _ => {}
                         }
+                    }
 
-                        id
-                    });
+                    id
+                });
+            }
+
+            while !maybe_wait_ids.is_empty() {
+                let done_id = depend_join_set.join_next().await.unwrap().unwrap();
+
+                maybe_wait_ids.retain(|id| *id != done_id);
+            }
+
+            for task in tasks.into_iter() {
+                join_set.spawn(task.instrument(tracing::info_span!("job_task")));
+            }
+
+            {
+                let mut job_progress = job_progress.write().await;
+                if let Some(job) = job_progress.get_mut(&id) {
+                    job.status = JobStatus::Running.into();
                 }
+            }
 
-                while !maybe_wait_ids.is_empty() {
-                    let done_id = depend_join_set.join_next().await.unwrap().unwrap();
-
-                    maybe_wait_ids.retain(|id| *id != done_id);
-                }
-
-                for task in tasks.into_iter() {
-                    join_set.spawn(task.instrument(tracing::info_span!("job_task")));
-                }
-
+            while let Some(res) = join_set.join_next().await {
                 {
                     let mut job_progress = job_progress.write().await;
-                    if let Some(job) = job_progress.get_mut(&id) {
-                        job.status = JobStatus::Running.into();
-                    }
-                }
+                    let tasks_completed = total_tasks - join_set.len();
+                    let percent = (tasks_completed as f64 / total_tasks as f64 * 100.0) as u32;
 
-                while let Some(res) = join_set.join_next().await {
-                    {
-                        let mut job_progress = job_progress.write().await;
-                        let tasks_completed = total_tasks - join_set.len();
-                        let percent = (tasks_completed as f64 / total_tasks as f64 * 100.0) as u32;
+                    match res {
+                        Ok(Ok(_)) => {}
+                        Ok(Err(e)) => {
+                            tracing::error!("Task failed: {:?}", e);
 
-                        match res {
-                            Ok(Ok(_)) => {}
-                            Ok(Err(e)) => {
-                                tracing::error!("Task failed: {:?}", e);
-
-                                if let Some(job) = job_progress.get_mut(&id) {
-                                    job.status = JobStatus::Failure.into();
-                                }
-                            }
-                            Err(e) => {
-                                tracing::error!("Join failed: {:?}", e);
-
-                                if let Some(job) = job_progress.get_mut(&id) {
-                                    job.status = JobStatus::Failure.into();
-                                }
+                            if let Some(job) = job_progress.get_mut(&id) {
+                                job.status = JobStatus::Failure.into();
                             }
                         }
+                        Err(e) => {
+                            tracing::error!("Join failed: {:?}", e);
 
-                        if let Some(job) = job_progress.get_mut(&id) {
-                            job.percent = percent;
-                        };
-                    }
-
-                    if let Err(why) = invalidate_sender.send(id) {
-                        tracing::debug!("Invalidation channel closed: {:?}", why);
-                    }
-                }
-
-                {
-                    let mut job_progress = job_progress.write().await;
-                    if let Some(job) = job_progress.get_mut(&id) {
-                        let status = JobStatus::try_from(job.status).unwrap();
-
-                        match status {
-                            JobStatus::Failure => {}
-                            _ => {
-                                job.status = JobStatus::Success.into();
-                                job.percent = 100;
+                            if let Some(job) = job_progress.get_mut(&id) {
+                                job.status = JobStatus::Failure.into();
                             }
                         }
                     }
-                }
 
-                tracing::info!("Job completed: {}", name);
+                    if let Some(job) = job_progress.get_mut(&id) {
+                        job.percent = percent;
+                    };
+                }
 
                 if let Err(why) = invalidate_sender.send(id) {
                     tracing::debug!("Invalidation channel closed: {:?}", why);
                 }
             }
-            .instrument(tracing::info_span!("job_thread")),
-        );
+
+            {
+                let mut job_progress = job_progress.write().await;
+                if let Some(job) = job_progress.get_mut(&id) {
+                    let status = JobStatus::try_from(job.status).unwrap();
+
+                    match status {
+                        JobStatus::Failure => {}
+                        _ => {
+                            job.status = JobStatus::Success.into();
+                            job.percent = 100;
+                        }
+                    }
+                }
+            }
+
+            tracing::info!("Job completed: {}", name);
+
+            if let Err(why) = invalidate_sender.send(id) {
+                tracing::debug!("Invalidation channel closed: {:?}", why);
+            }
+        });
 
         id
     }
