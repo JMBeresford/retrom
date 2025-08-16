@@ -1,5 +1,5 @@
-use std::{collections::HashSet, path::PathBuf, str::FromStr};
-
+use super::LibraryServiceHandlers;
+use crate::media_cache::cacheable_media::CacheableMetadata;
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use futures::future::join_all;
@@ -8,12 +8,9 @@ use retrom_codegen::retrom::{
     DeleteMissingEntriesResponse, Game, GameFile, GameMetadata, Platform, PlatformMetadata,
 };
 use retrom_db::schema;
+use std::{collections::HashSet, path::PathBuf, str::FromStr};
 use tonic::Status;
 use tracing::error;
-
-use crate::media_cache::CacheableMetadata;
-
-use super::LibraryServiceHandlers;
 
 pub async fn delete_library(
     state: &LibraryServiceHandlers,

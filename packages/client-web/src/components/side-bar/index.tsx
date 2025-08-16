@@ -40,8 +40,15 @@ import {
 } from "@retrom/ui/components/dropdown-menu";
 import { Button } from "@retrom/ui/components/button";
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
+import { useGameMetadata } from "@/queries/useGameMetadata";
+import { createUrl, usePublicUrl } from "@/utils/urls";
+import { GetGameMetadataResponse_MediaPaths } from "@retrom/codegen/retrom/services/metadata-service_pb";
 
 type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
+type GameMetadataWithMediaPaths = {
+  metadata: GameMetadata;
+  mediaPaths?: GetGameMetadataResponse_MediaPaths;
+};
 
 export function SideBar() {
   const {
@@ -64,6 +71,23 @@ export function SideBar() {
     request: { withMetadata: true },
   });
 
+  const { data: allGameMetadata, status: gameMetadataStatus } = useGameMetadata(
+    {
+      request: { gameIds: gameData?.games.map((g) => g.id) },
+      selectFn: (data) =>
+        data.metadata.reduce(
+          (acc, value) => ({
+            ...acc,
+            [value.gameId]: {
+              metadata: value,
+              mediaPaths: data.mediaPaths[value.gameId],
+            },
+          }),
+          {} as Record<number, GameMetadataWithMediaPaths>,
+        ),
+    },
+  );
+
   const currentGame = useMemo(() => {
     try {
       const id = parseInt(path.split("games/")[1]?.split("/")[0]);
@@ -73,8 +97,15 @@ export function SideBar() {
     }
   }, [path, gameData]);
 
-  const loading = platformStatus === "pending" || gameStatus === "pending";
-  const error = platformStatus === "error" || gameStatus === "error";
+  const loading =
+    platformStatus === "pending" ||
+    gameStatus === "pending" ||
+    gameMetadataStatus === "pending";
+
+  const error =
+    platformStatus === "error" ||
+    gameStatus === "error" ||
+    gameMetadataStatus === "error";
 
   const platformsWithMetadata: PlatformWithMetadata[] = useMemo(() => {
     const platforms =
@@ -279,9 +310,8 @@ export function SideBar() {
                                 installationData?.installationState[game.id] ===
                                 InstallationStatus.INSTALLED;
 
-                              const gameMetadata = game.metadata;
+                              const gameMetadata = allGameMetadata?.[game.id];
 
-                              const iconUrl = gameMetadata?.iconUrl;
                               const fallbackName =
                                 game.storageType ===
                                 StorageType.SINGLE_FILE_GAME
@@ -289,7 +319,7 @@ export function SideBar() {
                                   : getFileName(game.path);
 
                               const gameName =
-                                gameMetadata?.name ?? fallbackName;
+                                gameMetadata?.metadata?.name ?? fallbackName;
 
                               return (
                                 <Tooltip key={game.id}>
@@ -309,25 +339,11 @@ export function SideBar() {
                                         "max-w-full w-full overflow-hidden text-ellipsis px-2 py-0.5",
                                       )}
                                     >
-                                      <Link
-                                        to="/games/$gameId"
-                                        params={{ gameId: game.id.toString() }}
-                                        className="grid grid-cols-[auto_1fr] items-center max-w-full h-full"
-                                      >
-                                        <div className="relative min-w-[28px] min-h-[28px] mr-2 my-[2px]">
-                                          {iconUrl && (
-                                            <Image
-                                              src={iconUrl}
-                                              width={28}
-                                              height={28}
-                                              alt={gameName ?? ""}
-                                            />
-                                          )}
-                                        </div>
-                                        <span className="whitespace-nowrap overflow-hidden text-ellipsis">
-                                          <span>{gameName}</span>
-                                        </span>
-                                      </Link>
+                                      <GameItem
+                                        game={game}
+                                        metadata={gameMetadata}
+                                        displayName={gameName}
+                                      />
                                     </li>
                                   </TooltipTrigger>
                                   <TooltipPortal>
@@ -359,6 +375,43 @@ export function SideBar() {
         )}
       </aside>
     </div>
+  );
+}
+
+function GameItem(props: {
+  game: Game;
+  displayName: string;
+  metadata?: GameMetadataWithMediaPaths;
+}) {
+  const { game, displayName, metadata: data } = props;
+
+  const publicUrl = usePublicUrl();
+
+  const iconUrl = useMemo(() => {
+    const localPath = data?.mediaPaths?.iconUrl;
+    if (localPath && publicUrl) {
+      return createUrl({ path: localPath, base: publicUrl })?.href;
+    }
+
+    return data?.metadata?.iconUrl;
+  }, [data, publicUrl]);
+
+  return (
+    <Link
+      to="/games/$gameId"
+      params={{ gameId: game.id.toString() }}
+      className="grid grid-cols-[auto_1fr] items-center max-w-full h-full"
+    >
+      <div className="relative min-w-[28px] min-h-[28px] mr-2 my-[2px]">
+        {iconUrl && (
+          <Image src={iconUrl} width={28} height={28} alt={displayName} />
+        )}
+      </div>
+
+      <span className="whitespace-nowrap overflow-hidden text-ellipsis">
+        <span>{displayName}</span>
+      </span>
+    </Link>
   );
 }
 

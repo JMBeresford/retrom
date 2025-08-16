@@ -3,12 +3,15 @@ import { InterfaceConfig_GameListEntryImageJson } from "@retrom/codegen/retrom/c
 import { getFileStub } from "@/lib/utils";
 import { useConfig } from "@/providers/config";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { FocusContainer, useFocusable } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { Group, useGroupContext } from "@/providers/fullscreen/group-context";
 import { Separator } from "@retrom/ui/components/separator";
 import { cn } from "@retrom/ui/lib/utils";
+import { useGameMetadata } from "@/queries/useGameMetadata";
+import { createUrl, usePublicUrl } from "@/utils/urls";
+import { Skeleton } from "@retrom/ui/components/skeleton";
 
 function getFirstGameId(group: Group) {
   const firstPartitionWithGames = group.partitionedGames.find(
@@ -121,6 +124,7 @@ function GameListItem(props: {
   initialFocus?: boolean;
 }) {
   const { game, id, initialFocus } = props;
+
   const navigate = useNavigate();
   const { ref } = useFocusable<HTMLDivElement>({
     focusKey: id,
@@ -173,13 +177,36 @@ function GameImage(props: {
   kind: InterfaceConfig_GameListEntryImageJson;
 }) {
   const { game } = props;
-  const imageSrc =
-    props.kind === "BACKGROUND"
-      ? game.metadata?.backgroundUrl
-      : game.metadata?.coverUrl;
+  const publicUrl = usePublicUrl();
 
-  const [noImage, setNoImage] = useState(!imageSrc);
+  const { data, status } = useGameMetadata({
+    request: { gameIds: [game.id] },
+    selectFn: (data) => ({
+      metadata: data.metadata.at(0),
+      mediaPaths:
+        game.id in data.mediaPaths ? data.mediaPaths[game.id] : undefined,
+    }),
+  });
 
+  const coverUrl = useMemo(() => {
+    const localPath = data?.mediaPaths?.coverUrl;
+    if (localPath && publicUrl) {
+      return createUrl({ path: localPath, base: publicUrl })?.href;
+    }
+
+    return data?.metadata?.coverUrl;
+  }, [publicUrl, data]);
+
+  const backgroundUrl = useMemo(() => {
+    const localPath = data?.mediaPaths?.backgroundUrl;
+    if (localPath && publicUrl) {
+      return createUrl({ path: localPath, base: publicUrl })?.href;
+    }
+
+    return data?.metadata?.backgroundUrl;
+  }, [publicUrl, data]);
+
+  const imageSrc = props.kind === "BACKGROUND" ? backgroundUrl : coverUrl;
   const gameName = game.metadata?.name ?? getFileStub(game.path);
 
   return (
@@ -191,23 +218,18 @@ function GameImage(props: {
         "h-fit w-fit min-w-full min-h-full",
       )}
     >
-      {imageSrc && (
+      {status === "pending" ? (
+        <Skeleton className="size-full" />
+      ) : imageSrc ? (
         <img
           loading="lazy"
           src={imageSrc}
-          onError={() => {
-            setNoImage(true);
-          }}
-          className={cn(
-            "absolute object-cover min-w-full min-h-full",
-            noImage && "hidden",
-          )}
+          className={cn("absolute object-cover min-w-full min-h-full")}
         />
-      )}
+      ) : null}
 
       <div
         className={cn(
-          !noImage && "opacity-0 translate-y-2 transition-all",
           "group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0",
           "absolute inset-0",
           "bg-gradient-to-t from-card",

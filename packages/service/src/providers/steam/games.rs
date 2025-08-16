@@ -16,7 +16,11 @@ impl GameMetadataProvider<models::Game> for SteamWebApiProvider {
         let app_details = match self.get_app_details(app.appid).await {
             Ok(details) => details,
             Err(e) => {
-                tracing::warn!("Failed to get app details for app {:?}: {:?}", e, app.appid);
+                tracing::warn!(
+                    "Failed to get app details for app {:?}: Status {:?}",
+                    app.appid,
+                    e
+                );
                 return None;
             }
         };

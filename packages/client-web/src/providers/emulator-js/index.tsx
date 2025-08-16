@@ -2,7 +2,7 @@ import { createContext, useContext, ReactNode } from "react";
 import { Config, Core } from "@/lib/emulatorjs";
 import { EmulatorJS } from "@/lib/emulatorjs/emulator";
 import { useQuery } from "@tanstack/react-query";
-import { useApiUrl } from "@/utils/useApiUrl";
+import { useApiUrl } from "@/utils/urls";
 import { Loader2 } from "lucide-react";
 import { useGameDetail } from "../game-details";
 import { getFileStub } from "@/lib/utils";

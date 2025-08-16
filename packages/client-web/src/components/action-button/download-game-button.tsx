@@ -9,7 +9,7 @@ import { Button, ButtonProps } from "@retrom/ui/components/button";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { cn } from "@retrom/ui/lib/utils";
 import { DownloadIcon } from "lucide-react";
-import { useApiUrl } from "@/utils/useApiUrl";
+import { useApiUrl } from "@/utils/urls";
 
 export const DownloadGameButton = forwardRef(
   (

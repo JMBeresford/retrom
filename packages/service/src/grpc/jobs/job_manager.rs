@@ -1,6 +1,9 @@
 use futures::Future;
 use retrom_codegen::retrom::{JobProgress, JobStatus};
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{HashMap, VecDeque},
+    sync::Arc,
+};
 use tokio::{
     sync::{
         broadcast::{self, error::RecvError},
@@ -15,8 +18,11 @@ use uuid::Uuid;
 pub enum JobError {
     #[error(transparent)]
     Io(#[from] std::io::Error),
+    #[error("Job with name '{0}' already running")]
+    JobAlreadyRunning(String),
 }
 
+type Result<T> = std::result::Result<T, JobError>;
 type JobId = Uuid;
 
 #[derive(Debug, Clone)]
@@ -43,24 +49,31 @@ impl JobManager {
         name: &str,
         tasks: Vec<impl Future<Output = std::result::Result<T, E>> + Send + 'static>,
         opts: Option<JobOptions>,
-    ) -> JobId
+    ) -> Result<JobId>
     where
         T: Send + 'static,
         E: Send + 'static + std::fmt::Debug,
     {
         let name = name.to_string();
+        if self.get_job_by_name(&name).await.is_some_and(|(_, j)| {
+            !(j.status == JobStatus::Success as i32
+                || (j.status == JobStatus::Failure as i32 && j.percent == 100))
+        }) {
+            tracing::warn!("Job already exists: {:?}", name);
+            return Err(JobError::JobAlreadyRunning(name));
+        }
+
         let mut join_set = JoinSet::new();
         let total_tasks = tasks.len();
-        let id = uuid::Uuid::new_v4();
+        let mut id = uuid::Uuid::new_v4();
 
-        if let Some(job) = self.job_progress.read().await.get(&id) {
-            match JobStatus::try_from(job.status) {
-                Ok(JobStatus::Idle) | Ok(JobStatus::Running) => {
-                    tracing::warn!("Job already running: {:?}", name);
-                    return id;
-                }
-                _ => {}
-            }
+        while self.job_progress.read().await.get(&id).is_some() {
+            tracing::warn!(
+                "Job ID collision detected, this should not happen often (if ever): {:?}",
+                id
+            );
+
+            id = uuid::Uuid::new_v4();
         }
 
         let invalidate_sender = self.invalidation_channel.clone();
@@ -68,6 +81,23 @@ impl JobManager {
         let job_progress = self.job_progress.clone();
         {
             let mut job_progress = job_progress.write().await;
+
+            let mut finished_jobs = job_progress
+                .iter()
+                .filter_map(|(id, j)| if j.percent == 100 { Some(*id) } else { None })
+                .collect::<VecDeque<_>>();
+
+            while finished_jobs.len() > 100 {
+                let job_to_remove = finished_jobs.pop_front();
+
+                match job_to_remove {
+                    Some(id) => {
+                        job_progress.remove(&id);
+                    }
+                    None => break,
+                }
+            }
+
             job_progress.insert(
                 id,
                 JobProgress {
@@ -194,7 +224,18 @@ impl JobManager {
             }
         });
 
-        id
+        Ok(id)
+    }
+
+    pub async fn get_job_by_name(&self, name: &str) -> Option<(JobId, JobProgress)> {
+        let job_progress = self.job_progress.read().await;
+        for (id, job) in job_progress.iter() {
+            if job.name == name {
+                return Some((*id, job.clone()));
+            }
+        }
+
+        None
     }
 
     pub fn subscribe(&self, id: JobId) -> broadcast::Receiver<JobProgress> {
@@ -209,13 +250,14 @@ impl JobManager {
                     let job = progress.get(&id).cloned();
 
                     if let Some(job) = job {
-                        let status = JobStatus::try_from(job.status);
+                        let is_done = job.percent == 100;
+
                         if tx.send(job).is_err() {
                             tracing::debug!("Job progress reciever closed");
                             break;
                         }
 
-                        if status == Ok(JobStatus::Success) || status == Ok(JobStatus::Failure) {
+                        if is_done {
                             break;
                         }
                     }
@@ -241,7 +283,9 @@ impl JobManager {
             loop {
                 {
                     let progress = job_progress.read().await;
-                    let all_progress = progress.values().cloned().collect::<Vec<_>>();
+                    let mut all_progress = progress.values().cloned().collect::<Vec<_>>();
+
+                    all_progress.sort_by(|a, b| b.percent.cmp(&a.percent));
 
                     if tx.send(all_progress).is_err() {
                         tracing::debug!("Bulk job progress reciever closed");

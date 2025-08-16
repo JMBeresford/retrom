@@ -13,6 +13,7 @@ import {
 import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
 import {
   GetGameMetadataResponse_GameGenres,
+  GetGameMetadataResponse_MediaPaths,
   GetGameMetadataResponse_SimilarGames,
 } from "@retrom/codegen/retrom/services/metadata-service_pb";
 import { checkIsDesktop } from "@/lib/env";
@@ -22,10 +23,17 @@ import { useEmulatorProfiles } from "@/queries/useEmulatorProfiles";
 import { useEmulators } from "@/queries/useEmulators";
 import { useQuery } from "@tanstack/react-query";
 import { Navigate } from "@tanstack/react-router";
-import { PropsWithChildren, createContext, useContext, useMemo } from "react";
+import {
+  PropsWithChildren,
+  ReactNode,
+  createContext,
+  useContext,
+  useMemo,
+} from "react";
 import { useConfig } from "../config";
-import { getFileStub } from "@/lib/utils";
+import { getFileName, getFileStub } from "@/lib/utils";
 import { Code, ConnectError } from "@connectrpc/connect";
+import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 
 export type GameDetailContext = {
   game: Game;
@@ -35,6 +43,7 @@ export type GameDetailContext = {
   extraMetadata?: {
     genres?: GetGameMetadataResponse_GameGenres;
     similarGames?: GetGameMetadataResponse_SimilarGames;
+    mediaPaths?: GetGameMetadataResponse_MediaPaths;
   };
   platformMetadata?: PlatformMetadata;
   emulator?: Emulator;
@@ -47,7 +56,11 @@ export type GameDetailContext = {
 const GameDetailContext = createContext<GameDetailContext | null>(null);
 
 export function GameDetailProvider(
-  props: PropsWithChildren<{ gameId: number; errorRedirectUrl?: string }>,
+  props: PropsWithChildren<{
+    gameId: number;
+    errorRedirectUrl?: string;
+    loadingComponent?: ReactNode;
+  }>,
 ) {
   const { gameId, errorRedirectUrl = "/" } = props;
   const fullscreenByDefault = useConfig(
@@ -154,7 +167,10 @@ export function GameDetailProvider(
 
   const name = useMemo(
     () =>
-      gameMetadata?.metadata.at(0)?.name || getFileStub(gameData?.game?.path),
+      gameMetadata?.metadata.at(0)?.name ||
+      (gameData?.game?.storageType === StorageType.SINGLE_FILE_GAME
+        ? getFileStub(gameData?.game?.path)
+        : getFileName(gameData?.game?.path)),
     [gameData?.game, gameMetadata?.metadata],
   );
 
@@ -165,6 +181,7 @@ export function GameDetailProvider(
     const path = fullscreenByDefault ? "/fullscreen" : "/home";
     return <Navigate to={path} />;
   }
+
   const defaultProfile =
     profiles?.find((profile) => profile.id === defaultProfileId) ??
     profiles?.at(0);
@@ -192,7 +209,7 @@ export function GameDetailProvider(
     emulatorsStatus === "pending" ||
     profilesStatus === "pending"
   ) {
-    return <span>Loading...</span>;
+    return props.loadingComponent ?? null;
   }
 
   if (!gameData.game || !platformData.platform) {
@@ -214,6 +231,7 @@ export function GameDetailProvider(
     extraMetadata: {
       genres: gameMetadata.genres[gameData.game.id],
       similarGames: gameMetadata.similarGames[gameData.game.id],
+      mediaPaths: gameMetadata.mediaPaths[gameData.game.id],
     },
     platformMetadata: platformData.platformMetadata,
     emulator,

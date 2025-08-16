@@ -10,15 +10,24 @@ import { cn } from "@retrom/ui/lib/utils";
 import { ScrollArea, ScrollBar } from "@retrom/ui/components/scroll-area";
 import { useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
+import { createUrl, usePublicUrl } from "@/utils/urls";
 
 export function SimilarGames() {
+  const publicUrl = usePublicUrl();
   const { extraMetadata } = useGameDetail();
 
   const similarGames = extraMetadata?.similarGames?.value;
   const { data: similarGamesMetadata } = useGameMetadata({
     request: { gameIds: similarGames?.map((game) => game.id) },
     enabled: similarGames !== undefined,
-    selectFn: (data) => data.metadata,
+    selectFn: (data) =>
+      data.metadata.map((meta) => ({
+        metadata: meta,
+        mediaPaths:
+          meta.gameId in data.mediaPaths
+            ? data.mediaPaths[meta.gameId]
+            : undefined,
+      })),
   });
 
   if (!similarGamesMetadata?.length) {
@@ -26,7 +35,7 @@ export function SimilarGames() {
   }
 
   return (
-    <Card className="col-span-6 row-span-3">
+    <Card className="col-span-full">
       <CardHeader>
         <CardTitle>Similar Games</CardTitle>
       </CardHeader>
@@ -41,28 +50,36 @@ export function SimilarGames() {
           )}
         >
           <div className="flex gap-5 pb-4 pr-[60px]">
-            {similarGamesMetadata?.map((metadata) => (
-              <Link
-                key={metadata.gameId}
-                to={"/games/$gameId"}
-                params={{ gameId: metadata.gameId.toString() }}
-              >
-                <div className="aspect-[3/4] relative rounded-lg overflow-hidden min-w-[120px]">
-                  <Image src={metadata.coverUrl} alt="" className="w-[150px]" />
+            {similarGamesMetadata?.map(({ metadata, mediaPaths }) => {
+              const coverUrl =
+                mediaPaths?.coverUrl && publicUrl
+                  ? createUrl({ path: mediaPaths.coverUrl, base: publicUrl })
+                      ?.href
+                  : metadata.coverUrl;
 
-                  <div
-                    className={cn(
-                      "opacity-0 sm:hover:opacity-100 transition-opacity",
-                      "absolute inset-0 bg-gradient-to-t from-muted",
-                      "flex flex-col-reverse overflow-hidden p-2",
-                      "text-pretty font-semibold",
-                    )}
-                  >
-                    <h4>{metadata.name}</h4>
+              return (
+                <Link
+                  key={metadata.gameId}
+                  to={"/games/$gameId"}
+                  params={{ gameId: metadata.gameId.toString() }}
+                >
+                  <div className="aspect-[3/4] relative rounded-lg overflow-hidden min-w-[120px]">
+                    <Image src={coverUrl} alt="" className="w-[150px]" />
+
+                    <div
+                      className={cn(
+                        "opacity-0 sm:hover:opacity-100 transition-opacity",
+                        "absolute inset-0 bg-gradient-to-t from-muted",
+                        "flex flex-col-reverse overflow-hidden p-2",
+                        "text-pretty font-semibold",
+                      )}
+                    >
+                      <h4>{metadata.name}</h4>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
 
             {!similarGamesMetadata?.length && (
               <div className="text-center w-full">

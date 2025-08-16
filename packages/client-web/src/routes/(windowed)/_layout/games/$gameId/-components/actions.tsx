@@ -29,7 +29,7 @@ import { usePlayGame } from "@/mutations/usePlayGame";
 import { checkIsDesktop, PlatformDependent } from "@/lib/env";
 import { useNavigate } from "@tanstack/react-router";
 import { Core } from "@/lib/emulatorjs";
-import { useApiUrl } from "@/utils/useApiUrl";
+import { useApiUrl } from "@/utils/urls";
 
 export function Actions() {
   const { game, validEmulators, validProfiles, defaultProfile, gameFiles } =

@@ -33,6 +33,7 @@ import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { useEJSSessionState } from "@/providers/emulator-js/ejs-session";
 import { configOptions } from "./config";
 import { useControlOptions } from "@/providers/emulator-js/control-options";
+import { createUrl, usePublicUrl } from "@/utils/urls";
 
 export type OverlayMenuItem = Omit<MenuItem, "items" | "Render"> & {
   Render?: FC;
@@ -251,11 +252,27 @@ export const OverlayMenu = memo(function OverlayMenu(props: {
  * to avoid these re-renders down the tree.
  */
 export function Overlay() {
+  const publicUrl = usePublicUrl();
   const { overlay } = useSearch({ strict: false });
   const emulatorJS = useEmulatorJS();
   const { pauseInput } = useControlOptions();
-  const { name, gameMetadata, emulator, platform, platformMetadata } =
-    useGameDetail();
+  const {
+    name,
+    gameMetadata,
+    extraMetadata,
+    emulator,
+    platform,
+    platformMetadata,
+  } = useGameDetail();
+
+  const coverUrl = useMemo(() => {
+    const localPath = extraMetadata?.mediaPaths?.coverUrl;
+    if (localPath && publicUrl) {
+      return createUrl({ path: localPath, base: publicUrl })?.href;
+    }
+
+    return gameMetadata?.coverUrl;
+  }, [publicUrl, gameMetadata, extraMetadata]);
 
   const navigate = useNavigate();
 
@@ -314,7 +331,7 @@ export function Overlay() {
               core={emulator?.name ?? emulatorJS.coreName}
               name={name}
               platform={platformMetadata?.name ?? getFileStub(platform.path)}
-              imgSrc={gameMetadata?.coverUrl ?? logo}
+              imgSrc={coverUrl || logo}
             />
           </div>
         </HotkeyLayer>

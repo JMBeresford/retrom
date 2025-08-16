@@ -41,7 +41,7 @@ use std::time::SystemTime;
 use tokio::fs;
 use tracing::{debug, warn};
 
-use super::{MediaCacheError, Result};
+use super::{CacheMediaOpts, MediaCacheError, Result};
 
 /// Index entry for a single media file
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -114,11 +114,35 @@ impl IndexManager {
         }
     }
 
+    /// Checks if a given index entry is still valid for the given options.
+    /// The timestamp of the index entry is not checked, only the parameters
+    /// such as `remote_url`.
+    pub async fn is_entry_valid(&self, opts: &CacheMediaOpts) -> Result<bool> {
+        let index = self.read_index(&opts.cache_dir).await?;
+        let relative_path = self.get_relative_path(opts).await?;
+
+        let entry = match index.entries.get(&relative_path) {
+            Some(entry) => entry,
+            None => {
+                debug!("No index entry found for {}", relative_path);
+                return Ok(false);
+            }
+        };
+
+        // TODO: Use hash comparison (store url hash in index) or similar
+        // for improved performance for large libraries
+        if entry.remote_url.as_ref() != Some(&opts.remote_url) {
+            return Ok(false);
+        }
+
+        Ok(true)
+    }
+
     /// Write the index file to a cache directory
     /// Uses atomic write (write to temp file, then rename)
     pub async fn write_index(&self, cache_dir: &Path, index: &MetadataIndex) -> Result<()> {
         if !cache_dir.exists() {
-            fs::create_dir_all(cache_dir).await?;
+            fs::create_dir_all(&cache_dir).await?;
         }
 
         let index_path = self.get_index_path(cache_dir);
@@ -139,32 +163,29 @@ impl IndexManager {
     }
 
     /// Add or update an index entry for a cached file
-    pub async fn update_entry(
-        &self,
-        cache_dir: &Path,
-        relative_path: &str,
-        remote_url: Option<&str>,
-    ) -> Result<()> {
-        let mut index = self.read_index(cache_dir).await?;
+    pub async fn update_entry(&self, opts: &CacheMediaOpts) -> Result<()> {
+        let mut index = self.read_index(&opts.cache_dir).await?;
+        let relative_path = self.get_relative_path(opts).await?;
 
         let entry = IndexEntry {
-            remote_url: remote_url.map(|s| s.to_string()),
+            remote_url: opts.remote_url.clone().into(),
             updated_at: SystemTime::now().into(),
         };
 
         debug!("Updating index entry: {} -> {:?}", relative_path, entry);
         index.entries.insert(relative_path.to_string(), entry);
 
-        self.write_index(cache_dir, &index).await
+        self.write_index(&opts.cache_dir, &index).await
     }
 
     /// Remove an index entry for a file
-    pub async fn remove_entry(&self, cache_dir: &Path, relative_path: &str) -> Result<()> {
-        let mut index = self.read_index(cache_dir).await?;
+    pub async fn remove_entry(&self, opts: &CacheMediaOpts) -> Result<()> {
+        let mut index = self.read_index(&opts.cache_dir).await?;
+        let relative_path = self.get_relative_path(opts).await?;
 
-        if index.entries.remove(relative_path).is_some() {
+        if index.entries.remove(&relative_path).is_some() {
             debug!("Removing index entry: {}", relative_path);
-            self.write_index(cache_dir, &index).await?;
+            self.write_index(&opts.cache_dir, &index).await?;
         }
 
         Ok(())
@@ -183,7 +204,10 @@ impl IndexManager {
     }
 
     /// Get a relative path from the cache directory to a file
-    pub fn get_relative_path(&self, cache_dir: &Path, file_path: &Path) -> Result<String> {
+    pub async fn get_relative_path(&self, opts: &CacheMediaOpts) -> Result<String> {
+        let cache_dir = &opts.cache_dir;
+        let file_path = opts.get_item_path().await?;
+
         let relative = file_path.strip_prefix(cache_dir).map_err(|_| {
             MediaCacheError::Io(std::io::Error::other(format!(
                 "File path {file_path:?} is not within cache directory {cache_dir:?}"
@@ -247,29 +271,29 @@ mod tests {
         let cache_dir = temp_dir.path();
         let manager = IndexManager::new();
 
+        let opts = CacheMediaOpts {
+            remote_url: "https://example.com/cover.jpg".to_string(),
+            cache_dir: cache_dir.to_path_buf(),
+            semantic_name: Some("cover".to_string()),
+            base_dir: None,
+        };
+
         // Update entry in empty index
-        manager
-            .update_entry(
-                cache_dir,
-                "cover.jpg",
-                Some("https://example.com/cover.jpg"),
-            )
-            .await
-            .unwrap();
+        manager.update_entry(&opts).await.unwrap();
 
         let index = manager.read_index(cache_dir).await.unwrap();
         assert_eq!(index.entries.len(), 1);
         assert!(index.entries.contains_key("cover.jpg"));
 
         // Update the same entry
-        manager
-            .update_entry(
-                cache_dir,
-                "cover.jpg",
-                Some("https://example.com/new-cover.jpg"),
-            )
-            .await
-            .unwrap();
+        let new_opts = CacheMediaOpts {
+            remote_url: "https://example.com/new-cover.jpg".to_string(),
+            cache_dir: cache_dir.to_path_buf(),
+            semantic_name: Some("cover".to_string()),
+            base_dir: None,
+        };
+
+        manager.update_entry(&new_opts).await.unwrap();
 
         let updated_index = manager.read_index(cache_dir).await.unwrap();
         assert_eq!(updated_index.entries.len(), 1);
@@ -286,18 +310,21 @@ mod tests {
         let cache_dir = temp_dir.path();
         let manager = IndexManager::new();
 
+        let opts = CacheMediaOpts {
+            remote_url: "https://example.com/cover.jpg".to_string(),
+            cache_dir: cache_dir.to_path_buf(),
+            semantic_name: Some("cover".to_string()),
+            base_dir: None,
+        };
+
         // Add an entry
-        manager
-            .update_entry(
-                cache_dir,
-                "cover.jpg",
-                Some("https://example.com/cover.jpg"),
-            )
-            .await
-            .unwrap();
+        manager.update_entry(&opts).await.unwrap();
+
+        let index = manager.read_index(cache_dir).await.unwrap();
+        assert_eq!(index.entries.len(), 1);
 
         // Remove it
-        manager.remove_entry(cache_dir, "cover.jpg").await.unwrap();
+        manager.remove_entry(&opts).await.unwrap();
 
         let index = manager.read_index(cache_dir).await.unwrap();
         assert!(index.entries.is_empty());
@@ -308,9 +335,14 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let cache_dir = temp_dir.path();
         let manager = IndexManager::new();
+        let opts = CacheMediaOpts {
+            remote_url: "https://example.com/image.jpg".to_string(),
+            cache_dir: cache_dir.to_path_buf(),
+            semantic_name: Some("image".to_string()),
+            base_dir: Some(PathBuf::from("artwork")),
+        };
 
-        let file_path = cache_dir.join("artwork").join("image.jpg");
-        let relative = manager.get_relative_path(cache_dir, &file_path).unwrap();
+        let relative = manager.get_relative_path(&opts).await.unwrap();
 
         // Should use forward slashes regardless of platform
         assert_eq!(relative, "artwork/image.jpg");
@@ -322,31 +354,31 @@ mod tests {
         let cache_dir = temp_dir.path();
         let manager = IndexManager::new();
 
+        let cover = CacheMediaOpts {
+            remote_url: "https://example.com/cover.jpg".to_string(),
+            cache_dir: cache_dir.to_path_buf(),
+            semantic_name: Some("cover".to_string()),
+            base_dir: None,
+        };
+
+        let background = CacheMediaOpts {
+            remote_url: "https://example.com/bg.jpg".to_string(),
+            cache_dir: cache_dir.to_path_buf(),
+            semantic_name: Some("background".to_string()),
+            base_dir: None,
+        };
+
+        let artwork = CacheMediaOpts {
+            remote_url: "https://example.com/artwork.jpg".to_string(),
+            cache_dir: cache_dir.to_path_buf(),
+            semantic_name: Some("art1".to_string()),
+            base_dir: Some(PathBuf::from("artwork")),
+        };
+
         // Add multiple entries
-        manager
-            .update_entry(
-                cache_dir,
-                "cover.jpg",
-                Some("https://example.com/cover.jpg"),
-            )
-            .await
-            .unwrap();
-        manager
-            .update_entry(
-                cache_dir,
-                "background.png",
-                Some("https://example.com/bg.png"),
-            )
-            .await
-            .unwrap();
-        manager
-            .update_entry(
-                cache_dir,
-                "artwork/art1.jpg",
-                Some("https://example.com/art1.jpg"),
-            )
-            .await
-            .unwrap();
+        manager.update_entry(&cover).await.unwrap();
+        manager.update_entry(&background).await.unwrap();
+        manager.update_entry(&artwork).await.unwrap();
 
         // Verify persistence by creating a new manager instance
         let new_manager = IndexManager::new();
@@ -354,7 +386,7 @@ mod tests {
 
         assert_eq!(index.entries.len(), 3);
         assert!(index.entries.contains_key("cover.jpg"));
-        assert!(index.entries.contains_key("background.png"));
+        assert!(index.entries.contains_key("background.jpg"));
         assert!(index.entries.contains_key("artwork/art1.jpg"));
     }
 
@@ -382,10 +414,15 @@ mod tests {
 
         // Add an entry and check that timestamp is recent
         let before = SystemTime::now();
-        manager
-            .update_entry(cache_dir, "test.jpg", Some("https://example.com/test.jpg"))
-            .await
-            .unwrap();
+        let opts = CacheMediaOpts {
+            remote_url: "https://example.com/test.jpg".to_string(),
+            cache_dir: cache_dir.to_path_buf(),
+            semantic_name: Some("test".to_string()),
+            base_dir: None,
+        };
+
+        manager.update_entry(&opts).await.unwrap();
+
         let after = SystemTime::now();
 
         let index = manager.read_index(cache_dir).await.unwrap();
@@ -400,14 +437,14 @@ mod tests {
 
         // Test that updating an entry updates the timestamp
         std::thread::sleep(std::time::Duration::from_millis(100));
-        manager
-            .update_entry(
-                cache_dir,
-                "test.jpg",
-                Some("https://example.com/updated.jpg"),
-            )
-            .await
-            .unwrap();
+        let new_opts = CacheMediaOpts {
+            remote_url: "https://example.com/updated.jpg".to_string(),
+            cache_dir: cache_dir.to_path_buf(),
+            semantic_name: Some("test".to_string()),
+            base_dir: None,
+        };
+
+        manager.update_entry(&new_opts).await.unwrap();
 
         let updated_index = manager.read_index(cache_dir).await.unwrap();
         let updated_entry = &updated_index.entries["test.jpg"];

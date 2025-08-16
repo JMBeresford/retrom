@@ -1,15 +1,34 @@
-import { GameMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
 import { Image } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { BufferGeometry, Mesh, MeshBasicMaterial } from "three";
 import { damp } from "three/src/math/MathUtils.js";
+import { useGameDetail } from "@/providers/game-details";
+import { createUrl, usePublicUrl } from "@/utils/urls";
 
-export function Background(props: { metadata: Partial<GameMetadata> }) {
-  const { metadata } = props;
-  const { backgroundUrl, coverUrl } = metadata;
+export function Background() {
+  const publicUrl = usePublicUrl();
+  const { gameMetadata, extraMetadata } = useGameDetail();
   const { width, height } = useThree((s) => s.viewport);
   const ref = useRef<Mesh<BufferGeometry, MeshBasicMaterial>>(null);
+
+  const backgroundUrl = useMemo(() => {
+    const localPath = extraMetadata?.mediaPaths?.backgroundUrl;
+    if (localPath && publicUrl) {
+      return createUrl({ path: localPath, base: publicUrl })?.href;
+    }
+
+    return gameMetadata?.backgroundUrl;
+  }, [publicUrl, gameMetadata, extraMetadata]);
+
+  const coverUrl = useMemo(() => {
+    const localPath = extraMetadata?.mediaPaths?.coverUrl;
+    if (localPath && publicUrl) {
+      return createUrl({ path: localPath, base: publicUrl })?.href;
+    }
+
+    return gameMetadata?.coverUrl;
+  }, [publicUrl, gameMetadata, extraMetadata]);
 
   const url = backgroundUrl || coverUrl;
 

@@ -1,6 +1,6 @@
 import { PropsWithChildren, createContext, useContext, useMemo } from "react";
 import { RetromClient } from "./client";
-import { useApiUrl } from "@/utils/useApiUrl";
+import { useApiUrl } from "@/utils/urls";
 
 const context = createContext<RetromClient | undefined>(undefined);
 

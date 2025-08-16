@@ -77,12 +77,22 @@ function Game() {
 
           <div
             className={cn(
-              `grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] grid-rows-[repeat(auto-fit,minmax(100px,1fr))]`,
+              `grid grid-cols-[repeat(6,1fr)]`,
               "grid-flow-dense gap-5",
+              "@container",
             )}
           >
-            <Links />
-            <GameFiles />
+            <div
+              className={cn(
+                "grid grid-cols-subgrid grid-rows-subgrid",
+                "grid-flow-row col-span-full row-span-2",
+                "@md:row-span-1 @md:grid-flow-col",
+                "*:col-span-full @md:*:col-span-3 *:only:col-span-full",
+              )}
+            >
+              <Links />
+              <GameFiles />
+            </div>
             <Media />
 
             <SimilarGames />

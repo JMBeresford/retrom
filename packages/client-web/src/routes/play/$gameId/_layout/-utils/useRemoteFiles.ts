@@ -1,7 +1,7 @@
 import { File, FileStat } from "@retrom/codegen/retrom/files_pb";
 import { useMutation } from "@tanstack/react-query";
 import { useRetromClient } from "@/providers/retrom-client";
-import { useApiUrl } from "@/utils/useApiUrl";
+import { useApiUrl } from "@/utils/urls";
 import { useCallback, useMemo } from "react";
 import { RawMessage } from "@/utils/protos";
 

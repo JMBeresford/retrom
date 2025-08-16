@@ -41,8 +41,8 @@ pub struct RetryAttempts {
 impl RetryAttempts {
     pub fn new(attempts_left: usize) -> Self {
         let backoff = ExponentialBackoffMaker::new(
-            Duration::from_millis(500),
-            Duration::from_millis(5000),
+            Duration::from_millis(200),
+            Duration::from_millis(1000),
             1.25,
             HasherRng::default(),
         )

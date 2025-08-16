@@ -25,11 +25,6 @@ export function useUpdateLibraryMetadata() {
       extraMetadataJobId,
       steamMetadataJobId,
     }) => {
-      void queryClient.invalidateQueries({
-        predicate: (query) =>
-          ["jobs"].some((key) => query.queryKey.includes(key)),
-      });
-
       toast({
         title: "Library Metadata Update Started",
       });

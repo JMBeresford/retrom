@@ -36,7 +36,7 @@ export function Links() {
   }
 
   return (
-    <Card className={"col-span-4 row-span-2"}>
+    <Card>
       <CardHeader>
         <CardTitle>External Links</CardTitle>
       </CardHeader>

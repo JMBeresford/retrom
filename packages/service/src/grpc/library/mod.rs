@@ -1,7 +1,6 @@
 use super::jobs::job_manager::JobManager;
 use crate::{
     config::ServerConfigManager,
-    media_cache::MediaCache,
     providers::{igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider},
 };
 use retrom_codegen::retrom::{
@@ -24,7 +23,6 @@ pub struct LibraryServiceHandlers {
     steam_web_api_client: Arc<SteamWebApiProvider>,
     job_manager: Arc<JobManager>,
     config_manager: Arc<ServerConfigManager>,
-    media_cache: Arc<MediaCache>,
 }
 
 impl LibraryServiceHandlers {
@@ -34,7 +32,6 @@ impl LibraryServiceHandlers {
         steam_web_api_client: Arc<SteamWebApiProvider>,
         job_manager: Arc<JobManager>,
         config_manager: Arc<ServerConfigManager>,
-        media_cache: Arc<MediaCache>,
     ) -> Self {
         Self {
             db_pool,
@@ -42,7 +39,6 @@ impl LibraryServiceHandlers {
             steam_web_api_client,
             job_manager,
             config_manager,
-            media_cache,
         }
     }
 }
