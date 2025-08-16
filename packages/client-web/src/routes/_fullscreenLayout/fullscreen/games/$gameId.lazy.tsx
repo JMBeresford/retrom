@@ -107,7 +107,7 @@ function Inner() {
                   )}
                 >
                   <Scene>
-                    {gameMetadata && <Background metadata={gameMetadata} />}
+                    <Background />
                     <Name name={name} />
                   </Scene>
                 </CatchBoundary>

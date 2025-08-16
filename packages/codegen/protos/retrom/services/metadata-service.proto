@@ -38,9 +38,10 @@ message GetGameMetadataResponse {
   message MediaPaths {
     optional string cover_url = 1;
     optional string background_url = 2;
-    repeated string video_urls = 3;
-    repeated string screenshot_urls = 4;
-    repeated string artwork_urls = 5;
+    optional string icon_url = 3;
+    repeated string video_urls = 4;
+    repeated string screenshot_urls = 5;
+    repeated string artwork_urls = 6;
   }
 
   repeated GameMetadata metadata = 1;

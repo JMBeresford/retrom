@@ -1,3 +1,4 @@
+use crate::media_cache::cacheable_media::CacheableMetadata;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use futures::future::join_all;
@@ -8,8 +9,6 @@ use retrom_codegen::retrom::{
 use retrom_db::{schema, Pool};
 use std::{path::PathBuf, sync::Arc};
 use tonic::{Code, Request, Response, Status};
-
-use crate::media_cache::CacheableMetadata;
 
 #[derive(Clone)]
 pub struct GameServiceHandlers {

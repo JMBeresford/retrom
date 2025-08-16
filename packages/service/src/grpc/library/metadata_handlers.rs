@@ -1,19 +1,11 @@
-use std::{
-    collections::{HashMap, HashSet},
-    convert::Infallible,
-    sync::Arc,
-};
-
+use super::LibraryServiceHandlers;
 use crate::{
-    grpc::jobs::job_manager::JobOptions,
-    media_cache::CacheableMetadata,
+    grpc::jobs::job_manager::{JobError, JobOptions},
     providers::{
         igdb::provider::IgdbSearchData, GameMetadataProvider, MetadataProvider,
         PlatformMetadataProvider,
     },
 };
-
-use super::LibraryServiceHandlers;
 use bigdecimal::ToPrimitive;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -28,6 +20,11 @@ use retrom_codegen::retrom::{
     UpdateLibraryMetadataResponse, UpdatedGameMetadata,
 };
 use retrom_db::schema;
+use std::{
+    collections::{HashMap, HashSet},
+    convert::Infallible,
+    sync::Arc,
+};
 use tracing::instrument;
 
 #[instrument(skip(state))]
@@ -61,7 +58,6 @@ pub async fn update_metadata(
         .map(|platform| {
             let igdb_provider = state.igdb_client.clone();
             let db_pool = db_pool.clone();
-            let media_cache = state.media_cache.clone();
 
             async move {
                 let mut conn = match db_pool.get().await {
@@ -100,14 +96,6 @@ pub async fn update_metadata(
                     .await;
 
                 if let Some(metadata) = metadata {
-                    if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
-                        tracing::warn!(
-                            "Failed to cache media for platform {:?}: {}",
-                            metadata.platform_id,
-                            e
-                        );
-                    };
-
                     let mut conn = match db_pool.get().await {
                         Ok(conn) => conn,
                         Err(why) => {
@@ -151,7 +139,6 @@ pub async fn update_metadata(
         .map(|game| {
             let igdb_provider = state.igdb_client.clone();
             let db_pool = db_pool.clone();
-            let media_cache = state.media_cache.clone();
 
             async move {
                 let mut conn = match db_pool.get().await {
@@ -208,14 +195,6 @@ pub async fn update_metadata(
                 let metadata = igdb_provider.get_game_metadata(game, Some(query)).await;
 
                 if let Some(metadata) = metadata {
-                    if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
-                        tracing::warn!(
-                            "Failed to cache media for game {:?}: {}",
-                            metadata.game_id,
-                            e
-                        );
-                    }
-
                     let mut conn = match db_pool.get().await {
                         Ok(conn) => conn,
                         Err(why) => {
@@ -489,8 +468,6 @@ pub async fn update_metadata(
             let steam_provider = steam_provider.clone();
             let db_pool = db_pool.clone();
             let steam_games = steam_games.clone();
-            let media_cache = state.media_cache.clone();
-
             let steam_appid = app.appid;
 
             let game = match steam_games
@@ -504,6 +481,8 @@ pub async fn update_metadata(
                 }
             };
 
+            let game_id = game.id;
+
             Some(async move {
                 let mut conn = db_pool.get().await.expect("Failed to get connection");
 
@@ -516,7 +495,6 @@ pub async fn update_metadata(
                 // to be rate limited
                 drop(conn);
 
-                let game_id = game.id;
                 let metadata = match steam_provider.get_game_metadata(game, Some(app)).await {
                     Some(meta) => meta,
                     None => {
@@ -527,10 +505,6 @@ pub async fn update_metadata(
                         return Ok(());
                     }
                 };
-
-                if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
-                    tracing::warn!("Failed to cache media for Steam game {}: {}", game_id, e);
-                }
 
                 let mut conn = db_pool.get().await.expect("Failed to get connection");
 
@@ -575,39 +549,67 @@ pub async fn update_metadata(
         .collect();
 
     let job_manager = state.job_manager.clone();
-    let platform_metadata_job_id = job_manager
+    let platform_metadata_job_id = match job_manager
         .spawn("Downloading Platform Metadata", platform_tasks, None)
-        .await;
+        .await
+    {
+        Ok(id) => id,
+        Err(JobError::JobAlreadyRunning(_)) => {
+            return Err("Platform metadata job is already running".to_string())
+        }
+        _ => return Err("Failed to spawn platform metadata job".to_string()),
+    };
 
     let game_job_opts = JobOptions {
         wait_on_jobs: Some(vec![platform_metadata_job_id]),
     };
 
     let steam_metadata_job_id = if !steam_tasks.is_empty() {
-        let id = job_manager
+        let id = match job_manager
             .spawn("Downloading Steam Metadata", steam_tasks, None)
-            .await;
+            .await
+        {
+            Ok(id) => id,
+            Err(JobError::JobAlreadyRunning(_)) => {
+                return Err("Steam metadata job is already running".to_string())
+            }
+            _ => return Err("Failed to spawn Steam metadata job".to_string()),
+        };
 
         Some(id.to_string())
     } else {
         None
     };
 
-    let game_metadata_job_id = job_manager
+    let game_metadata_job_id = match job_manager
         .spawn("Downloading Game Metadata", game_tasks, Some(game_job_opts))
-        .await;
+        .await
+    {
+        Ok(id) => id,
+        Err(JobError::JobAlreadyRunning(_)) => {
+            return Err("Game metadata job is already running".to_string())
+        }
+        _ => return Err("Failed to spawn game metadata job".to_string()),
+    };
 
     let extra_metadata_job_opts = JobOptions {
         wait_on_jobs: Some(vec![game_metadata_job_id]),
     };
 
-    let extra_metadata_job_id = job_manager
+    let extra_metadata_job_id = match job_manager
         .spawn(
             "Downloading Extra Metadata",
             extra_metadata_tasks,
             Some(extra_metadata_job_opts),
         )
-        .await;
+        .await
+    {
+        Ok(id) => id,
+        Err(JobError::JobAlreadyRunning(_)) => {
+            return Err("Extra metadata job is already running".to_string())
+        }
+        _ => return Err("Failed to spawn extra metadata job".to_string()),
+    };
 
     Ok(UpdateLibraryMetadataResponse {
         platform_metadata_job_id: platform_metadata_job_id.to_string(),

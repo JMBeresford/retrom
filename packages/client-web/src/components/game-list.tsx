@@ -1,17 +1,19 @@
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { GameMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
-import { getFileStub, Image } from "@/lib/utils";
+import { getFileName, getFileStub, Image } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import { ActionButton } from "../components/action-button";
-import { GameDetailProvider } from "@/providers/game-details";
+import { GameDetailProvider, useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
 import { useMediaQuery } from "@/utils/use-media-query";
+import { createUrl, usePublicUrl } from "@/utils/urls";
+import { useMemo } from "react";
+import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
+import { Skeleton } from "@retrom/ui/components/skeleton";
 
 export type GameWithMetadata = Game & { metadata?: GameMetadata };
 
 export function GameList(props: { games: GameWithMetadata[] }) {
-  const isMobile = useMediaQuery("(max-width: 640px)");
-
   return (
     <div
       className={cn(
@@ -20,82 +22,117 @@ export function GameList(props: { games: GameWithMetadata[] }) {
       )}
     >
       {props.games.map((game) => {
-        const bgUrl = game.metadata?.backgroundUrl;
-        const coverUrl = game.metadata?.coverUrl;
-
-        const played = game.metadata?.minutesPlayed;
-        const playedRender = played
-          ? played > 60
-            ? `Played for ${Math.floor(played / 60)}h ${played % 60}m`
-            : `Played for ${played}m`
-          : "Not played yet";
-
-        const image = isMobile ? (coverUrl ?? bgUrl) : (bgUrl ?? coverUrl);
-
         return (
-          <div
+          <GameDetailProvider
             key={game.id}
-            className={cn(
-              "aspect-video h-[12rem] max-h-[12rem] p-2",
-              (image === coverUrl || isMobile) &&
-                "row-span-2 h-[24rem] max-h-[24rem] aspect-[3/4]",
-              "first:row-span-2 first:h-[24rem] first:max-h-[24rem] first:pl-0",
-            )}
+            gameId={game.id}
+            loadingComponent={
+              <Skeleton className="aspect-video h-[24rem] mx-5 row-span-2" />
+            }
           >
-            <div
-              className={cn(
-                "relative w-full h-full group",
-                "rounded-lg overflow-hidden",
-                !image && "border",
-              )}
-            >
-              <div
-                className={cn(
-                  "absolute inset-0 bg-gradient-to-t from-card to-card/20 pointer-events-none touch-none",
-                  "sm:opacity-0 group-hover:opacity-100 transition-opacity",
-                )}
-              >
-                <div
-                  className={cn(
-                    "absolute left-3 bottom-3 w-[90%] overflow-hidden text-ellipsis",
-                  )}
-                >
-                  <h3 className="whitespace-nowrap text-lg font-bold overflow-hidden text-ellipsis">
-                    {game.metadata?.name || getFileStub(game.path)}
-                  </h3>
-
-                  <h5 className="text-sm text-muted-foreground mb-2">
-                    {playedRender}
-                  </h5>
-
-                  <GameDetailProvider gameId={game.id}>
-                    <div
-                      className={cn(
-                        "rounded-md overflow-hidden w-fit pointer-events-auto touch-auto z-50",
-                        "hidden sm:block",
-                      )}
-                    >
-                      <ActionButton
-                        size="sm"
-                        className='text-md min-w-[100px] [&_div[role="progressbar"]_>_*]:bg-primary-foreground'
-                      />
-                    </div>
-                  </GameDetailProvider>
-                </div>
-              </div>
-
-              <GameImage game={game} image={image} />
-            </div>
-          </div>
+            <GameItem />
+          </GameDetailProvider>
         );
       })}
     </div>
   );
 }
 
-function GameImage(props: { game: GameWithMetadata; image?: string }) {
-  const { game, image } = props;
-  const name = game.metadata?.name ?? getFileStub(game.path);
+function GameItem() {
+  const isMobile = useMediaQuery("(max-width: 640px)");
+  const publicUrl = usePublicUrl();
+  const { game, gameMetadata, extraMetadata } = useGameDetail();
+
+  const bgUrl = useMemo(() => {
+    const localPath = extraMetadata?.mediaPaths?.backgroundUrl;
+    if (localPath && publicUrl) {
+      return createUrl({ path: localPath, base: publicUrl })?.href;
+    }
+
+    return gameMetadata?.backgroundUrl;
+  }, [publicUrl, gameMetadata, extraMetadata]);
+
+  const coverUrl = useMemo(() => {
+    const localPath = extraMetadata?.mediaPaths?.coverUrl;
+    if (localPath && publicUrl) {
+      return createUrl({ path: localPath, base: publicUrl })?.href;
+    }
+
+    return gameMetadata?.coverUrl;
+  }, [publicUrl, gameMetadata, extraMetadata]);
+
+  const played = gameMetadata?.minutesPlayed;
+  const playedRender = played
+    ? played > 60
+      ? `Played for ${Math.floor(played / 60)}h ${played % 60}m`
+      : `Played for ${played}m`
+    : "Not played yet";
+
+  const image = isMobile ? (coverUrl ?? bgUrl) : (bgUrl ?? coverUrl);
+
+  const gameName =
+    gameMetadata?.name ??
+    (game.storageType === StorageType.SINGLE_FILE_GAME
+      ? getFileStub(game.path)
+      : getFileName(game.path));
+
+  return (
+    <div
+      className={cn(
+        "aspect-video h-[12rem] max-h-[12rem] p-2",
+        (image === coverUrl || isMobile) &&
+          "row-span-2 h-[24rem] max-h-[24rem] aspect-[3/4]",
+        "first:row-span-2 first:h-[24rem] first:max-h-[24rem] first:pl-0",
+      )}
+    >
+      <div
+        className={cn(
+          "relative w-full h-full group",
+          "rounded-lg overflow-hidden",
+          !image && "border",
+        )}
+      >
+        <div
+          className={cn(
+            "absolute inset-0 bg-gradient-to-t from-card to-card/20 pointer-events-none touch-none",
+            "sm:opacity-0 group-hover:opacity-100 transition-opacity",
+          )}
+        >
+          <div
+            className={cn(
+              "absolute left-3 bottom-3 w-[90%] overflow-hidden text-ellipsis",
+            )}
+          >
+            <h3 className="whitespace-nowrap text-lg font-bold overflow-hidden text-ellipsis">
+              {gameName}
+            </h3>
+
+            <h5 className="text-sm text-muted-foreground mb-2">
+              {playedRender}
+            </h5>
+
+            <div
+              className={cn(
+                "rounded-md overflow-hidden w-fit pointer-events-auto touch-auto z-50",
+                "hidden sm:block",
+              )}
+            >
+              <ActionButton
+                size="sm"
+                className='text-md min-w-[100px] [&_div[role="progressbar"]_>_*]:bg-primary-foreground'
+              />
+            </div>
+          </div>
+        </div>
+
+        <GameImage game={game} name={gameName} image={image} />
+      </div>
+    </div>
+  );
+}
+
+function GameImage(props: { game: Game; name: string; image?: string }) {
+  const { game, name, image } = props;
 
   return (
     <Link

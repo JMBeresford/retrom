@@ -6,6 +6,8 @@ use retrom_db::schema::{self};
 use tonic::{Request, Status};
 use tracing::warn;
 
+use crate::grpc::jobs::job_manager::JobError;
+
 use super::{
     content_resolver::{game_resolver::ResolvedGame, ContentResolver},
     LibraryServiceHandlers,
@@ -153,23 +155,27 @@ pub(super) async fn update_library(
     let mut job_ids = vec![];
 
     if !tasks.is_empty() {
-        let job_id = state
-            .job_manager
-            .spawn("Update Library", tasks, None)
-            .await
-            .into();
+        let job_id = match state.job_manager.spawn("Update Library", tasks, None).await {
+            Ok(job_id) => job_id,
+            Err(JobError::JobAlreadyRunning(name)) => return Err(Status::already_exists(name)),
+            Err(why) => return Err(Status::internal(format!("Failed to spawn job: {why}"))),
+        };
 
-        job_ids.push(job_id);
+        job_ids.push(job_id.into());
     }
 
     if !steam_tasks.is_empty() {
-        let job_id = state
+        let job_id = match state
             .job_manager
             .spawn("Update Steam Library", steam_tasks, None)
             .await
-            .into();
+        {
+            Ok(job_id) => job_id,
+            Err(JobError::JobAlreadyRunning(name)) => return Err(Status::already_exists(name)),
+            Err(why) => return Err(Status::internal(format!("Failed to spawn job: {why}"))),
+        };
 
-        job_ids.push(job_id);
+        job_ids.push(job_id.into());
     }
 
     if job_ids.is_empty() {

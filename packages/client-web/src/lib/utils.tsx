@@ -72,7 +72,7 @@ export function getFileStub(path?: string) {
   return path ? getFileParts(path).name : "";
 }
 
-export function getFileName(path: string) {
+export function getFileName(path: string = "") {
   const { name, extension } = getFileParts(path);
   return name + (extension ? `.${extension}` : "");
 }

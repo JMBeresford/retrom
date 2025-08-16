@@ -52,19 +52,21 @@ export function ConnectivityIndicator(props: PopoverProps) {
           <Separator className="my-2" />
           {connectionStatus === "CONNECTED" && connectionInfo ? (
             <div className="flex flex-col gap-2">
-              <p className="font-semibold">
-                Host
+              <span>
+                <p className="font-semibold">Host</p>
+
                 <pre className="text-xs text-muted-foreground">
                   {connectionInfo?.host}
                 </pre>
-              </p>
+              </span>
 
-              <p className="font-semibold">
-                Version
+              <span>
+                <p className="font-semibold">Version</p>
+
                 <pre className="text-xs text-muted-foreground">
                   {connectionInfo?.version}
                 </pre>
-              </p>
+              </span>
             </div>
           ) : connectionStatus === "NOT_CONNECTED" ? (
             <div className="flex flex-col gap-2">

@@ -16,21 +16,47 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  useCarousel,
 } from "@retrom/ui/components/carousel";
 import { Image } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
+import { createUrl, usePublicUrl } from "@/utils/urls";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 
 export function Media() {
-  const { gameMetadata } = useGameDetail();
+  const publicUrl = usePublicUrl();
+  const { gameMetadata, extraMetadata } = useGameDetail();
+
+  const screenshots = useMemo(() => {
+    const localPaths = extraMetadata?.mediaPaths?.screenshotUrls;
+    if (localPaths && publicUrl) {
+      return localPaths
+        .map((path) => createUrl({ path, base: publicUrl })?.href)
+        .filter((s) => s !== undefined);
+    }
+
+    return gameMetadata?.screenshotUrls ?? [];
+  }, [publicUrl, extraMetadata, gameMetadata]);
+
+  const artwork = useMemo(() => {
+    const localPaths = extraMetadata?.mediaPaths?.artworkUrls;
+    if (localPaths && publicUrl) {
+      return localPaths
+        .map((path) => createUrl({ path, base: publicUrl })?.href)
+        .filter((s) => s !== undefined);
+    }
+
+    return gameMetadata?.artworkUrls ?? [];
+  }, [publicUrl, extraMetadata, gameMetadata]);
 
   if (!gameMetadata) {
     return null;
   }
 
-  const showImages = gameMetadata?.artworkUrls.length;
-  const showScreenshots = gameMetadata?.screenshotUrls.length;
-  const showVideos = gameMetadata?.videoUrls.length;
+  const showImages = !!artwork.length;
+  const showScreenshots = !!screenshots.length;
+  const showVideos = !!gameMetadata?.videoUrls.length;
 
   let tabsShown = 0;
   if (showImages) tabsShown++;
@@ -50,7 +76,7 @@ export function Media() {
         : "none";
 
   return (
-    <Card className="col-span-6 row-span-4">
+    <Card className="col-span-full">
       <CardHeader>
         <CardTitle>Media</CardTitle>
       </CardHeader>
@@ -72,11 +98,11 @@ export function Media() {
           ) : null}
 
           <TabsContent value="images">
-            <ImageCarousel images={gameMetadata.artworkUrls} />
+            <ImageCarousel images={artwork} />
           </TabsContent>
 
           <TabsContent value="screenshots">
-            <ImageCarousel images={gameMetadata.screenshotUrls} />
+            <ImageCarousel images={screenshots} />
           </TabsContent>
 
           <TabsContent value="videos">
@@ -130,22 +156,49 @@ function VideoCarousel(props: { videos: string[] }) {
   const { videos } = props;
 
   return (
-    <Carousel className="group">
-      <CarouselContent className="h-max">
-        {videos.map((video, idx) => (
-          <CarouselItem key={idx}>
+    <Carousel className="group" opts={{ inViewThreshold: 0.2 }}>
+      <VideoItems videos={videos} />
+
+      {videos.length > 1 ? <Controls /> : null}
+    </Carousel>
+  );
+}
+
+function VideoItems(props: { videos: string[] }) {
+  const { videos } = props;
+  const [inactive, setInactive] = useState(Array<number>());
+  const { api } = useCarousel();
+
+  const handleViewEvent = useCallback((currentApi: typeof api) => {
+    const notInView = currentApi?.slidesNotInView();
+    if (notInView) {
+      setInactive(notInView);
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    api?.on("slidesInView", handleViewEvent);
+
+    return () => {
+      api?.off("slidesInView", handleViewEvent);
+    };
+  }, [api]);
+
+  return (
+    <CarouselContent className="h-max">
+      {videos.map((video, idx) => (
+        <CarouselItem key={idx}>
+          {inactive.includes(idx) ? null : (
             <iframe
               // @ts-expect-error -- types out of date
               credentialless="true"
               className="w-full aspect-video rounded-lg"
               src={video}
             />
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-
-      {videos.length > 1 ? <Controls /> : null}
-    </Carousel>
+          )}
+        </CarouselItem>
+      ))}
+    </CarouselContent>
   );
 }
 

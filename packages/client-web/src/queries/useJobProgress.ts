@@ -9,7 +9,7 @@ export function useJobProgress() {
 
   useQuery({
     queryKey: ["jobs", "job-progress"],
-    staleTime: Infinity,
+    retry: true,
     queryFn: async () => {
       const stream = retromClient.jobClient.getJobs({});
 
@@ -19,7 +19,9 @@ export function useJobProgress() {
         setJobs(runningJobs);
       }
 
-      return null;
+      // throw error to trigger a retry, we want this stream
+      // to be always open
+      throw new Error("Job progress stream ended");
     },
   });
 

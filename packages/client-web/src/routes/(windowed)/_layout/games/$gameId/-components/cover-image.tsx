@@ -1,12 +1,22 @@
-import { getFileStub, Image } from "@/lib/utils";
+import { Image } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import logo from "@/assets/img/LogoLong-NoBackground.png";
 import { useGameDetail } from "@/providers/game-details";
+import { createUrl, usePublicUrl } from "@/utils/urls";
+import { useMemo } from "react";
 
 export function CoverImage() {
-  const { game, gameMetadata } = useGameDetail();
+  const publicUrl = usePublicUrl();
+  const { gameMetadata, extraMetadata, name } = useGameDetail();
 
-  const name = gameMetadata?.name || getFileStub(game.path);
+  const coverUrl = useMemo(() => {
+    const localPath = extraMetadata?.mediaPaths?.coverUrl;
+    if (localPath && publicUrl) {
+      return createUrl({ path: localPath, base: publicUrl })?.href;
+    }
+
+    return gameMetadata?.coverUrl;
+  }, [publicUrl, gameMetadata, extraMetadata]);
 
   return (
     <div
@@ -25,10 +35,10 @@ export function CoverImage() {
         <Image src={logo} alt="Retrom Logo" className="" />
       </div>
 
-      {gameMetadata?.coverUrl && (
+      {coverUrl ? (
         <div>
           <Image
-            srcSet={gameMetadata.coverUrl}
+            src={coverUrl}
             alt={name}
             className={cn(
               "row-start-1 col-start-1",
@@ -37,7 +47,7 @@ export function CoverImage() {
             )}
           />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

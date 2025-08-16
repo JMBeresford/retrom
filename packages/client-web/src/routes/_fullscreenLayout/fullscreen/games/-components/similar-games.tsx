@@ -4,22 +4,20 @@ import {
   useFocusable,
 } from "@/components/fullscreen/focus-container";
 import { ScrollArea, ScrollBar } from "@retrom/ui/components/scroll-area";
-import { GameMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
 import { cn } from "@retrom/ui/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useGameMetadata } from "@/queries/useGameMetadata";
 import { useNavigate } from "@tanstack/react-router";
 import { AlertCircleIcon, LoaderCircleIcon } from "lucide-react";
-import { RefObject } from "react";
+import { RefObject, useMemo } from "react";
+import { createUrl, usePublicUrl } from "@/utils/urls";
+import { Skeleton } from "@retrom/ui/components/skeleton";
 
 export function SimilarGames() {
   const { extraMetadata } = useGameDetail();
 
   const similarGames = extraMetadata?.similarGames?.value;
-  const { data, status } = useGameMetadata({
-    request: { gameIds: similarGames?.map((game) => game.id) },
-  });
 
   return (
     <div
@@ -51,7 +49,7 @@ export function SimilarGames() {
               <AlertCircleIcon className="text-destructive-text" />
               Error loading similar games
             </p>
-          ) : data.metadata.length === 0 ? (
+          ) : !similarGames?.length ? (
             <FocusableElement
               opts={{
                 focusKey: `empty-similar-games`,
@@ -71,11 +69,9 @@ export function SimilarGames() {
               )}
             />
           ) : (
-            data.metadata
+            similarGames
               .slice(0, 20)
-              .map((metadata) => (
-                <SimilarGame key={metadata.gameId} metadata={metadata} />
-              ))
+              .map(({ id }) => <SimilarGame key={id} gameId={id} />)
           )}
         </FocusContainer>
 
@@ -85,11 +81,22 @@ export function SimilarGames() {
   );
 }
 
-function SimilarGame(props: { metadata: GameMetadata }) {
-  const { metadata } = props;
+function SimilarGame(props: { gameId: number }) {
+  const publicUrl = usePublicUrl();
+  const { data, status } = useGameMetadata({
+    request: { gameIds: [props.gameId] },
+    selectFn: (data) => ({
+      metadata: data.metadata.at(0),
+      mediaPaths:
+        props.gameId in data.mediaPaths
+          ? data.mediaPaths[props.gameId]
+          : undefined,
+    }),
+  });
+
   const navigate = useNavigate();
   const { ref } = useFocusable<HTMLDivElement>({
-    focusKey: `similar-game-${metadata.gameId}`,
+    focusKey: `similar-game-${props.gameId}`,
     onFocus: ({ node }) => {
       node?.focus({ preventScroll: true });
       node?.scrollIntoView({
@@ -101,12 +108,21 @@ function SimilarGame(props: { metadata: GameMetadata }) {
   });
 
   const goToGame = () => {
-    void navigate({
+    navigate({
       to: "/fullscreen/games/$gameId",
       resetScroll: false,
-      params: { gameId: metadata.gameId.toString() },
-    });
+      params: { gameId: props.gameId.toString() },
+    }).catch(console.error);
   };
+
+  const coverUrl = useMemo(() => {
+    const localPath = data?.mediaPaths?.coverUrl;
+    if (localPath && publicUrl) {
+      return createUrl({ path: localPath, base: publicUrl })?.href;
+    }
+
+    return data?.metadata?.coverUrl;
+  }, [publicUrl, data]);
 
   return (
     <HotkeyLayer handlers={{ ACCEPT: { handler: () => goToGame() } }}>
@@ -119,7 +135,13 @@ function SimilarGame(props: { metadata: GameMetadata }) {
         )}
         onClick={() => goToGame()}
       >
-        <img src={metadata.coverUrl} alt="" />
+        {status !== "pending" ? (
+          coverUrl ? (
+            <img src={coverUrl} alt="" />
+          ) : null
+        ) : (
+          <Skeleton className="border aspect-[3/4]" />
+        )}
       </div>
     </HotkeyLayer>
   );

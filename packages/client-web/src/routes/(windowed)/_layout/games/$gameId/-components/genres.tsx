@@ -10,7 +10,7 @@ import { useGameDetail } from "@/providers/game-details";
 export function Genres() {
   const { extraMetadata } = useGameDetail();
 
-  if (!extraMetadata?.genres?.value) {
+  if (!extraMetadata?.genres?.value?.length) {
     return null;
   }
 

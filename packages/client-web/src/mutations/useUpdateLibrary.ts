@@ -19,12 +19,7 @@ export function useUpdateLibrary() {
         description: err.message,
       });
     },
-    onSuccess: async ({ jobIds }) => {
-      void queryClient.invalidateQueries({
-        predicate: (query) =>
-          ["jobs"].some((key) => query.queryKey.includes(key)),
-      });
-
+    onSuccess: ({ jobIds }) => {
       toast({
         title: "Library update started!",
       });
@@ -35,18 +30,20 @@ export function useUpdateLibrary() {
         }),
       );
 
-      function invalidate() {
-        void queryClient.invalidateQueries({
-          predicate: (query) =>
-            [
-              "library",
-              "games",
-              "platforms",
-              "game-metadata",
-              "platform-metadata",
-              "installation-state",
-            ].some((key) => query.queryKey.includes(key)),
-        });
+      async function invalidate() {
+        return queryClient
+          .invalidateQueries({
+            predicate: (query) =>
+              [
+                "library",
+                "games",
+                "platforms",
+                "game-metadata",
+                "platform-metadata",
+                "installation-state",
+              ].some((key) => query.queryKey.includes(key)),
+          })
+          .catch(console.error);
       }
 
       async function pollSub(
@@ -54,7 +51,7 @@ export function useUpdateLibrary() {
       ) {
         for await (const progress of subscription) {
           if (progress.job?.status === JobStatus.Success) {
-            invalidate();
+            await invalidate();
 
             toast({
               title: `Job complete: ${progress.job?.name}!`,
@@ -76,12 +73,15 @@ export function useUpdateLibrary() {
           }),
       );
 
-      await Promise.all(promises);
-      if (checkIsDesktop()) {
-        await updateSteamInstallations();
-      }
+      Promise.all(promises)
+        .then(async () => {
+          if (checkIsDesktop()) {
+            await updateSteamInstallations();
+          }
 
-      invalidate();
+          return invalidate();
+        })
+        .catch(console.error);
     },
     mutationFn: () => retromClient.libraryClient.updateLibrary({}),
   });

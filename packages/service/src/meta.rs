@@ -1,11 +1,13 @@
-use std::path::PathBuf;
-
 use directories::ProjectDirs;
+use std::path::PathBuf;
+use std::sync::OnceLock;
+use tempfile::TempDir;
 
 const QUALIFIER: &str = "com";
 const ORGANIZATION: &str = "retrom";
 const APPLICATION: &str = "server";
 
+#[derive(Clone, Debug)]
 pub struct RetromDirs {
     data_dir: PathBuf,
     config_dir: PathBuf,
@@ -13,8 +15,22 @@ pub struct RetromDirs {
     web_dir: PathBuf,
 }
 
+static TEST_DIRS: OnceLock<RetromDirs> = OnceLock::new();
+
 impl RetromDirs {
     pub fn new() -> Self {
+        if cfg!(test) {
+            // In test mode, use a temporary directory
+            let dirs = TEST_DIRS.get_or_init(|| RetromDirs {
+                data_dir: TempDir::new().unwrap().keep(),
+                config_dir: TempDir::new().unwrap().keep(),
+                public_dir: TempDir::new().unwrap().keep(),
+                web_dir: TempDir::new().unwrap().keep(),
+            });
+
+            return dirs.clone();
+        }
+
         let project_dirs = ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION).unwrap();
 
         let default_data_dir = project_dirs.data_dir().to_path_buf();

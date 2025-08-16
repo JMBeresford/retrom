@@ -170,9 +170,13 @@ export function GameFiles() {
     updateStatus === "pending" ||
     updateGameStatus === "pending";
 
+  if (gameFiles.length === 0) {
+    return null;
+  }
+
   return (
     <>
-      <Card className="col-span-2 row-span-2 ring-inset relative">
+      <Card className="ring-inset">
         <CardHeader>
           <CardTitle>Files</CardTitle>
         </CardHeader>
