@@ -10,7 +10,7 @@ use thiserror::Error;
 use tokio::fs;
 use tokio::task::JoinSet;
 use tokio_retry::Condition;
-use tracing::{debug, info, instrument, warn};
+use tracing::{debug, info, instrument, warn, Instrument};
 
 use crate::meta::RetromDirs;
 
@@ -119,80 +119,95 @@ impl CacheableMetadata for GameMetadata {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: cover_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("cover".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: cover_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("cover".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         if let Some(background_url) = self.background_url.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: background_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("background".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: background_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("background".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         if let Some(icon_url) = self.icon_url.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: icon_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("icon".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: icon_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("icon".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         for artwork_url in self.artwork_urls.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: artwork_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: None,
-                        base_dir: Some(PathBuf::from("artwork")),
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: artwork_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: None,
+                            base_dir: Some(PathBuf::from("artwork")),
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         for screenshot_url in self.screenshot_urls.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: screenshot_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: None,
-                        base_dir: Some(PathBuf::from("screenshots")),
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: screenshot_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: None,
+                            base_dir: Some(PathBuf::from("screenshots")),
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         while let Some(result) = join_set.join_next().await {
@@ -234,80 +249,95 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: cover_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("cover".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: cover_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("cover".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         if let Some(background_url) = self.background_url.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: background_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("background".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: background_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("background".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         if let Some(icon_url) = self.icon_url.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: icon_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("icon".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: icon_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("icon".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         for artwork_url in self.artwork_urls.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: artwork_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: None,
-                        base_dir: Some(PathBuf::from("artwork")),
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: artwork_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: None,
+                            base_dir: Some(PathBuf::from("artwork")),
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         for screenshot_url in self.screenshot_urls.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: screenshot_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: None,
-                        base_dir: Some(PathBuf::from("screenshots")),
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: screenshot_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: None,
+                            base_dir: Some(PathBuf::from("screenshots")),
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         while let Some(result) = join_set.join_next().await {
@@ -348,32 +378,38 @@ impl CacheableMetadata for PlatformMetadata {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: background_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("background".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: background_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("background".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         if let Some(logo_url) = self.logo_url.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: logo_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("logo".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: logo_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("logo".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         while let Some(result) = join_set.join_next().await {
@@ -415,32 +451,38 @@ impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: background_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("background".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: background_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("background".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         if let Some(logo_url) = self.logo_url.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: logo_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("logo".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: logo_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("logo".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         while let Some(result) = join_set.join_next().await {
@@ -482,80 +524,95 @@ impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: cover_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("cover".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: cover_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("cover".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         if let Some(background_url) = self.background_url.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: background_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("background".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: background_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("background".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         if let Some(icon_url) = self.icon_url.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: icon_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("icon".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: icon_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("icon".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         for artwork_url in self.artwork_urls.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: artwork_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: None,
-                        base_dir: Some(PathBuf::from("artwork")),
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: artwork_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: None,
+                            base_dir: Some(PathBuf::from("artwork")),
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         for screenshot_url in self.screenshot_urls.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: screenshot_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: None,
-                        base_dir: Some(PathBuf::from("screenshots")),
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: screenshot_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: None,
+                            base_dir: Some(PathBuf::from("screenshots")),
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         while let Some(result) = join_set.join_next().await {
@@ -597,32 +654,38 @@ impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: background_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("background".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: background_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("background".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         if let Some(logo_url) = self.logo_url.clone() {
             let cache_dir = cache_dir.clone();
             let cache = cache.clone();
 
-            join_set.spawn(async move {
-                cache
-                    .cache_media_file(CacheMediaOpts {
-                        remote_url: logo_url,
-                        cache_dir: cache_dir.clone(),
-                        semantic_name: Some("logo".to_string()),
-                        base_dir: None,
-                    })
-                    .await
-            });
+            join_set.spawn(
+                async move {
+                    cache
+                        .cache_media_file(CacheMediaOpts {
+                            remote_url: logo_url,
+                            cache_dir: cache_dir.clone(),
+                            semantic_name: Some("logo".to_string()),
+                            base_dir: None,
+                        })
+                        .await
+                }
+                .in_current_span(),
+            );
         }
 
         while let Some(result) = join_set.join_next().await {

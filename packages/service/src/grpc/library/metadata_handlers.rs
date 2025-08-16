@@ -28,7 +28,7 @@ use retrom_codegen::retrom::{
     UpdateLibraryMetadataResponse, UpdatedGameMetadata,
 };
 use retrom_db::schema;
-use tracing::{info_span, instrument, Instrument};
+use tracing::instrument;
 
 #[instrument(skip(state))]
 pub async fn update_metadata(
@@ -133,7 +133,6 @@ pub async fn update_metadata(
 
                 Ok(())
             }
-            .instrument(info_span!("platform_metadata_task"))
         })
         .collect();
 
@@ -241,7 +240,6 @@ pub async fn update_metadata(
 
                 Ok(())
             }
-            .instrument(info_span!("game_metadata_task"))
         })
         .collect();
 
@@ -465,7 +463,6 @@ pub async fn update_metadata(
 
                 Ok(())
             }
-            .instrument(info_span!("extra_metadata_task"))
         })
         .collect();
 
@@ -507,76 +504,73 @@ pub async fn update_metadata(
                 }
             };
 
-            Some(
-                async move {
-                    let mut conn = db_pool.get().await.expect("Failed to get connection");
+            Some(async move {
+                let mut conn = db_pool.get().await.expect("Failed to get connection");
 
-                    let existing = schema::game_metadata::table
-                        .find(game.id)
-                        .first::<retrom::GameMetadata>(&mut conn)
-                        .await;
+                let existing = schema::game_metadata::table
+                    .find(game.id)
+                    .first::<retrom::GameMetadata>(&mut conn)
+                    .await;
 
-                    // don't hold the db connection while we fetch metadata, as we are likely
-                    // to be rate limited
-                    drop(conn);
+                // don't hold the db connection while we fetch metadata, as we are likely
+                // to be rate limited
+                drop(conn);
 
-                    let game_id = game.id;
-                    let metadata = match steam_provider.get_game_metadata(game, Some(app)).await {
-                        Some(meta) => meta,
-                        None => {
-                            tracing::warn!(
-                                "No metadata found for game with Steam App ID: {}",
-                                steam_appid
-                            );
-                            return Ok(());
-                        }
-                    };
-
-                    if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
-                        tracing::warn!("Failed to cache media for Steam game {}: {}", game_id, e);
-                    }
-
-                    let mut conn = db_pool.get().await.expect("Failed to get connection");
-
-                    if existing.is_ok() && !overwrite {
-                        tracing::debug!(
-                            "Metadata already exists for game {}",
-                            existing.unwrap().name()
+                let game_id = game.id;
+                let metadata = match steam_provider.get_game_metadata(game, Some(app)).await {
+                    Some(meta) => meta,
+                    None => {
+                        tracing::warn!(
+                            "No metadata found for game with Steam App ID: {}",
+                            steam_appid
                         );
-
-                        let updated_meta = UpdatedGameMetadata {
-                            last_played: metadata.last_played,
-                            minutes_played: metadata.minutes_played,
-                            ..Default::default()
-                        };
-
-                        if let Err(why) = diesel::update(schema::game_metadata::table)
-                            .filter(schema::game_metadata::game_id.eq(game_id))
-                            .set(&updated_meta)
-                            .execute(&mut conn)
-                            .await
-                        {
-                            tracing::error!("Failed to update metadata: {}", why);
-                        };
-
                         return Ok(());
                     }
+                };
 
-                    if let Err(why) = diesel::insert_into(schema::game_metadata::table)
-                        .values(&metadata)
-                        .on_conflict_do_nothing()
+                if let Err(e) = metadata.cache_metadata(media_cache.clone()).await {
+                    tracing::warn!("Failed to cache media for Steam game {}: {}", game_id, e);
+                }
+
+                let mut conn = db_pool.get().await.expect("Failed to get connection");
+
+                if existing.is_ok() && !overwrite {
+                    tracing::debug!(
+                        "Metadata already exists for game {}",
+                        existing.unwrap().name()
+                    );
+
+                    let updated_meta = UpdatedGameMetadata {
+                        last_played: metadata.last_played,
+                        minutes_played: metadata.minutes_played,
+                        ..Default::default()
+                    };
+
+                    if let Err(why) = diesel::update(schema::game_metadata::table)
+                        .filter(schema::game_metadata::game_id.eq(game_id))
+                        .set(&updated_meta)
                         .execute(&mut conn)
                         .await
                     {
                         tracing::error!("Failed to update metadata: {}", why);
-                    }
+                    };
 
-                    tracing::debug!("Steam metadata task completed");
-
-                    Ok::<(), Infallible>(())
+                    return Ok(());
                 }
-                .instrument(info_span!("steam_metadata_task")),
-            )
+
+                if let Err(why) = diesel::insert_into(schema::game_metadata::table)
+                    .values(&metadata)
+                    .on_conflict_do_nothing()
+                    .execute(&mut conn)
+                    .await
+                {
+                    tracing::error!("Failed to update metadata: {}", why);
+                }
+
+                tracing::debug!("Steam metadata task completed");
+
+                Ok::<(), Infallible>(())
+            })
         })
         .collect();
 
