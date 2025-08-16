@@ -243,17 +243,8 @@ impl JobManager {
                     let progress = job_progress.read().await;
                     let all_progress = progress.values().cloned().collect::<Vec<_>>();
 
-                    let no_running_jobs = all_progress
-                        .iter()
-                        .filter_map(|job| JobStatus::try_from(job.status).ok())
-                        .all(|status| status != JobStatus::Running && status != JobStatus::Idle);
-
                     if tx.send(all_progress).is_err() {
                         tracing::debug!("Bulk job progress reciever closed");
-                        break;
-                    }
-
-                    if no_running_jobs {
                         break;
                     }
                 }
