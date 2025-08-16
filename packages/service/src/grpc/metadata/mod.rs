@@ -13,7 +13,7 @@ use futures::future::join_all;
 use retrom_codegen::{
     retrom::{
         self,
-        get_game_metadata_response::{GameGenres, SimilarGames},
+        get_game_metadata_response::{GameGenres, MediaPaths, SimilarGames},
         get_igdb_search_request::IgdbSearchType,
         get_igdb_search_response::SearchResults,
         metadata_service_server::MetadataService,
@@ -34,11 +34,14 @@ use tokio::sync::RwLock;
 use tonic::{Request, Response, Status};
 use tracing::{error, Instrument, Level};
 
+use super::jobs::job_manager::JobManager;
+
 pub struct MetadataServiceHandlers {
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,
     steam_provider: Arc<SteamWebApiProvider>,
     media_cache: Arc<MediaCache>,
+    job_manager: Arc<JobManager>,
 }
 
 impl MetadataServiceHandlers {
@@ -47,12 +50,14 @@ impl MetadataServiceHandlers {
         igdb_client: Arc<IGDBProvider>,
         steam_provider: Arc<SteamWebApiProvider>,
         media_cache: Arc<MediaCache>,
+        job_manager: Arc<JobManager>,
     ) -> Self {
         Self {
             db_pool,
             igdb_client,
             steam_provider,
             media_cache,
+            job_manager,
         }
     }
 }
@@ -137,10 +142,111 @@ impl MetadataService for MetadataServiceHandlers {
             })
             .collect();
 
+        // Build media paths for each game from the local cache
+        let mut media_paths: HashMap<i32, MediaPaths> = HashMap::new();
+
+        for meta in &metadata {
+            if let Some(cache_dir) = meta.get_cache_dir() {
+                if cache_dir.exists() {
+                    let index = match self
+                        .media_cache
+                        .index_manager()
+                        .read_index(&cache_dir)
+                        .await
+                    {
+                        Ok(index) => index,
+                        Err(_) => continue, // Skip games without valid index
+                    };
+
+                    let mut paths = MediaPaths {
+                        cover_url: None,
+                        background_url: None,
+                        video_urls: vec![],
+                        screenshot_urls: vec![],
+                        artwork_urls: vec![],
+                    };
+
+                    // Process index entries to build media paths
+                    for (relative_path, _entry) in index.entries {
+                        let cache_path = cache_dir.join(&relative_path);
+                        let public_url = self.media_cache.get_public_url(&cache_path);
+
+                        // Map based on file structure and naming using PathBuf methods
+                        let path = std::path::Path::new(&relative_path);
+                        let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+                        let parent_name = path
+                            .parent()
+                            .and_then(|p| p.file_name())
+                            .and_then(|n| n.to_str())
+                            .unwrap_or("");
+
+                        if file_stem == "cover" {
+                            paths.cover_url = Some(public_url);
+                        } else if file_stem == "background" {
+                            paths.background_url = Some(public_url);
+                        } else if parent_name == "artwork" {
+                            paths.artwork_urls.push(public_url);
+                        } else if parent_name == "screenshots" {
+                            paths.screenshot_urls.push(public_url);
+                        }
+                        // Note: video_urls not currently populated as the current system doesn't cache videos
+                    }
+
+                    // Only include games that actually have cached media
+                    if paths.cover_url.is_some()
+                        || paths.background_url.is_some()
+                        || !paths.artwork_urls.is_empty()
+                        || !paths.screenshot_urls.is_empty()
+                        || !paths.video_urls.is_empty()
+                    {
+                        media_paths.insert(meta.game_id, paths);
+                    }
+                } else {
+                    // Media is not currently cached, spawn background task to cache it
+                    let game_name = meta.name.clone();
+                    let meta_clone = meta.clone();
+                    let cache_clone = self.media_cache.clone();
+
+                    let task_name = format!(
+                        "Cache Media Files{}",
+                        game_name.map(|s| format!(" For {s}")).unwrap_or_default()
+                    );
+
+                    let task = async move {
+                        if let Err(e) = meta_clone.cache_metadata(cache_clone).await {
+                            tracing::warn!(
+                                "Failed to cache media for game {}: {}",
+                                meta_clone.game_id,
+                                e
+                            );
+
+                            Err(Status::internal(e.to_string()))
+                        } else {
+                            tracing::debug!(
+                                "Successfully cached media for game {}",
+                                meta_clone.game_id
+                            );
+                            Ok(())
+                        }
+                    };
+
+                    let job_manager = self.job_manager.clone();
+                    let job_id = job_manager.spawn(&task_name, vec![task], None).await;
+
+                    tracing::debug!(
+                        "Spawned background job to cache media for game {}: {}",
+                        meta.game_id,
+                        job_id
+                    );
+                }
+            }
+        }
+
         Ok(Response::new(GetGameMetadataResponse {
             metadata,
             genres,
             similar_games,
+            media_paths,
         }))
     }
 

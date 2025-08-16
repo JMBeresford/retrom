@@ -112,6 +112,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> C
         igdb_client.clone(),
         steam_web_api_client.clone(),
         media_cache.clone(),
+        job_manager.clone(),
     ));
 
     let game_service = GameServiceServer::new(GameServiceHandlers::new(shared_pool.clone()));
