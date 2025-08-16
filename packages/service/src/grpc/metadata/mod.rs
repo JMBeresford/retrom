@@ -34,11 +34,14 @@ use tokio::sync::RwLock;
 use tonic::{Request, Response, Status};
 use tracing::{error, Instrument, Level};
 
+use super::jobs::job_manager::JobManager;
+
 pub struct MetadataServiceHandlers {
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,
     steam_provider: Arc<SteamWebApiProvider>,
     media_cache: Arc<MediaCache>,
+    job_manager: Arc<JobManager>,
 }
 
 impl MetadataServiceHandlers {
@@ -47,12 +50,14 @@ impl MetadataServiceHandlers {
         igdb_client: Arc<IGDBProvider>,
         steam_provider: Arc<SteamWebApiProvider>,
         media_cache: Arc<MediaCache>,
+        job_manager: Arc<JobManager>,
     ) -> Self {
         Self {
             db_pool,
             igdb_client,
             steam_provider,
             media_cache,
+            job_manager,
         }
     }
 }
@@ -198,22 +203,41 @@ impl MetadataService for MetadataServiceHandlers {
                     }
                 } else {
                     // Media is not currently cached, spawn background task to cache it
+                    let game_name = meta.name.clone();
                     let meta_clone = meta.clone();
                     let cache_clone = self.media_cache.clone();
-                    tokio::task::spawn(async move {
+
+                    let task_name = format!(
+                        "Cache Media Files{}",
+                        game_name.map(|s| format!(" For {s}")).unwrap_or_default()
+                    );
+
+                    let task = async move {
                         if let Err(e) = meta_clone.cache_metadata(cache_clone).await {
                             tracing::warn!(
                                 "Failed to cache media for game {}: {}",
                                 meta_clone.game_id,
                                 e
                             );
+
+                            Err(Status::internal(e.to_string()))
                         } else {
                             tracing::debug!(
                                 "Successfully cached media for game {}",
                                 meta_clone.game_id
                             );
+                            Ok(())
                         }
-                    }.in_current_span());
+                    };
+
+                    let job_manager = self.job_manager.clone();
+                    let job_id = job_manager.spawn(&task_name, vec![task], None).await;
+
+                    tracing::debug!(
+                        "Spawned background job to cache media for game {}: {}",
+                        meta.game_id,
+                        job_id
+                    );
                 }
             }
         }

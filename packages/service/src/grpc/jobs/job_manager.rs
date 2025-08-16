@@ -111,7 +111,6 @@ impl JobManager {
                 for (id, mut listener) in listeners.into_iter() {
                     depend_join_set.spawn(async move {
                         while let Ok(progress) = listener.recv().await {
-                            tokio::task::yield_now().await;
                             match JobStatus::try_from(progress.status) {
                                 Ok(JobStatus::Success) => break,
                                 Ok(JobStatus::Failure) => break,
@@ -130,8 +129,7 @@ impl JobManager {
                 }
 
                 for task in tasks.into_iter() {
-                    join_set.spawn(task);
-                    tokio::task::yield_now().await;
+                    join_set.spawn(task.instrument(tracing::info_span!("job_task")));
                 }
 
                 {
@@ -170,8 +168,6 @@ impl JobManager {
                         };
                     }
 
-                    tokio::task::yield_now().await;
-
                     if let Err(why) = invalidate_sender.send(id) {
                         tracing::debug!("Invalidation channel closed: {:?}", why);
                     }
@@ -195,7 +191,7 @@ impl JobManager {
                 tracing::info!("Job completed: {}", name);
 
                 if let Err(why) = invalidate_sender.send(id) {
-                    tracing::error!("Invalidation channel closed: {:?}", why);
+                    tracing::debug!("Invalidation channel closed: {:?}", why);
                 }
             }
             .instrument(tracing::info_span!("job_thread")),
