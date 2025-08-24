@@ -12,8 +12,8 @@ links = "tauri-plugin-steam"
 
 [dependencies]
 tauri = { workspace = true }
-serde = "1.0"
-thiserror = "1.0"
+serde = { workspace = true }
+thiserror = { workspace = true }
 tracing = { workspace = true }
 retrom-codegen = { workspace = true }
 tokio = { workspace = true }
@@ -22,4 +22,4 @@ steamlocate = "2.0.0"
 notify = { workspace = true }
 
 [build-dependencies]
-tauri-plugin = { version = "2.0.0-rc.6", features = ["build"] }
+tauri-plugin = { workspace = true }

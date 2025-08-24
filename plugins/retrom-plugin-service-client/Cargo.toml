@@ -11,9 +11,9 @@ exclude = ["./examples", "./webview-dist", "./webview-src", "**/node_modules"]
 links = "tauri-plugin-retrom-service-client"
 
 [dependencies]
-tauri = { version = "2.0.0-rc.6" }
-serde = "1.0"
-thiserror = "1.0"
+tauri = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
 tracing = { workspace = true }
 tokio = { workspace = true }
 retrom-codegen = { workspace = true }
@@ -27,4 +27,4 @@ tonic-web = { workspace = true }
 tonic = { workspace = true }
 
 [build-dependencies]
-tauri-plugin = { version = "2.0.0-rc.6", features = ["build"] }
+tauri-plugin = { workspace = true }

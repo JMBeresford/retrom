@@ -9,12 +9,13 @@
     "dist/**"
   ],
   "dependencies": {
-    "@tauri-apps/api": "^2.2.0",
+    "@tauri-apps/api": "catalog:",
     "@bufbuild/protobuf": "2.4.0",
     "@retrom/codegen": "workspace:*",
-    "@tauri-apps/plugin-opener": "^2.2.5"
+    "@tauri-apps/plugin-opener": "catalog:"
   },
   "devDependencies": {
-    "@retrom/configs": "workspace:*"
+    "@retrom/configs": "workspace:*",
+    "vite": "catalog:"
   }
 }
