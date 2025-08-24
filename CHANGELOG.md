@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.33](https://github.com/JMBeresford/retrom/compare/v0.7.32...v0.7.33) - 2025-08-24
+
+### Newly Added
+- cache metadata images on server
+
+    Retrom now caches all remote image files on
+    the server, and the client will fetch those
+    copies instead of accessing the external URLs
+    they were sourced from.
+
+    If a file is not currently cached, the client
+    will still use the upstream URL -- but the file
+    will be cached for next time.
+
+    fixes [#366](https://github.com/JMBeresford/retrom/pull/366)
+
+
+
+
 ## [0.7.32](https://github.com/JMBeresford/retrom/compare/v0.7.31...v0.7.32) - 2025-08-10
 
 ### Bug Fixes
