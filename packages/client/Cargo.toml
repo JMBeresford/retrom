@@ -13,7 +13,7 @@ name = "Retrom"
 path = "src/main.rs"
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-rc.7", features = [] }
+tauri-build = {workspace = true }
 
 [dependencies]
 tauri = { workspace = true }
@@ -30,7 +30,6 @@ tokio = { workspace = true }
 tokio-util = { workspace = true }
 tonic = { workspace = true }
 prost = { workspace = true }
-tauri-plugin-fs = "2.0.0-rc"
 dotenvy = { workspace = true }
 futures = { workspace = true }
 retrom-plugin-installer = { workspace = true }
@@ -41,13 +40,14 @@ retrom-plugin-standalone = { workspace = true }
 retrom-plugin-config = { workspace = true }
 tauri-plugin-dialog = { workspace = true }
 tauri-plugin-opener = { workspace = true }
-tauri-plugin-shell = "2.0.0-rc"
-tauri-plugin-process = "2.0.0-rc"
+tauri-plugin-shell = { workspace = true }
+tauri-plugin-process = { workspace = true }
+tauri-plugin-fs = { workspace = true }
+tauri-plugin-system-info = { workspace = true }
+tauri-plugin-single-instance = { workspace = true }
+tauri-plugin-updater = { workspace = true }
 pq-sys = { workspace = true }
 openssl-sys = { workspace = true }
-tauri-plugin-system-info = "2.0.8"
-tauri-plugin-single-instance = "2.0.0-rc.0"
-tauri-plugin-updater = "2.7.1"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
@@ -56,4 +56,4 @@ tauri-plugin-updater = "2.7.1"
 custom-protocol = ["tauri/custom-protocol"]
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
-tauri-plugin-window-state = "2.2.0"
+tauri-plugin-window-state = { workspace = true }

@@ -13,7 +13,7 @@ links = "tauri-plugin-installer"
 [dependencies]
 prost = { workspace = true }
 tauri = { workspace = true }
-serde = "1.0"
+serde = { workspace = true }
 thiserror = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-plugin-steam = { workspace = true }
@@ -29,4 +29,4 @@ dotenvy = { workspace = true }
 tauri-plugin-opener = { workspace = true }
 
 [build-dependencies]
-tauri-plugin = { version = "2.0.0-rc", features = ["build"] }
+tauri-plugin = { workspace = true }

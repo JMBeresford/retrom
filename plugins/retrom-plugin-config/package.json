@@ -9,13 +9,14 @@
     "dist/**"
   ],
   "dependencies": {
-    "@tauri-apps/api": ">=2.0.0-beta.6",
+    "@tauri-apps/api": "catalog:",
     "@bufbuild/protobuf": "2.4.0",
     "@retrom/codegen": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "tslib": "^2.6.2",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "tslib": "catalog:",
     "@retrom/configs": "workspace:*"
   }
 }

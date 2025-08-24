@@ -35,4 +35,4 @@ hyper-rustls = { workspace = true }
 walkdir = { workspace = true }
 
 [build-dependencies]
-tauri-plugin = { version = "2.0.0-beta.17", features = ["build"] }
+tauri-plugin = { workspace = true }

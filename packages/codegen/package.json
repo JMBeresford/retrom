@@ -18,6 +18,9 @@
   "devDependencies": {
     "@bufbuild/buf": "^1.53.0",
     "@retrom/configs": "workspace:*",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "vite-plugin-dts": "catalog:",
     "@types/node": "^22.14.1",
     "glob": "^11.0.3",
     "globals": "^16.0.0"

@@ -22,4 +22,4 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 
 [build-dependencies]
-tauri-plugin = { version = "2.0.0-rc.6", features = ["build"] }
+tauri-plugin = { workspace = true }
