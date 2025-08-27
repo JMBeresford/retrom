@@ -49,6 +49,16 @@ export function getFileParts(path: string) {
   const filename = path.split("/").pop() ?? "";
   const parts = filename.split(".");
 
+  // After obtaining the file name without its extension,
+  // if the obtained "stub" is empty, return the whole filename
+  // This fixes an issue where file names starting with a dot (e.g. ".DS_Store")
+  // would crash the application
+  if (parts.length > 0) {
+    if (parts[0] === "") {
+      return { name: filename, extension: "" };
+    }
+  }
+
   if (parts.length < 2) {
     return { name: filename, extension: "" };
   }
