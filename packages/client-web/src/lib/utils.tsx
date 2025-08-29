@@ -53,7 +53,7 @@ export function getFileParts(path: string) {
   // if the obtained "stub" is empty, return the whole filename
   // This fixes an issue where file names starting with a dot (e.g. ".DS_Store")
   // would crash the application
-  if (parts.length > 0) {
+  if (parts.length == 2) {
     if (parts[0] === "") {
       return { name: filename, extension: "" };
     }
