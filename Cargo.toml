@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["./packages/*", "./plugins/*"]
-exclude = ["./packages/client-web", "./packages/ui", "./packages/configs"]
+exclude = ["./packages/ui", "./packages/configs"]
 
 [workspace.package]
 edition = "2021"
