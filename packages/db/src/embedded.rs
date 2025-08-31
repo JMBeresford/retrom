@@ -17,6 +17,16 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<PostgreSQL> {
     tracing::debug!("Starting embedded database: {:#?}", settings);
 
     let mut psql = PostgreSQL::new(settings);
+
+    if psql.status() == postgresql_embedded::Status::Started {
+        tracing::info!(
+            "Embedded database is possibly already running, or was not properly stopped. \
+            Attempting to restart..."
+        );
+
+        psql.stop().await?;
+    }
+
     if let Err(err) = psql.setup().await {
         use postgresql_embedded::Error as EmbeddedError;
 
