@@ -17,10 +17,10 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 dotenvy = { workspace = true }
 async-trait = { workspace = true }
-postgresql_commands = { optional = true, version = "^0.18.7", features = [
+postgresql_commands = { optional = true, version = "^0.19.0", features = [
   "tokio",
 ] }
-postgresql_embedded = { optional = true, version = "^0.18.7", features = [
+postgresql_embedded = { optional = true, version = "^0.19.0", features = [
   "tokio",
 ] }
 thiserror = { workspace = true }
