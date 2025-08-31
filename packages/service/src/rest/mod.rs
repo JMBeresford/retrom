@@ -9,6 +9,7 @@ use warp::{
     Filter,
 };
 use web::web;
+use crate::auth::auth;
 
 pub mod error;
 pub mod file;
@@ -40,8 +41,13 @@ pub fn rest_service(
     let headers = warp::reply::with::headers(headers);
 
     let routes = warp::path("rest")
-        .and(file(pool.clone()).or(game(pool.clone())).or(public()))
-        .or(web());
+        .and(
+            file(pool.clone())
+                .or(game(pool.clone()))
+                .or(public())
+            )
+        .or(web())
+        .or(auth(pool.clone()));
 
     let cors = warp::cors().allow_any_origin();
 
