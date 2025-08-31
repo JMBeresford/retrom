@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.35](https://github.com/JMBeresford/retrom/compare/v0.7.34...v0.7.35) - 2025-08-31
+
+### Bug Fixes
+- embedded DB failing to start
+
+    More cases in which the embedded DB server failed
+    to start have been addressed. Specifically, if the
+    server is not gracefully shutdown Retrom will now
+    attempt to clean up the environment when it is next
+    brought back up which should address many of these
+    failures.
+
+    fixes [#391](https://github.com/JMBeresford/retrom/pull/391)
+
+
+
+
+
+### Newly Added
+- *(docker)* Redirect root path to `/web`
+
+    When navigating to your Retrom server in the browser,
+    the root path (e.g. `localhost:5101/` or `retrom.my-website.com/`)
+    will now redirect to the web client at `/web` (e.g. `localhost:5101/web`
+    or `retrom.my-website.com/web`).
+
+
+
+
 ## [0.7.34](https://github.com/JMBeresford/retrom/compare/v0.7.33...v0.7.34) - 2025-08-31
 
 ### Bug Fixes
