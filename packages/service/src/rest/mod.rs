@@ -41,7 +41,9 @@ pub fn rest_service(
 
     let routes = warp::path("rest")
         .and(file(pool.clone()).or(game(pool.clone())).or(public()))
-        .or(web());
+        .or(web())
+        .or(warp::path::end()
+            .map(|| warp::redirect::permanent(warp::http::Uri::from_static("/web"))));
 
     let cors = warp::cors().allow_any_origin();
 
