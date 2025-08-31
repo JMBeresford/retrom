@@ -110,6 +110,8 @@ sort of _self-hosted Steam_ for your DRM-free game library.
     - [x] IGDB provider
     - [ ] SteamGridDB provider
   - [ ] Cloud save games / states / emulator NANDs
+    - [x] Built-in emulators
+    - [ ] Standalone emulators
   - [ ] (Multi-)User authentication
   - [ ] Publish server binaries, as an alternative to Docker
 - [ ] Basic client functionality
