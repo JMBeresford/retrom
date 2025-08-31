@@ -16,6 +16,7 @@ changelog_update = true
 changelog_include = [
   'retrom-client',
   'retrom-client-web',
+  'retrom-db',
   'retrom-plugin-installer',
   'retrom-plugin-launcher',
   'retrom-plugin-config',
