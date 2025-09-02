@@ -1,6 +1,12 @@
 {
   "announcements": [
     {
+      "versions": ["0.7.34", "0.7.35"],
+      "level": "warning",
+      "message": "This version of Retrom can have issues with starting the internal DB. If you are seeing errors like this in your Retrom server you can usually fix it by removing the `postmaster.pid` file found in the `data/db` directory. Feel free to reach out for assistance at the provided link if needed.",
+      "url": "https://github.com/JMBeresford/retrom/issues/396"
+    },
+    {
       "versions": [
         "0.7.15",
         "0.7.16",
