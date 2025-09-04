@@ -5580,6 +5580,8 @@ dependencies = [
  "serde_json",
  "sevenz-rust2",
  "sha2",
+ "signal-hook",
+ "signal-hook-tokio",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
@@ -6204,6 +6206,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9203b8055f63a2a00e2f593bb0510367fe707d7ff1e5c872de2f537b339e5410"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "signal-hook-tokio"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "213241f76fb1e37e27de3b6aa1b068a2c333233b59cca6634f634b80a27ecf1e"
+dependencies = [
+ "futures-core",
+ "libc",
+ "signal-hook",
+ "tokio",
 ]
 
 [[package]]

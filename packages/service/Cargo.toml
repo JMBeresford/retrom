@@ -81,6 +81,8 @@ notify = { workspace = true }
 tempfile = { workspace = true }
 sha2 = "0.10.8"
 url = "2.5.4"
+signal-hook = { workspace = true }
+signal-hook-tokio = { workspace = true }
 
 [features]
 embedded_db = ["retrom-db/embedded"]

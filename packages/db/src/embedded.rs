@@ -24,7 +24,15 @@ pub async fn start_embedded_db(url: &str) -> crate::Result<PostgreSQL> {
             Attempting to restart..."
         );
 
-        psql.stop().await?;
+        if let Err(why) = psql.stop().await {
+            tracing::warn!("Could not stop embedded database: {why}");
+            let pid_file = psql.settings().data_dir.join("postmaster.pid");
+            if pid_file.exists() {
+                if let Err(why) = tokio::fs::remove_file(pid_file).await {
+                    tracing::warn!("Could not remove stale pid file: {why}");
+                }
+            }
+        }
     }
 
     if let Err(err) = psql.setup().await {
