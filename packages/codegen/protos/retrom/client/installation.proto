@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package retrom.client.installation;
+
+import "google/protobuf/timestamp.proto";
+
+enum InstallationStatus {
+  INSTALLATION_STATUS_UNSPECIFIED = 0;
+  INSTALLATION_STATUS_INSTALLED = 1;
+  INSTALLATION_STATUS_INSTALLING = 2;
+  INSTALLATION_STATUS_PAUSED = 3;
+  INSTALLATION_STATUS_NOT_INSTALLED = 4;
+  INSTALLATION_STATUS_OUT_OF_DATE = 5;
+  INSTALLATION_STATUS_FAILED = 6;
+}
+
+enum InstallationEvent {
+  INSTALLATION_EVENT_UNSPECIFIED = 0;
+  INSTALLATION_EVENT_STARTED = 1;
+  INSTALLATION_EVENT_PROGRESS = 2;
+  INSTALLATION_EVENT_PAUSED = 3;
+  INSTALLATION_EVENT_RESUMED = 4;
+  INSTALLATION_EVENT_COMPLETED = 5;
+  INSTALLATION_EVENT_FAILED = 6;
+}
+
+message InstallationEventMessage {
+  optional InstallationProgressUpdate progress = 1;
+}
+
+message InstallationSpeed {
+  double bytes_per_second = 1;
+}
+
+message InstallationProgressUpdate {
+  int32 game_id = 1;
+  InstallationEvent event = 2;
+  uint32 percent = 3;
+  InstallationSpeed speed = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message InstallGamePayload {
+  int32 game_id = 1;
+}
+
+message UninstallGamePayload {
+  int32 game_id = 1;
+}
+
+message GetInstallationStatusPayload {
+  int32 game_id = 1;
+}
+
+message GetInstallationStatusResponse {
+  int32 game_id = 1;
+  InstallationStatus status = 2;
+}
+
+message InstallationIndex {
+  map<int32, InstallationStatus> installations = 1; // game_id -> status
+}

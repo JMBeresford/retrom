@@ -13,7 +13,7 @@ import {
 import { cn } from "@retrom/ui/lib/utils";
 import { EllipsisVertical } from "lucide-react";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_pb";
 import { ActionButton } from "../../../../../../components/action-button";
 import { useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
@@ -36,7 +36,7 @@ export function Actions() {
   const { game, validEmulators, validProfiles, defaultProfile, gameFiles } =
     useGameDetail();
 
-  const { data: installationState } = useInstallationQuery(game);
+  const installationState = useInstallationQuery(game);
   const { openModal: openDeleteGameModal } = useModalAction("deleteGameModal");
   const { mutate: playGame } = usePlayGame(game);
   const navigate = useNavigate();
@@ -47,24 +47,21 @@ export function Actions() {
   );
 
   const playWithOptions = useMemo(() => {
-    return validProfiles.reduce(
-      (map, profile) => {
-        const emulator = validEmulators?.find(
-          (e) => e.id === profile.emulatorId,
-        );
+    return validProfiles.reduce<
+      Record<number, { emulator: Emulator; profiles: EmulatorProfile[] }>
+    >((map, profile) => {
+      const emulator = validEmulators?.find((e) => e.id === profile.emulatorId);
 
-        if (emulator) {
-          if (!map[emulator.id]) {
-            map[emulator.id] = { emulator, profiles: [] };
-          }
-
-          map[emulator.id].profiles.push(profile);
+      if (emulator) {
+        if (!map[emulator.id]) {
+          map[emulator.id] = { emulator, profiles: [] };
         }
 
-        return map;
-      },
-      {} as Record<number, { emulator: Emulator; profiles: EmulatorProfile[] }>,
-    );
+        map[emulator.id].profiles.push(profile);
+      }
+
+      return map;
+    }, {});
   }, [validEmulators, validProfiles]);
 
   return (
@@ -77,10 +74,14 @@ export function Actions() {
       <div
         className={cn(
           "w-full *:w-full rounded-l-lg sm:rounded-tl-none overflow-hidden border-r-2",
-          installationState === InstallationStatus.INSTALLING && "bg-primary",
+          // installationState === InstallationStatus.INSTALLING && "bg-primary",
         )}
       >
-        <ActionButton className='[&_div[role="progressbar"]]:w-[85%] [&_div[role="progressbar"]_>_*]:bg-primary-foreground w-full' />
+        <ActionButton
+          className={cn(
+            '[&_div[role="progressbar"]]:w-[85%] [&_div[role="progressbar"]_>_*]:bg-primary-foreground w-full',
+          )}
+        />
       </div>
 
       <DropdownMenu>

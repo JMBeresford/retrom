@@ -40,7 +40,7 @@ export function useUpdateLibrary() {
                 "platforms",
                 "game-metadata",
                 "platform-metadata",
-                "installation-state",
+                "installation-index",
               ].some((key) => query.queryKey.includes(key)),
           })
           .catch(console.error);

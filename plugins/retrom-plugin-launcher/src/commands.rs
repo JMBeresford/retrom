@@ -2,8 +2,8 @@ use std::{ffi::OsStr, path::PathBuf, sync::Arc};
 
 use prost::Message;
 use retrom_codegen::retrom::{
-    emulator::OperatingSystem, GamePlayStatusUpdate, GetGamePlayStatusPayload,
-    GetLocalEmulatorConfigsRequest, InstallationStatus, PlayGamePayload, PlayStatus,
+    client::installation::InstallationStatus, emulator::OperatingSystem, GamePlayStatusUpdate,
+    GetGamePlayStatusPayload, GetLocalEmulatorConfigsRequest, PlayGamePayload, PlayStatus,
     StopGamePayload,
 };
 use retrom_plugin_config::ConfigExt;

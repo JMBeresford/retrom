@@ -17,13 +17,13 @@ import { useState } from "react";
 import { FocusContainer } from "../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_pb";
 
 export function UninstallGameAction() {
   const [open, setOpen] = useState(false);
   const { game } = useGameDetail();
 
-  const { data: installationStatus } = useInstallationQuery(game);
+  const installationStatus = useInstallationQuery(game);
   const { mutate: uninstall, status } = useUninstallGame(game);
   const openDisabled = installationStatus !== InstallationStatus.INSTALLED;
 

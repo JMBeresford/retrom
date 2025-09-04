@@ -1,3 +1,12 @@
+use retrom_codegen::{
+    retrom::{
+        client::installation::{
+            InstallationEvent, InstallationProgressUpdate, InstallationSpeed, InstallationStatus,
+        },
+        GetGamesRequest,
+    },
+    timestamp::Timestamp,
+};
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
@@ -6,12 +15,11 @@ use std::{
     collections::{HashMap, HashSet},
     fs::create_dir_all,
     path::PathBuf,
+    time::SystemTime,
 };
-use tauri::{plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
-use tracing::{debug, info, instrument, trace};
-
-use retrom_codegen::retrom::{GetGamesRequest, InstallationProgressUpdate, InstallationStatus};
+use tauri::{ipc::Channel, plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
 use tokio::sync::RwLock;
+use tracing::{debug, info, instrument, trace};
 
 type GameId = i32;
 type FileId = i32;
@@ -21,19 +29,22 @@ pub struct FileInstallationProgress {
     pub file_id: FileId,
     pub bytes_read: usize,
     pub total_size: usize,
+    pub last_updated: Timestamp,
+    pub bytes_per_second: f64,
 }
 
 #[derive(Debug)]
 pub struct GameInstallationProgress {
     pub game_id: GameId,
     pub files: Vec<FileInstallationProgress>,
+    pub status: InstallationStatus,
 }
 
-#[derive(Debug)]
 pub struct Installer<R: Runtime> {
     app_handle: AppHandle<R>,
     pub(crate) installed_games: RwLock<HashSet<GameId>>,
     pub(crate) currently_installing: RwLock<HashMap<GameId, GameInstallationProgress>>,
+    pub(crate) subscriptions: RwLock<Vec<Channel<InstallationProgressUpdate>>>,
 }
 
 #[instrument(skip(app, _api))]
@@ -45,6 +56,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
         app_handle: app.clone(),
         installed_games: RwLock::new(HashSet::new()),
         currently_installing: RwLock::new(HashMap::new()),
+        subscriptions: RwLock::new(Vec::new()),
     };
 
     Ok(installer)
@@ -224,13 +236,8 @@ impl<R: Runtime> Installer<R> {
     pub async fn get_game_installation_status(&self, game_id: GameId) -> InstallationStatus {
         trace!("Checking game installation status: {}", game_id);
 
-        if self
-            .currently_installing
-            .read()
-            .await
-            .contains_key(&game_id)
-        {
-            InstallationStatus::Installing
+        if let Some(progress) = self.currently_installing.read().await.get(&game_id) {
+            progress.status
         } else if self.installed_games.read().await.contains(&game_id) {
             InstallationStatus::Installed
         } else {
@@ -261,6 +268,31 @@ impl<R: Runtime> Installer<R> {
         Some(percent)
     }
 
+    pub async fn get_game_installation_speed(&self, game_id: GameId) -> Option<InstallationSpeed> {
+        let installation = self.currently_installing.read().await;
+        let installation = installation.get(&game_id)?;
+        let num_files = installation.files.len() as u32;
+        let total_bytes_per_second = installation
+            .files
+            .iter()
+            .filter_map(|f| {
+                if f.bytes_per_second > 0f64 {
+                    Some(f.bytes_per_second)
+                } else {
+                    None
+                }
+            })
+            .sum::<f64>();
+
+        if num_files == 0 || total_bytes_per_second == 0f64 {
+            None
+        } else {
+            Some(InstallationSpeed {
+                bytes_per_second: total_bytes_per_second / num_files as f64,
+            })
+        }
+    }
+
     #[instrument(skip(self), fields(game_id, file_id, bytes_read))]
     pub async fn update_installation_progress(
         &self,
@@ -268,37 +300,91 @@ impl<R: Runtime> Installer<R> {
         file_id: FileId,
         bytes_read: usize,
     ) {
-        trace!(
-            "Updating installation progress: game {} file {} - {} bytes read",
-            game_id,
-            file_id,
-            bytes_read
+        debug!(
+            "Updating installation progress: game {game_id} file {file_id} - {bytes_read} bytes read"
         );
 
-        let cur_percent = self.get_game_installation_percent(game_id).await.unwrap();
+        let cur_progress = self.currently_installing.read().await;
+        let cur_file = cur_progress
+            .get(&game_id)
+            .and_then(|g| g.files.iter().find(|f| f.file_id == file_id));
 
-        {
-            let mut installation = self.currently_installing.write().await;
-            let installation = installation.get_mut(&game_id).unwrap();
-            let file = installation
-                .files
-                .iter_mut()
-                .find(|f| f.file_id == file_id)
-                .unwrap();
+        let last_updated_at = cur_file
+            .map(|f| f.last_updated.clone())
+            .unwrap_or_else(|| SystemTime::now().into());
 
-            file.bytes_read += bytes_read;
-        }
+        let updated_at: Timestamp = SystemTime::now().into();
 
-        let new_percent = self.get_game_installation_percent(game_id).await.unwrap();
-        let progress = InstallationProgressUpdate {
-            game_id,
-            progress: new_percent,
+        let diff_seconds = (updated_at.seconds - last_updated_at.seconds) as f64;
+        let diff_nanos = updated_at.nanos - last_updated_at.nanos;
+        let seconds = diff_seconds + (diff_nanos as f64 / 1_000_000_000f64);
+
+        let bytes_per_second = if seconds > 0.0 {
+            bytes_read as f64 / seconds
+        } else {
+            bytes_read as f64
         };
 
-        if new_percent != cur_percent {
-            self.app_handle
-                .emit("install-progress", progress)
-                .expect("Error emitting event");
+        drop(cur_progress);
+
+        {
+            if let Some(file) = self
+                .currently_installing
+                .write()
+                .await
+                .get_mut(&game_id)
+                .and_then(|g| g.files.iter_mut().find(|f| f.file_id == file_id))
+            {
+                file.bytes_read += bytes_read;
+                file.last_updated = updated_at;
+                file.bytes_per_second = bytes_per_second;
+            }
+        }
+
+        self.emit_progress_update(game_id, InstallationEvent::Progress)
+            .await;
+    }
+
+    #[instrument(skip(self), fields(game_id))]
+    pub(crate) async fn mark_game_as_failed(&self, game_id: GameId) {
+        info!("Marking installation of game {game_id} as failed");
+
+        if let Some(entry) = self.currently_installing.write().await.get_mut(&game_id) {
+            entry.status = InstallationStatus::Failed;
+        };
+
+        self.emit_progress_update(game_id, InstallationEvent::Failed)
+            .await;
+    }
+
+    #[instrument(skip(self), fields(game_id))]
+    pub(crate) async fn emit_progress_update(&self, game_id: GameId, event: InstallationEvent) {
+        let percent = self.get_game_installation_percent(game_id).await.unwrap();
+        let speed = self.get_game_installation_speed(game_id).await;
+
+        let progress = InstallationProgressUpdate {
+            game_id,
+            event: event.into(),
+            percent,
+            speed,
+            updated_at: Some(SystemTime::now().into()),
+        };
+
+        debug!("Emitting installation progress: {:?}", progress);
+        let mut to_remove = Vec::new();
+        let subs = self.subscriptions.read().await;
+        for channel in subs.iter() {
+            if let Err(e) = channel.send(progress.clone()) {
+                tracing::error!("Error sending installation progress update: {}", e);
+                to_remove.push(channel.id());
+            }
+        }
+
+        if !to_remove.is_empty() {
+            self.subscriptions
+                .write()
+                .await
+                .retain(|c| !to_remove.contains(&c.id()));
         }
     }
 

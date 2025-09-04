@@ -33,6 +33,7 @@ import { CleanLibraryModal } from "@/components/modals/clean-library";
 import { UpdatePlatformMetadataModal } from "@/components/modals/update-platform-metadata";
 import { cn } from "@retrom/ui/lib/utils";
 import { ExitModal } from "@/components/modals/exit";
+import { InstallationIndicator } from "@/components/menubar/installation-indicator";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
@@ -96,6 +97,9 @@ function LayoutComponent() {
                 </ScrollArea>
               </ResizablePanel>
             </ResizablePanelGroup>
+            <div className="border-t flex items-center justify-center">
+              <InstallationIndicator />
+            </div>
           </div>
 
           <UpdateLibraryModal />

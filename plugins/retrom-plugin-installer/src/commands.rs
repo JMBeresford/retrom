@@ -2,17 +2,20 @@ use futures::TryStreamExt;
 use prost::Message;
 use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{
-    GetGamesRequest, GetPlatformsRequest, InstallGamePayload, InstallationState,
-    InstallationStatus, StorageType, UninstallGamePayload,
+    client::installation::{
+        GetInstallationStatusPayload, GetInstallationStatusResponse, InstallGamePayload,
+        InstallationIndex, InstallationProgressUpdate, InstallationStatus, UninstallGamePayload,
+    },
+    GetGamesRequest, GetPlatformsRequest, StorageType,
 };
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
-use std::{collections::HashMap, path::PathBuf};
-use tauri::{AppHandle, Runtime};
+use std::{collections::HashMap, path::PathBuf, time::SystemTime};
+use tauri::{ipc::Channel, AppHandle, Runtime};
 use tauri_plugin_opener::OpenerExt;
 use tokio::io::AsyncWriteExt;
-use tracing::{info, instrument};
+use tracing::{debug, instrument};
 
 use crate::{
     desktop::{FileInstallationProgress, GameInstallationProgress},
@@ -26,8 +29,27 @@ pub async fn install_game<R: Runtime>(
     payload: Vec<u8>,
 ) -> crate::Result<()> {
     let payload = InstallGamePayload::decode(payload.as_slice())?;
-    let game = payload.game.unwrap();
-    let files = payload.files;
+    let game_id = payload.game_id;
+    let mut game_client = app_handle.get_game_client().await;
+    let res = game_client
+        .get_games(GetGamesRequest {
+            ids: vec![game_id],
+            with_files: Some(true),
+            ..Default::default()
+        })
+        .await?
+        .into_inner();
+
+    let game = res.games.into_iter().next().ok_or_else(|| {
+        crate::error::Error::InternalError(format!("Game with id {game_id} not found"))
+    })?;
+
+    let files = res
+        .game_files
+        .into_iter()
+        .filter(|f| f.game_id == game.id)
+        .collect::<Vec<_>>();
+
     let installer = app_handle.installer();
 
     let install_dir = installer.get_installation_dir().await?;
@@ -86,12 +108,15 @@ pub async fn install_game<R: Runtime>(
 
     let installation = GameInstallationProgress {
         game_id: game.id,
+        status: InstallationStatus::Installing,
         files: files
             .iter()
             .map(|f| FileInstallationProgress {
                 file_id: f.id,
                 bytes_read: 0,
                 total_size: f.byte_size as usize,
+                last_updated: SystemTime::now().into(),
+                bytes_per_second: 0f64,
             })
             .collect(),
     };
@@ -132,7 +157,7 @@ pub async fn install_game<R: Runtime>(
                 .send()
                 .await?;
 
-            info!("Downloading file: {:?}", res);
+            debug!("Downloading file: {:?}", res);
 
             let game_path = PathBuf::from(&game.path);
             let prefix = match game.storage_type() {
@@ -162,7 +187,10 @@ pub async fn install_game<R: Runtime>(
                 let bytes = match chunk {
                     Ok(Some(bytes)) => bytes,
                     Ok(None) => break,
-                    Err(e) => return Err(crate::Error::from(e)),
+                    Err(e) => {
+                        installer.mark_game_as_failed(game.id).await;
+                        return Err(crate::error::Error::from(e));
+                    }
                 };
 
                 if bytes.is_empty() {
@@ -191,7 +219,22 @@ pub async fn uninstall_game<R: Runtime>(
     payload: Vec<u8>,
 ) -> crate::Result<()> {
     let payload = UninstallGamePayload::decode(payload.as_slice())?;
-    let game = payload.game.unwrap();
+    let game_id = payload.game_id;
+
+    let mut game_client = app_handle.get_game_client().await;
+    let game = game_client
+        .get_games(GetGamesRequest {
+            ids: vec![game_id],
+            ..Default::default()
+        })
+        .await?
+        .into_inner()
+        .games
+        .into_iter()
+        .next()
+        .ok_or_else(|| {
+            crate::error::Error::InternalError(format!("Game with id {game_id} not found"))
+        })?;
 
     if game.third_party {
         if let Some(Ok(steam_id)) = game.steam_app_id.map(u32::try_from) {
@@ -226,17 +269,7 @@ pub async fn uninstall_game<R: Runtime>(
 
 #[instrument(skip(app_handle))]
 #[tauri::command]
-pub async fn get_game_installation_status<R: Runtime>(
-    app_handle: AppHandle<R>,
-    game_id: i32,
-) -> i32 {
-    let installer = app_handle.installer();
-    installer.get_game_installation_status(game_id).await.into()
-}
-
-#[instrument(skip(app_handle))]
-#[tauri::command]
-pub async fn get_installation_state<R: Runtime>(
+pub async fn get_installation_index<R: Runtime>(
     app_handle: AppHandle<R>,
 ) -> crate::Result<Vec<u8>> {
     let installer = app_handle.installer();
@@ -251,14 +284,20 @@ pub async fn get_installation_state<R: Runtime>(
         .map(|s| s.install_games_in_standalone())
         .unwrap_or(false);
 
-    let mut installation_state: HashMap<i32, i32> = HashMap::new();
+    let mut index = InstallationIndex {
+        installations: HashMap::new(),
+    };
 
     for game_id in installer.installed_games.read().await.iter() {
-        installation_state.insert(*game_id, InstallationStatus::Installed.into());
+        index
+            .installations
+            .insert(*game_id, InstallationStatus::Installed.into());
     }
 
     for game_id in installer.currently_installing.read().await.keys() {
-        installation_state.insert(*game_id, InstallationStatus::Installing.into());
+        index
+            .installations
+            .insert(*game_id, InstallationStatus::Installing.into());
     }
 
     // installation disabled for standalone mode,
@@ -276,15 +315,15 @@ pub async fn get_installation_state<R: Runtime>(
             .into_iter()
             .filter(|g| !g.third_party)
             .for_each(|game| {
-                installation_state.insert(game.id, InstallationStatus::Installed.into());
+                index
+                    .installations
+                    .insert(game.id, InstallationStatus::Installed.into());
             });
 
-        tracing::info!("Installed: {:?}", installation_state);
+        tracing::info!("Installed: {:?}", index.installations);
     }
 
-    let res = InstallationState { installation_state };
-
-    Ok(res.encode_to_vec())
+    Ok(index.encode_to_vec())
 }
 
 #[instrument(skip(app_handle))]
@@ -293,6 +332,26 @@ pub async fn update_steam_installations<R: Runtime>(app_handle: AppHandle<R>) ->
     let installer = app_handle.installer();
 
     installer.update_steam_installations().await
+}
+
+#[instrument(skip(app_handle))]
+#[tauri::command]
+pub async fn get_installation_status<R: Runtime>(
+    app_handle: AppHandle<R>,
+    payload: Vec<u8>,
+) -> crate::Result<Vec<u8>> {
+    let payload = GetInstallationStatusPayload::decode(payload.as_slice())?;
+    let installer = app_handle.installer();
+
+    let status = installer
+        .get_game_installation_status(payload.game_id)
+        .await;
+
+    Ok(GetInstallationStatusResponse {
+        status: status as i32,
+        game_id: payload.game_id,
+    }
+    .encode_to_vec())
 }
 
 #[instrument(skip(app))]
@@ -375,6 +434,36 @@ pub async fn clear_installation_dir<R: Runtime>(app: AppHandle<R>) -> crate::Res
 
     installer.installed_games.write().await.clear();
     installer.init_installation_index().await?;
+
+    Ok(())
+}
+
+#[instrument(skip(app, channel))]
+#[tauri::command]
+pub async fn subscribe_to_installation_updates<R: Runtime>(
+    app: AppHandle<R>,
+    channel: Channel<InstallationProgressUpdate>,
+) -> crate::Result<()> {
+    let installer = app.installer();
+    debug!("Subscribing to installation updates");
+    installer.subscriptions.write().await.push(channel);
+
+    Ok(())
+}
+
+#[instrument(skip(app))]
+#[tauri::command]
+pub async fn unsubscribe_from_installation_updates<R: Runtime>(
+    app: AppHandle<R>,
+    channel_id: u32,
+) -> crate::Result<()> {
+    let installer = app.installer();
+    debug!("Unsubscribing from installation updates");
+    installer
+        .subscriptions
+        .write()
+        .await
+        .retain(|c| c.id() != channel_id);
 
     Ok(())
 }

@@ -1,5 +1,5 @@
 import { Button } from "@retrom/ui/components/button";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_pb";
 import { PlatformDependent } from "@/lib/env";
 import { cn } from "@retrom/ui/lib/utils";
 import { useInstallationQuery } from "@/queries/useInstallationQuery";
@@ -19,7 +19,7 @@ export const ActionButton = forwardRef(
   ) => {
     const { game, emulator } = useGameDetail();
     const { className, ...rest } = props;
-    const { data: installationState, status } = useInstallationQuery(game);
+    const installationState = useInstallationQuery(game);
 
     const buttonClasses = cn(
       "rounded-none font-bold text-lg tracking-wider flex gap-2 items-center",
@@ -44,7 +44,6 @@ export const ActionButton = forwardRef(
           ) : (
             <InstallGameButton
               ref={forwardedRef}
-              disabled={status !== "success"}
               {...rest}
               className={cn(buttonClasses)}
               variant="accent"
