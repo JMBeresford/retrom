@@ -28,6 +28,10 @@ services:
       dockerfile: docker/service.Dockerfile
     container_name: retrom
     hostname: retrom
+    ulimits:
+      nofile:
+        hard: 65536
+        soft: 65536
     env_file: ./.env
     # environment:
     # RUST_LOG: DEBUG

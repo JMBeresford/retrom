@@ -1,6 +1,7 @@
 #!/bin/bash
 
 umask ${UMASK}
+ulimit -n 65536
 
 ## VARIABLES
 SEP="\n------------------------------------------"
