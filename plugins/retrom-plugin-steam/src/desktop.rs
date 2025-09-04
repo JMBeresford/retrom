@@ -1,4 +1,4 @@
-use retrom_codegen::retrom::InstallationStatus;
+use retrom_codegen::retrom::client::installation::InstallationStatus;
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Runtime};
 use tauri_plugin_opener::OpenerExt;

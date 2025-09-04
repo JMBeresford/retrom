@@ -51,9 +51,9 @@ export function GameActions() {
         <SheetTrigger asChild>
           <Button
             ref={ref}
-            variant="accent"
+            variant="secondary"
             className={cn(
-              "h-full rounded-none px-2 focus:ring-2 focus:ring-ring",
+              "h-full rounded-none px-2 ring-ring focus-visible:ring-2 focus-visible:ring-offset-0",
               "opacity-80 focus-hover:opacity-100 transition-all",
             )}
           >

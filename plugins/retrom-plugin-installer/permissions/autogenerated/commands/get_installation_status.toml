@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-installation-status"
+description = "Enables the get_installation_status command without any pre-configured scope."
+commands.allow = ["get_installation_status"]
+
+[[permission]]
+identifier = "deny-get-installation-status"
+description = "Denies the get_installation_status command without any pre-configured scope."
+commands.deny = ["get_installation_status"]

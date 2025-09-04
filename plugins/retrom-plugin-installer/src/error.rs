@@ -35,6 +35,12 @@ pub enum Error {
     DecodeError(#[from] prost::DecodeError),
 }
 
+impl From<tonic::Status> for Error {
+    fn from(status: tonic::Status) -> Self {
+        Error::Tonic(status.code())
+    }
+}
+
 impl Serialize for Error {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where

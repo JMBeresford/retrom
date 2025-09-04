@@ -31,8 +31,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             commands::install_game,
             commands::uninstall_game,
-            commands::get_game_installation_status,
-            commands::get_installation_state,
+            commands::get_installation_status,
+            commands::get_installation_index,
+            commands::subscribe_to_installation_updates,
+            commands::unsubscribe_from_installation_updates,
             commands::open_installation_dir,
             commands::migrate_installation_dir,
             commands::clear_installation_dir,

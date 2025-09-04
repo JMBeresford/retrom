@@ -27,6 +27,9 @@ const PlayGameIdImport = createFileRoute('/play/$gameId')()
 const FullscreenLayoutFullscreenIndexLazyImport = createFileRoute(
   '/_fullscreenLayout/fullscreen/',
 )()
+const windowedLayoutInstallingLazyImport = createFileRoute(
+  '/(windowed)/_layout/installing',
+)()
 const windowedLayoutHomeLazyImport = createFileRoute(
   '/(windowed)/_layout/home',
 )()
@@ -78,6 +81,16 @@ const FullscreenLayoutFullscreenIndexLazyRoute =
     import('./routes/_fullscreenLayout/fullscreen/index.lazy').then(
       (d) => d.Route,
     ),
+  )
+
+const windowedLayoutInstallingLazyRoute = windowedLayoutInstallingLazyImport
+  .update({
+    id: '/installing',
+    path: '/installing',
+    getParentRoute: () => windowedLayoutRoute,
+  } as any)
+  .lazy(() =>
+    import('./routes/(windowed)/_layout/installing.lazy').then((d) => d.Route),
   )
 
 const windowedLayoutHomeLazyRoute = windowedLayoutHomeLazyImport
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof windowedLayoutHomeLazyImport
       parentRoute: typeof windowedLayoutImport
     }
+    '/(windowed)/_layout/installing': {
+      id: '/(windowed)/_layout/installing'
+      path: '/installing'
+      fullPath: '/installing'
+      preLoaderRoute: typeof windowedLayoutInstallingLazyImport
+      parentRoute: typeof windowedLayoutImport
+    }
     '/_fullscreenLayout/fullscreen/': {
       id: '/_fullscreenLayout/fullscreen/'
       path: '/fullscreen'
@@ -258,11 +278,13 @@ const FullscreenLayoutRouteWithChildren =
 
 interface windowedLayoutRouteChildren {
   windowedLayoutHomeLazyRoute: typeof windowedLayoutHomeLazyRoute
+  windowedLayoutInstallingLazyRoute: typeof windowedLayoutInstallingLazyRoute
   windowedLayoutGamesGameIdIndexRoute: typeof windowedLayoutGamesGameIdIndexRoute
 }
 
 const windowedLayoutRouteChildren: windowedLayoutRouteChildren = {
   windowedLayoutHomeLazyRoute: windowedLayoutHomeLazyRoute,
+  windowedLayoutInstallingLazyRoute: windowedLayoutInstallingLazyRoute,
   windowedLayoutGamesGameIdIndexRoute: windowedLayoutGamesGameIdIndexRoute,
 }
 
@@ -312,6 +334,7 @@ export interface FileRoutesByFullPath {
   '': typeof FullscreenLayoutRouteWithChildren
   '/play/$gameId': typeof PlayGameIdLayoutRouteWithChildren
   '/home': typeof windowedLayoutHomeLazyRoute
+  '/installing': typeof windowedLayoutInstallingLazyRoute
   '/fullscreen': typeof FullscreenLayoutFullscreenIndexLazyRoute
   '/fullscreen/games/$gameId': typeof FullscreenLayoutFullscreenGamesGameIdLazyRoute
   '/play/$gameId/frame': typeof PlayGameIdLayoutFrameLazyRoute
@@ -325,6 +348,7 @@ export interface FileRoutesByTo {
   '': typeof FullscreenLayoutRouteWithChildren
   '/play/$gameId': typeof PlayGameIdLayoutIndexRoute
   '/home': typeof windowedLayoutHomeLazyRoute
+  '/installing': typeof windowedLayoutInstallingLazyRoute
   '/fullscreen': typeof FullscreenLayoutFullscreenIndexLazyRoute
   '/fullscreen/games/$gameId': typeof FullscreenLayoutFullscreenGamesGameIdLazyRoute
   '/play/$gameId/frame': typeof PlayGameIdLayoutFrameLazyRoute
@@ -341,6 +365,7 @@ export interface FileRoutesById {
   '/play/$gameId': typeof PlayGameIdRouteWithChildren
   '/play/$gameId/_layout': typeof PlayGameIdLayoutRouteWithChildren
   '/(windowed)/_layout/home': typeof windowedLayoutHomeLazyRoute
+  '/(windowed)/_layout/installing': typeof windowedLayoutInstallingLazyRoute
   '/_fullscreenLayout/fullscreen/': typeof FullscreenLayoutFullscreenIndexLazyRoute
   '/_fullscreenLayout/fullscreen/games/$gameId': typeof FullscreenLayoutFullscreenGamesGameIdLazyRoute
   '/play/$gameId/_layout/frame': typeof PlayGameIdLayoutFrameLazyRoute
@@ -356,6 +381,7 @@ export interface FileRouteTypes {
     | ''
     | '/play/$gameId'
     | '/home'
+    | '/installing'
     | '/fullscreen'
     | '/fullscreen/games/$gameId'
     | '/play/$gameId/frame'
@@ -368,6 +394,7 @@ export interface FileRouteTypes {
     | ''
     | '/play/$gameId'
     | '/home'
+    | '/installing'
     | '/fullscreen'
     | '/fullscreen/games/$gameId'
     | '/play/$gameId/frame'
@@ -382,6 +409,7 @@ export interface FileRouteTypes {
     | '/play/$gameId'
     | '/play/$gameId/_layout'
     | '/(windowed)/_layout/home'
+    | '/(windowed)/_layout/installing'
     | '/_fullscreenLayout/fullscreen/'
     | '/_fullscreenLayout/fullscreen/games/$gameId'
     | '/play/$gameId/_layout/frame'
@@ -443,6 +471,7 @@ export const routeTree = rootRoute
       "parent": "/(windowed)",
       "children": [
         "/(windowed)/_layout/home",
+        "/(windowed)/_layout/installing",
         "/(windowed)/_layout/games/$gameId/"
       ]
     },
@@ -462,6 +491,10 @@ export const routeTree = rootRoute
     },
     "/(windowed)/_layout/home": {
       "filePath": "(windowed)/_layout/home.lazy.tsx",
+      "parent": "/(windowed)/_layout"
+    },
+    "/(windowed)/_layout/installing": {
+      "filePath": "(windowed)/_layout/installing.lazy.tsx",
       "parent": "/(windowed)/_layout"
     },
     "/_fullscreenLayout/fullscreen/": {

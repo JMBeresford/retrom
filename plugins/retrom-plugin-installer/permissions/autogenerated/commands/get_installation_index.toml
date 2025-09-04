@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-installation-index"
+description = "Enables the get_installation_index command without any pre-configured scope."
+commands.allow = ["get_installation_index"]
+
+[[permission]]
+identifier = "deny-get-installation-index"
+description = "Denies the get_installation_index command without any pre-configured scope."
+commands.deny = ["get_installation_index"]
