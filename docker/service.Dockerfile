@@ -98,10 +98,11 @@ VOLUME ["/app/config", "/app/data", "/app/psql"]
 
 RUN chown -R retrom:retrom /app && \
   chmod -R "=rwx" /app && \
+  chmod +x /entrypoint.sh && \
   chmod +x /app/start.sh
 
 EXPOSE ${RETROM_SERVER_PORT}
 EXPOSE ${PORT}
 
-ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/app/start.sh"]

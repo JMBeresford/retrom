@@ -1,10 +1,13 @@
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
+use futures::stream::StreamExt;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
 use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
 use retrom_db::run_migrations;
 use retry::retry;
+use signal_hook::consts::signal::*;
+use signal_hook_tokio::Signals;
 use std::{
     convert::Infallible,
     net::SocketAddr,
@@ -36,7 +39,9 @@ pub const DEFAULT_DB_URL: &str = "postgres://postgres:postgres@localhost/retrom"
 const CARGO_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tracing::instrument(name = "root_span")]
-pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr) {
+pub async fn get_server(
+    db_params: Option<&str>,
+) -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr) {
     let _ = emulator_js::EmulatorJs::new().await;
     let config_manager = match crate::config::ServerConfigManager::new() {
         Ok(config) => Arc::new(config),
@@ -229,11 +234,28 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
 
     let port = server.local_addr();
 
-    let handle: JoinHandle<()> = tokio::spawn(
+    let handle: JoinHandle<_> = tokio::spawn(
         async move {
-            if let Err(why) = server.await {
+            let signals = Signals::new([SIGTERM, SIGINT, SIGQUIT])?;
+            let handle = signals.handle();
+
+            if let Err(why) = server
+                .with_graceful_shutdown(async {
+                    tokio::select! {
+                         _ = handle_signals(signals) => {
+                            tracing::info!("Received termination signal, shutting down...");
+                        }
+                        _ = tokio::signal::ctrl_c() => {
+                            tracing::info!("Received Ctrl+C, shutting down...");
+                        }
+                    }
+                })
+                .await
+            {
                 tracing::error!("Server error: {}", why);
             }
+
+            handle.close();
 
             #[cfg(feature = "embedded_db")]
             if let Some(psql_running) = psql {
@@ -245,6 +267,8 @@ pub async fn get_server(db_params: Option<&str>) -> (JoinHandle<()>, SocketAddr)
             }
 
             tracing::info!("Server stopped");
+
+            Ok::<(), std::io::Error>(())
         }
         .instrument(tracing::info_span!("server_task")),
     );
@@ -365,4 +389,15 @@ where
 
 fn map_option_err<T, U: Into<Error>>(err: Option<Result<T, U>>) -> Option<Result<T, Error>> {
     err.map(|e| e.map_err(Into::into))
+}
+
+async fn handle_signals(mut signals: Signals) {
+    while let Some(signal) = signals.next().await {
+        match signal {
+            SIGTERM | SIGINT | SIGQUIT => {
+                break;
+            }
+            _ => {}
+        }
+    }
 }

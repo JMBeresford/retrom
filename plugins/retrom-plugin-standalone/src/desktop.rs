@@ -17,7 +17,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 /// Access to the standalone APIs.
 pub struct Standalone<R: Runtime> {
     _app: AppHandle<R>,
-    server_handle: RwLock<Option<tokio::task::JoinHandle<()>>>,
+    server_handle: RwLock<Option<tokio::task::JoinHandle<std::io::Result<()>>>>,
     addr: RwLock<Option<SocketAddr>>,
 }
 
