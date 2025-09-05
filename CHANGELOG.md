@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.36](https://github.com/JMBeresford/retrom/compare/v0.7.35...v0.7.36) - 2025-09-05
+
+### Bug Fixes
+- *(Docker)* graceful shutdown of server and DB
+
+    fixes [#396](https://github.com/JMBeresford/retrom/pull/396)
+
+
+
+
 ## [0.7.35](https://github.com/JMBeresford/retrom/compare/v0.7.34...v0.7.35) - 2025-08-31
 
 ### Bug Fixes
