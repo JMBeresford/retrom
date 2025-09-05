@@ -6,8 +6,6 @@ use hyper::{service::make_service_fn, Server};
 use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
 use retrom_db::run_migrations;
 use retry::retry;
-use signal_hook::consts::signal::*;
-use signal_hook_tokio::Signals;
 use std::{
     convert::Infallible,
     net::SocketAddr,
@@ -236,26 +234,47 @@ pub async fn get_server(
 
     let handle: JoinHandle<_> = tokio::spawn(
         async move {
-            let signals = Signals::new([SIGTERM, SIGINT, SIGQUIT])?;
-            let handle = signals.handle();
-
             if let Err(why) = server
                 .with_graceful_shutdown(async {
-                    tokio::select! {
-                         _ = handle_signals(signals) => {
-                            tracing::info!("Received termination signal, shutting down...");
+                    if cfg!(windows) {
+                        let _ = tokio::signal::ctrl_c().await;
+                        tracing::info!("Received Ctrl+C, shutting down...");
+                    } else {
+                        use signal_hook::consts::signal::*;
+                        use signal_hook_tokio::Signals;
+
+                        let mut signals = Signals::new([SIGTERM, SIGINT, SIGQUIT])
+                            .expect("Could not create signal handler");
+
+                        let handle = signals.handle();
+
+                        let handle_signals = async move {
+                            while let Some(signal) = signals.next().await {
+                                match signal {
+                                    SIGTERM | SIGINT | SIGQUIT => {
+                                        break;
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        };
+
+                        tokio::select! {
+                             _ = handle_signals => {
+                                tracing::info!("Received termination signal, shutting down...");
+                            }
+                            _ = tokio::signal::ctrl_c() => {
+                                tracing::info!("Received Ctrl+C, shutting down...");
+                            }
                         }
-                        _ = tokio::signal::ctrl_c() => {
-                            tracing::info!("Received Ctrl+C, shutting down...");
-                        }
+
+                        handle.close();
                     }
                 })
                 .await
             {
                 tracing::error!("Server error: {}", why);
             }
-
-            handle.close();
 
             #[cfg(feature = "embedded_db")]
             if let Some(psql_running) = psql {
@@ -389,15 +408,4 @@ where
 
 fn map_option_err<T, U: Into<Error>>(err: Option<Result<T, U>>) -> Option<Result<T, Error>> {
     err.map(|e| e.map_err(Into::into))
-}
-
-async fn handle_signals(mut signals: Signals) {
-    while let Some(signal) = signals.next().await {
-        match signal {
-            SIGTERM | SIGINT | SIGQUIT => {
-                break;
-            }
-            _ => {}
-        }
-    }
 }
