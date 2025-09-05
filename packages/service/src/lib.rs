@@ -1,6 +1,5 @@
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use either::Either;
-use futures::stream::StreamExt;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
 use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
@@ -236,18 +235,22 @@ pub async fn get_server(
         async move {
             if let Err(why) = server
                 .with_graceful_shutdown(async {
-                    if cfg!(windows) {
+                    #[cfg(windows)]
+                    {
                         let _ = tokio::signal::ctrl_c().await;
                         tracing::info!("Received Ctrl+C, shutting down...");
-                    } else {
+                    }
+
+                    #[cfg(not(windows))]
+                    {
                         use signal_hook::consts::signal::*;
                         use signal_hook_tokio::Signals;
+                        use futures::stream::StreamExt;
 
                         let mut signals = Signals::new([SIGTERM, SIGINT, SIGQUIT])
                             .expect("Could not create signal handler");
 
                         let handle = signals.handle();
-
                         let handle_signals = async move {
                             while let Some(signal) = signals.next().await {
                                 match signal {
