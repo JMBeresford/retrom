@@ -243,9 +243,9 @@ pub async fn get_server(
 
                     #[cfg(not(windows))]
                     {
+                        use futures::stream::StreamExt;
                         use signal_hook::consts::signal::*;
                         use signal_hook_tokio::Signals;
-                        use futures::stream::StreamExt;
 
                         let mut signals = Signals::new([SIGTERM, SIGINT, SIGQUIT])
                             .expect("Could not create signal handler");
