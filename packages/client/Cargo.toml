@@ -13,7 +13,7 @@ name = "Retrom"
 path = "src/main.rs"
 
 [build-dependencies]
-tauri-build = {workspace = true }
+tauri-build = { workspace = true }
 
 [dependencies]
 tauri = { workspace = true }
