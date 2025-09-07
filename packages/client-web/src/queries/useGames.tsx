@@ -21,33 +21,27 @@ export function useGames<T = GetGamesResponse>(opts: {
   const retromClient = useRetromClient();
 
   return useQuery({
-    queryKey: [
-      "games",
-      "game-metadata",
-      "game-files",
-      request,
-      retromClient,
-      toast,
-    ],
+    queryKey: ["games", "game-metadata", "game-files", request, retromClient],
     queryFn: async () => {
       const data = await retromClient.gameClient.getGames(request);
 
       if (!data.games.length) {
         toast({
           title: "Your Library Is Empty",
+          id: "empty-library",
           duration: Infinity,
           description: "Have you added any games to your library yet?",
           action: (
             <ToastAction
               altText="open update library modal"
               onClick={() =>
-                void navigate({
+                navigate({
                   to: ".",
                   search: (prev) => ({
                     ...prev,
                     updateLibraryModal: { open: true },
                   }),
-                })
+                }).catch(console.error)
               }
             >
               Update Library

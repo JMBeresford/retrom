@@ -45,6 +45,7 @@ export function ConnectionConfig() {
   const toggleStandaloneMode = useCallback(async () => {
     if (serverConfig?.standalone) {
       await disable(undefined);
+      queryClient.invalidateQueries().catch(console.error);
     } else {
       confirm({
         title: "Are you sure?",
@@ -64,10 +65,12 @@ export function ConnectionConfig() {
 
             return;
           }
+
+          queryClient.invalidateQueries().catch(console.error);
         },
       });
     }
-  }, [disable, enable, serverConfig, confirm, toast]);
+  }, [disable, enable, serverConfig, confirm, toast, queryClient]);
 
   const toggleInstallInStandalone = useCallback(
     (value: boolean) => {
