@@ -60,7 +60,7 @@ export function TelemetryEnabledPrompt() {
   }, []);
 
   useLayoutEffect(() => {
-    if (!completed && status !== "success") {
+    if (!completed) {
       toast({
         title: "Help Retrom Improve",
         id: "telemetry-prompt",
