@@ -1,5 +1,4 @@
 import { checkIsDesktop } from "@/lib/env";
-import { Button } from "@retrom/ui/components/button";
 import { toast } from "@retrom/ui/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useLayoutEffect } from "react";
@@ -29,11 +28,10 @@ export function LegacyEntry() {
   });
 
   useLayoutEffect(() => {
-    let dismiss: () => unknown;
-
     if (usingLegacyEntry) {
-      dismiss = toast({
+      toast({
         title: "Using Legacy Web Entry",
+        id: "legacy-web-entry-prompt",
         duration: Infinity,
         description: (
           <p>
@@ -43,21 +41,15 @@ export function LegacyEntry() {
           </p>
         ),
         action: (
-          <Button>
-            <a
-              target="_blank"
-              href="https://github.com/JMBeresford/retrom/wiki/Migration-Guides#v0730"
-            >
-              Read more
-            </a>
-          </Button>
+          <a
+            target="_blank"
+            href="https://github.com/JMBeresford/retrom/wiki/Migration-Guides#v0730"
+          >
+            Read more
+          </a>
         ),
-      }).dismiss;
+      });
     }
-
-    return () => {
-      dismiss?.();
-    };
   }, [usingLegacyEntry]);
 
   return <></>;

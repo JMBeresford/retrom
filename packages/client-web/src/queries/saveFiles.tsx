@@ -27,7 +27,7 @@ export function useGetSaveFiles(
 
   return useQuery({
     queryFn: async () => {
-      const { dismiss } = toast({
+      const { update } = toast({
         id: "download-remote-saves",
         duration: Infinity,
         title: "Downloading Save Files",
@@ -37,8 +37,7 @@ export function useGetSaveFiles(
       try {
         const res = await retromClient.savesClient.getSaveFiles(request);
 
-        dismiss();
-        toast({
+        update({
           title: "Save files downloaded",
           description: "Your save files have been downloaded successfully",
           duration: 3000,
@@ -46,8 +45,7 @@ export function useGetSaveFiles(
 
         return res;
       } catch (error) {
-        dismiss();
-        toast({
+        update({
           title: "Failed to download save files",
           duration: 5000,
           description:

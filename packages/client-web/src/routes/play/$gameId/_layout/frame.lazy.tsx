@@ -16,7 +16,6 @@ import {
   TooltipArrow,
 } from "@retrom/ui/components/tooltip";
 import { toast } from "@retrom/ui/hooks/use-toast";
-import { Button } from "@retrom/ui/components/button";
 
 export type EmuJsFrameEvent =
   | "exit"
@@ -52,21 +51,15 @@ function FrameComponent() {
       description:
         "In-browser emulation is experimental, please report any issues you encounter.",
       action: (
-        <Button variant="ghost" className="border" asChild>
-          <a
-            href="https://github.com/JMBeresford/retrom/issues/new/choose"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Report
-          </a>
-        </Button>
+        <a
+          href="https://github.com/JMBeresford/retrom/issues/new/choose"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Report
+        </a>
       ),
     });
-
-    return () => {
-      // dismiss();
-    };
   }, []);
 
   return (

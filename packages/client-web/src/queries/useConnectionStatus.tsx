@@ -1,4 +1,3 @@
-import { Button } from "@retrom/ui/components/button";
 import { useToast } from "@retrom/ui/hooks/use-toast";
 import { versionToString } from "@/lib/version-utils";
 import { configStore } from "@/providers/config";
@@ -24,27 +23,25 @@ export function useConnectionStatus() {
     queryKey: ["connectionStatus"],
     retry: (count, err) => {
       if (configStore.getState().server === undefined) {
-        const { dismiss } = toast({
+        toast({
           id: "no-server-configured",
           title: "No server configured",
           description:
             "In order to use Retrom, you need to either connect to a server or enable standalone mode.",
           action: (
-            <Button size="sm" asChild onClick={() => dismiss()}>
-              <Link
-                to="."
-                search={(prev) => ({
-                  ...prev,
-                  configModal: {
-                    open: true,
-                    tab: "client",
-                    clientTab: "connection",
-                  },
-                })}
-              >
-                Connect
-              </Link>
-            </Button>
+            <Link
+              to="."
+              search={(prev) => ({
+                ...prev,
+                configModal: {
+                  open: true,
+                  tab: "client",
+                  clientTab: "connection",
+                },
+              })}
+            >
+              Connect
+            </Link>
           ),
         });
 

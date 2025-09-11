@@ -246,7 +246,7 @@ function BackupItem(props: { save: SaveFilesStat; backup: BackupStats }) {
 
   const handler = useCallback(async () => {
     if (confirm) {
-      const { dismiss, update } = toast({
+      const { update } = toast({
         title: "Restoring Backup",
         icon: <LoaderCircle className="animate-spin" />,
         duration: Infinity,
@@ -279,8 +279,7 @@ function BackupItem(props: { save: SaveFilesStat; backup: BackupStats }) {
           duration: undefined,
         });
       } catch (error) {
-        dismiss();
-        toast({
+        update({
           title: "Failed to restore backup",
           description:
             error instanceof Error

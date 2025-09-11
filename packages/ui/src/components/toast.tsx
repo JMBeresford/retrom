@@ -90,7 +90,7 @@ const TitleIcon: Record<
 function ToastTitle(props: ToastProps) {
   return props.title ? (
     typeof props.title !== "function" ? (
-      <p className="text-sm font-semibold">{props.title}</p>
+      <span className="text-sm font-semibold">{props.title}</span>
     ) : (
       <props.title />
     )
@@ -100,7 +100,7 @@ function ToastTitle(props: ToastProps) {
 function ToastDescription(props: ToastProps) {
   return props.description ? (
     typeof props.description !== "function" ? (
-      <p className="text-sm text-muted-foreground">{props.description}</p>
+      <span className="text-sm text-muted-foreground">{props.description}</span>
     ) : (
       <props.description />
     )
@@ -112,7 +112,7 @@ function ToastAction({ action, id }: ToastProps): React.ReactNode {
     typeof action === "object" && "label" in action ? (
       <Button
         size="sm"
-        variant="ghost"
+        variant="ghost-outline"
         onClick={(e) => {
           action.onClick(e);
           if (!e.defaultPrevented) {
@@ -123,8 +123,31 @@ function ToastAction({ action, id }: ToastProps): React.ReactNode {
         {action.label}
       </Button>
     ) : (
-      <Button size="sm" variant="ghost" asChild>
+      <Button size="sm" variant="ghost-outline" asChild>
         {action}
+      </Button>
+    )
+  ) : null;
+}
+
+function ToastCancel({ cancel, id }: ToastProps): React.ReactNode {
+  return cancel ? (
+    typeof cancel === "object" && "label" in cancel ? (
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={(e) => {
+          cancel.onClick(e);
+          if (!e.defaultPrevented) {
+            toast.dismiss(id);
+          }
+        }}
+      >
+        {cancel.label}
+      </Button>
+    ) : (
+      <Button size="sm" variant="ghost" asChild>
+        {cancel}
       </Button>
     )
   ) : null;
@@ -154,8 +177,9 @@ function Toast(props: ToastProps) {
 
         <ToastDescription {...props} />
       </div>
-      <div className="flex flex-col justify-center ml-auto">
+      <div className="flex flex-col gap-2 justify-center ml-auto">
         <ToastAction {...props} />
+        <ToastCancel {...props} />
       </div>
       {dismissible && closeButton ? (
         <LucideX
@@ -179,9 +203,8 @@ const toast = (opts: ToastProps) => {
   const id = handleToast(opts);
 
   const update = (opts: Omit<ToastProps, "id">) => handleToast({ ...opts, id });
-  const dismiss = () => sonnerToast.dismiss(id);
 
-  return { id, dismiss, update };
+  return { id, update };
 };
 
 toast.dismiss = sonnerToast.dismiss;
