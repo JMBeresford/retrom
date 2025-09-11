@@ -253,7 +253,6 @@ function BackupItem(props: { save: SaveFilesStat; backup: BackupStats }) {
       });
 
       try {
-        await new Promise((r) => setTimeout(r, 5000));
         const res = await restore({
           saveFilesSelectors: [
             {
