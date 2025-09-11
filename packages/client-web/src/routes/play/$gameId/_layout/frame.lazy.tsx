@@ -44,7 +44,7 @@ function FrameComponent() {
   const pointerMoveTimeout = useRef<number>();
 
   useLayoutEffect(() => {
-    const { dismiss } = toast({
+    toast({
       title: "Disclaimer",
       variant: "warning",
       id: "emulatorjs-disclaimer",
@@ -52,20 +52,20 @@ function FrameComponent() {
       description:
         "In-browser emulation is experimental, please report any issues you encounter.",
       action: (
-        <a
-          href="https://github.com/JMBeresford/retrom/issues/new/choose"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <Button variant="ghost" className="border">
+        <Button variant="ghost" className="border" asChild>
+          <a
+            href="https://github.com/JMBeresford/retrom/issues/new/choose"
+            target="_blank"
+            rel="noreferrer"
+          >
             Report
-          </Button>
-        </a>
+          </a>
+        </Button>
       ),
     });
 
     return () => {
-      dismiss();
+      // dismiss();
     };
   }, []);
 

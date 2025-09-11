@@ -3,7 +3,6 @@ import { useClientVersion } from "@/queries/useClientVersion";
 import { useToast } from "@retrom/ui/hooks/use-toast";
 import { useEffect } from "react";
 import { isBreakingChange, versionCompare } from "@/lib/version-utils";
-import { ToastAction } from "@retrom/ui/components/toast";
 import { Link } from "@tanstack/react-router";
 
 export function ServerMismatch() {
@@ -45,11 +44,9 @@ function InnerToast(props: { breaking: boolean }) {
       description,
       duration: Infinity,
       action: (
-        <ToastAction altText="show version resolution dialog" asChild>
-          <Link to="." search={{ versionInfoModal: { open: true } }}>
-            Resolve
-          </Link>
-        </ToastAction>
+        <Link to="." search={{ versionInfoModal: { open: true } }}>
+          Resolve
+        </Link>
       ),
     });
 

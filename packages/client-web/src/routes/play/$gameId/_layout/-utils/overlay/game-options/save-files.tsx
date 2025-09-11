@@ -248,10 +248,12 @@ function BackupItem(props: { save: SaveFilesStat; backup: BackupStats }) {
     if (confirm) {
       const { dismiss, update } = toast({
         title: "Restoring Backup",
-        description: <LoaderCircle className="animate-spin" />,
+        icon: <LoaderCircle className="animate-spin" />,
+        duration: Infinity,
       });
 
       try {
+        await new Promise((r) => setTimeout(r, 5000));
         const res = await restore({
           saveFilesSelectors: [
             {
@@ -273,7 +275,8 @@ function BackupItem(props: { save: SaveFilesStat; backup: BackupStats }) {
         }
 
         update({
-          description: "Backup restored successfully",
+          title: "Backup restored successfully",
+          duration: undefined,
         });
       } catch (error) {
         dismiss();

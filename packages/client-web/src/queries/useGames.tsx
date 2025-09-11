@@ -1,4 +1,3 @@
-import { ToastAction } from "@retrom/ui/components/toast";
 import { useToast } from "@retrom/ui/hooks/use-toast";
 import {
   type GetGamesResponse,
@@ -31,22 +30,18 @@ export function useGames<T = GetGamesResponse>(opts: {
           id: "empty-library",
           duration: Infinity,
           description: "Have you added any games to your library yet?",
-          action: (
-            <ToastAction
-              altText="open update library modal"
-              onClick={() =>
-                navigate({
-                  to: ".",
-                  search: (prev) => ({
-                    ...prev,
-                    updateLibraryModal: { open: true },
-                  }),
-                }).catch(console.error)
-              }
-            >
-              Update Library
-            </ToastAction>
-          ),
+          action: {
+            label: "Update Library",
+            onClick: () => {
+              navigate({
+                to: ".",
+                search: (prev) => ({
+                  ...prev,
+                  updateLibraryModal: { open: true },
+                }),
+              }).catch(console.error);
+            },
+          },
         });
       }
       return data;

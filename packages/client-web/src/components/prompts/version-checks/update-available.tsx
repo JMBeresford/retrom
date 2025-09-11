@@ -1,9 +1,7 @@
-import { Button } from "@retrom/ui/components/button";
 import { useToast } from "@retrom/ui/hooks/use-toast";
 import { useEffect } from "react";
 import { useUpdateCheck } from "@/queries/useUpdateCheck";
 import { useClientVersion } from "@/queries/useClientVersion";
-import { ToastAction } from "@retrom/ui/components/toast";
 import { useNavigate } from "@tanstack/react-router";
 
 export function UpdateAvailable() {
@@ -14,7 +12,7 @@ export function UpdateAvailable() {
   const pending =
     updateCheckStatus === "pending" || clientVersionStatus === "pending";
 
-  if (!update?.available || pending || !clientVersion) {
+  if (update === null || pending || !clientVersion) {
     return null;
   }
 
@@ -26,37 +24,26 @@ function InnerToast() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const toastInfo = toast({
+    const { dismiss } = toast({
       title: "Update Available",
       duration: Infinity,
       description: "A new version of Retrom is available.",
-      action: (
-        <ToastAction asChild altText="show update dialog">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              void navigate({
-                to: ".",
-                search: (prev) => ({
-                  ...prev,
-                  checkForUpdateModal: { open: true },
-                }),
-              })
-            }
-          >
-            Update
-          </Button>
-        </ToastAction>
-      ),
+      action: {
+        label: "Update",
+        onClick: () => {
+          navigate({
+            to: ".",
+            search: (prev) => ({
+              ...prev,
+              checkForUpdateModal: { open: true },
+            }),
+          }).catch(console.error);
+        },
+      },
     });
 
-    const dismiss = toastInfo.dismiss;
-
     return () => {
-      if (dismiss) {
-        dismiss();
-      }
+      dismiss();
     };
   }, [toast, navigate]);
 

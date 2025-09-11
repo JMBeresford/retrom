@@ -29,7 +29,7 @@ export function LegacyEntry() {
   });
 
   useLayoutEffect(() => {
-    let dismiss: () => void | undefined;
+    let dismiss: () => unknown;
 
     if (usingLegacyEntry) {
       dismiss = toast({
