@@ -102,6 +102,9 @@ sort of _self-hosted Steam_ for your DRM-free game library.
 
 ## Roadmap
 
+> [!TIP]
+> The below list is often out-of-date, see the full roadmap [here](https://github.com/users/JMBeresford/projects/7)
+
 - [ ] Basic server functionality
   - [x] Scan filesystem for library items
   - [x] Add/remove library items
