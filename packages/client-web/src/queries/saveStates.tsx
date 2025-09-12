@@ -24,7 +24,7 @@ export function useGetSaveStates(request: RawMessage<GetSaveStatesRequest>) {
 
   return useQuery({
     queryFn: async () => {
-      const { dismiss } = toast({
+      const { update } = toast({
         id: "download-remote-saves",
         duration: Infinity,
         title: "Downloading Save States",
@@ -34,8 +34,7 @@ export function useGetSaveStates(request: RawMessage<GetSaveStatesRequest>) {
       try {
         const res = await retromClient.savesClient.getSaveStates(request);
 
-        dismiss();
-        toast({
+        update({
           title: "Save states downloaded",
           description: "Your save states have been downloaded successfully",
           duration: 3000,
@@ -43,8 +42,7 @@ export function useGetSaveStates(request: RawMessage<GetSaveStatesRequest>) {
 
         return res;
       } catch (error) {
-        dismiss();
-        toast({
+        update({
           title: "Failed to download save states",
           duration: 5000,
           description:

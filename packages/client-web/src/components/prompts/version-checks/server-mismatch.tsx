@@ -1,9 +1,8 @@
 import { useServerInfo } from "@/queries/useServerInfo";
 import { useClientVersion } from "@/queries/useClientVersion";
-import { useToast } from "@retrom/ui/hooks/use-toast";
-import { useEffect } from "react";
+import { toast } from "@retrom/ui/hooks/use-toast";
+import { useLayoutEffect } from "react";
 import { isBreakingChange, versionCompare } from "@/lib/version-utils";
-import { ToastAction } from "@retrom/ui/components/toast";
 import { Link } from "@tanstack/react-router";
 
 export function ServerMismatch() {
@@ -15,52 +14,40 @@ export function ServerMismatch() {
   const pending = serverStatus === "pending" || clientStatus === "pending";
   const error = serverStatus === "error" || clientStatus === "error";
 
-  if (pending || error || !serverVersion || !clientVersion) {
-    return null;
-  }
+  useLayoutEffect(() => {
+    if (pending || error || !serverVersion || !clientVersion) {
+      return;
+    }
 
-  const comparison = versionCompare(serverVersion, clientVersion);
-  const breaking = isBreakingChange(serverVersion, clientVersion);
+    const comparison = versionCompare(serverVersion, clientVersion);
+    const breaking = isBreakingChange(serverVersion, clientVersion);
 
-  return comparison !== 0 ? <InnerToast breaking={breaking} /> : <></>;
-}
-
-function InnerToast(props: { breaking: boolean }) {
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const title = props.breaking
+    const title = breaking
       ? "Incompatible Server Version"
       : "Server Version Mismatch";
 
-    const variant = props.breaking ? "destructive" : "default";
+    const variant = breaking ? "destructive" : "default";
 
-    const description = props.breaking
+    const description = breaking
       ? "You may experience issues until the version mismatch is resolved."
       : "The server is running a different version of Retrom.";
 
-    const toastInfo = toast({
+    if (comparison === 0) {
+      return;
+    }
+
+    toast({
       title,
       variant,
       description,
       duration: Infinity,
       action: (
-        <ToastAction altText="show version resolution dialog" asChild>
-          <Link to="." search={{ versionInfoModal: { open: true } }}>
-            Resolve
-          </Link>
-        </ToastAction>
+        <Link to="." search={{ versionInfoModal: { open: true } }}>
+          Resolve
+        </Link>
       ),
     });
+  }, [clientVersion, serverVersion, error, pending]);
 
-    const dismiss = toastInfo.dismiss;
-
-    return () => {
-      if (dismiss) {
-        dismiss();
-      }
-    };
-  }, [toast, props.breaking]);
-
-  return <></>;
+  return null;
 }

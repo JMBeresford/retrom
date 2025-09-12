@@ -7,7 +7,7 @@ import { useCallback } from "react";
 export function useExportEJSState() {
   return useCallback((args: { state: RawMessage<File> }) => {
     const { state } = args;
-    const content = state.content;
+    const content = new Uint8Array(state.content);
 
     const stat = state.stat;
     if (!stat) {

@@ -16,7 +16,6 @@ import {
   TooltipArrow,
 } from "@retrom/ui/components/tooltip";
 import { toast } from "@retrom/ui/hooks/use-toast";
-import { Button } from "@retrom/ui/components/button";
 
 export type EmuJsFrameEvent =
   | "exit"
@@ -44,7 +43,7 @@ function FrameComponent() {
   const pointerMoveTimeout = useRef<number>();
 
   useLayoutEffect(() => {
-    const { dismiss } = toast({
+    toast({
       title: "Disclaimer",
       variant: "warning",
       id: "emulatorjs-disclaimer",
@@ -57,16 +56,10 @@ function FrameComponent() {
           target="_blank"
           rel="noreferrer"
         >
-          <Button variant="ghost" className="border">
-            Report
-          </Button>
+          Report
         </a>
       ),
     });
-
-    return () => {
-      dismiss();
-    };
   }, []);
 
   return (

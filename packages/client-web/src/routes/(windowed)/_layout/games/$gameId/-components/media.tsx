@@ -182,7 +182,7 @@ function VideoItems(props: { videos: string[] }) {
     return () => {
       api?.off("slidesInView", handleViewEvent);
     };
-  }, [api]);
+  }, [api, handleViewEvent]);
 
   return (
     <CarouselContent className="h-max">
