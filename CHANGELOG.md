@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.37](https://github.com/JMBeresford/retrom/compare/v0.7.36...v0.7.37) - 2025-09-12
+
+### Bug Fixes
+- standalone toggle no longer hangs
+
+
+
+### Newly Added
+- notification UI tweaks ([#401](https://github.com/JMBeresford/retrom/pull/401))
+
+
 ## [0.7.36](https://github.com/JMBeresford/retrom/compare/v0.7.35...v0.7.36) - 2025-09-05
 
 ### Bug Fixes
