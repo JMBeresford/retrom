@@ -8,7 +8,7 @@ import { ServerConfig_TelemetryConfigSchema } from "@retrom/codegen/retrom/serve
 
 export function TelemetryEnabledPrompt() {
   const completed = useConfig((s) => s.flowCompletions?.telemetryEnabled);
-  const { data: serverConfig, status } = useServerConfig();
+  const { data: serverConfig } = useServerConfig();
   const { mutate } = useUpdateServerConfig();
 
   const enable = useCallback(() => {
