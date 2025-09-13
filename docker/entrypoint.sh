@@ -1,7 +1,9 @@
 #!/bin/bash
 
 umask ${UMASK}
-ulimit -n 65536
+if [ "$(id -u)" = 0 ]; then
+    ulimit -n 65536
+fi
 
 ## VARIABLES
 SEP="\n------------------------------------------"
