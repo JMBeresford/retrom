@@ -1,7 +1,9 @@
 #!/bin/bash
 
 umask ${UMASK}
-ulimit -n 65536
+if [ "$(id -u)" = 0 ] && [ -n "$ULIMIT_FILE_LIMIT" ]; then
+    ulimit -n "$ULIMIT_FILE_LIMIT"
+fi
 
 ## VARIABLES
 SEP="\n------------------------------------------"

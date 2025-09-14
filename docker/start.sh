@@ -6,7 +6,6 @@ function on_error() {
 }
 
 trap 'on_error $LINENO' ERR
-ulimit -n 65536
 
 # Start the web server
 cd /app/web
