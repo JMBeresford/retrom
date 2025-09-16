@@ -1,9 +1,12 @@
-import { getInstallationIndex } from "@retrom/plugin-installer";
+import { subscribeToInstallationIndex } from "@retrom/plugin-installer";
 import { checkIsDesktop } from "@/lib/env";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { UnlistenFn } from "@tauri-apps/api/event";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { createContext, PropsWithChildren, useContext, useEffect } from "react";
+import {
+  createContext,
+  PropsWithChildren,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { create } from "@bufbuild/protobuf";
 import {
   InstallationIndex,
@@ -15,53 +18,20 @@ const InstallationIndexContext = createContext<InstallationIndex>(
 );
 
 export function InstallationIndexProvider(props: PropsWithChildren) {
-  const queryClient = useQueryClient();
-
-  const query = useQuery({
-    queryFn: () => {
-      if (!checkIsDesktop()) {
-        return create(InstallationIndexSchema, {});
-      }
-
-      return getInstallationIndex();
-    },
-    queryKey: ["installation-index"],
-  });
+  const [index, setIndex] = useState<InstallationIndex>(
+    create(InstallationIndexSchema, {}),
+  );
 
   useEffect(() => {
     if (!checkIsDesktop()) return;
 
-    const window = getCurrentWebviewWindow();
-    const unlisteners: UnlistenFn[] = [];
-
-    const invalidate = () => {
-      queryClient
-        .invalidateQueries({
-          queryKey: ["installation-index"],
-        })
-        .catch(console.error);
-    };
-
-    async function listen() {
-      unlisteners.push(await window.listen("game-installed", invalidate));
-
-      unlisteners.push(await window.listen("steam-game-installed", invalidate));
-      unlisteners.push(
-        await window.listen("steam-game-uninstalled", invalidate),
-      );
-    }
-
-    listen().catch(console.error);
-
-    return () => {
-      unlisteners.forEach((unlisten) => unlisten());
-    };
-  }, [queryClient]);
+    subscribeToInstallationIndex((payload) => {
+      setIndex(payload);
+    }).catch(console.error);
+  }, []);
 
   return (
-    <InstallationIndexContext.Provider
-      value={query.data ?? create(InstallationIndexSchema, {})}
-    >
+    <InstallationIndexContext.Provider value={index}>
       {props.children}
     </InstallationIndexContext.Provider>
   );

@@ -13,7 +13,7 @@ import { getFileStub } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import { useUninstallGame } from "@/mutations/useUninstallGame";
 import { useGameDetail } from "@/providers/game-details";
-import { useInstallationQuery } from "@/queries/useInstallationQuery";
+import { useInstallationStatus } from "@/queries/useInstallationStatus";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { LoaderCircleIcon } from "lucide-react";
 import { Route } from "@/routes/(windowed)/_layout/games/$gameId";
@@ -21,7 +21,7 @@ import { Route } from "@/routes/(windowed)/_layout/games/$gameId";
 export function UninstallGameModal() {
   const { game, gameMetadata: metadata } = useGameDetail();
   const name = metadata?.name || getFileStub(game.path);
-  const installationStatus = useInstallationQuery(game);
+  const installationStatus = useInstallationStatus(game.id);
   const { uninstallGameModal } = Route.useSearch();
   const navigate = useNavigate();
 
