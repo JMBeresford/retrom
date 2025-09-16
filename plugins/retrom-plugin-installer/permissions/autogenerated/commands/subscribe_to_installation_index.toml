@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-subscribe-to-installation-index"
+description = "Enables the subscribe_to_installation_index command without any pre-configured scope."
+commands.allow = ["subscribe_to_installation_index"]
+
+[[permission]]
+identifier = "deny-subscribe-to-installation-index"
+description = "Denies the subscribe_to_installation_index command without any pre-configured scope."
+commands.deny = ["subscribe_to_installation_index"]

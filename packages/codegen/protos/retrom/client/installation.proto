@@ -28,16 +28,18 @@ message InstallationEventMessage {
   optional InstallationProgressUpdate progress = 1;
 }
 
-message InstallationSpeed {
+message InstallationMetrics {
   double bytes_per_second = 1;
+  uint64 bytes_transferred = 2;
+  uint64 total_bytes = 3;
+  uint32 percent_complete = 4;
 }
 
 message InstallationProgressUpdate {
   int32 game_id = 1;
   InstallationEvent event = 2;
-  uint32 percent = 3;
-  InstallationSpeed speed = 4;
-  google.protobuf.Timestamp updated_at = 5;
+  InstallationMetrics metrics = 3;
+  google.protobuf.Timestamp updated_at = 4;
 }
 
 message InstallGamePayload {

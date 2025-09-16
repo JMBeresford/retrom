@@ -1,15 +1,11 @@
 import { checkIsDesktop } from "@/lib/env";
 import { InstallationProgressUpdate } from "@retrom/codegen/retrom/client/installation_pb";
-import {
-  subscribeToInstallationUpdates,
-  unsubscribeFromInstallationUpdates,
-} from "@retrom/plugin-installer";
-import { Channel } from "@tauri-apps/api/core";
+import { subscribeToInstallationUpdates } from "@retrom/plugin-installer";
 import {
   createContext,
   PropsWithChildren,
   useContext,
-  useLayoutEffect,
+  useEffect,
   useRef,
 } from "react";
 import { createStore, StoreApi, useStore, Mutate } from "zustand";
@@ -37,32 +33,19 @@ export function InstallationProgressProvider(props: PropsWithChildren) {
     );
   }
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const store = storeRef.current;
+    if (!store || !checkIsDesktop()) return;
 
-    let channel: Channel<InstallationProgressUpdate> | undefined;
+    subscribeToInstallationUpdates((payload) => {
+      const gameId = payload.gameId;
 
-    async function subscribe() {
-      if (!store || !checkIsDesktop()) return;
-      channel = await subscribeToInstallationUpdates((payload) => {
-        console.log({ payload });
-        const gameId = payload.gameId;
-
-        store.setState((state) => {
-          const current = state[gameId] || [];
-          current.push(payload);
-          return { [gameId]: current.slice(-1000) }; // Keep only the last 1000 updates
-        });
+      store.setState((state) => {
+        const current = state[gameId] || [];
+        current.push(payload);
+        return { [gameId]: [...current] };
       });
-    }
-
-    subscribe().catch(console.error);
-
-    return () => {
-      if (channel) {
-        unsubscribeFromInstallationUpdates(channel).catch(console.error);
-      }
-    };
+    }).catch(console.error);
   }, []);
 
   return (

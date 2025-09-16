@@ -218,6 +218,32 @@ Denies the open_installation_dir command without any pre-configured scope.
 <tr>
 <td>
 
+`retrom-plugin-installer:allow-subscribe-to-installation-index`
+
+</td>
+<td>
+
+Enables the subscribe_to_installation_index command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-installer:deny-subscribe-to-installation-index`
+
+</td>
+<td>
+
+Denies the subscribe_to_installation_index command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `retrom-plugin-installer:allow-subscribe-to-installation-updates`
 
 </td>
@@ -263,6 +289,32 @@ Enables the uninstall_game command without any pre-configured scope.
 <td>
 
 Denies the uninstall_game command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-installer:allow-unsubscribe-from-installation-index`
+
+</td>
+<td>
+
+Enables the unsubscribe_from_installation_index command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-installer:deny-unsubscribe-from-installation-index`
+
+</td>
+<td>
+
+Denies the unsubscribe_from_installation_index command without any pre-configured scope.
 
 </td>
 </tr>

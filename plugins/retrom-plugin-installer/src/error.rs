@@ -33,6 +33,10 @@ pub enum Error {
     InternalError(String),
     #[error(transparent)]
     DecodeError(#[from] prost::DecodeError),
+    #[error("Installation Failed: {0}")]
+    InstallationFailed(String),
+    #[error("Installation Aborted")]
+    InstallationAborted,
 }
 
 impl From<tonic::Status> for Error {

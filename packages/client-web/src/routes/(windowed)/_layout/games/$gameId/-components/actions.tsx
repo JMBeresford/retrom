@@ -12,7 +12,7 @@ import {
 } from "@retrom/ui/components/dropdown-menu";
 import { cn } from "@retrom/ui/lib/utils";
 import { EllipsisVertical } from "lucide-react";
-import { useInstallationQuery } from "@/queries/useInstallationQuery";
+import { useInstallationStatus } from "@/queries/useInstallationStatus";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_pb";
 import { ActionButton } from "../../../../../../components/action-button";
 import { useGameDetail } from "@/providers/game-details";
@@ -35,7 +35,7 @@ export function Actions() {
   const { game, validEmulators, validProfiles, defaultProfile, gameFiles } =
     useGameDetail();
 
-  const installationState = useInstallationQuery(game);
+  const installationState = useInstallationStatus(game.id);
   const { mutate: playGame } = usePlayGame(game);
   const navigate = useNavigate();
   const apiUrl = useApiUrl();

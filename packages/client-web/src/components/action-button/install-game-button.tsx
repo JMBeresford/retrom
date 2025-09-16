@@ -1,4 +1,4 @@
-import { useInstallationQuery } from "@/queries/useInstallationQuery";
+import { useInstallationStatus } from "@/queries/useInstallationStatus";
 import { Button } from "@retrom/ui/components/button";
 import {
   CircleAlertIcon,
@@ -21,7 +21,7 @@ export const InstallGameButton = forwardRef(
     const { game } = useGameDetail();
     const { className, ...rest } = props;
 
-    const installationStatus = useInstallationQuery(game);
+    const installationStatus = useInstallationStatus(game.id);
     const installationRequest = useInstallGame(game);
     const installProgress = useInstallationProgress(game.id);
 

@@ -13,8 +13,8 @@
   ],
   "devDependencies": {
     "@retrom/configs": "workspace:*",
-    "@types/node": "^22.14.1",
     "@tailwindcss/vite": "^4.1.11",
+    "@types/node": "^22.14.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
@@ -24,9 +24,6 @@
     "vite-plugin-dts": "^4.0.0"
   },
   "peerDependencies": {
-    "lucide-react": "^0.376.0",
-    "sonner": "2.0.7",
-    "tailwindcss": "^4.1.11",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-collapsible": "^1.0.3",
@@ -44,16 +41,20 @@
     "@radix-ui/react-toast": "^1.1.5",
     "@radix-ui/react-tooltip": "^1.0.7",
     "@radix-ui/react-visually-hidden": "^1.1.1",
-    "embla-carousel-react": "^8.1.6",
-    "react-hook-form": "^7.54.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
-    "tailwind-merge": "^3.3.1",
-    "vaul": "^1.1.2",
-    "react-resizable-panels": "^2.0.19",
-    "tw-animate-css": "^1.3.5",
+    "embla-carousel-react": "^8.1.6",
+    "lucide-react": "^0.376.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "react-resizable-panels": "^2.0.19",
+    "sonner": "2.0.7",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.11",
+    "recharts": "catalog:",
+    "tw-animate-css": "^1.3.5",
+    "vaul": "^1.1.2"
   }
 }

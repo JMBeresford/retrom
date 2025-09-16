@@ -40,6 +40,7 @@ catalog:
   nx: 21.4.1
   nx-mcp: 0.6.3
   prettier: 3.5.3
+  recharts: 2.15.4
   tauri-plugin-system-info-api: 2.0.10
   tslib: 2.8.1
   typescript: 5.9.2
