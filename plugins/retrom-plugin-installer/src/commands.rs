@@ -3,7 +3,7 @@ use prost::Message;
 use retrom_codegen::retrom::{
     client::installation::{
         GetInstallationStatusPayload, GetInstallationStatusResponse, InstallGamePayload,
-        InstallationStatus, UninstallGamePayload,
+        InstallationProgressUpdate, InstallationStatus, UninstallGamePayload,
     },
     GetGamesRequest,
 };
@@ -12,7 +12,7 @@ use retrom_plugin_steam::SteamExt;
 use std::path::PathBuf;
 use tauri::{ipc::Channel, AppHandle, Runtime};
 use tauri_plugin_opener::OpenerExt;
-use tracing::{debug, instrument};
+use tracing::{debug, info, instrument};
 
 #[instrument(skip_all)]
 #[tauri::command]
@@ -22,7 +22,28 @@ pub async fn install_game<R: Runtime>(
 ) -> crate::Result<()> {
     let payload = InstallGamePayload::decode(payload.as_slice())?;
     let installer = app_handle.installer();
-    installer.begin_installation(payload).await
+
+    let status = installer
+        .get_game_installation_status(payload.game_id)
+        .await;
+
+    match status {
+        InstallationStatus::Installing => {
+            return Err(crate::error::Error::AlreadyInstalling);
+        }
+        InstallationStatus::Installed => {
+            return Err(crate::error::Error::AlreadyInstalled);
+        }
+        InstallationStatus::Paused => {
+            info!(
+                "Moving game installation to front of queue: {}",
+                payload.game_id
+            );
+
+            installer.mark_game_installing(payload.game_id).await
+        }
+        _ => installer.begin_installation(payload).await,
+    }
 }
 
 #[instrument(skip_all)]
@@ -240,6 +261,27 @@ pub async fn subscribe_to_installation_updates<R: Runtime>(
 ) -> crate::Result<()> {
     let installer = app.installer();
     debug!("Subscribing to installation updates");
+    installer
+        .installation_index
+        .read()
+        .await
+        .values()
+        .filter(|v| v.metrics.is_some())
+        .for_each(|progress| {
+            let update = InstallationProgressUpdate {
+                game_id: progress.game_id,
+                status: progress.status.into(),
+                metrics: progress.metrics.clone(),
+            };
+
+            if let Err(why) = channel.send(update.encode_to_vec().as_slice()) {
+                tracing::error!(
+                    "Failed to send installation update to new subscriber: {:#?}",
+                    why
+                );
+            }
+        });
+
     installer.progress_subscriptions.write().await.push(channel);
 
     Ok(())

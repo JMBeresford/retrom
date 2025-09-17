@@ -21,17 +21,17 @@ export const InstallGameButton = forwardRef(
     const { game } = useGameDetail();
     const { className, ...rest } = props;
 
-    const installationStatus = useInstallationStatus(game.id);
-    const installationRequest = useInstallGame(game);
-    const installProgress = useInstallationProgress(game.id);
+    const installationRequest = useInstallGame();
+    const installState = useInstallationStatus(game.id);
+    const { percentComplete } = useInstallationProgress(game.id);
 
-    const installState = installationStatus;
     const install = installationRequest.mutate;
 
     const error = installationRequest.status === "error";
     const pending = installationRequest.status === "pending";
 
-    const disabled = error || pending;
+    const disabled =
+      error || pending || installState === InstallationStatus.PAUSED;
 
     const Content = () => {
       if (error) {
@@ -52,11 +52,20 @@ export const InstallGameButton = forwardRef(
         );
       }
 
+      if (installState === InstallationStatus.PAUSED) {
+        return (
+          <div className="flex gap-3 w-full items-center text-base justify-center">
+            <LoaderCircleIcon className="animate-spin" />
+            <p>Installation Pending</p>
+          </div>
+        );
+      }
+
       if (installState === InstallationStatus.INSTALLING) {
         return (
           <div className="flex gap-2 w-full items-center">
-            <p className="text-sm">{Math.floor(installProgress)}%</p>
-            <Progress value={installProgress} className="h-1" />
+            <p className="text-sm">{Math.floor(percentComplete)}%</p>
+            <Progress value={percentComplete} className="h-1" />
           </div>
         );
       }
@@ -76,9 +85,9 @@ export const InstallGameButton = forwardRef(
         disabled={disabled || rest.disabled}
         className={cn(className, "relative")}
         onClick={
-          installState === InstallationStatus.INSTALLING
-            ? undefined
-            : () => install(undefined)
+          installState === InstallationStatus.NOT_INSTALLED
+            ? () => install(game.id)
+            : undefined
         }
       >
         <Content />

@@ -1,4 +1,6 @@
 import { useInstallationProgressStore } from "@/providers/installation-progress";
+import { create } from "@bufbuild/protobuf";
+import { InstallationMetricsSchema } from "@retrom/codegen/retrom/client/installation_pb";
 import { useEffect, useState } from "react";
 
 export function useInstallationProgress(gameId: number) {
@@ -6,16 +8,16 @@ export function useInstallationProgress(gameId: number) {
   const lastUpdate = store.getState()[gameId]?.at(-1);
 
   const [progress, setProgress] = useState(
-    lastUpdate?.metrics?.percentComplete ?? 0,
+    create(InstallationMetricsSchema, lastUpdate?.metrics),
   );
 
   useEffect(() => {
     const unsub = store.subscribe((s) => {
       const updates = s[gameId];
-      const percent = updates?.at(-1)?.metrics?.percentComplete;
+      const metrics = updates?.at(-1)?.metrics;
 
-      if (percent !== undefined) {
-        setProgress(percent);
+      if (metrics !== undefined) {
+        setProgress(metrics);
       }
     });
 

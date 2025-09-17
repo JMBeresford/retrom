@@ -12,22 +12,42 @@ export const FileSizeOrderUnit = {
   [FileSizeOrder.GIGABYTES]: "GB",
 } as const satisfies Record<FileSizeOrder, string>;
 
+export function getBestFileSizeOrder(byteSize: number | bigint) {
+  byteSize =
+    typeof byteSize === "bigint" ? byteSize : BigInt(Math.floor(byteSize));
+
+  if (byteSize < BigInt(FileSizeOrder.KILOBYTES)) {
+    return FileSizeOrder.BYTES;
+  } else if (byteSize < BigInt(FileSizeOrder.MEGABYTES)) {
+    return FileSizeOrder.KILOBYTES;
+  } else if (byteSize < BigInt(FileSizeOrder.GIGABYTES)) {
+    return FileSizeOrder.MEGABYTES;
+  } else {
+    return FileSizeOrder.GIGABYTES;
+  }
+}
+
+export function convertToFileSizeOrder(
+  byteSize: number | bigint,
+  asOrder?: FileSizeOrder,
+): typeof byteSize {
+  asOrder = asOrder ?? getBestFileSizeOrder(byteSize);
+
+  if (typeof byteSize === "bigint") {
+    return byteSize / BigInt(asOrder);
+  }
+
+  return byteSize / asOrder;
+}
+
 export function readableByteSize(
   byteSize: number | bigint,
   asOrder?: FileSizeOrder,
 ): string {
-  byteSize = typeof byteSize === "bigint" ? Number(byteSize) : byteSize;
-  if (asOrder !== undefined) {
-    return `${(byteSize / asOrder).toFixed(2)} ${FileSizeOrderUnit[asOrder]}`;
-  }
+  const order = asOrder ?? getBestFileSizeOrder(byteSize);
+  const size = convertToFileSizeOrder(byteSize, order);
 
-  if (byteSize < FileSizeOrder.KILOBYTES.valueOf()) {
-    return `${byteSize} B`;
-  } else if (byteSize < FileSizeOrder.MEGABYTES.valueOf()) {
-    return `${(byteSize / FileSizeOrder.KILOBYTES).toFixed(2)} KB`;
-  } else if (byteSize < FileSizeOrder.GIGABYTES.valueOf()) {
-    return `${(byteSize / FileSizeOrder.MEGABYTES.valueOf()).toFixed(2)} MB`;
-  } else {
-    return `${(byteSize / FileSizeOrder.GIGABYTES.valueOf()).toFixed(2)} GB`;
-  }
+  return `${size.toLocaleString(undefined, {
+    maximumFractionDigits: 2,
+  })} ${FileSizeOrderUnit[order]}`;
 }

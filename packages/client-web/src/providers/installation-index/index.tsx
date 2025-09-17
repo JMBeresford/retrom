@@ -1,4 +1,7 @@
-import { subscribeToInstallationIndex } from "@retrom/plugin-installer";
+import {
+  subscribeToInstallationIndex,
+  unsubscribeFromInstallationIndex,
+} from "@retrom/plugin-installer";
 import { checkIsDesktop } from "@/lib/env";
 import {
   createContext,
@@ -25,9 +28,15 @@ export function InstallationIndexProvider(props: PropsWithChildren) {
   useEffect(() => {
     if (!checkIsDesktop()) return;
 
-    subscribeToInstallationIndex((payload) => {
+    const sub = subscribeToInstallationIndex((payload) => {
       setIndex(payload);
-    }).catch(console.error);
+    });
+
+    return () => {
+      sub
+        .then((channel) => unsubscribeFromInstallationIndex(channel))
+        .catch(console.error);
+    };
   }, []);
 
   return (
