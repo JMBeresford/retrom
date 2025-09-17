@@ -1,6 +1,9 @@
 import { checkIsDesktop } from "@/lib/env";
 import { InstallationProgressUpdate } from "@retrom/codegen/retrom/client/installation_pb";
-import { subscribeToInstallationUpdates } from "@retrom/plugin-installer";
+import {
+  subscribeToInstallationUpdates,
+  unsubscribeFromInstallationUpdates,
+} from "@retrom/plugin-installer";
 import {
   createContext,
   PropsWithChildren,
@@ -37,7 +40,7 @@ export function InstallationProgressProvider(props: PropsWithChildren) {
     const store = storeRef.current;
     if (!store || !checkIsDesktop()) return;
 
-    subscribeToInstallationUpdates((payload) => {
+    const sub = subscribeToInstallationUpdates((payload) => {
       const gameId = payload.gameId;
 
       store.setState((state) => {
@@ -45,7 +48,13 @@ export function InstallationProgressProvider(props: PropsWithChildren) {
         current.push(payload);
         return { [gameId]: [...current] };
       });
-    }).catch(console.error);
+    });
+
+    return () => {
+      sub
+        .then((channel) => unsubscribeFromInstallationUpdates(channel))
+        .catch(console.error);
+    };
   }, []);
 
   return (

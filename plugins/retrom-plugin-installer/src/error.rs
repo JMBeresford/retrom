@@ -37,6 +37,10 @@ pub enum Error {
     InstallationFailed(String),
     #[error("Installation Aborted")]
     InstallationAborted,
+    #[error("Already Installing")]
+    AlreadyInstalling,
+    #[error("Already Installed")]
+    AlreadyInstalled,
 }
 
 impl From<tonic::Status> for Error {

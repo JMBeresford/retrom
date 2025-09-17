@@ -14,32 +14,18 @@ enum InstallationStatus {
   INSTALLATION_STATUS_FAILED = 6;
 }
 
-enum InstallationEvent {
-  INSTALLATION_EVENT_UNSPECIFIED = 0;
-  INSTALLATION_EVENT_STARTED = 1;
-  INSTALLATION_EVENT_PROGRESS = 2;
-  INSTALLATION_EVENT_PAUSED = 3;
-  INSTALLATION_EVENT_RESUMED = 4;
-  INSTALLATION_EVENT_COMPLETED = 5;
-  INSTALLATION_EVENT_FAILED = 6;
-}
-
-message InstallationEventMessage {
-  optional InstallationProgressUpdate progress = 1;
-}
-
 message InstallationMetrics {
   double bytes_per_second = 1;
   uint64 bytes_transferred = 2;
   uint64 total_bytes = 3;
   uint32 percent_complete = 4;
+  google.protobuf.Timestamp updated_at = 5;
 }
 
 message InstallationProgressUpdate {
   int32 game_id = 1;
-  InstallationEvent event = 2;
+  InstallationStatus status = 2;
   InstallationMetrics metrics = 3;
-  google.protobuf.Timestamp updated_at = 4;
 }
 
 message InstallGamePayload {
