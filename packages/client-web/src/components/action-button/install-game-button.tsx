@@ -21,7 +21,7 @@ export const InstallGameButton = forwardRef(
     const { game } = useGameDetail();
     const { className, ...rest } = props;
 
-    const installationRequest = useInstallGame();
+    const installationRequest = useInstallGame(game.id);
     const installState = useInstallationStatus(game.id);
     const { percentComplete } = useInstallationProgress(game.id);
 
@@ -86,7 +86,7 @@ export const InstallGameButton = forwardRef(
         className={cn(className, "relative")}
         onClick={
           installState === InstallationStatus.NOT_INSTALLED
-            ? () => install(game.id)
+            ? () => install(undefined)
             : undefined
         }
       >

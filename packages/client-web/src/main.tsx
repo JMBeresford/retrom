@@ -22,7 +22,7 @@ import { initOtel } from "./otel";
 if (import.meta.env.DEV) {
   import("react-scan")
     .then(({ scan: _scan }) => {
-      _scan();
+      // _scan();
     })
     .catch(console.error);
 }

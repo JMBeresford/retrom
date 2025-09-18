@@ -9,7 +9,5 @@ export function useInstallationStatus(gameId: number) {
     [installations, gameId],
   );
 
-  console.log({ status });
-
   return status;
 }

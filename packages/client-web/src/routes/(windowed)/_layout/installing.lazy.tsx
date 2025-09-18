@@ -122,7 +122,7 @@ function InstallationItem({ gameId }: { gameId: number }) {
   });
 
   const status = useInstallationStatus(gameId);
-  const { percentComplete, bytesPerSecond, totalBytes, bytesTransferred } =
+  const { percentComplete, totalBytes, bytesTransferred } =
     useInstallationProgress(gameId);
 
   const name = useMemo(
@@ -130,7 +130,8 @@ function InstallationItem({ gameId }: { gameId: number }) {
     [metadata, game],
   );
 
-  const { mutate: install, status: installRequestStatus } = useInstallGame();
+  const { mutate: install, status: installRequestStatus } =
+    useInstallGame(gameId);
 
   return (
     <div className="relative grid grid-flow-col grid-cols-[auto_1fr] grid-rows-1 gap-4">
@@ -178,9 +179,6 @@ function InstallationItem({ gameId }: { gameId: number }) {
                     {readableByteSize(totalBytes)})
                   </span>
                 </p>
-                <p className="text-muted-foreground font-semibold">
-                  {readableByteSize(bytesPerSecond)}/s
-                </p>
               </>
             ),
             [InstallationStatus.PAUSED]: () => (
@@ -196,7 +194,7 @@ function InstallationItem({ gameId }: { gameId: number }) {
                 </p>
 
                 <Button
-                  onClick={() => install(gameId)}
+                  onClick={() => install(undefined)}
                   disabled={installRequestStatus === "pending"}
                   size="sm"
                   variant="outline"
@@ -260,7 +258,7 @@ const InstallationProgressChartOverlay = ({
 );
 
 type ChartDatum = {
-  updatedAt: string;
+  updatedAt: Date;
   speed: number;
   percent: number;
 };
@@ -280,9 +278,7 @@ const InstallationProgressChart = memo(function ({
         const { metrics } = update;
 
         data.push({
-          updatedAt: timestampDate(updatedAt).toLocaleTimeString("en-US", {
-            formatMatcher: "best fit",
-          }),
+          updatedAt: timestampDate(updatedAt),
           speed: metrics.bytesPerSecond,
           percent: metrics.percentComplete,
         });
@@ -293,13 +289,13 @@ const InstallationProgressChart = memo(function ({
   }, [updates]);
 
   const chartConfig = {
+    updatedAt: {
+      label: "Time",
+      color: "var(--color-foreground)",
+    },
     speed: {
       label: "Speed",
       color: "var(--color-accent)",
-    },
-    percent: {
-      label: "Completion",
-      color: "var(--color-primary)",
     },
   } satisfies ChartConfig;
 
@@ -319,58 +315,67 @@ const InstallationProgressChart = memo(function ({
               stopOpacity={0.1}
             />
           </linearGradient>
-          <linearGradient id="fillDownloaded" x1="0" y1="0" x2="0" y2="1">
-            <stop
-              offset="5%"
-              stopColor="var(--color-downloaded)"
-              stopOpacity={0.8}
-            />
-            <stop
-              offset="95%"
-              stopColor="var(--color-downloaded)"
-              stopOpacity={0.1}
-            />
-          </linearGradient>
         </defs>
 
         <CartesianGrid vertical={false} />
 
         <XAxis
           type="number"
-          interval="preserveStartEnd"
           dataKey="percent"
-          domain={["dataMax - 100", 100]}
+          domain={[0, 100]}
+          allowDataOverflow
           hide
         />
 
-        <YAxis orientation="left" yAxisId="speed" hide />
+        <XAxis type="number" dataKey="updatedAt" allowDataOverflow hide />
+
+        <YAxis
+          type="number"
+          orientation="right"
+          allowDataOverflow
+          dataKey="speed"
+          yAxisId="speed"
+          axisLine={false}
+          tickLine={false}
+          tickMargin={10}
+          interval="preserveStart"
+          fontSize={12}
+          tickFormatter={(value: number) => `${readableByteSize(value)}/s`}
+        />
+
+        <Area
+          dataKey="speed"
+          isAnimationActive={false}
+          fill="url(#fillSpeed)"
+          type="bump"
+          stroke="var(--color-speed)"
+          yAxisId="speed"
+          stackId="a"
+        />
 
         <ChartTooltip
           cursor={false}
           content={
             <ChartTooltipContent
               hideLabel
-              labelFormatter={(v: string | number) => {
+              formatter={(v, name, item) => {
                 if (typeof v === "number") {
-                  return `${readableByteSize(v)} / s`;
+                  return (
+                    <>
+                      <div
+                        style={{ backgroundColor: item.color }}
+                        className={cn("w-2.5 h-2.5 rounded-xs")}
+                      ></div>
+                      <span className="capitalize">{name}:</span>{" "}
+                      {readableByteSize(v)}/s
+                    </>
+                  );
                 }
 
                 return v;
               }}
             />
           }
-        />
-
-        <Area
-          dataKey="speed"
-          animationDuration={300}
-          animateNewValues
-          type="step"
-          allowReorder="no"
-          fill="url(#fillSpeed)"
-          stroke="var(--color-speed)"
-          yAxisId="speed"
-          stackId="a"
         />
       </AreaChart>
     </ChartContainer>
