@@ -1,8 +1,4 @@
-import { useToast } from "@retrom/ui/hooks/use-toast";
-import { getFileStub } from "@/lib/utils";
-import { cn } from "@retrom/ui/lib/utils";
-import { useDeleteGames } from "@/mutations/useDeleteGames";
-import { useGameDetail } from "@/providers/game-details";
+import { toast } from "@retrom/ui/hooks/use-toast";
 import { useCallback, useState } from "react";
 import {
   DialogContent,
@@ -17,43 +13,52 @@ import { Checkbox } from "@retrom/ui/components/checkbox";
 import { Button } from "@retrom/ui/components/button";
 import { LoaderCircleIcon } from "lucide-react";
 import { BaseModalActionProps, useModalAction } from "@/providers/modal-action";
+import { useDeleteGameFiles } from "@/mutations/useDeleteGameFile";
+import { cn } from "@retrom/ui/lib/utils";
 
 declare global {
   namespace RetromModals {
     interface ModalActions {
-      deleteGameModal: BaseModalActionProps;
+      deleteFileModal: BaseModalActionProps & {
+        fileId: number;
+      };
     }
   }
 }
 
-export function DeleteGameModal() {
-  const { game, gameMetadata: metadata } = useGameDetail();
-  const { toast } = useToast();
-  const name = metadata?.name || getFileStub(game.path);
+export function DeleteFileModal() {
   const [deleteFromDisk, setDeleteFromDisk] = useState(false);
   const [blacklistEntries, setBlacklistEntries] = useState(false);
-  const modalAction = useModalAction("deleteGameModal");
+  const modalAction = useModalAction("deleteFileModal");
   const { openModal: confirm } = useModalAction("confirmModal");
 
-  const { mutateAsync: deleteGame, isPending } = useDeleteGames();
+  const { mutateAsync: deleteGameFiles, status: deletionStatus } =
+    useDeleteGameFiles();
 
   const handleDelete = useCallback(async () => {
+    const fileId = modalAction.modalState?.fileId;
+    if (fileId === undefined) {
+      throw new Error("No file ID provided");
+    }
+
     try {
-      const res = await deleteGame({
-        ids: [game.id],
+      const res = await deleteGameFiles({
+        ids: [fileId],
         deleteFromDisk,
         blacklistEntries,
       });
 
-      if (!res.gamesDeleted.length) {
-        throw new Error("Failed to delete game");
+      if (!res.gameFilesDeleted.length) {
+        throw new Error("Failed to delete file");
       }
-    } catch {
+    } catch (e) {
+      console.error(e);
+
       toast({
-        title: "Failed to delete game",
+        title: "Failed to delete file",
       });
     }
-  }, [deleteGame, game.id, deleteFromDisk, blacklistEntries, toast]);
+  }, [deleteGameFiles, modalAction, deleteFromDisk, blacklistEntries]);
 
   const confirmDelete = useCallback(() => {
     confirm({
@@ -64,6 +69,8 @@ export function DeleteGameModal() {
     });
   }, [confirm, handleDelete, modalAction]);
 
+  const pending = deletionStatus === "pending";
+
   return (
     <Dialog
       open={!!modalAction.modalState?.open}
@@ -73,25 +80,23 @@ export function DeleteGameModal() {
         } else {
           modalAction.modalState?.onClose?.();
           modalAction.closeModal();
+          setDeleteFromDisk(false);
+          setBlacklistEntries(false);
         }
       }}
     >
-      <DialogContent className="max-w-[60ch]">
+      <DialogContent className="max-w-[65ch]">
         <DialogHeader>
-          <DialogTitle>Delete Game</DialogTitle>
+          <DialogTitle>Delete Game File</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete {name}?
+            Are you sure you want to delete this file?
           </DialogDescription>
         </DialogHeader>
 
         <p className="pb-2">
-          You can either delete the entry from the database or delete the game
-          from the disk.
-          <br />
-          <br />
-          Deleting only the entry will leave your file system as is, but Retrom
-          will re-create the entry on the next library scan unless you also
-          blacklist it.
+          You can either delete the entry from the database or delete the file
+          from the disk. Deleting only the entry will leave your file system as
+          is, but Retrom will ignore the file moving forward.
         </p>
 
         <div className="flex flex-col gap-4">
@@ -99,20 +104,14 @@ export function DeleteGameModal() {
             <Checkbox
               id="delete-from-disk"
               checked={deleteFromDisk}
-              disabled={game.thirdParty}
               onCheckedChange={(event) => setDeleteFromDisk(!!event)}
             />
 
-            <div
-              className={cn(
-                "grid gap-1 5 leading-none",
-                game.thirdParty && "opacity-50",
-              )}
-            >
+            <div className="grid gap-1 5 leading-none">
               <label htmlFor="delete-from-disk">Delete from disk</label>
 
               <p className="text-sm text-muted-foreground">
-                This will alter the the file system
+                This will alter the file system
               </p>
             </div>
           </div>
@@ -125,31 +124,33 @@ export function DeleteGameModal() {
             />
 
             <div className="grid gap-1 5 leading-none">
-              <label htmlFor="blacklist-entries">Blacklist entries</label>
+              <label htmlFor="blacklist-entries">Blacklist entry</label>
 
               <p className="text-sm text-muted-foreground max-w-[45ch]">
-                Enabling this will prevent the game and its files from being
-                re-imported in any future library scans
+                Enabling this will prevent the file from being re-imported in
+                any future library scans
               </p>
             </div>
           </div>
         </div>
 
         <DialogFooter>
-          <DialogClose asChild>
-            <Button>Cancel</Button>
-          </DialogClose>
+          <div className="flex gap-2">
+            <DialogClose asChild>
+              <Button disabled={pending}>Cancel</Button>
+            </DialogClose>
 
-          <Button
-            className="relative"
-            variant="destructive"
-            onClick={confirmDelete}
-          >
-            <LoaderCircleIcon
-              className={cn("animate-spin absolute", !isPending && "opacity-0")}
-            />
-            <p className={cn(isPending && "opacity-0")}>Delete</p>
-          </Button>
+            <Button
+              onClick={confirmDelete}
+              variant="destructive"
+              disabled={pending}
+            >
+              <LoaderCircleIcon
+                className={cn("animate-spin", !pending && "hidden")}
+              />
+              Delete
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

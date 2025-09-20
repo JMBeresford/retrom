@@ -19,6 +19,8 @@ import { z } from "zod";
 import { DesktopOnly } from "@/lib/env";
 import { LaunchConfig } from "./-components/launch-config";
 import { zodValidator } from "@tanstack/zod-adapter";
+import { DeleteFileModal } from "@/components/modals/delete-file";
+import { RenameFileModal } from "@/components/modals/rename-file";
 
 const modalsSchema = z.object({
   updateMetadataModal: z
@@ -27,11 +29,6 @@ const modalsSchema = z.object({
     })
     .optional(),
   uninstallGameModal: z
-    .object({
-      open: z.boolean().catch(false),
-    })
-    .optional(),
-  deleteGameModal: z
     .object({
       open: z.boolean().catch(false),
     })
@@ -127,6 +124,8 @@ function Game() {
       <UpdateMetadataModal />
       <UninstallGameModal />
       <DeleteGameModal />
+      <DeleteFileModal />
+      <RenameFileModal />
     </GameDetailProvider>
   );
 }

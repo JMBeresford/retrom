@@ -2,43 +2,25 @@ import { Prettify } from "@/utils/typescript";
 import {
   createContext,
   PropsWithChildren,
+  SetStateAction,
   useCallback,
   useContext,
   useMemo,
   useState,
 } from "react";
 
-declare global {
-  namespace RetromModals {
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    export interface ModalActions
-      extends Record<string, BaseModalActionProps<unknown, unknown>> {}
-  }
-}
+export type * from "./modals";
 
-type ModalActionCallback<T> = T extends (...args: infer Args) => infer Return
-  ? (...args: Args) => Return
-  : (...args: unknown[]) => unknown;
-
-export type BaseModalActionProps<Open = undefined, Close = undefined> = {
-  open?: boolean;
-  title?: string;
-  description?: string;
-  onOpen?: ModalActionCallback<Open>;
-  onClose?: ModalActionCallback<Close>;
-};
-
+export type ModalName = keyof RetromModals.ModalActions;
 type ModalMap = {
-  [K in keyof RetromModals.ModalActions]?: RetromModals.ModalActions[K];
+  [K in ModalName]?: RetromModals.ModalActions[K];
 };
 
 export type ModalActionContext = {
   modals: ModalMap;
-  setModalState: <T extends keyof RetromModals.ModalActions>(
+  setModalState: <T extends ModalName>(
     modal: T,
-    cb:
-      | RetromModals.ModalActions[T]
-      | ((prev?: RetromModals.ModalActions[T]) => RetromModals.ModalActions[T]),
+    cb: SetStateAction<ModalMap[T]>,
   ) => void;
 };
 
@@ -67,9 +49,7 @@ export function ModalActionProvider(props: PropsWithChildren) {
   return <context.Provider value={value}>{props.children}</context.Provider>;
 }
 
-export function useModalAction<T extends keyof RetromModals.ModalActions>(
-  modal: T,
-) {
+export function useModalAction<T extends ModalName>(modal: T) {
   const modalContext = useContext(context);
   if (!modalContext) {
     throw new Error("useModalAction must be used within a ModalActionProvider");
@@ -78,8 +58,12 @@ export function useModalAction<T extends keyof RetromModals.ModalActions>(
   const { modals, setModalState } = modalContext;
 
   const openModal = useCallback(
-    (props: Prettify<Omit<RetromModals.ModalActions[T], "open">>) => {
-      setModalState(modal, (prev) => ({ ...prev, ...props, open: true }));
+    (props?: Prettify<Omit<RetromModals.ModalActions[T], "open">>) => {
+      setModalState(modal, (prev) => ({
+        ...prev,
+        ...props,
+        open: true,
+      }));
     },
     [modal, setModalState],
   );
