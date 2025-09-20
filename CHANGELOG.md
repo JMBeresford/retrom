@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.38](https://github.com/JMBeresford/retrom/compare/v0.7.37...v0.7.38) - 2025-09-20
+
+### Bug Fixes
+- file dialogs on game details page ([#407](https://github.com/JMBeresford/retrom/pull/407))
+
+    The rename and delete file modal dialogs now work
+    as expected.
+
+    fixes [#347](https://github.com/JMBeresford/retrom/pull/347)
+
+
+
+
 ## [0.7.37](https://github.com/JMBeresford/retrom/compare/v0.7.36...v0.7.37) - 2025-09-12
 
 ### Bug Fixes
