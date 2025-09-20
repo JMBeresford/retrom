@@ -4,12 +4,30 @@ export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
-export function match<T extends Record<IndexSignature, unknown>, Result>(
-  value: keyof T,
-  cases: Record<keyof T, () => Result>,
+type ExhaustiveMatchers<T extends IndexSignature, Result> = Record<
+  T,
+  () => Result
+>;
+
+type Matchers<T extends IndexSignature, Result> =
+  | (ExhaustiveMatchers<T, Result> & {
+      default?: never;
+    })
+  | (Partial<ExhaustiveMatchers<T, Result>> & {
+      default: () => Result;
+    });
+
+export function match<T extends IndexSignature, Result>(
+  value: T,
+  cases: Matchers<NoInfer<T>, Result>,
 ): Result {
-  if (value in cases) {
-    return cases[value]();
+  const matcher = cases[value];
+  if (matcher) {
+    return matcher();
+  }
+
+  if (cases.default) {
+    return cases.default();
   }
 
   throw new Error(`No case found for value: ${String(value)}`);

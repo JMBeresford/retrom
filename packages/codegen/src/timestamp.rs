@@ -37,7 +37,14 @@ pub struct Timestamp {
     pub nanos: i32,
 }
 
-impl Timestamp {}
+impl Timestamp {
+    pub fn elapsed_since(&self, earlier: &Timestamp) -> Option<Duration> {
+        let self_duration = Duration::new(self.seconds as u64, self.nanos as u32);
+        let earlier_duration = Duration::new(earlier.seconds as u64, earlier.nanos as u32);
+
+        self_duration.checked_sub(earlier_duration)
+    }
+}
 
 impl TryFrom<Timestamp> for prost_types::Timestamp {
     type Error = prost::DecodeError;

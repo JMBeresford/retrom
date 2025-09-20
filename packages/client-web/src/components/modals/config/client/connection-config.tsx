@@ -85,7 +85,7 @@ export function ConnectionConfig() {
 
       queryClient
         .invalidateQueries({
-          predicate: ({ queryKey }) => queryKey.includes("installation-state"),
+          predicate: ({ queryKey }) => queryKey.includes("installation-index"),
         })
         .catch(console.error);
     },

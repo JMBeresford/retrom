@@ -12,26 +12,6 @@ message RetromHostInfo {
   string host = 3;
 }
 
-enum InstallationStatus {
-  INSTALLED = 0;
-  INSTALLING = 1;
-  NOT_INSTALLED = 2;
-}
-
-message InstallationProgressUpdate {
-  int32 gameId = 1;
-  uint32 progress = 2;
-}
-
-message InstallGamePayload {
-  Game game = 1;
-  repeated GameFile files = 2;
-}
-
-message UninstallGamePayload {
-  Game game = 1;
-}
-
 enum PlayStatus {
   PLAYING = 0;
   NOT_PLAYING = 1;
@@ -55,8 +35,4 @@ message GetGamePlayStatusPayload {
 message GamePlayStatusUpdate {
   int32 game_id = 1;
   PlayStatus play_status = 2;
-}
-
-message InstallationState {
-  map<int32, InstallationStatus> installation_state = 1;
 }

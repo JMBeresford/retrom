@@ -9,6 +9,8 @@ import { InputDeviceProvider } from "@/providers/input-device";
 import { serverConfigTabSchema } from "@/components/modals/config/server";
 import { clientConfigTabSchema } from "@/components/modals/config/client";
 import { Toaster } from "@retrom/ui/components/toast";
+import { InstallationIndexProvider } from "@/providers/installation-index";
+import { InstallationProgressProvider } from "@/providers/installation-progress";
 
 const modalsSearchSchema = z
   .object({
@@ -97,11 +99,15 @@ function RootComponent() {
       <ConfigProvider>
         <RetromClientProvider>
           <QueryClientProvider>
-            <Outlet />
+            <InstallationIndexProvider>
+              <InstallationProgressProvider>
+                <Outlet />
 
-            <Prompts />
-            <Toaster />
-            {/* <TanStackRouterDevtools /> */}
+                <Prompts />
+                <Toaster />
+                {/* <TanStackRouterDevtools /> */}
+              </InstallationProgressProvider>
+            </InstallationIndexProvider>
           </QueryClientProvider>
         </RetromClientProvider>
       </ConfigProvider>

@@ -9,7 +9,7 @@ export function useUninstallGame(game: Game) {
 
   return useMutation({
     mutationKey: ["uninstall", game.path],
-    mutationFn: () => uninstallGame({ game }),
+    mutationFn: () => uninstallGame({ gameId: game.id }),
     onSuccess: () => {
       toast({
         title: "Game uninstalled",
@@ -17,7 +17,7 @@ export function useUninstallGame(game: Game) {
       });
 
       return queryClient.invalidateQueries({
-        queryKey: ["installation-state"],
+        queryKey: ["installation-index"],
       });
     },
   });

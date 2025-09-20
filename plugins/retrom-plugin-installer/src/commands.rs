@@ -1,23 +1,18 @@
-use futures::TryStreamExt;
+use crate::InstallerExt;
 use prost::Message;
-use reqwest::header::ACCESS_CONTROL_ALLOW_ORIGIN;
 use retrom_codegen::retrom::{
-    GetGamesRequest, GetPlatformsRequest, InstallGamePayload, InstallationState,
-    InstallationStatus, StorageType, UninstallGamePayload,
+    client::installation::{
+        GetInstallationStatusPayload, GetInstallationStatusResponse, InstallGamePayload,
+        InstallationProgressUpdate, InstallationStatus, UninstallGamePayload,
+    },
+    GetGamesRequest,
 };
-use retrom_plugin_config::ConfigExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
-use std::{collections::HashMap, path::PathBuf};
-use tauri::{AppHandle, Runtime};
+use std::path::PathBuf;
+use tauri::{ipc::Channel, AppHandle, Runtime};
 use tauri_plugin_opener::OpenerExt;
-use tokio::io::AsyncWriteExt;
-use tracing::{info, instrument};
-
-use crate::{
-    desktop::{FileInstallationProgress, GameInstallationProgress},
-    InstallerExt,
-};
+use tracing::{debug, info, instrument};
 
 #[instrument(skip_all)]
 #[tauri::command]
@@ -26,162 +21,29 @@ pub async fn install_game<R: Runtime>(
     payload: Vec<u8>,
 ) -> crate::Result<()> {
     let payload = InstallGamePayload::decode(payload.as_slice())?;
-    let game = payload.game.unwrap();
-    let files = payload.files;
     let installer = app_handle.installer();
 
-    let install_dir = installer.get_installation_dir().await?;
-    let output_directory = install_dir.join(game.id.to_string());
+    let status = installer
+        .get_game_installation_status(payload.game_id)
+        .await;
 
-    if !(output_directory.try_exists()?) {
-        std::fs::create_dir_all(&output_directory)?;
-    }
-
-    if game.third_party {
-        let mut platform_svc_client = app_handle.get_platform_client().await;
-
-        let steam_id = u32::try_from(game.steam_app_id()).expect("Could not convert steam id");
-
-        let platform_res = platform_svc_client
-            .get_platforms(GetPlatformsRequest {
-                ids: vec![game.platform_id()],
-                ..Default::default()
-            })
-            .await
-            .map_err(|e| crate::Error::Tonic(e.code()))?
-            .into_inner();
-
-        let platform = platform_res.platforms.into_iter().next();
-
-        let platform_path = match platform {
-            Some(platform) => platform.path.clone(),
-            None => {
-                tracing::error!("No third party platform found for game: {:?}", game);
-                return Err(crate::error::Error::ThirdPartyNotFound);
-            }
-        };
-
-        match platform_path.as_str() {
-            "__RETROM_RESERVED__/Steam" => {
-                let steam_client = match app_handle.steam() {
-                    Some(client) => client,
-                    None => {
-                        tracing::error!("Steam client not initialized");
-                        return Err(crate::error::Error::InternalError(
-                            "Steam client not initialized".into(),
-                        ));
-                    }
-                };
-
-                steam_client.install_game(steam_id).await?;
-                installer.mark_game_installed(game.id).await;
-                return Ok(());
-            }
-            _ => {
-                tracing::error!("No third party platform found for game: {:?}", game);
-                return Err(crate::error::Error::ThirdPartyNotFound);
-            }
+    match status {
+        InstallationStatus::Installing => {
+            return Err(crate::error::Error::AlreadyInstalling);
         }
+        InstallationStatus::Installed => {
+            return Err(crate::error::Error::AlreadyInstalled);
+        }
+        InstallationStatus::Paused => {
+            info!(
+                "Moving game installation to front of queue: {}",
+                payload.game_id
+            );
+
+            installer.mark_game_installing(payload.game_id).await
+        }
+        _ => installer.begin_installation(payload).await,
     }
-
-    let installation = GameInstallationProgress {
-        game_id: game.id,
-        files: files
-            .iter()
-            .map(|f| FileInstallationProgress {
-                file_id: f.id,
-                bytes_read: 0,
-                total_size: f.byte_size as usize,
-            })
-            .collect(),
-    };
-
-    installer.mark_game_installing(installation).await;
-    let client = reqwest::Client::new();
-
-    for file in files {
-        let game = game.clone();
-        let app_handle = app_handle.clone();
-        let output_directory = output_directory.clone();
-        let client = client.clone();
-
-        tauri::async_runtime::spawn(async move {
-            let client_config = app_handle.config_manager().get_config().await;
-
-            let host: String = match client_config.server.map(|server| {
-                let mut host = server.hostname.to_string();
-
-                if let Some(port) = server.port {
-                    host.push_str(&format!(":{port}"));
-                }
-
-                host
-            }) {
-                Some(host) => host,
-                None => {
-                    tracing::warn!("No server configuration found");
-                    "http://localhost:5101".to_string()
-                }
-            };
-
-            let download_uri = format!("{host}/rest/file/{}", file.id);
-
-            let res = client
-                .get(download_uri)
-                .header(ACCESS_CONTROL_ALLOW_ORIGIN, host)
-                .send()
-                .await?;
-
-            info!("Downloading file: {:?}", res);
-
-            let game_path = PathBuf::from(&game.path);
-            let prefix = match game.storage_type() {
-                StorageType::MultiFileGame => game_path.clone(),
-                StorageType::SingleFileGame => game_path.clone().parent().unwrap().to_path_buf(),
-                _ => {
-                    return Err(crate::error::Error::InternalError(
-                        "Invalid storage type".into(),
-                    ))
-                }
-            };
-
-            let file_path = PathBuf::from(file.path);
-            let relative_file = file_path
-                .strip_prefix(&prefix)
-                .expect("could not strip file prefix");
-
-            let absolute_file = output_directory.join(relative_file);
-            std::fs::create_dir_all(absolute_file.parent().unwrap())?;
-
-            let installer = app_handle.installer();
-            let mut outfile = tokio::fs::File::create(absolute_file).await?;
-            let mut stream = res.bytes_stream();
-
-            loop {
-                let chunk = stream.try_next().await;
-                let bytes = match chunk {
-                    Ok(Some(bytes)) => bytes,
-                    Ok(None) => break,
-                    Err(e) => return Err(crate::Error::from(e)),
-                };
-
-                if bytes.is_empty() {
-                    break;
-                }
-
-                outfile.write_all(&bytes).await?;
-                installer
-                    .update_installation_progress(game.id, file.id, bytes.len())
-                    .await;
-            }
-
-            installer.mark_file_installed(game.id, file.id).await;
-
-            Ok(())
-        });
-    }
-
-    Ok(())
 }
 
 #[instrument(skip_all)]
@@ -191,7 +53,22 @@ pub async fn uninstall_game<R: Runtime>(
     payload: Vec<u8>,
 ) -> crate::Result<()> {
     let payload = UninstallGamePayload::decode(payload.as_slice())?;
-    let game = payload.game.unwrap();
+    let game_id = payload.game_id;
+
+    let mut game_client = app_handle.get_game_client().await;
+    let game = game_client
+        .get_games(GetGamesRequest {
+            ids: vec![game_id],
+            ..Default::default()
+        })
+        .await?
+        .into_inner()
+        .games
+        .into_iter()
+        .next()
+        .ok_or_else(|| {
+            crate::error::Error::InternalError(format!("Game with id {game_id} not found"))
+        })?;
 
     if game.third_party {
         if let Some(Ok(steam_id)) = game.steam_app_id.map(u32::try_from) {
@@ -206,7 +83,11 @@ pub async fn uninstall_game<R: Runtime>(
             };
 
             steam_client.uninstall_game(steam_id).await?;
-            app_handle.installer().mark_game_uninstalled(game.id).await;
+            app_handle
+                .installer()
+                .mark_game_uninstalled(game.id)
+                .await?;
+
             return Ok(());
         }
     }
@@ -219,72 +100,28 @@ pub async fn uninstall_game<R: Runtime>(
         tokio::fs::remove_dir_all(&output_directory).await?;
     }
 
-    installer.mark_game_uninstalled(game.id).await;
+    installer.mark_game_uninstalled(game.id).await
+}
+
+#[instrument(skip_all)]
+#[tauri::command]
+pub async fn subscribe_to_installation_index<R: Runtime>(
+    app_handle: AppHandle<R>,
+    channel: Channel<&'static [u8]>,
+) -> crate::Result<()> {
+    let installer = app_handle.installer();
+    debug!("Subscribing to installation index updates");
+    let index = installer.get_installation_index().await?;
+    if let Err(why) = channel.send(index.encode_to_vec().as_slice()) {
+        tracing::error!(
+            "Failed to send installation index to new subscriber: {:#?}",
+            why
+        );
+    }
+
+    installer.index_subscriptions.write().await.push(channel);
 
     Ok(())
-}
-
-#[instrument(skip(app_handle))]
-#[tauri::command]
-pub async fn get_game_installation_status<R: Runtime>(
-    app_handle: AppHandle<R>,
-    game_id: i32,
-) -> i32 {
-    let installer = app_handle.installer();
-    installer.get_game_installation_status(game_id).await.into()
-}
-
-#[instrument(skip(app_handle))]
-#[tauri::command]
-pub async fn get_installation_state<R: Runtime>(
-    app_handle: AppHandle<R>,
-) -> crate::Result<Vec<u8>> {
-    let installer = app_handle.installer();
-    let server_config = app_handle.config_manager().get_config().await.server;
-    let standalone = server_config
-        .as_ref()
-        .map(|s| s.standalone())
-        .unwrap_or(false);
-
-    let install_in_standalone = server_config
-        .as_ref()
-        .map(|s| s.install_games_in_standalone())
-        .unwrap_or(false);
-
-    let mut installation_state: HashMap<i32, i32> = HashMap::new();
-
-    for game_id in installer.installed_games.read().await.iter() {
-        installation_state.insert(*game_id, InstallationStatus::Installed.into());
-    }
-
-    for game_id in installer.currently_installing.read().await.keys() {
-        installation_state.insert(*game_id, InstallationStatus::Installing.into());
-    }
-
-    // installation disabled for standalone mode,
-    // consider all games installed
-    if standalone && !install_in_standalone {
-        let mut game_client = app_handle.get_game_client().await;
-        let games = game_client
-            .get_games(GetGamesRequest::default())
-            .await
-            .map_err(|e| crate::Error::Tonic(e.code()))?
-            .into_inner()
-            .games;
-
-        games
-            .into_iter()
-            .filter(|g| !g.third_party)
-            .for_each(|game| {
-                installation_state.insert(game.id, InstallationStatus::Installed.into());
-            });
-
-        tracing::info!("Installed: {:?}", installation_state);
-    }
-
-    let res = InstallationState { installation_state };
-
-    Ok(res.encode_to_vec())
 }
 
 #[instrument(skip(app_handle))]
@@ -293,6 +130,26 @@ pub async fn update_steam_installations<R: Runtime>(app_handle: AppHandle<R>) ->
     let installer = app_handle.installer();
 
     installer.update_steam_installations().await
+}
+
+#[instrument(skip(app_handle))]
+#[tauri::command]
+pub async fn get_installation_status<R: Runtime>(
+    app_handle: AppHandle<R>,
+    payload: Vec<u8>,
+) -> crate::Result<Vec<u8>> {
+    let payload = GetInstallationStatusPayload::decode(payload.as_slice())?;
+    let installer = app_handle.installer();
+
+    let status = installer
+        .get_game_installation_status(payload.game_id)
+        .await;
+
+    Ok(GetInstallationStatusResponse {
+        status: status as i32,
+        game_id: payload.game_id,
+    }
+    .encode_to_vec())
 }
 
 #[instrument(skip(app))]
@@ -325,9 +182,14 @@ pub async fn migrate_installation_dir<R: Runtime>(
     let new_dir = PathBuf::from(new_dir);
     let installer = app.installer();
     let old_dir = installer.get_installation_dir().await?;
-    let installing = installer.currently_installing.read().await;
+    let installing = installer.installation_index.read().await.values().any(|i| {
+        matches!(
+            i.status,
+            InstallationStatus::Installing | InstallationStatus::Paused
+        )
+    });
 
-    if !installing.is_empty() {
+    if installing {
         return Err(crate::error::Error::MigrationError(
             "Currently installing at least one game".into(),
         ));
@@ -337,7 +199,19 @@ pub async fn migrate_installation_dir<R: Runtime>(
         tokio::fs::create_dir_all(&new_dir).await?;
     }
 
-    let installed_games = installer.installed_games.read().await;
+    let installed_games = installer
+        .installation_index
+        .read()
+        .await
+        .iter()
+        .filter_map(|(game_id, installation)| {
+            if installation.status == InstallationStatus::Installed {
+                Some(*game_id)
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
 
     for game_id in installed_games.iter() {
         let path = old_dir.join(game_id.to_string());
@@ -373,8 +247,76 @@ pub async fn clear_installation_dir<R: Runtime>(app: AppHandle<R>) -> crate::Res
         }
     }
 
-    installer.installed_games.write().await.clear();
+    installer.installation_index.write().await.clear();
     installer.init_installation_index().await?;
+
+    Ok(())
+}
+
+#[instrument(skip(app, channel))]
+#[tauri::command]
+pub async fn subscribe_to_installation_updates<R: Runtime>(
+    app: AppHandle<R>,
+    channel: Channel<&'static [u8]>,
+) -> crate::Result<()> {
+    let installer = app.installer();
+    debug!("Subscribing to installation updates");
+    installer
+        .installation_index
+        .read()
+        .await
+        .values()
+        .filter(|v| v.metrics.is_some())
+        .for_each(|progress| {
+            let update = InstallationProgressUpdate {
+                game_id: progress.game_id,
+                status: progress.status.into(),
+                metrics: progress.metrics.clone(),
+            };
+
+            if let Err(why) = channel.send(update.encode_to_vec().as_slice()) {
+                tracing::error!(
+                    "Failed to send installation update to new subscriber: {:#?}",
+                    why
+                );
+            }
+        });
+
+    installer.progress_subscriptions.write().await.push(channel);
+
+    Ok(())
+}
+
+#[instrument(skip(app))]
+#[tauri::command]
+pub async fn unsubscribe_from_installation_updates<R: Runtime>(
+    app: AppHandle<R>,
+    channel_id: u32,
+) -> crate::Result<()> {
+    let installer = app.installer();
+    debug!("Unsubscribing from installation updates");
+    installer
+        .progress_subscriptions
+        .write()
+        .await
+        .retain(|c| c.id() != channel_id);
+
+    Ok(())
+}
+
+#[instrument(skip(app))]
+#[tauri::command]
+pub async fn unsubscribe_from_installation_index<R: Runtime>(
+    app: AppHandle<R>,
+    channel_id: u32,
+) -> crate::Result<()> {
+    let installer = app.installer();
+    debug!("Unsubscribing from installation index updates");
+    installer
+        .index_subscriptions
+        .write()
+        .await
+        .retain(|c| c.id() != channel_id);
 
     Ok(())
 }

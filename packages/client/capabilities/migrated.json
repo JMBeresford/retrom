@@ -10,7 +10,10 @@
       "http://*.local:*"
     ]
   },
-  "windows": ["main", "emulator-js"],
+  "windows": [
+    "main",
+    "emulator-js"
+  ],
   "permissions": [
     "core:path:default",
     "core:event:default",
@@ -46,8 +49,12 @@
     },
     "installer:allow-install-game",
     "installer:allow-uninstall-game",
-    "installer:allow-get-game-installation-status",
-    "installer:allow-get-installation-state",
+    "installer:allow-get-installation-status",
+    "installer:allow-get-installation-index",
+    "installer:allow-subscribe-to-installation-updates",
+    "installer:allow-unsubscribe-from-installation-updates",
+    "installer:allow-subscribe-to-installation-index",
+    "installer:allow-unsubscribe-from-installation-index",
     "installer:allow-open-installation-dir",
     "installer:allow-migrate-installation-dir",
     "installer:allow-clear-installation-dir",

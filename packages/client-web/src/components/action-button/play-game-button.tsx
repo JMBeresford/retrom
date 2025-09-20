@@ -104,10 +104,10 @@ export const PlayGameButton = forwardRef(
       const text = game.thirdParty ? "Launch In Steam" : "Play";
 
       return (
-        <>
-          <PlayIcon className="h-[1.2rem] w-[1.2rem] fill-current" />
-          {text}
-        </>
+        <div className="flex gap-2 items-center">
+          <PlayIcon className="fill-current" />
+          <p>{text}</p>
+        </div>
       );
     };
 
