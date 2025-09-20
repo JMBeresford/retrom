@@ -1,5 +1,5 @@
 import { cn } from "@retrom/ui/lib/utils";
-import { useCallback, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import {
   DialogContent,
   DialogHeader,
@@ -73,6 +73,14 @@ export function RenameFileModal() {
       });
     }
   }, [modalAction, renameValue, updateGameFiles]);
+
+  useLayoutEffect(() => {
+    const file = modalAction.modalState?.file;
+
+    if (file) {
+      setRenameValue(getFileName(file.path));
+    }
+  }, [modalAction.modalState?.file]);
 
   return (
     <Dialog
