@@ -30,12 +30,14 @@ import { checkIsDesktop, PlatformDependent } from "@/lib/env";
 import { useNavigate } from "@tanstack/react-router";
 import { Core } from "@/lib/emulatorjs";
 import { useApiUrl } from "@/utils/urls";
+import { useModalAction } from "@/providers/modal-action";
 
 export function Actions() {
   const { game, validEmulators, validProfiles, defaultProfile, gameFiles } =
     useGameDetail();
 
   const { data: installationState } = useInstallationQuery(game);
+  const { openModal: openDeleteGameModal } = useModalAction("deleteGameModal");
   const { mutate: playGame } = usePlayGame(game);
   const navigate = useNavigate();
   const apiUrl = useApiUrl();
@@ -198,14 +200,11 @@ export function Actions() {
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem asChild>
-            <Link
-              to="."
-              className="text-destructive-text"
-              search={{ deleteGameModal: { open: true } }}
-            >
-              Delete
-            </Link>
+          <DropdownMenuItem
+            className="text-destructive-text"
+            onSelect={() => openDeleteGameModal()}
+          >
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -15,7 +15,7 @@ import { LoaderCircle } from "lucide-react";
 
 declare global {
   namespace RetromModals {
-    export interface ModalActions {
+    interface ModalActions {
       confirmModal: BaseModalActionProps & {
         content?: ReactNode;
         onConfirm?: () => void | Promise<void>;
@@ -60,7 +60,7 @@ export function ConfirmModal() {
         }
       }}
     >
-      <DialogContent>
+      <DialogContent className="sm:min-w-[400px]">
         <DialogHeader>
           <DialogTitle>
             {modalAction.modalState?.title ?? "Are you sure?"}

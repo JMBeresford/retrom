@@ -41,7 +41,7 @@ import { RawMessage } from "@/utils/protos";
 
 declare global {
   namespace RetromModals {
-    export interface ModalActions {
+    interface ModalActions {
       serverFileExplorerModal: BaseModalActionProps<
         undefined,
         (path: string | undefined) => void
