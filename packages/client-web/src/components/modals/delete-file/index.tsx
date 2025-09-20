@@ -49,13 +49,13 @@ export function DeleteFileModal() {
       });
 
       if (!res.gameFilesDeleted.length) {
-        throw new Error("Failed to delete game");
+        throw new Error("Failed to delete file");
       }
     } catch (e) {
       console.error(e);
 
       toast({
-        title: "Failed to delete game",
+        title: "Failed to delete file",
       });
     }
   }, [deleteGameFiles, modalAction, deleteFromDisk, blacklistEntries]);
