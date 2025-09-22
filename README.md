@@ -141,5 +141,5 @@ sort of _self-hosted Steam_ for your DRM-free game library.
   - [ ] Built-in emulator profiles for popular emulators
 
 [discord-badge]: https://invidget.switchblade.xyz/tM7VgWXCdZ
-[discord-link]: https://discord.gg/tM7VgWXCdZ
+[discord-link]: https://discord.gg/r6KNHPkKS4
 [banner-link]: https://github.com/user-attachments/assets/f4af6a79-ce07-4605-8876-5dd2a9f94ed0
