@@ -1,6 +1,9 @@
+import { Image } from "@/lib/utils";
 import { useInstallationIndex } from "@/providers/installation-index";
 import { useInstallationProgressContext } from "@/providers/installation-progress";
+import { useGameMetadata } from "@/queries/useGameMetadata";
 import { match } from "@/utils/typescript";
+import { createUrl, usePublicUrl } from "@/utils/urls";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_pb";
 import { Button } from "@retrom/ui/components/button";
 import { Progress } from "@retrom/ui/components/progress";
@@ -11,6 +14,7 @@ import { useMemo } from "react";
 export function InstallationIndicator() {
   const { installations } = useInstallationIndex();
   const installationProgress = useInstallationProgressContext((s) => s);
+  const publicUrl = usePublicUrl();
 
   const [installing, queued, completed] = useMemo(() => {
     const installing: number[] = [];
@@ -31,6 +35,23 @@ export function InstallationIndicator() {
     return [installing, queued, completed];
   }, [installations, installationProgress]);
 
+  const { data: iconUrl } = useGameMetadata({
+    request: { gameIds: installing },
+    selectFn: ({ mediaPaths }) => {
+      const installingId = installing.at(0);
+      if (publicUrl === undefined || installingId === undefined) {
+        return null;
+      }
+
+      const localPath = mediaPaths[installingId]?.iconUrl;
+      if (localPath === undefined) {
+        return null;
+      }
+
+      return createUrl({ path: localPath, base: publicUrl })?.href ?? null;
+    },
+  });
+
   const currentProgress = useMemo(
     () =>
       installing.reduce((acc, gameId) => {
@@ -50,17 +71,27 @@ export function InstallationIndicator() {
         to="/installing"
         className={cn(
           "text-muted-foreground italic text-sm",
-          "hover:text-accent transition-colors",
+          "hover:text-foreground transition-colors",
+          "flex gap-2",
         )}
       >
+        {iconUrl ? <Image className="min-w-0 h-full" src={iconUrl} /> : <></>}
         {numToInstall > 0 ? (
-          <div className="flex gap-2 items-center text-xs">
-            Installing {completed.length + 1} /{" "}
-            {numToInstall + completed.length}
-            <Progress value={currentProgress} className="w-32" />
+          <div className="flex flex-col text-xs">
+            <div className="flex justify-between">
+              <span>
+                Installing {completed.length + 1} /{" "}
+                {numToInstall + completed.length}
+              </span>
+              <span>{Math.floor(currentProgress)}%</span>
+            </div>
+
+            <Progress value={currentProgress} className="my-1 w-64" />
           </div>
         ) : (
-          <p>{completed.length} games installed</p>
+          <p>
+            {`${completed.length} ${completed.length > 1 ? "games" : "game"} installed`}
+          </p>
         )}
       </Link>
     </Button>

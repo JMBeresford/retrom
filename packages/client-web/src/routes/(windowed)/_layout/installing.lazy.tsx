@@ -12,9 +12,8 @@ import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { LoaderCircle } from "lucide-react";
 import { HTMLAttributes, memo, PropsWithChildren, useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { useInstallationProgress } from "@/queries/useInstallationProgress";
-import { readableByteSize } from "@/utils/files";
+import { getBestFileSizeOrder, readableByteSize } from "@/utils/files";
 import { Separator } from "@retrom/ui/components/separator";
 import { match } from "@/utils/typescript";
 import { useInstallationIndex } from "@/providers/installation-index";
@@ -258,7 +257,6 @@ const InstallationProgressChartOverlay = ({
 );
 
 type ChartDatum = {
-  updatedAt: Date;
   speed: number;
   percent: number;
 };
@@ -270,20 +268,22 @@ const InstallationProgressChart = memo(function ({
   const updates = useInstallationProgressContext((s) => s[gameId] ?? []);
 
   const data = useMemo(() => {
-    const data: ChartDatum[] = [];
+    const data: ChartDatum[] = Array.from({ length: 101 }).map((_, i) => {
+      const update = updates.find(
+        (u) =>
+          u.metrics?.percentComplete !== undefined &&
+          u.metrics.percentComplete >= i,
+      );
 
-    for (const update of updates) {
-      if (update.metrics?.updatedAt) {
-        const updatedAt = update.metrics.updatedAt;
-        const { metrics } = update;
-
-        data.push({
-          updatedAt: timestampDate(updatedAt),
-          speed: metrics.bytesPerSecond,
-          percent: metrics.percentComplete,
-        });
+      if (update?.metrics) {
+        return {
+          speed: update.metrics.bytesPerSecond,
+          percent: i,
+        };
       }
-    }
+
+      return { speed: 0, percent: i };
+    });
 
     return data;
   }, [updates]);
@@ -317,37 +317,47 @@ const InstallationProgressChart = memo(function ({
           </linearGradient>
         </defs>
 
-        <CartesianGrid vertical={false} />
+        <CartesianGrid syncWithTicks />
 
         <XAxis
           type="number"
           dataKey="percent"
+          unit="%"
           domain={[0, 100]}
           allowDataOverflow
-          hide
+          axisLine={false}
+          tickLine={false}
+          interval="preserveStart"
+          ticks={[25, 50, 75]}
+          fontSize={12}
         />
 
-        <XAxis type="number" dataKey="updatedAt" allowDataOverflow hide />
-
         <YAxis
-          type="number"
+          padding={{ top: 12 }}
           orientation="right"
           allowDataOverflow
           dataKey="speed"
           yAxisId="speed"
           axisLine={false}
           tickLine={false}
-          tickMargin={10}
-          interval="preserveStart"
+          tickCount={3}
+          interval="preserveEnd"
           fontSize={12}
-          tickFormatter={(value: number) => `${readableByteSize(value)}/s`}
+          tickFormatter={(value: number) => {
+            if (value === 0) return "";
+
+            const order = getBestFileSizeOrder(value / 10);
+            return `${readableByteSize(value, order)}/s`;
+          }}
         />
 
         <Area
           dataKey="speed"
-          isAnimationActive={false}
+          animationDuration={250}
+          animationEasing="linear"
+          // isAnimationActive={false}
           fill="url(#fillSpeed)"
-          type="bump"
+          type="basis"
           stroke="var(--color-speed)"
           yAxisId="speed"
           stackId="a"
