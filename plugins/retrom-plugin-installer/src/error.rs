@@ -41,6 +41,8 @@ pub enum Error {
     AlreadyInstalling,
     #[error("Already Installed")]
     AlreadyInstalled,
+    #[error("Not Installing")]
+    NotInstalling,
 }
 
 impl From<tonic::Status> for Error {

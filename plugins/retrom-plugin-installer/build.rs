@@ -10,6 +10,7 @@ const COMMANDS: &[&str] = &[
     "unsubscribe_from_installation_updates",
     "subscribe_to_installation_index",
     "unsubscribe_from_installation_index",
+    "abort_installation",
 ];
 
 fn main() {

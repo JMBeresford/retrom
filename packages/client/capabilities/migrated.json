@@ -10,10 +10,7 @@
       "http://*.local:*"
     ]
   },
-  "windows": [
-    "main",
-    "emulator-js"
-  ],
+  "windows": ["main", "emulator-js"],
   "permissions": [
     "core:path:default",
     "core:event:default",
@@ -59,6 +56,7 @@
     "installer:allow-migrate-installation-dir",
     "installer:allow-clear-installation-dir",
     "installer:allow-update-steam-installations",
+    "installer:allow-abort-installation",
     "dialog:allow-open",
     "launcher:allow-play-game",
     "launcher:allow-stop-game",

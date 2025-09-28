@@ -29,6 +29,7 @@ import { cn } from "@retrom/ui/lib/utils";
 import { useGames } from "@/queries/useGames";
 import { useInstallGame } from "@/mutations/useInstallGame";
 import { Button } from "@retrom/ui/components/button";
+import { useAbortInstallation } from "@/mutations/useAbortInstallation";
 
 export const Route = createLazyFileRoute("/(windowed)/_layout/installing")({
   component: RouteComponent,
@@ -132,6 +133,9 @@ function InstallationItem({ gameId }: { gameId: number }) {
   const { mutate: install, status: installRequestStatus } =
     useInstallGame(gameId);
 
+  const { mutate: abort, status: abortRequestStatus } =
+    useAbortInstallation(gameId);
+
   return (
     <div className="relative grid grid-flow-col grid-cols-[auto_1fr] grid-rows-1 gap-4">
       <Link
@@ -178,6 +182,21 @@ function InstallationItem({ gameId }: { gameId: number }) {
                     {readableByteSize(totalBytes)})
                   </span>
                 </p>
+
+                <Button
+                  onClick={() => abort(undefined)}
+                  disabled={abortRequestStatus === "pending"}
+                  size="sm"
+                  variant="outline"
+                >
+                  Cancel{" "}
+                  <LoaderCircle
+                    className={cn(
+                      "ml-2 h-4 w-4 animate-spin",
+                      abortRequestStatus !== "pending" && "hidden",
+                    )}
+                  />
+                </Button>
               </>
             ),
             [InstallationStatus.PAUSED]: () => (
@@ -206,6 +225,21 @@ function InstallationItem({ gameId }: { gameId: number }) {
                     )}
                   />
                 </Button>
+
+                <Button
+                  onClick={() => abort(undefined)}
+                  disabled={abortRequestStatus === "pending"}
+                  size="sm"
+                  variant="outline"
+                >
+                  Cancel{" "}
+                  <LoaderCircle
+                    className={cn(
+                      "ml-2 h-4 w-4 animate-spin",
+                      abortRequestStatus !== "pending" && "hidden",
+                    )}
+                  />
+                </Button>
               </>
             ),
             default: () => <></>,
@@ -227,6 +261,11 @@ function InstallationItem({ gameId }: { gameId: number }) {
             [InstallationStatus.FAILED]: () => (
               <InstallationProgressChartOverlay className="text-destructive-text">
                 Installation Failed
+              </InstallationProgressChartOverlay>
+            ),
+            [InstallationStatus.ABORTED]: () => (
+              <InstallationProgressChartOverlay>
+                Installation Cancelled
               </InstallationProgressChartOverlay>
             ),
             default: () => <></>,

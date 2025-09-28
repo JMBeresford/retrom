@@ -94,6 +94,10 @@ export async function subscribeToInstallationIndex<
   return channel;
 }
 
+export async function abortInstallation(gameId: number) {
+  return invoke("plugin:installer|abort_installation", { gameId });
+}
+
 export async function unsubscribeFromInstallationUpdates(
   channel: Channel<number[]> | number,
 ) {

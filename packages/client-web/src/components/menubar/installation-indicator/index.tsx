@@ -64,12 +64,16 @@ export function InstallationIndicator() {
   );
 
   const numToInstall = installing.length + queued.length;
+  const totalInstallations =
+    installing.length + completed.length + queued.length;
 
   return (
     <Button variant="inline" asChild>
       <Link
         to="/installing"
         className={cn(
+          totalInstallations === 0 &&
+            "pointer-events-none touch-none opacity-0",
           "text-muted-foreground italic text-sm",
           "hover:text-foreground transition-colors",
           "flex gap-2",

@@ -10,6 +10,32 @@
 <tr>
 <td>
 
+`retrom-plugin-installer:allow-abort-installation`
+
+</td>
+<td>
+
+Enables the abort_installation command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-installer:deny-abort-installation`
+
+</td>
+<td>
+
+Denies the abort_installation command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `retrom-plugin-installer:allow-clear-installation-dir`
 
 </td>

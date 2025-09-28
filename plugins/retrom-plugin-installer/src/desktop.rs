@@ -111,6 +111,7 @@ impl<R: Runtime> Installer<R> {
             .collect::<Vec<_>>();
 
         let total_bytes: u64 = files.iter().map(|f| f.byte_size as u64).sum();
+
         let installation = GameInstallationProgress {
             game_id: game.id,
             status: InstallationStatus::Installing,
@@ -206,16 +207,12 @@ impl<R: Runtime> Installer<R> {
 
                         loop {
                             if let Some(progress) =
-                                installer.installation_index.write().await.get_mut(&game.id)
+                                installer.installation_index.read().await.get(&game.id)
                             {
                                 match progress.status {
                                     InstallationStatus::Installing => {}
                                     InstallationStatus::Paused => {
                                         trace!("Installation paused");
-                                        if let Some(metrics) = progress.metrics.as_mut() {
-                                            metrics.updated_at = Some(SystemTime::now().into());
-                                        }
-
                                         continue;
                                     }
                                     InstallationStatus::Installed => {
@@ -225,8 +222,13 @@ impl<R: Runtime> Installer<R> {
                                     InstallationStatus::Failed => {
                                         return Err(crate::error::Error::InstallationAborted);
                                     }
-                                    _ => {
+                                    InstallationStatus::Aborted => {
                                         return Err(crate::error::Error::InstallationAborted);
+                                    }
+                                    _ => {
+                                        return Err(crate::error::Error::InternalError(
+                                            "Invalid installation status".into(),
+                                        ));
                                     }
                                 }
                             }
@@ -260,15 +262,19 @@ impl<R: Runtime> Installer<R> {
                             let percent_complete =
                                 installer.get_game_installation_percent(game_id).await?;
 
-                            let previous_metrics = installer
-                                .installation_index
-                                .read()
-                                .await
-                                .get(&game_id)
-                                .and_then(|p| p.metrics.clone())
-                                .ok_or(crate::Error::InternalError(
-                                    "No current installation found for game".into(),
-                                ))?;
+                            let previous_metrics = {
+                                let installations_lock = installer.installation_index.read().await;
+
+                                let progress = installations_lock.get(&game_id).ok_or(
+                                    crate::Error::InternalError(
+                                        "No current installation found for game".into(),
+                                    ),
+                                )?;
+
+                                progress.metrics.clone().ok_or(crate::Error::InternalError(
+                                    "No installation metrics found".into(),
+                                ))?
+                            };
 
                             if percent_complete > previous_metrics.percent_complete {
                                 let bytes_transferred = installer
@@ -302,21 +308,27 @@ impl<R: Runtime> Installer<R> {
                                     && duration_as_secs >= 1.0
                                     && bytes_diff > 0.0
                                 {
-                                    installer
+                                    match installer
                                         .installation_index
                                         .write()
                                         .await
                                         .get_mut(&game_id)
-                                        .ok_or(crate::Error::InternalError(
-                                            "No current installation found for game".into(),
-                                        ))?
-                                        .metrics = Some(InstallationMetrics {
-                                        bytes_transferred,
-                                        percent_complete,
-                                        total_bytes: previous_metrics.total_bytes,
-                                        bytes_per_second: bytes_diff / duration_as_secs,
-                                        updated_at: Some(updated_at),
-                                    });
+                                    {
+                                        Some(progress) => {
+                                            progress.metrics = Some(InstallationMetrics {
+                                                bytes_transferred,
+                                                percent_complete,
+                                                total_bytes: previous_metrics.total_bytes,
+                                                bytes_per_second: bytes_diff / duration_as_secs,
+                                                updated_at: Some(updated_at),
+                                            });
+                                        }
+                                        None => {
+                                            return Err(crate::Error::InternalError(
+                                                "No current installation found for game".into(),
+                                            ))
+                                        }
+                                    }
 
                                     installer.emit_update(game_id).await?;
                                 };
@@ -334,8 +346,27 @@ impl<R: Runtime> Installer<R> {
                 .instrument(tracing::info_span!("game_installation", game_id))
             });
 
-            futures::future::try_join_all(futures).await?;
-            app_handle.installer().mark_game_installed(game_id).await?;
+            match futures::future::try_join_all(futures).await {
+                Ok(_) => {
+                    debug!("All files downloaded for game: {}", game.id);
+                    app_handle.installer().mark_game_installed(game_id).await?;
+                }
+                Err(crate::error::Error::InstallationAborted) => {
+                    info!("Installation aborted for game: {}", game.id);
+                    app_handle
+                        .installer()
+                        .handle_uninstallation(game_id)
+                        .await?;
+                }
+                _ => {
+                    warn!("Installation failed for game: {}", game.id);
+                    app_handle.installer().mark_game_as_failed(game_id).await?;
+                    app_handle
+                        .installer()
+                        .handle_uninstallation(game_id)
+                        .await?;
+                }
+            }
 
             Ok(())
         });
@@ -390,6 +421,52 @@ impl<R: Runtime> Installer<R> {
                 Err(crate::error::Error::ThirdPartyNotFound)
             }
         }
+    }
+
+    pub(crate) async fn handle_uninstallation(&self, game_id: GameId) -> crate::Result<()> {
+        let app_handle = self.app_handle.clone();
+        let mut game_client = app_handle.get_game_client().await;
+
+        let game = game_client
+            .get_games(GetGamesRequest {
+                ids: vec![game_id],
+                ..Default::default()
+            })
+            .await?
+            .into_inner()
+            .games
+            .into_iter()
+            .next()
+            .ok_or_else(|| {
+                crate::error::Error::InternalError(format!("Game with id {game_id} not found"))
+            })?;
+
+        if game.third_party {
+            if let Some(Ok(steam_id)) = game.steam_app_id.map(u32::try_from) {
+                let steam_client = match app_handle.steam() {
+                    Some(client) => client,
+                    None => {
+                        tracing::error!("Steam client not initialized");
+                        return Err(crate::error::Error::InternalError(
+                            "Steam client not initialized".into(),
+                        ));
+                    }
+                };
+
+                steam_client.uninstall_game(steam_id).await?;
+
+                return Ok(());
+            }
+        } else {
+            let install_dir = self.get_installation_dir().await?;
+            let output_directory = install_dir.join(game.id.to_string());
+
+            if output_directory.try_exists()? {
+                tokio::fs::remove_dir_all(&output_directory).await?;
+            }
+        }
+
+        self.mark_game_uninstalled(game.id).await
     }
 
     pub async fn get_installation_dir(&self) -> crate::Result<PathBuf> {
@@ -505,13 +582,14 @@ impl<R: Runtime> Installer<R> {
             })
         {
             if steam.get_installation_status(app_id).await? == InstallationStatus::Installed {
-                installed.insert(game_id, {
+                installed.insert(
+                    game_id,
                     GameInstallationProgress {
                         game_id,
                         status: InstallationStatus::Installed,
                         ..Default::default()
-                    }
-                });
+                    },
+                );
             }
         }
 
@@ -524,44 +602,74 @@ impl<R: Runtime> Installer<R> {
     pub async fn mark_game_installing(&self, game_id: GameId) -> crate::Result<()> {
         info!("Installing game: {}", game_id);
 
-        let mut paused_ids = vec![];
-        {
-            let mut installations = self.installation_index.write().await;
-            for installation in installations
-                .values_mut()
-                .filter(|p| p.status == InstallationStatus::Installing && p.game_id != game_id)
-            {
-                installation.status = InstallationStatus::Paused;
-                if let Some(metrics) = installation.metrics.as_mut() {
+        let ids_to_pause = {
+            let index = self.installation_index.read().await;
+
+            index
+                .iter()
+                .filter_map(|(id, progress)| {
+                    if progress.status == InstallationStatus::Installing && id != &game_id {
+                        Some(*id)
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>()
+        };
+
+        match self.installation_index.write().await.get_mut(&game_id) {
+            Some(progress) => {
+                progress.status = InstallationStatus::Installing;
+                if let Some(metrics) = progress.metrics.as_mut() {
                     metrics.updated_at = Some(SystemTime::now().into());
                     metrics.bytes_per_second = 0.0;
                 }
-                paused_ids.push(installation.game_id);
             }
+            None => {
+                return Err(crate::error::Error::InternalError(format!(
+                    "No installation found for game {game_id}"
+                )))
+            }
+        };
 
-            match installations.get_mut(&game_id) {
-                Some(progress) => {
-                    progress.status = InstallationStatus::Installing;
+        futures::future::join_all(
+            ids_to_pause
+                .into_iter()
+                .map(|id| async move { self.pause_game_installation(id).await }),
+        )
+        .await;
+
+        self.emit_update(game_id).await?;
+        self.emit_index().await?;
+
+        debug!("Game installation started: {}", game_id);
+
+        Ok(())
+    }
+
+    #[instrument(skip(self), fields(game_id))]
+    pub(crate) async fn pause_game_installation(&self, game_id: GameId) -> crate::Result<()> {
+        info!("Pausing installation of game: {}", game_id);
+
+        match self.installation_index.write().await.get_mut(&game_id) {
+            Some(progress) => {
+                if progress.status == InstallationStatus::Installing {
+                    progress.status = InstallationStatus::Paused;
                     if let Some(metrics) = progress.metrics.as_mut() {
                         metrics.updated_at = Some(SystemTime::now().into());
                         metrics.bytes_per_second = 0.0;
                     }
                 }
-                None => {
-                    return Err(crate::error::Error::InternalError(format!(
-                        "No installation found for game {game_id}"
-                    )))
-                }
-            };
-        }
+            }
+            None => {
+                return Err(crate::error::Error::InternalError(format!(
+                    "No installation found for game {game_id}"
+                )))
+            }
+        };
 
-        for id in paused_ids {
-            self.emit_update(id).await?;
-        }
         self.emit_update(game_id).await?;
         self.emit_index().await?;
-
-        debug!("Game installation started: {}", game_id);
 
         Ok(())
     }
@@ -599,7 +707,7 @@ impl<R: Runtime> Installer<R> {
             .read()
             .await
             .iter()
-            .find(|(_, p)| p.status == InstallationStatus::Paused && p.game_id != game_id)
+            .find(|(id, progress)| progress.status == InstallationStatus::Paused && *id != &game_id)
             .map(|(id, _)| *id);
 
         if let Some(id) = id_to_resume {
@@ -633,14 +741,14 @@ impl<R: Runtime> Installer<R> {
     pub async fn get_game_installation_percent(&self, game_id: GameId) -> crate::Result<u32> {
         trace!("Checking game installation progress: {}", game_id);
 
-        let installation = self.installation_index.read().await;
-        let installation = installation
+        let index = self.installation_index.read().await;
+        let progress = index
             .get(&game_id)
             .ok_or(crate::Error::InternalError(format!(
                 "No current installation found for game {game_id}"
             )))?;
 
-        let metrics = match installation.metrics.as_ref() {
+        let metrics = match progress.metrics.as_ref() {
             Some(metrics) => metrics,
             None => {
                 return Err(crate::Error::InternalError(
@@ -649,12 +757,12 @@ impl<R: Runtime> Installer<R> {
             }
         };
 
-        let bytes_read: usize = installation.files.iter().map(|f| f.bytes_read).sum();
+        let bytes_read: usize = progress.files.iter().map(|f| f.bytes_read).sum();
 
         let percent = bytes_read as f64 / metrics.total_bytes as f64;
         let percent = (percent * 100.0).round() as u32;
 
-        debug!(
+        trace!(
             "Game installation progress: {bytes_read} / {} = {percent}%",
             metrics.total_bytes
         );
@@ -663,16 +771,35 @@ impl<R: Runtime> Installer<R> {
     }
 
     #[instrument(skip(self), fields(game_id))]
-    pub(crate) async fn mark_game_as_failed(&self, game_id: GameId) -> crate::Result<()> {
-        info!("Marking installation of game {game_id} as failed");
+    pub(crate) async fn mark_game_as_aborted(&self, game_id: GameId) -> crate::Result<()> {
+        info!("Marking installation as aborted");
 
-        if let Some(entry) = self.installation_index.write().await.get_mut(&game_id) {
-            entry.status = InstallationStatus::Failed;
+        if let Some(progress) = self.installation_index.write().await.get_mut(&game_id) {
+            progress.status = InstallationStatus::Aborted;
         };
 
         if let Err(why) = self.emit_update(game_id).await {
             warn!("Failed to emit installation failed event: {}", why);
         }
+
+        debug!("Installation marked as aborted");
+
+        self.emit_index().await
+    }
+
+    #[instrument(skip(self), fields(game_id))]
+    pub(crate) async fn mark_game_as_failed(&self, game_id: GameId) -> crate::Result<()> {
+        info!("Marking installation as failed");
+
+        if let Some(progress) = self.installation_index.write().await.get_mut(&game_id) {
+            progress.status = InstallationStatus::Failed;
+        };
+
+        if let Err(why) = self.emit_update(game_id).await {
+            warn!("Failed to emit installation failed event: {}", why);
+        }
+
+        debug!("Installation marked as failed");
 
         self.emit_index().await
     }
