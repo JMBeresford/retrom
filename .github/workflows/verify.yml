@@ -38,6 +38,9 @@ jobs:
         id: rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Setup rustfmt
+        run: rustup component add rustfmt
+
       - uses: Swatinem/rust-cache@v2
 
       - name: Install Protoc
