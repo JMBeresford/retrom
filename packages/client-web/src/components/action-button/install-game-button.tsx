@@ -1,4 +1,4 @@
-import { useInstallationQuery } from "@/queries/useInstallationQuery";
+import { useInstallationStatus } from "@/queries/useInstallationStatus";
 import { Button } from "@retrom/ui/components/button";
 import {
   CircleAlertIcon,
@@ -6,36 +6,32 @@ import {
   LoaderCircleIcon,
 } from "lucide-react";
 import { useInstallGame } from "@/mutations/useInstallGame";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_pb";
 import { Progress } from "@retrom/ui/components/progress";
 import { ComponentProps, ForwardedRef, forwardRef } from "react";
 import { cn } from "@retrom/ui/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
+import { useInstallationProgress } from "@/queries/useInstallationProgress";
 
 export const InstallGameButton = forwardRef(
   (
     props: ComponentProps<typeof Button>,
     forwardedRef: ForwardedRef<HTMLButtonElement>,
   ) => {
-    const { game, gameFiles: files } = useGameDetail();
+    const { game } = useGameDetail();
     const { className, ...rest } = props;
 
-    const installationQuery = useInstallationQuery(game);
-    const installationRequest = useInstallGame(game, files);
+    const installationRequest = useInstallGame(game.id);
+    const installState = useInstallationStatus(game.id);
+    const { percentComplete } = useInstallationProgress(game.id);
 
-    const installState = installationQuery.data;
-    const installProgress = installationRequest.progress;
     const install = installationRequest.mutate;
 
-    const error =
-      installationQuery.status === "error" ||
-      installationRequest.status === "error";
+    const error = installationRequest.status === "error";
+    const pending = installationRequest.status === "pending";
 
-    const pending =
-      installationQuery.status === "pending" ||
-      installationRequest.status === "pending";
-
-    const disabled = error || pending;
+    const disabled =
+      error || pending || installState === InstallationStatus.PAUSED;
 
     const Content = () => {
       if (error) {
@@ -49,14 +45,29 @@ export const InstallGameButton = forwardRef(
 
       if (pending) {
         return (
-          <>
+          <div className="flex gap-3 w-full items-center text-base justify-center">
             <LoaderCircleIcon className="animate-spin" />
-          </>
+            <p>Starting Installation</p>
+          </div>
+        );
+      }
+
+      if (installState === InstallationStatus.PAUSED) {
+        return (
+          <div className="flex gap-3 w-full items-center text-base justify-center">
+            <LoaderCircleIcon className="animate-spin" />
+            <p>Installation Pending</p>
+          </div>
         );
       }
 
       if (installState === InstallationStatus.INSTALLING) {
-        return <Progress value={installProgress} className="h-2" />;
+        return (
+          <div className="flex gap-2 w-full items-center">
+            <p className="text-sm">{Math.floor(percentComplete)}%</p>
+            <Progress value={percentComplete} className="h-1" />
+          </div>
+        );
       }
 
       return (
@@ -74,9 +85,9 @@ export const InstallGameButton = forwardRef(
         disabled={disabled || rest.disabled}
         className={cn(className, "relative")}
         onClick={
-          installState === InstallationStatus.INSTALLING
-            ? undefined
-            : () => install(undefined)
+          installState === InstallationStatus.NOT_INSTALLED
+            ? () => install(undefined)
+            : undefined
         }
       >
         <Content />

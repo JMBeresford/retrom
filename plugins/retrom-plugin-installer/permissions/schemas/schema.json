@@ -295,6 +295,18 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the abort_installation command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-abort-installation",
+          "markdownDescription": "Enables the abort_installation command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the abort_installation command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-abort-installation",
+          "markdownDescription": "Denies the abort_installation command without any pre-configured scope."
+        },
+        {
           "description": "Enables the clear_installation_dir command without any pre-configured scope.",
           "type": "string",
           "const": "allow-clear-installation-dir",
@@ -319,6 +331,18 @@
           "markdownDescription": "Denies the get_game_installation_status command without any pre-configured scope."
         },
         {
+          "description": "Enables the get_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-installation-index",
+          "markdownDescription": "Enables the get_installation_index command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-installation-index",
+          "markdownDescription": "Denies the get_installation_index command without any pre-configured scope."
+        },
+        {
           "description": "Enables the get_installation_state command without any pre-configured scope.",
           "type": "string",
           "const": "allow-get-installation-state",
@@ -329,6 +353,18 @@
           "type": "string",
           "const": "deny-get-installation-state",
           "markdownDescription": "Denies the get_installation_state command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_installation_status command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-installation-status",
+          "markdownDescription": "Enables the get_installation_status command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_installation_status command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-installation-status",
+          "markdownDescription": "Denies the get_installation_status command without any pre-configured scope."
         },
         {
           "description": "Enables the install_game command without any pre-configured scope.",
@@ -367,6 +403,30 @@
           "markdownDescription": "Denies the open_installation_dir command without any pre-configured scope."
         },
         {
+          "description": "Enables the subscribe_to_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-subscribe-to-installation-index",
+          "markdownDescription": "Enables the subscribe_to_installation_index command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the subscribe_to_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-subscribe-to-installation-index",
+          "markdownDescription": "Denies the subscribe_to_installation_index command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the subscribe_to_installation_updates command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-subscribe-to-installation-updates",
+          "markdownDescription": "Enables the subscribe_to_installation_updates command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the subscribe_to_installation_updates command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-subscribe-to-installation-updates",
+          "markdownDescription": "Denies the subscribe_to_installation_updates command without any pre-configured scope."
+        },
+        {
           "description": "Enables the uninstall_game command without any pre-configured scope.",
           "type": "string",
           "const": "allow-uninstall-game",
@@ -377,6 +437,30 @@
           "type": "string",
           "const": "deny-uninstall-game",
           "markdownDescription": "Denies the uninstall_game command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the unsubscribe_from_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-unsubscribe-from-installation-index",
+          "markdownDescription": "Enables the unsubscribe_from_installation_index command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the unsubscribe_from_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-unsubscribe-from-installation-index",
+          "markdownDescription": "Denies the unsubscribe_from_installation_index command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the unsubscribe_from_installation_updates command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-unsubscribe-from-installation-updates",
+          "markdownDescription": "Enables the unsubscribe_from_installation_updates command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the unsubscribe_from_installation_updates command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-unsubscribe-from-installation-updates",
+          "markdownDescription": "Denies the unsubscribe_from_installation_updates command without any pre-configured scope."
         },
         {
           "description": "Enables the update_steam_installations command without any pre-configured scope.",

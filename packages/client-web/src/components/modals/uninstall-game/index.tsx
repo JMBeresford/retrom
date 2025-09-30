@@ -8,12 +8,12 @@ import {
   DialogDescription,
   DialogClose,
 } from "@retrom/ui/components/dialog";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_pb";
 import { getFileStub } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import { useUninstallGame } from "@/mutations/useUninstallGame";
 import { useGameDetail } from "@/providers/game-details";
-import { useInstallationQuery } from "@/queries/useInstallationQuery";
+import { useInstallationStatus } from "@/queries/useInstallationStatus";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { LoaderCircleIcon } from "lucide-react";
 import { Route } from "@/routes/(windowed)/_layout/games/$gameId";
@@ -21,7 +21,7 @@ import { Route } from "@/routes/(windowed)/_layout/games/$gameId";
 export function UninstallGameModal() {
   const { game, gameMetadata: metadata } = useGameDetail();
   const name = metadata?.name || getFileStub(game.path);
-  const { data: installationState } = useInstallationQuery(game);
+  const installationStatus = useInstallationStatus(game.id);
   const { uninstallGameModal } = Route.useSearch();
   const navigate = useNavigate();
 
@@ -32,10 +32,10 @@ export function UninstallGameModal() {
       open={uninstallGameModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          void navigate({
+          navigate({
             to: ".",
             search: (prev) => ({ ...prev, uninstallGameModal: undefined }),
-          });
+          }).catch(console.error);
         }
       }}
     >
@@ -63,7 +63,7 @@ export function UninstallGameModal() {
 
           <Button
             disabled={
-              isPending || installationState !== InstallationStatus.INSTALLED
+              isPending || installationStatus !== InstallationStatus.INSTALLED
             }
             className="relative"
             variant="destructive"

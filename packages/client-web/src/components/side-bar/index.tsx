@@ -27,8 +27,7 @@ import { Separator } from "@retrom/ui/components/separator";
 import { filterName, sortGames, sortPlatforms } from "./utils";
 import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { TooltipPortal } from "@retrom/ui/components/tooltip";
-import { useInstallationStateQuery } from "@/queries/useInstallationState";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_pb";
 import { Skeleton } from "@retrom/ui/components/skeleton";
 import { EllipsisVertical } from "lucide-react";
 import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
@@ -43,6 +42,9 @@ import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 import { useGameMetadata } from "@/queries/useGameMetadata";
 import { createUrl, usePublicUrl } from "@/utils/urls";
 import { GetGameMetadataResponse_MediaPaths } from "@retrom/codegen/retrom/services/metadata-service_pb";
+import { useInstallationIndex } from "@/providers/installation-index";
+import { useInstallationStatus } from "@/queries/useInstallationStatus";
+import { useInstallationProgress } from "@/queries/useInstallationProgress";
 
 type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 type GameMetadataWithMediaPaths = {
@@ -61,7 +63,7 @@ export function SideBar() {
   } = useFilterAndSort();
 
   const path = useLocation({ select: (location) => location.pathname });
-  const { data: installationData } = useInstallationStateQuery();
+  const { installations } = useInstallationIndex();
 
   const { data: platformData, status: platformStatus } = usePlatforms({
     request: { withMetadata: true },
@@ -152,12 +154,10 @@ export function SideBar() {
       if (groupByInstallationStatus) {
         games.sort((a, b) => {
           const aInstalled =
-            installationData?.installationState[a.id] ===
-            InstallationStatus.INSTALLED;
+            installations[a.id] === InstallationStatus.INSTALLED;
 
           const bInstalled =
-            installationData?.installationState[b.id] ===
-            InstallationStatus.INSTALLED;
+            installations[b.id] === InstallationStatus.INSTALLED;
 
           if (aInstalled && !bInstalled) {
             return -1;
@@ -181,7 +181,7 @@ export function SideBar() {
     gameSortDirection,
     gameSortKey,
     groupByInstallationStatus,
-    installationData?.installationState,
+    installations,
   ]);
 
   return (
@@ -306,8 +306,9 @@ export function SideBar() {
                           <ul>
                             {games.map((game) => {
                               const isCurrentGame = currentGame?.id === game.id;
+                              const installationStatus = installations[game.id];
                               const isInstalled =
-                                installationData?.installationState[game.id] ===
+                                installationStatus ===
                                 InstallationStatus.INSTALLED;
 
                               const gameMetadata = allGameMetadata?.[game.id];
@@ -385,6 +386,8 @@ function GameItem(props: {
 }) {
   const { game, displayName, metadata: data } = props;
 
+  const installationStatus = useInstallationStatus(game.id);
+  const { percentComplete } = useInstallationProgress(game.id);
   const publicUrl = usePublicUrl();
 
   const iconUrl = useMemo(() => {
@@ -396,11 +399,15 @@ function GameItem(props: {
     return data?.metadata?.iconUrl;
   }, [data, publicUrl]);
 
+  const isInstalling =
+    installationStatus === InstallationStatus.INSTALLING ||
+    installationStatus === InstallationStatus.PAUSED;
+
   return (
     <Link
       to="/games/$gameId"
       params={{ gameId: game.id.toString() }}
-      className="grid grid-cols-[auto_1fr] items-center max-w-full h-full"
+      className={cn("grid grid-cols-[auto_1fr] items-center max-w-full h-full")}
     >
       <div className="relative min-w-[28px] min-h-[28px] mr-2 my-[2px]">
         {iconUrl && (
@@ -408,8 +415,18 @@ function GameItem(props: {
         )}
       </div>
 
-      <span className="whitespace-nowrap overflow-hidden text-ellipsis">
-        <span>{displayName}</span>
+      <span
+        className={cn(
+          "whitespace-nowrap overflow-hidden text-ellipsis",
+          isInstalling && "text-primary",
+        )}
+      >
+        <span className="text-sm">
+          {isInstalling ? `${percentComplete}% - ` : ""}
+        </span>
+        <span className={cn(isInstalling && "animate-pulse")}>
+          {displayName}
+        </span>
       </span>
     </Link>
   );

@@ -33,6 +33,22 @@ pub enum Error {
     InternalError(String),
     #[error(transparent)]
     DecodeError(#[from] prost::DecodeError),
+    #[error("Installation Failed: {0}")]
+    InstallationFailed(String),
+    #[error("Installation Aborted")]
+    InstallationAborted,
+    #[error("Already Installing")]
+    AlreadyInstalling,
+    #[error("Already Installed")]
+    AlreadyInstalled,
+    #[error("Not Installing")]
+    NotInstalling,
+}
+
+impl From<tonic::Status> for Error {
+    fn from(status: tonic::Status) -> Self {
+        Error::Tonic(status.code())
+    }
 }
 
 impl Serialize for Error {

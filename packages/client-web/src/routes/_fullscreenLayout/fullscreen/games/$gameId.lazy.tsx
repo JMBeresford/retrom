@@ -1,13 +1,16 @@
+import { ActionButton as ActionButtonImpl } from "@/components/action-button";
 import {
   FocusContainer,
   useFocusable,
 } from "@/components/fullscreen/focus-container";
+import { GameActions } from "@/components/fullscreen/game-actions";
 import { Scene } from "@/components/fullscreen/scene";
-import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { getFileStub } from "@/lib/utils";
-import { cn } from "@retrom/ui/lib/utils";
 import { GameDetailProvider, useGameDetail } from "@/providers/game-details";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
+import { buttonVariants } from "@retrom/ui/components/button";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
+import { cn } from "@retrom/ui/lib/utils";
 import {
   CatchBoundary,
   createLazyFileRoute,
@@ -16,19 +19,8 @@ import {
 import { Background } from "./-components/background";
 import { Description } from "./-components/description";
 import { ExtraInfo } from "./-components/extra-info";
-import { SimilarGames } from "./-components/similar-games";
-import { GameActions } from "@/components/fullscreen/game-actions";
-import { FocusEvent, memo } from "react";
-import { PlatformDependent } from "@/lib/env";
-import { DownloadGameButton } from "@/components/action-button/download-game-button";
-import { useInstallationQuery } from "@/queries/useInstallationQuery";
-import { PlayGameButton } from "@/components/action-button/play-game-button";
-import { InstallGameButton } from "@/components/action-button/install-game-button";
-import { Button, buttonVariants } from "@retrom/ui/components/button";
 import { Name } from "./-components/name";
-import { InstallationStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
-import { Emulator_OperatingSystem } from "@retrom/codegen/retrom/models/emulators_pb";
-import { PlayIcon } from "lucide-react";
+import { SimilarGames } from "./-components/similar-games";
 
 export const Route = createLazyFileRoute(
   "/_fullscreenLayout/fullscreen/games/$gameId",
@@ -49,27 +41,20 @@ function GameComponent() {
 }
 
 const buttonStyles = cn(
-  buttonVariants({ variant: "accent", size: "lg" }),
-  "font-bold w-auto text-5xl h-[unset] [&_svg]:hidden uppercase px-8 py-4",
-  "focus:ring-2 focus:ring-ring focus:ring-offset-2",
-  "opacity-80 focus-hover:opacity-100 transition-all h-full rounded-none",
+  buttonVariants({ variant: "secondary", size: "lg" }),
+  "font-bold w-auto text-5xl uppercase px-8 py-4 h-full rounded-none",
+  "ring-ring focus-visible:ring-2 focus-visible:ring-offset-0",
+  "opacity-80 focus-hover:opacity-100 transition-all",
+  '[&_div[role="progressbar"]]:w-[6ch] [&_div[role="progressbar"]]:bg-primary-foreground',
+  '[&_div[role="progressbar"]_>_*]:bg-accent',
 );
 
-function onFocus(e: FocusEvent<HTMLButtonElement>) {
-  e.target.scrollIntoView({ block: "end" });
-}
-
 function Inner() {
-  const { gameMetadata, game, emulator } = useGameDetail();
-  const { data: installationStatus } = useInstallationQuery(game);
+  const { gameMetadata, game } = useGameDetail();
   const navigate = useNavigate();
 
   const name = gameMetadata?.name || getFileStub(game.path);
   const url = gameMetadata?.backgroundUrl || gameMetadata?.coverUrl;
-
-  const playableInWeb =
-    emulator?.libretroName &&
-    emulator.operatingSystems.includes(Emulator_OperatingSystem.WASM);
 
   return (
     <HotkeyLayer
@@ -117,18 +102,7 @@ function Inner() {
 
               <div className="row-start-2 row-end-4 flex justify-center gap-1">
                 <div className="w-min">
-                  <PlatformDependent
-                    desktop={
-                      installationStatus === InstallationStatus.INSTALLED ? (
-                        <PlayButton />
-                      ) : (
-                        <InstallButton />
-                      )
-                    }
-                    web={
-                      playableInWeb ? <PlayInWebButton /> : <DownloadButton />
-                    }
-                  />
+                  <ActionButton />
                 </div>
 
                 {!game.thirdParty && <GameActions />}
@@ -147,107 +121,22 @@ function Inner() {
   );
 }
 
-function PlayInWebButton() {
-  const { game } = useGameDetail();
-  const navigate = useNavigate();
-
+function ActionButton() {
   const { ref } = useFocusable<HTMLButtonElement>({
     initialFocus: true,
-    focusKey: "fullscreen-play-web-button",
+    focusKey: "fullscreen-action-button",
     onFocus: ({ node }) => {
       node?.focus({ preventScroll: true });
+      node.scrollIntoView({ block: "end" });
     },
   });
 
   return (
     <HotkeyLayer
-      id="play-web-button"
+      id="fullscreen-action-button"
       handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
     >
-      <Button
-        ref={ref}
-        onClick={() =>
-          navigate({
-            to: "/play/$gameId",
-            params: { gameId: game.id.toString() },
-          })
-        }
-        variant="accent"
-        className={cn(buttonStyles)}
-      >
-        <PlayIcon className="h-[1.2rem] w-[1.2rem] fill-current" />
-        Play
-      </Button>
-    </HotkeyLayer>
-  );
-}
-
-const PlayButton = memo(() => {
-  const { ref } = useFocusable<HTMLButtonElement>({
-    focusKey: "fullscreen-play-button",
-    initialFocus: true,
-    onFocus: ({ node }) => {
-      node?.focus({ preventScroll: true });
-    },
-  });
-
-  return (
-    <HotkeyLayer
-      id="play-button"
-      handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
-    >
-      <PlayGameButton ref={ref} onFocus={onFocus} className={buttonStyles} />
-    </HotkeyLayer>
-  );
-});
-
-const InstallButton = memo(() => {
-  const { ref } = useFocusable<HTMLButtonElement>({
-    focusKey: "fullscreen-install-button",
-    initialFocus: true,
-    onFocus: ({ node }) => {
-      node?.focus({ preventScroll: true });
-    },
-  });
-
-  return (
-    <HotkeyLayer
-      id="install-button"
-      handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
-    >
-      <InstallGameButton
-        ref={ref}
-        onFocus={onFocus}
-        className={cn(
-          buttonStyles,
-          '[&_div[role="progressbar"]]:w-[6ch] [&_div[role="progressbar"]_>_*]:bg-primary-foreground',
-        )}
-      />
-    </HotkeyLayer>
-  );
-});
-
-function DownloadButton() {
-  const { game } = useGameDetail();
-  const { ref } = useFocusable<HTMLButtonElement>({
-    focusKey: "fullscreen-download-button",
-    initialFocus: true,
-    onFocus: ({ node }) => {
-      node?.focus({ preventScroll: true });
-    },
-  });
-
-  return (
-    <HotkeyLayer
-      id="download-button"
-      handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
-    >
-      <DownloadGameButton
-        ref={ref}
-        onFocus={onFocus}
-        game={game}
-        className={buttonStyles}
-      />
+      <ActionButtonImpl ref={ref} className={buttonStyles} />
     </HotkeyLayer>
   );
 }

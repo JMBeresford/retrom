@@ -10,6 +10,12 @@ pub mod retrom {
         tonic::include_proto!("retrom.files");
     }
 
+    pub mod client {
+        pub mod installation {
+            tonic::include_proto!("retrom.client.installation");
+        }
+    }
+
     use std::path::PathBuf;
 
     tonic::include_proto!("retrom");

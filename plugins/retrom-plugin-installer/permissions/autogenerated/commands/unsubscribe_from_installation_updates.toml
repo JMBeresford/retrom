@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-unsubscribe-from-installation-updates"
+description = "Enables the unsubscribe_from_installation_updates command without any pre-configured scope."
+commands.allow = ["unsubscribe_from_installation_updates"]
+
+[[permission]]
+identifier = "deny-unsubscribe-from-installation-updates"
+description = "Denies the unsubscribe_from_installation_updates command without any pre-configured scope."
+commands.deny = ["unsubscribe_from_installation_updates"]
