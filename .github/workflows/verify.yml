@@ -40,7 +40,10 @@ jobs:
 
       - name: Setup rustfmt
         run: rustup component add rustfmt
-
+        
+      - name: Setup clippy
+        run: rustup component add clippy
+      
       - uses: Swatinem/rust-cache@v2
 
       - name: Install Protoc
