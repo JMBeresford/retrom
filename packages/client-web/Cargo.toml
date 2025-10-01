@@ -8,4 +8,4 @@ edition.workspace = true
 description = "The Retrom video game library web client"
 rust-version = "1.80"
 
-exclude = ["node_modules", "dist", "src", 'public']
+exclude = ["node_modules", "dist", 'public']
