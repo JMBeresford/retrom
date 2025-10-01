@@ -20,7 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - See installation speed and progress at a glance for all installations
     - See recently installed games
 
+    **Screenshots**
 
+    ![Screenshot 1](https://github.com/user-attachments/assets/5b360d3c-be83-4136-924f-10c8b26b020e)
+
+    ![Screenshot 2](https://github.com/user-attachments/assets/952d2f32-4c30-489d-8975-763ed884ab79)
 
 
 ## [0.7.38](https://github.com/JMBeresford/retrom/compare/v0.7.37...v0.7.38) - 2025-09-20
