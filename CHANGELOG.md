@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.7.39](https://github.com/JMBeresford/retrom/compare/v0.7.38...v0.7.39) - 2025-09-30
+
+### Newly Added
+- installation manager ([#406](https://github.com/JMBeresford/retrom/pull/406))
+
+    Game installations are now shown in the new installation dashboard,
+    in addition other relevant locations like the library side bar etc. The dashboard
+    allows you to view the status of and manage installs in the following ways:
+
+    - Cancel installations
+    - Immediately install a queued installation, pausing the currently active one
+    - See installation speed and progress at a glance for all installations
+    - See recently installed games
+
+    **Screenshots**
+
+    ![Screenshot 1](https://github.com/user-attachments/assets/5b360d3c-be83-4136-924f-10c8b26b020e)
+
+    ![Screenshot 2](https://github.com/user-attachments/assets/952d2f32-4c30-489d-8975-763ed884ab79)
+
+
 ## [0.7.38](https://github.com/JMBeresford/retrom/compare/v0.7.37...v0.7.38) - 2025-09-20
 
 ### Bug Fixes
