@@ -9,7 +9,10 @@
   "always-update": true,
   "release-type": "rust",
 
-  "packages": {},
+  "packages": {
+    "packages/client": {},
+    "packages/ui": {}
+  },
   "plugins": [
     { "type": "node-workspace", "updateAllPackages": true, "merge": true },
     { "type": "cargo-workspace", "updateAllPackages": true, "merge": true }
