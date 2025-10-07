@@ -9,7 +9,7 @@
   "always-update": true,
 
   "packages": {
-    ".": { "release-type": "rust" },
+    ".": { "release-type": "rust", "component": "retrom" },
     "packages/client": { "release-type": "rust" },
     "packages/ui": { "release-type": "node" }
   },
