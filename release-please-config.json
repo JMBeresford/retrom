@@ -9,10 +9,13 @@
   "always-update": true,
 
   "packages": {
-    ".": { "release-type": "rust", "component": "retrom" }
+    ".": {
+      "release-type": "node",
+      "component": "retrom",
+      "extra-files": [{ "type": "generic", "path": "Cargo.toml" }]
+    }
   },
   "plugins": [
-    { "type": "node-workspace", "updateAllPackages": true, "merge": true },
-    { "type": "cargo-workspace" }
+    { "type": "node-workspace", "updateAllPackages": true, "merge": true }
   ]
 }
