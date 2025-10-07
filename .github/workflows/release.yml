@@ -24,6 +24,8 @@ jobs:
           manifest-file: .release-please-manifest.json
 
   publish-crates:
+    permissions:
+      contents: read
     needs: release-please
     if: needs.release-please.outputs.released
     name: Publish to Crates.io
