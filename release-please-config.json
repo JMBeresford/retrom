@@ -12,6 +12,7 @@
     ".": { "release-type": "rust", "component": "retrom" }
   },
   "plugins": [
-    { "type": "node-workspace", "updateAllPackages": true, "merge": true }
+    { "type": "node-workspace", "updateAllPackages": true, "merge": true },
+    { "type": "cargo-workspace" }
   ]
 }
