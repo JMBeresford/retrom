@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.40](https://github.com/JMBeresford/retrom/compare/v0.7.39...v0.7.40) (2025-10-07)
+
+
+### Bug Fixes
+
+* **ci:** extend release-please ([b83cf41](https://github.com/JMBeresford/retrom/commit/b83cf41a412ec0a48639901b85d7e6e3cec0537c))
+* test release ([1842345](https://github.com/JMBeresford/retrom/commit/184234557b727cf0f060b50776584227d5bfaa47))
+
 ## [Unreleased]
 ## [0.7.39](https://github.com/JMBeresford/retrom/compare/v0.7.38...v0.7.39) - 2025-09-30
 
