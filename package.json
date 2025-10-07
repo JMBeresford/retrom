@@ -1,5 +1,6 @@
 {
   "name": "retrom",
+  "version": "0.7.39",
   "type": "module",
   "nx": {
     "targets": {
