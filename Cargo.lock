@@ -5369,10 +5369,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "retrom-client-web"
-version = "0.7.39"
-
-[[package]]
 name = "retrom-codegen"
 version = "0.7.39"
 dependencies = [
