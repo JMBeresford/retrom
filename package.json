@@ -40,5 +40,6 @@
     "prettier": "$prettier",
     "eslint": "$eslint"
   },
-  "packageManager": "pnpm@10.15.1+sha256.8c53af02ae3ec1fb0ae75377f8d4d6217c2d7cbe6f03c16350cabf7493de6eff"
+  "packageManager": "pnpm@10.15.1+sha256.8c53af02ae3ec1fb0ae75377f8d4d6217c2d7cbe6f03c16350cabf7493de6eff",
+  "version": "0.7.40"
 }
