@@ -9,12 +9,9 @@
   "always-update": true,
 
   "packages": {
-    ".": { "release-type": "rust", "component": "retrom" },
-    "packages/client": { "release-type": "rust" },
-    "packages/ui": { "release-type": "node" }
+    ".": { "release-type": "rust", "component": "retrom" }
   },
   "plugins": [
-    { "type": "node-workspace", "updateAllPackages": true, "merge": true },
-    { "type": "cargo-workspace", "updateAllPackages": true, "merge": true }
+    { "type": "node-workspace", "updateAllPackages": true, "merge": true }
   ]
 }
