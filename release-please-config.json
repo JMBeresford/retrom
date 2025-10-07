@@ -1,0 +1,4 @@
+{
+  "packages": {},
+  "plugins": [{ "type": "node-workspace" }, { "type": "cargo-workspace" }]
+}
