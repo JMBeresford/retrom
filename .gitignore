@@ -21,3 +21,4 @@ retrom.log
 .github/instructions/nx.instructions.md
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+.gh_token.txt
