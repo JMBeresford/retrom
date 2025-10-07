@@ -1,4 +1,9 @@
 {
+  "bootstrap-sha": "53512d72f087f58af62a9147b69dd45503f8aac3",
+  "release-as": "0.7.40",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+
   "packages": {},
   "plugins": [{ "type": "node-workspace" }, { "type": "cargo-workspace" }]
 }
