@@ -5,7 +5,7 @@
   "bump-patch-for-minor-pre-major": true,
 
   "packages": {
-    ".": {}
+    ".": { "release-type": "rust" }
   },
   "plugins": [{ "type": "node-workspace" }, { "type": "cargo-workspace" }]
 }
