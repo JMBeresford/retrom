@@ -1,8 +1,8 @@
 [package]
 name = "retrom-db"
+version = "0.7.39"
 resolver = "2"
 description = "Database layer for Retrom"
-version.workspace = true
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
