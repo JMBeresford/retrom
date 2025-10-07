@@ -9,9 +9,9 @@
   "always-update": true,
 
   "packages": {
-    ".": {},
+    ".": { "release-type": "rust" },
     "packages/client": { "release-type": "rust" },
-    "packages/ui": {}
+    "packages/ui": { "release-type": "node" }
   },
   "plugins": [
     { "type": "node-workspace", "updateAllPackages": true, "merge": true },
