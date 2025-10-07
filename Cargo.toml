@@ -22,7 +22,7 @@ exclude = [
 
 [workspace.package]
 edition = "2021"
-version = "0.7.39"                                    # x-release-please-version
+version = "0.7.40"                                    # x-release-please-version
 authors = ["John Beresford <jberesford@volcaus.com>"]
 license = "GPL-3.0"
 readme = "./README.md"
@@ -75,15 +75,15 @@ tokio-util = { version = "0.7.11", features = ["io", "compat"] }
 dotenvy = "0.15.7"
 
 # x-release-please-start-version
-retrom-db = { path = "./packages/db", version = "^0.7.39" }
-retrom-service = { path = "./packages/service", version = "^0.7.39" }
-retrom-codegen = { path = "./packages/codegen", version = "^0.7.39" }
-retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "^0.7.39" }
-retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "^0.7.39" }
-retrom-plugin-service-client = { path = "./plugins/retrom-plugin-service-client", version = "^0.7.39" }
-retrom-plugin-steam = { path = "./plugins/retrom-plugin-steam", version = "^0.7.39" }
-retrom-plugin-config = { path = "./plugins/retrom-plugin-config", version = "^0.7.39" }
-retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone", version = "^0.7.39" }
+retrom-db = { path = "./packages/db", version = "^0.7.40" }
+retrom-service = { path = "./packages/service", version = "^0.7.40" }
+retrom-codegen = { path = "./packages/codegen", version = "^0.7.40" }
+retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "^0.7.40" }
+retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "^0.7.40" }
+retrom-plugin-service-client = { path = "./plugins/retrom-plugin-service-client", version = "^0.7.40" }
+retrom-plugin-steam = { path = "./plugins/retrom-plugin-steam", version = "^0.7.40" }
+retrom-plugin-config = { path = "./plugins/retrom-plugin-config", version = "^0.7.40" }
+retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone", version = "^0.7.40" }
 # x-release-please-end
 
 config = { version = "0.13.4", features = ["json5"] }
