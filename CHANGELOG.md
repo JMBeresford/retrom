@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Notification center ([2c66e1f](https://github.com/JMBeresford/retrom/commit/2c66e1f45aaf9521e250bfa8d4e643998fcd68bf))
 
+## [0.7.40](https://github.com/JMBeresford/retrom/compare/v0.7.39...v0.7.40) (2025-10-08)
+
+
+### Features
+
+* Notification center ([2c66e1f](https://github.com/JMBeresford/retrom/commit/2c66e1f45aaf9521e250bfa8d4e643998fcd68bf))
+
 ## [Unreleased]
 ## [0.7.39](https://github.com/JMBeresford/retrom/compare/v0.7.38...v0.7.39) - 2025-09-30
 
