@@ -4,6 +4,7 @@ use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{service::make_service_fn, Server};
 use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
 use retrom_db::run_migrations;
+use retrom_telemetry::span_from_grpc_request;
 use retry::retry;
 use std::{
     convert::Infallible,
@@ -15,21 +16,11 @@ use std::{
 };
 use tokio::task::JoinHandle;
 use tower::Service;
-use trace::span_from_grpc_request;
 use tracing::Instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 #[cfg(feature = "embedded_db")]
 use retrom_db::embedded::DB_NAME;
-
-pub mod config;
-pub mod emulator_js;
-mod grpc;
-pub mod media_cache;
-pub mod meta;
-mod providers;
-mod rest;
-pub mod trace;
 
 pub const DEFAULT_PORT: i32 = 5101;
 pub const DEFAULT_DB_URL: &str = "postgres://postgres:postgres@localhost/retrom";

@@ -1,0 +1,33 @@
+[package]
+name = "retrom-service-common"
+resolver = "2"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Common service utils for the Retrom video game library service"
+
+[dependencies]
+directories = { workspace = true }
+tempfile = { workspace = true }
+tracing = { workspace = true }
+reqwest = { workspace = true }
+tower = { workspace = true }
+retrom-codegen = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+futures = { workspace = true }
+bigdecimal = { workspace = true }
+deunicode = "1.4.4"
+prost = { workspace = true }
+libcaesium = "0.17.4"
+thiserror = { workspace = true }
+tokio-retry = { workspace = true }
+url = { workspace = true }
+sha2 = { workspace = true }
+sevenz-rust2 = { workspace = true }
+config = { workspace = true }
+dotenvy = { workspace = true }

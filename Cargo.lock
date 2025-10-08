@@ -5330,7 +5330,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-client"
-version = "0.7.39"
+version = "0.7.40"
 dependencies = [
  "dotenvy",
  "futures",
@@ -5370,7 +5370,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-codegen"
-version = "0.7.39"
+version = "0.7.40"
 dependencies = [
  "diesel",
  "prost 0.12.6",
@@ -5389,7 +5389,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-db"
-version = "0.7.39"
+version = "0.7.40"
 dependencies = [
  "async-trait",
  "deadpool",
@@ -5410,8 +5410,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "retrom-grpc-service"
+version = "0.7.40"
+dependencies = [
+ "bigdecimal",
+ "chrono",
+ "deadpool",
+ "diesel",
+ "diesel-async",
+ "futures",
+ "http 0.2.12",
+ "regex",
+ "retrom-codegen",
+ "retrom-db",
+ "retrom-service-common",
+ "sanitize-filename",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+ "tonic 0.11.0",
+ "tonic-reflection",
+ "tonic-web",
+ "tower-http 0.4.4",
+ "tracing",
+ "uuid",
+ "walkdir",
+]
+
+[[package]]
 name = "retrom-plugin-config"
-version = "0.7.39"
+version = "0.7.40"
 dependencies = [
  "config",
  "prost 0.12.6",
@@ -5427,7 +5456,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-installer"
-version = "0.7.39"
+version = "0.7.40"
 dependencies = [
  "dotenvy",
  "futures",
@@ -5450,7 +5479,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-launcher"
-version = "0.7.39"
+version = "0.7.40"
 dependencies = [
  "dotenvy",
  "hyper 0.14.32",
@@ -5479,7 +5508,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-service-client"
-version = "0.7.39"
+version = "0.7.40"
 dependencies = [
  "hyper 0.14.32",
  "hyper-rustls 0.25.0",
@@ -5500,7 +5529,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-standalone"
-version = "0.7.39"
+version = "0.7.40"
 dependencies = [
  "local-ip-address",
  "retrom-codegen",
@@ -5517,7 +5546,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-steam"
-version = "0.7.39"
+version = "0.7.40"
 dependencies = [
  "notify",
  "retrom-codegen",
@@ -5532,8 +5561,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "retrom-rest-service"
+version = "0.7.40"
+dependencies = [
+ "async_zip",
+ "diesel",
+ "diesel-async",
+ "http 0.2.12",
+ "hyper 0.14.32",
+ "retrom-codegen",
+ "retrom-db",
+ "retrom-service-common",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "walkdir",
+ "warp",
+]
+
+[[package]]
 name = "retrom-service"
-version = "0.7.39"
+version = "0.7.40"
 dependencies = [
  "async-compression",
  "async_zip",
@@ -5542,11 +5591,9 @@ dependencies = [
  "chrono",
  "config",
  "deadpool",
- "deunicode",
  "diesel",
  "diesel-async",
  "diesel_migrations",
- "directories",
  "dotenvy",
  "either",
  "futures",
@@ -5557,7 +5604,6 @@ dependencies = [
  "http-body-util",
  "hyper 0.14.32",
  "hyper-util",
- "libcaesium",
  "notify",
  "opentelemetry",
  "opentelemetry-http",
@@ -5570,12 +5616,15 @@ dependencies = [
  "reqwest",
  "retrom-codegen",
  "retrom-db",
+ "retrom-grpc-service",
+ "retrom-rest-service",
+ "retrom-service-common",
+ "retrom-telemetry",
  "retry",
  "sanitize-filename",
  "serde",
  "serde_json",
  "sevenz-rust2",
- "sha2",
  "signal-hook",
  "signal-hook-tokio",
  "tempfile",
@@ -5595,8 +5644,51 @@ dependencies = [
  "url",
  "uuid",
  "walkdir",
- "warp",
  "zeroize",
+]
+
+[[package]]
+name = "retrom-service-common"
+version = "0.7.40"
+dependencies = [
+ "bigdecimal",
+ "chrono",
+ "config",
+ "deunicode",
+ "directories",
+ "dotenvy",
+ "futures",
+ "libcaesium",
+ "prost 0.12.6",
+ "reqwest",
+ "retrom-codegen",
+ "serde",
+ "serde_json",
+ "sevenz-rust2",
+ "sha2",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-retry",
+ "tower 0.5.2",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "retrom-telemetry"
+version = "0.7.40"
+dependencies = [
+ "http 0.2.12",
+ "opentelemetry",
+ "opentelemetry-http",
+ "opentelemetry-otlp",
+ "opentelemetry-semantic-conventions",
+ "opentelemetry_sdk",
+ "retrom-service-common",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
 ]
 
 [[package]]
