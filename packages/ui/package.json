@@ -55,6 +55,7 @@
     "tailwindcss": "^4.1.11",
     "recharts": "catalog:",
     "tw-animate-css": "^1.3.5",
-    "vaul": "^1.1.2"
+    "vaul": "^1.1.2",
+    "zustand": "catalog:"
   }
 }

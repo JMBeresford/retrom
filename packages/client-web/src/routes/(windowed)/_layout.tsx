@@ -34,6 +34,8 @@ import { UpdatePlatformMetadataModal } from "@/components/modals/update-platform
 import { cn } from "@retrom/ui/lib/utils";
 import { ExitModal } from "@/components/modals/exit";
 import { InstallationIndicator } from "@/components/menubar/installation-indicator";
+import { NotificationCenter } from "@/components/notification-center";
+import { Toaster } from "@retrom/ui/components/toast";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
@@ -95,10 +97,23 @@ function LayoutComponent() {
                     <Outlet />
                   </main>
                 </ScrollArea>
+
+                <Toaster offset={{ bottom: "4rem" }} />
               </ResizablePanel>
             </ResizablePanelGroup>
-            <div className="border-t flex items-center justify-center">
-              <InstallationIndicator />
+            <div
+              className={cn(
+                "border-t grid grid-cols-3 px-5 grid-rows-1 place-items-center gap-2",
+                "*:w-full",
+              )}
+            >
+              <div className="flex justify-start"></div>
+              <div className="flex justify-center">
+                <InstallationIndicator />
+              </div>
+              <div className="flex justify-end">
+                <NotificationCenter />
+              </div>
             </div>
           </div>
 

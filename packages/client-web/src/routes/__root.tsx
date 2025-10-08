@@ -8,7 +8,6 @@ import { z } from "zod";
 import { InputDeviceProvider } from "@/providers/input-device";
 import { serverConfigTabSchema } from "@/components/modals/config/server";
 import { clientConfigTabSchema } from "@/components/modals/config/client";
-import { Toaster } from "@retrom/ui/components/toast";
 import { InstallationIndexProvider } from "@/providers/installation-index";
 import { InstallationProgressProvider } from "@/providers/installation-progress";
 
@@ -104,7 +103,6 @@ function RootComponent() {
                 <Outlet />
 
                 <Prompts />
-                <Toaster />
                 {/* <TanStackRouterDevtools /> */}
               </InstallationProgressProvider>
             </InstallationIndexProvider>

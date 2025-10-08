@@ -80,7 +80,7 @@
     "@opentelemetry/context-zone": "catalog:",
     "@opentelemetry/instrumentation": "catalog:",
     "@opentelemetry/instrumentation-fetch": "catalog:",
-    "zustand": "^4.5.5"
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
