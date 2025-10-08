@@ -16,8 +16,34 @@ import {
 } from "sonner";
 import { cn } from "../lib/utils";
 import { Button } from "./button";
+import { createStore, useStore } from "zustand";
+import { useCallback } from "react";
 
 const MAX_TOASTS = 5;
+
+interface ToastHistory {
+  history: ToastProps[];
+  addToast: (toast: ToastProps) => void;
+  removeToast: (id: string | number) => void;
+  clearHistory: () => void;
+}
+
+const toastHistoryStore = createStore<ToastHistory>()((set) => ({
+  history: Array<ToastProps>(),
+  addToast: (toast: ToastProps) => {
+    set((state) => ({
+      history: [toast, ...state.history.filter((t) => t.id !== toast.id)],
+    }));
+  },
+  removeToast: (id: string | number) => {
+    set((state) => ({
+      history: state.history.filter((toast) => toast.id !== id),
+    }));
+  },
+  clearHistory: () => set({ history: [] }),
+}));
+
+const useToastHistory = () => useStore(toastHistoryStore);
 
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
@@ -159,9 +185,19 @@ function Toast(props: ToastProps) {
 
   const Icon = props.icon ? () => <>{props.icon}</> : TitleIcon[variant];
 
+  const dismiss = useCallback(() => {
+    sonnerToast.dismiss(id);
+
+    if (id !== undefined) {
+      toastHistoryStore.getState().removeToast(id);
+    }
+  }, [id]);
+
   return (
     <div
-      onClick={dismissible ? () => sonnerToast.dismiss(id) : undefined}
+      onClick={
+        dismissible ? (closeButton ? undefined : () => dismiss()) : undefined
+      }
       className={cn(
         toastVariants({ variant }),
         "pr-4",
@@ -183,6 +219,7 @@ function Toast(props: ToastProps) {
       </div>
       {dismissible && closeButton ? (
         <LucideX
+          onClick={dismiss}
           size={14}
           className={cn(
             "absolute right-[8px] top-[8px] cursor-pointer",
@@ -194,14 +231,18 @@ function Toast(props: ToastProps) {
   );
 }
 
-const handleToast = (opts: ToastProps) =>
-  sonnerToast.custom((id) => <Toast id={id} {...opts} />, {
+const handleToast = (opts: ToastProps) => {
+  return sonnerToast.custom((id) => <Toast id={id} {...opts} />, {
     ...opts,
+    onAutoClose: (args) => {
+      toastHistoryStore.getState().addToast({ ...opts, id: args.id });
+      opts.onAutoClose?.(args);
+    },
   });
+};
 
 const toast = (opts: ToastProps) => {
   const id = handleToast(opts);
-
   const update = (opts: Omit<ToastProps, "id">) => handleToast({ ...opts, id });
 
   return { id, update };
@@ -209,5 +250,5 @@ const toast = (opts: ToastProps) => {
 
 toast.dismiss = sonnerToast.dismiss;
 
-export { Toaster, toast, useSonner };
+export { Toaster, toast, useSonner, Toast, toastHistoryStore, useToastHistory };
 export type * from "sonner";

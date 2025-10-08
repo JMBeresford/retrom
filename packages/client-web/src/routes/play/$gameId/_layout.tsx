@@ -10,6 +10,7 @@ import {
 import { useHotkeys } from "@/providers/hotkeys";
 import { GamepadProvider } from "@/providers/gamepad";
 import { FocusedHotkeyLayerProvider } from "@/providers/hotkeys/layers";
+import { Toaster } from "@retrom/ui/components/toast";
 
 export const Route = createFileRoute("/play/$gameId/_layout")({
   component: Layout,
@@ -57,18 +58,22 @@ function Layout() {
   });
 
   return (
-    <FocusedHotkeyLayerProvider>
-      <GamepadProvider>
-        <ModalActionProvider>
-          <GameDetailProvider gameId={parseInt(gameId)}>
-            <div className="w-dvw h-dvh overflow-hidden flex flex-col">
-              <Outlet />
-            </div>
-          </GameDetailProvider>
+    <div>
+      <FocusedHotkeyLayerProvider>
+        <GamepadProvider>
+          <ModalActionProvider>
+            <GameDetailProvider gameId={parseInt(gameId)}>
+              <div className="w-dvw h-dvh overflow-hidden flex flex-col">
+                <Outlet />
+              </div>
+            </GameDetailProvider>
 
-          <ConfirmModal />
-        </ModalActionProvider>
-      </GamepadProvider>
-    </FocusedHotkeyLayerProvider>
+            <ConfirmModal />
+          </ModalActionProvider>
+        </GamepadProvider>
+      </FocusedHotkeyLayerProvider>
+
+      <Toaster />
+    </div>
   );
 }
