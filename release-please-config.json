@@ -4,8 +4,6 @@
   "include-component-in-tag": false,
   "always-update": true,
   "always-link-local": true,
-  "pull-request-title-pattern": "chore(release): ${version}",
-  "group-pull-request-title-pattern": "chore(release): ${version}",
 
   "packages": {
     ".": {
