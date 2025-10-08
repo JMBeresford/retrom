@@ -198,3 +198,23 @@ jobs:
           updaterJsonPreferNsis: true
           tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
           args: ${{ env.TARGET_ARG }} # required for the action to look in the correct target subdir
+
+  publish-crates:
+    permissions:
+      contents: read
+    needs: release-please
+    if: github.event_name == 'release'
+    name: Publish to Crates.io
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PLEASE_GH_TOKEN }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish crates
+        run: cargo publish --token="${{ secrets.CARGO_REGISTRY_TOKEN }}"
