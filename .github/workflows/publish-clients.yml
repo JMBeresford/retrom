@@ -202,7 +202,6 @@ jobs:
   publish-crates:
     permissions:
       contents: read
-    needs: release-please
     if: github.event_name == 'release'
     name: Publish to Crates.io
     runs-on: ubuntu-latest
