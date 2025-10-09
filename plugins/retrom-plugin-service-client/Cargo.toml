@@ -18,7 +18,8 @@ tracing = { workspace = true }
 tokio = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-plugin-config = { workspace = true }
-hyper = { workspace = true }
+hyper = { workspace = true, features = ["client"] }
+hyper-util = { workspace = true }
 tokio-rustls = { workspace = true }
 webpki-roots = { workspace = true }
 hyper-rustls = { workspace = true }

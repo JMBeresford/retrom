@@ -1,23 +1,13 @@
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use either::Either;
-use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
-use hyper::{service::make_service_fn, Server};
 use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
 use retrom_db::run_migrations;
-use retrom_telemetry::span_from_grpc_request;
+use retrom_grpc_service::grpc_service;
+use retrom_rest_service::rest_service;
+use retrom_service_common::{config::ServerConfigManager, emulator_js};
 use retry::retry;
-use std::{
-    convert::Infallible,
-    net::SocketAddr,
-    pin::Pin,
-    process::exit,
-    sync::Arc,
-    task::{Context, Poll},
-};
-use tokio::task::JoinHandle;
-use tower::Service;
+use std::{net::SocketAddr, process::exit, sync::Arc};
+use tokio::{net::TcpListener, task::JoinHandle};
 use tracing::Instrument;
-use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 #[cfg(feature = "embedded_db")]
 use retrom_db::embedded::DB_NAME;
@@ -31,7 +21,7 @@ pub async fn get_server(
     db_params: Option<&str>,
 ) -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr) {
     let _ = emulator_js::EmulatorJs::new().await;
-    let config_manager = match crate::config::ServerConfigManager::new() {
+    let config_manager = match ServerConfigManager::new() {
         Ok(config) => Arc::new(config),
         Err(err) => {
             tracing::error!("Could not load configuration: {:#?}", err);
@@ -137,8 +127,8 @@ pub async fn get_server(
 
     let pool_state = Arc::new(pool);
 
-    let rest_service = warp::service(rest::rest_service(pool_state.clone()));
-    let grpc_service = grpc::grpc_service(&db_url, config_manager);
+    let rest_service = rest_service(pool_state.clone());
+    let grpc_service = grpc_service(&db_url, config_manager);
 
     tracing::info!(
         "Starting Retrom {} service at: {}",
@@ -148,127 +138,26 @@ pub async fn get_server(
 
     check_version_announcements().await;
 
-    let mut binding = Server::try_bind(&addr);
+    let service = rest_service.merge(grpc_service).into_make_service();
 
-    while binding.is_err() {
+    let mut listener = TcpListener::bind(&addr).await;
+    while listener.is_err() {
         let port = addr.port();
 
         tracing::warn!("Could not bind to port {}, trying port {}", port, port + 1);
         let new_port = port + 1;
         addr.set_port(new_port);
-        binding = Server::try_bind(&addr);
+        listener = TcpListener::bind(&addr).await;
     }
 
-    let server = binding.unwrap().serve(make_service_fn(move |_| {
-        let mut rest_service = rest_service.clone();
-        let mut grpc_service = grpc_service.clone();
-        std::future::ready(Ok::<_, Infallible>(tower::service_fn(
-            move |req: hyper::Request<hyper::Body>| {
-                let span = span_from_grpc_request(&req);
+    let server = axum::serve(listener.expect("Could not get an address"), service)
+        .with_graceful_shutdown(shutdown_signal());
 
-                match is_grpc_request(&req) {
-                    false => Either::Left({
-                        let res = rest_service.call(req);
-
-                        Box::pin(async move {
-                            let res = res.await.map(|res| res.map(EitherBody::Left))?;
-                            Ok::<_, Error>(res)
-                        })
-                    }),
-                    true => Either::Right({
-                        let res = span.in_scope(|| grpc_service.call(req));
-
-                        Box::pin(async move {
-                            let res = res.await.map(|res| {
-                                let grpc_status = res
-                                    .headers()
-                                    .get("grpc-status")
-                                    .and_then(|h| h.to_str().ok())
-                                    .map(|h| h.to_string());
-
-                                let grpc_message = res
-                                    .headers()
-                                    .get("grpc-message")
-                                    .and_then(|h| h.to_str().ok())
-                                    .map(|h| h.to_string());
-
-                                if let Some(ref grpc_message) = grpc_message {
-                                    span.record(
-                                        "rpc.grpc.metadata.messages",
-                                        format!("{:#?}", vec![&grpc_message]),
-                                    );
-                                }
-
-                                if let Some(grpc_status) = grpc_status {
-                                    span.record("rpc.grpc.status_code", &grpc_status);
-
-                                    if grpc_status != "0" {
-                                        span.set_status(opentelemetry::trace::Status::error(
-                                            grpc_message.unwrap_or_default(),
-                                        ));
-                                    }
-                                }
-
-                                res.map(EitherBody::Right)
-                            })?;
-
-                            Ok::<_, Error>(res)
-                        })
-                    }),
-                }
-            },
-        )))
-    }));
-
-    let port = server.local_addr();
+    let port = server.local_addr().expect("Could not get local address");
 
     let handle: JoinHandle<_> = tokio::spawn(
         async move {
-            if let Err(why) = server
-                .with_graceful_shutdown(async {
-                    #[cfg(windows)]
-                    {
-                        let _ = tokio::signal::ctrl_c().await;
-                        tracing::info!("Received Ctrl+C, shutting down...");
-                    }
-
-                    #[cfg(not(windows))]
-                    {
-                        use futures::stream::StreamExt;
-                        use signal_hook::consts::signal::*;
-                        use signal_hook_tokio::Signals;
-
-                        let mut signals = Signals::new([SIGTERM, SIGINT, SIGQUIT])
-                            .expect("Could not create signal handler");
-
-                        let handle = signals.handle();
-                        let handle_signals = async move {
-                            while let Some(signal) = signals.next().await {
-                                match signal {
-                                    SIGTERM | SIGINT | SIGQUIT => {
-                                        break;
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        };
-
-                        tokio::select! {
-                             _ = handle_signals => {
-                                tracing::info!("Received termination signal, shutting down...");
-                            }
-                            _ = tokio::signal::ctrl_c() => {
-                                tracing::info!("Received Ctrl+C, shutting down...");
-                            }
-                        }
-
-                        handle.close();
-                    }
-                })
-                .await
-            {
-                tracing::error!("Server error: {}", why);
-            }
+            server.await?;
 
             #[cfg(feature = "embedded_db")]
             if let Some(psql_running) = psql {
@@ -287,29 +176,6 @@ pub async fn get_server(
     );
 
     (handle, port)
-}
-
-fn is_grpc_request(req: &hyper::Request<hyper::Body>) -> bool {
-    let is_grpc = req
-        .headers()
-        .get(CONTENT_TYPE)
-        .map(|content_type| content_type.as_bytes())
-        .filter(|content_type| content_type.starts_with(b"application/grpc"))
-        .is_some();
-
-    let is_grpc_preflight = req.method() == hyper::Method::OPTIONS
-        && req
-            .headers()
-            .get(ACCESS_CONTROL_REQUEST_HEADERS)
-            .map(|headers| {
-                headers
-                    .to_str()
-                    .ok()
-                    .map(|headers| headers.contains("content-type") && headers.contains("grpc"))
-            })
-            .is_some();
-
-    is_grpc || is_grpc_preflight
 }
 
 async fn check_version_announcements() {
@@ -355,51 +221,43 @@ async fn check_version_announcements() {
     });
 }
 
-type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
-
-enum EitherBody<A, B> {
-    Left(A),
-    Right(B),
-}
-
-impl<A, B> http_body::Body for EitherBody<A, B>
-where
-    A: http_body::Body + Send + Unpin,
-    B: http_body::Body<Data = A::Data> + Send + Unpin,
-    A::Error: Into<Error>,
-    B::Error: Into<Error>,
-{
-    type Data = A::Data;
-    type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
-
-    fn is_end_stream(&self) -> bool {
-        match self {
-            EitherBody::Left(b) => b.is_end_stream(),
-            EitherBody::Right(b) => b.is_end_stream(),
-        }
+async fn shutdown_signal() {
+    #[cfg(windows)]
+    {
+        let _ = tokio::signal::ctrl_c().await;
+        tracing::info!("Received Ctrl+C, shutting down...");
     }
 
-    fn poll_data(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Result<Self::Data, Self::Error>>> {
-        match self.get_mut() {
-            EitherBody::Left(b) => Pin::new(b).poll_data(cx).map(map_option_err),
-            EitherBody::Right(b) => Pin::new(b).poll_data(cx).map(map_option_err),
-        }
-    }
+    #[cfg(not(windows))]
+    {
+        use futures::stream::StreamExt;
+        use signal_hook::consts::signal::*;
+        use signal_hook_tokio::Signals;
 
-    fn poll_trailers(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<Option<http::HeaderMap>, Self::Error>> {
-        match self.get_mut() {
-            EitherBody::Left(b) => Pin::new(b).poll_trailers(cx).map_err(Into::into),
-            EitherBody::Right(b) => Pin::new(b).poll_trailers(cx).map_err(Into::into),
-        }
-    }
-}
+        let mut signals =
+            Signals::new([SIGTERM, SIGINT, SIGQUIT]).expect("Could not create signal handler");
 
-fn map_option_err<T, U: Into<Error>>(err: Option<Result<T, U>>) -> Option<Result<T, Error>> {
-    err.map(|e| e.map_err(Into::into))
+        let handle = signals.handle();
+        let handle_signals = async move {
+            while let Some(signal) = signals.next().await {
+                match signal {
+                    SIGTERM | SIGINT | SIGQUIT => {
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+        };
+
+        tokio::select! {
+             _ = handle_signals => {
+                tracing::info!("Received termination signal, shutting down...");
+            }
+            _ = tokio::signal::ctrl_c() => {
+                tracing::info!("Received Ctrl+C, shutting down...");
+            }
+        }
+
+        handle.close();
+    }
 }

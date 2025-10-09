@@ -1,62 +1,54 @@
-use std::path::PathBuf;
-use std::sync::Arc;
-
+use axum::{
+    body::Bytes,
+    extract::Path,
+    http::{header, StatusCode},
+    response::Response,
+    routing::get,
+    Extension, Router,
+};
 use diesel::associations::HasTable;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::header;
+use futures_util::TryStreamExt;
 use retrom_codegen::retrom;
 use retrom_db::Pool;
+use std::sync::Arc;
+use tokio::fs::File;
 use tokio_util::io::ReaderStream;
-use warp::{filters::BoxedFilter, Filter};
 
-use super::with_db_pool;
+pub fn file_routes() -> Router {
+    Router::new().nest("/file", Router::new().route("/:fileId", get(file_handler)))
+}
 
-pub fn file(pool: Arc<Pool>) -> BoxedFilter<(impl warp::Reply,)> {
-    warp::path!("file" / i32)
-        .and(warp::get())
-        .and(with_db_pool(pool))
-        .and_then(|file_id: i32, pool: Arc<Pool>| async move {
-            let mut conn = pool.get().await.unwrap();
+pub async fn file_handler(
+    Extension(pool): Extension<Arc<Pool>>,
+    Path(file_id): Path<i32>,
+) -> Result<Response, StatusCode> {
+    let mut conn = pool.get().await.unwrap();
 
-            let file = match retrom::GameFile::table()
-                .find(file_id)
-                .first::<retrom::GameFile>(&mut conn)
-                .await
-            {
-                Ok(game_file) => PathBuf::from(game_file.path),
-                Err(_) => return Err(warp::reject::not_found()),
-            };
+    let file_path = retrom::GameFile::table()
+        .find(file_id)
+        .first::<retrom::GameFile>(&mut conn)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?
+        .path;
 
-            let file_name = file
-                .file_name()
-                .unwrap()
-                .to_str()
-                .unwrap_or("unknown")
-                .to_string();
+    let file = File::open(&file_path)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?;
 
-            let file = match tokio::fs::File::open(file).await {
-                Ok(file) => file,
-                Err(_) => return Err(warp::reject::not_found()),
-            };
+    let reader_stream = ReaderStream::new(file).map_ok(Bytes::from);
+    let body = axum::body::Body::from_stream(reader_stream);
 
-            let reader_stream = ReaderStream::new(file);
-            let body = hyper::Body::wrap_stream(reader_stream);
+    let response = Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "application/octet-stream")
+        .header(
+            header::CONTENT_DISPOSITION,
+            format!("attachment; filename=\"{file_path}\""),
+        )
+        .body(body)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-            let mut response = warp::reply::Response::new(body);
-            let headers = response.headers_mut();
-            headers.insert(
-                header::CONTENT_TYPE,
-                "application/octet-stream".parse().unwrap(),
-            );
-            headers.insert(
-                header::CONTENT_DISPOSITION,
-                format!("attachment; filename=\"{file_name}\"")
-                    .parse()
-                    .unwrap(),
-            );
-
-            Ok(response)
-        })
-        .boxed()
+    Ok(response)
 }

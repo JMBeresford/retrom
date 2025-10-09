@@ -506,28 +506,27 @@ pub async fn update_metadata(
 
                 let mut conn = db_pool.get().await.expect("Failed to get connection");
 
-                if existing.is_ok() && !overwrite {
-                    tracing::debug!(
-                        "Metadata already exists for game {}",
-                        existing.unwrap().name()
-                    );
+                if let Ok(existing) = existing {
+                    if !overwrite {
+                        tracing::debug!("Metadata already exists for game {}", existing.name());
 
-                    let updated_meta = UpdatedGameMetadata {
-                        last_played: metadata.last_played,
-                        minutes_played: metadata.minutes_played,
-                        ..Default::default()
-                    };
+                        let updated_meta = UpdatedGameMetadata {
+                            last_played: metadata.last_played,
+                            minutes_played: metadata.minutes_played,
+                            ..Default::default()
+                        };
 
-                    if let Err(why) = diesel::update(schema::game_metadata::table)
-                        .filter(schema::game_metadata::game_id.eq(game_id))
-                        .set(&updated_meta)
-                        .execute(&mut conn)
-                        .await
-                    {
-                        tracing::error!("Failed to update metadata: {}", why);
-                    };
+                        if let Err(why) = diesel::update(schema::game_metadata::table)
+                            .filter(schema::game_metadata::game_id.eq(game_id))
+                            .set(&updated_meta)
+                            .execute(&mut conn)
+                            .await
+                        {
+                            tracing::error!("Failed to update metadata: {}", why);
+                        };
 
-                    return Ok(());
+                        return Ok(());
+                    }
                 }
 
                 if let Err(why) = diesel::insert_into(schema::game_metadata::table)

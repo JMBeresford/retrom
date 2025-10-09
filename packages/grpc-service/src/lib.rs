@@ -1,3 +1,4 @@
+use axum::Router;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use emulators::EmulatorServiceHandlers;
 use file_explorer::FileExplorerServiceHandlers;
@@ -23,8 +24,7 @@ use retrom_service_common::{
 };
 use saves::SavesServiceHandlers;
 use std::{sync::Arc, time::Duration};
-use tonic::transport::{server::Routes, Server};
-use tower_http::cors::{AllowOrigin, Cors, CorsLayer};
+use tower_http::cors::{AllowOrigin, CorsLayer};
 
 pub mod clients;
 pub mod emulators;
@@ -54,7 +54,7 @@ const DEFAULT_ALLOW_HEADERS: [HeaderName; 7] = [
     HeaderName::from_static("tracestate"),
 ];
 
-pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> Cors<Routes> {
+pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> Router {
     use std::num::NonZeroUsize;
     let shared_pool_config =
         AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
@@ -93,7 +93,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> C
 
     let reflection_service = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
-        .build()
+        .build_v1()
         .unwrap();
 
     let library_service = LibraryServiceServer::new(LibraryServiceHandlers::new(
@@ -134,26 +134,32 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> C
         config_manager.clone(),
     ));
 
-    Server::builder()
-        // .accept_http1(true)
+    let mut routes_builder = tonic::service::Routes::builder();
+
+    routes_builder
+        .add_service(reflection_service)
+        .add_service(library_service)
+        .add_service(game_service)
+        .add_service(platform_service)
+        .add_service(metadata_service)
+        .add_service(client_service)
+        .add_service(server_service)
+        .add_service(emulator_service)
+        .add_service(job_service)
+        .add_service(file_explorer_service)
+        .add_service(saves_service);
+
+    routes_builder
+        .routes()
+        .into_axum_router()
         .layer(
             CorsLayer::new()
                 .allow_origin(AllowOrigin::mirror_request())
                 .allow_credentials(true)
-                .expose_headers(DEFAULT_EXPOSED_HEADERS.to_vec())
-                .allow_headers(DEFAULT_ALLOW_HEADERS.to_vec())
+                .expose_headers(DEFAULT_EXPOSED_HEADERS)
+                .allow_headers(DEFAULT_ALLOW_HEADERS)
                 .max_age(DEFAULT_MAX_AGE),
         )
-        .add_service(reflection_service)
-        .add_service(tonic_web::enable(library_service))
-        .add_service(tonic_web::enable(game_service))
-        .add_service(tonic_web::enable(platform_service))
-        .add_service(tonic_web::enable(metadata_service))
-        .add_service(tonic_web::enable(client_service))
-        .add_service(tonic_web::enable(server_service))
-        .add_service(tonic_web::enable(emulator_service))
-        .add_service(tonic_web::enable(job_service))
-        .add_service(tonic_web::enable(file_explorer_service))
-        .add_service(tonic_web::enable(saves_service))
-        .into_service()
+        .layer(tower_http::trace::TraceLayer::new_for_grpc())
+        .layer(tonic_web::GrpcWebLayer::new())
 }

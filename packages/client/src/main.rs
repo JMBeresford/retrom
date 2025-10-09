@@ -36,8 +36,8 @@ pub async fn main() {
             if config.telemetry.is_some_and(|t| t.enabled) {
                 use opentelemetry::trace::TracerProvider;
 
-                let tracer_provider = retrom_service::trace::get_tracer_provider();
-                let meter_provider = retrom_service::trace::init_meter_provider();
+                let tracer_provider = retrom_telemetry::get_tracer_provider();
+                let meter_provider = retrom_telemetry::init_meter_provider();
 
                 let tracer = tracer_provider.tracer("main");
 

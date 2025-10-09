@@ -24,6 +24,7 @@ uuid = { workspace = true }
 thiserror = { workspace = true }
 http = { workspace = true }
 tower-http = { workspace = true }
+axum = { workspace = true }
 deadpool = { workspace = true }
 tonic-reflection = { workspace = true }
 tonic-web = { workspace = true }
