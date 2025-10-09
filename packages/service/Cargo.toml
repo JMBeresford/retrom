@@ -33,7 +33,6 @@ tonic = { workspace = true }
 tonic-web = { workspace = true }
 tonic-reflection = { workspace = true }
 prost = { workspace = true }
-
 futures = { workspace = true }
 bigdecimal = { workspace = true }
 tower = { workspace = true }
@@ -43,11 +42,11 @@ hyper = { workspace = true }
 hyper-util = { workspace = true }
 either = "1.12.0"
 http-body = "0.4"
+axum = { workspace = true }
 http = { workspace = true }
-http-new = { version = "1.3.1", package = 'http' }
 tokio-util = { workspace = true }
 tokio-retry = { workspace = true }
-futures-util = "0.3.30"
+futures-util = { workspace = true }
 tokio-stream = { workspace = true }
 thiserror = { workspace = true }
 sanitize-filename = { workspace = true }

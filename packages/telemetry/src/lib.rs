@@ -1,11 +1,6 @@
-use std::{fs::OpenOptions, str::FromStr};
+use std::fs::OpenOptions;
 
-use opentelemetry::{
-    global,
-    trace::{SpanKind, TracerProvider},
-    KeyValue,
-};
-use opentelemetry_http::HeaderExtractor;
+use opentelemetry::{global, trace::TracerProvider, KeyValue};
 use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
 use opentelemetry_sdk::{
     metrics::{MeterProviderBuilder, PeriodicReader, SdkMeterProvider},
@@ -15,8 +10,7 @@ use opentelemetry_sdk::{
     Resource,
 };
 use opentelemetry_semantic_conventions::attribute::{SERVICE_NAME, SERVICE_VERSION};
-use tracing::field::Empty;
-use tracing_opentelemetry::{MetricsLayer, OpenTelemetryLayer, OpenTelemetrySpanExt};
+use tracing_opentelemetry::{MetricsLayer, OpenTelemetryLayer};
 use tracing_subscriber::{layer::SubscriberExt, prelude::*, util::SubscriberInitExt};
 
 #[tracing::instrument]
@@ -140,92 +134,4 @@ pub fn get_tracer_provider() -> SdkTracerProvider {
     );
 
     tracer_provider
-}
-
-pub fn span_from_grpc_request(req: &hyper::Request<hyper::Body>) -> tracing::Span {
-    // HACK: http crate mismatch in deps, manually re-create headers in (aliased) http crate
-    // that is supported by opentelemetry
-    let mut headers = http_new::HeaderMap::new();
-
-    for pair in req.headers().iter() {
-        if let Ok(key) = http_new::HeaderName::from_str(pair.0.as_ref()) {
-            if let Ok(value) = http_new::HeaderValue::from_str(pair.1.to_str().unwrap()) {
-                headers.insert(key, value);
-            }
-        }
-    }
-
-    let parent_context = global::get_text_map_propagator(|propagator| {
-        propagator.extract(&HeaderExtractor(&headers))
-    });
-
-    let name = req
-        .uri()
-        .path()
-        .strip_prefix("/")
-        .unwrap_or(req.uri().path());
-
-    let parts = name.split('/').collect::<Vec<_>>();
-    let service = parts.first().unwrap_or(&"");
-    let method = parts.get(1).unwrap_or(&"");
-    let server_host = req.uri().host().unwrap_or("");
-    let server_port = req
-        .uri()
-        .port()
-        .map(|p| p.as_str().to_string())
-        .unwrap_or_default();
-
-    let user_agent = req
-        .headers()
-        .get(http::header::USER_AGENT)
-        .map_or("", |h| h.to_str().unwrap_or(""));
-
-    let x_forwarded_for: Vec<&str> = req
-        .headers()
-        .get_all("x-forwarded-for")
-        .iter()
-        .filter_map(|h| h.to_str().ok())
-        .collect();
-
-    let client_host = req
-        .headers()
-        .get(http::header::HOST)
-        .and_then(|h| h.to_str().ok())
-        .unwrap_or("");
-
-    let client_parts = client_host.split(':').collect::<Vec<_>>();
-    let client_address = client_parts.first().unwrap_or(&"");
-    let client_port = client_parts
-        .get(1)
-        .and_then(|p| p.parse::<u16>().ok())
-        .unwrap_or(0);
-
-    let span = tracing::info_span!(
-        "request_handler",
-        otel.kind = ?SpanKind::Server,
-        otel.name = name,
-        otel.status_code = Empty,
-
-        http.user_agent = %user_agent,
-        http.x_forwarded_for = ?x_forwarded_for,
-
-        rpc.system = "grpc",
-        rpc.service = service,
-        rpc.method = method,
-        rpc.grpc.status_code = Empty,
-        rpc.grpc.metadata.messages = Empty,
-
-        server.address = server_host,
-        server.port = server_port,
-
-        client.address = client_address,
-        client.port = client_port,
-
-        exception.message = Empty,
-        exception.details = Empty,
-    );
-
-    span.set_parent(parent_context);
-
-    span
 }

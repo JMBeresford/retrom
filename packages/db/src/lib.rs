@@ -42,7 +42,7 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 pub fn run_migrations(
     conn: &mut impl MigrationHarness<diesel::pg::Pg>,
-) -> Result<Vec<MigrationVersion>> {
+) -> Result<Vec<MigrationVersion<'_>>> {
     conn.run_pending_migrations(MIGRATIONS)
         .map_err(|e| Error::MigrationError(e.to_string()))
 }

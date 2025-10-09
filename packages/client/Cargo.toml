@@ -26,6 +26,7 @@ opentelemetry_sdk = { workspace = true }
 opentelemetry = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-service = { workspace = true }
+retrom-telemetry = { workspace = true }
 tokio = { workspace = true }
 tokio-util = { workspace = true }
 tonic = { workspace = true }

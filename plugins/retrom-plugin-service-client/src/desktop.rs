@@ -1,4 +1,5 @@
 use crate::GrpcWebClient;
+use hyper_util::rt::TokioExecutor;
 use retrom_plugin_config::ConfigExt;
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Runtime};
@@ -31,13 +32,23 @@ impl<R: Runtime> RetromPluginServiceClient<R> {
             .with_root_certificates(roots)
             .with_no_client_auth();
 
-        let https = hyper_rustls::HttpsConnectorBuilder::new()
-            .with_tls_config(tls)
-            .https_or_http()
-            .enable_http2()
-            .build();
+        let mut http = hyper_util::client::legacy::connect::HttpConnector::new();
+        http.enforce_http(false);
 
-        let client = hyper::Client::builder().build(https);
+        let connector = tower::ServiceBuilder::new()
+            .layer_fn(move |s| {
+                let tls = tls.clone();
+
+                hyper_rustls::HttpsConnectorBuilder::new()
+                    .with_tls_config(tls)
+                    .https_or_http()
+                    .enable_http2()
+                    .wrap_connector(s)
+            })
+            .service(http);
+
+        let client =
+            hyper_util::client::legacy::Client::builder(TokioExecutor::new()).build(connector);
 
         tower::ServiceBuilder::new()
             .layer(GrpcWebClientLayer::new())

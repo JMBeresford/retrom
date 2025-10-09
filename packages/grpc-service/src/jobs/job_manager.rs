@@ -30,9 +30,15 @@ pub struct JobOptions {
     pub wait_on_jobs: Option<Vec<JobId>>,
 }
 
-pub(crate) struct JobManager {
+pub struct JobManager {
     job_progress: Arc<RwLock<HashMap<JobId, JobProgress>>>,
     invalidation_channel: broadcast::Sender<JobId>,
+}
+
+impl Default for JobManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl JobManager {

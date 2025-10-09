@@ -1,4 +1,5 @@
-use retrom_service::{get_server, trace::init_tracing_subscriber};
+use retrom_service::get_server;
+use retrom_telemetry::init_tracing_subscriber;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

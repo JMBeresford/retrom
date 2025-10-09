@@ -7,6 +7,12 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 pub struct FileExplorerServiceHandlers {}
 
+impl Default for FileExplorerServiceHandlers {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FileExplorerServiceHandlers {
     pub fn new() -> Self {
         Self {}

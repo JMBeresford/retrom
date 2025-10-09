@@ -212,7 +212,7 @@ pub async fn subscribe_to_installation_updates<R: Runtime>(
             let update = InstallationProgressUpdate {
                 game_id: progress.game_id,
                 status: progress.status.into(),
-                metrics: metrics.clone().into(),
+                metrics: (*metrics).into(),
             };
 
             if let Err(why) = channel.send(update.encode_to_vec().as_slice()) {

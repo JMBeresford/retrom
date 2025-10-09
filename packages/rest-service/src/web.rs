@@ -1,16 +1,15 @@
-use warp::{filters::BoxedFilter, Filter};
-
+use axum::Router;
 use retrom_service_common::retrom_dirs::RetromDirs;
+use tower_http::services::{ServeDir, ServeFile};
 
-#[tracing::instrument]
-pub fn web() -> BoxedFilter<(impl warp::Reply,)> {
+pub fn web_routes() -> Router {
     let dir = RetromDirs::new().web_dir().join("dist");
     let index_path = dir.join("index.html");
 
-    let get = warp::get().and(warp::fs::dir(dir).or(warp::fs::file(index_path)));
+    let dir_service = ServeDir::new(dir);
+    let index_service = ServeFile::new(index_path);
 
-    warp::path("web")
-        .and(get)
-        .with(warp::filters::trace::request())
-        .boxed()
+    Router::new()
+        .nest_service("/web", dir_service)
+        .fallback_service(index_service)
 }
