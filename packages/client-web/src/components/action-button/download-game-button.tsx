@@ -28,19 +28,20 @@ export const DownloadGameButton = forwardRef(
     useImperativeHandle(forwardedRef, () => ref.current);
 
     return (
-      <form action={downloadUrl.href} className="w-full">
-        <Button
-          ref={ref}
-          type="submit"
-          {...rest}
-          disabled={game.thirdParty || rest.disabled}
-          className={cn(className)}
-          variant="accent"
-        >
+      <Button
+        ref={ref}
+        type="submit"
+        {...rest}
+        disabled={game.thirdParty || rest.disabled}
+        className={cn(className)}
+        variant="accent"
+        asChild
+      >
+        <a href={downloadUrl.toString()} target="_blank" rel="noreferrer">
           <DownloadIcon className="h-[1.2rem] w-[1.2rem]" />
           Download
-        </Button>
-      </form>
+        </a>
+      </Button>
     );
   },
 );

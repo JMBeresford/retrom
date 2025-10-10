@@ -152,6 +152,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
     routes_builder
         .routes()
         .into_axum_router()
+        .layer(tonic_web::GrpcWebLayer::new())
         .layer(
             CorsLayer::new()
                 .allow_origin(AllowOrigin::mirror_request())
@@ -161,5 +162,4 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
                 .max_age(DEFAULT_MAX_AGE),
         )
         .layer(tower_http::trace::TraceLayer::new_for_grpc())
-        .layer(tonic_web::GrpcWebLayer::new())
 }

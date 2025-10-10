@@ -1,4 +1,7 @@
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
+use hyper::{body::Incoming, Request};
+use hyper_util::rt::{TokioExecutor, TokioIo};
 use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
 use retrom_db::run_migrations;
 use retrom_grpc_service::grpc_service;
@@ -7,6 +10,7 @@ use retrom_service_common::{config::ServerConfigManager, emulator_js};
 use retry::retry;
 use std::{net::SocketAddr, process::exit, sync::Arc};
 use tokio::{net::TcpListener, task::JoinHandle};
+use tower::ServiceExt;
 use tracing::Instrument;
 
 #[cfg(feature = "embedded_db")]
@@ -138,8 +142,6 @@ pub async fn get_server(
 
     check_version_announcements().await;
 
-    let service = rest_service.merge(grpc_service).into_make_service();
-
     let mut listener = TcpListener::bind(&addr).await;
     while listener.is_err() {
         let port = addr.port();
@@ -150,14 +152,87 @@ pub async fn get_server(
         listener = TcpListener::bind(&addr).await;
     }
 
-    let server = axum::serve(listener.expect("Could not get an address"), service)
-        .with_graceful_shutdown(shutdown_signal());
-
-    let port = server.local_addr().expect("Could not get local address");
+    let listener = listener.expect("Could not bind to address");
+    let port = listener.local_addr().expect("Could not get local address");
 
     let handle: JoinHandle<_> = tokio::spawn(
         async move {
-            server.await?;
+            let server = async {
+                loop {
+                    let (socket, addr) = listener
+                        .accept()
+                        .await
+                        .expect("Could not accept connection");
+
+                    let grpc_service = grpc_service.clone();
+                    let rest_service = rest_service.clone();
+
+                    tokio::spawn(
+                        async move {
+                            let socket = TokioIo::new(socket);
+
+                            let hyper_service =
+                                hyper::service::service_fn(move |req: Request<Incoming>| {
+                                    let is_grpc = req
+                                        .headers()
+                                        .get(CONTENT_TYPE)
+                                        .map(|content_type| content_type.as_bytes())
+                                        .filter(|content_type| {
+                                            content_type.starts_with(b"application/grpc")
+                                        })
+                                        .is_some();
+
+                                    let is_grpc_preflight = req.method() == hyper::Method::OPTIONS
+                                        && req
+                                            .headers()
+                                            .get(ACCESS_CONTROL_REQUEST_HEADERS)
+                                            .map(|headers| {
+                                                headers.to_str().ok().map(|headers| {
+                                                    headers.contains("content-type")
+                                                        && headers.contains("grpc")
+                                                })
+                                            })
+                                            .is_some();
+
+                                    if is_grpc || is_grpc_preflight {
+                                        tracing::debug!(
+                                            "Routing request to gRPC service: {} {}",
+                                            req.method(),
+                                            req.uri().path()
+                                        );
+                                        grpc_service.clone().oneshot(req)
+                                    } else {
+                                        tracing::debug!(
+                                            "Routing request to REST service: {} {}",
+                                            req.method(),
+                                            req.uri().path()
+                                        );
+                                        rest_service.clone().oneshot(req)
+                                    }
+                                });
+
+                            if let Err(err) =
+                                hyper_util::server::conn::auto::Builder::new(TokioExecutor::new())
+                                    .serve_connection(socket, hyper_service)
+                                    .await
+                            {
+                                tracing::error!("Error serving connection for {}: {}", addr, err);
+                            }
+                        }
+                        .in_current_span(),
+                    );
+                }
+            }
+            .in_current_span();
+
+            tokio::select! {
+                _ = server => {
+                    tracing::info!("Server exited");
+                }
+                _ = shutdown_signal() => {
+                    tracing::info!("Shutdown signal received");
+                }
+            }
 
             #[cfg(feature = "embedded_db")]
             if let Some(psql_running) = psql {

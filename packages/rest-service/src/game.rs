@@ -18,7 +18,7 @@ use tracing::{instrument, warn};
 use walkdir::WalkDir;
 
 pub fn game_routes() -> Router {
-    Router::new().nest("/game", Router::new().route(":gameId", get(game_handler)))
+    Router::new().route("/{gameId}", get(game_handler))
 }
 
 #[instrument(skip_all)]
@@ -26,7 +26,7 @@ pub async fn game_handler(
     Extension(pool): Extension<Arc<Pool>>,
     Path(game_id): Path<i32>,
 ) -> Result<Response, StatusCode> {
-    let mut conn = pool.get().await.unwrap();
+    let mut conn = pool.get().await.expect("Failed to get DB connection");
 
     let game = match retrom::Game::table()
         .find(game_id)
@@ -38,6 +38,8 @@ pub async fn game_handler(
     };
 
     let game_path = PathBuf::from(game.path);
+
+    tracing::info!("Creating zip archive for game with ID {game_id} at {game_path:?}");
 
     let file_name = match game_path.is_dir() {
         true => game_path
