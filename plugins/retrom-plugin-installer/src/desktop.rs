@@ -271,7 +271,7 @@ impl<R: Runtime> Installer<R> {
                                     ),
                                 )?;
 
-                                progress.metrics.clone().ok_or(crate::Error::InternalError(
+                                progress.metrics.ok_or(crate::Error::InternalError(
                                     "No installation metrics found".into(),
                                 ))?
                             };
@@ -814,7 +814,7 @@ impl<R: Runtime> Installer<R> {
                 let update = InstallationProgressUpdate {
                     game_id,
                     status: progress.status.into(),
-                    metrics: progress.metrics.clone(),
+                    metrics: progress.metrics,
                 };
 
                 let encoded = update.encode_to_vec();
