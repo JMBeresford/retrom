@@ -61,6 +61,8 @@ pub async fn init_tracing_subscriber() {
         .unwrap_or_else(|_| "info,".into())
         .add_directive("tokio_postgres=info".parse().unwrap())
         .add_directive("hyper=info".parse().unwrap())
+        // .add_directive("tower_http=debug".parse().unwrap())
+        .add_directive("axum::rejection=trace".parse().unwrap())
         .add_directive("hyper_util=info".parse().unwrap());
 
     tracing_subscriber::registry()

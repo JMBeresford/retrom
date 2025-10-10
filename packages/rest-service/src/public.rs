@@ -1,23 +1,23 @@
 use axum::{
     http::{StatusCode, Uri},
     response::{IntoResponse, Response},
-    routing::post,
+    routing::any_service,
     Json, Router,
 };
 use retrom_codegen::retrom::{files::File, FilesystemNodeType};
 use retrom_service_common::retrom_dirs::RetromDirs;
 use std::path::PathBuf;
+use tower::ServiceExt;
 use tower_http::services::ServeDir;
 
 pub fn public_routes() -> Router {
-    Router::new()
-        .route("/public", post(post_file).delete(delete_file))
-        .fallback_service(dir_service())
-}
-
-fn dir_service() -> ServeDir {
     let public_dir = RetromDirs::new().public_dir().clone();
-    ServeDir::new(public_dir)
+    let dir_service = ServeDir::new(public_dir);
+
+    Router::new().route(
+        "/{*tail}",
+        any_service(dir_service).post(post_file).delete(delete_file),
+    )
 }
 
 #[tracing::instrument]

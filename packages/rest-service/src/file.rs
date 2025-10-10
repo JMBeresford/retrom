@@ -17,7 +17,7 @@ use tokio::fs::File;
 use tokio_util::io::ReaderStream;
 
 pub fn file_routes() -> Router {
-    Router::new().nest("/file", Router::new().route("/:fileId", get(file_handler)))
+    Router::new().route("/{fileId}", get(file_handler))
 }
 
 pub async fn file_handler(
