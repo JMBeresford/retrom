@@ -1,13 +1,10 @@
-use axum::{
-    response::Redirect,
-    routing::get,
-    Extension, Router,
-};
+use axum::{response::Redirect, routing::get, Extension, Router};
 use file::file_routes;
 use game::game_routes;
 use public::public_routes;
 use retrom_db::Pool;
 use std::sync::Arc;
+use tower_http::cors::{AllowOrigin, CorsLayer};
 use web::web_routes;
 pub mod error;
 pub mod file;
@@ -32,6 +29,11 @@ pub fn rest_service(pool: Arc<Pool>) -> Router {
         )
         .layer(Extension(pool))
         .layer(tower_http::trace::TraceLayer::new_for_http())
+        .layer(
+            CorsLayer::new()
+                .allow_origin(AllowOrigin::mirror_request())
+                .allow_credentials(true),
+        )
     // .layer(
     //     ServiceBuilder::new().map_response(|mut response: Response| {
     //         let headers = response.headers_mut();

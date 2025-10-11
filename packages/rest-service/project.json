@@ -1,0 +1,11 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "retrom-rest-service",
+  "targets": {
+    "cargo:lint": {},
+    "cargo:format": {},
+    "cargo:build": {},
+    "cargo:test": {},
+    "cargo:run": {}
+  }
+}
