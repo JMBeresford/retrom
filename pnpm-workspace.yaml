@@ -3,40 +3,41 @@ packages:
   - plugins/*
 
 catalog:
-  "@monodon/rust": ^2.3.0
-  "@nx/eslint": 21.4.1
-  "@nx/js": 21.4.1
-  "@nx/vite": 21.2.1
-  "@nx/web": 21.4.1
-  "@opentelemetry/api": 1.9.0
-  "@opentelemetry/context-zone": 2.0.1
-  "@opentelemetry/exporter-trace-otlp-http": 0.201.0
-  "@opentelemetry/exporter-trace-otlp-proto": 0.201.0
-  "@opentelemetry/instrumentation": 0.201.0
-  "@opentelemetry/instrumentation-document-load": 0.46.0
-  "@opentelemetry/instrumentation-fetch": 0.201.0
-  "@opentelemetry/resources": 2.0.1
-  "@opentelemetry/sdk-trace-web": 2.0.1
-  "@opentelemetry/semantic-conventions": 1.33.0
-  "@swc-node/register": ~1.9.1
-  "@swc/core": ~1.5.7
-  "@swc/helpers": ~0.5.11
-  "@tauri-apps/api": 2.8.0
-  "@tauri-apps/cli": ^2.8.4
-  "@tauri-apps/plugin-dialog": 2.4.0
-  "@tauri-apps/plugin-fs": 2.4.2
-  "@tauri-apps/plugin-opener": 2.5.0
-  "@tauri-apps/plugin-process": 2.3.0
-  "@tauri-apps/plugin-shell": 2.3.1
-  "@tauri-apps/plugin-updater": 2.9.0
-  "@tauri-apps/plugin-upload": 2.3.1
-  "@tauri-apps/plugin-window-state": 2.4.0
-  "@uptrace/web": ^1.23.0
-  "@vitest/ui": ^3.0.0
+  '@monodon/rust': ^2.3.0
+  '@nx/eslint': 21.4.1
+  '@nx/js': 21.4.1
+  '@nx/vite': 21.2.1
+  '@nx/web': 21.4.1
+  '@opentelemetry/api': 1.9.0
+  '@opentelemetry/context-zone': 2.0.1
+  '@opentelemetry/exporter-trace-otlp-http': 0.201.0
+  '@opentelemetry/exporter-trace-otlp-proto': 0.201.0
+  '@opentelemetry/instrumentation': 0.201.0
+  '@opentelemetry/instrumentation-document-load': 0.46.0
+  '@opentelemetry/instrumentation-fetch': 0.201.0
+  '@opentelemetry/resources': 2.0.1
+  '@opentelemetry/sdk-trace-web': 2.0.1
+  '@opentelemetry/semantic-conventions': 1.33.0
+  '@swc-node/register': ~1.9.1
+  '@swc/core': ~1.5.7
+  '@swc/helpers': ~0.5.11
+  '@tauri-apps/api': 2.8.0
+  '@tauri-apps/cli': ^2.8.4
+  '@tauri-apps/plugin-dialog': 2.4.0
+  '@tauri-apps/plugin-fs': 2.4.2
+  '@tauri-apps/plugin-opener': 2.5.0
+  '@tauri-apps/plugin-process': 2.3.0
+  '@tauri-apps/plugin-shell': 2.3.1
+  '@tauri-apps/plugin-updater': 2.9.0
+  '@tauri-apps/plugin-upload': 2.3.1
+  '@tauri-apps/plugin-window-state': 2.4.0
+  '@uptrace/web': ^1.23.0
+  '@vitest/ui': ^3.0.0
   dotenv: ^16.5.0
   eslint: ^9.25.1
   jiti: 2.4.2
   jsdom: ~22.1.0
+  markdownlint-cli2: ^0.18.1
   nx: 21.4.1
   nx-mcp: 0.6.3
   prettier: 3.5.3
@@ -52,12 +53,12 @@ catalog:
 catalogMode: strict
 
 onlyBuiltDependencies:
-  - "@bufbuild/buf"
-  - "@swc/core"
-  - "@tailwindcss/oxide"
+  - '@bufbuild/buf'
+  - '@swc/core'
+  - '@tailwindcss/oxide'
   - core-js-pure
   - esbuild
   - grpc-tools
   - nx
-  - "@parcel/watcher"
+  - '@parcel/watcher'
   - protobufjs

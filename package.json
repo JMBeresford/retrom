@@ -9,6 +9,18 @@
         "options": {
           "command": "pnpm --version"
         }
+      },
+      "markdownlint:lint": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm markdownlint-cli2 '**/*.md' '#**/node_modules' '#**/dist' '#**/target' --fix",
+          "cwd": "{projectRoot}"
+        },
+        "configurations": {
+          "check": {
+            "command": "pnpm markdownlint-cli2 '**/*.md' '#**/node_modules' '#**/dist' '#**/target'"
+          }
+        }
       }
     }
   },
@@ -29,6 +41,7 @@
     "eslint": "catalog:",
     "jiti": "catalog:",
     "jsdom": "catalog:",
+    "markdownlint-cli2": "catalog:",
     "nx": "catalog:",
     "nx-mcp": "catalog:",
     "prettier": "catalog:",
