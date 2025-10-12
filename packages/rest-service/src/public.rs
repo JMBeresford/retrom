@@ -7,7 +7,6 @@ use axum::{
 use retrom_codegen::retrom::{files::File, FilesystemNodeType};
 use retrom_service_common::retrom_dirs::RetromDirs;
 use std::path::PathBuf;
-use tower::ServiceExt;
 use tower_http::services::ServeDir;
 
 pub fn public_routes() -> Router {

@@ -10,9 +10,6 @@
     },
     {
       "path": "../retrom-plugin-config/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/codegen/tsconfig.lib.json"
     }
   ]
 }
