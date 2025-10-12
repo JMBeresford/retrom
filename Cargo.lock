@@ -5457,7 +5457,6 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tokio-util",
- "tower 0.5.2",
  "tower-http",
  "tracing",
  "walkdir",
