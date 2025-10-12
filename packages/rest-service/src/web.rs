@@ -1,7 +1,4 @@
-use axum::{
-    routing::any_service,
-    Router,
-};
+use axum::{routing::any_service, Router};
 use retrom_service_common::retrom_dirs::RetromDirs;
 use tower_http::services::{ServeDir, ServeFile};
 
