@@ -40,10 +40,10 @@ jobs:
 
       - name: Setup rustfmt
         run: rustup component add rustfmt
-        
+
       - name: Setup clippy
         run: rustup component add clippy
-      
+
       - uses: Swatinem/rust-cache@v2
 
       - name: Install Protoc
@@ -67,6 +67,9 @@ jobs:
       - name: disable NX cloud
         if: steps.nx-check.outcome != 'success'
         run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+
+      - name: Check for unused cargo dependencies
+        uses: bnjbvr/cargo-machete@main
 
       - name: run tests
         run: cargo test
