@@ -70,6 +70,8 @@ jobs:
 
       - name: Check for unused cargo dependencies
         uses: bnjbvr/cargo-machete@main
+        with:
+          args: "--with-metadata"
 
       - name: run tests
         run: cargo test
