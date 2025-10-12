@@ -11,7 +11,7 @@ use retry::retry;
 use std::{net::SocketAddr, process::exit, sync::Arc};
 use tokio::{net::TcpListener, task::JoinHandle};
 use tower::ServiceExt;
-use tracing::Instrument;
+use tracing::{info_span, Instrument};
 
 #[cfg(feature = "embedded_db")]
 use retrom_db::embedded::DB_NAME;
@@ -219,11 +219,11 @@ pub async fn get_server(
                                 tracing::error!("Error serving connection for {}: {}", addr, err);
                             }
                         }
-                        .in_current_span(),
+                        .instrument(info_span!("connection", %addr)),
                     );
                 }
             }
-            .in_current_span();
+            .instrument(info_span!("server_loop"));
 
             tokio::select! {
                 _ = server => {

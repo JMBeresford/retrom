@@ -22,6 +22,7 @@ use retrom_service_common::{
     metadata_providers::{igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider},
     retrom_dirs::RetromDirs,
 };
+use retrom_telemetry::grpc::{GrpcOnRequestSpan, GrpcOnResponseSpanHandler};
 use saves::SavesServiceHandlers;
 use std::{sync::Arc, time::Duration};
 use tower_http::cors::{AllowOrigin, CorsLayer};
@@ -154,6 +155,11 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         .into_axum_router()
         .layer(tonic_web::GrpcWebLayer::new())
         .layer(
+            tower_http::trace::TraceLayer::new_for_grpc()
+                .make_span_with(GrpcOnRequestSpan::default())
+                .on_response(GrpcOnResponseSpanHandler::default()),
+        )
+        .layer(
             CorsLayer::new()
                 .allow_origin(AllowOrigin::mirror_request())
                 .allow_credentials(true)
@@ -161,5 +167,4 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
                 .allow_headers(DEFAULT_ALLOW_HEADERS)
                 .max_age(DEFAULT_MAX_AGE),
         )
-        .layer(tower_http::trace::TraceLayer::new_for_grpc())
 }

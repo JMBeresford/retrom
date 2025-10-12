@@ -2,8 +2,27 @@ use retrom_service::get_server;
 use retrom_telemetry::init_tracing_subscriber;
 
 #[tokio::main]
+#[tracing::instrument]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    init_tracing_subscriber().await;
+    let mut telemetry_enabled = false;
+    let server_config = retrom_service_common::config::ServerConfigManager::new();
+
+    if let Ok(config) = server_config {
+        if config
+            .get_config()
+            .await
+            .telemetry
+            .is_some_and(|t| t.enabled)
+        {
+            telemetry_enabled = true;
+        }
+    };
+
+    std::env::set_var("SERVICE_NAME", env!("CARGO_PKG_NAME"));
+    std::env::set_var("SERVICE_VERSION", env!("CARGO_PKG_VERSION"));
+
+    println!("Telemetry enabled: {}", telemetry_enabled);
+    init_tracing_subscriber(telemetry_enabled, "./retrom.log").await;
 
     if cfg!(debug_assertions) {
         dotenvy::dotenv().ok();
