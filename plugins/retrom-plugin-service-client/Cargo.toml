@@ -15,7 +15,6 @@ tauri = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-tokio = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-plugin-config = { workspace = true }
 hyper = { workspace = true, features = ["client"] }
@@ -29,3 +28,6 @@ tonic = { workspace = true }
 
 [build-dependencies]
 tauri-plugin = { workspace = true }
+
+[package.metadata.cargo-machete]
+ignored = ["tauri-plugin"]

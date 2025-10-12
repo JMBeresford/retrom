@@ -16,7 +16,6 @@ tauri = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
 serde = { workspace = true }
-dotenvy = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 retrom-codegen = { workspace = true }
@@ -24,15 +23,10 @@ retrom-plugin-installer = { workspace = true }
 retrom-plugin-steam = { workspace = true }
 retrom-plugin-service-client = { workspace = true }
 retrom-plugin-config = { workspace = true }
-retry = { workspace = true }
-hyper = { workspace = true }
-hyper-util = { workspace = true }
-tower = { workspace = true }
-tonic-web = { workspace = true }
-tokio-rustls = { workspace = true }
-webpki-roots = { workspace = true }
-hyper-rustls = { workspace = true }
 walkdir = { workspace = true }
 
 [build-dependencies]
 tauri-plugin = { workspace = true }
+
+[package.metadata.cargo-machete]
+ignored = ["tauri-plugin"]

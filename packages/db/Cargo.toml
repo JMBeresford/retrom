@@ -13,13 +13,6 @@ diesel = { workspace = true }
 diesel_migrations = { workspace = true }
 diesel-async = { workspace = true }
 deadpool = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-dotenvy = { workspace = true }
-async-trait = { workspace = true }
-postgresql_commands = { optional = true, version = "^0.19.0", features = [
-  "tokio",
-] }
 postgresql_embedded = { optional = true, version = "^0.19.0", features = [
   "tokio",
 ] }
@@ -28,7 +21,9 @@ tracing = { workspace = true }
 pq-sys = { workspace = true }
 openssl-sys = { workspace = true }
 tokio = { workspace = true }
-zeroize = { workspace = true }
 
 [features]
-embedded = ["dep:postgresql_embedded", "dep:postgresql_commands"]
+embedded = ["dep:postgresql_embedded"]
+
+[package.metadata.cargo-machete]
+ignored = ['openssl-sys', 'pq-sys']

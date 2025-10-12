@@ -17,12 +17,10 @@ retrom-codegen = { workspace = true }
 retrom-db = { workspace = true }
 tokio-util = { workspace = true }
 tokio = { workspace = true }
-hyper = { workspace = true }
 tracing = { workspace = true }
 async_zip = { workspace = true }
 walkdir = { workspace = true }
 retrom-service-common = { workspace = true }
-http-body-util = { workspace = true }
 futures-util = { workspace = true }
 bytes = { workspace = true }
 axum = { workspace = true }

@@ -16,10 +16,12 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 retrom-codegen = { workspace = true }
-tokio = { workspace = true }
 tauri-plugin-opener = { workspace = true }
 steamlocate = "2.0.0"
 notify = { workspace = true }
 
 [build-dependencies]
 tauri-plugin = { workspace = true }
+
+[package.metadata.cargo-machete]
+ignored = ["tauri-plugin"]

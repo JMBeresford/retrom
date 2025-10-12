@@ -359,8 +359,8 @@ dependencies = [
  "bytes",
  "form_urlencoded",
  "futures-util",
- "http 1.3.1",
- "http-body 1.0.1",
+ "http",
+ "http-body",
  "http-body-util",
  "hyper",
  "hyper-util",
@@ -390,8 +390,8 @@ checksum = "59446ce19cd142f8833f856eb31f3eb097812d1479ab224f54d72428ca21ea22"
 dependencies = [
  "bytes",
  "futures-core",
- "http 1.3.1",
- "http-body 1.0.1",
+ "http",
+ "http-body",
  "http-body-util",
  "mime",
  "pin-project-lite",
@@ -2083,7 +2083,7 @@ dependencies = [
  "fnv",
  "futures-core",
  "futures-sink",
- "http 1.3.1",
+ "http",
  "indexmap 2.9.0",
  "slab",
  "tokio",
@@ -2195,17 +2195,6 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.2.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "601cbb57e577e2f5ef5be8e7b83f0f63994f25aa94d673e54a92d5c516d101f1"
-dependencies = [
- "bytes",
- "fnv",
- "itoa",
-]
-
-[[package]]
-name = "http"
 version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4a85d31aea989eead29a3aaf9e1115a180df8282431156e533de47660892565"
@@ -2217,23 +2206,12 @@ dependencies = [
 
 [[package]]
 name = "http-body"
-version = "0.4.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ceab25649e9960c0311ea418d17bee82c0dcec1bd053b5f9a66e265a693bed2"
-dependencies = [
- "bytes",
- "http 0.2.12",
- "pin-project-lite",
-]
-
-[[package]]
-name = "http-body"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1efedce1fb8e6913f23e0c92de8e62cd5b772a67e7b3946df930a62566c93184"
 dependencies = [
  "bytes",
- "http 1.3.1",
+ "http",
 ]
 
 [[package]]
@@ -2244,8 +2222,8 @@ checksum = "b021d93e26becf5dc7e1b75b1bed1fd93124b374ceb73f43d4d4eafec896a64a"
 dependencies = [
  "bytes",
  "futures-core",
- "http 1.3.1",
- "http-body 1.0.1",
+ "http",
+ "http-body",
  "pin-project-lite",
 ]
 
@@ -2278,8 +2256,8 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "h2",
- "http 1.3.1",
- "http-body 1.0.1",
+ "http",
+ "http-body",
  "httparse",
  "httpdate",
  "itoa",
@@ -2296,7 +2274,7 @@ version = "0.27.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3c93eb611681b207e1fe55d5a71ecf91572ec8a6705cdb6857f7d8d5242cf58"
 dependencies = [
- "http 1.3.1",
+ "http",
  "hyper",
  "hyper-util",
  "log",
@@ -2349,8 +2327,8 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
- "http 1.3.1",
- "http-body 1.0.1",
+ "http",
+ "http-body",
  "hyper",
  "ipnet",
  "libc",
@@ -3949,7 +3927,7 @@ checksum = "46d7ab32b827b5b495bd90fa95a6cb65ccc293555dcc3199ae2937d2d237c8ed"
 dependencies = [
  "async-trait",
  "bytes",
- "http 1.3.1",
+ "http",
  "opentelemetry",
  "reqwest",
  "tracing",
@@ -3962,7 +3940,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d899720fe06916ccba71c01d04ecd77312734e2de3467fd30d9d580c8ce85656"
 dependencies = [
  "futures-core",
- "http 1.3.1",
+ "http",
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-proto",
@@ -5168,8 +5146,8 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http 1.3.1",
- "http-body 1.0.1",
+ "http",
+ "http-body",
  "http-body-util",
  "hyper",
  "hyper-rustls",
@@ -5211,7 +5189,7 @@ checksum = "57f17d28a6e6acfe1733fe24bcd30774d13bffa4b8a22535b4c8c98423088d4e"
 dependencies = [
  "anyhow",
  "async-trait",
- "http 1.3.1",
+ "http",
  "reqwest",
  "serde",
  "thiserror 1.0.69",
@@ -5228,7 +5206,7 @@ dependencies = [
  "async-trait",
  "futures",
  "getrandom 0.2.16",
- "http 1.3.1",
+ "http",
  "hyper",
  "parking_lot 0.11.2",
  "reqwest",
@@ -5249,7 +5227,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "getrandom 0.2.16",
- "http 1.3.1",
+ "http",
  "matchit",
  "reqwest",
  "reqwest-middleware",
@@ -5261,22 +5239,16 @@ name = "retrom-client"
 version = "0.7.40"
 dependencies = [
  "dotenvy",
- "futures",
  "openssl-sys",
  "opentelemetry",
- "opentelemetry_sdk",
  "pq-sys",
- "prost 0.14.1",
- "retrom-codegen",
  "retrom-plugin-config",
  "retrom-plugin-installer",
  "retrom-plugin-launcher",
  "retrom-plugin-service-client",
  "retrom-plugin-standalone",
  "retrom-plugin-steam",
- "retrom-service",
  "retrom-telemetry",
- "serde",
  "serde_json",
  "tauri",
  "tauri-build",
@@ -5290,8 +5262,6 @@ dependencies = [
  "tauri-plugin-updater",
  "tauri-plugin-window-state",
  "tokio",
- "tokio-util",
- "tonic 0.14.2",
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
@@ -5309,8 +5279,6 @@ dependencies = [
  "prost-wkt-types",
  "retrom-db",
  "serde",
- "serde_json",
- "tokio",
  "tonic 0.14.2",
  "tonic-prost",
  "tonic-prost-build",
@@ -5321,22 +5289,16 @@ dependencies = [
 name = "retrom-db"
 version = "0.7.40"
 dependencies = [
- "async-trait",
  "deadpool",
  "diesel",
  "diesel-async",
  "diesel_migrations",
- "dotenvy",
  "openssl-sys",
- "postgresql_commands",
  "postgresql_embedded",
  "pq-sys",
- "serde",
- "serde_json",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
- "zeroize",
 ]
 
 [[package]]
@@ -5350,7 +5312,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "futures",
- "http 1.3.1",
+ "http",
  "regex",
  "retrom-codegen",
  "retrom-db",
@@ -5390,7 +5352,6 @@ dependencies = [
 name = "retrom-plugin-installer"
 version = "0.7.40"
 dependencies = [
- "dotenvy",
  "futures",
  "prost 0.14.1",
  "reqwest",
@@ -5404,7 +5365,6 @@ dependencies = [
  "tauri-plugin-opener",
  "thiserror 1.0.69",
  "tokio",
- "tokio-util",
  "tonic 0.14.2",
  "tracing",
 ]
@@ -5413,29 +5373,20 @@ dependencies = [
 name = "retrom-plugin-launcher"
 version = "0.7.40"
 dependencies = [
- "dotenvy",
- "hyper",
- "hyper-rustls",
- "hyper-util",
  "prost 0.14.1",
  "retrom-codegen",
  "retrom-plugin-config",
  "retrom-plugin-installer",
  "retrom-plugin-service-client",
  "retrom-plugin-steam",
- "retry",
  "serde",
  "tauri",
  "tauri-plugin",
  "thiserror 1.0.69",
  "tokio",
- "tokio-rustls",
  "tonic 0.14.2",
- "tonic-web",
- "tower 0.5.2",
  "tracing",
  "walkdir",
- "webpki-roots",
 ]
 
 [[package]]
@@ -5451,7 +5402,6 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 1.0.69",
- "tokio",
  "tokio-rustls",
  "tonic 0.14.2",
  "tonic-web",
@@ -5465,7 +5415,6 @@ name = "retrom-plugin-standalone"
 version = "0.7.40"
 dependencies = [
  "local-ip-address",
- "retrom-codegen",
  "retrom-plugin-config",
  "retrom-service",
  "serde",
@@ -5474,7 +5423,6 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tracing",
- "urlencoding",
 ]
 
 [[package]]
@@ -5489,7 +5437,6 @@ dependencies = [
  "tauri-plugin",
  "tauri-plugin-opener",
  "thiserror 1.0.69",
- "tokio",
  "tracing",
 ]
 
@@ -5503,9 +5450,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "futures-util",
- "http 1.3.1",
- "http-body-util",
- "hyper",
+ "http",
  "retrom-codegen",
  "retrom-db",
  "retrom-service-common",
@@ -5522,35 +5467,16 @@ dependencies = [
 name = "retrom-service"
 version = "0.7.40"
 dependencies = [
- "async-compression",
- "async_zip",
- "axum",
- "bigdecimal",
- "bytes",
- "chrono",
  "config",
  "deadpool",
  "diesel",
  "diesel-async",
- "diesel_migrations",
  "dotenvy",
- "either",
  "futures",
- "futures-util",
- "http 1.3.1",
- "http-body 0.4.6",
- "http-body-util",
+ "http",
  "hyper",
  "hyper-util",
- "notify",
- "opentelemetry",
- "opentelemetry-http",
  "opentelemetry-otlp",
- "opentelemetry-semantic-conventions",
- "opentelemetry_sdk",
- "prost 0.14.1",
- "rayon",
- "regex",
  "reqwest",
  "retrom-codegen",
  "retrom-db",
@@ -5559,30 +5485,11 @@ dependencies = [
  "retrom-service-common",
  "retrom-telemetry",
  "retry",
- "sanitize-filename",
- "serde",
- "serde_json",
- "sevenz-rust2",
  "signal-hook",
  "signal-hook-tokio",
- "tempfile",
- "thiserror 1.0.69",
  "tokio",
- "tokio-retry",
- "tokio-stream",
- "tokio-util",
- "tonic 0.14.2",
- "tonic-reflection",
- "tonic-web",
  "tower 0.5.2",
- "tower-http",
  "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
- "url",
- "uuid",
- "walkdir",
- "zeroize",
 ]
 
 [[package]]
@@ -5617,14 +5524,13 @@ dependencies = [
 name = "retrom-telemetry"
 version = "0.7.40"
 dependencies = [
- "http 1.3.1",
+ "http",
  "hyper",
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
  "opentelemetry_sdk",
- "retrom-service-common",
  "tower-http",
  "tracing",
  "tracing-opentelemetry",
@@ -6742,7 +6648,7 @@ dependencies = [
  "glob",
  "gtk",
  "heck 0.5.0",
- "http 1.3.1",
+ "http",
  "jni",
  "libc",
  "log",
@@ -6992,7 +6898,7 @@ dependencies = [
  "dirs",
  "flate2",
  "futures-util",
- "http 1.3.1",
+ "http",
  "infer",
  "log",
  "minisign-verify",
@@ -7038,7 +6944,7 @@ dependencies = [
  "cookie",
  "dpi",
  "gtk",
- "http 1.3.1",
+ "http",
  "jni",
  "objc2 0.6.1",
  "objc2-ui-kit",
@@ -7061,7 +6967,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c1fe9d48bd122ff002064e88cfcd7027090d789c4302714e68fcccba0f4b7807"
 dependencies = [
  "gtk",
- "http 1.3.1",
+ "http",
  "jni",
  "log",
  "objc2 0.6.1",
@@ -7095,7 +7001,7 @@ dependencies = [
  "dunce",
  "glob",
  "html5ever",
- "http 1.3.1",
+ "http",
  "infer",
  "json-patch",
  "kuchikiki",
@@ -7504,8 +7410,8 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "flate2",
- "http 1.3.1",
- "http-body 1.0.1",
+ "http",
+ "http-body",
  "http-body-util",
  "hyper",
  "hyper-timeout",
@@ -7532,8 +7438,8 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "h2",
- "http 1.3.1",
- "http-body 1.0.1",
+ "http",
+ "http-body",
  "http-body-util",
  "hyper",
  "hyper-timeout",
@@ -7614,8 +7520,8 @@ checksum = "75214f6b6bd28c19aa752ac09fdf0eea546095670906c21fe3940e180a4c43f2"
 dependencies = [
  "base64 0.22.1",
  "bytes",
- "http 1.3.1",
- "http-body 1.0.1",
+ "http",
+ "http-body",
  "pin-project",
  "tokio-stream",
  "tonic 0.14.2",
@@ -7676,8 +7582,8 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-util",
- "http 1.3.1",
- "http-body 1.0.1",
+ "http",
+ "http-body",
  "http-body-util",
  "http-range-header",
  "httpdate",
@@ -7999,12 +7905,6 @@ dependencies = [
  "percent-encoding",
  "serde",
 ]
-
-[[package]]
-name = "urlencoding"
-version = "2.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
 
 [[package]]
 name = "urlpattern"
@@ -8909,7 +8809,7 @@ dependencies = [
  "gdkx11",
  "gtk",
  "html5ever",
- "http 1.3.1",
+ "http",
  "javascriptcore-rs",
  "jni",
  "kuchikiki",

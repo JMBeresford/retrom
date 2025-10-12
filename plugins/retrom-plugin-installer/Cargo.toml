@@ -22,11 +22,12 @@ retrom-plugin-config = { workspace = true }
 futures = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
-tokio-util = { workspace = true }
 reqwest = { workspace = true }
 tracing = { workspace = true }
-dotenvy = { workspace = true }
 tauri-plugin-opener = { workspace = true }
 
 [build-dependencies]
 tauri-plugin = { workspace = true }
+
+[package.metadata.cargo-machete]
+ignored = ["tauri-plugin"]

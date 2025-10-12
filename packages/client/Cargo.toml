@@ -17,22 +17,13 @@ tauri-build = { workspace = true }
 
 [dependencies]
 tauri = { workspace = true }
-serde_json = { workspace = true }
-serde = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 tracing-opentelemetry = { workspace = true }
-opentelemetry_sdk = { workspace = true }
 opentelemetry = { workspace = true }
-retrom-codegen = { workspace = true }
-retrom-service = { workspace = true }
 retrom-telemetry = { workspace = true }
 tokio = { workspace = true }
-tokio-util = { workspace = true }
-tonic = { workspace = true }
-prost = { workspace = true }
 dotenvy = { workspace = true }
-futures = { workspace = true }
 retrom-plugin-installer = { workspace = true }
 retrom-plugin-launcher = { workspace = true }
 retrom-plugin-service-client = { workspace = true }
@@ -49,6 +40,7 @@ tauri-plugin-single-instance = { workspace = true }
 tauri-plugin-updater = { workspace = true }
 pq-sys = { workspace = true }
 openssl-sys = { workspace = true }
+serde_json = { workspace = true }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
@@ -58,3 +50,6 @@ custom-protocol = ["tauri/custom-protocol"]
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-window-state = { workspace = true }
+
+[package.metadata.cargo-machete]
+ignored = ["openssl-sys", "pq-sys", "tauri-build", "serde_json"]
