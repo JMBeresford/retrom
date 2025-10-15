@@ -1,0 +1,22 @@
+[package]
+name = "retrom-telemetry"
+resolver = "2"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Common telemetry utils for the Retrom video game library packages"
+
+[dependencies]
+opentelemetry = { workspace = true }
+opentelemetry-http = { workspace = true }
+opentelemetry-otlp = { workspace = true }
+opentelemetry_sdk = { workspace = true }
+opentelemetry-semantic-conventions = { workspace = true }
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
+tracing-subscriber = { workspace = true }
+http = { workspace = true }
+hyper = { workspace = true }
+tower-http = { workspace = true }

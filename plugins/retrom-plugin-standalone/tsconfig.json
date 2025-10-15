@@ -9,9 +9,6 @@
       "path": "../retrom-plugin-config"
     },
     {
-      "path": "../../packages/codegen"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

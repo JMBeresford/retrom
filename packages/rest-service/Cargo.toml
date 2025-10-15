@@ -1,0 +1,27 @@
+[package]
+name = "retrom-rest-service"
+resolver = "2"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "The Retrom video game library REST (non-gRPC) service handlers"
+
+[dependencies]
+thiserror = { workspace = true }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+http = { workspace = true }
+retrom-codegen = { workspace = true }
+retrom-db = { workspace = true }
+tokio-util = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+async_zip = { workspace = true }
+walkdir = { workspace = true }
+retrom-service-common = { workspace = true }
+futures-util = { workspace = true }
+bytes = { workspace = true }
+axum = { workspace = true }
+tower-http = { workspace = true }

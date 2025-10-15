@@ -23,15 +23,8 @@ const DIESEL_INSERTABLE_DERIVES: [&str; 1] = ["Insertable"];
 // Derives that are used for structs representing changesets, or to-be-updated rows
 const DIESEL_UPDATE_DERIVES: [&str; 3] = ["AsChangeset", "Insertable", "Identifiable"];
 
-const OTHER_DERIVES: [&str; 2] = ["Hash", "Eq"];
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not set"));
-    let other_derivations = OTHER_DERIVES
-        .iter()
-        .map(|d| d.to_string())
-        .collect::<Vec<String>>()
-        .join(",");
 
     let diesel_row_derivations = DIESEL_ROW_DERIVES
         .iter()
@@ -214,7 +207,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ),
     ];
 
-    let mut build = tonic_build::configure()
+    let mut build = tonic_prost_build::configure()
         .type_attribute(".", "#[derive(serde::Serialize, serde::Deserialize)]")
         .extern_path(".google.protobuf.Timestamp", "crate::timestamp::Timestamp")
         .extern_path(".google.protobuf.Duration", "::prost_wkt_types::Duration")
@@ -255,10 +248,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (model_name, table_name, primary_key, belongs_to) in queryable_models.into_iter() {
         let derives = match belongs_to.len() {
-            0 => format!("#[derive({diesel_row_derivations},{other_derivations})]",),
-            _ => format!(
-                "#[derive({diesel_row_derivations},diesel::Associations,{other_derivations})]",
-            ),
+            0 => format!("#[derive({diesel_row_derivations})]",),
+            _ => format!("#[derive({diesel_row_derivations},diesel::Associations)]",),
         };
 
         let diesel_macro_clause = get_diesel_macro(table_name, primary_key, belongs_to);
@@ -271,10 +262,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (model_name, table_name, primary_key, belongs_to) in insertable_models.into_iter() {
         let derives = match belongs_to.len() {
-            0 => format!("#[derive({diesel_insertable_derivations},{other_derivations})]",),
-            _ => format!(
-                "#[derive({diesel_insertable_derivations},diesel::Associations,{other_derivations})]",
-            ),
+            0 => format!("#[derive({diesel_insertable_derivations})]",),
+            _ => format!("#[derive({diesel_insertable_derivations},diesel::Associations)]",),
         };
 
         let diesel_macro_clause = get_diesel_macro(table_name, primary_key, belongs_to);
@@ -287,10 +276,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (model_name, table_name, primary_key, belongs_to) in updatable_models.into_iter() {
         let derives = match belongs_to.len() {
-            0 => format!("#[derive({diesel_update_derivations},{other_derivations})]",),
-            _ => format!(
-                "#[derive({diesel_update_derivations},diesel::Associations,{other_derivations})]",
-            ),
+            0 => format!("#[derive({diesel_update_derivations})]",),
+            _ => format!("#[derive({diesel_update_derivations},diesel::Associations)]",),
         };
 
         let diesel_macro_clause = get_diesel_macro(table_name, primary_key, belongs_to);
@@ -303,7 +290,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     build
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))
-        .compile(&proto_paths, &["./protos/"])?;
+        .compile_protos(&proto_paths, &[PathBuf::from("./protos/")])?;
 
     Ok(())
 }

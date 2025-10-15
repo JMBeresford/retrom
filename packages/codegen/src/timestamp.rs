@@ -17,6 +17,7 @@ fn pg_epoch() -> SystemTime {
     Clone,
     Eq,
     Hash,
+    Copy,
     PartialEq,
     PartialOrd,
     Ord,

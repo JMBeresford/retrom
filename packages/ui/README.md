@@ -1,10 +1,8 @@
-# @retrom/ui
+# Retrom UI
 
 A collection of reusable UI components for the Retrom application, built with React and Tailwind CSS.
 
 ## Overview
-
-## Components
 
 This package includes components based on [shadcn/ui](https://ui.shadcn.com/) which are built on top of:
 
@@ -15,7 +13,12 @@ This package includes components based on [shadcn/ui](https://ui.shadcn.com/) wh
 ## Usage
 
 ```tsx
-import { Button, Dialog, DialogContent, DialogTrigger } from "@retrom/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@retrom/ui/components/dialog";
+import { Button } from "@retrom/ui/components/button";
 
 function MyComponent() {
   return (
