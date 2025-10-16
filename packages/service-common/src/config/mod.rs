@@ -76,6 +76,10 @@ impl ServerConfigManager {
         self.config.read().await.clone()
     }
 
+    pub fn get_config_blocking(&self) -> ServerConfig {
+        self.config.blocking_read().clone()
+    }
+
     pub async fn update_config(&self, config: ServerConfig) -> Result<()> {
         let data = serde_json::to_vec_pretty(&config)?;
         tokio::fs::write(&self.config_path, data).await?;

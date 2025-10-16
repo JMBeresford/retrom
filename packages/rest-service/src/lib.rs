@@ -4,7 +4,10 @@ use game::game_routes;
 use public::public_routes;
 use retrom_db::Pool;
 use std::sync::Arc;
-use tower_http::cors::{AllowOrigin, CorsLayer};
+use tower_http::{
+    compression::CompressionLayer,
+    cors::{AllowOrigin, CorsLayer},
+};
 use web::web_routes;
 pub mod error;
 pub mod file;
@@ -27,6 +30,7 @@ pub fn rest_service(pool: Arc<Pool>) -> Router {
             "/",
             get(|| async { Redirect::to("/web") }).head(|| async { Redirect::to("/web") }),
         )
+        .layer(CompressionLayer::new())
         .layer(Extension(pool))
         .layer(tower_http::trace::TraceLayer::new_for_http())
         .layer(
