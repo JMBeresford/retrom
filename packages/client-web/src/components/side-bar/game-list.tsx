@@ -62,11 +62,8 @@ export function GameList(props: { platform: PlatformWithMetadata }) {
       });
     }
 
-    console.log({ name, games, allGames });
-
     return games;
   }, [
-    name,
     allGames,
     filters.name,
     gameSortDirection,
@@ -128,7 +125,7 @@ export function GameList(props: { platform: PlatformWithMetadata }) {
         ) : (
           <div className="grid place-items-center pt-4">
             <p className="font-medium text-muted-foreground italic">
-              Theres no games here...
+              There are no games here...
             </p>
           </div>
         )}
