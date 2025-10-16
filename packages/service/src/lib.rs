@@ -9,7 +9,7 @@ use retrom_rest_service::rest_service;
 use retrom_service_common::{config::ServerConfigManager, emulator_js};
 use retry::retry;
 use std::{net::SocketAddr, process::exit, sync::Arc};
-use tokio::{net::TcpListener, task::JoinHandle};
+use tokio::{net::TcpListener, runtime::Builder, task::JoinHandle};
 use tower::ServiceExt;
 use tracing::{info_span, Instrument};
 
@@ -155,6 +155,15 @@ pub async fn get_server(
     let listener = listener.expect("Could not bind to address");
     let port = listener.local_addr().expect("Could not get local address");
 
+    let request_runtime = Builder::new_multi_thread()
+        .worker_threads(2)
+        .thread_name("request-pool")
+        .thread_stack_size(3 * 1024 * 1024)
+        .enable_time()
+        .enable_io()
+        .build()
+        .expect("Could not create request runtime");
+
     let handle: JoinHandle<_> = tokio::spawn(
         async move {
             let server = async {
@@ -167,7 +176,8 @@ pub async fn get_server(
                     let grpc_service = grpc_service.clone();
                     let rest_service = rest_service.clone();
 
-                    tokio::spawn(
+                    let _g = request_runtime.enter();
+                    request_runtime.spawn(
                         async move {
                             let socket = TokioIo::new(socket);
 
