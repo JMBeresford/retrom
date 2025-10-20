@@ -1,4 +1,5 @@
 use axum::{response::Redirect, routing::get, Extension, Router};
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use file::file_routes;
 use game::game_routes;
 use public::public_routes;
@@ -32,7 +33,8 @@ pub fn rest_service(pool: Arc<Pool>) -> Router {
         )
         .layer(CompressionLayer::new())
         .layer(Extension(pool))
-        .layer(tower_http::trace::TraceLayer::new_for_http())
+        .layer(OtelInResponseLayer::default())
+        .layer(OtelAxumLayer::default())
         .layer(
             CorsLayer::new()
                 .allow_origin(AllowOrigin::mirror_request())

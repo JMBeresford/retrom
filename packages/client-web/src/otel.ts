@@ -13,10 +13,37 @@ import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from "@opentelemetry/semantic-conven
 import { ZoneContextManager } from "@opentelemetry/context-zone";
 import { DocumentLoadInstrumentation } from "@opentelemetry/instrumentation-document-load";
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
+import {
+  CompositePropagator,
+  W3CBaggagePropagator,
+  W3CTraceContextPropagator,
+} from "@opentelemetry/core";
 
 export function initOtel() {
   const contextManager = new ZoneContextManager();
-  const documentLoadInstrumentation = new DocumentLoadInstrumentation();
+  const propagator = new CompositePropagator({
+    propagators: [new W3CTraceContextPropagator(), new W3CBaggagePropagator()],
+  });
+
+  const documentLoadInstrumentation = new DocumentLoadInstrumentation({
+    ignoreNetworkEvents: false,
+    ignorePerformancePaintEvents: false,
+  });
+
+  // const fetchInstrumentation = new FetchInstrumentation({
+  //   ignoreNetworkEvents: false,
+  //   requestHook: (span, request) => {
+  //     const traceId = span.spanContext().traceId;
+  //     const headers = new Headers(request.headers);
+  //     if (traceId && !headers.has("traceparent")) {
+  //       headers.set("traceparent", traceId);
+  //       console.log({ traceId, request });
+  //     }
+  //   },
+  // });
+
+  const instrumentations = [documentLoadInstrumentation];
+
   const dsn = import.meta.env.VITE_UPTRACE_DSN;
 
   const version = import.meta.env.VITE_RETROM_VERSION;
@@ -38,11 +65,15 @@ export function initOtel() {
       dsn: import.meta.env.VITE_UPTRACE_DSN,
       contextManager,
       resource,
+      textMapPropagator: propagator,
+      instrumentations,
     });
   } else {
     console.log("Using custom OpenTelemetry configuration");
 
-    const url = new URL("http://localhost:3000/v1/traces").toString();
+    const url =
+      import.meta.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT ||
+      new URL("http://localhost:4318/v1/traces").toString();
 
     const exporter = new OTLPTraceExporter({
       url,
@@ -55,10 +86,13 @@ export function initOtel() {
 
     provider.register({
       contextManager,
+      propagator,
+    });
+
+    registerInstrumentations({
+      instrumentations,
     });
   }
-
-  registerInstrumentations({
-    instrumentations: [documentLoadInstrumentation],
-  });
 }
+
+initOtel();
