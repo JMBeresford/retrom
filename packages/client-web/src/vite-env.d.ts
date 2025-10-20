@@ -9,6 +9,7 @@ const _Vars = [
   "UPTRACE_DSN",
   "BASE_URL",
   "OTEL_SERVICE_NAME",
+  "OTEL_EXPORTER_OTLP_ENDPOINT",
 ] as const;
 
 type Env = (typeof _Vars)[number] | `VITE_${(typeof _Vars)[number]}`;

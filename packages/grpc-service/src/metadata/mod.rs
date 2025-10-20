@@ -95,6 +95,7 @@ impl MetadataService for MetadataServiceHandlers {
         let games: Vec<Game> = games1
             .filter(games1.field(schema::games::id).eq_any(game_ids))
             .load::<retrom::Game>(&mut conn)
+            .instrument(tracing::info_span!("load_games"))
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -102,6 +103,7 @@ impl MetadataService for MetadataServiceHandlers {
             .inner_join(schema::game_genres::table)
             .select((GameGenreMap::as_select(), GameGenre::as_select()))
             .load(&mut conn)
+            .instrument(tracing::info_span!("load_genre_maps"))
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -129,6 +131,7 @@ impl MetadataService for MetadataServiceHandlers {
                     games2.fields(schema::games::all_columns),
                 ))
                 .load(&mut conn)
+                .instrument(tracing::info_span!("load_similar_game_maps"))
                 .await
                 .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -144,130 +147,147 @@ impl MetadataService for MetadataServiceHandlers {
             .collect();
 
         // Build media paths for each game from the local cache
-        let mut media_paths: HashMap<i32, MediaPaths> = HashMap::new();
+        let media_futures = metadata
+            .iter()
+            .map(|meta| {
+                async {
+                    if meta.get_cache_dir().is_some() {
+                        let mut paths = MediaPaths {
+                            cover_url: None,
+                            background_url: None,
+                            icon_url: None,
+                            video_urls: vec![],
+                            screenshot_urls: vec![],
+                            artwork_urls: vec![],
+                        };
 
-        for meta in &metadata {
-            if meta.get_cache_dir().is_some() {
-                let mut paths = MediaPaths {
-                    cover_url: None,
-                    background_url: None,
-                    icon_url: None,
-                    video_urls: vec![],
-                    screenshot_urls: vec![],
-                    artwork_urls: vec![],
-                };
+                        let cache_opts = meta.get_cacheable_media_opts();
+                        let meta_clone = meta.clone();
+                        let mut cache_tasks = vec![];
 
-                let cache_opts = meta.get_cacheable_media_opts();
-                let meta_clone = meta.clone();
-                let mut cache_tasks = vec![];
+                        for media_opts in cache_opts.into_iter() {
+                            let cache_path = match media_opts.get_item_path().await {
+                                Ok(path) => path,
+                                _ => {
+                                    tracing::warn!(
+                                        "Failed to get cache path for media opts: {:?}",
+                                        media_opts
+                                    );
+                                    continue;
+                                }
+                            };
 
-                for media_opts in cache_opts.into_iter() {
-                    let cache_path = match media_opts.get_item_path().await {
-                        Ok(path) => path,
-                        _ => {
-                            tracing::warn!(
-                                "Failed to get cache path for media opts: {:?}",
-                                media_opts
-                            );
-                            continue;
-                        }
-                    };
+                            let cache_clone = self.media_cache.clone();
+                            let needs_caching = !cache_clone
+                                .index_manager()
+                                .is_entry_valid(&media_opts)
+                                .await
+                                .unwrap_or(true);
 
-                    let cache_clone = self.media_cache.clone();
-                    let needs_caching = !cache_clone
-                        .index_manager()
-                        .is_entry_valid(&media_opts)
-                        .await
-                        .unwrap_or(true);
+                            if needs_caching {
+                                cache_tasks.push(async move {
+                                    if let Err(e) = cache_clone.cache_media_file(&media_opts).await
+                                    {
+                                        tracing::warn!(
+                                            "Failed to cache media for game {}: {}",
+                                            meta_clone.game_id,
+                                            e
+                                        );
 
-                    if needs_caching {
-                        cache_tasks.push(async move {
-                            if let Err(e) = cache_clone.cache_media_file(&media_opts).await {
-                                tracing::warn!(
-                                    "Failed to cache media for game {}: {}",
-                                    meta_clone.game_id,
-                                    e
-                                );
+                                        Err(Status::internal(e.to_string()))
+                                    } else {
+                                        tracing::debug!(
+                                            "Successfully cached media for game {}",
+                                            meta_clone.game_id
+                                        );
+                                        Ok(())
+                                    }
+                                });
 
-                                Err(Status::internal(e.to_string()))
-                            } else {
-                                tracing::debug!(
-                                    "Successfully cached media for game {}",
-                                    meta_clone.game_id
-                                );
-                                Ok(())
+                                continue;
                             }
-                        });
 
-                        continue;
+                            let public_url = match get_public_url(&cache_path) {
+                                Ok(url) => url,
+                                Err(why) => {
+                                    tracing::warn!(
+                                    "Failed to get public URL for cached media at path: {why:?}",
+                                );
+
+                                    continue;
+                                }
+                            };
+
+                            // Map based on file structure and naming using PathBuf methods
+                            match media_opts.semantic_name.as_deref() {
+                                Some("cover") => paths.cover_url = Some(public_url.clone()),
+                                Some("background") => {
+                                    paths.background_url = Some(public_url.clone())
+                                }
+                                Some("icon") => paths.icon_url = Some(public_url.clone()),
+                                _ => {}
+                            };
+
+                            let base_dir = media_opts.base_dir.as_ref().and_then(|p| {
+                                p.file_name().map(|s| s.to_string_lossy().to_string())
+                            });
+
+                            match base_dir.as_deref() {
+                                Some("artwork") => {
+                                    paths.artwork_urls.push(public_url);
+                                }
+                                Some("screenshots") => {
+                                    paths.screenshot_urls.push(public_url);
+                                }
+                                _ => {}
+                            };
+                        }
+
+                        // Only include games that actually have cached media
+                        if paths.cover_url.is_some()
+                            || paths.background_url.is_some()
+                            || paths.icon_url.is_some()
+                            || !paths.artwork_urls.is_empty()
+                            || !paths.screenshot_urls.is_empty()
+                            || !paths.video_urls.is_empty()
+                        {
+                            return Some((meta.game_id, paths));
+                        }
+
+                        let job_name = format!("Cache Media Files For Game {}", meta_clone.game_id);
+
+                        if !cache_tasks.is_empty() {
+                            let job_manager = self.job_manager.clone();
+                            match job_manager.spawn(&job_name, cache_tasks, None).await {
+                                Ok(job_id) => {
+                                    tracing::debug!(
+                                        "Spawned background job to cache media for game {}: {}",
+                                        meta.game_id,
+                                        job_id
+                                    );
+                                }
+                                Err(JobError::JobAlreadyRunning(_)) => {}
+                                Err(why) => {
+                                    tracing::error!("Failed to spawn cache job: {}", why);
+                                }
+                            }
+                        }
                     }
 
-                    let public_url = match get_public_url(&cache_path) {
-                        Ok(url) => url,
-                        Err(why) => {
-                            tracing::warn!(
-                                "Failed to get public URL for cached media at path: {why:?}",
-                            );
-
-                            continue;
-                        }
-                    };
-
-                    // Map based on file structure and naming using PathBuf methods
-                    match media_opts.semantic_name.as_deref() {
-                        Some("cover") => paths.cover_url = Some(public_url.clone()),
-                        Some("background") => paths.background_url = Some(public_url.clone()),
-                        Some("icon") => paths.icon_url = Some(public_url.clone()),
-                        _ => {}
-                    };
-
-                    let base_dir = media_opts
-                        .base_dir
-                        .as_ref()
-                        .and_then(|p| p.file_name().map(|s| s.to_string_lossy().to_string()));
-
-                    match base_dir.as_deref() {
-                        Some("artwork") => {
-                            paths.artwork_urls.push(public_url);
-                        }
-                        Some("screenshots") => {
-                            paths.screenshot_urls.push(public_url);
-                        }
-                        _ => {}
-                    };
+                    None
                 }
+                .instrument(tracing::info_span!(
+                    "build_media_paths",
+                    game_id = meta.game_id
+                ))
+            })
+            .collect::<Vec<_>>();
 
-                // Only include games that actually have cached media
-                if paths.cover_url.is_some()
-                    || paths.background_url.is_some()
-                    || paths.icon_url.is_some()
-                    || !paths.artwork_urls.is_empty()
-                    || !paths.screenshot_urls.is_empty()
-                    || !paths.video_urls.is_empty()
-                {
-                    media_paths.insert(meta.game_id, paths);
-                }
-
-                let job_name = format!("Cache Media Files For Game {}", meta_clone.game_id);
-
-                if !cache_tasks.is_empty() {
-                    let job_manager = self.job_manager.clone();
-                    match job_manager.spawn(&job_name, cache_tasks, None).await {
-                        Ok(job_id) => {
-                            tracing::debug!(
-                                "Spawned background job to cache media for game {}: {}",
-                                meta.game_id,
-                                job_id
-                            );
-                        }
-                        Err(JobError::JobAlreadyRunning(_)) => {}
-                        Err(why) => {
-                            tracing::error!("Failed to spawn cache job: {}", why);
-                        }
-                    }
-                }
-            }
-        }
+        let media_paths: HashMap<i32, MediaPaths> = join_all(media_futures)
+            .await
+            .into_iter()
+            .flatten()
+            .collect();
 
         Ok(Response::new(GetGameMetadataResponse {
             metadata,

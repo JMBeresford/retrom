@@ -17,7 +17,6 @@ import {
   restoreStateCurrent,
   StateFlags,
 } from "@tauri-apps/plugin-window-state";
-import { initOtel } from "./otel";
 
 if (import.meta.env.DEV) {
   import("react-scan")
@@ -42,9 +41,9 @@ declare module "@tanstack/react-router" {
 
 const rootElement = document.getElementById("root")!;
 
-if (window !== undefined) {
-  initOtel();
-}
+// if (window !== undefined) {
+//   initOtel();
+// }
 
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
