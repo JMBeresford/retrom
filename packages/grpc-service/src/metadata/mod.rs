@@ -82,6 +82,7 @@ impl MetadataService for MetadataServiceHandlers {
         let metadata = match retrom_db::schema::game_metadata::table
             .filter(retrom_db::schema::game_metadata::game_id.eq_any(&game_ids))
             .load::<retrom::GameMetadata>(&mut conn)
+            .instrument(tracing::info_span!("load_game_metadata"))
             .await
         {
             Ok(rows) => rows,

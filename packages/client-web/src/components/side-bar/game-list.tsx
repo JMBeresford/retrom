@@ -11,18 +11,21 @@ import {
   DropdownMenuTrigger,
 } from "@retrom/ui/components/dropdown-menu";
 import { cn } from "@retrom/ui/lib/utils";
-import { ComponentPropsWithoutRef, useMemo } from "react";
+import { ComponentPropsWithoutRef, useEffect, useMemo, useRef } from "react";
 import { PlatformWithMetadata } from ".";
 import { useGames } from "@/queries/useGames";
 import { Skeleton } from "@retrom/ui/components/skeleton";
 import { GameItem } from "./game-item";
 import { Button } from "@retrom/ui/components/button";
 import { EllipsisVertical } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { useFilterAndSort } from "./filter-sort-context";
 import { filterName, sortGames } from "./utils";
 import { useInstallationIndex } from "@/providers/installation-index";
 import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_pb";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { ScrollArea } from "@retrom/ui/components/scroll-area";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
 
 export function GameList(props: { platform: PlatformWithMetadata }) {
   const { platform } = props;
@@ -117,11 +120,7 @@ export function GameList(props: { platform: PlatformWithMetadata }) {
 
       <AccordionContent>
         {games.length ? (
-          <ul>
-            {games.map((game) => {
-              return <GameItem key={game.id} game={game} />;
-            })}
-          </ul>
+          <VirtualizedGameList games={games} />
         ) : (
           <div className="grid place-items-center pt-4">
             <p className="font-medium text-muted-foreground italic">
@@ -131,6 +130,66 @@ export function GameList(props: { platform: PlatformWithMetadata }) {
         )}
       </AccordionContent>
     </AccordionItem>
+  );
+}
+
+function VirtualizedGameList(props: { games: Game[] }) {
+  const { games } = props;
+  const { gameId: currentGameId } = useParams({ strict: false });
+  const virtualizerRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: games.length,
+    getScrollElement: () => virtualizerRef.current,
+    estimateSize: () => 36,
+  });
+
+  useEffect(() => {
+    const currentIndex = games.findIndex(
+      (game) => game.id.toString() === currentGameId,
+    );
+
+    if (currentIndex >= 0) {
+      virtualizerRef.current?.scrollIntoView({
+        block: "center",
+      });
+
+      rowVirtualizer.scrollToIndex(currentIndex, {
+        align: "center",
+        behavior: "auto",
+      });
+    }
+  }, [currentGameId, games, rowVirtualizer]);
+
+  return (
+    <ScrollArea
+      ref={virtualizerRef}
+      className="flex flex-col max-h-[50cqh]"
+      type="always"
+    >
+      <ul
+        style={{
+          height: `${rowVirtualizer.getTotalSize()}px`,
+        }}
+        className={cn("relative")}
+      >
+        {rowVirtualizer.getVirtualItems().map((item) => {
+          const game = games[item.index];
+
+          return (
+            <span
+              key={item.index}
+              style={{
+                height: `${item.size}px`,
+                transform: `translateY(${item.start}px)`,
+              }}
+              className={cn("absolute top-0 left-0 w-full")}
+            >
+              <GameItem game={game} />
+            </span>
+          );
+        })}
+      </ul>
+    </ScrollArea>
   );
 }
 

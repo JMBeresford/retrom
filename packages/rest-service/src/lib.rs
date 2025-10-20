@@ -8,6 +8,7 @@ use std::sync::Arc;
 use tower_http::{
     compression::CompressionLayer,
     cors::{AllowOrigin, CorsLayer},
+    decompression::RequestDecompressionLayer,
 };
 use web::web_routes;
 pub mod error;
@@ -31,15 +32,16 @@ pub fn rest_service(pool: Arc<Pool>) -> Router {
             "/",
             get(|| async { Redirect::to("/web") }).head(|| async { Redirect::to("/web") }),
         )
-        .layer(CompressionLayer::new())
         .layer(Extension(pool))
-        .layer(OtelInResponseLayer::default())
+        .layer(OtelInResponseLayer)
         .layer(OtelAxumLayer::default())
         .layer(
             CorsLayer::new()
                 .allow_origin(AllowOrigin::mirror_request())
                 .allow_credentials(true),
         )
+        .layer(RequestDecompressionLayer::new())
+        .layer(CompressionLayer::new())
     // .layer(
     //     ServiceBuilder::new().map_response(|mut response: Response| {
     //         let headers = response.headers_mut();

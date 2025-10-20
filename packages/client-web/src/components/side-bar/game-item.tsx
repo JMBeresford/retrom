@@ -70,7 +70,7 @@ export function GameItem(props: { game: Game }) {
       <TooltipTrigger asChild>
         <li
           className={cn(
-            "relative h-9 z-10 before:z-[-1] before:duration-200",
+            "relative h-full z-10 before:z-[-1] before:duration-200",
             "border-l border-border",
             "before:absolute before:inset-0 before:transition-opacity",
             "before:bg-gradient-to-r before:from-accent/40 before:opacity-0",
@@ -92,7 +92,13 @@ export function GameItem(props: { game: Game }) {
           >
             <div className="relative min-w-[28px] min-h-[28px] mr-2 my-[2px]">
               {iconUrl && (
-                <Image src={iconUrl} width={28} height={28} alt={gameName} />
+                <Image
+                  loading="lazy"
+                  src={iconUrl}
+                  width={28}
+                  height={28}
+                  alt={gameName}
+                />
               )}
             </div>
 
