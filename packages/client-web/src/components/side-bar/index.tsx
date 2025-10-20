@@ -8,7 +8,7 @@ import { Separator } from "@retrom/ui/components/separator";
 import { Skeleton } from "@retrom/ui/components/skeleton";
 import { TooltipProvider } from "@retrom/ui/components/tooltip";
 import { cn } from "@retrom/ui/lib/utils";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useFilterAndSort } from "./filter-sort-context";
 import { FiltersAndSorting } from "./filters-and-sorting";
@@ -18,9 +18,11 @@ import { sortPlatforms } from "./utils";
 export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
 
 export function SideBar() {
+  const router = useRouter();
   const { platformSortKey, platformSortDirection } = useFilterAndSort();
 
-  const { gameId } = useParams({ strict: false });
+  const gameId = router.state.location.pathname.match(/\/games\/(?<gameId>\d+)/)
+    ?.groups?.gameId;
 
   const { data: platformData, status: platformStatus } = usePlatforms({
     request: { withMetadata: true },
