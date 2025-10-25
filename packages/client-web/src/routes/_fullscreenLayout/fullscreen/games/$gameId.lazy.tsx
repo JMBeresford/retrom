@@ -21,6 +21,8 @@ import { Description } from "./-components/description";
 import { ExtraInfo } from "./-components/extra-info";
 import { Name } from "./-components/name";
 import { SimilarGames } from "./-components/similar-games";
+import { useInstallationStatus } from "@/queries/useInstallationStatus";
+import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_pb";
 
 export const Route = createLazyFileRoute(
   "/_fullscreenLayout/fullscreen/games/$gameId",
@@ -122,6 +124,9 @@ function Inner() {
 }
 
 function ActionButton() {
+  const { game } = useGameDetail();
+  const installationStatus = useInstallationStatus(game.id);
+
   const { ref } = useFocusable<HTMLButtonElement>({
     initialFocus: true,
     focusKey: "fullscreen-action-button",
@@ -136,7 +141,15 @@ function ActionButton() {
       id="fullscreen-action-button"
       handlers={{ ACCEPT: { handler: () => ref.current?.click() } }}
     >
-      <ActionButtonImpl ref={ref} className={buttonStyles} />
+      <ActionButtonImpl
+        ref={ref}
+        game={game}
+        className={cn(
+          buttonStyles,
+          installationStatus !== InstallationStatus.INSTALLING &&
+            "focus-visible:bg-accent",
+        )}
+      />
     </HotkeyLayer>
   );
 }

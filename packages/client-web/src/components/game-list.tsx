@@ -3,17 +3,17 @@ import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { getFileName, getFileStub, Image } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import { ActionButton } from "../components/action-button";
-import { GameDetailProvider, useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
 import { useMediaQuery } from "@/utils/use-media-query";
 import { createUrl, usePublicUrl } from "@/utils/urls";
 import { useMemo } from "react";
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 import { Skeleton } from "@retrom/ui/components/skeleton";
+import { useGameMetadata } from "@/queries/useGameMetadata";
 
 export type GameWithMetadata = Game & { metadata?: GameMetadata };
 
-export function GameList(props: { games: GameWithMetadata[] }) {
+export function GameList(props: { games: Game[] }) {
   return (
     <div
       className={cn(
@@ -22,46 +22,46 @@ export function GameList(props: { games: GameWithMetadata[] }) {
       )}
     >
       {props.games.map((game) => {
-        return (
-          <GameDetailProvider
-            key={game.id}
-            gameId={game.id}
-            loadingComponent={
-              <Skeleton className="aspect-video h-[24rem] mx-5 row-span-2" />
-            }
-          >
-            <GameItem />
-          </GameDetailProvider>
-        );
+        return <GameItem key={game.id} game={game} />;
       })}
     </div>
   );
 }
 
-function GameItem() {
+function GameItem(props: { game: Game }) {
+  const { game } = props;
+  const { data: metadata, status: metadataStatus } = useGameMetadata({
+    request: { gameIds: [game.id] },
+    selectFn: (data) => {
+      const meta = data.metadata.find((m) => m.gameId === game.id);
+      const mediaPaths = data.mediaPaths[game.id];
+
+      return { ...meta, mediaPaths };
+    },
+  });
+
   const isMobile = useMediaQuery("(max-width: 640px)");
   const publicUrl = usePublicUrl();
-  const { game, gameMetadata, extraMetadata } = useGameDetail();
 
   const bgUrl = useMemo(() => {
-    const localPath = extraMetadata?.mediaPaths?.backgroundUrl;
+    const localPath = metadata?.mediaPaths?.backgroundUrl;
     if (localPath && publicUrl) {
       return createUrl({ path: localPath, base: publicUrl })?.href;
     }
 
-    return gameMetadata?.backgroundUrl;
-  }, [publicUrl, gameMetadata, extraMetadata]);
+    return metadata?.backgroundUrl;
+  }, [publicUrl, metadata]);
 
   const coverUrl = useMemo(() => {
-    const localPath = extraMetadata?.mediaPaths?.coverUrl;
+    const localPath = metadata?.mediaPaths?.coverUrl;
     if (localPath && publicUrl) {
       return createUrl({ path: localPath, base: publicUrl })?.href;
     }
 
-    return gameMetadata?.coverUrl;
-  }, [publicUrl, gameMetadata, extraMetadata]);
+    return metadata?.coverUrl;
+  }, [publicUrl, metadata]);
 
-  const played = gameMetadata?.minutesPlayed;
+  const played = metadata?.minutesPlayed;
   const playedRender = played
     ? played > 60
       ? `Played for ${Math.floor(played / 60)}h ${played % 60}m`
@@ -71,7 +71,7 @@ function GameItem() {
   const image = isMobile ? (coverUrl ?? bgUrl) : (bgUrl ?? coverUrl);
 
   const gameName =
-    gameMetadata?.name ??
+    metadata?.name ??
     (game.storageType === StorageType.SINGLE_FILE_GAME
       ? getFileStub(game.path)
       : getFileName(game.path));
@@ -85,48 +85,53 @@ function GameItem() {
         "first:row-span-2 first:h-[24rem] first:max-h-[24rem] first:pl-0",
       )}
     >
-      <div
-        className={cn(
-          "relative w-full h-full group",
-          "rounded-lg overflow-hidden",
-          !image && "border",
-        )}
-      >
+      {metadataStatus === "pending" ? (
+        <Skeleton className="w-full h-full" />
+      ) : (
         <div
           className={cn(
-            "absolute inset-0 bg-gradient-to-t from-card to-card/20 pointer-events-none touch-none",
-            "sm:opacity-0 group-hover:opacity-100 transition-opacity",
+            "relative w-full h-full group",
+            "rounded-lg overflow-hidden",
+            !image && "border",
           )}
         >
           <div
             className={cn(
-              "absolute left-3 bottom-3 w-[90%] overflow-hidden text-ellipsis",
+              "absolute inset-0 bg-gradient-to-t from-card to-card/20 pointer-events-none touch-none",
+              "sm:opacity-0 group-hover:opacity-100 transition-opacity",
             )}
           >
-            <h3 className="whitespace-nowrap text-lg font-bold overflow-hidden text-ellipsis">
-              {gameName}
-            </h3>
-
-            <h5 className="text-sm text-muted-foreground mb-2">
-              {playedRender}
-            </h5>
-
             <div
               className={cn(
-                "rounded-md overflow-hidden w-fit pointer-events-auto touch-auto z-50",
-                "hidden sm:block",
+                "absolute left-3 bottom-3 w-[90%] overflow-hidden text-ellipsis",
               )}
             >
-              <ActionButton
-                size="sm"
-                className='text-md min-w-[100px] [&_div[role="progressbar"]_>_*]:bg-primary-foreground'
-              />
+              <h3 className="whitespace-nowrap text-lg font-bold overflow-hidden text-ellipsis">
+                {gameName}
+              </h3>
+
+              <h5 className="text-sm text-muted-foreground mb-2">
+                {playedRender}
+              </h5>
+
+              <div
+                className={cn(
+                  "rounded-md overflow-hidden w-fit pointer-events-auto touch-auto z-50",
+                  "hidden sm:block",
+                )}
+              >
+                <ActionButton
+                  game={game}
+                  size="sm"
+                  className='text-md min-w-[100px] [&_div[role="progressbar"]_>_*]:bg-primary-foreground'
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <GameImage game={game} name={gameName} image={image} />
-      </div>
+          <GameImage game={game} name={gameName} image={image} />
+        </div>
+      )}
     </div>
   );
 }

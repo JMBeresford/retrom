@@ -69,11 +69,8 @@ export function initOtel() {
       instrumentations,
     });
   } else {
-    console.log("Using custom OpenTelemetry configuration");
-
-    const url =
-      import.meta.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT ||
-      new URL("http://localhost:4318/v1/traces").toString();
+    const url = new URL("/v1/traces", window.location.origin).toString();
+    console.log("Using custom OpenTelemetry configuration: ", url);
 
     const exporter = new OTLPTraceExporter({
       url,

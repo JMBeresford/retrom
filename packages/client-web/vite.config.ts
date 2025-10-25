@@ -50,14 +50,17 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.VITE_RETROM_VERSION": JSON.stringify(localVersion),
       "import.meta.env.VITE_RETROM_LOCAL_SERVICE_HOST":
         JSON.stringify(localServiceHost),
-      "import.meta.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT":
-        JSON.stringify(localTracesEndpoint),
     },
     base: baseUrl,
     server: {
       port: 3000,
       host: "0.0.0.0",
-      allowedHosts: true,
+      proxy: {
+        "/v1/traces": {
+          target: localTracesEndpoint,
+          changeOrigin: true,
+        },
+      },
     },
     preview: {
       port: 3000,

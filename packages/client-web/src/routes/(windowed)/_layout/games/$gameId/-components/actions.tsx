@@ -78,6 +78,7 @@ export function Actions() {
         )}
       >
         <ActionButton
+          game={game}
           className={cn(
             '[&_div[role="progressbar"]]:w-[85%] [&_div[role="progressbar"]_>_*]:bg-primary-foreground w-full',
           )}

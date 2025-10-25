@@ -4,19 +4,16 @@ import { timestampToDate } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import { useGames } from "@/queries/useGames";
 import { useMemo } from "react";
-import { GameList, GameWithMetadata } from "./game-list";
+import { GameList } from "./game-list";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
 
 export function RecentlyAdded() {
-  const { data, status } = useGames({ request: { withMetadata: true } });
+  const { data, status } = useGames();
 
-  const gamesByDate: GameWithMetadata[] =
+  const gamesByDate: Game[] =
     useMemo(
       () =>
         data?.games
-          .map((game) => ({
-            ...game,
-            metadata: data.metadata?.find((meta) => meta.gameId === game.id),
-          }))
           .sort((a, b) => {
             const aTime = timestampToDate(a.createdAt).getTime();
             const bTime = timestampToDate(b.createdAt).getTime();

@@ -11,6 +11,7 @@ service GameService {
   rpc DeleteGames(DeleteGamesRequest) returns (DeleteGamesResponse);
   rpc UpdateGames(UpdateGamesRequest) returns (UpdateGamesResponse);
 
+  rpc GetGameFiles(GetGameFilesRequest) returns (GetGameFilesResponse);
   rpc DeleteGameFiles(DeleteGameFilesRequest) returns (DeleteGameFilesResponse);
   rpc UpdateGameFiles(UpdateGameFilesRequest) returns (UpdateGameFilesResponse);
 }
@@ -45,6 +46,15 @@ message UpdateGamesRequest {
 
 message UpdateGamesResponse {
   repeated Game games_updated = 1;
+}
+
+message GetGameFilesRequest {
+  repeated int32 ids = 1;
+  optional bool include_deleted = 2;
+}
+
+message GetGameFilesResponse {
+  repeated GameFile game_files = 1;
 }
 
 message DeleteGameFilesRequest {
