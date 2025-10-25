@@ -7,18 +7,18 @@ import { PlayGameButton } from "./play-game-button";
 import { InstallGameButton } from "./install-game-button";
 import { ComponentProps, ForwardedRef, forwardRef } from "react";
 import { DownloadGameButton } from "./download-game-button";
-import { useGameDetail } from "@/providers/game-details";
 import { Emulator_OperatingSystem } from "@retrom/codegen/retrom/models/emulators_pb";
 import { Link } from "@tanstack/react-router";
 import { PlayIcon } from "lucide-react";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
+import { useDefaultEmulator } from "@/queries/useDefaultEmulator";
+
+type ActionButtonProps = { game: Game } & ComponentProps<typeof Button>;
 
 export const ActionButton = forwardRef(
-  (
-    props: ComponentProps<typeof Button>,
-    forwardedRef: ForwardedRef<HTMLButtonElement>,
-  ) => {
-    const { game, emulator } = useGameDetail();
-    const { className, ...rest } = props;
+  (props: ActionButtonProps, forwardedRef: ForwardedRef<HTMLButtonElement>) => {
+    const { game, className, ...rest } = props;
+    const { data: emulatorData } = useDefaultEmulator(game);
     const installationState = useInstallationStatus(game.id);
 
     const buttonClasses = cn(
@@ -26,6 +26,7 @@ export const ActionButton = forwardRef(
       className,
     );
 
+    const { emulator } = emulatorData ?? {};
     const isPlayableInWeb =
       emulator?.libretroName &&
       emulator.operatingSystems.includes(Emulator_OperatingSystem.WASM);
@@ -37,6 +38,7 @@ export const ActionButton = forwardRef(
           isPlayableInWeb ? (
             <PlayGameButton
               ref={forwardedRef}
+              game={game}
               {...rest}
               className={cn(buttonClasses)}
               variant="accent"
@@ -44,6 +46,7 @@ export const ActionButton = forwardRef(
           ) : (
             <InstallGameButton
               ref={forwardedRef}
+              game={game}
               {...rest}
               className={cn(buttonClasses)}
               variant="accent"

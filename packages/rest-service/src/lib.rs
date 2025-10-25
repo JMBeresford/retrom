@@ -6,9 +6,7 @@ use public::public_routes;
 use retrom_db::Pool;
 use std::sync::Arc;
 use tower_http::{
-    compression::CompressionLayer,
-    cors::{AllowOrigin, CorsLayer},
-    decompression::RequestDecompressionLayer,
+    compression::CompressionLayer, cors::CorsLayer, decompression::RequestDecompressionLayer,
 };
 use web::web_routes;
 pub mod error;
@@ -35,11 +33,7 @@ pub fn rest_service(pool: Arc<Pool>) -> Router {
         .layer(Extension(pool))
         .layer(OtelInResponseLayer)
         .layer(OtelAxumLayer::default())
-        .layer(
-            CorsLayer::new()
-                .allow_origin(AllowOrigin::mirror_request())
-                .allow_credentials(true),
-        )
+        .layer(CorsLayer::permissive())
         .layer(RequestDecompressionLayer::new())
         .layer(CompressionLayer::new())
     // .layer(

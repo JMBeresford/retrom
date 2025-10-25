@@ -311,6 +311,42 @@ impl GameService for GameServiceHandlers {
         Ok(Response::new(response))
     }
 
+    async fn get_game_files(
+        &self,
+        request: Request<retrom::GetGameFilesRequest>,
+    ) -> Result<Response<retrom::GetGameFilesResponse>, Status> {
+        let request = request.into_inner();
+        let include_deleted = request.include_deleted();
+
+        let mut conn = match self.db_pool.get().await {
+            Ok(conn) => conn,
+            Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
+        };
+
+        let mut query = schema::game_files::table
+            .into_boxed()
+            .select(retrom::GameFile::as_select());
+
+        if !&request.ids.is_empty() {
+            query = query.filter(schema::game_files::id.eq_any(&request.ids));
+        }
+
+        if !include_deleted {
+            query = query.filter(schema::game_files::is_deleted.eq(false));
+        }
+
+        let game_files_data: Vec<retrom::GameFile> = match query.load(&mut conn).await {
+            Ok(rows) => rows,
+            Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
+        };
+
+        let response = retrom::GetGameFilesResponse {
+            game_files: game_files_data,
+        };
+
+        Ok(Response::new(response))
+    }
+
     async fn delete_game_files(
         &self,
         request: Request<retrom::DeleteGameFilesRequest>,

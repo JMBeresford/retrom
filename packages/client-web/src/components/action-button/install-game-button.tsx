@@ -10,15 +10,17 @@ import { InstallationStatus } from "@retrom/codegen/retrom/client/installation_p
 import { Progress } from "@retrom/ui/components/progress";
 import { ComponentProps, ForwardedRef, forwardRef } from "react";
 import { cn } from "@retrom/ui/lib/utils";
-import { useGameDetail } from "@/providers/game-details";
 import { useInstallationProgress } from "@/queries/useInstallationProgress";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
+
+type InstallGameButtonProps = { game: Game } & ComponentProps<typeof Button>;
 
 export const InstallGameButton = forwardRef(
   (
-    props: ComponentProps<typeof Button>,
+    props: InstallGameButtonProps,
     forwardedRef: ForwardedRef<HTMLButtonElement>,
   ) => {
-    const { game } = useGameDetail();
+    const { game } = props;
     const { className, ...rest } = props;
 
     const installationRequest = useInstallGame(game.id);

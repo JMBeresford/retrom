@@ -4,12 +4,13 @@ import { timestampToDate } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import { useGames } from "@/queries/useGames";
 import { useMemo } from "react";
-import { GameList, GameWithMetadata } from "./game-list";
+import { GameList } from "./game-list";
+import { Game } from "@retrom/codegen/retrom/models/games_pb";
 
 export function RecentlyPlayed() {
   const { data, status } = useGames({ request: { withMetadata: true } });
 
-  const gamesByPlayedDate: GameWithMetadata[] =
+  const gamesByPlayedDate: Game[] =
     useMemo(
       () =>
         data?.games
