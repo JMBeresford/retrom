@@ -85,16 +85,6 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    build: {
-      target: [
-        "es2022",
-        "chrome89",
-        "edge89",
-        "safari15",
-        "firefox89",
-        "opera75",
-      ],
-    },
     plugins: [
       tailwindcss(),
       TanStackRouterVite(),
