@@ -30,9 +30,9 @@ pub fn rest_service(pool: Arc<Pool>) -> Router {
             "/",
             get(|| async { Redirect::to("/web") }).head(|| async { Redirect::to("/web") }),
         )
-        .layer(Extension(pool))
         .layer(OtelInResponseLayer)
         .layer(OtelAxumLayer::default())
+        .layer(Extension(pool))
         .layer(CorsLayer::permissive())
         .layer(RequestDecompressionLayer::new())
         .layer(CompressionLayer::new())

@@ -42,6 +42,8 @@ export default defineConfig(({ mode }) => {
 
   const baseUrl = process.env.VITE_BASE_URL || "/";
 
+  console.log("VITE_BASE_URL:", baseUrl);
+
   // https://vitejs.dev/config/
   return {
     define: {
@@ -84,6 +86,9 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => `/web/${path.replace(/^\//, "")}`,
         },
       },
+    },
+    build: {
+      target: ["es2022"],
     },
     plugins: [
       tailwindcss(),

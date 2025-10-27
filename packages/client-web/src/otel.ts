@@ -12,6 +12,7 @@ import {
 import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
 import { ZoneContextManager } from "@opentelemetry/context-zone";
 import { DocumentLoadInstrumentation } from "@opentelemetry/instrumentation-document-load";
+import { FetchInstrumentation } from "@opentelemetry/instrumentation-fetch";
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
 import {
   CompositePropagator,
@@ -30,19 +31,11 @@ export function initOtel() {
     ignorePerformancePaintEvents: false,
   });
 
-  // const fetchInstrumentation = new FetchInstrumentation({
-  //   ignoreNetworkEvents: false,
-  //   requestHook: (span, request) => {
-  //     const traceId = span.spanContext().traceId;
-  //     const headers = new Headers(request.headers);
-  //     if (traceId && !headers.has("traceparent")) {
-  //       headers.set("traceparent", traceId);
-  //       console.log({ traceId, request });
-  //     }
-  //   },
-  // });
+  const fetchInstrumentation = new FetchInstrumentation({
+    semconvStabilityOptIn: "http",
+  });
 
-  const instrumentations = [documentLoadInstrumentation];
+  const instrumentations = [documentLoadInstrumentation, fetchInstrumentation];
 
   const dsn = import.meta.env.VITE_UPTRACE_DSN;
 
@@ -55,7 +48,7 @@ export function initOtel() {
   const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: serviceName,
     [ATTR_SERVICE_VERSION]: version,
-    [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: import.meta.env.MODE,
+    [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: "debug", //import.meta.env.MODE,
   });
 
   if (dsn) {
