@@ -8,7 +8,7 @@ import { GameList } from "./game-list";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 
 export function RecentlyAdded() {
-  const { data, status } = useGames();
+  const { data, status } = useGames({ request: { withMetadata: true } });
 
   const gamesByDate: Game[] =
     useMemo(

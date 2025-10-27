@@ -1,5 +1,4 @@
 import { getFileName, getFileStub, Image } from "@/lib/utils";
-import { useGameMetadata } from "@/queries/useGameMetadata";
 import { useInstallationProgress } from "@/queries/useInstallationProgress";
 import { useInstallationStatus } from "@/queries/useInstallationStatus";
 import { createUrl, usePublicUrl } from "@/utils/urls";
@@ -16,30 +15,23 @@ import {
 import { cn } from "@retrom/ui/lib/utils";
 import { Link, useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { useSidebarMetadataContext } from "./metadata-context";
 
 export function GameItem(props: { game: Game }) {
   const { game } = props;
+  const { gameMetadata: allGameMetadata } = useSidebarMetadataContext();
   const { gameId: currentGameId } = useParams({ strict: false });
+
+  const gameMetadata = useMemo(
+    () => allGameMetadata?.find((m) => m.gameId === game.id),
+    [allGameMetadata, game.id],
+  );
 
   const isCurrentGame = currentGameId === game.id.toString();
   const installationStatus = useInstallationStatus(game.id);
   const isInstalled = installationStatus === InstallationStatus.INSTALLED;
   const { percentComplete } = useInstallationProgress(game.id);
   const publicUrl = usePublicUrl();
-
-  const { data: gameMetadata, status: gameMetadataStatus } = useGameMetadata({
-    request: { gameIds: [game.id] },
-    selectFn: (data) => {
-      const meta = data.metadata.find((m) => m.gameId === game.id);
-      const mediaPaths = data.mediaPaths[game.id];
-
-      if (!meta) {
-        throw new Error("No metadata found");
-      }
-
-      return { ...meta, mediaPaths };
-    },
-  });
 
   const fallbackName =
     game.storageType === StorageType.SINGLE_FILE_GAME
@@ -61,7 +53,7 @@ export function GameItem(props: { game: Game }) {
     installationStatus === InstallationStatus.INSTALLING ||
     installationStatus === InstallationStatus.PAUSED;
 
-  if (gameMetadataStatus === "pending") {
+  if (allGameMetadata === undefined) {
     return <Skeleton className="w-full h-9" />;
   }
 
@@ -92,13 +84,7 @@ export function GameItem(props: { game: Game }) {
           >
             <div className="relative min-w-[28px] min-h-[28px] mr-2 my-[2px]">
               {iconUrl && (
-                <Image
-                  loading="lazy"
-                  src={iconUrl}
-                  width={28}
-                  height={28}
-                  alt={gameName}
-                />
+                <Image src={iconUrl} width={28} height={28} alt={gameName} />
               )}
             </div>
 

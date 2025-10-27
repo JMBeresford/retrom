@@ -5505,6 +5505,8 @@ dependencies = [
  "diesel-async",
  "futures-util",
  "http",
+ "http-body-util",
+ "opentelemetry 0.29.1",
  "retrom-codegen",
  "retrom-db",
  "retrom-service-common",
@@ -5513,6 +5515,7 @@ dependencies = [
  "tokio-util",
  "tower-http",
  "tracing",
+ "tracing-opentelemetry 0.30.0",
  "walkdir",
 ]
 

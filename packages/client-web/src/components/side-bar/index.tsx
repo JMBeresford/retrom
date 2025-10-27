@@ -1,8 +1,11 @@
 import { useGames } from "@/queries/useGames";
 import { usePlatforms } from "@/queries/usePlatforms";
-import { PlatformMetadata } from "@retrom/codegen/retrom/models/metadata_pb";
-import { Platform } from "@retrom/codegen/retrom/models/platforms_pb";
-import { Accordion } from "@retrom/ui/components/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@retrom/ui/components/accordion";
 import { ScrollArea } from "@retrom/ui/components/scroll-area";
 import { Separator } from "@retrom/ui/components/separator";
 import { Skeleton } from "@retrom/ui/components/skeleton";
@@ -14,8 +17,12 @@ import { useFilterAndSort } from "./filter-sort-context";
 import { FiltersAndSorting } from "./filters-and-sorting";
 import { GameList } from "./game-list";
 import { sortPlatforms } from "./utils";
-
-export type PlatformWithMetadata = Platform & { metadata?: PlatformMetadata };
+import {
+  PlatformWithMetadata,
+  SidebarMetadataProvider,
+} from "./metadata-context";
+import { getFileStub } from "@/lib/utils";
+import { PlatformContextMenu } from "./platform-context-menu";
 
 export function SideBar() {
   const router = useRouter();
@@ -102,7 +109,45 @@ export function SideBar() {
                 defaultValue={currentGame?.platformId?.toString()}
               >
                 {platformsWithMetadata.map((platform) => {
-                  return <GameList key={platform.id} platform={platform} />;
+                  const name =
+                    platform.metadata?.name || getFileStub(platform.path);
+
+                  return (
+                    <AccordionItem
+                      key={platform.id}
+                      value={platform.id.toString()}
+                      className={cn("border-b-0 w-full max-w-full")}
+                    >
+                      <div
+                        className={cn(
+                          "group grid grid-cols-[1fr_auto] border-b border-transparent",
+                          "sm:hover:border-border transition-all",
+                        )}
+                      >
+                        <AccordionTrigger
+                          hideIcon
+                          className={cn(
+                            "group py-2 font-medium overflow-hidden relative hover:no-underline",
+                          )}
+                        >
+                          <div className="flex w-full">
+                            <h3 className="text-left text-lg sm:text-base whitespace-nowrap text-ellipsis overflow-hidden">
+                              {name}
+                            </h3>
+                            <span className="sr-only">Toggle</span>
+                          </div>
+                        </AccordionTrigger>
+
+                        <PlatformContextMenu platform={platform} />
+                      </div>
+
+                      <AccordionContent>
+                        <SidebarMetadataProvider platform={platform}>
+                          <GameList />
+                        </SidebarMetadataProvider>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
                 })}
 
                 <div className="not-only:hidden py-10 grid place-items-center">
