@@ -25,7 +25,4 @@ futures-util = { workspace = true }
 bytes = { workspace = true }
 axum = { workspace = true }
 tower-http = { workspace = true }
-http-body-util = { workspace = true }
 axum-tracing-opentelemetry = { version = "0.32.1" }
-opentelemetry = { workspace = true }
-tracing-opentelemetry = { workspace = true }
