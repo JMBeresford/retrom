@@ -54,6 +54,10 @@ message SavesConfig {
   int32 max_save_states_backups = 2;
 }
 
+message MetadataConfig {
+  bool store_metadata_locally = 1;
+}
+
 message ServerConfig {
   message TelemetryConfig {
     bool enabled = 1;
@@ -65,4 +69,5 @@ message ServerConfig {
   optional SteamConfig steam = 4;
   optional SavesConfig saves = 5;
   optional TelemetryConfig telemetry = 6;
+  optional MetadataConfig metadata = 7;
 }

@@ -19,6 +19,7 @@ import { LibrariesConfig } from "./libraries-config";
 import { TelemetryConfig } from "./telemetry-config";
 import { z } from "zod";
 import { Route as RootRoute } from "@/routes/__root";
+import { MetadataConfig } from "./metadata-config";
 
 type ServerTabs = Exclude<keyof ServerConfigJson, "connection">;
 export const serverConfigTabSchema = z
@@ -28,6 +29,7 @@ export const serverConfigTabSchema = z
     "steam",
     "saves",
     "telemetry",
+    "metadata",
   ] as const satisfies ServerTabs[])
   .default("contentDirectories");
 
@@ -36,6 +38,7 @@ const tabItems: Record<ServerTabs, { value: ServerTabs; name: string }> = {
     value: "contentDirectories",
     name: "Content Directories",
   },
+  metadata: { value: "metadata", name: "Metadata" },
   igdb: { value: "igdb", name: "IGDB" },
   steam: { value: "steam", name: "Steam" },
   saves: { value: "saves", name: "Cloud Saves" },
@@ -86,14 +89,7 @@ export function ServerConfigTab() {
         <Tabs defaultValue={tab ?? "contentDirectories"} className="w-full">
           <TabsList className="w-full">
             {Object.values(tabItems).map(({ value, name }) => (
-              <TabsTrigger
-                key={value}
-                value={value}
-                style={{
-                  flexBasis: `calc(1 / ${Object.values(tabItems).length} * 100%)`,
-                }}
-                className="text-sm"
-              >
+              <TabsTrigger key={value} value={value} className="w-full text-sm">
                 {name}
               </TabsTrigger>
             ))}
@@ -102,6 +98,7 @@ export function ServerConfigTab() {
           {/* <Separator className="mt-4" /> */}
 
           <LibrariesConfig currentConfig={data.config} />
+          <MetadataConfig currentConfig={data.config} />
           <IgdbConfig currentConfig={data.config} />
           <SteamConfig currentConfig={data.config} />
           <SavesConfig currentConfig={data.config} />
