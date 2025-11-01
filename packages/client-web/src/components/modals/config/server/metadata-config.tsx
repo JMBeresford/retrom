@@ -93,7 +93,7 @@ export function MetadataConfig(props: {
                         field.onChange(val);
                       }}
                     />
-                    <div className={cn("grid gap-1 5 leading-none")}>
+                    <div className={cn("grid gap-1 leading-none")}>
                       <label htmlFor="server-local-metadata-enabled">
                         Enable Local Metadata Storage
                       </label>
