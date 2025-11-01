@@ -48,7 +48,7 @@ export function initOtel() {
   const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: serviceName,
     [ATTR_SERVICE_VERSION]: version,
-    [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: "debug", //import.meta.env.MODE,
+    [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: import.meta.env.MODE,
   });
 
   if (dsn) {

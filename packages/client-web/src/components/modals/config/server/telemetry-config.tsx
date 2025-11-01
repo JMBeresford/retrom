@@ -48,7 +48,7 @@ export function TelemetryConfig() {
               }
             }}
           />
-          <div className={cn("grid gap-1 5 leading-none")}>
+          <div className={cn("grid gap-1 leading-none")}>
             <label htmlFor="server-telemetry-enabled">
               Enable Telemetry
               <span className="text-xs text-muted-foreground ml-1">
