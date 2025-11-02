@@ -23,7 +23,7 @@ futures = { workspace = true }
 bigdecimal = { workspace = true }
 deunicode = "1.4.4"
 prost = { workspace = true }
-libcaesium = "0.17.4"
+libcaesium = "0.19.0"
 thiserror = { workspace = true }
 tokio-retry = { workspace = true }
 url = { workspace = true }
@@ -31,3 +31,4 @@ sha2 = { workspace = true }
 sevenz-rust2 = { workspace = true }
 config = { workspace = true }
 dotenvy = { workspace = true }
+rayon = { workspace = true }

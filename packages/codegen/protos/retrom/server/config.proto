@@ -55,7 +55,37 @@ message SavesConfig {
 }
 
 message MetadataConfig {
+  enum ImageFormat {
+    JPEG = 0;
+    PNG = 1;
+    WEBP = 2;
+  }
+
   bool store_metadata_locally = 1;
+
+  // JPEG quality for stored images (0-100)
+  uint32 jpeg_quality = 2;
+
+  // Perform lossless optimization on stored JPEG images
+  bool jpeg_optimization = 3;
+
+  // WebP quality for stored images (0-100)
+  uint32 webp_quality = 4;
+
+  // Perform lossless encoding for stored WebP images
+  bool webp_lossless = 5;
+
+  // PNG compression level for stored images (0-100)
+  uint32 png_quality = 6;
+
+  // Perform optimization on stored PNG images (0-9)
+  uint32 png_optimization_level = 7;
+
+  // Perform lossless optimization on stored PNG images
+  bool png_optimization = 8;
+
+  // Preferred image format for storing metadata images
+  optional ImageFormat preferred_image_format = 9;
 }
 
 message ServerConfig {
