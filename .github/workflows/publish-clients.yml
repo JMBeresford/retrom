@@ -212,6 +212,11 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PLEASE_GH_TOKEN }}
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
