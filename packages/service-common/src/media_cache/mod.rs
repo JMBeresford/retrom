@@ -250,36 +250,36 @@ impl MediaCache {
         let bytes = response.bytes().await?;
 
         let config = self.config_manager.get_config().await;
+        let optimization_config = config.metadata.and_then(|m| m.optimization);
         let mut params = CSParameters::new();
         params.keep_metadata = false;
 
         params.jpeg.progressive = true;
-        params.jpeg.quality = config.metadata.map(|m| m.jpeg_quality).unwrap_or(80);
-        params.jpeg.optimize = config
-            .metadata
+        params.jpeg.quality = optimization_config.map(|m| m.jpeg_quality).unwrap_or(85);
+        params.jpeg.optimize = optimization_config
             .map(|m| m.jpeg_optimization)
             .unwrap_or(false);
 
-        params.png.quality = config.metadata.map(|m| m.png_quality).unwrap_or(80);
-        params.png.optimize = config.metadata.map(|m| m.png_optimization).unwrap_or(true);
-        params.png.optimization_level = config
-            .metadata
+        params.png.quality = optimization_config.map(|m| m.png_quality).unwrap_or(85);
+        params.png.optimize = optimization_config
+            .map(|m| m.png_optimization)
+            .unwrap_or(true);
+        params.png.optimization_level = optimization_config
             .map(|m| m.png_optimization_level)
             .and_then(|lvl| lvl.to_u8())
             .unwrap_or(2u8);
 
-        params.webp.quality = config.metadata.map(|m| m.webp_quality).unwrap_or(80);
-        params.webp.lossless = config.metadata.map(|m| m.webp_lossless).unwrap_or(true);
-        let thread_pool = self.compression_threads.clone();
+        params.webp.quality = optimization_config.map(|m| m.webp_quality).unwrap_or(85);
+        params.webp.lossless = optimization_config.map(|m| m.webp_lossless).unwrap_or(true);
+        let image_format = optimization_config
+            .and_then(|m| m.preferred_image_format)
+            .unwrap_or(ImageFormat::Jpeg.into());
 
+        let thread_pool = self.compression_threads.clone();
         let compressed_bytes = tokio::task::spawn_blocking(move || {
             thread_pool.install(move || {
                 let initial_bytes = bytes.to_vec();
-                let converted_bytes = match config
-                    .metadata
-                    .and_then(|m| m.preferred_image_format)
-                    .and_then(|f| ImageFormat::try_from(f).ok())
-                {
+                let converted_bytes = match ImageFormat::try_from(image_format).ok() {
                     Some(ImageFormat::Jpeg) => {
                         convert_in_memory(initial_bytes, &params, caesium::SupportedFileTypes::Jpeg)
                     }
@@ -311,7 +311,7 @@ impl MediaCache {
         })
         .instrument(tracing::info_span!(
             "compression_task",
-            config = ?config.metadata
+            config = ?optimization_config
         ))
         .await?;
 
