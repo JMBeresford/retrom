@@ -75,10 +75,10 @@ message MetadataConfig {
     // Perform lossless encoding for stored WebP images
     bool webp_lossless = 4;
 
-    // PNG compression level for stored images (0-100)
+    // PNG quality for stored images (0-100)
     uint32 png_quality = 5;
 
-    // Perform optimization on stored PNG images (0-9)
+    // Lossless comporession level on stored PNG images (0-6)
     uint32 png_optimization_level = 6;
 
     // Perform lossless optimization on stored PNG images
