@@ -98,7 +98,7 @@ function VirtualizedGameList(props: { games: Game[] }) {
   return (
     <ScrollArea
       ref={virtualizerRef}
-      className="flex flex-col max-h-[50cqh]"
+      className="flex flex-col max-h-[50cqh] bg-[rgba(255,255,255,0.035)]"
       type="always"
     >
       <ul
