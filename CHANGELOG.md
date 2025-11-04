@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.42](https://github.com/JMBeresford/retrom/compare/v0.7.41...v0.7.42) (2025-11-04)
+
+
+### Features
+
+* configure locally stored metadata quality ([20c0eba](https://github.com/JMBeresford/retrom/commit/20c0eba2edbdac683ab6c26dd1b337d76dc4eed6))
+
+
+### Bug Fixes
+
+* sidebar UI tweaks ([6b9bd7e](https://github.com/JMBeresford/retrom/commit/6b9bd7edf6eba3ec561682ec55d41da25c59e9cf))
+
 ## [0.7.41](https://github.com/JMBeresford/retrom/compare/v0.7.40...v0.7.41) (2025-11-01)
 
 
