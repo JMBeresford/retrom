@@ -78,7 +78,7 @@ message MetadataConfig {
     // PNG quality for stored images (0-100)
     uint32 png_quality = 5;
 
-    // Lossless comporession level on stored PNG images (0-6)
+    // Lossless compression level on stored PNG images (0-6)
     uint32 png_optimization_level = 6;
 
     // Perform lossless optimization on stored PNG images
