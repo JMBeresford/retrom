@@ -6,7 +6,7 @@ import { ActionButton } from "../components/action-button";
 import { Link } from "@tanstack/react-router";
 import { useMediaQuery } from "@/utils/use-media-query";
 import { createUrl, usePublicUrl } from "@/utils/urls";
-import { createContext, PropsWithChildren, useContext, useMemo } from "react";
+import { createContext, memo, PropsWithChildren, useContext, useMemo } from "react";
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 import { Skeleton } from "@retrom/ui/components/skeleton";
 import { useGameMetadata } from "@/queries/useGameMetadata";
@@ -74,7 +74,7 @@ export function GameList(props: { games: Game[] }) {
   );
 }
 
-function GameItem(props: { game: Game }) {
+const GameItem = memo(function GameItem(props: { game: Game }) {
   const { game } = props;
   const listContext = useGameListMetadataContext();
   const metadata = useMemo(
@@ -172,9 +172,9 @@ function GameItem(props: { game: Game }) {
       </div>
     </div>
   );
-}
+});
 
-function GameImage(props: { game: Game; name: string; image?: string }) {
+const GameImage = memo(function GameImage(props: { game: Game; name: string; image?: string }) {
   const { game, name, image } = props;
 
   return (
@@ -203,4 +203,4 @@ function GameImage(props: { game: Game; name: string; image?: string }) {
       </div>
     </Link>
   );
-}
+});
