@@ -53,14 +53,14 @@ const metadataSchema = z.object({
   storeMetadataLocally: z.boolean().default(false),
   optimization: z
     .object({
-      jpegQuality: z.number().min(1).max(100).default(85),
+      jpegQuality: z.coerce.number().min(1).max(100).default(85),
       jpegOptimization: z.boolean(),
 
       pngOptimization: z.boolean(),
-      pngQuality: z.number().min(1).max(100).catch(85),
-      pngOptimizationLevel: z.number().min(0).max(6).catch(2),
+      pngQuality: z.coerce.number().min(1).max(100).catch(85),
+      pngOptimizationLevel: z.coerce.number().min(0).max(6).catch(2),
 
-      webpQuality: z.number().min(1).max(100).catch(85),
+      webpQuality: z.coerce.number().min(1).max(100).catch(85),
       webpLossless: z.boolean(),
 
       preferredImageFormat: z
@@ -151,6 +151,7 @@ export function MetadataConfig(props: {
                       </div>
                     </div>
                   </FormControl>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -168,6 +169,8 @@ export function MetadataConfig(props: {
                     </FormControl>
                     <p className="text-sm font-semibold">{field.value}</p>
                   </div>
+
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -187,6 +190,8 @@ export function MetadataConfig(props: {
                     </FormControl>
                     <p className="text-sm font-semibold">{field.value}</p>
                   </div>
+
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -206,6 +211,8 @@ export function MetadataConfig(props: {
                     </FormControl>
                     <p className="text-sm font-semibold">{field.value}</p>
                   </div>
+
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -237,6 +244,8 @@ export function MetadataConfig(props: {
                     </FormControl>
                     <p className="text-sm font-semibold">{field.value}</p>
                   </div>
+
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -276,6 +285,8 @@ export function MetadataConfig(props: {
                           {field.value ? "Lossless" : "Lossy"}
                         </Toggle>
                       </FormControl>
+
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -301,6 +312,8 @@ export function MetadataConfig(props: {
                           {field.value ? "Lossless" : "Lossy"}
                         </Toggle>
                       </FormControl>
+
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -326,6 +339,8 @@ export function MetadataConfig(props: {
                           {field.value ? "Lossless" : "Lossy"}
                         </Toggle>
                       </FormControl>
+
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -379,6 +394,8 @@ export function MetadataConfig(props: {
                       </SelectContent>
                     </Select>
                   </FormControl>
+
+                  <FormMessage />
                 </FormItem>
               )}
             />
