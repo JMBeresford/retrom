@@ -6,7 +6,13 @@ import { ActionButton } from "../components/action-button";
 import { Link } from "@tanstack/react-router";
 import { useMediaQuery } from "@/utils/use-media-query";
 import { createUrl, usePublicUrl } from "@/utils/urls";
-import { createContext, memo, PropsWithChildren, useContext, useMemo } from "react";
+import {
+  createContext,
+  memo,
+  PropsWithChildren,
+  useContext,
+  useMemo,
+} from "react";
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 import { Skeleton } from "@retrom/ui/components/skeleton";
 import { useGameMetadata } from "@/queries/useGameMetadata";
@@ -174,7 +180,11 @@ const GameItem = memo(function GameItem(props: { game: Game }) {
   );
 });
 
-const GameImage = memo(function GameImage(props: { game: Game; name: string; image?: string }) {
+const GameImage = memo(function GameImage(props: {
+  game: Game;
+  name: string;
+  image?: string;
+}) {
   const { game, name, image } = props;
 
   return (
