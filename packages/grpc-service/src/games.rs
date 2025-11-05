@@ -161,13 +161,12 @@ impl GameService for GameServiceHandlers {
         };
 
         if delete_from_disk {
-            // Delete files in parallel for better performance
             let delete_tasks: Vec<_> = games_deleted
                 .iter()
                 .map(|game| {
                     let path = PathBuf::from(&game.path);
                     let game_id = game.id;
-                    
+
                     async move {
                         if path.exists() {
                             let result = if path.is_dir() {
@@ -175,7 +174,7 @@ impl GameService for GameServiceHandlers {
                             } else {
                                 tokio::fs::remove_file(&path).await
                             };
-                            
+
                             if let Err(why) = result {
                                 tracing::error!(
                                     "Failed to delete game {} from disk: {}",
@@ -187,7 +186,7 @@ impl GameService for GameServiceHandlers {
                     }
                 })
                 .collect();
-            
+
             futures::future::join_all(delete_tasks).await;
         }
 
@@ -378,13 +377,12 @@ impl GameService for GameServiceHandlers {
         };
 
         if delete_from_disk {
-            // Delete files in parallel for better performance
             let delete_tasks: Vec<_> = game_files_deleted
                 .iter()
                 .map(|game_file| {
                     let path = PathBuf::from(&game_file.path);
                     let file_id = game_file.id;
-                    
+
                     async move {
                         if path.exists() {
                             let result = if path.is_dir() {
@@ -392,12 +390,18 @@ impl GameService for GameServiceHandlers {
                             } else {
                                 tokio::fs::remove_file(&path).await
                             };
-                            
+
                             if let Err(why) = result {
                                 let error_msg = if path.is_dir() {
-                                    format!("Failed to delete game sub-directory {} from disk: {}", file_id, why)
+                                    format!(
+                                        "Failed to delete game sub-directory {} from disk: {}",
+                                        file_id, why
+                                    )
                                 } else {
-                                    format!("Failed to delete game file {} from disk: {}", file_id, why)
+                                    format!(
+                                        "Failed to delete game file {} from disk: {}",
+                                        file_id, why
+                                    )
                                 };
                                 tracing::error!("{}", error_msg);
                             }
@@ -405,7 +409,7 @@ impl GameService for GameServiceHandlers {
                     }
                 })
                 .collect();
-            
+
             futures::future::join_all(delete_tasks).await;
         }
 
