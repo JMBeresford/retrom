@@ -14,10 +14,10 @@ import {
 } from "@retrom/ui/components/tooltip";
 import { cn } from "@retrom/ui/lib/utils";
 import { Link, useParams } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useSidebarMetadataContext } from "./metadata-context";
 
-export function GameItem(props: { game: Game }) {
+export const GameItem = memo(function GameItem(props: { game: Game }) {
   const { game } = props;
   const { gameMetadata: allGameMetadata } = useSidebarMetadataContext();
   const { gameId: currentGameId } = useParams({ strict: false });
@@ -114,4 +114,4 @@ export function GameItem(props: { game: Game }) {
       </TooltipPortal>
     </Tooltip>
   );
-}
+});

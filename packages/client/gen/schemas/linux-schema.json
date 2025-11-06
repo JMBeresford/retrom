@@ -37,7 +37,7 @@
   ],
   "definitions": {
     "Capability": {
-      "description": "A grouping and boundary mechanism developers can use to isolate access to the IPC layer.\n\nIt controls application windows' and webviews' fine grained access to the Tauri core, application, or plugin commands. If a webview or its window is not matching any capability then it has no access to the IPC layer at all.\n\nThis can be done to create groups of windows, based on their required system access, which can reduce impact of frontend vulnerabilities in less privileged windows. Windows can be added to a capability by exact name (e.g. `main-window`) or glob patterns like `*` or `admin-*`. A Window can have none, one, or multiple associated capabilities.\n\n## Example\n\n```json { \"identifier\": \"main-user-files-write\", \"description\": \"This capability allows the `main` window on macOS and Windows access to `filesystem` write related commands and `dialog` commands to enable programatic access to files selected by the user.\", \"windows\": [ \"main\" ], \"permissions\": [ \"core:default\", \"dialog:open\", { \"identifier\": \"fs:allow-write-text-file\", \"allow\": [{ \"path\": \"$HOME/test.txt\" }] }, ], \"platforms\": [\"macOS\",\"windows\"] } ```",
+      "description": "A grouping and boundary mechanism developers can use to isolate access to the IPC layer.\n\nIt controls application windows' and webviews' fine grained access to the Tauri core, application, or plugin commands. If a webview or its window is not matching any capability then it has no access to the IPC layer at all.\n\nThis can be done to create groups of windows, based on their required system access, which can reduce impact of frontend vulnerabilities in less privileged windows. Windows can be added to a capability by exact name (e.g. `main-window`) or glob patterns like `*` or `admin-*`. A Window can have none, one, or multiple associated capabilities.\n\n## Example\n\n```json { \"identifier\": \"main-user-files-write\", \"description\": \"This capability allows the `main` window on macOS and Windows access to `filesystem` write related commands and `dialog` commands to enable programmatic access to files selected by the user.\", \"windows\": [ \"main\" ], \"permissions\": [ \"core:default\", \"dialog:open\", { \"identifier\": \"fs:allow-write-text-file\", \"allow\": [{ \"path\": \"$HOME/test.txt\" }] }, ], \"platforms\": [\"macOS\",\"windows\"] } ```",
       "type": "object",
       "required": [
         "identifier",
@@ -49,7 +49,7 @@
           "type": "string"
         },
         "description": {
-          "description": "Description of what the capability is intended to allow on associated windows.\n\nIt should contain a description of what the grouped permissions should allow.\n\n## Example\n\nThis capability allows the `main` window access to `filesystem` write related commands and `dialog` commands to enable programatic access to files selected by the user.",
+          "description": "Description of what the capability is intended to allow on associated windows.\n\nIt should contain a description of what the grouped permissions should allow.\n\n## Example\n\nThis capability allows the `main` window access to `filesystem` write related commands and `dialog` commands to enable programmatic access to files selected by the user.",
           "default": "",
           "type": "string"
         },
@@ -2397,10 +2397,10 @@
           "markdownDescription": "Default core plugins set.\n#### This default permission set includes:\n\n- `core:path:default`\n- `core:event:default`\n- `core:window:default`\n- `core:webview:default`\n- `core:app:default`\n- `core:image:default`\n- `core:resources:default`\n- `core:menu:default`\n- `core:tray:default`"
         },
         {
-          "description": "Default permissions for the plugin.\n#### This default permission set includes:\n\n- `allow-version`\n- `allow-name`\n- `allow-tauri-version`\n- `allow-identifier`",
+          "description": "Default permissions for the plugin.\n#### This default permission set includes:\n\n- `allow-version`\n- `allow-name`\n- `allow-tauri-version`\n- `allow-identifier`\n- `allow-bundle-type`",
           "type": "string",
           "const": "core:app:default",
-          "markdownDescription": "Default permissions for the plugin.\n#### This default permission set includes:\n\n- `allow-version`\n- `allow-name`\n- `allow-tauri-version`\n- `allow-identifier`"
+          "markdownDescription": "Default permissions for the plugin.\n#### This default permission set includes:\n\n- `allow-version`\n- `allow-name`\n- `allow-tauri-version`\n- `allow-identifier`\n- `allow-bundle-type`"
         },
         {
           "description": "Enables the app_hide command without any pre-configured scope.",
@@ -2413,6 +2413,12 @@
           "type": "string",
           "const": "core:app:allow-app-show",
           "markdownDescription": "Enables the app_show command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the bundle_type command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:app:allow-bundle-type",
+          "markdownDescription": "Enables the bundle_type command without any pre-configured scope."
         },
         {
           "description": "Enables the default_window_icon command without any pre-configured scope.",
@@ -2479,6 +2485,12 @@
           "type": "string",
           "const": "core:app:deny-app-show",
           "markdownDescription": "Denies the app_show command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the bundle_type command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:app:deny-bundle-type",
+          "markdownDescription": "Denies the bundle_type command without any pre-configured scope."
         },
         {
           "description": "Denies the default_window_icon command without any pre-configured scope.",
@@ -3231,6 +3243,12 @@
           "markdownDescription": "Enables the reparent command without any pre-configured scope."
         },
         {
+          "description": "Enables the set_webview_auto_resize command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:webview:allow-set-webview-auto-resize",
+          "markdownDescription": "Enables the set_webview_auto_resize command without any pre-configured scope."
+        },
+        {
           "description": "Enables the set_webview_background_color command without any pre-configured scope.",
           "type": "string",
           "const": "core:webview:allow-set-webview-background-color",
@@ -3331,6 +3349,12 @@
           "type": "string",
           "const": "core:webview:deny-reparent",
           "markdownDescription": "Denies the reparent command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_webview_auto_resize command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:webview:deny-set-webview-auto-resize",
+          "markdownDescription": "Denies the set_webview_auto_resize command without any pre-configured scope."
         },
         {
           "description": "Denies the set_webview_background_color command without any pre-configured scope.",
@@ -3681,6 +3705,12 @@
           "markdownDescription": "Enables the set_focus command without any pre-configured scope."
         },
         {
+          "description": "Enables the set_focusable command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:allow-set-focusable",
+          "markdownDescription": "Enables the set_focusable command without any pre-configured scope."
+        },
+        {
           "description": "Enables the set_fullscreen command without any pre-configured scope.",
           "type": "string",
           "const": "core:window:allow-set-fullscreen",
@@ -3751,6 +3781,12 @@
           "type": "string",
           "const": "core:window:allow-set-shadow",
           "markdownDescription": "Enables the set_shadow command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_simple_fullscreen command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:allow-set-simple-fullscreen",
+          "markdownDescription": "Enables the set_simple_fullscreen command without any pre-configured scope."
         },
         {
           "description": "Enables the set_size command without any pre-configured scope.",
@@ -4125,6 +4161,12 @@
           "markdownDescription": "Denies the set_focus command without any pre-configured scope."
         },
         {
+          "description": "Denies the set_focusable command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:deny-set-focusable",
+          "markdownDescription": "Denies the set_focusable command without any pre-configured scope."
+        },
+        {
           "description": "Denies the set_fullscreen command without any pre-configured scope.",
           "type": "string",
           "const": "core:window:deny-set-fullscreen",
@@ -4195,6 +4237,12 @@
           "type": "string",
           "const": "core:window:deny-set-shadow",
           "markdownDescription": "Denies the set_shadow command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_simple_fullscreen command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:deny-set-simple-fullscreen",
+          "markdownDescription": "Denies the set_simple_fullscreen command without any pre-configured scope."
         },
         {
           "description": "Denies the set_size command without any pre-configured scope.",
@@ -6081,6 +6129,12 @@
           "markdownDescription": "This enables all file write related commands without any pre-configured accessible paths."
         },
         {
+          "description": "Enables the abort_installation command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-abort-installation",
+          "markdownDescription": "Enables the abort_installation command without any pre-configured scope."
+        },
+        {
           "description": "Enables the clear_installation_dir command without any pre-configured scope.",
           "type": "string",
           "const": "installer:allow-clear-installation-dir",
@@ -6093,10 +6147,22 @@
           "markdownDescription": "Enables the get_game_installation_status command without any pre-configured scope."
         },
         {
+          "description": "Enables the get_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-get-installation-index",
+          "markdownDescription": "Enables the get_installation_index command without any pre-configured scope."
+        },
+        {
           "description": "Enables the get_installation_state command without any pre-configured scope.",
           "type": "string",
           "const": "installer:allow-get-installation-state",
           "markdownDescription": "Enables the get_installation_state command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_installation_status command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-get-installation-status",
+          "markdownDescription": "Enables the get_installation_status command without any pre-configured scope."
         },
         {
           "description": "Enables the install_game command without any pre-configured scope.",
@@ -6117,16 +6183,46 @@
           "markdownDescription": "Enables the open_installation_dir command without any pre-configured scope."
         },
         {
+          "description": "Enables the subscribe_to_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-subscribe-to-installation-index",
+          "markdownDescription": "Enables the subscribe_to_installation_index command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the subscribe_to_installation_updates command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-subscribe-to-installation-updates",
+          "markdownDescription": "Enables the subscribe_to_installation_updates command without any pre-configured scope."
+        },
+        {
           "description": "Enables the uninstall_game command without any pre-configured scope.",
           "type": "string",
           "const": "installer:allow-uninstall-game",
           "markdownDescription": "Enables the uninstall_game command without any pre-configured scope."
         },
         {
+          "description": "Enables the unsubscribe_from_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-unsubscribe-from-installation-index",
+          "markdownDescription": "Enables the unsubscribe_from_installation_index command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the unsubscribe_from_installation_updates command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:allow-unsubscribe-from-installation-updates",
+          "markdownDescription": "Enables the unsubscribe_from_installation_updates command without any pre-configured scope."
+        },
+        {
           "description": "Enables the update_steam_installations command without any pre-configured scope.",
           "type": "string",
           "const": "installer:allow-update-steam-installations",
           "markdownDescription": "Enables the update_steam_installations command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the abort_installation command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-abort-installation",
+          "markdownDescription": "Denies the abort_installation command without any pre-configured scope."
         },
         {
           "description": "Denies the clear_installation_dir command without any pre-configured scope.",
@@ -6141,10 +6237,22 @@
           "markdownDescription": "Denies the get_game_installation_status command without any pre-configured scope."
         },
         {
+          "description": "Denies the get_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-get-installation-index",
+          "markdownDescription": "Denies the get_installation_index command without any pre-configured scope."
+        },
+        {
           "description": "Denies the get_installation_state command without any pre-configured scope.",
           "type": "string",
           "const": "installer:deny-get-installation-state",
           "markdownDescription": "Denies the get_installation_state command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_installation_status command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-get-installation-status",
+          "markdownDescription": "Denies the get_installation_status command without any pre-configured scope."
         },
         {
           "description": "Denies the install_game command without any pre-configured scope.",
@@ -6165,10 +6273,34 @@
           "markdownDescription": "Denies the open_installation_dir command without any pre-configured scope."
         },
         {
+          "description": "Denies the subscribe_to_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-subscribe-to-installation-index",
+          "markdownDescription": "Denies the subscribe_to_installation_index command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the subscribe_to_installation_updates command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-subscribe-to-installation-updates",
+          "markdownDescription": "Denies the subscribe_to_installation_updates command without any pre-configured scope."
+        },
+        {
           "description": "Denies the uninstall_game command without any pre-configured scope.",
           "type": "string",
           "const": "installer:deny-uninstall-game",
           "markdownDescription": "Denies the uninstall_game command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the unsubscribe_from_installation_index command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-unsubscribe-from-installation-index",
+          "markdownDescription": "Denies the unsubscribe_from_installation_index command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the unsubscribe_from_installation_updates command without any pre-configured scope.",
+          "type": "string",
+          "const": "installer:deny-unsubscribe-from-installation-updates",
+          "markdownDescription": "Denies the unsubscribe_from_installation_updates command without any pre-configured scope."
         },
         {
           "description": "Denies the update_steam_installations command without any pre-configured scope.",
