@@ -2,4 +2,4 @@
 tauri.local.conf.json
 retrom.log
 server-config.json
-
+gen/schemas/**
