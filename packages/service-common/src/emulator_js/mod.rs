@@ -2,7 +2,7 @@ use crate::retrom_dirs::RetromDirs;
 use futures::StreamExt;
 use std::path::PathBuf;
 
-const EMULATOR_JS_VER: &str = "4.2.1";
+const EMULATOR_JS_VER: &str = "4.2.3";
 const EMULATOR_JS_RELEASE_URL: &str =
     "https://github.com/EmulatorJS/EmulatorJS/releases/download/v";
 

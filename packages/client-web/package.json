@@ -10,7 +10,7 @@
     "@bufbuild/protobuf": "2.4.0",
     "@connectrpc/connect": "2.0.2",
     "@connectrpc/connect-web": "2.0.2",
-    "@emulatorjs/emulatorjs": "^4.2.1",
+    "@emulatorjs/emulatorjs": "^4.2.3",
     "@hookform/resolvers": "^3.3.4",
     "@noriginmedia/norigin-spatial-navigation": "^2.3.0",
     "@nx/vite": "*",
