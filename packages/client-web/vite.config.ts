@@ -61,6 +61,10 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
         },
       },
+      headers: {
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Embedder-Policy": "credentialless",
+      },
     },
     preview: {
       port: 3000,

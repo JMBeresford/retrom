@@ -99,6 +99,18 @@ pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -
                 )
                 .title(emulator.name)
                 .focused(true)
+                .on_web_resource_request(|req, res| {
+                    if req.uri().path().ends_with("/frame") {
+                        let headers = res.headers_mut();
+
+                        headers
+                            .insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
+                        headers.insert(
+                            "Cross-Origin-Embedder-Policy",
+                            "require-corp".parse().unwrap(),
+                        );
+                    }
+                })
                 .build()
                 .expect("Failed to build webview window");
 
