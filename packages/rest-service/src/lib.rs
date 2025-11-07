@@ -1,10 +1,16 @@
-use axum::{response::Redirect, routing::get, Extension, Router};
+use axum::{
+    response::{Redirect, Response},
+    routing::get,
+    Extension, Router,
+};
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use file::file_routes;
 use game::game_routes;
+use http::{header::CACHE_CONTROL, HeaderValue};
 use public::public_routes;
 use retrom_db::Pool;
 use std::sync::Arc;
+use tower::ServiceBuilder;
 use tower_http::{
     compression::CompressionLayer, cors::CorsLayer, decompression::RequestDecompressionLayer,
 };
@@ -36,6 +42,16 @@ pub fn rest_service(pool: Arc<Pool>) -> Router {
         .layer(CorsLayer::permissive())
         .layer(RequestDecompressionLayer::new())
         .layer(CompressionLayer::new())
+        .layer(
+            ServiceBuilder::new().map_response(|mut response: Response| {
+                tracing::info!("Response generated: {:?}", response);
+                let headers = response.headers_mut();
+
+                headers.insert(CACHE_CONTROL, HeaderValue::from_static("no-cache"));
+
+                response
+            }),
+        )
     // .layer(
     //     ServiceBuilder::new().map_response(|mut response: Response| {
     //         let headers = response.headers_mut();
