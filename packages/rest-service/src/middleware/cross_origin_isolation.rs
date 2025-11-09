@@ -1,3 +1,4 @@
+use http::HeaderValue;
 use tracing::instrument;
 
 #[instrument]
@@ -9,10 +10,13 @@ pub async fn cross_origin_isolation_middleware(
 
     let headers = response.headers_mut();
 
-    headers.insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
+    headers.insert(
+        "Cross-Origin-Opener-Policy",
+        HeaderValue::from_static("same-origin"),
+    );
     headers.insert(
         "Cross-Origin-Embedder-Policy",
-        "credentialless".parse().unwrap(),
+        HeaderValue::from_static("credentialless"),
     );
 
     response

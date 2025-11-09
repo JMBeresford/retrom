@@ -61,10 +61,6 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
         },
       },
-      headers: {
-        "Cross-Origin-Opener-Policy": "same-origin",
-        "Cross-Origin-Embedder-Policy": "credentialless",
-      },
     },
     preview: {
       port: 3000,
@@ -93,6 +89,25 @@ export default defineConfig(({ mode }) => {
       target: ["es2022"],
     },
     plugins: [
+      {
+        name: "cross-origin-isolation-plugin",
+        configureServer: (server) => {
+          server.middlewares.use((_req, res, next) => {
+            res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+            res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
+
+            next();
+          });
+        },
+        configurePreviewServer: (server) => {
+          server.middlewares.use((_req, res, next) => {
+            res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+            res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
+
+            next();
+          });
+        },
+      },
       tailwindcss(),
       TanStackRouterVite(),
       react(),

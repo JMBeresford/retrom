@@ -29,7 +29,8 @@
     }
   },
   "build": {
-    "frontendDist": "../client-web/dist"
+    "frontendDist": "../client-web/dist",
+    "devUrl": "http://localhost:3000"
   },
   "productName": "Retrom",
   "identifier": "com.retrom.client",
@@ -48,7 +49,7 @@
       "csp": null,
       "headers": {
         "Access-Control-Allow-Credentials": "true",
-        "Cross-Origin-Embedder-Policy": "require-corp",
+        "Cross-Origin-Embedder-Policy": "credentialles",
         "Cross-Origin-Opener-Policy": "same-origin",
         "Access-Control-Allow-Headers": ["traceparent"],
         "Access-Control-Allow-Methods": "*"

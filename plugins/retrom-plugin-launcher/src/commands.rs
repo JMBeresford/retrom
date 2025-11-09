@@ -107,7 +107,7 @@ pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -
                             .insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
                         headers.insert(
                             "Cross-Origin-Embedder-Policy",
-                            "require-corp".parse().unwrap(),
+                            "credentialless".parse().unwrap(),
                         );
                     }
                 })
