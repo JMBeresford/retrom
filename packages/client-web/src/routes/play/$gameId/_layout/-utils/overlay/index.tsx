@@ -17,7 +17,7 @@ import { Hotkey, useHotkeys } from "@/providers/hotkeys";
 import { MenuEntryButton } from "@/components/fullscreen/menubar/menu-entry-button";
 import { FocusContainer } from "@/components/fullscreen/focus-container";
 import { gameOptions } from "./game-options";
-import logo from "@/assets/img/Logo.png";
+import logoCover from "@/assets/img/Logo-9x16-Small.png";
 import logoLong from "@/assets/img/LogoLong-NoBackground-Small.png";
 import { Separator } from "@retrom/ui/components/separator";
 import { emulationOptions } from "./emulation-options";
@@ -200,15 +200,15 @@ export const OverlayMenu = memo(function OverlayMenu(props: {
         e.preventDefault();
         pauseInput();
       }}
-      className="absolute w-96"
+      className="absolute w-96 gap-0"
       userCanClose
     >
       <SheetHeader className="px-3">
         <div className="flex flex-row gap-2">
-          <Image src={imgSrc} className="w-16 min-w-0" />
+          <Image src={imgSrc} className="w-16 object-cover" />
 
-          <div className="text-pretty w-fit">
-            <SheetTitle className="font-black whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="text-pretty w-fit overflow-hidden overflow-ellipsis pr-6">
+            <SheetTitle className="font-black overflow-hidden text-ellipsis">
               {name}
             </SheetTitle>
             <SheetDescription className="text-foreground text-base font-semibold mb-1">
@@ -331,7 +331,7 @@ export function Overlay() {
               core={emulator?.name ?? emulatorJS.coreName}
               name={name}
               platform={platformMetadata?.name ?? getFileStub(platform.path)}
-              imgSrc={coverUrl || logo}
+              imgSrc={coverUrl || logoCover}
             />
           </div>
         </HotkeyLayer>
