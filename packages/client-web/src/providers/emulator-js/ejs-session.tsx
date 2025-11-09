@@ -44,7 +44,12 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
   // const { uploadFiles, downloadFiles } = useRemoteFiles();
   const { mutateAsync: updateSave } = useUpdateSaveFiles();
   const saveFilesQuery = useGetSaveFiles({
-    saveFilesSelectors: [{ gameId: game.id, emulatorId: emulator?.id }],
+    saveFilesSelectors: [
+      {
+        gameId: game?.id ?? 0,
+        emulatorId: emulator?.id,
+      },
+    ],
   });
 
   const startTime = useMemo(() => Date.now(), []);

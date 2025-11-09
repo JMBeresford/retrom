@@ -1,6 +1,6 @@
 use crate::retrom_dirs::RetromDirs;
 use config::{Config, ConfigError, File};
-use retrom_codegen::retrom::{ContentDirectory, SavesConfig, ServerConfig, StorageType};
+use retrom_codegen::retrom::{ContentDirectory, SaveDirStructure, SavesConfig, ServerConfig, StorageType};
 use std::path::PathBuf;
 use tokio::sync::RwLock;
 
@@ -46,6 +46,7 @@ impl ServerConfigManager {
                 saves: Some(SavesConfig {
                     max_save_files_backups: 5,
                     max_save_states_backups: 5,
+                       save_dir_structure: Some(i32::from(SaveDirStructure::EmulatorGame)),
                 }),
                 ..Default::default()
             };
