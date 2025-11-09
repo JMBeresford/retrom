@@ -1,7 +1,7 @@
 use http::HeaderValue;
 use tracing::instrument;
 
-#[instrument]
+#[instrument(skip_all)]
 pub async fn cross_origin_isolation_middleware(
     request: axum::extract::Request,
     next: axum::middleware::Next,

@@ -1,7 +1,7 @@
 use http::{header::CACHE_CONTROL, HeaderValue};
 use tracing::instrument;
 
-#[instrument]
+#[instrument(skip_all)]
 pub async fn cache_control_middleware(
     request: axum::extract::Request,
     next: axum::middleware::Next,
