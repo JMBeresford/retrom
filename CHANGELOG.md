@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.43](https://github.com/JMBeresford/retrom/compare/v0.7.42...v0.7.43) (2025-11-09)
+
+
+### Features
+
+* update emulatorJS version 4.2.1 -&gt; 4.2.3 ([58de623](https://github.com/JMBeresford/retrom/commit/58de623fb629610e50172ef3a24f9009329cd510))
+
+
+### Bug Fixes
+
+* built-in ppsspp emulation ([#433](https://github.com/JMBeresford/retrom/issues/433)) ([54c97e3](https://github.com/JMBeresford/retrom/commit/54c97e383e1b1448c900e41a71eaf8c06830d1b2))
+* cache control header for public files ([2dad54d](https://github.com/JMBeresford/retrom/commit/2dad54db81a47d0cbc7e6d78118d642f5526100d))
+* catch memory access error in web emulation ([08d39c4](https://github.com/JMBeresford/retrom/commit/08d39c469c891eab6be421f3409593e94627f12d))
+* overlay UI tweaks ([92c4f6f](https://github.com/JMBeresford/retrom/commit/92c4f6fe87e5971aa0ea657bfada52ca508a507e))
+
+
+### Performance Improvements
+
+* add database indexes and optimize hot paths ([#427](https://github.com/JMBeresford/retrom/issues/427)) ([f80b0e0](https://github.com/JMBeresford/retrom/commit/f80b0e087ec8bbf64a735d5ab3488fd4e7306772))
+
 ## [0.7.42](https://github.com/JMBeresford/retrom/compare/v0.7.41...v0.7.42) (2025-11-04)
 
 
