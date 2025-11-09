@@ -1,5 +1,4 @@
-use std::{ffi::OsStr, path::PathBuf, sync::Arc};
-
+use crate::{desktop::GameProcess, LauncherExt, Result};
 use prost::Message;
 use retrom_codegen::retrom::{
     client::installation::InstallationStatus, emulator::OperatingSystem, GamePlayStatusUpdate,
@@ -10,12 +9,13 @@ use retrom_plugin_config::ConfigExt;
 use retrom_plugin_installer::InstallerExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
-use tauri::{command, AppHandle, Runtime, WebviewUrl, WebviewWindow, WindowEvent};
+use std::{ffi::OsStr, path::PathBuf, sync::Arc};
+use tauri::{
+    command, http::HeaderValue, AppHandle, Runtime, WebviewUrl, WebviewWindow, WindowEvent,
+};
 use tokio::sync::Mutex;
 use tracing::{info, instrument};
 use walkdir::WalkDir;
-
-use crate::{desktop::GameProcess, LauncherExt, Result};
 
 #[command]
 #[instrument(skip_all)]
@@ -103,11 +103,13 @@ pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -
                     if req.uri().path().ends_with("/frame") {
                         let headers = res.headers_mut();
 
-                        headers
-                            .insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
+                        headers.insert(
+                            "Cross-Origin-Opener-Policy",
+                            HeaderValue::from_static("same-origin"),
+                        );
                         headers.insert(
                             "Cross-Origin-Embedder-Policy",
-                            "credentialless".parse().unwrap(),
+                            HeaderValue::from_static("credentialless"),
                         );
                     }
                 })
