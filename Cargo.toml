@@ -36,19 +36,19 @@ repository = "https://github.com/JMBeresford/retrom"
 [workspace.dependencies]
 signal-hook = "0.3.18"
 signal-hook-tokio = { version = "0.3.1", features = ["futures-v0_3"] }
-tauri = { version = "2.8.5", features = ["tracing", "common-controls-v6"] }
-tauri-plugin = { version = "2.4.0", features = ["build"] }
-tauri-build = "2.4.1"
-tauri-plugin-dialog = "2.4.0"
-tauri-plugin-opener = "2.5.0"
-tauri-plugin-shell = "2.3.1"
-tauri-plugin-process = "2.3.0"
-tauri-plugin-fs = "2.4.2"
+tauri = { version = "2.9.2", features = ["tracing", "common-controls-v6"] }
+tauri-plugin = { version = "2.5.1", features = ["build"] }
+tauri-build = "2.5.1"
+tauri-plugin-dialog = "2.4.2"
+tauri-plugin-opener = "2.5.2"
+tauri-plugin-shell = "2.3.3"
+tauri-plugin-process = "2.3.1"
+tauri-plugin-fs = "2.4.4"
 tauri-plugin-system-info = "2.0.9"
-tauri-plugin-single-instance = "2.3.4"
+tauri-plugin-single-instance = "2.3.6"
 tauri-plugin-updater = "2.9.0"
-tauri-plugin-upload = "2.3.1"
-tauri-plugin-window-state = "2.4.0"
+tauri-plugin-upload = "2.3.2"
+tauri-plugin-window-state = "2.4.1"
 uuid = { version = "1.10.0", features = ["v4"] }
 regex = "1.11.1"
 # opt out of lzma an xz to avoid linking twice (postrgres_embedded and async_zip)
