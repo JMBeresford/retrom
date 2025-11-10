@@ -178,6 +178,15 @@ jobs:
         run: |
           pnpm nx build retrom-client --args="$TARGET_ARG" --configuration="debug"
 
+      - name: upload web outputs to release
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist_${{ matrix.platform }}
+          path: packages/client-web/dist/
+
       - name: upload artifacts to release
         if: ${{ github.event_name != 'pull_request' }}
         uses: tauri-apps/tauri-action@v0
