@@ -204,7 +204,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
-          TAR_FILE: web-dist_"${{ matrix.platform }}".tar.gz
+          TAR_FILE: web-dist_${{ matrix.platform }}.tar.gz
         run: |
           tar -czvf "$TAR_FILE" packages/client-web/dist/
           gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
