@@ -178,15 +178,6 @@ jobs:
         run: |
           pnpm nx build retrom-client --args="$TARGET_ARG" --configuration="debug"
 
-      - name: upload web outputs to release
-        if: ${{ github.event_name != 'pull_request' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-dist_${{ matrix.platform }}
-          path: packages/client-web/dist/
-
       - name: upload artifacts to release
         if: ${{ github.event_name != 'pull_request' }}
         uses: tauri-apps/tauri-action@v0
@@ -207,6 +198,16 @@ jobs:
           updaterJsonPreferNsis: true
           tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
           args: ${{ env.TARGET_ARG }} # required for the action to look in the correct target subdir
+
+      - name: upload web outputs to release
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
+          TAR_FILE: web-dist_"${{ matrix.platform }}".tar.gz
+        run: |
+          tar -czvf "$TAR_FILE" packages/client-web/dist/
+          gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
 
   publish-crates:
     permissions:
