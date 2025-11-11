@@ -1,10 +1,19 @@
-use axum::{response::Redirect, routing::get, Extension, Router};
+use axum::{
+    response::{Redirect, Response},
+    routing::get,
+    Extension, Router,
+};
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use file::file_routes;
 use game::game_routes;
+use http::{header::CACHE_CONTROL, HeaderValue};
 use public::public_routes;
 use retrom_db::Pool;
 use std::sync::Arc;
-use tower_http::cors::{AllowOrigin, CorsLayer};
+use tower::ServiceBuilder;
+use tower_http::{
+    compression::CompressionLayer, cors::CorsLayer, decompression::RequestDecompressionLayer,
+};
 use web::web_routes;
 pub mod error;
 pub mod file;
@@ -27,12 +36,21 @@ pub fn rest_service(pool: Arc<Pool>) -> Router {
             "/",
             get(|| async { Redirect::to("/web") }).head(|| async { Redirect::to("/web") }),
         )
+        .layer(OtelInResponseLayer)
+        .layer(OtelAxumLayer::default())
         .layer(Extension(pool))
-        .layer(tower_http::trace::TraceLayer::new_for_http())
+        .layer(CorsLayer::permissive())
+        .layer(RequestDecompressionLayer::new())
+        .layer(CompressionLayer::new())
         .layer(
-            CorsLayer::new()
-                .allow_origin(AllowOrigin::mirror_request())
-                .allow_credentials(true),
+            ServiceBuilder::new().map_response(|mut response: Response| {
+                tracing::info!("Response generated: {:?}", response);
+                let headers = response.headers_mut();
+
+                headers.insert(CACHE_CONTROL, HeaderValue::from_static("no-cache"));
+
+                response
+            }),
         )
     // .layer(
     //     ServiceBuilder::new().map_response(|mut response: Response| {

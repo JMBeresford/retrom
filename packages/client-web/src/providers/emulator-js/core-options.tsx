@@ -21,20 +21,27 @@ export function CoreOptionsProvider(props: PropsWithChildren) {
   const initialCoreOptions = useMemo(() => {
     if (!emulatorJS) return {};
 
-    const rawOptions =
-      emulatorJS.gameManager?.getCoreOptions()?.split("\n") ?? [];
-    const parsedOptions: Record<string, CoreOption> = {};
+    try {
+      const rawOptions =
+        emulatorJS.gameManager?.getCoreOptions()?.split("\n") ?? [];
+      const parsedOptions: Record<string, CoreOption> = {};
 
-    rawOptions.forEach((line) => {
-      const [labelAndDefault, allValues] = line.split(";").map((v) => v.trim());
-      const [label, defaultValue] = labelAndDefault
-        .split("|")
-        .map((v) => v.trim());
-      const values = allValues.split("|").map((v) => v.trim());
-      parsedOptions[label] = { value: defaultValue, allValues: values };
-    });
+      rawOptions.forEach((line) => {
+        const [labelAndDefault, allValues] = line
+          .split(";")
+          .map((v) => v.trim());
+        const [label, defaultValue] = labelAndDefault
+          .split("|")
+          .map((v) => v.trim());
+        const values = allValues.split("|").map((v) => v.trim());
+        parsedOptions[label] = { value: defaultValue, allValues: values };
+      });
 
-    return parsedOptions;
+      return parsedOptions;
+    } catch (e) {
+      console.error("Failed to parse core options:", e);
+      return {};
+    }
   }, [emulatorJS]);
 
   const [coreOptions, setCoreOptions] = useState(initialCoreOptions);

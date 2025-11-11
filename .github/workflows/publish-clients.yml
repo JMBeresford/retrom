@@ -212,6 +212,26 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PLEASE_GH_TOKEN }}
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libwebkit2gtk-4.1-0=2.44.0-2 \
+            libwebkit2gtk-4.1-dev=2.44.0-2 \
+            libjavascriptcoregtk-4.1-0=2.44.0-2 \
+            libjavascriptcoregtk-4.1-dev=2.44.0-2 \
+            gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
+            gir1.2-webkit2-4.1=2.44.0-2 \
+            xdg-utils
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 

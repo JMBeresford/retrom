@@ -1,20 +1,23 @@
 use crate::retrom_dirs::RetromDirs;
-use caesium::parameters::CSParameters;
+use bigdecimal::ToPrimitive;
+use caesium::{compress_in_memory, convert_in_memory, parameters::CSParameters};
+use index::{IndexEntry, IndexManager};
+use rayon::ThreadPool;
 use reqwest::StatusCode;
+use retrom_codegen::retrom::metadata_config::ImageFormat;
 use std::{
     path::{Path, PathBuf},
     str::FromStr,
+    sync::Arc,
 };
 use thiserror::Error;
 use tokio::fs;
 use tokio_retry::Condition;
-use tracing::{debug, instrument, warn};
+use tracing::{debug, instrument, warn, Instrument};
 
 pub mod cacheable_media;
 pub mod index;
 pub mod utils;
-
-use index::{IndexEntry, IndexManager};
 
 #[derive(Error, Debug)]
 pub enum MediaCacheError {
@@ -117,8 +120,9 @@ impl CacheMediaOpts {
 
 pub struct MediaCache {
     client: reqwest::Client,
-    // compression_threads: Arc<ThreadPool>,
+    compression_threads: Arc<ThreadPool>,
     index_manager: IndexManager,
+    config_manager: Arc<crate::config::ServerConfigManager>,
 }
 
 struct RetryCondition {}
@@ -144,27 +148,28 @@ impl Condition<MediaCacheError> for RetryCondition {
 }
 
 impl MediaCache {
-    pub fn new() -> Self {
+    pub fn new(config_manager: Arc<crate::config::ServerConfigManager>) -> Self {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
             .unwrap_or_else(|_| reqwest::Client::new());
 
-        // let thread_count = std::thread::available_parallelism()
-        //     .map(|n| std::cmp::max(n.get() - 1, 1))
-        //     .unwrap_or(0); // 0 -> default thread count determined by rayon
+        let thread_count = std::thread::available_parallelism()
+            .map(|n| std::cmp::max(n.get() - 1, 1))
+            .unwrap_or(0); // 0 -> default thread count determined by rayon
 
-        // let compression_threads = Arc::new(
-        //     rayon::ThreadPoolBuilder::new()
-        //         .num_threads(thread_count)
-        //         .build()
-        //         .expect("Failed to create compression thread pool"),
-        // );
+        let compression_threads = Arc::new(
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(thread_count)
+                .build()
+                .expect("Failed to create compression thread pool"),
+        );
 
         Self {
             client,
-            // compression_threads,
+            compression_threads,
             index_manager: IndexManager::new(),
+            config_manager,
         }
     }
 
@@ -244,12 +249,73 @@ impl MediaCache {
 
         let bytes = response.bytes().await?;
 
-        fs::write(&cache_path, bytes).await?;
-
+        let config = self.config_manager.get_config().await;
+        let optimization_config = config.metadata.and_then(|m| m.optimization);
         let mut params = CSParameters::new();
         params.keep_metadata = false;
 
-        // self.compress_media(&cache_path, params).await?;
+        params.jpeg.progressive = true;
+        params.jpeg.quality = optimization_config.map(|m| m.jpeg_quality).unwrap_or(85);
+        params.jpeg.optimize = optimization_config
+            .map(|m| m.jpeg_optimization)
+            .unwrap_or(false);
+
+        params.png.quality = optimization_config.map(|m| m.png_quality).unwrap_or(85);
+        params.png.optimize = optimization_config
+            .map(|m| m.png_optimization)
+            .unwrap_or(true);
+        params.png.optimization_level = optimization_config
+            .map(|m| m.png_optimization_level)
+            .and_then(|lvl| lvl.to_u8())
+            .unwrap_or(2u8);
+
+        params.webp.quality = optimization_config.map(|m| m.webp_quality).unwrap_or(85);
+        params.webp.lossless = optimization_config.map(|m| m.webp_lossless).unwrap_or(true);
+        let image_format = optimization_config
+            .and_then(|m| m.preferred_image_format)
+            .unwrap_or(ImageFormat::Jpeg.into());
+
+        let thread_pool = self.compression_threads.clone();
+        let compressed_bytes = tokio::task::spawn_blocking(move || {
+            thread_pool.install(move || {
+                let initial_bytes = bytes.to_vec();
+                let converted_bytes = match ImageFormat::try_from(image_format).ok() {
+                    Some(ImageFormat::Jpeg) => {
+                        convert_in_memory(initial_bytes, &params, caesium::SupportedFileTypes::Jpeg)
+                    }
+                    Some(ImageFormat::Png) => {
+                        convert_in_memory(initial_bytes, &params, caesium::SupportedFileTypes::Png)
+                    }
+                    Some(ImageFormat::Webp) => {
+                        convert_in_memory(initial_bytes, &params, caesium::SupportedFileTypes::WebP)
+                    }
+                    _ => Ok(initial_bytes),
+                };
+
+                let compressed_bytes = match converted_bytes {
+                    Ok(b) => compress_in_memory(b, &params),
+                    Err(e) => {
+                        warn!("Image conversion failed, using original bytes: {:?}", e);
+                        return bytes.to_vec();
+                    }
+                };
+
+                match compressed_bytes {
+                    Ok(b) => b,
+                    Err(e) => {
+                        warn!("Image compression failed, using original bytes: {:?}", e);
+                        bytes.to_vec()
+                    }
+                }
+            })
+        })
+        .instrument(tracing::info_span!(
+            "compression_task",
+            config = ?optimization_config
+        ))
+        .await?;
+
+        fs::write(&cache_path, compressed_bytes).await?;
 
         if let Err(e) = self.index_manager.update_entry(opts).await {
             warn!("Failed to update cache index for {cache_path:?}: {e:?}");
@@ -288,65 +354,8 @@ impl MediaCache {
         .await
     }
 
-    // #[instrument(skip_all,
-    //     fields(png.quality = params.png.quality.to_i64(),
-    //            jpeg.quality = params.jpeg.quality.to_i64(),
-    //            optimization_level = params.png.optimization_level,
-    //            file_type = file.as_ref().extension().and_then(|s| s.to_str()).unwrap_or("unknown")
-    //     )
-    // )]
-    // async fn compress_media(&self, file: impl AsRef<Path>, params: CSParameters) -> Result<()> {
-    //     let (tx, rx) = tokio::sync::oneshot::channel();
-    //
-    //     let fp: &Path = file.as_ref();
-    //     let temp_path = fp.with_extension("compressed");
-    //
-    //     debug!("Spawning compression thread");
-    //
-    //     let span = tracing::info_span!("compression_thread");
-    //
-    //     let path_str = fp.to_string_lossy().to_string();
-    //     let out_path_str = temp_path.to_string_lossy().to_string();
-    //
-    //     let compression_threads = self.compression_threads.clone();
-    //     tokio::task::spawn_blocking(move || {
-    //         compression_threads.spawn(move || {
-    //             span.in_scope(|| {
-    //                 info!("Beginning compression of media file");
-    //
-    //                 let res = compress(path_str, out_path_str, &params);
-    //                 info!("Compression completed");
-    //
-    //                 let _ = tx.send(res);
-    //             });
-    //         })
-    //     })
-    //     .await?;
-    //
-    //     match rx.await {
-    //         Ok(Ok(res)) => {
-    //             info!("Media compressed successfully");
-    //             tokio::fs::remove_file(fp).await?;
-    //             tokio::fs::rename(temp_path, fp).await?;
-    //             Ok(res)
-    //         }
-    //         _ => {
-    //             warn!("Failed to compress media, returning original data");
-    //             Err(MediaCacheError::Io(std::io::Error::other(
-    //                 "Compression failed",
-    //             )))
-    //         }
-    //     }
-    // }
-
     pub fn index_manager(&self) -> &IndexManager {
         &self.index_manager
-    }
-}
-
-impl Default for MediaCache {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -507,7 +516,7 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_index_integration_with_cache_operations() {
-        let cache = MediaCache::new();
+        let cache = MediaCache::new(Arc::new(crate::config::ServerConfigManager::new().unwrap()));
 
         let game_metadata = GameMetadata {
             game_id: 123,
@@ -588,7 +597,7 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_cache_media_opts_absolute_path_validation() {
-        let cache = MediaCache::new();
+        let cache = MediaCache::new(Arc::new(crate::config::ServerConfigManager::new().unwrap()));
         let cache_dir = RetromDirs::new().media_dir().join("games").join("test");
 
         // Test with absolute path should return error
@@ -607,7 +616,7 @@ mod integration_tests {
     #[tokio::test]
     async fn test_cache_file_overwrite_on_url_change() {
         let temp_dir = TempDir::new().unwrap();
-        let cache = MediaCache::new();
+        let cache = MediaCache::new(Arc::new(crate::config::ServerConfigManager::new().unwrap()));
 
         // Create a test cache directory
         let cache_dir = temp_dir.path().join("cache");

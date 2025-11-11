@@ -132,9 +132,9 @@ pub async fn update_metadata(
         })?;
 
     let game_tasks = games
-        .clone()
-        .into_iter()
+        .iter()
         .map(|game| {
+            let game = game.clone();
             let igdb_provider = state.igdb_client.clone();
             let db_pool = db_pool.clone();
 

@@ -27,10 +27,10 @@ export function ConfigModal() {
       open={!!configModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          void navigate({
+          navigate({
             to: ".",
             search: (prev) => ({ ...prev, configModal: undefined }),
-          });
+          }).catch(console.error);
         }
       }}
     >
@@ -44,7 +44,7 @@ export function ConfigModal() {
         </DialogHeader>
 
         <Tabs
-          value={configModal?.tab}
+          value={configModal?.tab ?? "server"}
           onValueChange={(tab) => {
             navigate({
               to: ".",

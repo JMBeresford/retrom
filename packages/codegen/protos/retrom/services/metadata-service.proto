@@ -19,6 +19,9 @@ service MetadataService {
   rpc GetIgdbPlatformSearchResults(GetIgdbPlatformSearchResultsRequest) returns (GetIgdbPlatformSearchResultsResponse);
 
   rpc SyncSteamMetadata(SyncSteamMetadataRequest) returns (SyncSteamMetadataResponse);
+
+  rpc GetLocalMetadataStatus(GetLocalMetadataStatusRequest) returns (GetLocalMetadataStatusResponse);
+  rpc DeleteLocalMetadata(DeleteLocalMetadataRequest) returns (DeleteLocalMetadataResponse);
 }
 
 message GetGameMetadataRequest {
@@ -128,3 +131,14 @@ message SyncSteamMetadataRequest {
 }
 
 message SyncSteamMetadataResponse {}
+
+message GetLocalMetadataStatusRequest {}
+
+message GetLocalMetadataStatusResponse {
+  int64 total_byte_size = 1;
+  int32 total_files = 2;
+}
+
+message DeleteLocalMetadataRequest {}
+
+message DeleteLocalMetadataResponse {}

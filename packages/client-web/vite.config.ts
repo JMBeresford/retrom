@@ -79,7 +79,7 @@ export default defineConfig(({ mode }) => {
         "^/web/.*": {
           target: localServiceHost || "/",
           bypass: (_req, res) => {
-            res.setHeader("x-retrom-legacy-entry", "true");
+            res?.setHeader("x-retrom-legacy-entry", "true");
           },
           changeOrigin: true,
         },
@@ -95,14 +95,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      target: [
-        "es2022",
-        "chrome89",
-        "edge89",
-        "safari15",
-        "firefox89",
-        "opera75",
-      ],
+      target: ["es2022"],
     },
     plugins: [
       tailwindcss(),

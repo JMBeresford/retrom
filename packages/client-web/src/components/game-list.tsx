@@ -3,17 +3,67 @@ import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { getFileName, getFileStub, Image } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import { ActionButton } from "../components/action-button";
-import { GameDetailProvider, useGameDetail } from "@/providers/game-details";
 import { Link } from "@tanstack/react-router";
 import { useMediaQuery } from "@/utils/use-media-query";
 import { createUrl, usePublicUrl } from "@/utils/urls";
-import { useMemo } from "react";
+import {
+  createContext,
+  memo,
+  PropsWithChildren,
+  useContext,
+  useMemo,
+} from "react";
 import { StorageType } from "@retrom/codegen/retrom/server/config_pb";
 import { Skeleton } from "@retrom/ui/components/skeleton";
+import { useGameMetadata } from "@/queries/useGameMetadata";
+import { GetGameMetadataResponse_MediaPaths } from "@retrom/codegen/retrom/services/metadata-service_pb";
 
 export type GameWithMetadata = Game & { metadata?: GameMetadata };
 
-export function GameList(props: { games: GameWithMetadata[] }) {
+export type GameListMetadataContextState = {
+  games: Game[];
+  gameMetadata: Array<
+    GameMetadata & { mediaPaths?: GetGameMetadataResponse_MediaPaths }
+  >;
+};
+
+const GameListMetadataContext = createContext<GameListMetadataContextState>({
+  games: [],
+  gameMetadata: [],
+});
+
+function GameListMetadataProvider(props: PropsWithChildren<{ games: Game[] }>) {
+  const { games, children } = props;
+
+  const { data: gameMetadata, status } = useGameMetadata({
+    request: { gameIds: games.map((g) => g.id) },
+    selectFn: (data) =>
+      data.metadata.map((m) => ({
+        ...m,
+        mediaPaths: data.mediaPaths[m.gameId],
+      })),
+  });
+
+  if (status === "pending") {
+    return <Skeleton className="w-full h-96" />;
+  }
+
+  if (status === "error") {
+    return <div className="text-red-500">Failed to load game metadata.</div>;
+  }
+
+  return (
+    <GameListMetadataContext.Provider value={{ games, gameMetadata }}>
+      {children}
+    </GameListMetadataContext.Provider>
+  );
+}
+
+function useGameListMetadataContext() {
+  return useContext(GameListMetadataContext);
+}
+
+export function GameList(props: { games: Game[] }) {
   return (
     <div
       className={cn(
@@ -21,47 +71,45 @@ export function GameList(props: { games: GameWithMetadata[] }) {
         "pl-5 sm:pl-0",
       )}
     >
-      {props.games.map((game) => {
-        return (
-          <GameDetailProvider
-            key={game.id}
-            gameId={game.id}
-            loadingComponent={
-              <Skeleton className="aspect-video h-[24rem] mx-5 row-span-2" />
-            }
-          >
-            <GameItem />
-          </GameDetailProvider>
-        );
-      })}
+      <GameListMetadataProvider games={props.games}>
+        {props.games.map((game) => {
+          return <GameItem key={game.id} game={game} />;
+        })}
+      </GameListMetadataProvider>
     </div>
   );
 }
 
-function GameItem() {
+const GameItem = memo(function GameItem(props: { game: Game }) {
+  const { game } = props;
+  const listContext = useGameListMetadataContext();
+  const metadata = useMemo(
+    () => listContext.gameMetadata.find((m) => m.gameId === game.id),
+    [listContext.gameMetadata, game.id],
+  );
+
   const isMobile = useMediaQuery("(max-width: 640px)");
   const publicUrl = usePublicUrl();
-  const { game, gameMetadata, extraMetadata } = useGameDetail();
 
   const bgUrl = useMemo(() => {
-    const localPath = extraMetadata?.mediaPaths?.backgroundUrl;
+    const localPath = metadata?.mediaPaths?.backgroundUrl;
     if (localPath && publicUrl) {
       return createUrl({ path: localPath, base: publicUrl })?.href;
     }
 
-    return gameMetadata?.backgroundUrl;
-  }, [publicUrl, gameMetadata, extraMetadata]);
+    return metadata?.backgroundUrl;
+  }, [publicUrl, metadata]);
 
   const coverUrl = useMemo(() => {
-    const localPath = extraMetadata?.mediaPaths?.coverUrl;
+    const localPath = metadata?.mediaPaths?.coverUrl;
     if (localPath && publicUrl) {
       return createUrl({ path: localPath, base: publicUrl })?.href;
     }
 
-    return gameMetadata?.coverUrl;
-  }, [publicUrl, gameMetadata, extraMetadata]);
+    return metadata?.coverUrl;
+  }, [publicUrl, metadata]);
 
-  const played = gameMetadata?.minutesPlayed;
+  const played = metadata?.minutesPlayed;
   const playedRender = played
     ? played > 60
       ? `Played for ${Math.floor(played / 60)}h ${played % 60}m`
@@ -71,7 +119,7 @@ function GameItem() {
   const image = isMobile ? (coverUrl ?? bgUrl) : (bgUrl ?? coverUrl);
 
   const gameName =
-    gameMetadata?.name ??
+    metadata?.name ??
     (game.storageType === StorageType.SINGLE_FILE_GAME
       ? getFileStub(game.path)
       : getFileName(game.path));
@@ -118,6 +166,7 @@ function GameItem() {
               )}
             >
               <ActionButton
+                game={game}
                 size="sm"
                 className='text-md min-w-[100px] [&_div[role="progressbar"]_>_*]:bg-primary-foreground'
               />
@@ -129,9 +178,13 @@ function GameItem() {
       </div>
     </div>
   );
-}
+});
 
-function GameImage(props: { game: Game; name: string; image?: string }) {
+const GameImage = memo(function GameImage(props: {
+  game: Game;
+  name: string;
+  image?: string;
+}) {
   const { game, name, image } = props;
 
   return (
@@ -149,7 +202,8 @@ function GameImage(props: { game: Game; name: string; image?: string }) {
         {image ? (
           <Image
             src={image}
-            alt=""
+            loading="lazy"
+            alt={`${name} cover image`}
             className={cn(
               "object-cover h-full w-full rounded-lg mx-auto z-[-1] bg-transparent",
               "scale-100 group-hover:scale-[110%] transition-transform",
@@ -159,4 +213,4 @@ function GameImage(props: { game: Game; name: string; image?: string }) {
       </div>
     </Link>
   );
-}
+});

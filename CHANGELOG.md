@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.42](https://github.com/JMBeresford/retrom/compare/v0.7.41...v0.7.42) (2025-11-04)
+
+
+### Features
+
+* configure locally stored metadata quality ([20c0eba](https://github.com/JMBeresford/retrom/commit/20c0eba2edbdac683ab6c26dd1b337d76dc4eed6))
+
+
+### Bug Fixes
+
+* sidebar UI tweaks ([6b9bd7e](https://github.com/JMBeresford/retrom/commit/6b9bd7edf6eba3ec561682ec55d41da25c59e9cf))
+
+## [0.7.41](https://github.com/JMBeresford/retrom/compare/v0.7.40...v0.7.41) (2025-11-01)
+
+
+### Features
+
+* opt-in local metadata storage ([79f2baf](https://github.com/JMBeresford/retrom/commit/79f2baf0f776f61c2fa883ddc53e4503cd18a292))
+
+
+### Bug Fixes
+
+* sidebar load times ([e05fcaa](https://github.com/JMBeresford/retrom/commit/e05fcaac16f863f44deb33418553525d576b1dba))
+
+
+### Performance Improvements
+
+* targeted fetching in game lists ([75b65d8](https://github.com/JMBeresford/retrom/commit/75b65d87a7d3c4545d0c8e816e53a836e1562ea7))
+
 ## [0.7.40](https://github.com/JMBeresford/retrom/compare/v0.7.39...v0.7.40) (2025-10-08)
 
 

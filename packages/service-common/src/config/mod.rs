@@ -1,6 +1,9 @@
 use crate::retrom_dirs::RetromDirs;
 use config::{Config, ConfigError, File};
-use retrom_codegen::retrom::{ContentDirectory, SaveDirStructure, SavesConfig, ServerConfig, StorageType};
+use retrom_codegen::retrom::{
+    metadata_config::OptimizationConfig, ContentDirectory, MetadataConfig, SaveDirStructure, SavesConfig,
+    ServerConfig, StorageType,
+};
 use std::path::PathBuf;
 use tokio::sync::RwLock;
 
@@ -24,6 +27,36 @@ pub struct ServerConfigManager {
 }
 
 impl ServerConfigManager {
+    fn get_default_config() -> ServerConfig {
+        ServerConfig {
+            content_directories: vec![ContentDirectory {
+                path: "/app/library".into(),
+                storage_type: Some(i32::from(StorageType::MultiFileGame)),
+                ignore_patterns: None,
+                custom_library_definition: None,
+            }],
+            saves: Some(SavesConfig {
+                max_save_files_backups: 5,
+                max_save_states_backups: 5,
+                save_dir_structure: Some(i32::from(SaveDirStructure::EmulatorGame))
+            }),
+            metadata: Some(MetadataConfig {
+                store_metadata_locally: false,
+                optimization: Some(OptimizationConfig {
+                    jpeg_quality: 85,
+                    jpeg_optimization: false,
+                    webp_quality: 85,
+                    webp_lossless: true,
+                    png_quality: 85,
+                    png_optimization_level: 2,
+                    png_optimization: true,
+                    preferred_image_format: None,
+                }),
+            }),
+            ..Default::default()
+        }
+    }
+
     pub fn new() -> Result<Self> {
         dotenvy::dotenv().ok();
         let dirs = RetromDirs::new();
@@ -36,20 +69,7 @@ impl ServerConfigManager {
         tracing::debug!("Config path: {:?}", config_path);
 
         if !config_path.exists() {
-            let default_config = ServerConfig {
-                content_directories: vec![ContentDirectory {
-                    path: "/app/library".into(),
-                    storage_type: Some(i32::from(StorageType::MultiFileGame)),
-                    ignore_patterns: None,
-                    custom_library_definition: None,
-                }],
-                saves: Some(SavesConfig {
-                    max_save_files_backups: 5,
-                    max_save_states_backups: 5,
-                       save_dir_structure: Some(i32::from(SaveDirStructure::EmulatorGame)),
-                }),
-                ..Default::default()
-            };
+            let default_config = ServerConfigManager::get_default_config();
 
             tracing::info!("Config file does not exist, creating...");
 
@@ -75,6 +95,10 @@ impl ServerConfigManager {
 
     pub async fn get_config(&self) -> ServerConfig {
         self.config.read().await.clone()
+    }
+
+    pub fn get_config_blocking(&self) -> ServerConfig {
+        self.config.blocking_read().clone()
     }
 
     pub async fn update_config(&self, config: ServerConfig) -> Result<()> {

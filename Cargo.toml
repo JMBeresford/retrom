@@ -27,7 +27,7 @@ exclude = [
 
 [workspace.package]
 edition = "2021"
-version = "0.7.40"                                    # x-release-please-version
+version = "0.7.42"                                    # x-release-please-version
 authors = ["John Beresford <jberesford@volcaus.com>"]
 license = "GPL-3.0"
 readme = "./README.md"
@@ -102,19 +102,19 @@ dotenvy = "0.15.7"
 futures-util = "0.3.30"
 
 # x-release-please-start-version
-retrom-db = { path = "./packages/db", version = "^0.7.40" }
-retrom-service = { path = "./packages/service", version = "^0.7.40" }
-retrom-grpc-service = { path = "./packages/grpc-service", version = "^0.7.40" }
-retrom-rest-service = { path = "./packages/rest-service", version = "^0.7.40" }
-retrom-service-common = { path = "./packages/service-common", version = "^0.7.40" }
-retrom-telemetry = { path = "./packages/telemetry", version = "^0.7.40" }
-retrom-codegen = { path = "./packages/codegen", version = "^0.7.40" }
-retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "^0.7.40" }
-retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "^0.7.40" }
-retrom-plugin-service-client = { path = "./plugins/retrom-plugin-service-client", version = "^0.7.40" }
-retrom-plugin-steam = { path = "./plugins/retrom-plugin-steam", version = "^0.7.40" }
-retrom-plugin-config = { path = "./plugins/retrom-plugin-config", version = "^0.7.40" }
-retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone", version = "^0.7.40" }
+retrom-db = { path = "./packages/db", version = "^0.7.42" }
+retrom-service = { path = "./packages/service", version = "^0.7.42" }
+retrom-grpc-service = { path = "./packages/grpc-service", version = "^0.7.42" }
+retrom-rest-service = { path = "./packages/rest-service", version = "^0.7.42" }
+retrom-service-common = { path = "./packages/service-common", version = "^0.7.42" }
+retrom-telemetry = { path = "./packages/telemetry", version = "^0.7.42" }
+retrom-codegen = { path = "./packages/codegen", version = "^0.7.42" }
+retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "^0.7.42" }
+retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "^0.7.42" }
+retrom-plugin-service-client = { path = "./plugins/retrom-plugin-service-client", version = "^0.7.42" }
+retrom-plugin-steam = { path = "./plugins/retrom-plugin-steam", version = "^0.7.42" }
+retrom-plugin-config = { path = "./plugins/retrom-plugin-config", version = "^0.7.42" }
+retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone", version = "^0.7.42" }
 # x-release-please-end
 
 config = { version = "0.13.4", features = ["json5"] }
@@ -140,7 +140,12 @@ sanitize-filename = "0.5.0"
 hyper-util = { version = "0.1.3", features = ["full"] }
 hyper = { version = "1.7.0", features = ["full", "http2", "http1"] }
 tower = { version = "0.5.1", features = ["full"] }
-tower-http = { version = "0.6.6", features = ["full", "cors"] }
+tower-http = { version = "0.6.6", features = [
+  "full",
+  "cors",
+  "compression-full",
+  "decompression-full",
+] }
 http-body-util = "0.1.3"
 tokio-rustls = { version = "0.26.4", features = ["ring"] }
 webpki-roots = "1.0.3"
@@ -151,3 +156,4 @@ openssl-sys = { version = "0.9.100", features = ["vendored"] }
 tempfile = "3.16.0"
 walkdir = "2.5.0"
 zeroize = "1.8.1"
+rayon = { version = "1.11.0" }

@@ -62,6 +62,44 @@ message SavesConfig {
   optional SaveDirStructure save_dir_structure = 3;
 }
 
+message MetadataConfig {
+  enum ImageFormat {
+    UNSPECIFIED = 0;
+    JPEG = 1;
+    PNG = 2;
+    WEBP = 3;
+  }
+
+  message OptimizationConfig {
+    // JPEG quality for stored images (0-100)
+    uint32 jpeg_quality = 1;
+
+    // Perform lossless optimization on stored JPEG images
+    bool jpeg_optimization = 2;
+
+    // WebP quality for stored images (0-100)
+    uint32 webp_quality = 3;
+
+    // Perform lossless encoding for stored WebP images
+    bool webp_lossless = 4;
+
+    // PNG quality for stored images (0-100)
+    uint32 png_quality = 5;
+
+    // Lossless compression level on stored PNG images (0-6)
+    uint32 png_optimization_level = 6;
+
+    // Perform lossless optimization on stored PNG images
+    bool png_optimization = 7;
+
+    // Preferred image format for storing metadata images
+    optional ImageFormat preferred_image_format = 8;
+  }
+
+  bool store_metadata_locally = 1;
+  OptimizationConfig optimization = 2;
+}
+
 message ServerConfig {
   message TelemetryConfig {
     bool enabled = 1;
@@ -73,4 +111,5 @@ message ServerConfig {
   optional SteamConfig steam = 4;
   optional SavesConfig saves = 5;
   optional TelemetryConfig telemetry = 6;
+  optional MetadataConfig metadata = 7;
 }

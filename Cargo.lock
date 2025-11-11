@@ -74,6 +74,56 @@ dependencies = [
 ]
 
 [[package]]
+name = "anstream"
+version = "0.6.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43d5b281e737544384e969a5ccad3f1cdd24b48086a0fc1b2a5262a26b8f4f4a"
+dependencies = [
+ "anstyle",
+ "anstyle-parse",
+ "anstyle-query",
+ "anstyle-wincon",
+ "colorchoice",
+ "is_terminal_polyfill",
+ "utf8parse",
+]
+
+[[package]]
+name = "anstyle"
+version = "1.0.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5192cca8006f1fd4f7237516f40fa183bb07f8fbdfedaa0036de5ea9b0b45e78"
+
+[[package]]
+name = "anstyle-parse"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e7644824f0aa2c7b9384579234ef10eb7efb6a0deb83f9630a49594dd9c15c2"
+dependencies = [
+ "utf8parse",
+]
+
+[[package]]
+name = "anstyle-query"
+version = "1.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e231f6134f61b71076a3eab506c379d4f36122f2af15a9ff04415ea4c3339e2"
+dependencies = [
+ "windows-sys 0.60.2",
+]
+
+[[package]]
+name = "anstyle-wincon"
+version = "3.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e0633414522a32ffaac8ac6cc8f748e090c5717661fddeea04219e2344f5f2a"
+dependencies = [
+ "anstyle",
+ "once_cell_polyfill",
+ "windows-sys 0.60.2",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -399,6 +449,25 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "tracing",
+]
+
+[[package]]
+name = "axum-tracing-opentelemetry"
+version = "0.32.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "328c8ddd5ca871b2a5acb00be0b4f103aa62f5d6b6db4071ccf3b12b0629e7c1"
+dependencies = [
+ "axum",
+ "futures-core",
+ "futures-util",
+ "http",
+ "opentelemetry 0.31.0",
+ "opentelemetry-semantic-conventions 0.31.0",
+ "pin-project-lite",
+ "tower 0.5.2",
+ "tracing",
+ "tracing-opentelemetry 0.32.0",
+ "tracing-opentelemetry-instrumentation-sdk",
 ]
 
 [[package]]
@@ -771,6 +840,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap"
+version = "4.5.51"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c26d721170e0295f191a69bd9a1f93efcdb0aff38684b61ab5750468972e5f5"
+dependencies = [
+ "clap_builder",
+]
+
+[[package]]
+name = "clap_builder"
+version = "4.5.51"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75835f0c7bf681bfd05abe44e965760fea999a5286c6eb2d59883634fd02011a"
+dependencies = [
+ "anstream",
+ "anstyle",
+ "clap_lex",
+ "strsim",
+]
+
+[[package]]
+name = "clap_lex"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1d728cc89cf3aee9ff92b05e62b19ee65a02b5702cff7d5a377e32c6ae29d8d"
+
+[[package]]
 name = "cmake"
 version = "0.1.54"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -784,6 +880,12 @@ name = "color_quant"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b"
+
+[[package]]
+name = "colorchoice"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "combine"
@@ -1909,13 +2011,42 @@ dependencies = [
 ]
 
 [[package]]
-name = "gifsicle"
-version = "1.95.0"
+name = "gif-dispose"
+version = "5.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e5a3902ed9f1acd2c4472bccc633ad1a50c710e9893c8e827ae55f84064d299"
+checksum = "5e1aa07391f3d9c279f388cea6faf291555dd891df59bed01d4378583df946ac"
 dependencies = [
- "cc",
- "libc",
+ "gif",
+ "imgref",
+ "rgb",
+]
+
+[[package]]
+name = "gifski"
+version = "1.34.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c246c795a61d4a2476fb1c8ab70bedfaa825c734882adc40e117fc837df81190"
+dependencies = [
+ "clap",
+ "crossbeam-channel",
+ "crossbeam-utils",
+ "dunce",
+ "gif",
+ "gif-dispose",
+ "imagequant",
+ "imgref",
+ "lodepng",
+ "loop9",
+ "natord",
+ "num-traits",
+ "ordered-channel",
+ "pbr",
+ "quick-error",
+ "resize",
+ "rgb",
+ "wild",
+ "y4m",
+ "yuv",
 ]
 
 [[package]]
@@ -2532,14 +2663,20 @@ dependencies = [
 
 [[package]]
 name = "img-parts"
-version = "0.3.3"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b4e24cfdc6f897b582508e3c382eaf5378076898f80500a80d10d761ae85e90"
+checksum = "19734e3c43b2a850f5889c077056e47c874095f2d87e853c7c41214ae67375f0"
 dependencies = [
  "bytes",
  "crc32fast",
  "miniz_oxide",
 ]
+
+[[package]]
+name = "imgref"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7c5cedc30da3a610cac6b4ba17597bdf7152cf974e8aab3afb3d54455e371c8"
 
 [[package]]
 name = "indexmap"
@@ -2648,6 +2785,12 @@ dependencies = [
  "is-docker",
  "once_cell",
 ]
+
+[[package]]
+name = "is_terminal_polyfill"
+version = "1.70.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
 
 [[package]]
 name = "itertools"
@@ -2924,12 +3067,14 @@ checksum = "1171693293099992e19cddea4e8b849964e9846f4acee11b3948bcc337be8776"
 
 [[package]]
 name = "libcaesium"
-version = "0.17.4"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "916d2bafa88e06de998ea73ce38e391e3297ab151a51fc1322cb7c00425a9b5e"
+checksum = "db5068ed86a0f03f612f32da2f1856f4e2614fec0dab83920dbdd7d99129db45"
 dependencies = [
  "bytes",
- "gifsicle",
+ "gif",
+ "gif-dispose",
+ "gifski",
  "image",
  "imagequant",
  "img-parts",
@@ -3095,6 +3240,15 @@ name = "log"
 version = "0.4.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
+
+[[package]]
+name = "loop9"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fae87c125b03c1d2c0150c90365d7d6bcc53fb73a9acaef207d2d065860f062"
+dependencies = [
+ "imgref",
+]
 
 [[package]]
 name = "lru-slab"
@@ -3338,6 +3492,12 @@ dependencies = [
  "security-framework-sys",
  "tempfile",
 ]
+
+[[package]]
+name = "natord"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "308d96db8debc727c3fd9744aac51751243420e46edf401010908da7f8d5e57c"
 
 [[package]]
 name = "ndk"
@@ -3840,6 +4000,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 
 [[package]]
+name = "once_cell_polyfill"
+version = "1.70.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
+
+[[package]]
 name = "open"
 version = "5.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3920,6 +4086,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b84bcd6ae87133e903af7ef497404dda70c60d0ea14895fc8a5e6722754fc2a0"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "js-sys",
+ "pin-project-lite",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "opentelemetry-http"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3928,7 +4107,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "http",
- "opentelemetry",
+ "opentelemetry 0.29.1",
  "reqwest",
  "tracing",
 ]
@@ -3941,10 +4120,10 @@ checksum = "d899720fe06916ccba71c01d04ecd77312734e2de3467fd30d9d580c8ce85656"
 dependencies = [
  "futures-core",
  "http",
- "opentelemetry",
+ "opentelemetry 0.29.1",
  "opentelemetry-http",
  "opentelemetry-proto",
- "opentelemetry_sdk",
+ "opentelemetry_sdk 0.29.0",
  "prost 0.13.5",
  "reqwest",
  "thiserror 2.0.12",
@@ -3959,8 +4138,8 @@ version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c40da242381435e18570d5b9d50aca2a4f4f4d8e146231adb4e7768023309b3"
 dependencies = [
- "opentelemetry",
- "opentelemetry_sdk",
+ "opentelemetry 0.29.1",
+ "opentelemetry_sdk 0.29.0",
  "prost 0.13.5",
  "tonic 0.12.3",
 ]
@@ -3972,6 +4151,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84b29a9f89f1a954936d5aa92f19b2feec3c8f3971d3e96206640db7f9706ae3"
 
 [[package]]
+name = "opentelemetry-semantic-conventions"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e62e29dfe041afb8ed2a6c9737ab57db4907285d999ef8ad3a59092a36bdc846"
+
+[[package]]
 name = "opentelemetry_sdk"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3981,7 +4166,7 @@ dependencies = [
  "futures-executor",
  "futures-util",
  "glob",
- "opentelemetry",
+ "opentelemetry 0.29.1",
  "percent-encoding",
  "rand 0.9.1",
  "serde_json",
@@ -3992,10 +4177,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry_sdk"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e14ae4f5991976fd48df6d843de219ca6d31b01daaab2dad5af2badeded372bd"
+dependencies = [
+ "futures-channel",
+ "futures-executor",
+ "futures-util",
+ "opentelemetry 0.31.0",
+ "percent-encoding",
+ "rand 0.9.1",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "option-ext"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
+
+[[package]]
+name = "ordered-channel"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95be4d57809897b5a7539fc15a7dfe0e84141bc3dfaa2e9b1b27caa90acf61ab"
+dependencies = [
+ "crossbeam-channel",
+]
 
 [[package]]
 name = "ordered-multimap"
@@ -4149,6 +4358,17 @@ name = "pathdiff"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
+
+[[package]]
+name = "pbr"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed5827dfa0d69b6c92493d6c38e633bbaa5937c153d0d7c28bf12313f8c6d514"
+dependencies = [
+ "crossbeam-channel",
+ "libc",
+ "winapi",
+]
 
 [[package]]
 name = "percent-encoding"
@@ -5016,9 +5236,9 @@ checksum = "20675572f6f24e9e76ef639bc5552774ed45f1c30e2951e1e99c59888861c539"
 
 [[package]]
 name = "rayon"
-version = "1.10.0"
+version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b418a60154510ca1a002a752ca9714984e21e4241e804d32555251faf8b78ffa"
+checksum = "368f01d005bf8fd9b1206fb6fa653e6c4a81ceb1466406b81792d87c5677a58f"
 dependencies = [
  "either",
  "rayon-core",
@@ -5026,9 +5246,9 @@ dependencies = [
 
 [[package]]
 name = "rayon-core"
-version = "1.12.1"
+version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1465873a3dfdaa8ae7cb14b4383657caab0b3e8a0aa9ae8e04b044854c8dfce2"
+checksum = "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
@@ -5235,12 +5455,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "resize"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87a103d0b47e783f4579149402f7499397ab25540c7a57b2f70487a5d2d20ef0"
+dependencies = [
+ "rayon",
+ "rgb",
+]
+
+[[package]]
 name = "retrom-client"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "dotenvy",
  "openssl-sys",
- "opentelemetry",
+ "opentelemetry 0.29.1",
  "pq-sys",
  "retrom-plugin-config",
  "retrom-plugin-installer",
@@ -5263,13 +5493,13 @@ dependencies = [
  "tauri-plugin-window-state",
  "tokio",
  "tracing",
- "tracing-opentelemetry",
+ "tracing-opentelemetry 0.30.0",
  "tracing-subscriber",
 ]
 
 [[package]]
 name = "retrom-codegen"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "diesel",
  "prost 0.14.1",
@@ -5287,7 +5517,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-db"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "deadpool",
  "diesel",
@@ -5303,7 +5533,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-grpc-service"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "axum",
  "bigdecimal",
@@ -5334,7 +5564,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-config"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "config",
  "prost 0.14.1",
@@ -5350,7 +5580,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-installer"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "futures",
  "prost 0.14.1",
@@ -5371,7 +5601,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-launcher"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "prost 0.14.1",
  "retrom-codegen",
@@ -5391,7 +5621,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-service-client"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "hyper",
  "hyper-rustls",
@@ -5412,7 +5642,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-standalone"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "local-ip-address",
  "retrom-plugin-config",
@@ -5427,7 +5657,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-steam"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "notify",
  "retrom-codegen",
@@ -5442,10 +5672,11 @@ dependencies = [
 
 [[package]]
 name = "retrom-rest-service"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "async_zip",
  "axum",
+ "axum-tracing-opentelemetry",
  "bytes",
  "diesel",
  "diesel-async",
@@ -5457,6 +5688,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tokio-util",
+ "tower 0.5.2",
  "tower-http",
  "tracing",
  "walkdir",
@@ -5464,7 +5696,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "config",
  "deadpool",
@@ -5493,7 +5725,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-common"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -5504,6 +5736,7 @@ dependencies = [
  "futures",
  "libcaesium",
  "prost 0.14.1",
+ "rayon",
  "reqwest",
  "retrom-codegen",
  "serde",
@@ -5521,18 +5754,18 @@ dependencies = [
 
 [[package]]
 name = "retrom-telemetry"
-version = "0.7.40"
+version = "0.7.42"
 dependencies = [
  "http",
  "hyper",
- "opentelemetry",
+ "opentelemetry 0.29.1",
  "opentelemetry-http",
  "opentelemetry-otlp",
- "opentelemetry-semantic-conventions",
- "opentelemetry_sdk",
+ "opentelemetry-semantic-conventions 0.29.0",
+ "opentelemetry_sdk 0.29.0",
  "tower-http",
  "tracing",
- "tracing-opentelemetry",
+ "tracing-opentelemetry 0.30.0",
  "tracing-subscriber",
 ]
 
@@ -7664,14 +7897,46 @@ checksum = "fd8e764bd6f5813fd8bebc3117875190c5b0415be8f7f8059bffb6ecd979c444"
 dependencies = [
  "js-sys",
  "once_cell",
- "opentelemetry",
- "opentelemetry_sdk",
+ "opentelemetry 0.29.1",
+ "opentelemetry_sdk 0.29.0",
  "smallvec",
  "tracing",
  "tracing-core",
  "tracing-log",
  "tracing-subscriber",
  "web-time",
+]
+
+[[package]]
+name = "tracing-opentelemetry"
+version = "0.32.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e6e5658463dd88089aba75c7791e1d3120633b1bfde22478b28f625a9bb1b8e"
+dependencies = [
+ "js-sys",
+ "opentelemetry 0.31.0",
+ "opentelemetry_sdk 0.31.0",
+ "rustversion",
+ "smallvec",
+ "thiserror 2.0.12",
+ "tracing",
+ "tracing-core",
+ "tracing-log",
+ "tracing-subscriber",
+ "web-time",
+]
+
+[[package]]
+name = "tracing-opentelemetry-instrumentation-sdk"
+version = "0.32.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a1a4dcfb798af2cef9e47c30a14e13c108b4b40e057120401b2025ec622c416"
+dependencies = [
+ "http",
+ "opentelemetry 0.31.0",
+ "opentelemetry-semantic-conventions 0.31.0",
+ "tracing",
+ "tracing-opentelemetry 0.32.0",
 ]
 
 [[package]]
@@ -7928,6 +8193,12 @@ name = "utf8_iter"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
+
+[[package]]
+name = "utf8parse"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "uuid"
@@ -8196,9 +8467,9 @@ dependencies = [
 
 [[package]]
 name = "webp"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f53152f51fb5af0c08484c33d16cca96175881d1f3dec068c23b31a158c2d99"
+checksum = "c071456adef4aca59bf6a583c46b90ff5eb0b4f758fc347cea81290288f37ce1"
 dependencies = [
  "image",
  "libwebp-sys",
@@ -8264,6 +8535,15 @@ dependencies = [
  "redox_syscall 0.5.13",
  "wasite",
  "web-sys",
+]
+
+[[package]]
+name = "wild"
+version = "2.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3131afc8c575281e1e80f36ed6a092aa502c08b18ed7524e86fbbb12bb410e1"
+dependencies = [
+ "glob",
 ]
 
 [[package]]
@@ -8879,6 +9159,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "y4m"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a5a4b21e1a62b67a2970e6831bc091d7b87e119e7f9791aef9702e3bef04448"
+
+[[package]]
 name = "yaml-rust"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8909,6 +9195,16 @@ dependencies = [
  "quote",
  "syn 2.0.103",
  "synstructure",
+]
+
+[[package]]
+name = "yuv"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8cbe2d856acbe6d86c0fa6f458b73e962834061ca2f7f94c6e4633afc9efd4d4"
+dependencies = [
+ "num-traits",
+ "rgb",
 ]
 
 [[package]]

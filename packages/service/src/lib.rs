@@ -207,6 +207,7 @@ pub async fn get_server(
                                             req.method(),
                                             req.uri().path()
                                         );
+
                                         rest_service.clone().oneshot(req)
                                     }
                                 });
