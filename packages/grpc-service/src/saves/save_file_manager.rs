@@ -335,7 +335,7 @@ impl SaveFileManager for GameSaveFileManager {
                 
                 // Try to get the relative path from the content directory to the game
                 if let Ok(relative_game_path) = game_path.strip_prefix(&content_path) {
-                    // Get the parent directory of the ROM file (game directory)
+                    // Get the parent directory of the game file (game directory)
                     if let Some(game_dir) = relative_game_path.parent() {
                         let path_components: Vec<&str> = game_dir.components()
                             .filter_map(|comp| {
