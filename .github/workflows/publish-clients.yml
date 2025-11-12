@@ -201,6 +201,7 @@ jobs:
 
       - name: upload web outputs to release
         if: ${{ github.event_name != 'pull_request' }}
+        shell: "bash"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
