@@ -24,6 +24,9 @@
     },
     "linux": {
       "deb": {
+        "files": {
+          "/usr/share/metainfo/io.github.jmberesford.Retrom.appdata.xml": "../../io.github.jmberesford.Retrom.metainfo.xml"
+        },
         "depends": []
       }
     }
