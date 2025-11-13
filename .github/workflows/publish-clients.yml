@@ -199,15 +199,27 @@ jobs:
           tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
           args: ${{ env.TARGET_ARG }} # required for the action to look in the correct target subdir
 
-      - name: upload web outputs to release
+      - name: Upload web outputs to release
         if: ${{ github.event_name != 'pull_request' }}
         shell: "bash"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
-          TAR_FILE: web-dist_${{ matrix.platform }}.tar.gz
+          TAR_FILE: desktop-frontend-dist_${{ matrix.platform }}.tar.gz
         run: |
           tar -czvf "$TAR_FILE" packages/client-web/dist/
+          gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
+
+      - name: Upload vendored cargo deps to release
+        if: ${{ github.event_name != 'pull_request' }}
+        shell: "bash"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
+          TAR_FILE: cargo-vendor_${{ matrix.platform }}.tar.gz
+        run: |
+          cargo vendor
+          tar -czvf "$TAR_FILE" vendor/
           gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
 
   publish-crates:
