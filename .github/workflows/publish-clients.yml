@@ -218,7 +218,7 @@ jobs:
           RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
           TAR_FILE: cargo-vendor_${{ matrix.platform }}.tar.gz
         run: |
-          cargo vendor
+          cargo vendor --locked --manifest-path packages/client/Cargo.toml
           tar -czvf "$TAR_FILE" vendor/
           gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
 
