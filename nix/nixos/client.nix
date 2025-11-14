@@ -8,8 +8,6 @@ let
   cfg = config.programs.retrom;
 in
 {
-  imports = [ ./service.nix ];
-
   options.programs.retrom = {
     enable = lib.mkEnableOption "Enable Retrom. A centralized game library/collection management service with a focus on emulation";
     package = lib.mkOption {
