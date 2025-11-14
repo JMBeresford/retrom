@@ -24,7 +24,7 @@
             ./nix/nixos/client.nix
             ./nix/nixos/service.nix
           ];
-          programs.retrom.package = lib.mkDefault retromPackages.retrom;
+          programs.retrom.package = lib.mkDefault retromPackages.retrom-unwrapped;
           services.retrom.package = lib.mkDefault retromPackages.retrom-service;
         };
       homeModules.retrom =
@@ -36,7 +36,7 @@
           imports = [
             ./nix/home-manager/client.nix
           ];
-          programs.retrom.package = lib.mkDefault retromPackages.retrom;
+          programs.retrom.package = lib.mkDefault retromPackages.retrom-unwrapped;
         };
     }
     // flake-utils.lib.eachDefaultSystem (
