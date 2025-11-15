@@ -1,5 +1,6 @@
 {
   config,
+  osConfig,
   lib,
   pkgs,
   ...
@@ -15,7 +16,7 @@ in
     };
     supportNvidia = lib.mkOption {
       type = lib.types.bool;
-      default = false;
+      default = if isNull osConfig then false else osConfig.hardware.nvidia.enabled;
       description = "Configure to run on nvidia hardware. See https://github.com/tauri-apps/tauri/issues/9394.";
     };
   };
