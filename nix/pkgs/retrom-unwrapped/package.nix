@@ -1,6 +1,6 @@
 {
   lib,
-  fetchFromGitHub,
+  fetchgit,
   pkg-config,
   rustPlatform,
   cargo-tauri,
@@ -20,11 +20,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom";
   version = "0.7.43"; # x-release-please-version
 
-  src = fetchFromGitHub {
-    owner = "JMBeresford";
-    repo = "retrom";
+  src = fetchgit {
+    url = "https://github.com/JMBeresford/retrom.git";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-G9FnZJTrNIdPXL1OalmoHu0iF8aotc72AB4DMc/MhwM=";
+    hash = "sha256-zW6NsVzzlSceQ4RplV4UeI9Y/UNo2Iogd4r+d0VoXKo=";
   };
 
   pnpmDeps = pnpm_10.fetchDeps {
