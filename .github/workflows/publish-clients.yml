@@ -66,8 +66,9 @@ jobs:
             cache-key-prefix: "windows-latest"
     env:
       PQ_LIB_STATIC: 1
-      DEBUG_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'debug' || vars.IS_PRERELEASE }}
-      RELEASE_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'release' || (vars.IS_RELEASE && !vars.IS_PRERELEASE) }}
+      BUILDS: ${{ inputs.builds }}
+      # DEBUG_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'debug' || env.IS_PRERELEASE }}
+      # RELEASE_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'release' || (env.IS_RELEASE && !env.IS_PRERELEASE) }}
       TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -88,8 +89,34 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Configure job
+        run: |
+          echo Event name: "${{ github.event_name }}"
+          echo BUILDS: "$BUILDS"
+          echo IS_PRERELEASE: "$IS_PRERELEASE"
+          echo IS_DRAFT_RELEASE: "$IS_DRAFT_RELEASE"
 
+          if [ "$BUILDS" != "release" ] && 
+            { [ "$IS_PRERELEASE" == "true" ] || [ "$IS_DRAFT_RELEASE" == "true" ]; }; 
+          then
+            export DEBUG_BUILDS="1"
+          fi
+
+          if [ "$BUILDS" != "debug" ] || 
+            { [ "$IS_RELEASE" = "true" ] && 
+               { [ "$IS_PRERELEASE" == "true" ] || [ "$IS_DRAFT_RELEASE" == "true" ]; }
+            }
+          then
+            export RELEASE_BUILDS="1"
+          fi
+
+          echo "DEBUG_BUILDS=$DEBUG_BUILDS" >> "$GITHUB_ENV"
+          echo "RELEASE_BUILDS=$RELEASE_BUILDS" >> "$GITHUB_ENV"
+
+          echo RELEASE_BUILDS: "$RELEASE_BUILDS"
+          echo DEBUG_BUILDS: "$DEBUG_BUILDS"
+
+      - uses: actions/checkout@v4
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -171,12 +198,12 @@ jobs:
         run: cargo install tauri-cli --version "^2.0.0" --locked
 
       - name: build release client
-        if: ${{ env.RELEASE_BUILDS  }}
+        if: ${{ env.RELEASE_BUILDS }}
         run: |
           pnpm nx build retrom-client --args="$TARGET_ARG"
 
       - name: build debug client
-        if: ${{ env.DEBUG_BUILDS  }}
+        if: ${{ env.DEBUG_BUILDS }}
         run: |
           pnpm nx build retrom-client --args="$TARGET_ARG" --configuration="debug"
 
