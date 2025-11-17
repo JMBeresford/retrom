@@ -17,7 +17,12 @@ in
     supportNvidia = lib.mkOption {
       type = lib.types.bool;
       default = if isNull osConfig then false else osConfig.hardware.nvidia.enabled;
-      description = "Configure to run on nvidia hardware. See https://github.com/tauri-apps/tauri/issues/9394.";
+      description = ''
+        Configure to run on nvidia hardware. Makes the following changes:
+        * Linux:
+          - Set WEBKIT_DISABLE_DMABUF_RENDERER, resolves issues with WebkitGTK. Fallback software rendering may decrease performance.
+        See <https://github.com/tauri-apps/tauri/issues/9394> for more information.
+      '';
     };
   };
 

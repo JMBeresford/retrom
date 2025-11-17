@@ -1,4 +1,5 @@
 {
+  stdenv,
   lib,
   runCommand,
   makeWrapper,
@@ -20,5 +21,5 @@ runCommand retrom-unwrapped.name
     ln -s ${retrom-unwrapped}/share $out/share
 
     makeWrapper ${retrom-unwrapped}/bin/Retrom $out/bin/Retrom \
-      ${lib.optionalString supportNvidia "--set WEBKIT_DISABLE_DMABUF_RENDERER 1"}
+      ${lib.optionalString (supportNvidia && stdenv.isLinux) "--set WEBKIT_DISABLE_DMABUF_RENDERER 1"}
   ''
