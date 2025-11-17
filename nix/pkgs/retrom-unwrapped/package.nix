@@ -19,12 +19,12 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom";
-  version = "0.7.43";
+  version = "0.7.43"; # x-release-please-version
 
   src = fetchFromGitHub {
     owner = "JMBeresford";
     repo = "retrom";
-    rev = "v${finalAttrs.version}";
+    tag = "v${finalAttrs.version}";
     hash = "sha256-G9FnZJTrNIdPXL1OalmoHu0iF8aotc72AB4DMc/MhwM=";
   };
 
@@ -74,7 +74,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
     homepage = "https://github.com/JMBeresford/retrom";
     license = licenses.gpl3;
     platforms = platforms.all;
-    maintainers = with maintainers; [ concurac ];
     mainProgram = "Retrom";
   };
 })
