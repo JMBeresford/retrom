@@ -201,12 +201,12 @@ jobs:
         run: cargo install tauri-cli --version "^2.0.0" --locked
 
       - name: build release client
-        if: ${{ env.RELEASE_BUILDS }}
+        if: ${{ env.RELEASE_BUILDS == 'true' }}
         run: |
           pnpm nx build retrom-client --args="$TARGET_ARG"
 
       - name: build debug client
-        if: ${{ env.DEBUG_BUILDS }}
+        if: ${{ env.DEBUG_BUILDS == 'true' }}
         run: |
           pnpm nx build retrom-client --args="$TARGET_ARG" --configuration="debug"
 
