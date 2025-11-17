@@ -10,9 +10,7 @@
   protobuf_29,
   openssl,
   makeWrapper,
-  nix-update-script,
 }:
-
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom-service";
   version = "0.7.43"; # x-release-please-version
@@ -85,8 +83,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
   postFixup = ''
     wrapProgram $out/bin/retrom-service --set RETROM_WEB_DIR $out/srv/www
   '';
-
-  passthru.updateScript = nix-update-script { };
 
   meta = with lib; {
     description = "A centralized game library/collection management service with a focus on emulation";

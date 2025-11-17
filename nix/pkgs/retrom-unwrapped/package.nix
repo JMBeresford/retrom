@@ -14,7 +14,6 @@
   glib-networking,
   gst_all_1,
   wrapGAppsHook3,
-  nix-update-script,
 }:
 
 rustPlatform.buildRustPackage (finalAttrs: {
@@ -66,8 +65,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
     runHook tauriBuildHook
   '';
-
-  passthru.updateScript = nix-update-script { };
 
   meta = with lib; {
     description = "A centralized game library/collection management service with a focus on emulation";
