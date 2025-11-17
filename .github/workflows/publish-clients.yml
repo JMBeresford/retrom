@@ -100,7 +100,7 @@ jobs:
           if [ "$BUILDS" != "release" ] && 
             { [ "$IS_PRERELEASE" == "true" ] || [ "$IS_DRAFT_RELEASE" == "true" ]; }; 
           then
-            export DEBUG_BUILDS="1"
+            export DEBUG_BUILDS="true"
           fi
 
           if [ "$BUILDS" != "debug" ] || 
@@ -108,7 +108,7 @@ jobs:
                { [ "$IS_PRERELEASE" == "true" ] || [ "$IS_DRAFT_RELEASE" == "true" ]; }
             }
           then
-            export RELEASE_BUILDS="1"
+            export RELEASE_BUILDS="true"
           fi
 
           echo "DEBUG_BUILDS=$DEBUG_BUILDS" >> "$GITHUB_ENV"
