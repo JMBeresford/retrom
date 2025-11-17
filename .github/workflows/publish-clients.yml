@@ -90,6 +90,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Configure job
+        shell: bash
         run: |
           echo Event name: "${{ github.event_name }}"
           echo BUILDS: "$BUILDS"
