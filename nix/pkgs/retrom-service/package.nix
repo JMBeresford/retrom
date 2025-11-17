@@ -87,7 +87,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     description = "A centralized game library/collection management service with a focus on emulation";
     homepage = "https://github.com/JMBeresford/retrom";
     license = licenses.gpl3;
-    platforms = platforms.all;
+    platforms = platforms.linux;
     mainProgram = "retrom-service";
   };
 })
