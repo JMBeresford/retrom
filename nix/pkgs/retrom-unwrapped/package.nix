@@ -34,7 +34,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-q+IUP3WZWSR2JRHCnQjrq8ndndQOf0GbalQ9GF4niJ4=";
   };
 
-  cargoHash = "sha256-b6pV25rFwMnQDHuLA+vCwDhMSZROkXfiorAvGgKMfN0=";
+  cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
   buildAndTestSubdir = "packages/client";
 
   nativeBuildInputs = [
