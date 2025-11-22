@@ -23,8 +23,8 @@
     </recommends>
     <summary>A centralized game library/collection management service with a focus on emulation</summary>
 
-    <metadata_license>GPL-3.0</metadata_license>
-    <project_license>GPL-3.0</project_license>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>GPL-3.0-only</project_license>
     <url type="homepage">https://github.com/jmberesford/retrom</url>
 
     <supports>
@@ -38,12 +38,6 @@
             Retrom is a centralized game library management service that allows you to host your games on a single device, and connect clients on any amount of other devices to (un)install/download and play them when and where you want to! Think of it as a sort of self-hosted Steam for your DRM-free game library.
         </p>
     </description>
-    <screenshots>
-        <screenshot type="default">
-            <image>https://private-user-images.githubusercontent.com/1373954/440088218-1518d684-e40e-4927-9065-cbe05f96c7c9.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjI5MTQwMjcsIm5iZiI6MTc2MjkxMzcyNywicGF0aCI6Ii8xMzczOTU0LzQ0MDA4ODIxOC0xNTE4ZDY4NC1lNDBlLTQ5MjctOTA2NS1jYmUwNWY5NmM3YzkucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI1MTExMiUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNTExMTJUMDIxNTI3WiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9YThjNDVjNzViNzI4Y2ZjMjdiZDVkYjkwYzk3OGQ4OTczMDhlNmM2YmJkNDVmNTMxYzk0ZjMwZGRlYzg5YWM5OSZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QifQ.1O5pE6ScEh-IZxLlcFrU_ePKC-62TiAhnxDxq1yB_BA</image>
-            <caption>Game Details</caption>
-        </screenshot>
-    </screenshots>
     <releases>
         <release version="0.7.43" date="2025-11-09" >
             <!-- <description> -->
@@ -55,3 +49,4 @@
     </releases>
     <update_contact>jberesford@volcaus.com</update_contact>
 </component>
+
