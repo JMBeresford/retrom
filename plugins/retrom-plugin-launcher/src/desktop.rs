@@ -181,14 +181,18 @@ impl<R: Runtime> Launcher<R> {
     }
 
     pub(crate) fn get_open_cmd(&self, program: impl Into<PathBuf>) -> Command {
-        let path: PathBuf = program.into();
+        let program: PathBuf = program.into();
 
         #[cfg(target_os = "macos")]
         {
-            let program = if path.extension().is_some_and(|ext| ext == "app") {
-                path.join("Contents/MacOS/").join(path.file_stem().unwrap())
+            let program = if program.extension().is_some_and(|ext| ext == "app") {
+                program.join("Contents/MacOS/").join(
+                    program
+                        .file_stem()
+                        .unwrap_or_else(|| panic!("Failed to get file stem for file: {program:?}")),
+                )
             } else {
-                path
+                program
             };
 
             self.prepare_command(program)
@@ -196,7 +200,7 @@ impl<R: Runtime> Launcher<R> {
 
         #[cfg(not(target_os = "macos"))]
         {
-            self.prepare_command(std::path::PathBuf::from(program))
+            self.prepare_command(program)
         }
     }
 }
