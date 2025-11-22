@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use retrom_codegen::retrom::{
     GamePlayStatusUpdate, GetGameMetadataRequest, PlayStatus, UpdateGameMetadataRequest,
@@ -161,32 +161,42 @@ impl<R: Runtime> Launcher<R> {
         Ok(())
     }
 
-    pub(crate) fn get_open_cmd(&self, program: &str) -> Command {
+    fn prepare_command(&self, executable: std::path::PathBuf) -> Command {
+        let base_cmd = if cfg!(feature = "flatpak") {
+            // Must use flatpak-spawn to launch host executables from within a Flatpak
+            let mut cmd = Command::new("flatpak-spawn");
+            cmd.arg("--host").arg(executable);
+            cmd
+        } else {
+            Command::new(executable)
+        };
+
+        #[cfg(target_os = "windows")]
+        {
+            // Don't show the console window
+            base_cmd.creation_flags(0x08000000);
+        }
+
+        base_cmd
+    }
+
+    pub(crate) fn get_open_cmd(&self, program: impl Into<PathBuf>) -> Command {
+        let path: PathBuf = program.into();
+
         #[cfg(target_os = "macos")]
         {
-            let path = std::path::PathBuf::from(program);
             let program = if path.extension().is_some_and(|ext| ext == "app") {
                 path.join("Contents/MacOS/").join(path.file_stem().unwrap())
             } else {
                 path
             };
 
-            Command::new(program)
+            self.prepare_command(program)
         }
-        #[cfg(target_os = "windows")]
+
+        #[cfg(not(target_os = "macos"))]
         {
-            let mut cmd = Command::new(program);
-
-            // Don't show the console window
-            cmd.creation_flags(0x08000000);
-
-            cmd
-        }
-        #[cfg(target_os = "linux")]
-        {
-            let cmd = Command::new(program);
-
-            cmd
+            self.prepare_command(std::path::PathBuf::from(program))
         }
     }
 }
