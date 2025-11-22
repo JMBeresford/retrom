@@ -14,7 +14,8 @@ finish-args:
   - --share=ipc # Needed for performance reasons if the app fallbacks to X11
   - --socket=pulseaudio # We want to be able to play sounds
   - --device=dri # OpenGL
-  - --device=input # For gamepad support
+  # Need 'input' for gamepad support, but ubuntu flatpak version is old so this is a workaround
+  - --device=all 
   - --filesystem=host
   - --env=FLATPAK=1
   - --share=network
@@ -31,7 +32,7 @@ modules:
         url: https://github.com/JMBeresford/retrom
         #tag: v0.7.43
         #commit: 7bad442f9b3872766c8ec49325da57f878806a8d
-        commit: d04f4275fbc4e07db161a4fdaf447f8a647d2ef4
+        commit: 1f0ff2fb995c76b1f34f0deaba2dd762468e6e08
 
       - type: archive
         url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/web-dist_ubuntu-24.04.tar.gz
