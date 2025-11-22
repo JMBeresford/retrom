@@ -9,13 +9,16 @@ sdk-extensions:
 
 command: Retrom
 finish-args:
+  # Permissions required for launching user-configured emulators/launchers
+  - --socket=session-bus
   - --socket=wayland # Permission needed to show the window on wayland
   - --socket=fallback-x11 # Permission needed to fallback using X11 if wayland is not available
   - --share=ipc # Needed for performance reasons if the app fallbacks to X11
   - --socket=pulseaudio # We want to be able to play sounds
   - --device=dri # OpenGL
+
   # Need 'input' for gamepad support, but ubuntu flatpak version is old so this is a workaround
-  - --device=all 
+  - --device=all
   - --filesystem=host
   - --env=FLATPAK=1
   - --share=network
@@ -30,8 +33,8 @@ modules:
       - type: git
         branch: feat/flatpak
         url: https://github.com/JMBeresford/retrom
-        #tag: v0.7.43
-        #commit: 7bad442f9b3872766c8ec49325da57f878806a8d
+        # tag: v0.7.43
+        # commit: 7bad442f9b3872766c8ec49325da57f878806a8d
         commit: 1f0ff2fb995c76b1f34f0deaba2dd762468e6e08
 
       - type: archive
@@ -52,20 +55,21 @@ modules:
         npm_config_offline: "true"
 
     build-commands:
-      - cargo fetch --offline 
-          --config source.crates-io.replace-with=\"vendored-sources\" 
-          --config source.vendored-sources.directory=\"vendor\" 
-          --manifest-path packages/client/Cargo.toml
+      - cargo fetch --offline
+        --config source.crates-io.replace-with=\"vendored-sources\"
+        --config source.vendored-sources.directory=\"vendor\"
+        --manifest-path packages/client/Cargo.toml
 
       - cargo install --offline --path vendor/tauri-cli
-          --config source.crates-io.replace-with=\"vendored-sources\" 
-          --config source.vendored-sources.directory=\"vendor\" 
+        --config source.crates-io.replace-with=\"vendored-sources\"
+        --config source.vendored-sources.directory=\"vendor\"
 
       - cd packages/client && cargo --offline
-          tauri build --no-bundle --config ./tauri.build.conf.json -- 
-            --offline
-            --config source.crates-io.replace-with=\"vendored-sources\" 
-            --config source.vendored-sources.directory=\"../../vendor\" 
+        tauri build --no-bundle --config ./tauri.build.conf.json --
+        --features "flatpak"
+        --offline
+        --config source.crates-io.replace-with=\"vendored-sources\"
+        --config source.vendored-sources.directory=\"../../vendor\"
 
       - install -Dm644 -t /app/share/metainfo/ io.github.jmberesford.Retrom.metainfo.xml
       - install -Dm644 -t /app/share/applications/ io.github.jmberesford.Retrom.desktop
@@ -78,4 +82,3 @@ modules:
 
     post-install:
       - install -Dm644 LICENSE /app/share/licenses/io.github.jmberesford.Retrom/LICENSE
-
