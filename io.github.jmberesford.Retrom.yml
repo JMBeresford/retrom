@@ -1,8 +1,8 @@
 id: io.github.jmberesford.Retrom
 
 runtime: org.gnome.Platform
-runtime-version: "48"
-sdk: org.gnome.Sdk//48
+runtime-version: "49"
+sdk: org.gnome.Sdk
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable
   - org.freedesktop.Sdk.Extension.node22
@@ -16,7 +16,6 @@ finish-args:
   - --socket=fallback-x11
   - --share=ipc # Needed for performance reasons if the app fallbacks to X11
   - --socket=pulseaudio # Permissions required for emulator audio
-  - --device=dri # OpenGL/webGL used in web-view for built-in WASM emulators
   - --device=all # Need 'input' for gamepad support, but ubuntu flatpak version is old so this is a workaround
 
   - --filesystem=host # Permissions required for managing+launching user's game library on host
