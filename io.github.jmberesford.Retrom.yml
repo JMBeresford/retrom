@@ -9,19 +9,17 @@ sdk-extensions:
 
 command: Retrom
 finish-args:
-  # Permissions required for launching user-configured emulators/launchers
-  - --socket=session-bus
+  - --socket=session-bus # Permissions required for launching user-configured emulators/launchers on host
   - --socket=wayland # Permission needed to show the window on wayland
   - --socket=fallback-x11 # Permission needed to fallback using X11 if wayland is not available
   - --share=ipc # Needed for performance reasons if the app fallbacks to X11
-  - --socket=pulseaudio # We want to be able to play sounds
-  - --device=dri # OpenGL
+  - --socket=pulseaudio # Permissions required for emulator audio
+  - --device=dri # OpenGL/webGL used in web-view for built-in WASM emulators
+  - --device=all # Need 'input' for gamepad support, but ubuntu flatpak version is old so this is a workaround
+  - --filesystem=host # Permissions required for managing+launching user's game library on host
+  - --share=network # Permissions required for managing metadata (covers etc) from external providers, and for accessing optional remote dedicated Retrom server
 
-  # Need 'input' for gamepad support, but ubuntu flatpak version is old so this is a workaround
-  - --device=all
-  - --filesystem=host
   - --env=FLATPAK=1
-  - --share=network
 
 build-options:
   append-path: /usr/lib/sdk/node22/bin:/usr/lib/sdk/rust-stable/bin:/run/build/retrom/cargo/bin
@@ -33,17 +31,36 @@ modules:
       - type: git
         url: https://github.com/JMBeresford/retrom
         tag: init-flatpak
-        commit: 93e3726dd59dfc6093dc62aeb676b937b6a94008
+
+      # Static web assets
+      - type: archive
+        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/desktop-frontend-dist_ubuntu-24.04.tar.gz
+        sha256: ed27a24e55a78be187a3d07d4fd074f9ab1560eef4e72aba7e5aa50e5e33a33e
+        strip-components: 0
+        only-arches:
+          - x86_64
 
       - type: archive
-        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/web-dist_ubuntu-24.04.tar.gz
-        sha256: 245f7e439582883445c94a250a56b09c6fe38c8ae5328a506978d6d072ac1f79
+        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/desktop-frontend-dist_ubuntu-24.04-arm.tar.gz
+        sha256: d24b17a1e5de5612029daab7437c75adff650ca966e88b1f8ba79f8b1904166e
         strip-components: 0
+        only-arches:
+          - x86_64
 
+      # Vendored cargo deps
       - type: archive
         url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/cargo-vendor_ubuntu-24.04.tar.gz
-        sha256: 7266cfcd2753e80b51e140423418761bffe8f73a4dbc1cd704fee641b9568732
+        sha256: 4e1f3fa48a4a22429fd58c0813c64d57ae8f9097c759675d087af8a860fbac14
         strip-components: 0
+        only-arches:
+          - x86_64
+
+      - type: archive
+        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/cargo-vendor_ubuntu-24.04-arm.tar.gz
+        sha256: c9b50355a4cccb276e8656caabea564f786680910cbc476210db3a658b94d9af
+        strip-components: 0
+        only-arches:
+          - x86_64
 
     build-options:
       env:
