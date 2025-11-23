@@ -41,8 +41,9 @@ export const Route = createFileRoute("/_fullscreenLayout")({
     if (checkIsDesktop() && windowedFullscreenMode !== true) {
       await getCurrentWindow().setFullscreen(true);
     } else if (!checkIsDesktop() && windowedFullscreenMode === false) {
-      console.log("window", { window });
-      await window.document.documentElement.requestFullscreen();
+      await window.document.documentElement
+        .requestFullscreen()
+        .catch(console.error);
     }
 
     init({

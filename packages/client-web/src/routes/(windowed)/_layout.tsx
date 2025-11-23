@@ -44,8 +44,8 @@ export const Route = createFileRoute("/(windowed)/_layout")({
 
     if (checkIsDesktop()) {
       await getCurrentWindow().setFullscreen(false);
-    } else {
-      await window.document.exitFullscreen();
+    } else if (window.document.fullscreenElement) {
+      await window.document.exitFullscreen().catch(console.error);
     }
   },
 });
