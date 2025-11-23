@@ -15,6 +15,7 @@ import { checkIsDesktop } from "@/lib/env";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { FocusedHotkeyLayerProvider } from "@/providers/hotkeys/layers";
+import { configStore } from "@/providers/config";
 
 declare global {
   export interface HotkeyZones {
@@ -30,8 +31,18 @@ export const Route = createFileRoute("/_fullscreenLayout")({
   component: FullscreenLayout,
   validateSearch: zodValidator(searchSchema),
   loader: async () => {
-    if (checkIsDesktop() && !import.meta.env.DEV) {
+    const { windowedFullscreenMode } =
+      configStore.getState()?.config?.interface?.fullscreenConfig ?? {};
+
+    /**
+     * On desktop, default to fullscreen window mode unless configured otherwise.
+     * On web, default to windowed mode unless explicitly set to fullscreen.
+     */
+    if (checkIsDesktop() && windowedFullscreenMode !== true) {
       await getCurrentWindow().setFullscreen(true);
+    } else if (!checkIsDesktop() && windowedFullscreenMode === false) {
+      console.log("window", { window });
+      await window.document.documentElement.requestFullscreen();
     }
 
     init({
