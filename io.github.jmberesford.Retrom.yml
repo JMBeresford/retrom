@@ -9,13 +9,16 @@ sdk-extensions:
 
 command: Retrom
 finish-args:
-  - --socket=session-bus # Permissions required for launching user-configured emulators/launchers on host
-  - --socket=wayland # Permission needed to show the window on wayland
-  - --socket=fallback-x11 # Permission needed to fallback using X11 if wayland is not available
+  # Permissions required for launching user-configured emulators/launchers on host via flatpak-spawn
+  - --talk-name=org.freedesktop.Flatpak
+
+  - --socket=wayland
+  - --socket=fallback-x11
   - --share=ipc # Needed for performance reasons if the app fallbacks to X11
   - --socket=pulseaudio # Permissions required for emulator audio
   - --device=dri # OpenGL/webGL used in web-view for built-in WASM emulators
   - --device=all # Need 'input' for gamepad support, but ubuntu flatpak version is old so this is a workaround
+
   - --filesystem=host # Permissions required for managing+launching user's game library on host
   - --share=network # Permissions required for managing metadata (covers etc) from external providers, and for accessing optional remote dedicated Retrom server
 
@@ -45,7 +48,7 @@ modules:
         sha256: d24b17a1e5de5612029daab7437c75adff650ca966e88b1f8ba79f8b1904166e
         strip-components: 0
         only-arches:
-          - x86_64
+          - aarch64
 
       # Vendored cargo deps
       - type: archive
@@ -60,7 +63,7 @@ modules:
         sha256: c9b50355a4cccb276e8656caabea564f786680910cbc476210db3a658b94d9af
         strip-components: 0
         only-arches:
-          - x86_64
+          - aarch64
 
     build-options:
       env:
@@ -94,6 +97,4 @@ modules:
       - install -Dm644 packages/client/icons/128x128.png /app/share/icons/hicolor/128x128/apps/io.github.jmberesford.Retrom.png
       - install -Dm644 packages/client/icons/128x128@2x.png /app/share/icons/hicolor/256x256/apps/io.github.jmberesford.Retrom.png
       - install -Dm644 packages/client/icons/icon.png /app/share/icons/hicolor/256x256@2/apps/io.github.jmberesford.Retrom.png
-
-    post-install:
       - install -Dm644 LICENSE /app/share/licenses/io.github.jmberesford.Retrom/LICENSE
