@@ -38,4 +38,5 @@ ignored = [
   "walkdir",
   "retrom-db",
   "tonic-prost",
+  "protobuf-src",
 ]
