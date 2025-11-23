@@ -1,55 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-    <id>io.github.jmberesford.Retrom</id>
-    <launchable type="desktop-id">io.github.jmberesford.Retrom.desktop</launchable>
-    <name>Retrom</name>
-    <developer id="io.github.jmberesford">
-        <name>John Beresford</name>
-    </developer>
-    <content_rating type="oars-1.1">
-    </content_rating>
-    <keywords>
-        <keyword>gaming</keyword>
-        <keyword>emulation</keyword>
-        <keyword>cloud</keyword>
-        <keyword>self-hosted</keyword>
-    </keywords>
-    <branding>
-        <color type="primary" scheme_preference="light">#634582</color>
-        <color type="primary" scheme_preference="dark">#634582</color>
-    </branding>
-    <recommends>
-        <display_length compare="ge">360</display_length>
-    </recommends>
-    <summary>A centralized game library/collection management service with a focus on emulation</summary>
-
-    <metadata_license>CC0-1.0</metadata_license>
-    <project_license>GPL-3.0-only</project_license>
-    <url type="homepage">https://github.com/jmberesford/retrom</url>
-
-    <supports>
-        <control>pointing</control>
-        <control>keyboard</control>
-        <control>touch</control>
-    </supports>
-
-    <description>
-        <p>
-            Retrom is a centralized game library management service that allows you to host your 
-            games on a single device, and connect clients on any amount of other devices to 
-            (un)install/download and play them when and where you want to! Think of it as a sort 
-            of self-hosted Steam for your DRM-free game library.
-        </p>
-    </description>
-    <releases>
-        <release version="0.7.43" date="2025-11-09" >
-            <!-- <description> -->
-            <!-- <ul> -->
-            <!--     <li>Updated UI</li> -->
-            <!-- </ul> -->
-            <!-- </description> -->
-        </release>
-    </releases>
-    <update_contact>jberesford@volcaus.com</update_contact>
+  <id>io.github.jmberesford.Retrom</id>
+  <launchable type="desktop-id">io.github.jmberesford.Retrom.desktop</launchable>
+  <name>Retrom</name>
+  <developer id="io.github.jmberesford">
+    <name>John Beresford</name>
+  </developer>
+  <content_rating type="oars-1.1"></content_rating>
+  <keywords>
+    <keyword>gaming</keyword>
+    <keyword>emulation</keyword>
+    <keyword>cloud</keyword>
+    <keyword>self-hosted</keyword>
+  </keywords>
+  <branding>
+    <color scheme_preference="light" type="primary">#634582</color>
+    <color scheme_preference="dark" type="primary">#634582</color>
+  </branding>
+  <recommends>
+    <display_length compare="ge">360</display_length>
+  </recommends>
+  <summary>A centralized game library/collection management service with a focus on emulation</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-only</project_license>
+  <url type="homepage">https://github.com/jmberesford/retrom</url>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+  <description>
+    <p>Retrom is a centralized game library management service that allows you to host your games on a single device, and connect clients on any amount of other devices to (un)install/download and play them when and where you want to! Think of it as a sort of self-hosted Steam for your DRM-free game library.</p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://github.com/JMBeresford/retrom/blob/638cba2d638eded42b120ef839a770fea02a5f50/screenshots/1.png?raw=true</image>
+      <caption>Home page</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/JMBeresford/retrom/blob/638cba2d638eded42b120ef839a770fea02a5f50/screenshots/2.png?raw=true</image>
+      <caption>Mobile home page</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/JMBeresford/retrom/blob/638cba2d638eded42b120ef839a770fea02a5f50/screenshots/3.png?raw=true</image>
+      <caption>Fullscreen mode</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/JMBeresford/retrom/blob/638cba2d638eded42b120ef839a770fea02a5f50/screenshots/4.png?raw=true</image>
+      <caption>Fullscreen mode game page</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/JMBeresford/retrom/blob/638cba2d638eded42b120ef839a770fea02a5f50/screenshots/5.png?raw=true</image>
+      <caption>In-game</caption>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release date="2025-11-09" version="0.7.43"></release>
+  </releases>
+  <update_contact>jberesford@volcaus.com</update_contact>
 </component>
-
