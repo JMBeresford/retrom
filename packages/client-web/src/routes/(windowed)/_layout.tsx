@@ -41,8 +41,11 @@ export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
   loader: async () => {
     destroy();
+
     if (checkIsDesktop()) {
       await getCurrentWindow().setFullscreen(false);
+    } else {
+      await window.document.exitFullscreen();
     }
   },
 });
@@ -55,7 +58,7 @@ function LayoutComponent() {
   useEffect(() => {
     function onResize() {
       if (checkIsDesktop()) {
-        void saveWindowState(StateFlags.ALL);
+        saveWindowState(StateFlags.ALL).catch(console.error);
       }
     }
 

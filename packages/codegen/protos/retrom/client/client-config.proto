@@ -18,6 +18,7 @@ message InterfaceConfig {
 
   message FullscreenConfig {
     GridListConfig grid_list = 1;
+    optional bool windowed_fullscreen_mode = 2;
   }
 
   bool fullscreen_by_default = 1;
