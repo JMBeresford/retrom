@@ -35,7 +35,7 @@ modules:
         url: https://github.com/JMBeresford/retrom
         # tag: v0.7.43
         # commit: 7bad442f9b3872766c8ec49325da57f878806a8d
-        commit: 1f0ff2fb995c76b1f34f0deaba2dd762468e6e08
+        commit: 26fa6664312708abbad120e4edd7f004f6edd580
 
       - type: archive
         url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/web-dist_ubuntu-24.04.tar.gz
