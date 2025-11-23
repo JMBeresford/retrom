@@ -35,7 +35,10 @@
 
     <description>
         <p>
-            Retrom is a centralized game library management service that allows you to host your games on a single device, and connect clients on any amount of other devices to (un)install/download and play them when and where you want to! Think of it as a sort of self-hosted Steam for your DRM-free game library.
+            Retrom is a centralized game library management service that allows you to host your 
+            games on a single device, and connect clients on any amount of other devices to 
+            (un)install/download and play them when and where you want to! Think of it as a sort 
+            of self-hosted Steam for your DRM-free game library.
         </p>
     </description>
     <releases>
