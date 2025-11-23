@@ -31,7 +31,6 @@ modules:
     buildsystem: simple
     sources:
       - type: git
-        branch: feat/flatpak
         url: https://github.com/JMBeresford/retrom
         tag: init-flatpak
         commit: 93e3726dd59dfc6093dc62aeb676b937b6a94008
