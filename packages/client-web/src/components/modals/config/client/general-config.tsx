@@ -190,7 +190,7 @@ export function GeneralConfig() {
                       checked={field.value}
                       onCheckedChange={(val) => field.onChange(val)}
                     />
-                    <div className={cn("grid gap-1 5 leading-none")}>
+                    <div className={cn("grid gap-1 leading-none")}>
                       <label htmlFor="fullscreen-by-default">
                         Fullscreen by default
                       </label>
@@ -218,7 +218,7 @@ export function GeneralConfig() {
                       checked={field.value}
                       onCheckedChange={(val) => field.onChange(val)}
                     />
-                    <div className={cn("grid gap-1 5 leading-none")}>
+                    <div className={cn("grid gap-1 leading-none")}>
                       <label htmlFor="fullscreen-by-default">
                         Windowed fullscreen mode
                       </label>
@@ -246,7 +246,7 @@ export function GeneralConfig() {
                       checked={field.value}
                       onCheckedChange={(val) => field.onChange(val)}
                     />
-                    <div className={cn("grid gap-1 5 leading-none")}>
+                    <div className={cn("grid gap-1 leading-none")}>
                       <label htmlFor="telemetry-enabled">
                         Enable Telemetry
                         <span className="text-xs text-muted-foreground ml-1">
