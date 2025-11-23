@@ -12,16 +12,21 @@ tonic = { workspace = true }
 prost = { workspace = true }
 prost-types = { workspace = true }
 prost-wkt = { version = "0.7" }
-prost-wkt-types = { version = "0.7", features = ["vendored-protoc"] }
 serde = { workspace = true }
 diesel = { workspace = true }
 retrom-db = { workspace = true }
 tonic-prost = { workspace = true }
 
+[target.'cfg(not(windows))'.dependencies]
+prost-wkt-types = { version = "0.7", features = ['vendored-protoc'] }
+
+[target.'cfg(windows)'.dependencies]
+prost-wkt-types = { version = "0.7" }
+
 [build-dependencies]
 prost-wkt-build = "0.7"
 tonic-prost-build = "0.14.2"
-protobuf-src = "2.1.1+27.1"
+protobuf-src = "2.1.1"
 walkdir = { workspace = true }
 
 [package.metadata.cargo-machete]
