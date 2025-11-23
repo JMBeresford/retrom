@@ -8301,6 +8301,7 @@ dependencies = [
  "openssl-sys",
  "opentelemetry 0.29.1",
  "pq-sys",
+ "retrom-codegen",
  "retrom-plugin-config",
  "retrom-plugin-installer",
  "retrom-plugin-launcher",

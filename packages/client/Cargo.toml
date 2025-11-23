@@ -25,6 +25,7 @@ opentelemetry = { workspace = true }
 retrom-telemetry = { workspace = true }
 tokio = { workspace = true }
 dotenvy = { workspace = true }
+retrom-codegen = { workspace = true }
 retrom-plugin-installer = { workspace = true }
 retrom-plugin-launcher = { workspace = true }
 retrom-plugin-service-client = { workspace = true }
@@ -48,10 +49,17 @@ serde_json = { workspace = true }
 # If you use cargo directly instead of tauri's cli you can use this feature flag to switch between tauri's `dev` and `build` modes.
 # DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
-flatpak = ["retrom-plugin-launcher/flatpak"]
+flatpak = ["retrom-plugin-launcher/flatpak", "retrom-codegen/vendored-protoc"]
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-window-state = { workspace = true }
 
 [package.metadata.cargo-machete]
-ignored = ["openssl-sys", "pq-sys", "tauri-build", "serde_json", "tauri-cli"]
+ignored = [
+  "openssl-sys",
+  "pq-sys",
+  "tauri-build",
+  "serde_json",
+  "tauri-cli",
+  "retrom-codegen",
+]

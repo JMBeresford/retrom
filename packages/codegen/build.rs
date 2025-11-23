@@ -24,6 +24,7 @@ const DIESEL_INSERTABLE_DERIVES: [&str; 1] = ["Insertable"];
 const DIESEL_UPDATE_DERIVES: [&str; 3] = ["AsChangeset", "Insertable", "Identifiable"];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    #[cfg(feature = "protobuf-src")]
     std::env::set_var("PROTOC", protobuf_src::protoc());
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not set"));
