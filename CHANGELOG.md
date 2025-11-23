@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.44](https://github.com/JMBeresford/retrom/compare/v0.7.43...v0.7.44) (2025-11-23)
+
+
+### Features
+
+* configure native fullscreen handling ([546e1fd](https://github.com/JMBeresford/retrom/commit/546e1fd93449186236c503f7a7121775302f7468))
+
 ## [0.7.43](https://github.com/JMBeresford/retrom/compare/v0.7.42...v0.7.43) (2025-11-09)
 
 
