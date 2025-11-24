@@ -18,8 +18,11 @@ finish-args:
   - --socket=pulseaudio # Permissions required for emulator audio
   - --device=all # Need 'input' for gamepad support, but ubuntu flatpak version is old so this is a workaround
 
-  - --filesystem=host # Permissions required for managing+launching user's game library on host
-  - --share=network # Permissions required for managing metadata (covers etc) from external providers, and for accessing optional remote dedicated Retrom server
+  # Permissions required for managing+launching user's game library and finding emulator executables on host
+  - --filesystem=host-os
+
+  # Permissions required for managing metadata (covers etc) from external providers, and for accessing optional remote dedicated Retrom server
+  - --share=network
 
   - --env=FLATPAK=1
 

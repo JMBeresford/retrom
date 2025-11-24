@@ -48,8 +48,13 @@ serde_json = { workspace = true }
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
 # If you use cargo directly instead of tauri's cli you can use this feature flag to switch between tauri's `dev` and `build` modes.
 # DO NOT REMOVE!!
+default = ["flatpak"]
 custom-protocol = ["tauri/custom-protocol"]
-flatpak = ["retrom-plugin-launcher/flatpak", "retrom-codegen/vendored-protoc"]
+flatpak = [
+  "retrom-plugin-launcher/flatpak",
+  "retrom-codegen/vendored-protoc",
+  "retrom-plugin-standalone/flatpak",
+]
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-window-state = { workspace = true }

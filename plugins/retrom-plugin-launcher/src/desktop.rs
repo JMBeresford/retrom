@@ -162,22 +162,29 @@ impl<R: Runtime> Launcher<R> {
     }
 
     fn prepare_command(&self, executable: std::path::PathBuf) -> Command {
-        let base_cmd = if cfg!(feature = "flatpak") {
-            // Must use flatpak-spawn to launch host executables from within a Flatpak
-            let mut cmd = Command::new("flatpak-spawn");
-            cmd.arg("--host").arg(executable);
-            cmd
-        } else {
-            Command::new(executable)
-        };
+        #[cfg(not(target_os = "windows"))]
+        {
+            let base_cmd = if cfg!(feature = "flatpak") {
+                // Must use flatpak-spawn to launch host executables from within a Flatpak
+                let mut cmd = Command::new("flatpak-spawn");
+                cmd.arg("--host").arg(executable);
+                cmd
+            } else {
+                Command::new(executable)
+            };
+
+            base_cmd
+        }
 
         #[cfg(target_os = "windows")]
         {
+            let mut base_cmd = Command::new(executable);
+
             // Don't show the console window
             base_cmd.creation_flags(0x08000000);
-        }
 
-        base_cmd
+            base_cmd
+        }
     }
 
     pub(crate) fn get_open_cmd(&self, program: impl Into<PathBuf>) -> Command {
