@@ -308,14 +308,14 @@ jobs:
         run: cargo publish --token="${{ secrets.CARGO_REGISTRY_TOKEN }}"
 
   flatpak-template:
-    if: github.event_name == 'release'
+    if: github.event_name != 'pull_request'
     name: Create Flatpak Manifest
     needs: build-desktop-clients
     runs-on: ubuntu-latest
     env:
-      TAG_VALUE: ${{ github.event.release.tag_name }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG_VALUE: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
       COMMIT_SHA: ${{ github.sha }}
-      GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_GH_TOKEN }}
       WEB_DIST_x64: ${{ needs.build-desktop-clients.outputs.web-dist-x64 }}
       WEB_DIST_aarch64: ${{ needs.build-desktop-clients.outputs.web-dist-aarch64 }}
       CARGO_DEPS_x64: ${{ needs.build-desktop-clients.outputs.cargo-deps-x64 }}
