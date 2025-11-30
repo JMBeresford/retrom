@@ -61,6 +61,8 @@ export const cores = [
   "vice_xpet",
   "vice_xplus4",
   "vice_xvic",
+  "same_cdi",
+  "dosbox_pure",
 ] as const;
 
 export type Config = {
