@@ -341,6 +341,15 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: check NX cloud access
+        id: nx-check
+        continue-on-error: true
+        run: pnpm nx noop
+
+      - name: disable NX cloud
+        if: steps.nx-check.outcome != 'success'
+        run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+
       - name: Template manifest file
         run: pnpm nx template:flatpak
 
