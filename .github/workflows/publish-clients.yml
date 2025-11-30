@@ -49,10 +49,10 @@ jobs:
   build-desktop-clients:
     name: Build Desktop Clients
     outputs:
-      web-dist-x64: ${{ steps.web-dist.outputs.WEB_DIST_x64 }}
-      web-dist-aarch64: ${{ steps.web-dist.outputs.WEB_DIST_aarch64 }}
-      cargo-deps-x64: ${{ steps.cargo-deps.outputs.CARGO_DEPS_x64 }}
-      cargo-deps-aarch64: ${{ steps.cargo-deps.outputs.CARGO_DEPS_aarch64 }}
+      web-dist-x64: ${{ steps.web-dist.outputs['WEB_DIST_ubuntu-24.04'] }}
+      web-dist-aarch64: ${{ steps.web-dist.outputs['WEB_DIST_ubuntu-24.04-arm'] }}
+      cargo-deps-x64: ${{ steps.cargo-deps.outputs['CARGO_DEPS_ubuntu-24.04'] }}
+      cargo-deps-aarch64: ${{ steps.cargo-deps.outputs['CARGO_DEPS_ubuntu-24.04-arm'] }}
     strategy:
       fail-fast: false
       matrix:
@@ -148,6 +148,7 @@ jobs:
         with:
           cache-on-failure: true
           prefix-key: ${{ matrix.cache-key-prefix }}-rust-v${{ env.CACHE_VERSION }}
+          cache-all-crates: true
           cache-workspace-crates: true
 
       - name: Install Protoc
