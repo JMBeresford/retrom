@@ -10,6 +10,13 @@
           "command": "pnpm --version"
         }
       },
+      "template:flatpak": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node ./templates/write-flatpak-manifest.js dist/io.github.jmberesford.Retrom.yml",
+          "cwd": "{projectRoot}"
+        }
+      },
       "markdownlint:lint": {
         "executor": "nx:run-commands",
         "options": {

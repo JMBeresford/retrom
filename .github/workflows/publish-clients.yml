@@ -48,6 +48,11 @@ env:
 jobs:
   build-desktop-clients:
     name: Build Desktop Clients
+    outputs:
+      web-dist-x64: ${{ steps.web-dist.outputs.WEB_DIST_x64 }}
+      web-dist-aarch64: ${{ steps.web-dist.outputs.WEB_DIST_aarch64 }}
+      cargo-deps-x64: ${{ steps.cargo-deps.outputs.CARGO_DEPS_x64 }}
+      cargo-deps-aarch64: ${{ steps.cargo-deps.outputs.CARGO_DEPS_aarch64 }}
     strategy:
       fail-fast: false
       matrix:
@@ -233,27 +238,35 @@ jobs:
 
       - name: Upload web outputs to release
         if: ${{ github.event_name != 'pull_request' }}
+        id: web-dist
         shell: "bash"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
           TAR_FILE: desktop-frontend-dist_${{ matrix.platform }}.tar.gz
+          OUTPUT_NAME: WEB_DIST_${{ matrix.platform }}
         run: |
           tar -czvf "$TAR_FILE" packages/client-web/dist/
           gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
+          export SHA="sha256sum $TAR_FILE"
+          echo "$OUTPUT_NAME=$SHA" >> "$GITHUB_OUTPUT"
 
       - name: Upload vendored cargo deps to release
         if: ${{ github.event_name != 'pull_request' }}
+        id: cargo-deps
         shell: "bash"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
           TAR_FILE: cargo-vendor_${{ matrix.platform }}.tar.gz
+          OUTPUT_NAME: CARGO_DEPS_${{ matrix.platform }}
         run: |
           cargo clean
           cargo vendor --locked --manifest-path packages/client/Cargo.toml
           tar -czvf "$TAR_FILE" vendor/
           gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
+          export SHA="sha256sum $TAR_FILE"
+          echo "$OUTPUT_NAME=$SHA" >> "$GITHUB_OUTPUT"
 
   publish-crates:
     permissions:
@@ -293,3 +306,40 @@ jobs:
 
       - name: Publish crates
         run: cargo publish --token="${{ secrets.CARGO_REGISTRY_TOKEN }}"
+
+  flatpak-template:
+    if: github.event_name == 'release'
+    name: Create Flatpak Manifest
+    needs: build-desktop-clients
+    runs-on: ubuntu-latest
+    env:
+      TAG_VALUE: ${{ github.event.release.tag_name }}
+      COMMIT_SHA: ${{ github.sha }}
+      GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_GH_TOKEN }}
+      WEB_DIST_x64: ${{ needs.build-desktop-clients.outputs.web-dist-x64 }}
+      WEB_DIST_aarch64: ${{ needs.build-desktop-clients.outputs.web-dist-aarch64 }}
+      CARGO_DEPS_x64: ${{ needs.build-desktop-clients.outputs.cargo-deps-x64 }}
+      CARGO_DEPS_aarch64: ${{ needs.build-desktop-clients.outputs.cargo-deps-aarch64 }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Template manifest file
+        run: pnpm nx template:flatpak
+
+      - name: Upload output as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-build-artifacts
+          path: dist/io.github.jmberesford.Retrom.yml

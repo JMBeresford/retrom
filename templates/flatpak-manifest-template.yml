@@ -35,34 +35,35 @@ modules:
     sources:
       - type: git
         url: https://github.com/JMBeresford/retrom
-        tag: v0.7.44
+        tag: "{{ TAG_VALUE }}"
+        commit: "{{ COMMIT_HASH }}"
 
       # Static web assets
       - type: archive
-        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/desktop-frontend-dist_ubuntu-24.04.tar.gz
-        sha256: ed27a24e55a78be187a3d07d4fd074f9ab1560eef4e72aba7e5aa50e5e33a33e
+        url: https://github.com/JMBeresford/retrom/releases/download/{{ TAG_VALUE }}/desktop-frontend-dist_ubuntu-24.04.tar.gz
+        sha256: "{{ WEB_DIST_x64 }}"
         strip-components: 0
         only-arches:
           - x86_64
 
       - type: archive
-        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/desktop-frontend-dist_ubuntu-24.04-arm.tar.gz
-        sha256: d24b17a1e5de5612029daab7437c75adff650ca966e88b1f8ba79f8b1904166e
+        url: https://github.com/JMBeresford/retrom/releases/download/{{ TAG_VALUE }}/desktop-frontend-dist_ubuntu-24.04-arm.tar.gz
+        sha256: "{{ WEB_DIST_aarch64 }}"
         strip-components: 0
         only-arches:
           - aarch64
 
       # Vendored cargo deps
       - type: archive
-        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/cargo-vendor_ubuntu-24.04.tar.gz
-        sha256: 4e1f3fa48a4a22429fd58c0813c64d57ae8f9097c759675d087af8a860fbac14
+        url: https://github.com/JMBeresford/retrom/releases/download/{{ TAG_VALUE }}/cargo-vendor_ubuntu-24.04.tar.gz
+        sha256: "{{ CARGO_DEPS_x64 }}"
         strip-components: 0
         only-arches:
           - x86_64
 
       - type: archive
-        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/cargo-vendor_ubuntu-24.04-arm.tar.gz
-        sha256: c9b50355a4cccb276e8656caabea564f786680910cbc476210db3a658b94d9af
+        url: https://github.com/JMBeresford/retrom/releases/download/{{ TAG_VALUE }}/cargo-vendor_ubuntu-24.04-arm.tar.gz
+        sha256: "{{ CARGO_DEPS_aarch64 }}"
         strip-components: 0
         only-arches:
           - aarch64
