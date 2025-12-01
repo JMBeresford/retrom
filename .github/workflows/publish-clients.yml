@@ -198,7 +198,7 @@ jobs:
 
       - name: disable NX cloud (non-Windows)
         if: steps.nx-check.outcome != 'success' && matrix.platform != 'windows-latest'
-        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+        run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
 
       - name: disable NX cloud (Windows)
         if: steps.nx-check.outcome != 'success' && matrix.platform == 'windows-latest'
@@ -250,8 +250,7 @@ jobs:
         run: |
           tar -czvf "$TAR_FILE" packages/client-web/dist/
           gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
-          export SHA="sha256sum $TAR_FILE"
-          echo "$OUTPUT_NAME=$SHA" >> "$GITHUB_OUTPUT"
+          echo "$OUTPUT_NAME"="$(sha256sum "$TAR_FILE")" >> "$GITHUB_OUTPUT"
 
       - name: Upload vendored cargo deps to release
         if: ${{ github.event_name != 'pull_request' }}
@@ -267,8 +266,7 @@ jobs:
           cargo vendor --locked --manifest-path packages/client/Cargo.toml
           tar -czvf "$TAR_FILE" vendor/
           gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
-          export SHA="sha256sum $TAR_FILE"
-          echo "$OUTPUT_NAME=$SHA" >> "$GITHUB_OUTPUT"
+          echo "$OUTPUT_NAME"="$(sha256sum "$TAR_FILE")" >> "$GITHUB_OUTPUT"
 
   publish-crates:
     permissions:
