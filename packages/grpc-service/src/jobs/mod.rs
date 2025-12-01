@@ -1,5 +1,5 @@
 use futures::Stream;
-use job_manager::JobManager;
+use retrom_library_service::JobManager;
 use std::{pin::Pin, sync::Arc};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::Status;
@@ -10,8 +10,6 @@ use retrom_codegen::retrom::{
     job_service_server::JobService, GetJobSubscriptionRequest, GetJobSubscriptionResponse,
     GetJobsRequest, GetJobsResponse,
 };
-
-pub mod job_manager;
 
 pub struct JobServiceHandlers {
     job_manager: Arc<JobManager>,

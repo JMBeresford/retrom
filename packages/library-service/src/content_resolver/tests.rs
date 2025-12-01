@@ -1,5 +1,5 @@
 mod ignore_patterns {
-    use crate::library::content_resolver::{game_resolver::GameResolver, ContentResolver};
+    use crate::content_resolver::{game_resolver::GameResolver, ContentResolver};
     use retrom_codegen::retrom::{ContentDirectory, GameFile, IgnorePatterns, StorageType};
     use std::path::PathBuf;
 
@@ -296,7 +296,7 @@ mod ignore_patterns {
 }
 
 mod library_definitions {
-    use crate::library::content_resolver::{parser::ContentMacro, ContentResolver};
+    use crate::content_resolver::{parser::ContentMacro, ContentResolver};
     use retrom_codegen::retrom::{ContentDirectory, CustomLibraryDefinition, StorageType};
     use std::{path::PathBuf, str::FromStr};
 

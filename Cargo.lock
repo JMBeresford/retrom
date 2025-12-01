@@ -8378,6 +8378,7 @@ dependencies = [
  "regex",
  "retrom-codegen",
  "retrom-db",
+ "retrom-library-service",
  "retrom-service-common",
  "retrom-telemetry",
  "sanitize-filename",
@@ -8389,6 +8390,28 @@ dependencies = [
  "tonic-reflection",
  "tonic-web",
  "tower-http",
+ "tracing",
+ "uuid",
+ "walkdir",
+]
+
+[[package]]
+name = "retrom-library-service"
+version = "0.7.44"
+dependencies = [
+ "bigdecimal",
+ "diesel",
+ "diesel-async",
+ "futures",
+ "regex",
+ "retrom-codegen",
+ "retrom-db",
+ "retrom-service-common",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+ "tonic 0.14.2",
  "tracing",
  "uuid",
  "walkdir",

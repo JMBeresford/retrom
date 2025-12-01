@@ -4,18 +4,18 @@ use emulators::EmulatorServiceHandlers;
 use file_explorer::FileExplorerServiceHandlers;
 use games::GameServiceHandlers;
 use http::HeaderName;
-use jobs::{job_manager::JobManager, JobServiceHandlers};
-use library::LibraryServiceHandlers;
+use jobs::JobServiceHandlers;
 use metadata::MetadataServiceHandlers;
 use platforms::PlatformServiceHandlers;
 use retrom_codegen::retrom::{
     client_service_server::ClientServiceServer, emulator_service_server::EmulatorServiceServer,
     file_explorer_service_server::FileExplorerServiceServer,
     game_service_server::GameServiceServer, job_service_server::JobServiceServer,
-    library_service_server::LibraryServiceServer, metadata_service_server::MetadataServiceServer,
-    platform_service_server::PlatformServiceServer, saves_service_server::SavesServiceServer,
-    server_service_server::ServerServiceServer, FILE_DESCRIPTOR_SET,
+    metadata_service_server::MetadataServiceServer, platform_service_server::PlatformServiceServer,
+    saves_service_server::SavesServiceServer, server_service_server::ServerServiceServer,
+    FILE_DESCRIPTOR_SET,
 };
+use retrom_library_service::{library_service_server, JobManager};
 use retrom_service_common::{
     config::ServerConfigManager,
     media_cache::MediaCache,
@@ -32,7 +32,6 @@ pub mod emulators;
 pub mod file_explorer;
 pub mod games;
 pub mod jobs;
-pub mod library;
 pub mod metadata;
 pub mod platforms;
 mod saves;
@@ -97,13 +96,13 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         .build_v1()
         .unwrap();
 
-    let library_service = LibraryServiceServer::new(LibraryServiceHandlers::new(
+    let library_service = library_service_server(
         library_pool.clone(),
         igdb_client.clone(),
         steam_web_api_client.clone(),
         job_manager.clone(),
         config_manager.clone(),
-    ));
+    );
 
     let metadata_service = MetadataServiceServer::new(MetadataServiceHandlers::new(
         shared_pool.clone(),

@@ -1,4 +1,4 @@
-use super::jobs::job_manager::JobManager;
+use crate::job_manager::JobManager;
 use retrom_codegen::retrom::{
     library_service_server::LibraryService, DeleteLibraryRequest, DeleteLibraryResponse,
     DeleteMissingEntriesRequest, DeleteMissingEntriesResponse, UpdateLibraryMetadataRequest,
@@ -12,20 +12,17 @@ use retrom_service_common::{
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Result, Status};
 
-pub mod content_resolver;
-mod delete_handlers;
-mod metadata_handlers;
-mod update_handlers;
-
+/// Handlers for the Library gRPC service
 pub struct LibraryServiceHandlers {
-    db_pool: Arc<Pool>,
-    igdb_client: Arc<IGDBProvider>,
-    steam_web_api_client: Arc<SteamWebApiProvider>,
-    job_manager: Arc<JobManager>,
-    config_manager: Arc<ServerConfigManager>,
+    pub(crate) db_pool: Arc<Pool>,
+    pub(crate) igdb_client: Arc<IGDBProvider>,
+    pub(crate) steam_web_api_client: Arc<SteamWebApiProvider>,
+    pub(crate) job_manager: Arc<JobManager>,
+    pub(crate) config_manager: Arc<ServerConfigManager>,
 }
 
 impl LibraryServiceHandlers {
+    /// Creates a new LibraryServiceHandlers with the provided dependencies
     pub fn new(
         db_pool: Arc<Pool>,
         igdb_client: Arc<IGDBProvider>,
@@ -49,7 +46,7 @@ impl LibraryService for LibraryServiceHandlers {
         &self,
         request: Request<UpdateLibraryRequest>,
     ) -> Result<Response<UpdateLibraryResponse>, Status> {
-        match update_handlers::update_library(self, request).await {
+        match crate::update_handlers::update_library(self, request).await {
             Ok(response) => Ok(Response::new(response)),
             Err(why) => Err(why),
         }
@@ -59,7 +56,9 @@ impl LibraryService for LibraryServiceHandlers {
         &self,
         request: Request<UpdateLibraryMetadataRequest>,
     ) -> Result<Response<UpdateLibraryMetadataResponse>, Status> {
-        match metadata_handlers::update_metadata(self, request.into_inner().overwrite()).await {
+        match crate::metadata_handlers::update_metadata(self, request.into_inner().overwrite())
+            .await
+        {
             Ok(res) => Ok(Response::new(res)),
             Err(why) => Err(Status::new(Code::Internal, why)),
         }
@@ -69,7 +68,7 @@ impl LibraryService for LibraryServiceHandlers {
         &self,
         request: Request<DeleteLibraryRequest>,
     ) -> Result<Response<DeleteLibraryResponse>, Status> {
-        match delete_handlers::delete_library(self, request.into_inner()).await {
+        match crate::delete_handlers::delete_library(self, request.into_inner()).await {
             Ok(response) => Ok(Response::new(response)),
             Err(why) => Err(why),
         }
@@ -79,7 +78,7 @@ impl LibraryService for LibraryServiceHandlers {
         &self,
         request: Request<DeleteMissingEntriesRequest>,
     ) -> Result<Response<DeleteMissingEntriesResponse>, Status> {
-        match delete_handlers::delete_missing_entries(self, request.into_inner()).await {
+        match crate::delete_handlers::delete_missing_entries(self, request.into_inner()).await {
             Ok(response) => Ok(Response::new(response)),
             Err(why) => Err(why),
         }
