@@ -21,7 +21,11 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "extra-files": [{ "type": "generic", "path": "Cargo.toml" }]
+      "extra-files": [
+        { "type": "generic", "path": "Cargo.toml" },
+        { "type": "generic", "path": "nix/pkgs/retrom-unwrapped/package.nix" },
+        { "type": "generic", "path": "nix/pkgs/retrom-service/package.nix" }
+      ]
     }
   }
 }
