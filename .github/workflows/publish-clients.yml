@@ -319,6 +319,7 @@ jobs:
     needs: build-desktop-clients
     runs-on: ubuntu-latest
     env:
+      RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TAG_VALUE: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
       COMMIT_HASH: ${{ github.sha }}
@@ -364,3 +365,10 @@ jobs:
         with:
           name: my-build-artifacts
           path: dist/io.github.jmberesford.Retrom.yml
+
+      - name: Upload manifest to release
+        run: >
+          gh release upload
+          "$RELEASE_IDENTIFIER"
+          ./dist/io.github.jmberesford.Retrom.yml
+          --clobber
