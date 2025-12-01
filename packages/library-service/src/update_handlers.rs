@@ -1,4 +1,4 @@
-use crate::jobs::job_manager::JobError;
+use crate::job_manager::JobError;
 use bigdecimal::ToPrimitive;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -7,12 +7,12 @@ use retrom_db::schema::{self};
 use tonic::{Request, Status};
 use tracing::warn;
 
-use super::{
+use crate::{
     content_resolver::{game_resolver::ResolvedGame, ContentResolver},
-    LibraryServiceHandlers,
+    handlers::LibraryServiceHandlers,
 };
 
-pub(super) async fn update_library(
+pub(crate) async fn update_library(
     state: &LibraryServiceHandlers,
     _request: Request<UpdateLibraryRequest>,
 ) -> Result<UpdateLibraryResponse, Status> {

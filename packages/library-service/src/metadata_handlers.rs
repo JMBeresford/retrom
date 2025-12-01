@@ -1,5 +1,5 @@
-use super::LibraryServiceHandlers;
-use crate::jobs::job_manager::{JobError, JobOptions};
+use crate::handlers::LibraryServiceHandlers;
+use crate::job_manager::{JobError, JobOptions};
 use bigdecimal::ToPrimitive;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;

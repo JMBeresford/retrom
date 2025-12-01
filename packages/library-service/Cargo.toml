@@ -1,21 +1,19 @@
 [package]
-name = "retrom-grpc-service"
+name = "retrom-library-service"
 resolver = "2"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
 edition.workspace = true
-description = "The Retrom video game library gRPC service handlers"
+description = "Library service handlers for the Retrom video game library"
 
 [dependencies]
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-db = { workspace = true }
-retrom-library-service = { workspace = true }
 retrom-service-common = { workspace = true }
-retrom-telemetry = { workspace = true }
 walkdir = { workspace = true }
 tonic = { workspace = true }
 futures = { workspace = true }
@@ -24,14 +22,8 @@ tokio-stream = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
 thiserror = { workspace = true }
-http = { workspace = true }
-tower-http = { workspace = true }
-axum = { workspace = true }
-deadpool = { workspace = true }
-tonic-reflection = { workspace = true }
-tonic-web = { workspace = true }
-sanitize-filename = { workspace = true }
 bigdecimal = { workspace = true }
 regex = { workspace = true }
+
+[dev-dependencies]
 tempfile = { workspace = true }
-chrono = { workspace = true }

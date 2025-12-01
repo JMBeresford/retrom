@@ -1,4 +1,4 @@
-use super::LibraryServiceHandlers;
+use crate::handlers::LibraryServiceHandlers;
 use diesel::{BelongingToDsl, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use futures::future::join_all;

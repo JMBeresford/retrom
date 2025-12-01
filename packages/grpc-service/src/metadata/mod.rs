@@ -1,4 +1,3 @@
-use crate::jobs::job_manager::JobError;
 use chrono::DateTime;
 use diesel::prelude::*;
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
@@ -23,6 +22,7 @@ use retrom_codegen::{
     timestamp::Timestamp,
 };
 use retrom_db::{schema, Pool};
+use retrom_library_service::{JobError, JobManager};
 use retrom_service_common::{
     media_cache::{cacheable_media::CacheableMetadata, get_public_url, MediaCache},
     metadata_providers::{
@@ -37,8 +37,6 @@ use tokio::sync::RwLock;
 use tonic::{Request, Response, Status};
 use tracing::{error, Instrument, Level};
 use walkdir::WalkDir;
-
-use super::jobs::job_manager::JobManager;
 
 pub struct MetadataServiceHandlers {
     db_pool: Arc<Pool>,

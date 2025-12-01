@@ -10,7 +10,7 @@ The Retrom gRPC Service package provides the core gRPC API implementation for th
 
 This package implements several gRPC services that handle different aspects of the Retrom application:
 
-- **Library Service**: Manages game libraries, collections, and content resolution
+- **Library Service**: Managed by the separate [`retrom-library-service`](../library-service/README.md) crate
 - **Game Service**: Handles game metadata, files, and operations
 - **Platform Service**: Provides platform information and management
 - **Metadata Service**: Interfaces with external metadata providers
@@ -29,5 +29,5 @@ The package follows a modular architecture where each service is implemented as 
 - **Database Integration**: Uses Diesel ORM for PostgreSQL database access
 - **Connection Pooling**: Maintains separate connection pools for services with different usage patterns
 - **Media Cache**: Implements caching for game and platform media assets
-- **Job Management**: Provides background processing capabilities
-- **Content Resolution**: Resolves game content, platforms, and metadata
+- **Job Management**: Provides background processing capabilities (via `retrom-library-service`)
+- **Content Resolution**: Resolves game content, platforms, and metadata (via `retrom-library-service`)

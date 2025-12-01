@@ -6,6 +6,7 @@ members = [
   "packages/db",
   "packages/service",
   "packages/grpc-service",
+  "packages/library-service",
   "packages/rest-service",
   "packages/service-common",
   "packages/telemetry",
@@ -105,6 +106,7 @@ futures-util = "0.3.30"
 retrom-db = { path = "./packages/db", version = "^0.7.44" }
 retrom-service = { path = "./packages/service", version = "^0.7.44" }
 retrom-grpc-service = { path = "./packages/grpc-service", version = "^0.7.44" }
+retrom-library-service = { path = "./packages/library-service", version = "^0.7.44" }
 retrom-rest-service = { path = "./packages/rest-service", version = "^0.7.44" }
 retrom-service-common = { path = "./packages/service-common", version = "^0.7.44" }
 retrom-telemetry = { path = "./packages/telemetry", version = "^0.7.44" }
