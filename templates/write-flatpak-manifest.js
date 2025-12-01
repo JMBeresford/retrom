@@ -11,6 +11,14 @@ const CARGO_DEPS_aarch64 = process.env.CARGO_DEPS_aarch64;
 const scriptPath = process.argv[1];
 const outputPath = process.argv[2];
 
+console.log("Preparing to generate Flatpak manifest with: ");
+console.log(`TAG_VALUE: ${TAG_VALUE}`);
+console.log(`COMMIT_HASH: ${COMMIT_HASH}`);
+console.log(`WEB_DIST_x64: ${WEB_DIST_x64}`);
+console.log(`WEB_DIST_aarch64: ${WEB_DIST_aarch64}`);
+console.log(`CARGO_DEPS_x64: ${CARGO_DEPS_x64}`);
+console.log(`CARGO_DEPS_aarch64: ${CARGO_DEPS_aarch64}`);
+
 if (
   !TAG_VALUE ||
   !COMMIT_HASH ||

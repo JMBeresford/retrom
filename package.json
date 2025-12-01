@@ -12,6 +12,7 @@
       },
       "template:flatpak": {
         "executor": "nx:run-commands",
+        "cache": false,
         "options": {
           "command": "node ./templates/write-flatpak-manifest.js dist/io.github.jmberesford.Retrom.yml",
           "cwd": "{projectRoot}"
