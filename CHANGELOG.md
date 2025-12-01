@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.45](https://github.com/JMBeresford/retrom/compare/v0.7.44...v0.7.45) (2025-12-01)
+
+
+### Features
+
+* add DOSBox Pure core ([19c5815](https://github.com/JMBeresford/retrom/commit/19c5815c1a8c95c8443a962a96fbd65619428fbf))
+* add SAME CDI core ([5c3a182](https://github.com/JMBeresford/retrom/commit/5c3a182d26164e19b88ff7311e8f25ad386de1ff))
+* flatpak manifest generation ([#436](https://github.com/JMBeresford/retrom/issues/436)) ([2bb169b](https://github.com/JMBeresford/retrom/commit/2bb169b82f86b1c3c672b277078dd94e1d949796))
+
 ## [0.7.44](https://github.com/JMBeresford/retrom/compare/v0.7.43...v0.7.44) (2025-11-23)
 
 
