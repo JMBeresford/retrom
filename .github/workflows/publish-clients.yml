@@ -32,7 +32,7 @@ on:
 
   pull_request:
   release:
-    types: [published]
+    types: [created]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -41,10 +41,18 @@ concurrency:
 env:
   CACHE_VERSION: 6
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  IS_RELEASE: ${{ github.event_name == 'release' }}
+  IS_PRERELEASE: ${{ inputs.prerelease || github.event.release.prerelease == true }}
+  IS_DRAFT_RELEASE: ${{ inputs.draft || github.event.release.draft == true }}
 
 jobs:
   build-desktop-clients:
     name: Build Desktop Clients
+    outputs:
+      web-dist-x64: ${{ steps.web-dist.outputs['WEB_DIST_ubuntu-24.04'] }}
+      web-dist-aarch64: ${{ steps.web-dist.outputs['WEB_DIST_ubuntu-24.04-arm'] }}
+      cargo-deps-x64: ${{ steps.cargo-deps.outputs['CARGO_DEPS_ubuntu-24.04'] }}
+      cargo-deps-aarch64: ${{ steps.cargo-deps.outputs['CARGO_DEPS_ubuntu-24.04-arm'] }}
     strategy:
       fail-fast: false
       matrix:
@@ -63,9 +71,7 @@ jobs:
             cache-key-prefix: "windows-latest"
     env:
       PQ_LIB_STATIC: 1
-      IS_PRERELEASE: ${{ inputs.prerelease || github.event.release.prerelease == true }}
-      DEBUG_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'debug' || github.event.release.prerelease == true }}
-      RELEASE_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'release' || (github.event.release.prerelease == false && github.event.release.draft == false) }}
+      BUILDS: ${{ inputs.builds }}
       TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -86,8 +92,39 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Configure job
+        shell: bash
+        run: |
+          echo Event name: "${{ github.event_name }}"
+          echo BUILDS: "$BUILDS"
+          echo IS_PRERELEASE: "$IS_PRERELEASE"
+          echo IS_DRAFT_RELEASE: "$IS_DRAFT_RELEASE"
 
+          if [ "$BUILDS" != "release" ] && 
+            { [ "$IS_PRERELEASE" == "true" ] || [ "$IS_DRAFT_RELEASE" == "true" ]; }; 
+          then
+            export DEBUG_BUILDS="true"
+          else
+            export DEBUG_BUILDS="false"
+          fi
+
+          if [ "$BUILDS" != "debug" ] || 
+            { [ "$IS_RELEASE" = "true" ] && 
+               { [ "$IS_PRERELEASE" == "true" ] || [ "$IS_DRAFT_RELEASE" == "true" ]; }
+            };
+          then
+            export RELEASE_BUILDS="true"
+          else
+            export RELEASE_BUILDS="false"
+          fi
+
+          echo "DEBUG_BUILDS=$DEBUG_BUILDS" >> "$GITHUB_ENV"
+          echo "RELEASE_BUILDS=$RELEASE_BUILDS" >> "$GITHUB_ENV"
+
+          echo RELEASE_BUILDS: "$RELEASE_BUILDS"
+          echo DEBUG_BUILDS: "$DEBUG_BUILDS"
+
+      - uses: actions/checkout@v4
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -96,7 +133,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "pnpm"
 
       - name: install Rust stable
@@ -111,6 +148,8 @@ jobs:
         with:
           cache-on-failure: true
           prefix-key: ${{ matrix.cache-key-prefix }}-rust-v${{ env.CACHE_VERSION }}
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -159,7 +198,7 @@ jobs:
 
       - name: disable NX cloud (non-Windows)
         if: steps.nx-check.outcome != 'success' && matrix.platform != 'windows-latest'
-        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+        run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
 
       - name: disable NX cloud (Windows)
         if: steps.nx-check.outcome != 'success' && matrix.platform == 'windows-latest'
@@ -199,6 +238,42 @@ jobs:
           tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
           args: ${{ env.TARGET_ARG }} # required for the action to look in the correct target subdir
 
+      - name: Upload web outputs to release
+        if: ${{ github.event_name != 'pull_request' }}
+        id: web-dist
+        shell: "bash"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
+          TAR_FILE: desktop-frontend-dist_${{ matrix.platform }}.tar.gz
+          OUTPUT_NAME: WEB_DIST_${{ matrix.platform }}
+        run: |
+          tar -czvf "$TAR_FILE" packages/client-web/dist/
+          gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
+          SHA="$(sha256sum "$TAR_FILE")"
+          SHA=${SHA%% *}
+          OUT="$OUTPUT_NAME"="${SHA}"
+          echo "$OUT" >> "$GITHUB_OUTPUT"
+
+      - name: Upload vendored cargo deps to release
+        if: ${{ github.event_name != 'pull_request' }}
+        id: cargo-deps
+        shell: "bash"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
+          TAR_FILE: cargo-vendor_${{ matrix.platform }}.tar.gz
+          OUTPUT_NAME: CARGO_DEPS_${{ matrix.platform }}
+        run: |
+          cargo clean
+          cargo vendor --locked --manifest-path packages/client/Cargo.toml
+          tar -czvf "$TAR_FILE" vendor/
+          gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
+          SHA="$(sha256sum "$TAR_FILE")"
+          SHA=${SHA%% *}
+          OUT="$OUTPUT_NAME"="${SHA}"
+          echo "$OUT" >> "$GITHUB_OUTPUT"
+
   publish-crates:
     permissions:
       contents: read
@@ -236,4 +311,66 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Publish crates
-        run: cargo publish --token="${{ secrets.CARGO_REGISTRY_TOKEN }}"
+        run: cargo publish --no-verify --token="${{ secrets.CARGO_REGISTRY_TOKEN }}"
+
+  flatpak-template:
+    if: github.event_name != 'pull_request'
+    name: Create Flatpak Manifest
+    needs: build-desktop-clients
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_IDENTIFIER: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG_VALUE: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
+      COMMIT_HASH: ${{ github.sha }}
+      WEB_DIST_x64: ${{ needs.build-desktop-clients.outputs.web-dist-x64 }}
+      WEB_DIST_aarch64: ${{ needs.build-desktop-clients.outputs.web-dist-aarch64 }}
+      CARGO_DEPS_x64: ${{ needs.build-desktop-clients.outputs.cargo-deps-x64 }}
+      CARGO_DEPS_aarch64: ${{ needs.build-desktop-clients.outputs.cargo-deps-aarch64 }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: check NX cloud access
+        id: nx-check
+        continue-on-error: true
+        run: pnpm nx noop
+
+      - name: disable NX cloud
+        if: steps.nx-check.outcome != 'success'
+        run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+
+      - name: Template manifest file
+        run: pnpm nx template:flatpak
+
+      - name: Upload output as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-manifest
+          path: dist/io.github.jmberesford.Retrom.yml
+
+      - name: Upload manifest to release
+        run: >
+          gh release upload
+          "$RELEASE_IDENTIFIER"
+          ./dist/io.github.jmberesford.Retrom.yml
+          --clobber

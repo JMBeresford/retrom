@@ -1,0 +1,102 @@
+id: io.github.jmberesford.Retrom
+
+runtime: org.gnome.Platform
+runtime-version: "49"
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+  - org.freedesktop.Sdk.Extension.node22
+
+command: Retrom
+finish-args:
+  # Permissions required for launching user-configured emulators/launchers on host via flatpak-spawn
+  - --talk-name=org.freedesktop.Flatpak
+
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc # Needed for performance reasons if the app fallbacks to X11
+  - --socket=pulseaudio # Permissions required for emulator audio
+  - --device=all # Need 'input' for gamepad support, but ubuntu flatpak version is old so this is a workaround
+
+  # Permissions required for managing+launching user's game library and finding emulator executables on host
+  - --filesystem=host-os
+
+  # Permissions required for managing metadata (covers etc) from external providers, and for accessing optional remote dedicated Retrom server
+  - --share=network
+
+  - --env=FLATPAK=1
+
+build-options:
+  append-path: /usr/lib/sdk/node22/bin:/usr/lib/sdk/rust-stable/bin:/run/build/retrom/cargo/bin
+
+modules:
+  - name: retrom
+    buildsystem: simple
+    sources:
+      - type: git
+        url: https://github.com/JMBeresford/retrom
+        tag: v0.7.44
+
+      # Static web assets
+      - type: archive
+        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/desktop-frontend-dist_ubuntu-24.04.tar.gz
+        sha256: ed27a24e55a78be187a3d07d4fd074f9ab1560eef4e72aba7e5aa50e5e33a33e
+        strip-components: 0
+        only-arches:
+          - x86_64
+
+      - type: archive
+        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/desktop-frontend-dist_ubuntu-24.04-arm.tar.gz
+        sha256: d24b17a1e5de5612029daab7437c75adff650ca966e88b1f8ba79f8b1904166e
+        strip-components: 0
+        only-arches:
+          - aarch64
+
+      # Vendored cargo deps
+      - type: archive
+        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/cargo-vendor_ubuntu-24.04.tar.gz
+        sha256: 4e1f3fa48a4a22429fd58c0813c64d57ae8f9097c759675d087af8a860fbac14
+        strip-components: 0
+        only-arches:
+          - x86_64
+
+      - type: archive
+        url: https://github.com/JMBeresford/retrom/releases/download/v0.7.43/cargo-vendor_ubuntu-24.04-arm.tar.gz
+        sha256: c9b50355a4cccb276e8656caabea564f786680910cbc476210db3a658b94d9af
+        strip-components: 0
+        only-arches:
+          - aarch64
+
+    build-options:
+      env:
+        CARGO_HOME: /run/build/retrom/cargo
+        XDG_CACHE_HOME: /run/build/retrom/flatpak-node/cache
+        npm_config_cache: /run/build/retrom/flatpak-node/npm-cache
+        npm_config_offline: "true"
+
+    build-commands:
+      - cargo fetch --offline
+        --config source.crates-io.replace-with=\"vendored-sources\"
+        --config source.vendored-sources.directory=\"vendor\"
+        --manifest-path packages/client/Cargo.toml
+
+      - cargo install --offline --path vendor/tauri-cli
+        --config source.crates-io.replace-with=\"vendored-sources\"
+        --config source.vendored-sources.directory=\"vendor\"
+
+      - cd packages/client && cargo --offline
+        tauri build --no-bundle --config ./tauri.build.conf.json --
+        --features "flatpak"
+        --offline
+        --config source.crates-io.replace-with=\"vendored-sources\"
+        --config source.vendored-sources.directory=\"../../vendor\"
+
+      - install -Dm644 -t /app/share/metainfo/ io.github.jmberesford.Retrom.metainfo.xml
+      - install -Dm644 -t /app/share/applications/ io.github.jmberesford.Retrom.desktop
+      - install -Dm755 -t /app/bin/ target/release/Retrom
+
+      - install -Dm644 packages/client/icons/32x32.png /app/share/icons/hicolor/32x32/apps/io.github.jmberesford.Retrom.png
+      - install -Dm644 packages/client/icons/128x128.png /app/share/icons/hicolor/128x128/apps/io.github.jmberesford.Retrom.png
+      - install -Dm644 packages/client/icons/128x128@2x.png /app/share/icons/hicolor/256x256/apps/io.github.jmberesford.Retrom.png
+      - install -Dm644 packages/client/icons/icon.png /app/share/icons/hicolor/256x256@2/apps/io.github.jmberesford.Retrom.png
+      - install -Dm644 LICENSE /app/share/licenses/io.github.jmberesford.Retrom/LICENSE

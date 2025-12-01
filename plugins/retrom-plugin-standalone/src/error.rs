@@ -12,6 +12,9 @@ pub enum Error {
 
     #[error("Server is already running, cannot start another one")]
     AlreadyRunning,
+
+    #[error("Standalone mode is not currently available in Flatpak builds")]
+    FlatpakUnsupported,
 }
 
 impl Serialize for Error {
