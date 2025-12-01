@@ -250,7 +250,10 @@ jobs:
         run: |
           tar -czvf "$TAR_FILE" packages/client-web/dist/
           gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
-          echo "$OUTPUT_NAME"="$(sha256sum "$TAR_FILE")" >> "$GITHUB_OUTPUT"
+          SHA="$(sha256sum "$TAR_FILE")"
+          SHA=${SHA%% *}
+          OUT="$OUTPUT_NAME"="${SHA}"
+          echo "$OUT" >> "$GITHUB_OUTPUT"
 
       - name: Upload vendored cargo deps to release
         if: ${{ github.event_name != 'pull_request' }}
@@ -266,7 +269,10 @@ jobs:
           cargo vendor --locked --manifest-path packages/client/Cargo.toml
           tar -czvf "$TAR_FILE" vendor/
           gh release upload "$RELEASE_IDENTIFIER" "$TAR_FILE" --clobber
-          echo "$OUTPUT_NAME"="$(sha256sum "$TAR_FILE")" >> "$GITHUB_OUTPUT"
+          SHA="$(sha256sum "$TAR_FILE")"
+          SHA=${SHA%% *}
+          OUT="$OUTPUT_NAME"="${SHA}"
+          echo "$OUT" >> "$GITHUB_OUTPUT"
 
   publish-crates:
     permissions:
@@ -315,7 +321,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TAG_VALUE: ${{ github.event.release.tag_name || inputs.title || github.event.release.name }}
-      COMMIT_SHA: ${{ github.sha }}
+      COMMIT_HASH: ${{ github.sha }}
       WEB_DIST_x64: ${{ needs.build-desktop-clients.outputs.web-dist-x64 }}
       WEB_DIST_aarch64: ${{ needs.build-desktop-clients.outputs.web-dist-aarch64 }}
       CARGO_DEPS_x64: ${{ needs.build-desktop-clients.outputs.cargo-deps-x64 }}
