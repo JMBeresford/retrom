@@ -2,8 +2,8 @@ use crate::{desktop::GameProcess, LauncherExt, Result};
 use prost::Message;
 use retrom_codegen::retrom::{
     client::installation::InstallationStatus, emulator::OperatingSystem, GamePlayStatusUpdate,
-    GetGamePlayStatusPayload, GetLocalEmulatorConfigsRequest, PlayGamePayload, PlayStatus,
-    StopGamePayload,
+    GetGamePlayStatusPayload, GetGameFilesRequest, GetLocalEmulatorConfigsRequest, PlayGamePayload,
+    PlayStatus, StopGamePayload,
 };
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_installer::InstallerExt;
@@ -14,7 +14,7 @@ use tauri::{
     command, http::HeaderValue, AppHandle, Runtime, WebviewUrl, WebviewWindow, WindowEvent,
 };
 use tokio::sync::Mutex;
-use tracing::{info, instrument};
+use tracing::{info, instrument, warn};
 use walkdir::WalkDir;
 
 #[command]
