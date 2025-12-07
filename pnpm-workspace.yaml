@@ -2,6 +2,9 @@ packages:
   - packages/*
   - plugins/*
 
+overrides:
+  "tauri-plugin-system-info-api>valibot": "1.2.0"
+
 catalog:
   "@monodon/rust": ^2.3.0
   "@nx/eslint": 21.4.1
