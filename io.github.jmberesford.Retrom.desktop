@@ -3,4 +3,4 @@ Name=Retrom
 Exec=/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=retrom io.github.jmberesford.Retrom
 Type=Application
 Icon=io.github.jmberesford.Retrom
-Categories=Utility;LauncherStore;GameTool;
+Categories=Utility
