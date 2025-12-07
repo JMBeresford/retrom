@@ -8295,7 +8295,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-client"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "dotenvy",
  "openssl-sys",
@@ -8330,7 +8330,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-codegen"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "diesel",
  "prost 0.14.1",
@@ -8349,7 +8349,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-db"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "deadpool",
  "diesel",
@@ -8365,7 +8365,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-grpc-service"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "axum",
  "bigdecimal",
@@ -8396,7 +8396,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-config"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "config",
  "prost 0.14.1",
@@ -8412,7 +8412,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-installer"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "futures",
  "prost 0.14.1",
@@ -8433,7 +8433,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-launcher"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "prost 0.14.1",
  "retrom-codegen",
@@ -8453,7 +8453,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-service-client"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "hyper 1.7.0",
  "hyper-rustls 0.27.7",
@@ -8474,7 +8474,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-standalone"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "local-ip-address",
  "retrom-plugin-config",
@@ -8489,7 +8489,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-steam"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "notify 7.0.0",
  "retrom-codegen",
@@ -8504,7 +8504,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-rest-service"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "async_zip",
  "axum",
@@ -8527,7 +8527,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "config",
  "deadpool",
@@ -8556,7 +8556,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-common"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -8585,7 +8585,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-telemetry"
-version = "0.7.44"
+version = "0.7.45"
 dependencies = [
  "http 1.3.1",
  "hyper 1.7.0",
