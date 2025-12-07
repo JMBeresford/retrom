@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Retrom
-Exec=/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=retrom io.github.jmberesford.Retrom
+Exec=retrom
 Type=Application
 Icon=io.github.jmberesford.Retrom
 Categories=Utility
