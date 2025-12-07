@@ -22,7 +22,7 @@
     "vitest": "catalog:",
     "vite-plugin-dts": "catalog:",
     "@types/node": "^22.14.1",
-    "glob": "^11.0.3",
+    "glob": "catalog:",
     "globals": "^16.0.0"
   }
 }
