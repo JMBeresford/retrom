@@ -4,6 +4,7 @@ packages:
 
 overrides:
   "tauri-plugin-system-info-api>valibot": "1.2.0"
+  "glob": "^11.1.0"
 
 catalog:
   "@monodon/rust": ^2.3.0
