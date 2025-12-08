@@ -39,7 +39,7 @@
           programs.retrom.package = lib.mkDefault retromPackages.retrom-unwrapped;
         };
     }
-    // flake-utils.lib.eachDefaultSystem (
+    // flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       system:
       let
         pkgs = import nixpkgs { inherit system; };

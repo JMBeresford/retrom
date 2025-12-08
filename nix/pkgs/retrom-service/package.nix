@@ -1,7 +1,7 @@
 {
   lib,
   fetchgit,
-  nodejs_24,
+  nodejs_22,
   pnpm_10,
   faketty,
   pkg-config,
@@ -31,7 +31,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   buildAndTestSubdir = "packages/service";
 
   nativeBuildInputs = [
-    nodejs_24
+    nodejs_22
     pnpm_10.configHook
     faketty
     pkg-config

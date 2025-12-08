@@ -4,7 +4,7 @@
   pkg-config,
   rustPlatform,
   cargo-tauri,
-  nodejs_24,
+  nodejs_22,
   pnpm_10,
   faketty,
   perl,
@@ -36,7 +36,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   buildAndTestSubdir = "packages/client";
 
   nativeBuildInputs = [
-    nodejs_24
+    nodejs_22
     pnpm_10.configHook
     faketty
     pkg-config
