@@ -20,11 +20,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom";
   version = "0.7.45"; # x-release-please-version
 
-  src = fetchgit {
-    url = "https://github.com/JMBeresford/retrom.git";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-auFh0Q4o2YWX7gxopABGGmNZE8fZyEYXSQEZqRMCtk4=";
-  };
+  src = ./../../..;
 
   pnpmDeps = pnpm_10.fetchDeps {
     inherit (finalAttrs) pname version src;
