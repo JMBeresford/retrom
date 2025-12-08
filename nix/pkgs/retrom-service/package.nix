@@ -13,12 +13,12 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom-service";
-  version = "0.7.43"; # x-release-please-version
+  version = "0.7.45"; # x-release-please-version
 
   src = fetchgit {
     url = "https://github.com/JMBeresford/retrom.git";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-zW6NsVzzlSceQ4RplV4UeI9Y/UNo2Iogd4r+d0VoXKo=";
+    hash = "sha256-auFh0Q4o2YWX7gxopABGGmNZE8fZyEYXSQEZqRMCtk4=";
   };
 
   pnpmDeps = pnpm_10.fetchDeps {
