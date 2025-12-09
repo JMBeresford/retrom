@@ -140,6 +140,7 @@ function LayoutComponent() {
       )}
 
       <SetupModal />
+      {!setupComplete ? <Toaster /> : <></>}
     </>
   );
 }
