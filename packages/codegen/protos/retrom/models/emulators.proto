@@ -116,6 +116,7 @@ message LocalEmulatorConfig {
   google.protobuf.Timestamp updated_at = 5;
   string executable_path = 6;
   optional string nickname = 7;
+  optional string save_data_path = 8;
 }
 
 message NewLocalEmulatorConfig {
@@ -125,6 +126,7 @@ message NewLocalEmulatorConfig {
   optional google.protobuf.Timestamp updated_at = 4;
   string executable_path = 5;
   optional string nickname = 6;
+  optional string save_data_path = 7;
 }
 
 message UpdatedLocalEmulatorConfig {
@@ -135,4 +137,5 @@ message UpdatedLocalEmulatorConfig {
   optional google.protobuf.Timestamp updated_at = 5;
   optional string executable_path = 6;
   optional string nickname = 7;
+  optional string save_data_path = 8;
 }

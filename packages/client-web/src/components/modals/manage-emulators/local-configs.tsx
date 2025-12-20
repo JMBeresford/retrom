@@ -32,6 +32,7 @@ import {
 type ConfigSchema = z.infer<typeof configSchema>;
 const configSchema = z.object({
   executablePath: z.string().min(1),
+  saveDataPath: z.string().optional(),
 }) satisfies z.ZodObject<
   Record<
     keyof Omit<
@@ -101,6 +102,7 @@ function LocalConfigRow(props: {
   const form = useForm<ConfigSchema>({
     defaultValues: {
       executablePath: config?.executablePath || "",
+      saveDataPath: config?.saveDataPath || "",
     } satisfies Required<ConfigSchema>,
     resolver: zodResolver(configSchema),
   });
