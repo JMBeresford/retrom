@@ -83,11 +83,11 @@ const DialogContent = React.forwardRef<
 >(({ className, children, userCanClose = true, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay>
-      <ScrollArea className="h-dvh w-dvw z-100">
+      <ScrollArea className="h-dvh w-dvw z-100 border">
         <DialogPrimitive.Content
           ref={ref}
           className={cn(
-            "relative mx-auto my-12 w-fit max-w-screen-lg flex flex-col gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg",
+            "relative mx-auto my-12 w-full sm:w-fit max-w-screen-lg flex flex-col gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg",
             className,
           )}
           {...props}
