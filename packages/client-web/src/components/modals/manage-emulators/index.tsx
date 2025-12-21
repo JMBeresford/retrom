@@ -156,7 +156,7 @@ export function ManageEmulatorsModal() {
         ) : (
           <Tabs defaultValue="emulators">
             <div className="w-full mb-6">
-              <TabsList className="flex">
+              <TabsList className="flex w-full">
                 <TabsTrigger value="emulators" className="w-full">
                   All Emulators
                 </TabsTrigger>

@@ -180,7 +180,7 @@ export const ConfigInput = forwardRef<HTMLInputElement, Props>(
                 ref={focusable.ref}
                 className={cn(
                   "text-lg border-none p-0 focus-visible:ring-0 focus-visible:ring-transparent ring-offset-transparent",
-                  "bg-transparent outline-none shadow-none",
+                  "bg-transparent dark:bg-transparent outline-none shadow-none",
                   "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                   'aria-[invalid="true"]:ring-transparent',
                   className,

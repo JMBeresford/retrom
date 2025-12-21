@@ -3,7 +3,6 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  PopoverProps,
 } from "@retrom/ui/components/popover";
 import { Separator } from "@retrom/ui/components/separator";
 import { cn } from "@retrom/ui/lib/utils";
@@ -15,7 +14,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { LucideProps, Server, ServerCog, ServerOff } from "lucide-react";
-import { ReactNode } from "react";
+import { ComponentPropsWithoutRef, ReactNode } from "react";
 
 const IconMap: Record<ConnectionStatus, (props: LucideProps) => ReactNode> = {
   CONNECTED: (props) => <Server {...props} />,
@@ -27,7 +26,9 @@ const IconMap: Record<ConnectionStatus, (props: LucideProps) => ReactNode> = {
   ),
 };
 
-export function ConnectivityIndicator(props: PopoverProps) {
+export function ConnectivityIndicator(
+  props: ComponentPropsWithoutRef<typeof Popover>,
+) {
   const { connectionStatus, connectionInfo } = useConnectionStatus();
   const server = useConfig((s) => s.server);
   const queryClient = useQueryClient();
@@ -43,8 +44,10 @@ export function ConnectivityIndicator(props: PopoverProps) {
       </PopoverTrigger>
 
       <PopoverContent
+        side="bottom"
+        align="end"
         hidden={connectionStatus === "CONNECTING"}
-        className="w-fit"
+        className="w-fit p-4"
       >
         <div>
           <h4 className="font-semibold mr-4">Connection Info</h4>
@@ -53,7 +56,7 @@ export function ConnectivityIndicator(props: PopoverProps) {
           {connectionStatus === "CONNECTED" && connectionInfo ? (
             <div className="flex flex-col gap-2">
               <span>
-                <p className="font-semibold">Host</p>
+                <p className="font-semibold text-sm">Host</p>
 
                 <pre className="text-xs text-muted-foreground">
                   {connectionInfo?.host}
@@ -61,7 +64,7 @@ export function ConnectivityIndicator(props: PopoverProps) {
               </span>
 
               <span>
-                <p className="font-semibold">Version</p>
+                <p className="font-semibold text-sm">Version</p>
 
                 <pre className="text-xs text-muted-foreground">
                   {connectionInfo?.version}

@@ -103,11 +103,7 @@ export function CreateEmulator(props: {
                 }}
               >
                 <FormControl>
-                  <SelectTrigger
-                    className={cn(
-                      field.value === undefined && "text-muted-foreground",
-                    )}
-                  >
+                  <SelectTrigger className={cn("w-full")}>
                     <SelectValue placeholder="Select save strategy..." />
                   </SelectTrigger>
                 </FormControl>
@@ -138,7 +134,8 @@ export function CreateEmulator(props: {
             id="create-emulator-submit"
             onClick={form.handleSubmit(handleSubmit)}
             disabled={!form.formState.isValid || creationPending}
-            className={cn("flex gap-2 items-center")}
+            className={cn("flex")}
+            variant="accent"
           >
             <PlusIcon className="w-[1rem]" /> Add Emulator
           </Button>

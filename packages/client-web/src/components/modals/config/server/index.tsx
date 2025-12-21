@@ -68,7 +68,7 @@ export function ServerConfigTab() {
   return (
     <TabsContent
       value="server"
-      className="flex flex-col gap-2 w-fit max-w-full mt-0"
+      className="flex flex-col gap-2 w-full sm:w-fit max-w-full mt-0"
     >
       <DialogHeader>
         <DialogTitle className="text-xl font-extrabold">
