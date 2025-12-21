@@ -131,10 +131,10 @@ export function ManageEmulatorsModal() {
       open={manageEmulatorsModal?.open}
       onOpenChange={(open) => {
         if (!open) {
-          void navigate({
+          navigate({
             to: ".",
             search: (prev) => ({ ...prev, manageEmulatorsModal: undefined }),
-          });
+          }).catch(console.error);
         }
       }}
     >
