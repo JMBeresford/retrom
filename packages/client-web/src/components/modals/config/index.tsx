@@ -34,7 +34,7 @@ export function ConfigModal() {
         }
       }}
     >
-      <DialogContent className="gap-0">
+      <DialogContent className="gap-0 sm:w-inherit w-dvw">
         <DialogHeader>
           <DialogTitle>Retrom Configuration</DialogTitle>
 

@@ -47,34 +47,34 @@ export const InstallGameButton = forwardRef(
 
       if (pending) {
         return (
-          <div className="flex gap-3 w-full items-center text-base justify-center">
+          <>
             <LoaderCircleIcon className="animate-spin" />
             <p>Starting Installation</p>
-          </div>
+          </>
         );
       }
 
       if (installState === InstallationStatus.PAUSED) {
         return (
-          <div className="flex gap-3 w-full items-center text-base justify-center">
+          <>
             <LoaderCircleIcon className="animate-spin" />
             <p>Installation Pending</p>
-          </div>
+          </>
         );
       }
 
       if (installState === InstallationStatus.INSTALLING) {
         return (
-          <div className="flex gap-2 w-full items-center">
+          <>
             <p className="text-sm">{Math.floor(percentComplete)}%</p>
             <Progress value={percentComplete} className="h-1" />
-          </div>
+          </>
         );
       }
 
       return (
         <>
-          <DownloadCloudIcon className="h-[1.2rem] 1-[1.2rem]" />
+          <DownloadCloudIcon />
           Install
         </>
       );

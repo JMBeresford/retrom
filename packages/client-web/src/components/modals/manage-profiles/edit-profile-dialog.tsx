@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@retrom/ui/components/form";
-import { Input, InputStyles } from "@retrom/ui/components/input";
+import { Input } from "@retrom/ui/components/input";
 import {
   Emulator,
   EmulatorProfile,
@@ -32,6 +32,12 @@ import { useCreateEmulatorProfiles } from "@/mutations/useCreateEmulatorProfile"
 import { useUpdateEmulatorProfiles } from "@/mutations/useUpdateEmulatorProfiles";
 import { LoaderCircleIcon } from "lucide-react";
 import { MessageInitShape } from "@bufbuild/protobuf";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@retrom/ui/components/input-group";
 
 type Props = {
   emulator: Emulator;
@@ -127,7 +133,7 @@ export function EditProfileDialog(props: Props) {
       </DialogHeader>
       <Form {...form}>
         <form
-          className="space-y-2 w-full"
+          className="w-full flex flex-col gap-2"
           onSubmit={form.handleSubmit(handleSubmit)}
         >
           <FormField
@@ -151,31 +157,9 @@ export function EditProfileDialog(props: Props) {
               return (
                 <FormItem>
                   <FormLabel>Supported Extensions</FormLabel>
-                  <div
-                    className={cn(
-                      InputStyles,
-                      "flex items-center",
-                      field.value.length > 0 && "gap-2",
-                    )}
-                  >
-                    <div className="flex gap-1">
-                      {field.value.map((ext, i) => (
-                        <Badge
-                          key={i}
-                          variant="secondary"
-                          onClick={() =>
-                            field.onChange(field.value.filter((e) => e !== ext))
-                          }
-                          className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer"
-                        >
-                          {ext}
-                        </Badge>
-                      ))}
-                    </div>
-
+                  <InputGroup>
                     <FormControl>
-                      <Input
-                        className="focus-visible:ring-0 focus-visible:ring-offset-0 border-none p-0 m-0 bg-transparent w-full"
+                      <InputGroupInput
                         onBlur={(e) => {
                           if (e.currentTarget.value) {
                             field.onChange([
@@ -207,7 +191,30 @@ export function EditProfileDialog(props: Props) {
                         placeholder="Add extension (enter, space, comma to submit)"
                       />
                     </FormControl>
-                  </div>
+
+                    <InputGroupAddon
+                      align={
+                        field.value.length > 0 ? "inline-start" : "inline-end"
+                      }
+                    >
+                      <InputGroupText className={cn("flex gap-1")}>
+                        {field.value.map((ext, i) => (
+                          <Badge
+                            key={i}
+                            variant="secondary"
+                            onClick={() =>
+                              field.onChange(
+                                field.value.filter((e) => e !== ext),
+                              )
+                            }
+                            className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer"
+                          >
+                            {ext}
+                          </Badge>
+                        ))}
+                      </InputGroupText>
+                    </InputGroupAddon>
+                  </InputGroup>
                   <FormMessage />
                 </FormItem>
               );
