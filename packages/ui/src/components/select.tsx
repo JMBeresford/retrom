@@ -3,11 +3,14 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import type {
   SelectValueProps,
   SelectItemProps,
-  SelectProps,
+  SelectProps as SelectPropsImpl,
 } from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 import { cn } from "../lib/utils";
+
+// Redefine+inline SelectProps to avoid downstream peer dependency on types from Radix UI
+type SelectProps = { [K in keyof SelectPropsImpl]: SelectPropsImpl[K] } & {};
 
 const SelectOpenContext = React.createContext<
   [boolean, React.Dispatch<React.SetStateAction<boolean>>] | undefined
@@ -23,7 +26,7 @@ function useSelectOpen() {
   return context;
 }
 
-const Select = (props: React.ComponentProps<typeof SelectPrimitive.Root>) => {
+const Select = (props: SelectProps) => {
   const { open } = props;
   const openState = React.useState(props.defaultOpen ?? false);
 

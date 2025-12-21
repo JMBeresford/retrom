@@ -1,4 +1,3 @@
-import { ButtonProps } from "@retrom/ui/components/button";
 import { FormLabel } from "@retrom/ui/components/form";
 import {
   Select,
@@ -6,12 +5,13 @@ import {
   SelectContent,
   SelectValue,
   SelectItem,
+  type SelectProps,
   type SelectItemProps,
   type SelectValueProps,
 } from "@retrom/ui/components/select";
 import { cn } from "@retrom/ui/lib/utils";
 import {
-  ComponentProps,
+  ComponentPropsWithoutRef,
   forwardRef,
   useCallback,
   useId,
@@ -22,11 +22,13 @@ import { useFocusable } from "../../focus-container";
 import { HotkeyLayer } from "@/providers/hotkeys/layers";
 import { FocusContext } from "@noriginmedia/norigin-spatial-navigation";
 
-type TriggerProps = ButtonProps & { label?: string };
+type TriggerProps = ComponentPropsWithoutRef<typeof SelectTrigger> & {
+  label?: string;
+};
 
 const ConfigSelect = forwardRef<
   HTMLButtonElement,
-  ComponentProps<typeof Select> & { triggerProps: TriggerProps }
+  SelectProps & { triggerProps: TriggerProps }
 >(
   (
     { children, triggerProps, open: openProp, defaultOpen = false, ...props },
@@ -70,7 +72,7 @@ const ConfigSelect = forwardRef<
       <Select {...props} open={open} onOpenChange={onOpenChange}>
         <div
           className={cn(
-            "relative flex flex-col pt-1 bg-transparent transition-colors",
+            "relative flex flex-col pt-1 bg-transparent dark:bg-transparent transition-colors",
             "before:absolute before:inset-y-0 before:left-0 before:w-0 before:bg-secondary before:transition-all",
             "focus-within:before:bg-accent focus-within:before:w-1 focus-within:bg-secondary/20",
             "hover:before:w-1 hover:bg-secondary/20 before:rounded-r",
@@ -103,8 +105,9 @@ const ConfigSelect = forwardRef<
               id={id}
               {...rest}
               className={cn(
-                "border-none focus:ring-0 bg-transparent focus:ring-transparent ring-offset-transparent",
-                "px-4 py-0 text-base hover:bg-transparent text-left",
+                "w-full border-none focus:ring-0 bg-transparent dark:bg-transparent focus:ring-transparent ring-offset-transparent",
+                "dark:focus:ring-transparent hover:ring-0",
+                "px-4 py-0 text-base hover:bg-transparent dark:hover:bg-transparent text-left",
                 className,
               )}
             >
@@ -114,8 +117,13 @@ const ConfigSelect = forwardRef<
         </div>
 
         <FocusContext.Provider value={contentFocus.focusKey}>
-          <div ref={contentFocus.ref}>
-            <SelectContent className="z-[110]">
+          <div ref={contentFocus.ref} className="">
+            <SelectContent
+              className="z-[110]"
+              position="popper"
+              side="bottom"
+              align="center"
+            >
               <HotkeyLayer
                 id={`${id}-content`}
                 handlers={{

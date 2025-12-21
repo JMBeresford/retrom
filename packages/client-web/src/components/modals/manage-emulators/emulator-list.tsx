@@ -37,7 +37,6 @@ import {
 import { Input } from "@retrom/ui/components/input";
 import {
   Popover,
-  PopoverClose,
   PopoverContent,
   PopoverTrigger,
 } from "@retrom/ui/components/popover";
@@ -268,7 +267,7 @@ export function EmulatorList(props: {
                                     </PopoverTrigger>
                                     <FormMessage />
 
-                                    <PopoverContent>
+                                    <PopoverContent className="w-fit">
                                       <PlatformsDropdown
                                         selections={field.value}
                                         platforms={platforms ?? []}
@@ -284,19 +283,16 @@ export function EmulatorList(props: {
                                         }}
                                       />
 
-                                      <div className="flex justify-between gap-2 *:w-full">
-                                        <PopoverClose asChild>
-                                          <Button variant="secondary">
-                                            Close
-                                          </Button>
-                                        </PopoverClose>
-
+                                      <div className="grid grid-cols-1 p-2 border-t">
                                         <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
                                           onClick={() => {
                                             field.onChange([]);
                                           }}
                                         >
-                                          Clear
+                                          Clear All
                                         </Button>
                                       </div>
                                     </PopoverContent>
@@ -305,175 +301,179 @@ export function EmulatorList(props: {
                               )}
                             />
 
-                            <FormField
-                              control={form.control}
-                              name={
-                                `emulators.${emulator.id}.saveStrategy` as const
-                              }
-                              disabled={builtIn}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Save Strategy</FormLabel>
-                                  <Select
-                                    defaultValue={field.value?.toString()}
-                                    onValueChange={(value) => {
-                                      const valueNum = parseInt(value);
-                                      const saveStrategy = Object.values(
-                                        SaveStrategy,
-                                      ).find((v) => v.valueOf() === valueNum);
+                            <div className="flex gap-2 *:w-full">
+                              <FormField
+                                control={form.control}
+                                name={
+                                  `emulators.${emulator.id}.saveStrategy` as const
+                                }
+                                disabled={builtIn}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Save Strategy</FormLabel>
+                                    <Select
+                                      defaultValue={field.value?.toString()}
+                                      onValueChange={(value) => {
+                                        const valueNum = parseInt(value);
+                                        const saveStrategy = Object.values(
+                                          SaveStrategy,
+                                        ).find((v) => v.valueOf() === valueNum);
 
-                                      if (saveStrategy === undefined) return;
+                                        if (saveStrategy === undefined) return;
 
-                                      field.onChange(saveStrategy);
-                                    }}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger
-                                        disabled={field.disabled}
-                                        className={cn(
-                                          field.disabled &&
-                                            "hover:bg-transparent",
-                                        )}
-                                      >
-                                        <SelectValue placeholder="Select save strategy..." />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {Object.values(SaveStrategy)
-                                        .filter(
-                                          (value) => typeof value !== "string",
-                                        )
-                                        .map((value) => (
-                                          <SelectItem
-                                            key={value}
-                                            value={value.toString()}
-                                          >
-                                            {saveStrategyDisplayMap[value]}
-                                          </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                  </Select>
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name={
-                                `emulators.${emulator.id}.operatingSystems` as const
-                              }
-                              render={({ field }) => (
-                                <FormItem>
-                                  <Popover>
-                                    <FormLabel>Operating Systems</FormLabel>
-                                    <FormControl>
-                                      <PopoverTrigger asChild>
-                                        <Button
-                                          disabled={builtIn}
-                                          variant="outline"
-                                          role="combobox"
-                                          className={cn(
-                                            "justify-between w-full",
-                                            field.disabled &&
-                                              "hover:bg-transparent",
-                                            field.value.length === 0 &&
-                                              "text-muted-foreground",
-                                          )}
+                                        field.onChange(saveStrategy);
+                                      }}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger
+                                          disabled={field.disabled}
+                                          className={cn("w-full")}
                                         >
-                                          {field.value.length ? (
-                                            <span className="flex gap-1">
-                                              {field.value.map((v) => (
-                                                <Badge
-                                                  key={v}
-                                                  variant="secondary"
-                                                  className="flex items-center gap-1"
-                                                >
-                                                  {operatingSystemDisplayMap[v]}
-                                                  <X
-                                                    className="w-[0.8rem] h-fit p-0 hover:text-destructive"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
+                                          <SelectValue placeholder="Select save strategy..." />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {Object.values(SaveStrategy)
+                                          .filter(
+                                            (value) =>
+                                              typeof value !== "string",
+                                          )
+                                          .map((value) => (
+                                            <SelectItem
+                                              key={value}
+                                              value={value.toString()}
+                                            >
+                                              {saveStrategyDisplayMap[value]}
+                                            </SelectItem>
+                                          ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </FormItem>
+                                )}
+                              />
 
-                                                      field.onChange(
-                                                        field.value.filter(
-                                                          (id) => id !== v,
-                                                        ),
-                                                      );
-                                                    }}
-                                                  />
-                                                </Badge>
-                                              ))}
-                                            </span>
-                                          ) : (
-                                            "Select Operating Systems..."
-                                          )}
-
-                                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                      </PopoverTrigger>
-                                    </FormControl>
-
-                                    <PopoverContent>
-                                      <Command>
-                                        <CommandInput placeholder="Search operating systems" />
-                                        <CommandList>
-                                          <CommandGroup>
-                                            {Object.values(
-                                              Emulator_OperatingSystem,
-                                            )
-                                              .filter(
-                                                (value) =>
-                                                  typeof value !== "string",
-                                              )
-                                              .filter(
-                                                (value) =>
-                                                  value !==
-                                                    Emulator_OperatingSystem.WASM ||
-                                                  builtIn,
-                                              )
-                                              .map((os) => (
-                                                <CommandItem
-                                                  key={os}
-                                                  value={os.toString()}
-                                                  onSelect={() => {
-                                                    const value = [
-                                                      ...field.value,
-                                                    ];
-                                                    if (value.includes(os)) {
-                                                      value.splice(
-                                                        value.indexOf(os),
-                                                        1,
-                                                      );
-                                                    } else {
-                                                      value.push(os);
+                              <FormField
+                                control={form.control}
+                                name={
+                                  `emulators.${emulator.id}.operatingSystems` as const
+                                }
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <Popover>
+                                      <FormLabel>Operating Systems</FormLabel>
+                                      <FormControl>
+                                        <PopoverTrigger asChild>
+                                          <Button
+                                            disabled={builtIn}
+                                            variant="outline"
+                                            role="combobox"
+                                            className={cn(
+                                              "justify-between w-full",
+                                              field.disabled &&
+                                                "hover:bg-transparent",
+                                              field.value.length === 0 &&
+                                                "text-muted-foreground",
+                                            )}
+                                          >
+                                            {field.value.length ? (
+                                              <span className="flex gap-1">
+                                                {field.value.map((v) => (
+                                                  <Badge
+                                                    key={v}
+                                                    variant="secondary"
+                                                    className="flex items-center gap-1"
+                                                  >
+                                                    {
+                                                      operatingSystemDisplayMap[
+                                                        v
+                                                      ]
                                                     }
+                                                    <X
+                                                      className="w-[0.8rem] h-fit p-0 hover:text-destructive"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
 
-                                                    field.onChange(value);
-                                                  }}
-                                                >
-                                                  <Check
-                                                    className={cn(
-                                                      "mr-2 h-4 w-4",
-                                                      field.value.includes(os)
-                                                        ? "opacity-100"
-                                                        : "opacity-0",
-                                                    )}
-                                                  />
-                                                  {
-                                                    operatingSystemDisplayMap[
-                                                      os
-                                                    ]
-                                                  }
-                                                </CommandItem>
-                                              ))}
-                                          </CommandGroup>
-                                        </CommandList>
-                                      </Command>
-                                    </PopoverContent>
-                                  </Popover>
-                                </FormItem>
-                              )}
-                            />
+                                                        field.onChange(
+                                                          field.value.filter(
+                                                            (id) => id !== v,
+                                                          ),
+                                                        );
+                                                      }}
+                                                    />
+                                                  </Badge>
+                                                ))}
+                                              </span>
+                                            ) : (
+                                              "Select Operating Systems..."
+                                            )}
+
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                          </Button>
+                                        </PopoverTrigger>
+                                      </FormControl>
+
+                                      <PopoverContent>
+                                        <Command>
+                                          <CommandInput placeholder="Search operating systems" />
+                                          <CommandList>
+                                            <CommandGroup>
+                                              {Object.values(
+                                                Emulator_OperatingSystem,
+                                              )
+                                                .filter(
+                                                  (value) =>
+                                                    typeof value !== "string",
+                                                )
+                                                .filter(
+                                                  (value) =>
+                                                    value !==
+                                                      Emulator_OperatingSystem.WASM ||
+                                                    builtIn,
+                                                )
+                                                .map((os) => (
+                                                  <CommandItem
+                                                    key={os}
+                                                    value={os.toString()}
+                                                    onSelect={() => {
+                                                      const value = [
+                                                        ...field.value,
+                                                      ];
+                                                      if (value.includes(os)) {
+                                                        value.splice(
+                                                          value.indexOf(os),
+                                                          1,
+                                                        );
+                                                      } else {
+                                                        value.push(os);
+                                                      }
+
+                                                      field.onChange(value);
+                                                    }}
+                                                  >
+                                                    <Check
+                                                      className={cn(
+                                                        "mr-2 h-4 w-4",
+                                                        field.value.includes(os)
+                                                          ? "opacity-100"
+                                                          : "opacity-0",
+                                                      )}
+                                                    />
+                                                    {
+                                                      operatingSystemDisplayMap[
+                                                        os
+                                                      ]
+                                                    }
+                                                  </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                          </CommandList>
+                                        </Command>
+                                      </PopoverContent>
+                                    </Popover>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
 
                             <div className="flex justify-end my-4">
                               <Button
@@ -533,6 +533,7 @@ export function EmulatorList(props: {
             className="relative"
             disabled={pending || !form.formState.isValid}
             onClick={form.handleSubmit(handleSubmit)}
+            variant="accent"
           >
             <LoaderCircleIcon
               className={cn("animate-spin absolute", !pending && "opacity-0")}

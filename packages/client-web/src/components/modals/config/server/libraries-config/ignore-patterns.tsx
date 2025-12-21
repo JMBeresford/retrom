@@ -72,7 +72,7 @@ export function IgnorePatternsInput<
           </PopoverTrigger>
         </FormControl>
 
-        <PopoverContent className="flex flex-col gap-2 w-full">
+        <PopoverContent className="p-4 flex flex-col gap-2 sm:w-full w-[90dvw]">
           <div className="flex gap-2">
             <Input
               ref={input}
