@@ -5,8 +5,15 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
+  FormMessage,
 } from "@retrom/ui/components/form";
-import { Label } from "@retrom/ui/components/label";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupButton,
+  InputGroupAddon,
+} from "@retrom/ui/components/input-group";
 import {
   Emulator,
   LocalEmulatorConfig,
@@ -23,15 +30,15 @@ import { useCallback } from "react";
 import { useForm } from "@retrom/ui/components/form";
 import { z } from "zod";
 import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@retrom/ui/components/input-group";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@retrom/ui/components/accordion";
 
 type ConfigSchema = z.infer<typeof configSchema>;
 const configSchema = z.object({
-  executablePath: z.string().min(1),
+  executablePath: z.string().min(1, { message: "Executable path is required" }),
   saveDataPath: z.string().optional(),
 }) satisfies z.ZodObject<
   Record<
@@ -49,17 +56,7 @@ export function LocalConfigs(props: {
 }) {
   return (
     <>
-      <div className="grid grid-cols-[1fr_2fr_auto] grid-flow-col gap-y-2">
-        <div
-          className={cn(
-            "grid grid-cols-subgrid col-span-full grid-flow-col",
-            "text-sm *:font-bold",
-          )}
-        >
-          <Label>Emulator</Label>
-          <Label>Executable Path</Label>
-        </div>
-
+      <Accordion type="single" collapsible>
         {props.emulators
           .filter((e) => !e.builtIn)
           .map((emulator) => {
@@ -75,7 +72,7 @@ export function LocalConfigs(props: {
               />
             );
           })}
-      </div>
+      </Accordion>
 
       <DialogFooter className="border-none mt-8">
         <div className="flex justify-end col-span-4 gap-4">
@@ -105,6 +102,8 @@ function LocalConfigRow(props: {
       saveDataPath: config?.saveDataPath || "",
     } satisfies Required<ConfigSchema>,
     resolver: zodResolver(configSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
 
   const { mutateAsync: createConfig, isPending: creationPending } =
@@ -115,6 +114,7 @@ function LocalConfigRow(props: {
 
   const handleSubmit = useCallback(
     async (values: ConfigSchema) => {
+      console.log({ values, clientId, emulatorId: emulator.id });
       if (config) {
         const res = await updateConfig({
           configs: [
@@ -135,82 +135,148 @@ function LocalConfigRow(props: {
   );
 
   const pending = creationPending || updatePending;
-  const { isDirty: formDirty } = form.formState;
+
+  const { isDirty } = form.formState;
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(handleSubmit)}
-        key={emulator.id}
+    <AccordionItem value={emulator.id.toString()}>
+      <AccordionTrigger
         className={cn(
-          "grid grid-cols-subgrid col-span-full",
-          "items-center border-b pb-2",
+          "py-[0.35rem] px-1 hover:no-underline",
+          "hover:bg-primary/15",
         )}
       >
-        <p className="text-muted-foreground text-sm">{emulator.name}</p>
+        <span className="flex gap-2 items-baseline">
+          <span>{emulator.name}</span>
+          {isDirty ? (
+            <span className="text-sm text-muted-foreground italic">
+              (unsaved)
+            </span>
+          ) : null}
+        </span>
+      </AccordionTrigger>
 
-        <div className="flex items-center gap-2 w-full">
-          <FormField
-            control={form.control}
-            name="executablePath"
-            render={({ field, fieldState: { isDirty } }) => (
-              <FormItem className="w-full">
-                <InputGroup>
+      <AccordionContent className="[&_*]:ring-inset">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            name={emulator.id.toString()}
+            className={cn("flex flex-col gap-4 pt-4 border-t")}
+          >
+            <FormField
+              control={form.control}
+              name="executablePath"
+              render={({ field, fieldState: { isDirty } }) => (
+                <FormItem className="flex flex-col items-start">
+                  <FormLabel>Executable Path</FormLabel>
+
                   <FormControl>
-                    <InputGroupInput
-                      {...field}
-                      value={field.value || ""}
-                      placeholder="Enter path to executable"
-                      className={cn(
-                        "border-none",
-                        !isDirty && "text-muted-foreground",
-                      )}
-                    />
+                    <InputGroup>
+                      <InputGroupAddon align="inline-start">
+                        <InputGroupButton
+                          variant="secondary"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            open({
+                              title: "Select Emulator Executable",
+                              multiple: false,
+                              directory: false,
+                            })
+                              .then((result) => {
+                                if (result) {
+                                  field.onChange(result);
+                                }
+                              })
+                              .catch((e) => {
+                                console.error(e);
+                              });
+                          }}
+                        >
+                          <FolderOpenIcon />
+                          Browse
+                        </InputGroupButton>
+                      </InputGroupAddon>
+
+                      <InputGroupInput
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="Enter path to executable"
+                        className={cn(!isDirty && "text-muted-foreground")}
+                      />
+                    </InputGroup>
                   </FormControl>
 
-                  <InputGroupAddon align="inline-start">
-                    <InputGroupButton
-                      variant="secondary"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                        open({
-                          title: "Select Emulator Executable",
-                          multiple: false,
-                          directory: false,
-                        })
-                          .then((result) => {
-                            if (result) {
-                              field.onChange(result);
-                            }
-                          })
-                          .catch((e) => {
-                            console.error(e);
-                          });
-                      }}
-                    >
-                      <FolderOpenIcon className="w-[1rem] h-[1rem]" />
-                      Browse
-                    </InputGroupButton>
-                  </InputGroupAddon>
-                </InputGroup>
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="saveDataPath"
+              render={({ field, fieldState: { isDirty } }) => (
+                <FormItem className="flex flex-col items-start">
+                  <FormLabel>Save Data Path</FormLabel>
 
-          <Button disabled={pending || !formDirty} type="submit">
-            {pending ? (
-              <LoaderCircleIcon className="w-[1rem] h-[1rem] animate-spin" />
-            ) : (
-              <>
-                <SaveIcon className="w-[1rem] h-[1rem]" />
-                Save
-              </>
-            )}
-          </Button>
-        </div>
-      </form>
-    </Form>
+                  <FormControl>
+                    <InputGroup>
+                      <InputGroupAddon align="inline-start">
+                        <InputGroupButton
+                          variant="secondary"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            open({
+                              title: "Select Save Data Directory",
+                              directory: true,
+                            })
+                              .then((result) => {
+                                if (result) {
+                                  field.onChange(result);
+                                }
+                              })
+                              .catch((e) => {
+                                console.error(e);
+                              });
+                          }}
+                        >
+                          <FolderOpenIcon />
+                          Browse
+                        </InputGroupButton>
+                      </InputGroupAddon>
+
+                      <InputGroupInput
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="Enter path save data location"
+                        className={cn(!isDirty && "text-muted-foreground")}
+                      />
+                    </InputGroup>
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              disabled={pending || !isDirty}
+              type="submit"
+              className="ml-auto w-min"
+            >
+              {pending ? (
+                <LoaderCircleIcon className="animate-spin" />
+              ) : (
+                <SaveIcon />
+              )}
+              Save
+            </Button>
+          </form>
+        </Form>
+      </AccordionContent>
+    </AccordionItem>
   );
 }
