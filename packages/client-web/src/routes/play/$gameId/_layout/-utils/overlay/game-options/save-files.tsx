@@ -14,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   BackupStats,
   SaveFilesStat,
-} from "@retrom/codegen/retrom/services/saves-service_pb";
+} from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { toast } from "@retrom/ui/hooks/use-toast";
 
 function useStats() {

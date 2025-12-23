@@ -5,7 +5,7 @@ import { create, MessageInitShape } from "@bufbuild/protobuf";
 import {
   RestoreSaveFilesFromBackupRequestSchema,
   UpdateSaveFilesRequestSchema,
-} from "@retrom/codegen/retrom/services/saves-service_pb";
+} from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useUpdateSaveFiles() {

@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+package retrom.services.saves.v2;
+
+import "google/protobuf/timestamp.proto";
+import "retrom/files.proto";
+
+service EmulatorSavesService {
+  rpc StatSaveFiles(StatSaveFilesRequest) returns (StatSaveFilesResponse);
+  rpc RestoreSaveFilesFromBackup(RestoreSaveFilesFromBackupRequest) returns (RestoreSaveFilesFromBackupResponse);
+
+  rpc StatSaveStates(StatSaveStatesRequest) returns (StatSaveStatesResponse);
+  rpc RestoreSaveStatesFromBackup(RestoreSaveStatesFromBackupRequest) returns (RestoreSaveStatesFromBackupResponse);
+}
+
+message Backup {
+  string backup_id = 1;
+  optional google.protobuf.Timestamp created_at = 2;
+}
+
+message SaveFilesStat {
+  int32 emulator_id = 1;
+
+  // File stats relative to the emulator's saves root
+  repeated retrom.files.FileStat file_stats = 2;
+
+  // Backup stats for this emulator's saves
+  repeated Backup backups = 3;
+
+  string etag = 4;
+}
+
+message SaveFiles {
+  int32 emulator_id = 1;
+
+  // Files relative to the emulator's saves root
+  repeated retrom.files.File files = 2;
+
+  string etag = 3;
+}
+
+message StatSaveFilesRequest {
+  message Selector {
+    int32 emulator_id = 1;
+  }
+
+  message Config {
+    optional bool include_backups = 1;
+  }
+
+  repeated Selector save_files_selectors = 1;
+  optional Config config = 2;
+}
+
+message StatSaveFilesResponse {
+  repeated SaveFilesStat save_files_stats = 1;
+}
+
+message RestoreSaveFilesFromBackupRequest {
+  message Selector {
+    int32 emulator_id = 1;
+    Backup backup = 2;
+  }
+
+  message Config {
+    optional bool dry_run = 1;
+  }
+
+  repeated Selector save_files_selectors = 1;
+  optional Config config = 2;
+}
+
+message RestoreSaveFilesFromBackupResponse {
+  repeated SaveFiles save_files = 1;
+}
+
+message SaveStatesStat {
+  int32 emulator_id = 1;
+
+  // File stats relative to the emulator's states root
+  repeated retrom.files.FileStat file_stats = 2;
+
+  // Backup stats for this emulator's states
+  repeated Backup backups = 3;
+
+  string etag = 4;
+}
+
+message SaveStates {
+  int32 emulator_id = 1;
+
+  // Files relative to the emulator's states root
+  repeated retrom.files.File files = 2;
+}
+
+message StatSaveStatesRequest {
+  message Selector {
+    int32 emulator_id = 1;
+  }
+
+  message Config {
+    optional bool include_backups = 1;
+  }
+
+  repeated Selector save_states_selectors = 1;
+  optional Config config = 2;
+}
+
+message StatSaveStatesResponse {
+  repeated SaveStatesStat save_states_stats = 1;
+}
+
+message RestoreSaveStatesFromBackupRequest {
+  message Selector {
+    int32 emulator_id = 1;
+    Backup backup = 2;
+  }
+
+  message Config {
+    optional bool dry_run = 1;
+    optional bool reindex_backups = 2;
+  }
+
+  repeated Selector save_states_selectors = 1;
+  optional Config config = 2;
+}
+
+message RestoreSaveStatesFromBackupResponse {
+  repeated SaveStates save_states = 1;
+}

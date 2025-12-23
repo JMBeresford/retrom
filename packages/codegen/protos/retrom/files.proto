@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "retrom/file-explorer.proto";
 
 message FileStat {
-  /* Relative path to the file from the public directory */
+  /* Relative path to the file, usually from the public directory */
   string path = 1;
   google.protobuf.Timestamp created_at = 2;
   google.protobuf.Timestamp updated_at = 3;
