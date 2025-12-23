@@ -4,7 +4,7 @@ import {
   GetSaveFilesRequestSchema,
   GetSaveFilesResponseSchema,
   StatSaveFilesRequestSchema,
-} from "@retrom/codegen/retrom/services/saves-service_pb";
+} from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { toast } from "@retrom/ui/hooks/use-toast";
 import { Progress } from "@retrom/ui/components/progress";
 import { create, MessageInitShape } from "@bufbuild/protobuf";
