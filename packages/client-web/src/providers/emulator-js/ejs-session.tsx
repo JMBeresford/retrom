@@ -22,7 +22,7 @@ import { toast } from "@retrom/ui/hooks/use-toast";
 import {
   SaveFiles,
   UpdateSaveFilesResponse,
-} from "@retrom/codegen/retrom/services/saves-service_pb";
+} from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { clone, create } from "@bufbuild/protobuf";
 import { GameMetadataSchema } from "@retrom/codegen/retrom/models/metadata_pb";
 
