@@ -17,6 +17,7 @@ serde = { workspace = true }
 diesel = { workspace = true }
 retrom-db = { workspace = true }
 tonic-prost = { workspace = true }
+tonic-include-proto = "0.1.1"
 
 
 [build-dependencies]
