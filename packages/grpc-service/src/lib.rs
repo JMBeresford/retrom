@@ -8,13 +8,23 @@ use jobs::{job_manager::JobManager, JobServiceHandlers};
 use library::LibraryServiceHandlers;
 use metadata::MetadataServiceHandlers;
 use platforms::PlatformServiceHandlers;
-use retrom_codegen::retrom::{
-    client_service_server::ClientServiceServer, emulator_service_server::EmulatorServiceServer,
-    file_explorer_service_server::FileExplorerServiceServer,
-    game_service_server::GameServiceServer, job_service_server::JobServiceServer,
-    library_service_server::LibraryServiceServer, metadata_service_server::MetadataServiceServer,
-    platform_service_server::PlatformServiceServer, saves_service_server::SavesServiceServer,
-    server_service_server::ServerServiceServer, FILE_DESCRIPTOR_SET,
+use retrom_codegen::{
+    descriptors::retrom::FILE_DESCRIPTOR_SET,
+    retrom::{
+        client_service_server::ClientServiceServer,
+        emulator_service_server::EmulatorServiceServer,
+        file_explorer_service_server::FileExplorerServiceServer,
+        game_service_server::GameServiceServer,
+        job_service_server::JobServiceServer,
+        library_service_server::LibraryServiceServer,
+        metadata_service_server::MetadataServiceServer,
+        platform_service_server::PlatformServiceServer,
+        server_service_server::ServerServiceServer,
+        services::saves::{
+            v1::saves_service_server::SavesServiceServer,
+            v2::emulator_saves_service_server::EmulatorSavesServiceServer,
+        },
+    },
 };
 use retrom_service_common::{
     config::ServerConfigManager,
@@ -23,7 +33,8 @@ use retrom_service_common::{
     retrom_dirs::RetromDirs,
 };
 use retrom_telemetry::grpc::{GrpcOnRequestSpan, GrpcOnResponseSpanHandler};
-use saves::SavesServiceHandlers;
+use saves::v1::service::SavesServiceHandlers;
+use saves::v2::service::EmulatorSavesServiceHandlers;
 use std::{sync::Arc, time::Duration};
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
@@ -97,6 +108,11 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         .build_v1()
         .unwrap();
 
+    let reflection_service_alpha = tonic_reflection::server::Builder::configure()
+        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
+        .build_v1alpha()
+        .unwrap();
+
     let library_service = LibraryServiceServer::new(LibraryServiceHandlers::new(
         library_pool.clone(),
         igdb_client.clone(),
@@ -131,15 +147,23 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
     let job_service = JobServiceServer::new(JobServiceHandlers::new(job_manager.clone()));
     let file_explorer_service = FileExplorerServiceServer::new(FileExplorerServiceHandlers::new());
 
-    let saves_service = SavesServiceServer::new(SavesServiceHandlers::new(
+    let saves_service_v1 = SavesServiceServer::new(SavesServiceHandlers::new(
         shared_pool.clone(),
         config_manager.clone(),
     ));
 
+    let emulator_saves_service_v2 =
+        EmulatorSavesServiceServer::new(EmulatorSavesServiceHandlers::new(shared_pool.clone()));
+
     let mut routes_builder = tonic::service::Routes::builder();
+    let mut reflection_route_builder = tonic::service::Routes::builder();
+    reflection_route_builder
+        .add_service(reflection_service)
+        .add_service(reflection_service_alpha);
+
+    let reflection_router = reflection_route_builder.routes();
 
     routes_builder
-        .add_service(reflection_service)
         .add_service(library_service)
         .add_service(game_service)
         .add_service(platform_service)
@@ -149,12 +173,14 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         .add_service(emulator_service)
         .add_service(job_service)
         .add_service(file_explorer_service)
-        .add_service(saves_service);
+        .add_service(saves_service_v1)
+        .add_service(emulator_saves_service_v2);
 
     routes_builder
         .routes()
         .into_axum_router()
         .layer(tonic_web::GrpcWebLayer::new())
+        .merge(reflection_router.into_axum_router().reset_fallback())
         .layer(
             tower_http::trace::TraceLayer::new_for_grpc()
                 .make_span_with(GrpcOnRequestSpan::default())

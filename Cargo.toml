@@ -156,3 +156,4 @@ tempfile = "3.16.0"
 walkdir = "2.5.0"
 zeroize = "1.8.1"
 rayon = { version = "1.11.0" }
+ludusavi = { version = "0.30", default-features = false, git = "https://github.com/mtkennerly/ludusavi.git", rev = "fea63791158bcb0159ce5388d6c52cd5e7348326" }
