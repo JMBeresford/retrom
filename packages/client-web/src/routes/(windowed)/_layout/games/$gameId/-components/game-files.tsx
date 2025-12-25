@@ -84,7 +84,6 @@ export function GameFiles() {
             className={cn(
               "relative grid gap-px w-full",
               "grid-flow-col grid-cols-[minmax(0,1fr)_auto] ",
-              "[&_[data-radix-popper-content-wrapper]]:contents",
             )}
           >
             <Select
@@ -155,9 +154,9 @@ export function GameFiles() {
               </DropdownMenuTrigger>
 
               <DropdownMenuContent
-                portal={false}
                 align="start"
-                className={cn("absolute inset-x-0 sm:left-auto top-full mt-1")}
+                sideOffset={8}
+                className={cn("w-[var(--radix-dropdown-menu-trigger-width)] sm:w-auto")}
               >
                 <DropdownMenuGroup>
                   <DropdownMenuItem

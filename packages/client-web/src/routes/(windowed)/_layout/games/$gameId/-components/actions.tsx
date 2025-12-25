@@ -65,12 +65,7 @@ export function Actions() {
   }, [validEmulators, validProfiles]);
 
   return (
-    <div
-      className={cn(
-        "flex relative",
-        "[&_*[data-radix-popper-content-wrapper]]:contents sm:[&_*[data-radix-popper-content-wrapper]]:block",
-      )}
-    >
+    <div className="flex relative">
       <div
         className={cn(
           "w-full *:w-full rounded-l-lg sm:rounded-tl-none overflow-hidden border-r-2",
@@ -97,9 +92,9 @@ export function Actions() {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          portal={false}
           align="start"
-          className="absolute inset-x-0 top-full mt-2 sm:mt-0"
+          sideOffset={8}
+          className="w-[var(--radix-dropdown-menu-trigger-width)]"
         >
           <DropdownMenuSub>
             <DropdownMenuSubTrigger

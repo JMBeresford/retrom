@@ -2,8 +2,8 @@ use crate::{desktop::GameProcess, LauncherExt, Result};
 use prost::Message;
 use retrom_codegen::retrom::{
     client::installation::InstallationStatus, emulator::OperatingSystem, GamePlayStatusUpdate,
-    GetGamePlayStatusPayload, GetLocalEmulatorConfigsRequest, PlayGamePayload, PlayStatus,
-    StopGamePayload,
+    GetGamePlayStatusPayload, GetGameFilesRequest, GetLocalEmulatorConfigsRequest, PlayGamePayload,
+    PlayStatus, StopGamePayload,
 };
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_installer::InstallerExt;
@@ -14,7 +14,7 @@ use tauri::{
     command, http::HeaderValue, AppHandle, Runtime, WebviewUrl, WebviewWindow, WindowEvent,
 };
 use tokio::sync::Mutex;
-use tracing::{info, instrument};
+use tracing::{info, instrument, warn};
 use walkdir::WalkDir;
 
 #[command]
@@ -57,12 +57,44 @@ pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -
         .emulator_profile
         .expect("No emulator profile provided");
     let emulator = payload.emulator.expect("No emulator provided");
-    let maybe_default_game_file = payload.file;
+    let mut maybe_default_game_file = payload.file;
+
+    if maybe_default_game_file.is_none() {
+        if let Some(default_file_id) = game.default_file_id {
+            let mut game_client = app.get_game_client().await;
+            match game_client
+                .get_game_files(GetGameFilesRequest {
+                    ids: vec![default_file_id],
+                    include_deleted: None,
+                })
+                .await
+            {
+                Ok(response) => {
+                    let default_file = response
+                        .into_inner()
+                        .game_files
+                        .into_iter()
+                        .find(|file| file.id == default_file_id);
+
+                    if default_file.is_none() {
+                        warn!("Default file {} not found in response", default_file_id);
+                    }
+
+                    maybe_default_game_file = default_file;
+                }
+                Err(err) => {
+                    warn!(
+                        "Failed to fetch default file {} from service: {}",
+                        default_file_id, err
+                    );
+                }
+            }
+        }
+    }
 
     let maybe_default_file = maybe_default_game_file
-        .clone()
-        .map(|file| file.path)
-        .map(PathBuf::from);
+        .as_ref()
+        .map(|file| PathBuf::from(&file.path));
 
     if emulator.libretro_name.is_some()
         && emulator

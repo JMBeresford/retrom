@@ -9,7 +9,7 @@
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
-        "command": "pnpm buf generate",
+        "command": "NODE_OPTIONS=--require=./localstorage-polyfill.cjs pnpm buf generate",
         "cwd": "{projectRoot}"
       },
       "inputs": [
