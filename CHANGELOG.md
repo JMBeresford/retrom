@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.48](https://github.com/JMBeresford/retrom/compare/v0.7.47...v0.7.48) (2025-12-25)
+
+
+### Features
+
+* UI tweaks ([dbd5592](https://github.com/JMBeresford/retrom/commit/dbd559269a8112e69c6c194de3f92e8d188a3d8b))
+
+
+### Bug Fixes
+
+* default file respected when launching games ([574d396](https://github.com/JMBeresford/retrom/commit/574d396b2451d4a18b1cf33fc53de48d15384f0e))
+
 ## [0.7.47](https://github.com/JMBeresford/retrom/compare/v0.7.46...v0.7.47) (2025-12-09)
 
 
