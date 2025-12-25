@@ -7,10 +7,11 @@ use retrom_db::run_migrations;
 use retrom_grpc_service::grpc_service;
 use retrom_rest_service::rest_service;
 use retrom_service_common::{config::ServerConfigManager, emulator_js};
+use retrom_webdav_service::webdav_service;
 use retry::retry;
-use std::{net::SocketAddr, process::exit, sync::Arc};
+use std::{convert::Infallible, net::SocketAddr, process::exit, sync::Arc};
 use tokio::{net::TcpListener, task::JoinHandle};
-use tower::ServiceExt;
+use tower::{service_fn, ServiceExt};
 use tracing::{info_span, Instrument};
 
 #[cfg(feature = "embedded_db")]
@@ -133,6 +134,7 @@ pub async fn get_server(
 
     let rest_service = rest_service(pool_state.clone());
     let grpc_service = grpc_service(&db_url, config_manager);
+    let webdav_service = webdav_service(Some("/dav"));
 
     tracing::info!(
         "Starting Retrom {} service at: {}",
@@ -166,6 +168,7 @@ pub async fn get_server(
 
                     let grpc_service = grpc_service.clone();
                     let rest_service = rest_service.clone();
+                    let webdav_service = webdav_service.clone();
 
                     tokio::spawn(
                         async move {
@@ -201,6 +204,14 @@ pub async fn get_server(
                                             req.uri().path()
                                         );
                                         grpc_service.clone().oneshot(req)
+                                    } else if req.uri().path().starts_with("/dav") {
+                                        tracing::debug!(
+                                            "Routing request to WebDAV service: {} {}",
+                                            req.method(),
+                                            req.uri().path()
+                                        );
+
+                                        webdav_service.clone().oneshot(req)
                                     } else {
                                         tracing::debug!(
                                             "Routing request to REST service: {} {}",

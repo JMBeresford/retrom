@@ -9,6 +9,7 @@ members = [
   "packages/rest-service",
   "packages/service-common",
   "packages/telemetry",
+  "packages/webdav-service",
 
   "plugins/retrom-plugin-config/",
   "plugins/retrom-plugin-installer/",
@@ -115,12 +116,14 @@ retrom-plugin-service-client = { path = "./plugins/retrom-plugin-service-client"
 retrom-plugin-steam = { path = "./plugins/retrom-plugin-steam" }
 retrom-plugin-config = { path = "./plugins/retrom-plugin-config" }
 retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone" }
+retrom-webdav-service = { path = "./packages/webdav-service" }
 
 config = { version = "0.13.4", features = ["json5"] }
 futures = "0.3.30"
 bytes = "1.6.0"
 reqwest = { version = "0.12.3", features = ["json", "stream"] }
 axum = "0.8.6"
+axum-tracing-opentelemetry = { version = "0.32.1" }
 tonic = { version = "0.14.2", features = [
   "tls-native-roots",
   "tls-webpki-roots",
