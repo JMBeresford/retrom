@@ -40,6 +40,7 @@ export function useUpdateSaveFiles() {
         update({
           title: "Save Uploaded",
           description: "Your save has been uploaded successfully",
+          duration: 2000,
         });
 
         return res;
