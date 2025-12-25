@@ -51,6 +51,7 @@ message UpdateGamesResponse {
 message GetGameFilesRequest {
   repeated int32 ids = 1;
   optional bool include_deleted = 2;
+  repeated int32 game_ids = 3;
 }
 
 message GetGameFilesResponse {
