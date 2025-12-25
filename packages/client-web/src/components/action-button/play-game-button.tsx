@@ -3,7 +3,13 @@ import { usePlayGame } from "@/mutations/usePlayGame";
 import { usePlayStatusQuery } from "@/queries/usePlayStatus";
 import { PlayStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
 import { useStopGame } from "@/mutations/useStopGame";
-import { ComponentProps, ForwardedRef, forwardRef, useCallback } from "react";
+import {
+  ComponentProps,
+  ForwardedRef,
+  forwardRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { LoaderCircleIcon, PlayIcon, PlusIcon, Square } from "lucide-react";
 import { useMatch, useNavigate } from "@tanstack/react-router";
 import { useToast } from "@retrom/ui/hooks/use-toast";
@@ -22,7 +28,7 @@ export const PlayGameButton = forwardRef(
     const { toast } = useToast();
     const { data: emulatorData } = useDefaultEmulator(game);
     const { data: gameFiles } = useGameFiles({
-      request: { ids: [game.id] },
+      request: { gameIds: [game.id] },
       selectFn: (data) => data.gameFiles.filter((f) => f.gameId === game.id),
     });
 
@@ -38,7 +44,12 @@ export const PlayGameButton = forwardRef(
       usePlayStatusQuery(game);
 
     const { emulator, defaultProfile } = emulatorData ?? {};
-    const file = gameFiles?.find((file) => file.id === game.defaultFileId);
+
+    const file = useMemo(
+      () => gameFiles?.find((file) => file.id === game.defaultFileId),
+      [game.defaultFileId, gameFiles],
+    );
+
     const disabled = queryStatus !== "success";
     const shouldAddEmulator = !emulator && !fullscreenMatch && !game.thirdParty;
 
