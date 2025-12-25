@@ -137,7 +137,9 @@ export function DeleteFileModal() {
         <DialogFooter>
           <div className="flex gap-2">
             <DialogClose asChild>
-              <Button disabled={pending}>Cancel</Button>
+              <Button variant="secondary" disabled={pending}>
+                Cancel
+              </Button>
             </DialogClose>
 
             <Button

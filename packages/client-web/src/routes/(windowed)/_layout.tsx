@@ -100,8 +100,6 @@ function LayoutComponent() {
                     <Outlet />
                   </main>
                 </ScrollArea>
-
-                <Toaster offset={{ bottom: "4rem" }} />
               </ResizablePanel>
             </ResizablePanelGroup>
             <div
@@ -140,7 +138,7 @@ function LayoutComponent() {
       )}
 
       <SetupModal />
-      {!setupComplete ? <Toaster /> : <></>}
+      <Toaster offset={{ bottom: "4rem" }} />
     </>
   );
 }
