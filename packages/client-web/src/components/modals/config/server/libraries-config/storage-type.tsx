@@ -36,7 +36,8 @@ export function StorageTypeSelect<
         <FormControl>
           <SelectTrigger
             className={cn(
-              "sm:border-transparent bg-transparent hover:bg-transparent",
+              "w-full sm:border-transparent bg-transparent dark:bg-transparent",
+              "hover:bg-transparent dark:hover:bg-transparent",
               "flex justify-between gap-2 text-muted-foreground sm:px-0",
               fieldState.isDirty && "text-foreground",
             )}

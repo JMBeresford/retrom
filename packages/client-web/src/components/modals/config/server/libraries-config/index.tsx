@@ -32,6 +32,7 @@ import {
 import { InferSchema } from "@/lib/utils";
 import { RawMessage } from "@/utils/protos";
 import { create } from "@bufbuild/protobuf";
+import { cn } from "@retrom/ui/lib/utils";
 
 export const contentDirectorySchema = z.object({
   path: z.string().min(1),
@@ -149,7 +150,10 @@ export function LibrariesConfig(props: {
                 return (
                   <TableRow
                     key={index}
-                    className="*:py-1 flex flex-col sm:table-row pb-6 sm:pb-0"
+                    className={cn(
+                      "*:py-1 flex flex-col sm:table-row pb-6 sm:pb-0",
+                      "sm:*:px-4 *:px-0",
+                    )}
                   >
                     <TableCell>
                       <FormField
@@ -229,7 +233,7 @@ export function LibrariesConfig(props: {
                 );
               })}
 
-              <TableRow className="*:py-2 border-b-0">
+              <TableRow className="*:py-2 border-b-0 sm:*:px-4 *:px-0">
                 <TableCell colSpan={5} className="text-end">
                   <Button
                     size="icon"

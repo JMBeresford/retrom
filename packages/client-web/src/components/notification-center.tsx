@@ -49,7 +49,7 @@ export function NotificationCenter() {
         sideOffset={15}
         align="end"
         className={cn(
-          "relative flex flex-col gap-2 max-h-[60vh] overflow-hidden",
+          "relative flex flex-col gap-2 max-h-[60vh] overflow-hidden p-4",
         )}
       >
         <PopoverClose className="absolute top-3 right-3">

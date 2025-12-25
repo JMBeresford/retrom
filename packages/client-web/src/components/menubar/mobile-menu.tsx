@@ -89,7 +89,7 @@ function MobileMainMenuItem(props: { item: MenuItem; lastInGroup?: boolean }) {
           }
         }}
         className={cn(
-          item.viewportContext === "desktop" ? "hidden" : "block",
+          item.viewportContext === "desktop" ? "hidden" : "flex",
           "text-lg",
         )}
       >

@@ -37,7 +37,7 @@ export function ClientConfigTab() {
   return (
     <TabsContent
       value="client"
-      className="flex flex-col gap-2 w-fit max-w-full  mt-0"
+      className="flex flex-col gap-2 w-full sm:w-fit max-w-full mt-0"
     >
       <DialogHeader>
         <DialogTitle className="text-xl font-extrabold">

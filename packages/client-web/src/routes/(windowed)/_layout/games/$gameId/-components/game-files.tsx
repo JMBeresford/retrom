@@ -107,10 +107,7 @@ export function GameFiles() {
                 />
               </SelectTrigger>
 
-              <SelectContent
-                side="bottom"
-                className="max-h-[calc(var(--radix-select-content-available-height)*0.85)] w-min"
-              >
+              <SelectContent position="popper" side="bottom" align="end">
                 {gameFiles
                   ?.sort((a, b) => {
                     if (game.defaultFileId === a.id) {
@@ -125,7 +122,7 @@ export function GameFiles() {
                   })
                   .map((file) => (
                     <SelectItem key={file.id} value={file.id.toString()}>
-                      <div className="flex items-center w-fit max-w-full">
+                      <div className="flex items-center max-w-[40ch]">
                         <div className="relative break-word">
                           {file.path.replace(
                             game.path.split("/").slice(0, -2).join("/"),

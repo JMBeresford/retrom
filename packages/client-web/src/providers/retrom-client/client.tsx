@@ -8,7 +8,7 @@ import { ClientService } from "@retrom/codegen/retrom/services/client-service_pb
 import { ServerService } from "@retrom/codegen/retrom/services/server-service_pb";
 import { JobService } from "@retrom/codegen/retrom/services/job-service_pb";
 import { FileExplorerService } from "@retrom/codegen/retrom/services/file-explorer-service_pb";
-import { SavesService } from "@retrom/codegen/retrom/services/saves-service_pb";
+import { SavesService } from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
 import { otelInterceptor } from "./otel";
 
