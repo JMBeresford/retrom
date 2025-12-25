@@ -70,10 +70,7 @@ function InputGroupAddon({
       data-align={align}
       className={cn(inputGroupAddonVariants({ align }), className)}
       onClick={(e) => {
-        if (
-          e.target instanceof HTMLInputElement &&
-          e.target.closest("button")
-        ) {
+        if (e.target instanceof HTMLElement && e.target.closest("button")) {
           return;
         }
 
