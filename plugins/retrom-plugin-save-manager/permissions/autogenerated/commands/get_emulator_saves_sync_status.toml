@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-emulator-saves-sync-status"
+description = "Enables the get_emulator_saves_sync_status command without any pre-configured scope."
+commands.allow = ["get_emulator_saves_sync_status"]
+
+[[permission]]
+identifier = "deny-get-emulator-saves-sync-status"
+description = "Denies the get_emulator_saves_sync_status command without any pre-configured scope."
+commands.deny = ["get_emulator_saves_sync_status"]

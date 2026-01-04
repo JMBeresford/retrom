@@ -1220,6 +1220,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e93abca9e28e0a1b9877922aacb20576e05d4679ffa78c3d6dc22a26a216659"
 
 [[package]]
+name = "bytestring"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "113b4343b5f6617e7ad401ced8de3cc8b012e73a594347c307b90db3e9271289"
+dependencies = [
+ "bytes",
+]
+
+[[package]]
 name = "bzip2"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3301,6 +3310,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-set-times"
+version = "0.20.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94e7099f6313ecacbe1256e8ff9d617b75d1bcb16a6fddef94866d225a01a14a"
+dependencies = [
+ "io-lifetimes",
+ "rustix 1.1.2",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "fs_extra"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4736,6 +4756,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "io-lifetimes"
+version = "2.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06432fb54d3be7964ecd3649233cddf80db2832f47fec34c01f65b3d9d774983"
+
+[[package]]
 name = "ipnet"
 version = "2.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4807,6 +4833,15 @@ name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
 dependencies = [
  "either",
 ]
@@ -6021,6 +6056,12 @@ checksum = "df9761775871bdef83bee530e60050f7e54b1105350d6884eb0fb4f46c2f9405"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "nonempty"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "995defdca0a589acfdd1bd2e8e3b896b4d4f7675a31fd14c32611440c7f608e6"
 
 [[package]]
 name = "nonmax"
@@ -8418,6 +8459,15 @@ checksum = "a993555f31e5a609f617c12db6250dedcac1b0a85076912c436e6fc9b2c8e6a3"
 
 [[package]]
 name = "quick-xml"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1004a344b30a54e2ee58d66a71b32d2db2feb0a31f9a2d302bf0536f15de2a33"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
+name = "quick-xml"
 version = "0.37.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "331e97a1af0bf59823e6eadffe373d7b27f485be8748f71471c662c1f269b7fb"
@@ -8951,6 +9001,7 @@ dependencies = [
  "js-sys",
  "log",
  "mime",
+ "mime_guess",
  "native-tls",
  "percent-encoding",
  "pin-project-lite",
@@ -9068,9 +9119,11 @@ dependencies = [
  "retrom-plugin-config",
  "retrom-plugin-installer",
  "retrom-plugin-launcher",
+ "retrom-plugin-save-manager",
  "retrom-plugin-service-client",
  "retrom-plugin-standalone",
  "retrom-plugin-steam",
+ "retrom-plugin-webdav-client",
  "retrom-telemetry",
  "serde_json",
  "tauri",
@@ -9104,11 +9157,13 @@ dependencies = [
  "protobuf-src",
  "retrom-db",
  "serde",
+ "thiserror 1.0.69",
  "tonic 0.14.2",
  "tonic-include-proto",
  "tonic-prost",
  "tonic-prost-build",
  "walkdir",
+ "webdav-meta",
 ]
 
 [[package]]
@@ -9205,6 +9260,7 @@ dependencies = [
  "retrom-codegen",
  "retrom-plugin-config",
  "retrom-plugin-installer",
+ "retrom-plugin-save-manager",
  "retrom-plugin-service-client",
  "retrom-plugin-steam",
  "serde",
@@ -9215,6 +9271,34 @@ dependencies = [
  "tonic 0.14.2",
  "tracing",
  "walkdir",
+]
+
+[[package]]
+name = "retrom-plugin-save-manager"
+version = "0.7.47"
+dependencies = [
+ "fs-set-times",
+ "futures-util",
+ "headers",
+ "http 1.4.0",
+ "prost 0.14.1",
+ "reqwest 0.12.24",
+ "retrom-codegen",
+ "retrom-plugin-config",
+ "retrom-plugin-service-client",
+ "retrom-plugin-webdav-client",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util",
+ "tonic 0.14.2",
+ "tracing",
+ "urlencoding",
+ "walkdir",
+ "webdav-meta",
 ]
 
 [[package]]
@@ -9266,6 +9350,23 @@ dependencies = [
  "tauri-plugin-opener",
  "thiserror 1.0.69",
  "tracing",
+]
+
+[[package]]
+name = "retrom-plugin-webdav-client"
+version = "0.7.47"
+dependencies = [
+ "headers",
+ "http 1.4.0",
+ "reqwest 0.12.24",
+ "retrom-plugin-config",
+ "serde",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 1.0.69",
+ "tracing",
+ "url",
+ "webdav-meta",
 ]
 
 [[package]]
@@ -12430,6 +12531,7 @@ dependencies = [
  "tower-service",
  "tracing",
  "webpki-roots 1.0.4",
+ "zstd 0.13.3",
 ]
 
 [[package]]
@@ -13078,6 +13180,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
+name = "uniresid"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "995a4007fbec4f43386ea1b1d81d42d986a0c9616378e9aa4a96f45ea661e1b0"
+dependencies = [
+ "once_cell",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "universal-hash"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13162,6 +13274,12 @@ dependencies = [
  "percent-encoding",
  "serde",
 ]
+
+[[package]]
+name = "urlencoding"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
 
 [[package]]
 name = "urlpattern"
@@ -13572,6 +13690,53 @@ checksum = "5a6580f308b1fad9207618087a65c04e7a10bc77e02c8e84e9b00dd4b12fa0bb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "webdav-headers"
+version = "0.1.0"
+source = "git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7#39c459aa781360a0b755e5be841e1c4dd2fd18b7"
+dependencies = [
+ "headers",
+ "http 1.4.0",
+ "itertools 0.12.1",
+ "nonempty",
+ "uniresid",
+]
+
+[[package]]
+name = "webdav-meta"
+version = "0.1.0"
+source = "git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7#39c459aa781360a0b755e5be841e1c4dd2fd18b7"
+dependencies = [
+ "webdav-headers",
+ "webdav-methods",
+ "webdav-xml",
+]
+
+[[package]]
+name = "webdav-methods"
+version = "0.1.0"
+source = "git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7#39c459aa781360a0b755e5be841e1c4dd2fd18b7"
+dependencies = [
+ "http 1.4.0",
+ "once_cell",
+]
+
+[[package]]
+name = "webdav-xml"
+version = "0.1.0"
+source = "git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7#39c459aa781360a0b755e5be841e1c4dd2fd18b7"
+dependencies = [
+ "bytes",
+ "bytestring",
+ "http 1.4.0",
+ "httpdate",
+ "indexmap 2.12.1",
+ "mime",
+ "nonempty",
+ "quick-xml 0.31.0",
+ "time",
 ]
 
 [[package]]

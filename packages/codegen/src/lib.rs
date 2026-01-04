@@ -9,11 +9,14 @@ tonic_include_proto::namespaced!(
     "retrom",
     "retrom.files",
     "retrom.client.installation",
+    "retrom.client.saves",
     "retrom.services.saves.v1"
     "retrom.services.saves.v2"
 );
 
-use std::path::PathBuf;
+use std::path::{Component, Path, PathBuf};
+
+use crate::retrom::files::FileStat;
 
 pub mod descriptors {
     pub mod retrom {
@@ -52,10 +55,34 @@ impl TryFrom<PathBuf> for crate::retrom::FilesystemNode {
     }
 }
 
+impl crate::retrom::files::FileStat {
+    pub fn relative_to<P: AsRef<Path>>(&self, path: P) -> Option<FileStat> {
+        let base_path = path.as_ref();
+        let file_path = PathBuf::from(&self.path);
+
+        let relative_path: PathBuf = file_path
+            .strip_prefix(base_path)
+            .ok()?
+            .components()
+            .filter(|c| !matches!(c, Component::RootDir | Component::Prefix(_)))
+            .collect();
+
+        Some(FileStat {
+            path: relative_path.to_str()?.into(),
+            node_type: self.node_type,
+            created_at: self.created_at,
+            updated_at: self.updated_at,
+            byte_size: self.byte_size,
+            etag: self.etag.clone(),
+        })
+    }
+}
+
 impl TryFrom<PathBuf> for crate::retrom::files::FileStat {
     type Error = ();
 
     fn try_from(path_buf: PathBuf) -> Result<Self, Self::Error> {
+        use std::hash::{DefaultHasher, Hash, Hasher};
         let metadata = path_buf.metadata().ok();
         let path = path_buf.to_str().ok_or(())?.into();
 
@@ -75,12 +102,18 @@ impl TryFrom<PathBuf> for crate::retrom::files::FileStat {
 
         let byte_size = metadata.as_ref().map(|m| m.len());
 
+        let mut hasher = DefaultHasher::new();
+        let hash_str = format!("{:?}-{:?}-{:?}", path, created_at, updated_at);
+        hash_str.hash(&mut hasher);
+        let etag = hasher.finish().to_string();
+
         Ok(crate::retrom::files::FileStat {
             path,
             node_type,
             created_at,
             updated_at,
             byte_size,
+            etag,
         })
     }
 }
