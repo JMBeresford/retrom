@@ -48,7 +48,7 @@ export function FiltersAndSorting() {
   const labelStyles = cn("pl-1 font-medium text-muted-foreground text-sm");
 
   return (
-    <div className="flex flex-col gap-3 px-3 sm:px-4 pt-2 pb-4">
+    <div className="flex flex-col gap-3 px-3 sm:px-4 pt-2 pb-4 bg-background">
       <InputGroup>
         <InputGroupAddon align="inline-start">
           <SearchIcon />

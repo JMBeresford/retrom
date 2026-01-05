@@ -38,7 +38,7 @@ export function JobsIndicator(props: JSX.IntrinsicElements["button"]) {
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent align="end" className="w-fit">
+      <PopoverContent align="end" className="w-fit p-4">
         <div className="flex flex-col overflow-hidden gap-3">
           {jobs.length === 0 ? (
             <div className="pt-4 text-center text-muted-foreground">

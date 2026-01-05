@@ -85,7 +85,7 @@ function LayoutComponent() {
                 id="desktop-sidebar"
                 defaultSize={25}
                 maxSize={50}
-                className="bg-muted hidden sm:flex"
+                className="hidden sm:flex"
               >
                 <FilterAndSortContext>
                   <SideBar />

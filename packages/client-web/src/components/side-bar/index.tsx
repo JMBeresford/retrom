@@ -65,10 +65,7 @@ export function SideBar() {
   return (
     <div className="w-full h-full @container/sidebar">
       <aside
-        className={cn(
-          "min-h-full h-full w-[100cqw] min-w-0 flex flex-col",
-          "bg-gradient-to-b from-primary/10 to-background",
-        )}
+        className={cn("min-h-full h-full w-[100cqw] min-w-0 flex flex-col")}
       >
         <FiltersAndSorting />
         <Separator />
@@ -95,17 +92,20 @@ export function SideBar() {
         ) : (
           <ScrollArea
             className={cn(
-              "h-full max-h-full w-full max-w-full px-3 sm:px-4 pb-4",
+              "h-full max-h-full w-full max-w-full px-3 sm:px-4 bg-background/50",
               "before:absolute before:inset-x-0 before:top-0 before:h-8 before:z-10",
-              "before:bg-gradient-to-b before:from-black/60 before:to-transparent",
-              "before:pointer-events-none",
+              "before:bg-gradient-to-b before:from-black/50 before:to-transparent",
+              "after:absolute after:inset-x-0 after:bottom-0 after:h-8 after:z-10",
+              "after:bg-gradient-to-t after:from-black/50 after:to-transparent",
+              "before:pointer-events-none after:pointer-events-none",
+              "before:touch-none after:touch-none",
             )}
           >
             <TooltipProvider>
               <Accordion
                 type="single"
                 collapsible={true}
-                className="pt-4"
+                className="py-4"
                 defaultValue={currentGame?.platformId?.toString()}
               >
                 {platformsWithMetadata.map((platform) => {
