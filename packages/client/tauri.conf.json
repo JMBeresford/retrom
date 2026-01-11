@@ -20,6 +20,7 @@
     "longDescription": "A centralized game library/collection management service with a focus on emulation. Configure once, play anywhere.",
     "shortDescription": "Your own private cloud game-library service",
     "macOS": {
+      "minimumSystemVersion": "10.13",
       "entitlements": "./entitlements.plist.xml"
     },
     "linux": {

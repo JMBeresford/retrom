@@ -1190,6 +1190,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e93abca9e28e0a1b9877922aacb20576e05d4679ffa78c3d6dc22a26a216659"
 
 [[package]]
+name = "bytestring"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "113b4343b5f6617e7ad401ced8de3cc8b012e73a594347c307b90db3e9271289"
+dependencies = [
+ "bytes",
+]
+
+[[package]]
 name = "bzip2"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3256,6 +3265,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-set-times"
+version = "0.20.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94e7099f6313ecacbe1256e8ff9d617b75d1bcb16a6fddef94866d225a01a14a"
+dependencies = [
+ "io-lifetimes",
+ "rustix 1.1.3",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "fs_extra"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4691,6 +4711,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "io-lifetimes"
+version = "2.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06432fb54d3be7964ecd3649233cddf80db2832f47fec34c01f65b3d9d774983"
+
+[[package]]
 name = "ipnet"
 version = "2.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4762,6 +4788,15 @@ name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
 dependencies = [
  "either",
 ]
@@ -5966,6 +6001,12 @@ checksum = "df9761775871bdef83bee530e60050f7e54b1105350d6884eb0fb4f46c2f9405"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "nonempty"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "995defdca0a589acfdd1bd2e8e3b896b4d4f7675a31fd14c32611440c7f608e6"
 
 [[package]]
 name = "nonmax"
@@ -7714,7 +7755,7 @@ checksum = "740ebea15c5d1428f910cd1a5f52cebf8d25006245ed8ade92702f4943d91e07"
 dependencies = [
  "base64 0.22.1",
  "indexmap 2.13.0",
- "quick-xml",
+ "quick-xml 0.38.4",
  "serde",
  "time",
 ]
@@ -8316,6 +8357,15 @@ checksum = "a993555f31e5a609f617c12db6250dedcac1b0a85076912c436e6fc9b2c8e6a3"
 
 [[package]]
 name = "quick-xml"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1004a344b30a54e2ee58d66a71b32d2db2feb0a31f9a2d302bf0536f15de2a33"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
+name = "quick-xml"
 version = "0.38.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b66c2058c55a409d601666cffe35f04333cf1013010882cec174a7467cd4e21c"
@@ -8724,7 +8774,7 @@ dependencies = [
  "cfg-if",
  "libc",
  "rustix 1.1.3",
- "windows 0.61.3",
+ "windows 0.62.2",
 ]
 
 [[package]]
@@ -8848,6 +8898,7 @@ dependencies = [
  "js-sys",
  "log",
  "mime",
+ "mime_guess",
  "native-tls",
  "percent-encoding",
  "pin-project-lite",
@@ -8965,9 +9016,11 @@ dependencies = [
  "retrom-plugin-config",
  "retrom-plugin-installer",
  "retrom-plugin-launcher",
+ "retrom-plugin-save-manager",
  "retrom-plugin-service-client",
  "retrom-plugin-standalone",
  "retrom-plugin-steam",
+ "retrom-plugin-webdav-client",
  "retrom-telemetry",
  "serde_json",
  "tauri",
@@ -9001,11 +9054,13 @@ dependencies = [
  "protobuf-src",
  "retrom-db",
  "serde",
+ "thiserror 1.0.69",
  "tonic 0.14.2",
  "tonic-include-proto",
  "tonic-prost",
  "tonic-prost-build",
  "walkdir",
+ "webdav-meta",
 ]
 
 [[package]]
@@ -9102,6 +9157,7 @@ dependencies = [
  "retrom-codegen",
  "retrom-plugin-config",
  "retrom-plugin-installer",
+ "retrom-plugin-save-manager",
  "retrom-plugin-service-client",
  "retrom-plugin-steam",
  "serde",
@@ -9112,6 +9168,34 @@ dependencies = [
  "tonic 0.14.2",
  "tracing",
  "walkdir",
+]
+
+[[package]]
+name = "retrom-plugin-save-manager"
+version = "0.7.53"
+dependencies = [
+ "fs-set-times",
+ "futures-util",
+ "headers",
+ "http 1.4.0",
+ "prost 0.14.3",
+ "reqwest 0.12.28",
+ "retrom-codegen",
+ "retrom-plugin-config",
+ "retrom-plugin-service-client",
+ "retrom-plugin-webdav-client",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util",
+ "tonic 0.14.2",
+ "tracing",
+ "urlencoding",
+ "walkdir",
+ "webdav-meta",
 ]
 
 [[package]]
@@ -9163,6 +9247,23 @@ dependencies = [
  "tauri-plugin-opener",
  "thiserror 1.0.69",
  "tracing",
+]
+
+[[package]]
+name = "retrom-plugin-webdav-client"
+version = "0.7.53"
+dependencies = [
+ "headers",
+ "http 1.4.0",
+ "reqwest 0.12.28",
+ "retrom-plugin-config",
+ "serde",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 1.0.69",
+ "tracing",
+ "url",
+ "webdav-meta",
 ]
 
 [[package]]
@@ -12320,6 +12421,7 @@ dependencies = [
  "tower-service",
  "tracing",
  "webpki-roots 1.0.5",
+ "zstd 0.13.3",
 ]
 
 [[package]]
@@ -12968,6 +13070,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
+name = "uniresid"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "995a4007fbec4f43386ea1b1d81d42d986a0c9616378e9aa4a96f45ea661e1b0"
+dependencies = [
+ "once_cell",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "universal-hash"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13053,6 +13165,12 @@ dependencies = [
  "serde",
  "serde_derive",
 ]
+
+[[package]]
+name = "urlencoding"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
 
 [[package]]
 name = "urlpattern"
@@ -13406,6 +13524,53 @@ dependencies = [
 ]
 
 [[package]]
+name = "webdav-headers"
+version = "0.1.0"
+source = "git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7#39c459aa781360a0b755e5be841e1c4dd2fd18b7"
+dependencies = [
+ "headers",
+ "http 1.4.0",
+ "itertools 0.12.1",
+ "nonempty",
+ "uniresid",
+]
+
+[[package]]
+name = "webdav-meta"
+version = "0.1.0"
+source = "git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7#39c459aa781360a0b755e5be841e1c4dd2fd18b7"
+dependencies = [
+ "webdav-headers",
+ "webdav-methods",
+ "webdav-xml",
+]
+
+[[package]]
+name = "webdav-methods"
+version = "0.1.0"
+source = "git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7#39c459aa781360a0b755e5be841e1c4dd2fd18b7"
+dependencies = [
+ "http 1.4.0",
+ "once_cell",
+]
+
+[[package]]
+name = "webdav-xml"
+version = "0.1.0"
+source = "git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7#39c459aa781360a0b755e5be841e1c4dd2fd18b7"
+dependencies = [
+ "bytes",
+ "bytestring",
+ "http 1.4.0",
+ "httpdate",
+ "indexmap 2.13.0",
+ "mime",
+ "nonempty",
+ "quick-xml 0.31.0",
+ "time",
+]
+
+[[package]]
 name = "webkit2gtk"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13669,6 +13834,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "windows"
+version = "0.62.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "527fadee13e0c05939a6a05d5bd6eec6cd2e3dbd648b9f8e447c6518133d8580"
+dependencies = [
+ "windows-collections 0.3.2",
+ "windows-core 0.62.2",
+ "windows-future 0.3.2",
+ "windows-numerics 0.3.1",
+]
+
+[[package]]
 name = "windows-collections"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13684,6 +13861,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3beeceb5e5cfd9eb1d76b381630e82c4241ccd0d27f1a39ed41b2760b255c5e8"
 dependencies = [
  "windows-core 0.61.2",
+]
+
+[[package]]
+name = "windows-collections"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23b2d95af1a8a14a3c7367e1ed4fc9c20e0a26e79551b1454d72583c97cc6610"
+dependencies = [
+ "windows-core 0.62.2",
 ]
 
 [[package]]
@@ -13752,7 +13938,18 @@ checksum = "fc6a41e98427b19fe4b73c550f060b59fa592d7d686537eebf9385621bfbad8e"
 dependencies = [
  "windows-core 0.61.2",
  "windows-link 0.1.3",
- "windows-threading",
+ "windows-threading 0.1.0",
+]
+
+[[package]]
+name = "windows-future"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1d6f90251fe18a279739e78025bd6ddc52a7e22f921070ccdc67dde84c605cb"
+dependencies = [
+ "windows-core 0.62.2",
+ "windows-link 0.2.1",
+ "windows-threading 0.2.1",
 ]
 
 [[package]]
@@ -13818,6 +14015,16 @@ checksum = "9150af68066c4c5c07ddc0ce30421554771e528bde427614c61038bc2c92c2b1"
 dependencies = [
  "windows-core 0.61.2",
  "windows-link 0.1.3",
+]
+
+[[package]]
+name = "windows-numerics"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e2e40844ac143cdb44aead537bbf727de9b044e107a0f1220392177d15b0f26"
+dependencies = [
+ "windows-core 0.62.2",
+ "windows-link 0.2.1",
 ]
 
 [[package]]
@@ -14011,6 +14218,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b66463ad2e0ea3bbf808b7f1d371311c80e115c0b71d60efc142cafbcfb057a6"
 dependencies = [
  "windows-link 0.1.3",
+]
+
+[[package]]
+name = "windows-threading"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3949bd5b99cafdf1c7ca86b43ca564028dfe27d66958f2470940f73d86d75b37"
+dependencies = [
+ "windows-link 0.2.1",
 ]
 
 [[package]]
