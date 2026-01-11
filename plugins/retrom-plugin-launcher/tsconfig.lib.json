@@ -16,6 +16,9 @@
       "path": "../retrom-plugin-service-client/tsconfig.lib.json"
     },
     {
+      "path": "../retrom-plugin-save-manager/tsconfig.lib.json"
+    },
+    {
       "path": "../retrom-plugin-installer/tsconfig.lib.json"
     },
     {
