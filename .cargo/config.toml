@@ -1,0 +1,10 @@
+[target.aarch64-apple-darwin]
+rustflags = [
+  "-C",
+  "link-arg=-fuse-ld=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld",
+  "-C",
+  "link-arg=-ld_new",
+]
+
+[env]
+MACOSX_DEPLOYMENT_TARGET = { value = "10.12", force = true }

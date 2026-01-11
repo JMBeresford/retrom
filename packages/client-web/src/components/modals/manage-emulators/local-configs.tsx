@@ -92,6 +92,8 @@ function LocalConfigRow(props: {
   const { emulator, config } = props;
   const clientId = useConfigStore().getState().config?.clientInfo?.id;
 
+  console.log(emulator.id, { emulator, config });
+
   if (!clientId) {
     throw new Error("Client ID not found");
   }
@@ -114,7 +116,6 @@ function LocalConfigRow(props: {
 
   const handleSubmit = useCallback(
     async (values: ConfigSchema) => {
-      console.log({ values, clientId, emulatorId: emulator.id });
       if (config) {
         const res = await updateConfig({
           configs: [

@@ -1,0 +1,23 @@
+{
+  "name": "@retrom/plugin-save-manager",
+  "type": "module",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "default": "./dist/index.js"
+  },
+  "files": [
+    "dist/**"
+  ],
+  "dependencies": {
+    "@tauri-apps/api": "catalog:",
+    "@retrom/codegen": "workspace:*",
+    "@bufbuild/protobuf": "catalog:",
+    "ts-pattern": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "tslib": "catalog:",
+    "@retrom/configs": "workspace:*"
+  }
+}

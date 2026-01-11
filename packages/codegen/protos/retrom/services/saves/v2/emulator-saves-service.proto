@@ -7,9 +7,11 @@ import "retrom/files.proto";
 
 service EmulatorSavesService {
   rpc StatSaveFiles(StatSaveFilesRequest) returns (StatSaveFilesResponse);
+  rpc BackupSaveFiles(BackupSaveFilesRequest) returns (BackupSaveFilesResponse);
   rpc RestoreSaveFilesFromBackup(RestoreSaveFilesFromBackupRequest) returns (RestoreSaveFilesFromBackupResponse);
 
   rpc StatSaveStates(StatSaveStatesRequest) returns (StatSaveStatesResponse);
+  rpc BackupSaveStates(BackupSaveStatesRequest) returns (BackupSaveStatesResponse);
   rpc RestoreSaveStatesFromBackup(RestoreSaveStatesFromBackupRequest) returns (RestoreSaveStatesFromBackupResponse);
 }
 
@@ -27,7 +29,8 @@ message SaveFilesStat {
   // Backup stats for this emulator's saves
   repeated Backup backups = 3;
 
-  string etag = 4;
+  // Directory where the save files are stored on disk
+  string save_directory = 4;
 }
 
 message SaveFiles {
@@ -55,6 +58,21 @@ message StatSaveFilesRequest {
 message StatSaveFilesResponse {
   repeated SaveFilesStat save_files_stats = 1;
 }
+
+message BackupSaveFilesRequest {
+  message Selector {
+    int32 emulator_id = 1;
+  }
+
+  message Config {
+    optional bool dry_run = 1;
+  }
+
+  repeated Selector save_files_selectors = 1;
+  optional Config config = 2;
+}
+
+message BackupSaveFilesResponse {}
 
 message RestoreSaveFilesFromBackupRequest {
   message Selector {
@@ -109,6 +127,21 @@ message StatSaveStatesRequest {
 message StatSaveStatesResponse {
   repeated SaveStatesStat save_states_stats = 1;
 }
+
+message BackupSaveStatesRequest {
+  message Selector {
+    int32 emulator_id = 1;
+  }
+
+  message Config {
+    optional bool dry_run = 1;
+  }
+
+  repeated Selector save_states_selectors = 1;
+  optional Config config = 2;
+}
+
+message BackupSaveStatesResponse {}
 
 message RestoreSaveStatesFromBackupRequest {
   message Selector {

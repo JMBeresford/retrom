@@ -3,8 +3,10 @@ use diesel::{query_dsl::methods::FilterDsl, ExpressionMethods};
 use diesel_async::RunQueryDsl;
 use ludusavi::report::ApiGame;
 use retrom_codegen::retrom::{
+    files::FileStat,
     services::saves::v2::{
-        emulator_saves_service_server::EmulatorSavesService, Backup,
+        emulator_saves_service_server::EmulatorSavesService, Backup, BackupSaveFilesRequest,
+        BackupSaveFilesResponse, BackupSaveStatesRequest, BackupSaveStatesResponse,
         RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
         RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, SaveFilesStat,
         StatSaveFilesRequest, StatSaveFilesResponse, StatSaveStatesRequest, StatSaveStatesResponse,
@@ -12,6 +14,7 @@ use retrom_codegen::retrom::{
     Emulator,
 };
 use retrom_db::Pool;
+use retrom_service_common::retrom_dirs::RetromDirs;
 use std::{path::PathBuf, sync::Arc, time::SystemTime};
 use tonic::{Request, Response, Status};
 use tracing::instrument;
@@ -59,24 +62,37 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         };
 
         let mut ludusavi_manager = LudusaviManager::new(&emulators);
-        let files = ludusavi_manager.list_files().map_err(|e| {
-            Status::internal(format!("Failed to list save files via Ludusavi: {}", e))
-        })?;
+        let (files, backups_output) = tokio::task::spawn_blocking(move || {
+            let files = ludusavi_manager.list_files().map_err(|e| {
+                Status::internal(format!("Failed to list save files via Ludusavi: {}", e))
+            })?;
 
-        let backups_output = if include_backups {
-            Some(ludusavi_manager.list_backups(None).map_err(|e| {
-                Status::internal(format!("Failed to list save file backups: {}", e))
-            })?)
-        } else {
-            None
-        };
+            let backups_output = if include_backups {
+                Some(ludusavi_manager.list_backups(None).map_err(|e| {
+                    Status::internal(format!("Failed to list save file backups: {}", e))
+                })?)
+            } else {
+                None
+            };
+
+            Ok::<_, Status>((files, backups_output))
+        })
+        .await
+        .map_err(|e| {
+            Status::internal(format!("Failed to join Ludusavi list files task: {}", e))
+        })??;
+
+        let saves_root = RetromDirs::new().saves_dir();
 
         let save_files_stats: Vec<SaveFilesStat> = files
             .into_iter()
             .map(|(emulator_id, files)| {
+                let emulator_save_dir = saves_root.join(emulator_id.to_string());
+
                 let file_stats = files
                     .into_keys()
                     .filter_map(|fname| PathBuf::from(fname).try_into().ok())
+                    .filter_map(|stat: FileStat| stat.relative_to(&emulator_save_dir))
                     .collect();
 
                 let backups = backups_output
@@ -105,16 +121,62 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
                     })
                     .unwrap_or_default();
 
+                let save_directory = emulator_save_dir.to_string_lossy().to_string();
+
                 SaveFilesStat {
                     emulator_id,
                     file_stats,
                     backups,
-                    etag: Default::default(),
+                    save_directory,
                 }
             })
             .collect();
 
         Ok(Response::new(StatSaveFilesResponse { save_files_stats }))
+    }
+
+    #[instrument(skip(self))]
+    async fn backup_save_files(
+        &self,
+        request: Request<BackupSaveFilesRequest>,
+    ) -> Result<Response<BackupSaveFilesResponse>, Status> {
+        let request = request.into_inner();
+        let dry_run = request.config.map(|c| c.dry_run());
+
+        let emulator_ids = request
+            .save_files_selectors
+            .iter()
+            .map(|selector| selector.emulator_id)
+            .collect::<Vec<_>>();
+
+        let emulators: Vec<Emulator> = {
+            use retrom_db::schema::emulators;
+
+            let mut conn = self
+                .db_pool
+                .get()
+                .await
+                .map_err(|e| Status::internal(format!("Failed to get DB connection: {}", e)))?;
+
+            emulators::table
+                .filter(emulators::id.eq_any(&emulator_ids))
+                .load(&mut conn)
+                .await
+                .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
+        };
+
+        let mut ludusavi_manager = LudusaviManager::new(&emulators);
+        tokio::task::spawn_blocking(move || {
+            let output = ludusavi_manager.back_up(dry_run).map_err(|e| {
+                Status::internal(format!("Failed to back up save files via Ludusavi: {}", e))
+            })?;
+
+            Ok::<_, Status>(output)
+        })
+        .await
+        .map_err(|e| Status::internal(format!("Failed to join Ludusavi backup task: {}", e)))??;
+
+        Ok(Response::new(BackupSaveFilesResponse::default()))
     }
 
     #[instrument(skip(self))]
@@ -130,6 +192,14 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         &self,
         _request: Request<StatSaveStatesRequest>,
     ) -> Result<Response<StatSaveStatesResponse>, Status> {
+        unimplemented!()
+    }
+
+    #[instrument(skip(self))]
+    async fn backup_save_states(
+        &self,
+        _request: Request<BackupSaveStatesRequest>,
+    ) -> Result<Response<BackupSaveStatesResponse>, Status> {
         unimplemented!()
     }
 
