@@ -70,6 +70,7 @@
     "standalone:allow-enable-standalone-mode",
     "standalone:allow-disable-standalone-mode",
     "config:allow-get-config",
-    "config:allow-set-config"
+    "config:allow-set-config",
+    "config:allow-is-flatpak"
   ]
 }

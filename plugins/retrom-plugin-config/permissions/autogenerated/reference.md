@@ -36,6 +36,32 @@ Denies the get_config command without any pre-configured scope.
 <tr>
 <td>
 
+`retrom-plugin-config:allow-is-flatpak`
+
+</td>
+<td>
+
+Enables the is_flatpak command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-config:deny-is-flatpak`
+
+</td>
+<td>
+
+Denies the is_flatpak command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `retrom-plugin-config:allow-ping`
 
 </td>

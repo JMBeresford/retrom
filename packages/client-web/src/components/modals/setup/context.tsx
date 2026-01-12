@@ -54,12 +54,14 @@ export function SetupModalProvider(props: React.PropsWithChildren) {
     switch (step) {
       case "Confirm": {
         return () => {
-          void navigate({
+          navigate({
             to: ".",
             search: (prev) => ({ ...prev, setupModal: undefined }),
-          }).then(() => {
-            setStep("Mode");
-          });
+          })
+            .then(() => {
+              setStep("Mode");
+            })
+            .catch(console.error);
         };
       }
       default: {

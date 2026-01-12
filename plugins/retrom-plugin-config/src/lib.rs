@@ -26,7 +26,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("config")
         .invoke_handler(tauri::generate_handler![
             commands::get_config,
-            commands::set_config
+            commands::set_config,
+            commands::is_flatpak
         ])
         .setup(|app, api| {
             let config_manager = config_manager::init(app, api)?;
