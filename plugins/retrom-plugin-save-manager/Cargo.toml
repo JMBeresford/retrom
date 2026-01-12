@@ -35,3 +35,6 @@ urlencoding = "2.1.3"
 
 [build-dependencies]
 tauri-plugin = { workspace = true }
+
+[package.metadata.cargo-machete]
+ignored = ["tauri-plugin"]

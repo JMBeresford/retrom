@@ -35,4 +35,3 @@ regex = { workspace = true }
 tempfile = { workspace = true }
 chrono = { workspace = true }
 ludusavi = { workspace = true }
-serde_json = { workspace = true }

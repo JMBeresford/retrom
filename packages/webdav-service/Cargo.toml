@@ -9,15 +9,10 @@ edition.workspace = true
 description = "The Retrom video game library WebDAV service handlers"
 
 [dependencies]
-thiserror = { workspace = true }
-http = { workspace = true }
-retrom-codegen = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 retrom-service-common = { workspace = true }
 retrom-telemetry = { workspace = true }
 dav-server = { workspace = true }
-hyper = { workspace = true }
-hyper-util = { workspace = true }
 axum = { workspace = true }
 axum-tracing-opentelemetry = { workspace = true }
