@@ -29,7 +29,6 @@ impl LudusaviManager {
 
                 Some(CustomGame {
                     name: emulator.id.to_string(),
-                    alias: emulator.name.clone().into(),
                     files: vec![save_directory],
                     ..Default::default()
                 })

@@ -9054,13 +9054,11 @@ dependencies = [
  "protobuf-src",
  "retrom-db",
  "serde",
- "thiserror 1.0.69",
  "tonic 0.14.2",
  "tonic-include-proto",
  "tonic-prost",
  "tonic-prost-build",
  "walkdir",
- "webdav-meta",
 ]
 
 [[package]]
@@ -9098,7 +9096,6 @@ dependencies = [
  "retrom-service-common",
  "retrom-telemetry",
  "sanitize-filename",
- "serde_json",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
@@ -9372,13 +9369,8 @@ dependencies = [
  "axum",
  "axum-tracing-opentelemetry",
  "dav-server",
- "http 1.4.0",
- "hyper 1.8.1",
- "hyper-util",
- "retrom-codegen",
  "retrom-service-common",
  "retrom-telemetry",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
