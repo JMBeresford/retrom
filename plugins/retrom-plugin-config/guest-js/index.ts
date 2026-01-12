@@ -26,3 +26,7 @@ export async function setConfig(
     ),
   });
 }
+
+export async function isFlatpak(): Promise<boolean> {
+  return invoke<boolean>("plugin:config|is_flatpak");
+}

@@ -54,6 +54,7 @@ flatpak = [
   "retrom-plugin-launcher/flatpak",
   "retrom-codegen/vendored-protoc",
   "retrom-plugin-standalone/flatpak",
+  "retrom-plugin-config/flatpak",
 ]
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]

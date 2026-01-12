@@ -307,6 +307,18 @@
           "markdownDescription": "Denies the get_config command without any pre-configured scope."
         },
         {
+          "description": "Enables the is_flatpak command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-is-flatpak",
+          "markdownDescription": "Enables the is_flatpak command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the is_flatpak command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-is-flatpak",
+          "markdownDescription": "Denies the is_flatpak command without any pre-configured scope."
+        },
+        {
           "description": "Enables the ping command without any pre-configured scope.",
           "type": "string",
           "const": "allow-ping",
