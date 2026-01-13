@@ -5,5 +5,7 @@ export function useIsFlatpak() {
   return useQuery({
     queryFn: () => isFlatpak(),
     queryKey: ["isFlatpak"],
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 }

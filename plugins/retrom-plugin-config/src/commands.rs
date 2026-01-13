@@ -22,6 +22,6 @@ pub(crate) async fn set_config<R: Runtime>(app: AppHandle<R>, new_config: Vec<u8
 }
 
 #[command]
-pub(crate) async fn is_flatpak<R: Runtime>(_app: AppHandle<R>) -> bool {
+pub(crate) fn is_flatpak<R: Runtime>(_app: AppHandle<R>) -> bool {
     cfg!(feature = "flatpak")
 }
