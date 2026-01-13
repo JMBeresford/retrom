@@ -32,6 +32,7 @@ import {
 } from "@retrom/ui/components/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Code } from "@retrom/ui/components/code";
+import { useIsFlatpak } from "@/queries/useIsFlatpak";
 
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
@@ -41,6 +42,7 @@ const formSchema = z.object({
   port: z.coerce.number().optional(),
 });
 export function ServerHostStep() {
+  const isFlatpakQuery = useIsFlatpak();
   const { previousStep } = useSetupModal();
   const initialState = useConfigStore().getState();
 
@@ -136,10 +138,12 @@ export function ServerHostStep() {
       </div>
 
       <DialogFooter>
-        {previousStep && (
+        {previousStep && !isFlatpakQuery.data ? (
           <Button onClick={previousStep} variant="secondary">
             Back
           </Button>
+        ) : (
+          <></>
         )}
 
         <TestButton />
