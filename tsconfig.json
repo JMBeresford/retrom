@@ -31,6 +31,12 @@
     },
     {
       "path": "./packages/ui"
+    },
+    {
+      "path": "./plugins/retrom-plugin-webdav-client"
+    },
+    {
+      "path": "./plugins/retrom-plugin-save-manager"
     }
   ]
 }

@@ -12,6 +12,9 @@
       "path": "../retrom-plugin-service-client"
     },
     {
+      "path": "../retrom-plugin-save-manager"
+    },
+    {
       "path": "../retrom-plugin-installer"
     },
     {
