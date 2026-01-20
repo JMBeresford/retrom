@@ -24,7 +24,6 @@ on:
           The OS that this build job will be run on. Must be one of: \
           'macos-latest', 'windows-latest', 'ubuntu-24.04', 'ubuntu-24.04-arm'
       target:
-        required: true
         type: string
         description: |
           The target to build for on multi-target platforms, must be one of: \
