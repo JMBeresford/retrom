@@ -44,8 +44,28 @@ on:
         required: true
       VITE_OTEL_EXPORTER_OTLP_HEADERS:
         required: true
-
-  workflow_dispatch: *workflow-config
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+        description: The SemVer version this build represents
+      os:
+        required: true
+        type: string
+        description: |
+          The OS that this build job will be run on. Must be one of: \
+          'macos-latest', 'windows-latest', 'ubuntu-24.04', 'ubuntu-24.04-arm'
+      target:
+        required: true
+        type: string
+        description: |
+          The target to build for on multi-target platforms, must be one of: \
+          'aarch64-apple-darwin', 'x86_64-apple-darwin'
+      debug:
+        type: boolean
+        default: false
+        description: Create debug builds
 
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
