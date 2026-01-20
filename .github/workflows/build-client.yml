@@ -81,9 +81,11 @@ jobs:
     steps:
       - name: Configure job
         shell: bash
+        env:
+          INPUTS_JSON: ${{ toJson(inputs) }}
         run: |
-          echo inputs: ${{ toJson(inputs) }}
-          echo target: ${{ env.TARGET_ARG }}
+          echo inputs: "$INPUTS_JSON"
+          echo target: "$TARGET_ARG"
 
       - uses: actions/checkout@v4
         with:
