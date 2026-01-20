@@ -96,7 +96,7 @@ jobs:
         with:
           run_install: false
 
-      - name: Install Node.js
+      - name: install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -115,7 +115,7 @@ jobs:
           cache-all-crates: false
           cache-workspace-crates: true
 
-      - name: Install Protoc
+      - name: install Protoc
         uses: arduino/setup-protoc@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -159,6 +159,10 @@ jobs:
         id: nx-check
         continue-on-error: true
         run: pnpm nx noop
+
+      - name: disable NX cloud
+        if: steps.nx-check.outcome != 'success'
+        run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
 
       - name: install tauri cli
         run: cargo install tauri-cli --version "^2.0.0" --locked
