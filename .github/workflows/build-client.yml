@@ -21,13 +21,12 @@ on:
         required: true
         type: string
         description: |
-          The OS that this build job will be run on. Must be one of: \
+          The OS that this build job will be run on. Must be one of: 
           'macos-latest', 'windows-latest', 'ubuntu-24.04', 'ubuntu-24.04-arm'
       target:
-        required: false
         type: string
         description: |
-          The target to build for on multi-target platforms, must be one of: \
+          The target to build for on multi-target platforms, must be one of: 
           'aarch64-apple-darwin', 'x86_64-apple-darwin'
       debug:
         type: boolean
@@ -54,13 +53,12 @@ on:
         required: true
         type: string
         description: |
-          The OS that this build job will be run on. Must be one of: \
+          The OS that this build job will be run on. Must be one of: 
           'macos-latest', 'windows-latest', 'ubuntu-24.04', 'ubuntu-24.04-arm'
       target:
-        required: true
         type: string
         description: |
-          The target to build for on multi-target platforms, must be one of: \
+          The target to build for on multi-target platforms, must be one of: 
           'aarch64-apple-darwin', 'x86_64-apple-darwin'
       debug:
         type: boolean
