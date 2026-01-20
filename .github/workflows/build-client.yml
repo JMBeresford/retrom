@@ -1,0 +1,181 @@
+name: Build Client
+
+on:
+  workflow_call: &workflow-config
+    outputs:
+      binary:
+        value: ${{ jobs.build.outputs.binary }}
+        description: The resultant build binary
+      web-dist:
+        value: ${{ jobs.build.outputs.web-dist }}
+        description: The static web assets for this build
+      cargo-deps:
+        value: ${{ jobs.build.outputs.cargo-deps }}
+        description: The vendored cargo dependencies for this build
+    inputs:
+      version:
+        required: true
+        type: string
+        description: The SemVer version this build represents
+      os:
+        required: true
+        type: string
+        description: |
+          The OS that this build job will be run on. Must be one of: \
+          'macos-latest', 'windows-latest', 'ubuntu-24.04', 'ubuntu-24.04-arm'
+      target:
+        required: true
+        type: string
+        description: |
+          The target to build for on multi-target platforms, must be one of: \
+          'aarch64-apple-darwin', 'x86_64-apple-darwin'
+      debug:
+        type: boolean
+        default: false
+        description: Create debug builds
+    secrets:
+      NX_CLOUD_ACCESS_TOKEN:
+        required: true
+      UPTRACE_DSN:
+        required: true
+      VITE_UPTRACE_DSN:
+        required: true
+      OTEL_EXPORTER_OTLP_HEADERS:
+        required: true
+      VITE_OTEL_EXPORTER_OTLP_HEADERS:
+        required: true
+
+  workflow_dispatch: *workflow-config
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    outputs:
+      binary: steps.binary.outputs
+      web-dist: steps.web-dist.outputs
+      cargo-deps: steps.cargo-deps.outputs
+    env:
+      PQ_LIB_STATIC: 1
+      TARGET_ARG: ${{ format('{0}{1}', inputs.target && '--target ' || '', inputs.target) }}
+    steps:
+      - name: Configure job
+        shell: bash
+        run: |
+          echo inputs: ${{ toJson(inputs) }}
+          echo target: ${{ env.TARGET_ARG }}
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: install Rust stable
+        id: rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ inputs.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: false
+          cache-all-crates: false
+          cache-workspace-crates: true
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: install dependencies (ubuntu 24 only)
+        if: startsWith(inputs.os, 'ubuntu-24.04')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libwebkit2gtk-4.1-0=2.44.0-2 \
+            libwebkit2gtk-4.1-dev=2.44.0-2 \
+            libjavascriptcoregtk-4.1-0=2.44.0-2 \
+            libjavascriptcoregtk-4.1-dev=2.44.0-2 \
+            gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
+            gir1.2-webkit2-4.1=2.44.0-2 \
+            xdg-utils
+
+      - name: install dependencies (windows only)
+        if: inputs.os == 'windows-latest'
+        run: |
+          choco install -y postgresql17
+
+      - name: install dependencies (macos m1 only)
+        if: inputs.os == 'macOS-latest' && inputs.target != 'x86_64-apple-darwin'
+        run: |
+          brew install postgresql@17
+
+      - name: install dependencies (macos intel only)
+        if: inputs.target == 'x86_64-apple-darwin'
+        run: |
+          arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          arch -x86_64 /usr/local/bin/brew install postgresql@17
+
+      - name: install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: check NX cloud access
+        id: nx-check
+        continue-on-error: true
+        run: pnpm nx noop
+
+      - name: install tauri cli
+        run: cargo install tauri-cli --version "^2.0.0" --locked
+
+      - name: build client
+        env:
+          CONFIGURATION: ${{ inputs.debug && 'debug' || 'release' }}
+        run: |
+          pnpm nx build retrom-client --args="--no-bundle $TARGET_ARG" --configuration="$CONFIGURATION"
+
+      - name: upload build artifact
+        id: binary
+        uses: actions/upload-artifact@v6
+        env:
+          OUT_DIR: ${{ inputs.debug && 'target/debug' || 'target/release' }}
+        with:
+          name: binary
+          path: "${{ env.OUT_DIR }}/Retrom"
+          if-no-files-found: error
+
+      - name: upload static web assets
+        id: web-dist
+        uses: actions/upload-artifact@v6
+        with:
+          name: web-dist
+          path: packages/client-web/dist/
+          if-no-files-found: error
+
+      - name: vendor cargo dependencies
+        run: |
+          cargo clean
+          cargo vendor --locked --manifest-path packages/client/Cargo.toml
+
+      - name: upload vendored cargo deps
+        id: cargo-deps
+        uses: actions/upload-artifact@v6
+        with:
+          name: cargo-deps
+          path: vendor/
+          if-no-files-found: error
