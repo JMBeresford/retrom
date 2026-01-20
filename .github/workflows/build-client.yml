@@ -3,6 +3,9 @@ name: Build Client
 on:
   workflow_call: &workflow-config
     outputs:
+      bundles:
+        value: ${{ jobs.build.outputs.bundles }}
+        description: The resultant bundles, if applicable
       binary:
         value: ${{ jobs.build.outputs.binary }}
         description: The resultant build binary
@@ -13,25 +16,23 @@ on:
         value: ${{ jobs.build.outputs.cargo-deps }}
         description: The vendored cargo dependencies for this build
     inputs:
+      bundle:
+        type: boolean
+        default: false
+      sign:
+        type: boolean
+        default: false
       version:
         required: true
         type: string
-        description: The SemVer version this build represents
       os:
         required: true
         type: string
-        description: |
-          The OS that this build job will be run on. Must be one of: 
-          'macos-latest', 'windows-latest', 'ubuntu-24.04', 'ubuntu-24.04-arm'
       target:
         type: string
-        description: |
-          The target to build for on multi-target platforms, must be one of: 
-          'aarch64-apple-darwin', 'x86_64-apple-darwin'
       debug:
         type: boolean
         default: false
-        description: Create debug builds
     secrets:
       NX_CLOUD_ACCESS_TOKEN:
         required: true
@@ -45,18 +46,34 @@ on:
         required: true
   workflow_dispatch:
     inputs:
+      bundle:
+        type: boolean
+        default: false
+        description: Create native bundles (e.g. `.app` for MacOS, `.deb|.rpm|.appimage` for linux)
+      sign:
+        type: boolean
+        default: false
+        description: Sign any created bundles
       version:
         required: true
         type: string
         description: The SemVer version this build represents
       os:
         required: true
-        type: string
+        type: choice
+        options:
+          - macos-latest
+          - windows-latest
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
         description: |
           The OS that this build job will be run on. Must be one of: 
           'macos-latest', 'windows-latest', 'ubuntu-24.04', 'ubuntu-24.04-arm'
       target:
-        type: string
+        type: choice
+        options:
+          - aarch64-apple-darwin
+          - x86_64-apple-darwin
         description: |
           The target to build for on multi-target platforms, must be one of: 
           'aarch64-apple-darwin', 'x86_64-apple-darwin'
@@ -66,18 +83,22 @@ on:
         description: Create debug builds
 
 env:
+  PQ_LIB_STATIC: 1
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  TARGET_ARG: ${{ format('{0}{1}', inputs.target && '--target ' || '', inputs.target) }}
+  BUNDLE_ARG: ${{ inputs.bundle && '' || '--no-bundle' }}
+  SIGN_ARG: ${{ inputs.sign && '' || '--no-sign' }}
 
 jobs:
   build:
     runs-on: ${{ inputs.os }}
+    env:
+      OUT_DIR: ${{ inputs.debug && 'target/debug' || 'target/release' }}
     outputs:
+      bundles: steps.bundle.outputs
       binary: steps.binary.outputs
       web-dist: steps.web-dist.outputs
       cargo-deps: steps.cargo-deps.outputs
-    env:
-      PQ_LIB_STATIC: 1
-      TARGET_ARG: ${{ format('{0}{1}', inputs.target && '--target ' || '', inputs.target) }}
     steps:
       - name: Configure job
         shell: bash
@@ -85,7 +106,7 @@ jobs:
           INPUTS_JSON: ${{ toJson(inputs) }}
         run: |
           echo inputs: "$INPUTS_JSON"
-          echo target: "$TARGET_ARG"
+          echo ARGS: "$TARGET_ARG $BUNDLE_ARG $SIGN_ARG"
 
       - uses: actions/checkout@v4
         with:
@@ -171,13 +192,20 @@ jobs:
         env:
           CONFIGURATION: ${{ inputs.debug && 'debug' || 'release' }}
         run: |
-          pnpm nx build retrom-client --args="--no-bundle $TARGET_ARG" --configuration="$CONFIGURATION"
+          pnpm nx build retrom-client --args="$BUNDLE_ARG $TARGET_ARG $SIGN_ARG" --configuration="$CONFIGURATION"
+
+      - name: upload build bundles
+        id: bundles
+        if: inputs.bundle
+        uses: actions/upload-artifact@v6
+        with:
+          name: bundles
+          path: "${{ env.OUT_DIR }}/bundle"
+          if-no-files-found: error
 
       - name: upload build artifact
         id: binary
         uses: actions/upload-artifact@v6
-        env:
-          OUT_DIR: ${{ inputs.debug && 'target/debug' || 'target/release' }}
         with:
           name: binary
           path: "${{ env.OUT_DIR }}/Retrom"
