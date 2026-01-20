@@ -277,7 +277,7 @@ jobs:
   publish-crates:
     permissions:
       contents: read
-    if: github.event_name == 'release'
+    if: ${{ false }} # github.event_name == 'release'
     name: Publish to Crates.io
     runs-on: ubuntu-latest
     steps:
