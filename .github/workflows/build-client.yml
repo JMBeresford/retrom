@@ -86,8 +86,8 @@ env:
   PQ_LIB_STATIC: 1
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   TARGET_ARG: ${{ format('{0}{1}', inputs.target && '--target ' || '', inputs.target) }}
-  BUNDLE_ARG: ${{ inputs.bundle && '' || '--no-bundle' }}
-  SIGN_ARG: ${{ inputs.sign && '' || '--no-sign' }}
+  BUNDLE_ARG: ${{ !inputs.bundle && '--no-bundle' || '' }}
+  SIGN_ARG: ${{ !inputs.sign && '--no-sign' || '' }}
 
 jobs:
   build:
