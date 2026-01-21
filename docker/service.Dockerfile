@@ -46,6 +46,7 @@ RUN apt-get update && apt-get install build-essential protobuf-compiler openssl 
 FROM service-deps AS service-builder
 
 COPY --from=project /app /usr/src/retrom
+RUN rustup component add rustfmt
 RUN cargo install --path /usr/src/retrom/packages/service --features embedded_db
 
 ### RUNTIME
