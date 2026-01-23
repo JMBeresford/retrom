@@ -21,7 +21,7 @@ on:
         default: false
       sign:
         type: boolean
-        default: false
+        default: true
       version:
         required: true
         type: string
@@ -44,6 +44,25 @@ on:
         required: true
       VITE_OTEL_EXPORTER_OTLP_HEADERS:
         required: true
+      TAURI_SIGNING_PRIVATE_KEY:
+        required: false
+      APPLE_CERTIFICATE:
+        required: false
+      APPLE_CERTIFICATE_PASSWORD:
+        required: false
+      APPLE_SIGNING_IDENTITY:
+        required: false
+      APPLE_ID:
+        required: false
+      APPLE_PASSWORD:
+        required: false
+      APPLE_TEAM_ID:
+        required: false
+      APPLE_API_KEY:
+        required: false
+      APPLE_API_ISSUER:
+        required: false
+
   workflow_dispatch:
     inputs:
       bundle:
@@ -52,7 +71,7 @@ on:
         description: Create native bundles (e.g. `.app` for MacOS, `.deb|.rpm|.appimage` for linux)
       sign:
         type: boolean
-        default: false
+        default: true
         description: Sign any created bundles
       version:
         required: true
@@ -82,12 +101,25 @@ on:
         default: false
         description: Create debug builds
 
+permissions:
+  contents: read
+
 env:
   PQ_LIB_STATIC: 1
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   TARGET_ARG: ${{ format('{0}{1}', inputs.target && '--target ' || '', inputs.target) }}
   BUNDLE_ARG: ${{ !inputs.bundle && '--no-bundle' || '' }}
   SIGN_ARG: ${{ !inputs.sign && '--no-sign' || '' }}
+  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+  TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+  APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+  APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+  APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+  APPLE_ID: ${{ secrets.APPLE_ID }}
+  APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+  APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+  APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
 
 jobs:
   build:
