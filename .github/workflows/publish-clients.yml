@@ -31,8 +31,8 @@ on:
           - both
 
   pull_request:
-  release:
-    types: [created]
+  # release:
+  #   types: [created]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

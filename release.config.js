@@ -1,72 +1,6 @@
-import Handlebars from "handlebars";
+import commitPartial from "./release-notes-template.js";
 
-Handlebars.registerHelper("indent", (text) =>
-  text
-    .split("\n")
-    .map((line) => "\t" + line)
-    .join("\n"),
-);
-
-const commitPartial = `
-* {{header}}
-
-{{~!-- commit link --}}
-{{~#if @root.linkReferences}} ([{{hash}}](
-  {{~#if @root.repository}}
-    {{~#if @root.host}}
-      {{~@root.host}}/
-    {{~/if}}
-    {{~#if @root.owner}}
-      {{~@root.owner}}/
-    {{~/if}}
-    {{~@root.repository}}
-  {{~else}}
-    {{~@root.repoUrl}}
-  {{~/if}}/
-  {{~@root.commit}}/{{hash}}))
-{{~else if hash}} {{hash}}{{~/if}}
-
-{{~!-- commit references --}}
-{{~#if references~}}
-  , closes
-  {{~#each references}} {{#if @root.linkReferences~}}
-    [
-    {{~#if this.owner}}
-      {{~this.owner}}/
-    {{~/if}}
-    {{~this.repository}}#{{this.issue}}](
-    {{~#if @root.repository}}
-      {{~#if @root.host}}
-        {{~@root.host}}/
-      {{~/if}}
-      {{~#if this.repository}}
-        {{~#if this.owner}}
-          {{~this.owner}}/
-        {{~/if}}
-        {{~this.repository}}
-      {{~else}}
-        {{~#if @root.owner}}
-          {{~@root.owner}}/
-        {{~/if}}
-          {{~@root.repository}}
-        {{~/if}}
-    {{~else}}
-      {{~@root.repoUrl}}
-    {{~/if}}/
-    {{~@root.issue}}/{{this.issue}})
-  {{~else}}
-    {{~#if this.owner}}
-      {{~this.owner}}/
-    {{~/if}}
-    {{~this.repository}}#{{this.issue}}
-  {{~/if}}{{/each}}
-{{~/if}}
-
-{{~#if body}}
-
-  {{indent body}}
-{{/if}}
-`;
+const DRAFT_RELEASE = !!process.env.DRAFT_RELEASE;
 
 /**
  * @type {import('semantic-release').GlobalConfig}
@@ -76,7 +10,13 @@ export default {
   branches: ["main"],
   dryRun: true,
   plugins: [
-    "@semantic-release/commit-analyzer",
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        // Breaking changes trigger a minor release until v1.0.0
+        releaseRules: [{ breaking: true, release: "minor" }],
+      },
+    ],
     [
       "@semantic-release/release-notes-generator",
       {
@@ -92,7 +32,12 @@ export default {
       },
     ],
     "@semantic-release-cargo/semantic-release-cargo",
-    "@semantic-release/github",
+    [
+      "@semantic-release/github",
+      {
+        draftRelease: DRAFT_RELEASE,
+      },
+    ],
   ],
   preset: "conventionalcommits",
   ci: false,

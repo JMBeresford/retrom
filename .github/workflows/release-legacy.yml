@@ -1,7 +1,8 @@
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
 
 name: Release (legacy)
 

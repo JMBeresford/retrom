@@ -1,9 +1,28 @@
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      draft:
+        type: boolean
+        default: false
+      dry-run:
+        type: boolean
+        default: true
+  workflow_dispatch:
+    inputs:
+      draft:
+        type: boolean
+        description: "Create a draft release"
+        default: false
+      dry-run:
+        type: boolean
+        description: "Run the release process without publishing"
+        default: true
 
 name: Create Release
+
+env:
+  DRAFT_RELEASE: ${{ inputs.draft && 'true' || '' }}
+  DRY_RUN_ARG: ${{ format('--dry-run {0}', inputs.dry-run && 'true' || 'false') }}
 
 jobs:
   release:
@@ -36,6 +55,8 @@ jobs:
 
       - name: Create Release
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: pnpm exec semantic-release --ci=true
+        run: |
+          pnpm exec semantic-release --ci=true \
+            "$DRY_RUN_ARG"
