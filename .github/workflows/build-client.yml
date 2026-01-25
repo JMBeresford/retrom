@@ -1,7 +1,7 @@
 name: Build Client
 
 on:
-  workflow_call: &workflow-config
+  workflow_call:
     outputs:
       bundles:
         value: ${{ jobs.build.outputs.bundles }}
@@ -110,6 +110,7 @@ env:
   TARGET_ARG: ${{ format('{0}{1}', inputs.target && '--target ' || '', inputs.target) }}
   BUNDLE_ARG: ${{ !inputs.bundle && '--no-bundle' || '' }}
   SIGN_ARG: ${{ !inputs.sign && '--no-sign' || '' }}
+  OUT_DIR: "/target"
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
   TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
   APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -124,8 +125,6 @@ env:
 jobs:
   build:
     runs-on: ${{ inputs.os }}
-    env:
-      OUT_DIR: ${{ inputs.debug && 'target/debug' || 'target/release' }}
     outputs:
       bundles: steps.bundle.outputs
       binary: steps.binary.outputs
@@ -135,10 +134,22 @@ jobs:
       - name: Configure job
         shell: bash
         env:
+          TARGET: ${{ inputs.target }}
+          PROFILE: ${{ inputs.debug && 'debug' || 'release' }}
           INPUTS_JSON: ${{ toJson(inputs) }}
         run: |
+          if [ -n "$TARGET" ]; then
+            export TARGET_DIR="target/$TARGET/"
+          else
+            export TARGET_DIR="target/"
+          fi
+
+          export OUT_DIR="$TARGET_DIR/$PROFILE"
+          echo "OUT_DIR=$OUT_DIR" >> "$GITHUB_ENV"
+
           echo inputs: "$INPUTS_JSON"
           echo ARGS: "$TARGET_ARG $BUNDLE_ARG $SIGN_ARG"
+          echo OUT_DIR: "$OUT_DIR"
 
       - uses: actions/checkout@v4
         with:
