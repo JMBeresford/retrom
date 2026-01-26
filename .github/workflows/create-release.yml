@@ -11,11 +11,11 @@ on:
     inputs:
       draft:
         type: boolean
-        description: "Create a draft release"
+        description: Create a draft release
         default: false
       dry-run:
         type: boolean
-        description: "Run the release process without publishing"
+        description: Enable dry run mode
         default: true
 
 name: Create Release
