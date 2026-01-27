@@ -22,9 +22,6 @@ on:
       sign:
         type: boolean
         default: true
-      version:
-        required: true
-        type: string
       os:
         required: true
         type: string
@@ -38,11 +35,7 @@ on:
         required: true
       UPTRACE_DSN:
         required: true
-      VITE_UPTRACE_DSN:
-        required: true
       OTEL_EXPORTER_OTLP_HEADERS:
-        required: true
-      VITE_OTEL_EXPORTER_OTLP_HEADERS:
         required: true
       TAURI_SIGNING_PRIVATE_KEY:
         required: false
@@ -73,10 +66,6 @@ on:
         type: boolean
         default: true
         description: Sign any created bundles
-      version:
-        required: true
-        type: string
-        description: The SemVer version this build represents
       os:
         required: true
         type: choice
@@ -121,6 +110,7 @@ env:
   APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
   APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
   APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+  ARTIFACT_PREFIX: ""
 
 jobs:
   build:
@@ -138,18 +128,23 @@ jobs:
           PROFILE: ${{ inputs.debug && 'debug' || 'release' }}
           INPUTS_JSON: ${{ toJson(inputs) }}
         run: |
+          export ARTIFACT_PREFIX="${{ inputs.os }}-"
+
           if [ -n "$TARGET" ]; then
-            export TARGET_DIR="target/$TARGET/"
+            export TARGET_DIR="target/$TARGET"
+            export ARTIFACT_PREFIX="${ARTIFACT_PREFIX}${TARGET}-"
           else
-            export TARGET_DIR="target/"
+            export TARGET_DIR="target"
           fi
 
           export OUT_DIR="$TARGET_DIR/$PROFILE"
           echo "OUT_DIR=$OUT_DIR" >> "$GITHUB_ENV"
+          echo "ARTIFACT_PREFIX=$ARTIFACT_PREFIX" >> "$GITHUB_ENV"
 
           echo inputs: "$INPUTS_JSON"
           echo ARGS: "$TARGET_ARG $BUNDLE_ARG $SIGN_ARG"
           echo OUT_DIR: "$OUT_DIR"
+          echo ARTIFACT_PREFIX: "$ARTIFACT_PREFIX"
 
       - uses: actions/checkout@v4
         with:
@@ -242,7 +237,7 @@ jobs:
         if: inputs.bundle
         uses: actions/upload-artifact@v6
         with:
-          name: bundles
+          name: ${{ env.ARTIFACT_PREFIX }}bundles
           path: "${{ env.OUT_DIR }}/bundle"
           if-no-files-found: error
 
@@ -250,7 +245,7 @@ jobs:
         id: binary
         uses: actions/upload-artifact@v6
         with:
-          name: binary
+          name: ${{ env.ARTIFACT_PREFIX }}binary
           path: "${{ env.OUT_DIR }}/Retrom"
           if-no-files-found: error
 
@@ -258,7 +253,7 @@ jobs:
         id: web-dist
         uses: actions/upload-artifact@v6
         with:
-          name: web-dist
+          name: ${{ env.ARTIFACT_PREFIX }}web-dist
           path: packages/client-web/dist/
           if-no-files-found: error
 
@@ -271,6 +266,6 @@ jobs:
         id: cargo-deps
         uses: actions/upload-artifact@v6
         with:
-          name: cargo-deps
+          name: ${{ env.ARTIFACT_PREFIX }}cargo-deps
           path: vendor/
           if-no-files-found: error

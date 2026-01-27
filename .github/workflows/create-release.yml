@@ -24,15 +24,33 @@ env:
   DRAFT_RELEASE: ${{ inputs.draft && 'true' || '' }}
   DRY_RUN_ARG: ${{ format('--dry-run {0}', inputs.dry-run && 'true' || 'false') }}
 
+permissions:
+  contents: write # to be able to publish a GitHub release
+  issues: write # to be able to comment on released issues
+  pull-requests: write # to be able to comment on released pull requests
+  id-token: write # to enable use of OIDC for trusted publishing and npm provenance
+
 jobs:
+  build-clients:
+    name: Build Client
+    uses: jmberesford/retrom/.github/workflows/build-client.yml@main
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm, windows-latest]
+        include:
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+    with:
+      os: ${{ matrix.os }}
+      target: ${{ matrix.target }}
+    secrets: inherit
+
   release:
     name: Release
+    needs: build-clients
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # to be able to publish a GitHub release
-      issues: write # to be able to comment on released issues
-      pull-requests: write # to be able to comment on released pull requests
-      id-token: write # to enable use of OIDC for trusted publishing and npm provenance
     steps:
       - name: Checkout
         uses: actions/checkout@v4
