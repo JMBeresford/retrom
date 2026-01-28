@@ -244,9 +244,11 @@ jobs:
       - name: upload build artifact
         id: binary
         uses: actions/upload-artifact@v6
+        env:
+          BINARY_FILE: ${{ inputs.os == 'windows-latest' && 'Retrom.exe' || 'Retrom' }}
         with:
           name: ${{ env.ARTIFACT_PREFIX }}binary
-          path: "${{ env.OUT_DIR }}/Retrom"
+          path: "${{ env.OUT_DIR }}/${{ env.BINARY_FILE }}"
           if-no-files-found: error
 
       - name: upload static web assets
