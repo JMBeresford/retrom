@@ -1,7 +1,7 @@
 use crate::retrom_dirs::RetromDirs;
 use config::{Config, ConfigError, File};
 use retrom_codegen::retrom::{
-    metadata_config::OptimizationConfig, ContentDirectory, MetadataConfig, SavesConfig,
+    metadata_config::OptimizationConfig, ContentDirectory, MetadataConfig, SaveDirStructure, SavesConfig,
     ServerConfig, StorageType,
 };
 use std::path::PathBuf;
@@ -38,6 +38,7 @@ impl ServerConfigManager {
             saves: Some(SavesConfig {
                 max_save_files_backups: 5,
                 max_save_states_backups: 5,
+                save_dir_structure: Some(i32::from(SaveDirStructure::EmulatorGame))
             }),
             metadata: Some(MetadataConfig {
                 store_metadata_locally: false,
