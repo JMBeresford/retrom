@@ -7,7 +7,7 @@ const DRAFT_RELEASE = !!process.env.DRAFT_RELEASE;
  */
 export default {
   repositoryUrl: "https://github.com/JMBeresford/retrom",
-  branches: ["main"],
+  branches: ["main", { name: "beta", prerelease: true }],
   dryRun: true,
   plugins: [
     [
