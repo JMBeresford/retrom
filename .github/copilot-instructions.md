@@ -44,6 +44,8 @@ additional information in their own `README.md` files.
 - `prettier` and `rustfmt` are used for formatting the Typescript and Rust code respectively
   - rarely called directly, there are package scripts for running them
 - `nx` is used for managing the monorepo and running commands (targets) across packages
+  - An `mcp.json` file at the repository root configures the nx-mcp MCP server for AI tooling integration
+  - The nx-mcp server provides workspace context, project relationships, and available targets
   - `pnpm nx sync` syncs the NX workspace, ensuring dependencies and targets are up to date
   - `pnpm nx <target> <package>` or `pnpm nx run <package>:<target>` runs a target for a given package
   - `pnpm nx run-many -t <target1> <target2>` runs any amount of targets across all valid packages
