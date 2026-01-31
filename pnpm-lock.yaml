@@ -133,8 +133,8 @@ catalogs:
       specifier: 21.4.1
       version: 21.4.1
     nx-mcp:
-      specifier: 0.6.3
-      version: 0.6.3
+      specifier: 0.16.0
+      version: 0.16.0
     prettier:
       specifier: 3.5.3
       version: 3.5.3
@@ -246,7 +246,7 @@ importers:
         version: 21.4.1(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.24)(typescript@5.9.2))(@swc/core@1.5.29(@swc/helpers@0.5.17))
       nx-mcp:
         specifier: 'catalog:'
-        version: 0.6.3
+        version: 0.16.0
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -7406,8 +7406,8 @@ packages:
   nwsapi@2.2.21:
     resolution: {integrity: sha512-o6nIY3qwiSXl7/LuOU0Dmuctd34Yay0yeuZRLFmDPrrdHpXKFndPj3hM+YEPVHYC5fx2otBx4Ilc/gyYSAUaIA==}
 
-  nx-mcp@0.6.3:
-    resolution: {integrity: sha512-6c3naE3opOP0yNmWmm8H8himHnB/BjlScCigppgz4UJp2nt7ICs7hrmV7BCFnV+TygQB6V12VqomQjFNUJD+Fw==}
+  nx-mcp@0.16.0:
+    resolution: {integrity: sha512-5km1lKZmrwMnl4/JdIG8VH2eTbHSuygLlKeO1txCXzo58UZU3K2svKa1DNNxRL7pJqND0CNfXDAl2MzOz8DxiA==}
     hasBin: true
 
   nx@21.2.1:
@@ -13876,7 +13876,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.3.0)(@vitest/ui@3.2.4)(jsdom@22.1.0)(lightningcss@1.30.1)(sass@1.90.0)(terser@5.36.0)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.11)(@vitest/ui@3.2.4)(jsdom@22.1.0)(lightningcss@1.30.1)(sass@1.90.0)(terser@5.36.0)
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -16961,7 +16961,7 @@ snapshots:
 
   nwsapi@2.2.21: {}
 
-  nx-mcp@0.6.3: {}
+  nx-mcp@0.16.0: {}
 
   nx@21.2.1(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.24)(typescript@5.9.2))(@swc/core@1.5.29(@swc/helpers@0.5.17)):
     dependencies:
