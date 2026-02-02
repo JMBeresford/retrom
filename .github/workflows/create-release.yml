@@ -31,26 +31,16 @@ permissions:
   id-token: write # to enable use of OIDC for trusted publishing and npm provenance
 
 jobs:
-  build-clients:
+  build-client:
     name: Build Client
     uses: jmberesford/retrom/.github/workflows/build-client.yml@main
     secrets: inherit
-    strategy:
-      matrix:
-        os: [ubuntu-24.04, ubuntu-24.04-arm, windows-latest]
-        include:
-          - target: aarch64-apple-darwin
-            os: macos-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
     with:
-      os: ${{ matrix.os }}
-      target: ${{ matrix.target }}
       bundle: true
 
   release:
     name: Release
-    needs: build-clients
+    needs: build-client
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

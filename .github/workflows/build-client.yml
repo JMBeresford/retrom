@@ -2,19 +2,6 @@ name: Build Client
 
 on:
   workflow_call:
-    outputs:
-      bundles:
-        value: ${{ jobs.build.outputs.bundles }}
-        description: The resultant bundles, if applicable
-      binary:
-        value: ${{ jobs.build.outputs.binary }}
-        description: The resultant build binary
-      web-dist:
-        value: ${{ jobs.build.outputs.web-dist }}
-        description: The static web assets for this build
-      cargo-deps:
-        value: ${{ jobs.build.outputs.cargo-deps }}
-        description: The vendored cargo dependencies for this build
     inputs:
       bundle:
         type: boolean
@@ -22,11 +9,6 @@ on:
       sign:
         type: boolean
         default: true
-      os:
-        required: true
-        type: string
-      target:
-        type: string
       debug:
         type: boolean
         default: false
@@ -66,25 +48,6 @@ on:
         type: boolean
         default: true
         description: Sign any created bundles
-      os:
-        required: true
-        type: choice
-        options:
-          - macos-latest
-          - windows-latest
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
-        description: |
-          The OS that this build job will be run on. Must be one of: 
-          'macos-latest', 'windows-latest', 'ubuntu-24.04', 'ubuntu-24.04-arm'
-      target:
-        type: choice
-        options:
-          - aarch64-apple-darwin
-          - x86_64-apple-darwin
-        description: |
-          The target to build for on multi-target platforms, must be one of: 
-          'aarch64-apple-darwin', 'x86_64-apple-darwin'
       debug:
         type: boolean
         default: false
@@ -96,10 +59,8 @@ permissions:
 env:
   PQ_LIB_STATIC: 1
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-  TARGET_ARG: ${{ format('{0}{1}', inputs.target && '--target ' || '', inputs.target) }}
   BUNDLE_ARG: ${{ !inputs.bundle && '--no-bundle' || '' }}
   SIGN_ARG: ${{ !inputs.sign && '--no-sign' || '' }}
-  OUT_DIR: "/target"
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
   TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
   APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -110,42 +71,33 @@ env:
   APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
   APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
   APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-  ARTIFACT_PREFIX: ""
 
 jobs:
   build:
-    runs-on: ${{ inputs.os }}
-    outputs:
-      bundles: steps.bundle.outputs
-      binary: steps.binary.outputs
-      web-dist: steps.web-dist.outputs
-      cargo-deps: steps.cargo-deps.outputs
+    strategy:
+      matrix:
+        include:
+          - id: macos-aarch64
+            os: macos-latest
+            target: aarch64-apple-darwin
+          - id: macos-x86_64
+            os: macos-latest
+            target: x86_64-apple-darwin
+          - id: windows
+            os: windows-latest
+          - id: linux-x86_64
+            os: ubuntu-24.04
+          - id: linux-arm64
+            os: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.os }}
+    env:
+      ARTIFACT_PREFIX: "${{ matrix.id }}"
+      TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
+
+      # `target/{target/}debug|release`
+      OUT_DIR: ${{ format('target/{0}{1}', matrix.target && format('{0}/', matrix.target) || '', inputs.debug && 'debug' || 'release') }}
     steps:
-      - name: Configure job
-        shell: bash
-        env:
-          TARGET: ${{ inputs.target }}
-          PROFILE: ${{ inputs.debug && 'debug' || 'release' }}
-          INPUTS_JSON: ${{ toJson(inputs) }}
-        run: |
-          export ARTIFACT_PREFIX="${{ inputs.os }}-"
-
-          if [ -n "$TARGET" ]; then
-            export TARGET_DIR="target/$TARGET"
-            export ARTIFACT_PREFIX="${ARTIFACT_PREFIX}${TARGET}-"
-          else
-            export TARGET_DIR="target"
-          fi
-
-          export OUT_DIR="$TARGET_DIR/$PROFILE"
-          echo "OUT_DIR=$OUT_DIR" >> "$GITHUB_ENV"
-          echo "ARTIFACT_PREFIX=$ARTIFACT_PREFIX" >> "$GITHUB_ENV"
-
-          echo inputs: "$INPUTS_JSON"
-          echo ARGS: "$TARGET_ARG $BUNDLE_ARG $SIGN_ARG"
-          echo OUT_DIR: "$OUT_DIR"
-          echo ARTIFACT_PREFIX: "$ARTIFACT_PREFIX"
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -165,7 +117,7 @@ jobs:
         id: rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ inputs.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Cache rust build artifacts
         uses: Swatinem/rust-cache@v2
@@ -180,7 +132,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: install dependencies (ubuntu 24 only)
-        if: startsWith(inputs.os, 'ubuntu-24.04')
+        if: startsWith(matrix.os, 'ubuntu-24.04')
         run: |
           sudo apt-get update
           sudo apt-get install -y libpq-dev \
@@ -196,17 +148,17 @@ jobs:
             xdg-utils
 
       - name: install dependencies (windows only)
-        if: inputs.os == 'windows-latest'
+        if: matrix.os == 'windows-latest'
         run: |
           choco install -y postgresql17
 
       - name: install dependencies (macos m1 only)
-        if: inputs.os == 'macOS-latest' && inputs.target != 'x86_64-apple-darwin'
+        if: matrix.os == 'macos-latest' && matrix.target == 'aarch64-apple-darwin'
         run: |
           brew install postgresql@17
 
       - name: install dependencies (macos intel only)
-        if: inputs.target == 'x86_64-apple-darwin'
+        if: matrix.os == 'macos-latest' && matrix.target == 'x86_64-apple-darwin'
         run: |
           arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           arch -x86_64 /usr/local/bin/brew install postgresql@17
@@ -221,6 +173,7 @@ jobs:
 
       - name: disable NX cloud
         if: steps.nx-check.outcome != 'success'
+        shell: bash
         run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
 
       - name: install tauri cli
@@ -232,42 +185,37 @@ jobs:
         run: |
           pnpm nx build retrom-client --args="$BUNDLE_ARG $TARGET_ARG $SIGN_ARG" --configuration="$CONFIGURATION"
 
-      - name: upload build bundles
-        id: bundles
-        if: inputs.bundle
-        uses: actions/upload-artifact@v6
-        with:
-          name: ${{ env.ARTIFACT_PREFIX }}bundles
-          path: "${{ env.OUT_DIR }}/bundle"
-          if-no-files-found: error
+      - name: generate updater metadata
+        id: updater-metadata
+        shell: bash
+        env:
+          ID: ${{ matrix.id }}
+        run: |
+          SIG_FILE="$(find "${{ env.OUT_DIR }}/bundle/" -name '*.sig' | head -n 1 || true)"
+          ID_UPPERCASE="$(echo "${{ env.ID }}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
+          OUTPUT_NAME="${ID_UPPERCASE}_SIGNATURE"
+          if [[ -f "$SIG_FILE" ]]; then
+            echo "$OUTPUT_NAME=$(cat "$SIG_FILE")" >> "$GITHUB_ENV"
+          fi
 
-      - name: upload build artifact
-        id: binary
+      - name: upload build bundle
         uses: actions/upload-artifact@v6
         env:
-          BINARY_FILE: ${{ inputs.os == 'windows-latest' && 'Retrom.exe' || 'Retrom' }}
+          BINARY_FILE: ${{ matrix.os == 'windows-latest' && 'Retrom.exe' || 'Retrom' }}
         with:
-          name: ${{ env.ARTIFACT_PREFIX }}binary
-          path: "${{ env.OUT_DIR }}/${{ env.BINARY_FILE }}"
+          name: ${{ env.ARTIFACT_PREFIX }}client
           if-no-files-found: error
+          path: |
+            "${{ env.OUT_DIR }}/bundle/"
+            "${{ env.OUT_DIR }}/${{ env.BINARY_FILE }}"
 
-      - name: upload static web assets
-        id: web-dist
-        uses: actions/upload-artifact@v6
-        with:
-          name: ${{ env.ARTIFACT_PREFIX }}web-dist
-          path: packages/client-web/dist/
-          if-no-files-found: error
-
-      - name: vendor cargo dependencies
+  set-updater-metadata:
+    needs: build
+    outputs:
+      macos-aarch64-updater-sig: ${{ steps.set-macos-updater-sig.outputs.macos-aarch64-updater-sig }}
+    runs-on: ubuntu-24.04
+    steps:
+      - id: set-macos-updater-sig
         run: |
-          cargo clean
-          cargo vendor --locked --manifest-path packages/client/Cargo.toml
-
-      - name: upload vendored cargo deps
-        id: cargo-deps
-        uses: actions/upload-artifact@v6
-        with:
-          name: ${{ env.ARTIFACT_PREFIX }}cargo-deps
-          path: vendor/
-          if-no-files-found: error
+          echo "macos-aarch64-updater-sig=$MACOS_AARCH64_SIGNATURE" >> "$GITHUB_OUTPUT"
+          echo "macos-x86_64-updater-sig=$MACOS_X86_64_SIGNATURE" >> "$GITHUB_OUTPUT"
