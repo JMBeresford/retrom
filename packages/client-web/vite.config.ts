@@ -59,6 +59,15 @@ export default defineConfig(({ mode }) => {
         "/v1/traces": {
           target: localTracesEndpoint,
           changeOrigin: true,
+          configure: (proxy, _options) => {
+            proxy.on('error', (err, _req, _res) => {
+              if (err.code === 'ECONNREFUSED') {
+                // Silently ignore telemetry connection errors
+                return;
+              }
+              console.log('proxy error', err);
+            });
+          },
         },
       },
     },

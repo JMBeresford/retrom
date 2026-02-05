@@ -13,6 +13,7 @@ import { TabsContent } from "@retrom/ui/components/tabs";
 import {
   SavesConfigSchema,
   ServerConfig,
+  SaveDirStructure,
 } from "@retrom/codegen/retrom/server/config_pb";
 import { useUpdateServerConfig } from "@/mutations/useUpdateServerConfig";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +32,7 @@ type SavesConfigShape = Record<
 const savesSchema = z.object({
   maxSaveFilesBackups: z.coerce.number().default(5),
   maxSaveStatesBackups: z.coerce.number().default(5),
+  saveDirStructure: z.nativeEnum(SaveDirStructure).default(SaveDirStructure.EMULATOR_GAME),
 }) satisfies z.ZodObject<SavesConfigShape>;
 
 export function SavesConfig(props: {
@@ -41,9 +43,10 @@ export function SavesConfig(props: {
 
   const form = useForm<z.infer<typeof savesSchema>>({
     resolver: zodResolver(savesSchema),
-    defaultValues: props.currentConfig.saves ?? {
-      maxSaveFilesBackups: 5,
-      maxSaveStatesBackups: 5,
+    defaultValues: {
+      maxSaveFilesBackups: props.currentConfig.saves?.maxSaveFilesBackups ?? 5,
+      maxSaveStatesBackups: props.currentConfig.saves?.maxSaveStatesBackups ?? 5,
+      saveDirStructure: props.currentConfig.saves?.saveDirStructure ?? SaveDirStructure.EMULATOR_GAME,
     },
   });
 
@@ -104,6 +107,27 @@ export function SavesConfig(props: {
                 <FormLabel>Max Save States Backups</FormLabel>
                 <FormControl>
                   <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="saveDirStructure"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Save File Directory Structure</FormLabel>
+                <FormControl>
+                  <select 
+                    className="w-full px-3 py-2 bg-background border rounded-md"
+                    value={field.value}
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  >
+                    <option value={SaveDirStructure.EMULATOR_GAME}>Emulator/Game ID Based</option>
+                    <option value={SaveDirStructure.MIRROR_LIBRARY}>Mirror Game Library Structure</option>
+                  </select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
