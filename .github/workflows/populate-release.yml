@@ -1,0 +1,97 @@
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*.*.*-*"
+
+name: Populate Release
+
+permissions:
+  contents: write
+  packages: write
+  attestations: write
+  id-token: write
+
+env:
+  GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+
+jobs:
+  build-client:
+    name: Build Client
+    uses: jmberesford/retrom/.github/workflows/build-client.yml@main
+    secrets: inherit
+    with:
+      bundle: true
+      debug: false
+
+  add-client-artifacts:
+    name: Add Client Artifacts to Release
+    needs: build-client
+    env:
+      # `target/{target/}debug|release`
+      OUT_DIR: ${{ format('target/{0}release', matrix.target && format('{0}/', matrix.target) || '') }}
+      TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
+      TAG_NAME: ${{ github.ref_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One at a time to avoid race conditions on updating `latest.json`
+      # Builds were completed in parallel in the previous job, this should be quick
+      max-parallel: 1
+      matrix:
+        include:
+          - id: macos-aarch64
+            target: aarch64-apple-darwin
+            os: macos-latest
+          - id: macos-x86_64
+            target: x86_64-apple-darwin
+            os: macos-latest
+          - id: windows
+            os: windows-latest
+          - id: linux-x86_64
+            os: ubuntu-24.04
+          - id: linux-arm64
+            os: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find release ID
+        id: find_release
+        shell: bash
+        run: |
+          RELEASE_ID="$(gh api repos/jmberesford/retrom/releases --jq '.[] | select(.tag_name == "${{ env.TAG_NAME }}").id')"
+          echo "release-id=$RELEASE_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download Release Artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ matrix.id }}-client
+          path: ${{ env.OUT_DIR }}
+
+      # using this until a manual implementation replaces it
+      - name: upload artifacts to release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_ARGS: ${{ matrix.target }}
+        with:
+          projectPath: packages/client
+          releaseId: ${{ steps.find_release.outputs.release-id }}
+          tagName: ${{ env.TAG_NAME }}
+          releaseDraft: true
+          includeRelease: true
+          includeDebug: false
+          includeUpdaterJson: true
+          updaterJsonPreferNsis: true
+          tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
+          args: ${{ env.TARGET_ARG }} # required for the action to look in the correct target subdir
+
+  build-server-images:
+    name: Build Server Images
+    uses: jmberesford/retrom/.github/workflows/publish-images.yml@main
+    with:
+      tag: ${{ github.ref_name }}
+      latest: ${{ !contains(github.ref_name, '-') }}
+    secrets: inherit
