@@ -1,3 +1,10 @@
+## [0.7.52](https://github.com/JMBeresford/retrom/compare/v0.7.51...v0.7.52) (2026-02-05)
+
+### Bug Fixes
+
+
+* fix: publish CI ([e73897360f940a69fbfee879b069feb216819cc1](https://github.com/JMBeresford/retrom/commit/e73897360f940a69fbfee879b069feb216819cc1))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
