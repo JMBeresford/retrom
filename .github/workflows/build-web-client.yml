@@ -1,0 +1,88 @@
+name: Build Web Client
+
+on:
+  workflow_call:
+    outputs:
+      artifact-id:
+        value: ${{ jobs.build-web-client.outputs.artifact-id }}
+        description: "The uploaded artifact containing the web client build output"
+    inputs:
+      artifact_suffix:
+        type: string
+        default: ""
+      os:
+        type: string
+        description: "The operating system to build the web client on"
+        default: ubuntu-24.04
+
+  workflow_dispatch:
+    inputs:
+      artifact_suffix:
+        type: string
+        default: ""
+        description: "An optional suffix to append to the artifact name (e.g. `-debug`)"
+      os:
+        type: choice
+        description: "The operating system to build the web client on"
+        default: ubuntu-24.04
+        options:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - macos-latest
+          - windows-latest
+
+jobs:
+  build-web-client:
+    runs-on: ${{ inputs.os }}
+    outputs:
+      artifact-id: ${{ steps.artifact.outputs.artifact-id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: check NX cloud access
+        id: nx-check
+        continue-on-error: true
+        run: pnpm nx noop
+
+      - name: disable NX cloud
+        if: steps.nx-check.outcome != 'success'
+        run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          pnpm nx build:desktop retrom-client-web
+
+      - name: Upload output as artifact
+        id: artifact
+        uses: actions/upload-artifact@v6
+        with:
+          # Include root package.json to ensure full folder-structure is preserved
+          path: |
+            packages/client-web/dist/**
+            package.json
+          name: web-dist${{ inputs.artifact_suffix }}
+          include-hidden-files: true
+
+      - name: Examine output
+        env:
+          OUTPUT_JSON: ${{ toJson(steps.artifact.outputs) }}
+        run: |
+          echo "Artifact upload output: $OUTPUT_JSON"

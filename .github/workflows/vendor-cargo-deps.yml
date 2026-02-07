@@ -1,0 +1,51 @@
+name: Vendor Cargo Dependencies
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_suffix:
+        type: string
+        default: ""
+        description: "An optional suffix to append to the artifact name (e.g. `-debug`)"
+  workflow_call:
+    outputs:
+      artifact-id:
+        value: ${{ jobs.vendor-cargo-deps.outputs.artifact-id }}
+        description: "The uploaded artifact containing the vendored Cargo dependencies"
+    inputs:
+      artifact_suffix:
+        type: string
+        default: ""
+
+jobs:
+  vendor-cargo-deps:
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact-id: ${{ steps.artifact.outputs.artifact-id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Vendor Cargo dependencies
+        run: |
+          cargo clean
+          cargo vendor --locked --manifest-path packages/client/Cargo.toml
+
+      - name: Upload Cargo dependencies as artifact
+        uses: actions/upload-artifact@v6
+        id: artifact
+        with:
+          # Include cargo.toml to ensure full folder-structure is preserved
+          path: |
+            vendor/**
+            Cargo.toml
+          name: cargo-deps${{ inputs.artifact_suffix }}
+          include-hidden-files: true
+
+      - name: Examine output
+        env:
+          OUTPUT_JSON: ${{ toJson(steps.artifact.outputs) }}
+        run: |
+          echo "Artifact upload output: $OUTPUT_JSON"
