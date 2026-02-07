@@ -11,8 +11,15 @@ export default {
     [
       "@semantic-release/commit-analyzer",
       {
-        // Breaking changes trigger a minor release until v1.0.0
-        releaseRules: [{ breaking: true, release: "minor" }],
+        // Breaking changes trigger a minor release, and feature changes
+        // trigger a patch release until v1.0.0
+        releaseRules: [
+          { breaking: true, release: "minor" },
+          {
+            type: "feat",
+            release: "patch",
+          },
+        ],
       },
     ],
     [
