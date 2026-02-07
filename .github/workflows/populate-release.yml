@@ -1,0 +1,54 @@
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*.*.*-*"
+
+name: Populate Release
+
+permissions:
+  contents: write
+  packages: write
+  attestations: write
+  id-token: write
+
+env:
+  GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+
+jobs:
+  get-release-id:
+    name: Get Release ID
+    outputs:
+      release_id: ${{ steps.get_release_id.outputs.release_id }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Get Release ID
+        id: get_release_id
+        shell: bash
+        run: |
+          RELEASE_ID="$(gh api repos/jmberesford/retrom/releases --jq '.[] | select(.tag_name == "${{ github.ref_name }}").id')"
+          echo "release_id=$RELEASE_ID" >> "$GITHUB_OUTPUT"
+
+  publish-clients:
+    name: Publish Clients
+    concurrency:
+      group: "publish-clients-${{ github.ref_name }}"
+      cancel-in-progress: false
+    needs:
+      - get-release-id
+    uses: ./.github/workflows/publish-clients.yml
+    secrets: inherit
+    with:
+      tag_name: ${{ github.ref_name }}
+      release_id: ${{ fromJson(needs.get-release-id.outputs.release_id) }}
+
+  publish-server-images:
+    name: Publish Server Images
+    concurrency:
+      group: "publish-server-images-${{ github.ref_name }}"
+      cancel-in-progress: false
+    uses: ./.github/workflows/publish-images.yml
+    with:
+      tag: ${{ github.ref_name }}
+      latest: ${{ !contains(github.ref_name, '-') }}
+    secrets: inherit

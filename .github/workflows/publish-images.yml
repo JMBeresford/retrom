@@ -1,6 +1,7 @@
 name: Publish Images
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       tag:
@@ -11,22 +12,19 @@ on:
         description: Tag this image as `latest`?
         type: boolean
         default: false
-      prerelease:
-        description: Consider this run as a prerelease?
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+      latest:
         type: boolean
-        default: true
-
-  pull_request:
-  release:
-    types: [published]
+        default: false
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: jmberesford/retrom-service
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  PLATFORM_PAIR: ""
 
 jobs:
   build-images:
@@ -54,7 +52,7 @@ jobs:
       - name: Prepare
         run: |
           platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+          echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v4

@@ -40,33 +40,15 @@ modules:
 
       # Static web assets
       - type: archive
-        url: https://github.com/JMBeresford/retrom/releases/download/{{ TAG_VALUE }}/desktop-frontend-dist_ubuntu-24.04.tar.gz
-        sha256: "{{ WEB_DIST_x64 }}"
+        url: https://github.com/JMBeresford/retrom/releases/download/{{ TAG_VALUE }}/desktop-frontend-dist.tar.gz
+        sha256: "{{ WEB_DIST_SHA }}"
         strip-components: 0
-        only-arches:
-          - x86_64
-
-      - type: archive
-        url: https://github.com/JMBeresford/retrom/releases/download/{{ TAG_VALUE }}/desktop-frontend-dist_ubuntu-24.04-arm.tar.gz
-        sha256: "{{ WEB_DIST_aarch64 }}"
-        strip-components: 0
-        only-arches:
-          - aarch64
 
       # Vendored cargo deps
       - type: archive
-        url: https://github.com/JMBeresford/retrom/releases/download/{{ TAG_VALUE }}/cargo-vendor_ubuntu-24.04.tar.gz
-        sha256: "{{ CARGO_DEPS_x64 }}"
+        url: https://github.com/JMBeresford/retrom/releases/download/{{ TAG_VALUE }}/cargo-deps.tar.gz
+        sha256: "{{ CARGO_DEPS_SHA }}"
         strip-components: 0
-        only-arches:
-          - x86_64
-
-      - type: archive
-        url: https://github.com/JMBeresford/retrom/releases/download/{{ TAG_VALUE }}/cargo-vendor_ubuntu-24.04-arm.tar.gz
-        sha256: "{{ CARGO_DEPS_aarch64 }}"
-        strip-components: 0
-        only-arches:
-          - aarch64
 
     build-options:
       env:

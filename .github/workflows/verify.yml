@@ -1,89 +1,27 @@
+name: Verify
+
 permissions:
   contents: read
-name: Verify
 
 on:
   workflow_dispatch:
   pull_request:
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-
 jobs:
-  verify:
-    runs-on: ubuntu-latest
+  lint:
+    uses: ./.github/workflows/lint.yml
+    secrets: inherit
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  format:
+    uses: ./.github/workflows/format.yml
+    secrets: inherit
 
-      - name: Free disk space
-        uses: jlumbroso/free-disk-space@main
-
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: "pnpm"
-
-      - name: install Rust stable
-        id: rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Setup rustfmt
-        run: rustup component add rustfmt
-
-      - name: Setup clippy
-        run: rustup component add clippy
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libpq-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-
-      - name: install frontend dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: check NX cloud access
-        id: nx-check
-        continue-on-error: true
-        run: pnpm nx noop
-
-      - name: disable NX cloud
-        if: steps.nx-check.outcome != 'success'
-        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
-
-      - name: Check for unused cargo dependencies
-        uses: bnjbvr/cargo-machete@main
-        with:
-          args: "--with-metadata"
-
-      - name: run tests
-        run: cargo test
-
-      - name: check NX workspace sync status
-        run: pnpm nx sync:check
-
-      - name: run formatter
-        run: pnpm nx run-many -t cargo:format prettier:format buf:format --configuration check
-
-      - name: run linter
-        run: pnpm nx run-many -t cargo:lint eslint:lint
+  build:
+    uses: ./.github/workflows/build-client.yml
+    secrets: inherit
+    with:
+      bundle: false

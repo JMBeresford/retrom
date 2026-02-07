@@ -1,0 +1,20 @@
+on:
+  release:
+    types: [published]
+
+jobs:
+  announce:
+    name: Announce Release
+    uses: ./.github/workflows/announce.yml
+    with:
+      prerelease: ${{ github.event.release.prerelease }}
+
+  publish-flatpak-manifest:
+    name: Publish Flatpak Manifest
+    concurrency:
+      group: "publish-flatpak-manifest-${{ github.ref_name }}"
+      cancel-in-progress: false
+    uses: ./.github/workflows/publish-flatpak-manifest.yml
+    secrets: inherit
+    with:
+      tag_name: ${{ github.event.release.tag_name }}

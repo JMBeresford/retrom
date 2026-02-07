@@ -75,6 +75,7 @@ env:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - id: macos-aarch64
@@ -92,11 +93,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     env:
-      ARTIFACT_PREFIX: "${{ matrix.id }}"
-      TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
-
       # `target/{target/}debug|release`
       OUT_DIR: ${{ format('target/{0}{1}', matrix.target && format('{0}/', matrix.target) || '', inputs.debug && 'debug' || 'release') }}
+      TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -185,37 +184,14 @@ jobs:
         run: |
           pnpm nx build retrom-client --args="$BUNDLE_ARG $TARGET_ARG $SIGN_ARG" --configuration="$CONFIGURATION"
 
-      - name: generate updater metadata
-        id: updater-metadata
-        shell: bash
-        env:
-          ID: ${{ matrix.id }}
-        run: |
-          SIG_FILE="$(find "${{ env.OUT_DIR }}/bundle/" -name '*.sig' | head -n 1 || true)"
-          ID_UPPERCASE="$(echo "${{ env.ID }}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
-          OUTPUT_NAME="${ID_UPPERCASE}_SIGNATURE"
-          if [[ -f "$SIG_FILE" ]]; then
-            echo "$OUTPUT_NAME=$(cat "$SIG_FILE")" >> "$GITHUB_ENV"
-          fi
-
       - name: upload build bundle
         uses: actions/upload-artifact@v6
+        if: ${{ inputs.bundle }}
         env:
           BINARY_FILE: ${{ matrix.os == 'windows-latest' && 'Retrom.exe' || 'Retrom' }}
         with:
-          name: ${{ env.ARTIFACT_PREFIX }}client
+          name: ${{ matrix.id }}-client
           if-no-files-found: error
           path: |
-            "${{ env.OUT_DIR }}/bundle/"
-            "${{ env.OUT_DIR }}/${{ env.BINARY_FILE }}"
-
-  set-updater-metadata:
-    needs: build
-    outputs:
-      macos-aarch64-updater-sig: ${{ steps.set-macos-updater-sig.outputs.macos-aarch64-updater-sig }}
-    runs-on: ubuntu-24.04
-    steps:
-      - id: set-macos-updater-sig
-        run: |
-          echo "macos-aarch64-updater-sig=$MACOS_AARCH64_SIGNATURE" >> "$GITHUB_OUTPUT"
-          echo "macos-x86_64-updater-sig=$MACOS_X86_64_SIGNATURE" >> "$GITHUB_OUTPUT"
+            ${{ env.OUT_DIR }}/bundle/**
+            ${{ env.OUT_DIR }}/${{ env.BINARY_FILE }}
