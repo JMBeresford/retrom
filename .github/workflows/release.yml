@@ -1,6 +1,6 @@
 on:
   release:
-    types: [published, edited, released]
+    types: [published]
 
 name: Release
 
