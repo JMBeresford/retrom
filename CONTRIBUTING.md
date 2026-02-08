@@ -2,6 +2,11 @@
 
 Thank you for considering contributing to Retrom! This document provides a high-level overview of the project and instructions for getting started as a contributor.
 
+> [!WARNING]
+> If you are planning to contribute anything more complex than a simple bug/documentation fix,
+> please first begin with a **discussion** by opening a PR. This way we can align on the design/
+> proposed changes before you invest time in implementing something that might not be accepted.
+
 ## Setting up a development environment
 
 ### Prerequisites
