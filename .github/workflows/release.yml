@@ -1,11 +1,17 @@
 on:
   release:
-    types: [published]
+    types: [published, edited, released]
+
+name: Release
+
+permissions:
+  contents: read
 
 jobs:
   announce:
     name: Announce Release
     uses: ./.github/workflows/announce.yml
+    secrets: inherit
     with:
       prerelease: ${{ github.event.release.prerelease }}
 
