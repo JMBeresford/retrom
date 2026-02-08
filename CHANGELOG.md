@@ -1,3 +1,12 @@
+## [0.7.52](https://github.com/JMBeresford/retrom/compare/v0.7.51...v0.7.52) (2026-02-08)
+
+### Features
+
+
+* feat: flatpak client builds ([eab08318bef17a1e5497ddb8f15ca8821a18179e](https://github.com/JMBeresford/retrom/commit/eab08318bef17a1e5497ddb8f15ca8821a18179e))
+  	The Retrom client is now available via FlatHub. This means it will be
+	directly installable on SteamOS via the Discover Store!
+
 ## [0.7.52](https://github.com/JMBeresford/retrom/compare/v0.7.51...v0.7.52) (2026-02-07)
 
 ### Features
