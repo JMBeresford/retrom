@@ -56,6 +56,7 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release date="2026-02-08" version="0.7.52"></release>
     <release date="2025-11-09" version="0.7.43"></release>
   </releases>
   <update_contact>jberesford@volcaus.com</update_contact>

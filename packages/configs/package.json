@@ -24,6 +24,6 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "glob": "catalog:",
     "globals": "^16.0.0",
-    "typescript-eslint": "^8.31.0"
+    "typescript-eslint": "catalog:"
   }
 }

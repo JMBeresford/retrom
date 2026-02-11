@@ -39,6 +39,7 @@
     "@nx/vite": "catalog:",
     "@nx/web": "catalog:",
     "@retrom/configs": "workspace:*",
+    "@retrom/flatpak-release": "workspace:*",
     "@semantic-release/changelog": "catalog:",
     "@semantic-release/exec": "catalog:",
     "@semantic-release/git": "catalog:",
