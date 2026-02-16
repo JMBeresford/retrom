@@ -35,6 +35,29 @@ Thank you for considering contributing to Retrom! This document provides a high-
    pnpm nx dev retrom-client-web
    ```
 
+### Using GitHub Copilot CLI
+
+This repository is configured to work with [GitHub Copilot CLI](https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line) and includes MCP (Model Context Protocol) integration for enhanced AI assistance.
+
+#### MCP Server Setup
+
+The repository includes an `mcp.json` configuration file that enables the nx-mcp server. This allows AI tools to understand the NX workspace structure, projects, and available targets.
+
+To use the MCP server:
+
+1. Ensure you have the GitHub Copilot CLI installed and authenticated
+2. The `mcp.json` file is already configured at the repository root
+3. Copilot CLI will automatically discover the nx-mcp server when working in this repository
+
+The nx-mcp server provides:
+
+- Project graph and dependency information
+- Available NX targets for each project
+- Generator schemas and documentation
+- Real-time task execution details
+
+For more information about nx-mcp, see the [official documentation](https://nx.dev/docs/reference/nx-mcp).
+
 ### Troubleshooting
 
 #### Build task for the retrom-service Rust app exits midway without error

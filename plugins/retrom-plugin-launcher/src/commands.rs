@@ -230,6 +230,9 @@ pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -
 
     let mut cmd = launcher.get_open_cmd(&local_config.executable_path);
 
+    tracing::Span::current().record("command", format!("{cmd:?}"));
+    info!("Command: {cmd:?}");
+
     let args = if !profile.custom_args.is_empty() {
         #[allow(clippy::literal_string_with_formatting_args)]
         profile
@@ -250,6 +253,7 @@ pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -
         vec![file_path]
     };
 
+    tracing::Span::current().record("args", format!("{args:?}"));
     info!("Args Constructed: {:?}", args);
 
     cmd.args(args);

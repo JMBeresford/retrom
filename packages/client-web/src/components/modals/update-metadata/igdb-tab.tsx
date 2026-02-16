@@ -283,7 +283,7 @@ export function IgdbTab() {
           value={selectedMatch}
           onValueChange={setSelectedMatch}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue
               placeholder={
                 <span className="text-muted-foreground italic">

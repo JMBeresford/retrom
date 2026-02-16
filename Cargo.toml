@@ -23,11 +23,12 @@ exclude = [
   "node_modules",
   "dist",
   "target",
+  "vendor",
 ]
 
 [workspace.package]
 edition = "2021"
-version = "0.7.43"                                    # x-release-please-version
+version = "0.7.52"
 authors = ["John Beresford <jberesford@volcaus.com>"]
 license = "GPL-3.0"
 readme = "./README.md"
@@ -75,7 +76,7 @@ diesel = { version = "^2.2.0", features = [
   "numeric",
 ] }
 diesel_migrations = { version = "^2.2.0", features = ["postgres"] }
-diesel-async = { version = "^0.5.0", features = ["postgres", "deadpool"] }
+diesel-async = { version = "^0.7.4", features = ["postgres", "deadpool"] }
 deadpool = "0.12.1"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
@@ -101,21 +102,19 @@ tokio-util = { version = "0.7.16", features = ["io", "compat"] }
 dotenvy = "0.15.7"
 futures-util = "0.3.30"
 
-# x-release-please-start-version
-retrom-db = { path = "./packages/db", version = "^0.7.43" }
-retrom-service = { path = "./packages/service", version = "^0.7.43" }
-retrom-grpc-service = { path = "./packages/grpc-service", version = "^0.7.43" }
-retrom-rest-service = { path = "./packages/rest-service", version = "^0.7.43" }
-retrom-service-common = { path = "./packages/service-common", version = "^0.7.43" }
-retrom-telemetry = { path = "./packages/telemetry", version = "^0.7.43" }
-retrom-codegen = { path = "./packages/codegen", version = "^0.7.43" }
-retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer", version = "^0.7.43" }
-retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher", version = "^0.7.43" }
-retrom-plugin-service-client = { path = "./plugins/retrom-plugin-service-client", version = "^0.7.43" }
-retrom-plugin-steam = { path = "./plugins/retrom-plugin-steam", version = "^0.7.43" }
-retrom-plugin-config = { path = "./plugins/retrom-plugin-config", version = "^0.7.43" }
-retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone", version = "^0.7.43" }
-# x-release-please-end
+retrom-db = { path = "./packages/db" }
+retrom-service = { path = "./packages/service" }
+retrom-grpc-service = { path = "./packages/grpc-service" }
+retrom-rest-service = { path = "./packages/rest-service" }
+retrom-service-common = { path = "./packages/service-common" }
+retrom-telemetry = { path = "./packages/telemetry" }
+retrom-codegen = { path = "./packages/codegen" }
+retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer" }
+retrom-plugin-launcher = { path = "./plugins/retrom-plugin-launcher" }
+retrom-plugin-service-client = { path = "./plugins/retrom-plugin-service-client" }
+retrom-plugin-steam = { path = "./plugins/retrom-plugin-steam" }
+retrom-plugin-config = { path = "./plugins/retrom-plugin-config" }
+retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone" }
 
 config = { version = "0.13.4", features = ["json5"] }
 futures = "0.3.30"

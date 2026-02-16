@@ -6,6 +6,10 @@ use local_ip_address::local_ip;
 
 #[command]
 pub(crate) async fn enable_standalone_mode<R: Runtime>(app: AppHandle<R>) -> Result<(String, u16)> {
+    if cfg!(feature = "flatpak") {
+        return Err(crate::Error::FlatpakUnsupported);
+    };
+
     if !app.standalone().is_server_running().await {
         app.standalone().start_server().await?;
     }

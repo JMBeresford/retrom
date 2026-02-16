@@ -1,9 +1,8 @@
+use crate::ConfigExt;
+use crate::Result;
 use prost::Message;
 use retrom_codegen::retrom::RetromClientConfig;
 use tauri::{command, AppHandle, Runtime};
-
-use crate::ConfigExt;
-use crate::Result;
 
 #[command]
 pub(crate) async fn get_config<R: Runtime>(app: AppHandle<R>) -> Result<Vec<u8>> {
@@ -20,4 +19,9 @@ pub(crate) async fn set_config<R: Runtime>(app: AppHandle<R>, new_config: Vec<u8
     tracing::debug!("Updating config: {:?}", new_config);
 
     app.config_manager().update_config(new_config).await
+}
+
+#[command]
+pub(crate) fn is_flatpak<R: Runtime>(_app: AppHandle<R>) -> bool {
+    cfg!(feature = "flatpak")
 }

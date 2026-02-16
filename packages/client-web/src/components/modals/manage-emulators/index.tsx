@@ -97,6 +97,35 @@ export function ManageEmulatorsModal() {
   const navigate = useNavigate();
   const { manageEmulatorsModal } = RootRoute.useSearch();
 
+  return (
+    <Dialog
+      modal
+      open={manageEmulatorsModal?.open}
+      onOpenChange={(open) => {
+        if (!open) {
+          navigate({
+            to: ".",
+            search: (prev) => ({ ...prev, manageEmulatorsModal: undefined }),
+          }).catch(console.error);
+        }
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Manage Emulators</DialogTitle>
+          <DialogDescription className="max-w-[70ch]">
+            Manage existing emulator definitions and/or create new ones.
+            Configure paths to your local emulators in the Local Paths tab.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Content />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Content() {
   const { data: emulators, status: emulatorsStatus } = useEmulators({
     selectFn: (data) => data.emulators,
   });
@@ -125,75 +154,48 @@ export function ManageEmulatorsModal() {
     platformsStatus === "error" ||
     emulatorConfigsStatus === "error";
 
-  return (
-    <Dialog
-      modal
-      open={manageEmulatorsModal?.open}
-      onOpenChange={(open) => {
-        if (!open) {
-          void navigate({
-            to: ".",
-            search: (prev) => ({ ...prev, manageEmulatorsModal: undefined }),
-          });
-        }
-      }}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Manage Emulators</DialogTitle>
-          <DialogDescription className="max-w-[70ch]">
-            Manage existing emulator definitions and/or create new ones.
-            Configure paths to your local emulators in the Local Paths tab.
-          </DialogDescription>
-        </DialogHeader>
+  return pending ? (
+    <LoaderCircleIcon className="animate-spin h-8 w-8" />
+  ) : error ? (
+    <p className="text-red-500">
+      An error occurred while fetching data. Please try again.
+    </p>
+  ) : (
+    <Tabs defaultValue="emulators">
+      <div className="w-full mb-6">
+        <TabsList className="flex w-full">
+          <TabsTrigger value="emulators" className="w-full">
+            All Emulators
+          </TabsTrigger>
 
-        {pending ? (
-          <LoaderCircleIcon className="animate-spin h-8 w-8" />
-        ) : error ? (
-          <p className="text-red-500">
-            An error occurred while fetching data. Please try again.
-          </p>
-        ) : (
-          <Tabs defaultValue="emulators">
-            <div className="w-full mb-6">
-              <TabsList className="flex">
-                <TabsTrigger value="emulators" className="w-full">
-                  All Emulators
-                </TabsTrigger>
+          <TooltipProvider>
+            <Tooltip>
+              <TabsTrigger
+                asChild
+                disabled={!checkIsDesktop()}
+                className="w-full"
+                value="local-configs"
+              >
+                <TooltipTrigger className="disabled:pointer-events-auto">
+                  Local Paths
+                </TooltipTrigger>
+              </TabsTrigger>
 
-                <TooltipProvider>
-                  <Tooltip>
-                    <TabsTrigger
-                      asChild
-                      disabled={!checkIsDesktop()}
-                      className="w-full"
-                      value="local-configs"
-                    >
-                      <TooltipTrigger className="disabled:pointer-events-auto">
-                        Local Paths
-                      </TooltipTrigger>
-                    </TabsTrigger>
+              <TooltipContent className={cn(checkIsDesktop() && "hidden")}>
+                Only available on desktop
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </TabsList>
+      </div>
 
-                    <TooltipContent
-                      className={cn(checkIsDesktop() && "hidden")}
-                    >
-                      Only available on desktop
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </TabsList>
-            </div>
+      <TabsContent value="emulators" className={cn("h-fit", "")}>
+        <EmulatorList platforms={platforms} emulators={emulators} />
+      </TabsContent>
 
-            <TabsContent value="emulators" className={cn("h-fit", "")}>
-              <EmulatorList platforms={platforms} emulators={emulators} />
-            </TabsContent>
-
-            <TabsContent value="local-configs">
-              <LocalConfigs emulators={emulators} configs={emulatorConfigs} />
-            </TabsContent>
-          </Tabs>
-        )}
-      </DialogContent>
-    </Dialog>
+      <TabsContent value="local-configs">
+        <LocalConfigs emulators={emulators} configs={emulatorConfigs} />
+      </TabsContent>
+    </Tabs>
   );
 }

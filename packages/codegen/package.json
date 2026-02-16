@@ -12,8 +12,7 @@
   ],
   "dependencies": {
     "@bufbuild/protobuf": "2.4.0",
-    "@bufbuild/protoc-gen-es": "2.4.0",
-    "protobufjs": "^7.5.0"
+    "@bufbuild/protoc-gen-es": "2.4.0"
   },
   "devDependencies": {
     "@bufbuild/buf": "^1.53.0",
@@ -22,7 +21,7 @@
     "vitest": "catalog:",
     "vite-plugin-dts": "catalog:",
     "@types/node": "^22.14.1",
-    "glob": "^11.0.3",
+    "glob": "catalog:",
     "globals": "^16.0.0"
   }
 }

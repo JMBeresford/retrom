@@ -137,7 +137,7 @@ export function DeleteGameModal() {
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button>Cancel</Button>
+            <Button variant="secondary">Cancel</Button>
           </DialogClose>
 
           <Button

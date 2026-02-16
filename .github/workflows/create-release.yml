@@ -1,0 +1,69 @@
+on:
+  workflow_call:
+    inputs:
+      dry-run:
+        type: boolean
+        default: true
+    secrets:
+      RW_DEPLOY_KEY:
+        required: true
+      RELEASE_GH_TOKEN:
+        required: true
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        type: boolean
+        description: Enable dry run mode
+        default: true
+
+name: Create Release
+
+env:
+  DRY_RUN: ${{ inputs.dry-run && 'true' || 'false' }}
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ssh-key: ${{ secrets.RW_DEPLOY_KEY }}
+          persist-credentials: true
+
+      - name: Setup Pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: install Rust stable
+        id: rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: install cargo-workspaces
+        run: cargo install cargo-workspaces@0.3.2
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+        run: |
+          pnpm exec semantic-release --ci=true --dry-run="$DRY_RUN"

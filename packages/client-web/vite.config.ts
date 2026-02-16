@@ -109,7 +109,9 @@ export default defineConfig(({ mode }) => {
         },
       },
       tailwindcss(),
-      TanStackRouterVite(),
+      TanStackRouterVite({
+        enableRouteGeneration: process.env.NODE_ENV === "development",
+      }),
       react(),
       glslify(),
       nxViteTsPaths(),

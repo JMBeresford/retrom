@@ -329,6 +329,10 @@ impl GameService for GameServiceHandlers {
             query = query.filter(schema::game_files::id.eq_any(&request.ids));
         }
 
+        if !&request.game_ids.is_empty() {
+            query = query.filter(schema::game_files::game_id.eq_any(&request.game_ids));
+        }
+
         if !include_deleted {
             query = query.filter(schema::game_files::is_deleted.eq(false));
         }

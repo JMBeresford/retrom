@@ -83,8 +83,8 @@ function Game() {
               className={cn(
                 "grid grid-cols-subgrid grid-rows-subgrid",
                 "grid-flow-row col-span-full row-span-2",
-                "@md:row-span-1 @md:grid-flow-col",
-                "*:col-span-full @md:*:col-span-3 *:only:col-span-full",
+                // "@md:row-span-1 @md:grid-flow-col",
+                "*:col-span-full *:only:col-span-full",
               )}
             >
               <Links />

@@ -56,7 +56,6 @@ sort of _self-hosted Steam_ for your DRM-free game library.
 
 ## Screenshots
 
- 
 ### Home Screen
 
 <div align='center'>
@@ -70,7 +69,6 @@ sort of _self-hosted Steam_ for your DRM-free game library.
     <img width='49%' src="https://github.com/user-attachments/assets/bf7d59bc-008f-4d36-9b63-dd20f67b18fa" />
   </span>
 </div>
-
 
 ### Game Details
 

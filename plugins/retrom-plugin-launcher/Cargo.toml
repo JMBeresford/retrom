@@ -10,6 +10,10 @@ rust-version = "1.80"
 exclude = ["./examples", "./webview-dist", "./webview-src", "**/node_modules"]
 links = "tauri-plugin-launcher"
 
+[features]
+default = []
+flatpak = []
+
 [dependencies]
 prost = { workspace = true }
 tauri = { workspace = true }

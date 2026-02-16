@@ -6,7 +6,6 @@ import {
   FormField,
   FormItem,
 } from "@retrom/ui/components/form";
-import { Input } from "@retrom/ui/components/input";
 import { Label } from "@retrom/ui/components/label";
 import {
   Emulator,
@@ -23,6 +22,12 @@ import { FolderOpenIcon, LoaderCircleIcon, SaveIcon } from "lucide-react";
 import { useCallback } from "react";
 import { useForm } from "@retrom/ui/components/form";
 import { z } from "zod";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@retrom/ui/components/input-group";
 
 type ConfigSchema = z.infer<typeof configSchema>;
 const configSchema = z.object({
@@ -128,7 +133,7 @@ function LocalConfigRow(props: {
   );
 
   const pending = creationPending || updatePending;
-  const { isDirty } = form.formState;
+  const { isDirty: formDirty } = form.formState;
 
   return (
     <Form {...form}>
@@ -137,71 +142,72 @@ function LocalConfigRow(props: {
         key={emulator.id}
         className={cn(
           "grid grid-cols-subgrid col-span-full",
-          "items-center border-b",
+          "items-center border-b pb-2",
         )}
       >
         <p className="text-muted-foreground text-sm">{emulator.name}</p>
 
-        <FormField
-          control={form.control}
-          name="executablePath"
-          render={({ field, fieldState: { isDirty } }) => (
-            <FormItem>
-              <div className="flex items-center">
-                <Button
-                  size="icon"
-                  className="p-2 h-min w-min"
-                  variant="secondary"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
+        <div className="flex items-center gap-2 w-full">
+          <FormField
+            control={form.control}
+            name="executablePath"
+            render={({ field, fieldState: { isDirty } }) => (
+              <FormItem className="w-full">
+                <InputGroup>
+                  <FormControl>
+                    <InputGroupInput
+                      {...field}
+                      value={field.value || ""}
+                      placeholder="Enter path to executable"
+                      className={cn(
+                        "border-none",
+                        !isDirty && "text-muted-foreground",
+                      )}
+                    />
+                  </FormControl>
 
-                    open({
-                      title: "Select Emulator Executable",
-                      multiple: false,
-                      directory: false,
-                    })
-                      .then((result) => {
-                        if (result) {
-                          field.onChange(result);
-                        }
-                      })
-                      .catch((e) => {
-                        console.error(e);
-                      });
-                  }}
-                >
-                  <FolderOpenIcon className="w-[1rem] h-[1rem]" />
-                </Button>
+                  <InputGroupAddon align="inline-start">
+                    <InputGroupButton
+                      variant="secondary"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
 
-                <FormControl>
-                  <Input
-                    {...field}
-                    value={field.value || ""}
-                    placeholder="Enter path to executable"
-                    className={cn(
-                      "border-none",
-                      !isDirty && "text-muted-foreground",
-                    )}
-                  />
-                </FormControl>
-              </div>
-            </FormItem>
-          )}
-        />
+                        open({
+                          title: "Select Emulator Executable",
+                          multiple: false,
+                          directory: false,
+                        })
+                          .then((result) => {
+                            if (result) {
+                              field.onChange(result);
+                            }
+                          })
+                          .catch((e) => {
+                            console.error(e);
+                          });
+                      }}
+                    >
+                      <FolderOpenIcon className="w-[1rem] h-[1rem]" />
+                      Browse
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+              </FormItem>
+            )}
+          />
 
-        <Button
-          disabled={pending || !isDirty}
-          type="submit"
-          size="icon"
-          className="p-2 w-min h-min"
-        >
-          {pending ? (
-            <LoaderCircleIcon className="w-[1rem] h-[1rem] animate-spin" />
-          ) : (
-            <SaveIcon className="w-[1rem] h-[1rem]" />
-          )}
-        </Button>
+          <Button disabled={pending || !formDirty} type="submit">
+            {pending ? (
+              <LoaderCircleIcon className="w-[1rem] h-[1rem] animate-spin" />
+            ) : (
+              <>
+                <SaveIcon className="w-[1rem] h-[1rem]" />
+                Save
+              </>
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );

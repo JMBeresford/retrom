@@ -31,6 +31,9 @@ const configSchema = z.object({
   config: z.object({
     interface: z.object({
       fullscreenByDefault: z.boolean(),
+      fullscreenConfig: z.object({
+        windowedFullscreenMode: z.boolean().optional(),
+      }),
     }),
     installationDir: z.string().optional(),
   }),
@@ -47,14 +50,18 @@ export function GeneralConfig() {
   const { config, telemetry } = configStore();
   const { toast } = useToast();
 
-  console.log({ config, telemetry });
-
   const form = useForm<ConfigSchema>({
     resolver: zodResolver(configSchema),
     defaultValues: {
       config: {
         interface: {
           fullscreenByDefault: config?.interface?.fullscreenByDefault ?? false,
+          fullscreenConfig: {
+            ...config?.interface?.fullscreenConfig,
+            windowedFullscreenMode:
+              config?.interface?.fullscreenConfig?.windowedFullscreenMode ??
+              !checkIsDesktop(),
+          },
         },
         installationDir: config?.installationDir ?? "",
       },
@@ -183,7 +190,7 @@ export function GeneralConfig() {
                       checked={field.value}
                       onCheckedChange={(val) => field.onChange(val)}
                     />
-                    <div className={cn("grid gap-1 5 leading-none")}>
+                    <div className={cn("grid gap-1 leading-none")}>
                       <label htmlFor="fullscreen-by-default">
                         Fullscreen by default
                       </label>
@@ -191,6 +198,34 @@ export function GeneralConfig() {
                       <p className="text-sm text-muted-foreground">
                         Enabling this will make Retrom launch in fullscreen mode
                         by default
+                      </p>
+                    </div>
+                  </div>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="config.interface.fullscreenConfig.windowedFullscreenMode"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <div className="flex items-top gap-2">
+                    <Checkbox
+                      id="fullscreen-by-default"
+                      checked={field.value}
+                      onCheckedChange={(val) => field.onChange(val)}
+                    />
+                    <div className={cn("grid gap-1 leading-none")}>
+                      <label htmlFor="fullscreen-by-default">
+                        Windowed fullscreen mode
+                      </label>
+
+                      <p className="text-sm text-muted-foreground max-w-[45ch]">
+                        Enabling this will keep the application in a
+                        non-fullscreen window even when using Fullscreen Mode
                       </p>
                     </div>
                   </div>
@@ -211,7 +246,7 @@ export function GeneralConfig() {
                       checked={field.value}
                       onCheckedChange={(val) => field.onChange(val)}
                     />
-                    <div className={cn("grid gap-1 5 leading-none")}>
+                    <div className={cn("grid gap-1 leading-none")}>
                       <label htmlFor="telemetry-enabled">
                         Enable Telemetry
                         <span className="text-xs text-muted-foreground ml-1">
@@ -221,7 +256,7 @@ export function GeneralConfig() {
 
                       <p className="text-sm text-muted-foreground max-w-[45ch]">
                         Send anonymous usage data such as performance metrics
-                        and errors to help improve Retrom.
+                        and errors to help improve Retrom
                       </p>
                     </div>
                   </div>
@@ -233,10 +268,10 @@ export function GeneralConfig() {
           <DialogFooter className="gap-2">
             <Button
               onClick={() =>
-                void navigate({
+                navigate({
                   to: ".",
                   search: (prev) => ({ ...prev, configModal: undefined }),
-                })
+                }).catch(console.error)
               }
               variant="secondary"
             >

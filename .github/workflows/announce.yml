@@ -7,25 +7,24 @@ on:
         type: boolean
         required: true
         description: Is this a prerelease, or a regular release?
-
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      prerelease:
+        type: boolean
+        required: true
+        description: Is this a prerelease, or a regular release?
 
 permissions:
   contents: read
+
 jobs:
   announce-to-discord:
-    env:
-      PRERELEASE: ${{ github.event_name == 'release' && github.event.release.prerelease || inputs.prerelease }}
     name: Announce to Discord
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Announce Release
-        if: ${{ !env.PRERELEASE }}
+        if: ${{ !inputs.prerelease }}
         uses: SethCohen/github-releases-to-discord@v1.16.2
         with:
           webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
@@ -34,17 +33,17 @@ jobs:
           avatar_url: "https://raw.githubusercontent.com/JMBeresford/retrom/refs/heads/main/packages/client/icons/icon.png"
           username: "Retrom Release Bot"
 
-      # - name: Announce Beta Release
-      #   if: ${{ env.PRERELEASE }}
-      #   uses: SethCohen/github-releases-to-discord@v1.16.2
-      #   with:
-      #     webhook_url: ${{ secrets.DISCORD_BETA_RELEASE_WEBHOOK }}
-      #     content: |
-      #       <@&1354251624465567874> A new beta of Retrom has been released, beep boop! :tada: :rocket: :tada:
+      - name: Announce Beta Release
+        if: ${{ inputs.prerelease }}
+        uses: SethCohen/github-releases-to-discord@v1.16.2
+        with:
+          webhook_url: ${{ secrets.DISCORD_BETA_RELEASE_WEBHOOK }}
+          content: |
+            <@&1354251624465567874> A new beta of Retrom has been released, beep boop! :tada: :rocket: :tada:
 
-      #       Remember, beta releases are not stable and should be handled with care! It is suggested that you
-      #       keep installations of beta Retrom releases separated from your regular installations, and that you ensure 
-      #       you have a proper backup solution for your library :wink:
-      #     footer_timestamp: true
-      #     avatar_url: "https://raw.githubusercontent.com/JMBeresford/retrom/refs/heads/main/packages/client/icons/icon.png"
-      #     username: "Retrom Beta Release Bot"
+            Remember, beta releases are not stable and should be handled with care! It is suggested that you
+            keep installations of beta Retrom releases separated from your regular installations, and that you ensure
+            you have a proper backup solution for your library :wink:
+          footer_timestamp: true
+          avatar_url: "https://raw.githubusercontent.com/JMBeresford/retrom/refs/heads/main/packages/client/icons/icon.png"
+          username: "Retrom Beta Release Bot"

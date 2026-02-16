@@ -15,9 +15,14 @@ import {
 } from "@retrom/ui/components/tooltip";
 import { useEnableStandaloneMode } from "@/mutations/useEnableStandaloneMode";
 import { useDisableStandaloneMode } from "@/mutations/useDisableStandaloneMode";
+import { useIsFlatpak } from "@/queries/useIsFlatpak";
+import { Spinner } from "@retrom/ui/components/spinner";
+import { useEffect } from "react";
 
 export function ModeSelection() {
-  const { setStep } = useSetupModal();
+  const { setStep, step } = useSetupModal();
+  const isFlatpakQuery = useIsFlatpak();
+
   const { mutateAsync: enableStandaloneMode, status: enableStatus } =
     useEnableStandaloneMode();
 
@@ -26,7 +31,19 @@ export function ModeSelection() {
 
   const pending = enableStatus === "pending" || disableStatus === "pending";
 
-  return (
+  useEffect(() => {
+    if (isFlatpakQuery.data && step === "Mode") {
+      disableStandaloneMode(undefined)
+        .then(() => setStep("ServerHost"))
+        .catch(console.error);
+    }
+  }, [disableStandaloneMode, isFlatpakQuery.data, setStep, step]);
+
+  return isFlatpakQuery.status === "pending" ? (
+    <div className="grid place-items-center w-full h-32">
+      <Spinner /> Please wait...
+    </div>
+  ) : (
     <>
       <DialogHeader>
         <DialogTitle>Use Standalone Mode?</DialogTitle>

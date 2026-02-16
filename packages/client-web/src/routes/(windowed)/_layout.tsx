@@ -41,8 +41,11 @@ export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
   loader: async () => {
     destroy();
+
     if (checkIsDesktop()) {
       await getCurrentWindow().setFullscreen(false);
+    } else if (window.document.fullscreenElement) {
+      await window.document.exitFullscreen().catch(console.error);
     }
   },
 });
@@ -55,7 +58,7 @@ function LayoutComponent() {
   useEffect(() => {
     function onResize() {
       if (checkIsDesktop()) {
-        void saveWindowState(StateFlags.ALL);
+        saveWindowState(StateFlags.ALL).catch(console.error);
       }
     }
 
@@ -82,7 +85,7 @@ function LayoutComponent() {
                 id="desktop-sidebar"
                 defaultSize={25}
                 maxSize={50}
-                className="bg-muted hidden sm:flex"
+                className="hidden sm:flex"
               >
                 <FilterAndSortContext>
                   <SideBar />
@@ -97,8 +100,6 @@ function LayoutComponent() {
                     <Outlet />
                   </main>
                 </ScrollArea>
-
-                <Toaster offset={{ bottom: "4rem" }} />
               </ResizablePanel>
             </ResizablePanelGroup>
             <div
@@ -137,6 +138,7 @@ function LayoutComponent() {
       )}
 
       <SetupModal />
+      <Toaster offset={{ bottom: "4rem" }} />
     </>
   );
 }

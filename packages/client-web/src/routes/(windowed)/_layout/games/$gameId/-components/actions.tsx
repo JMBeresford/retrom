@@ -73,7 +73,7 @@ export function Actions() {
     >
       <div
         className={cn(
-          "w-full *:w-full rounded-l-lg sm:rounded-tl-none overflow-hidden border-r-2",
+          "w-full *:w-full rounded-l-lg sm:rounded-tl-none overflow-hidden border-r border-black",
           // installationState === InstallationStatus.INSTALLING && "bg-primary",
         )}
       >

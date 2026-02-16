@@ -1,9 +1,90 @@
+## [0.7.52](https://github.com/JMBeresford/retrom/compare/v0.7.51...v0.7.52) (2026-02-08)
+
+### Features
+
+
+* feat: flatpak client builds ([eab08318bef17a1e5497ddb8f15ca8821a18179e](https://github.com/JMBeresford/retrom/commit/eab08318bef17a1e5497ddb8f15ca8821a18179e))
+  	The Retrom client is now available via FlatHub. This means it will be
+	directly installable on SteamOS via the Discover Store!
+
+## [0.7.52](https://github.com/JMBeresford/retrom/compare/v0.7.51...v0.7.52) (2026-02-07)
+
+### Features
+
+
+* feat: flatpak client builds ([eab08318bef17a1e5497ddb8f15ca8821a18179e](https://github.com/JMBeresford/retrom/commit/eab08318bef17a1e5497ddb8f15ca8821a18179e))
+  	The Retrom client is now available via FlatHub. This means it will be
+	directly installable on SteamOS via the Discover Store!
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.7.51](https://github.com/JMBeresford/retrom/compare/v0.7.50...v0.7.51) (2026-01-18)
+
+
+### Bug Fixes
+
+* update flatpak metainfo ([f217436](https://github.com/JMBeresford/retrom/commit/f217436aa46ac2130dd5c932874bc0419a596197))
+
+## [0.7.50](https://github.com/JMBeresford/retrom/compare/v0.7.49...v0.7.50) (2026-01-14)
+
+
+### Bug Fixes
+
+* skip mode selection in flatpak setup ([5f136fc](https://github.com/JMBeresford/retrom/commit/5f136fc83426f51b079d4a730884ade437a26057))
+
+## [0.7.49](https://github.com/JMBeresford/retrom/compare/v0.7.48...v0.7.49) (2026-01-05)
+
+
+### Bug Fixes
+
+* various UI tweaks and fixes ([fc9c607](https://github.com/JMBeresford/retrom/commit/fc9c60722344f41a991c15ebb7b6547ce33ada85))
+
+## [0.7.48](https://github.com/JMBeresford/retrom/compare/v0.7.47...v0.7.48) (2025-12-25)
+
+
+### Features
+
+* UI tweaks ([dbd5592](https://github.com/JMBeresford/retrom/commit/dbd559269a8112e69c6c194de3f92e8d188a3d8b))
+
+
+### Bug Fixes
+
+* default file respected when launching games ([574d396](https://github.com/JMBeresford/retrom/commit/574d396b2451d4a18b1cf33fc53de48d15384f0e))
+
+## [0.7.47](https://github.com/JMBeresford/retrom/compare/v0.7.46...v0.7.47) (2025-12-09)
+
+
+### Bug Fixes
+
+* notifications before setup ([ef90b67](https://github.com/JMBeresford/retrom/commit/ef90b67636194f51b8fa0de9d0f87f609a2432db))
+
+## [0.7.46](https://github.com/JMBeresford/retrom/compare/v0.7.45...v0.7.46) (2025-12-07)
+
+
+### Bug Fixes
+
+* flatpak desktop file ([4738afe](https://github.com/JMBeresford/retrom/commit/4738afe96c858431b62506eb58a13c8c36d6d3ec))
+
+## [0.7.45](https://github.com/JMBeresford/retrom/compare/v0.7.44...v0.7.45) (2025-12-01)
+
+
+### Features
+
+* add DOSBox Pure core ([19c5815](https://github.com/JMBeresford/retrom/commit/19c5815c1a8c95c8443a962a96fbd65619428fbf))
+* add SAME CDI core ([5c3a182](https://github.com/JMBeresford/retrom/commit/5c3a182d26164e19b88ff7311e8f25ad386de1ff))
+* flatpak manifest generation ([#436](https://github.com/JMBeresford/retrom/issues/436)) ([2bb169b](https://github.com/JMBeresford/retrom/commit/2bb169b82f86b1c3c672b277078dd94e1d949796))
+
+## [0.7.44](https://github.com/JMBeresford/retrom/compare/v0.7.43...v0.7.44) (2025-11-23)
+
+
+### Features
+
+* configure native fullscreen handling ([546e1fd](https://github.com/JMBeresford/retrom/commit/546e1fd93449186236c503f7a7121775302f7468))
 
 ## [0.7.43](https://github.com/JMBeresford/retrom/compare/v0.7.42...v0.7.43) (2025-11-09)
 

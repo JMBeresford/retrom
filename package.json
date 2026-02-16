@@ -1,6 +1,6 @@
 {
   "name": "retrom",
-  "version": "0.7.43",
+  "version": "0.7.51",
   "type": "module",
   "nx": {
     "targets": {
@@ -8,6 +8,14 @@
         "executor": "nx:run-commands",
         "options": {
           "command": "pnpm --version"
+        }
+      },
+      "template:flatpak": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node ./templates/write-flatpak-manifest.js dist/io.github.jmberesford.Retrom.yml",
+          "cwd": "{projectRoot}"
         }
       },
       "markdownlint:lint": {
@@ -31,20 +39,26 @@
     "@nx/vite": "catalog:",
     "@nx/web": "catalog:",
     "@retrom/configs": "workspace:*",
+    "@semantic-release/changelog": "catalog:",
+    "@semantic-release/exec": "catalog:",
+    "@semantic-release/git": "catalog:",
     "@swc-node/register": "catalog:",
     "@swc/core": "catalog:",
     "@swc/helpers": "catalog:",
     "@tauri-apps/cli": "catalog:",
     "@uptrace/web": "catalog:",
     "@vitest/ui": "catalog:",
+    "conventional-changelog-conventionalcommits": "catalog:",
     "dotenv": "catalog:",
     "eslint": "catalog:",
+    "handlebars": "catalog:",
     "jiti": "catalog:",
     "jsdom": "catalog:",
     "markdownlint-cli2": "catalog:",
     "nx": "catalog:",
     "nx-mcp": "catalog:",
     "prettier": "catalog:",
+    "semantic-release": "catalog:",
     "tslib": "catalog:",
     "typescript": "catalog:"
   },
@@ -54,7 +68,10 @@
     "prettier": "$prettier",
     "eslint": "$eslint"
   },
-  "packageManager": "pnpm@10.15.1+sha256.8c53af02ae3ec1fb0ae75377f8d4d6217c2d7cbe6f03c16350cabf7493de6eff",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@10.26.1+sha512.664074abc367d2c9324fdc18037097ce0a8f126034160f709928e9e9f95d98714347044e5c3164d65bd5da6c59c6be362b107546292a8eecb7999196e5ce58fa",
   "dependencies": {
     "@opentelemetry/core": "catalog:"
   }

@@ -1,239 +1,89 @@
-name: Publish Clients Applications
+name: Publish Clients
 
 on:
   workflow_dispatch:
     inputs:
-      release-id:
-        description: An existing release-id to upload artifacts to
-        type: string
-      title:
-        description: The name for created release. Used for both tag name and release name.
+      release_id:
+        description: "The ID of the release to publish clients for"
+        required: true
+        type: number
+      tag_name:
+        description: "The tag name of the release (e.g. `v1.2.3`)"
         required: true
         type: string
-      release-body:
-        description: The body text for created release.
+  workflow_call:
+    inputs:
+      release_id:
+        required: true
+        type: number
+      tag_name:
+        required: true
         type: string
-      prerelease:
-        description: Create a pre-release
-        type: boolean
-        default: false
-      draft:
-        description: Create a draft release
-        type: boolean
-        default: true
-      builds:
-        description: What builds should be included
-        type: choice
-        default: debug
-        options:
-          - debug
-          - release
-          - both
-
-  pull_request:
-  release:
-    types: [published]
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
-env:
-  CACHE_VERSION: 6
-  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
 jobs:
-  build-desktop-clients:
-    name: Build Desktop Clients
+  build-client:
+    name: Build Client
+    uses: ./.github/workflows/build-client.yml
+    secrets: inherit
+    with:
+      bundle: true
+      debug: false
+
+  add-client-artifacts:
+    name: Add Client Artifacts to Release
+    needs: build-client
+    env:
+      # `target/{target/}debug|release`
+      OUT_DIR: ${{ format('target/{0}release', matrix.target && format('{0}/', matrix.target) || '') }}
+      TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
+      TAG_NAME: ${{ inputs.tag_name }}
+    runs-on: ${{ matrix.os }}
     strategy:
+      # One at a time to avoid race conditions on updating `latest.json`
+      # Builds were completed in parallel in the previous job, this should be quick
+      max-parallel: 1
       fail-fast: false
       matrix:
         include:
-          - platform: "macos-latest" # for Arm based macs (M1 and above).
-            cache-key-prefix: "macos-latest-aarch64"
-            target: "aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel based macs.
-            cache-key-prefix: "macos-latest-x86_64"
-            target: "x86_64-apple-darwin"
-          - platform: "ubuntu-24.04"
-            cache-key-prefix: "ubuntu-24.04-x64"
-          - platform: "ubuntu-24.04-arm"
-            cache-key-prefix: "ubuntu-24.04-aarch64"
-          - platform: "windows-latest"
-            cache-key-prefix: "windows-latest"
-    env:
-      PQ_LIB_STATIC: 1
-      IS_PRERELEASE: ${{ inputs.prerelease || github.event.release.prerelease == true }}
-      DEBUG_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'debug' || github.event.release.prerelease == true }}
-      RELEASE_BUILDS: ${{ inputs.builds == 'both' || inputs.builds == 'release' || (github.event.release.prerelease == false && github.event.release.draft == false) }}
-      TARGET_ARG: ${{ format('{0}{1}', matrix.target && '--target ' || '', matrix.target) }}
-      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
-      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-      UPTRACE_DSN: ${{ secrets.UPTRACE_DSN }}
-      VITE_UPTRACE_DSN: ${{ secrets.UPTRACE_DSN }}
-      OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
-      VITE_OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
-    permissions:
-      contents: write
-
-    runs-on: ${{ matrix.platform }}
+          - id: macos-aarch64
+            target: aarch64-apple-darwin
+            os: macos-latest
+          - id: macos-x86_64
+            target: x86_64-apple-darwin
+            os: macos-latest
+          - id: windows
+            os: windows-latest
+          - id: linux-x86_64
+            os: ubuntu-24.04
+          - id: linux-arm64
+            os: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
-
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          run_install: false
+          fetch-depth: 0
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - name: Download Release Artifacts
+        uses: actions/download-artifact@v7
         with:
-          node-version: 20
-          cache: "pnpm"
+          name: ${{ matrix.id }}-client
+          path: ${{ env.OUT_DIR }}
 
-      - name: install Rust stable
-        id: rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-
-      - name: Cache rust build artifacts
-        uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: true
-          prefix-key: ${{ matrix.cache-key-prefix }}-rust-v${{ env.CACHE_VERSION }}
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: install dependencies (ubuntu 24 only)
-        if: startsWith(matrix.platform, 'ubuntu-24.04') # This must match the platform value defined above.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libpq-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            libwebkit2gtk-4.1-0=2.44.0-2 \
-            libwebkit2gtk-4.1-dev=2.44.0-2 \
-            libjavascriptcoregtk-4.1-0=2.44.0-2 \
-            libjavascriptcoregtk-4.1-dev=2.44.0-2 \
-            gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
-            gir1.2-webkit2-4.1=2.44.0-2 \
-            xdg-utils
-
-      - name: install dependencies (windows only)
-        if: matrix.platform == 'windows-latest' # This must match the platform value defined above.
-        run: |
-          choco install -y postgresql17
-
-      - name: install dependencies (macos m1 only)
-        if: matrix.target == 'aarch64-apple-darwin' # This must match the value defined above.
-        run: |
-          brew install postgresql@17
-
-      - name: install dependencies (macos intel only)
-        if: matrix.target == 'x86_64-apple-darwin' # This must match the value defined above.
-        run: |
-          arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          arch -x86_64 /usr/local/bin/brew install postgresql@17
-
-      - name: install frontend dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: check NX cloud access
-        id: nx-check
-        continue-on-error: true
-        run: pnpm nx noop
-
-      - name: disable NX cloud (non-Windows)
-        if: steps.nx-check.outcome != 'success' && matrix.platform != 'windows-latest'
-        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
-
-      - name: disable NX cloud (Windows)
-        if: steps.nx-check.outcome != 'success' && matrix.platform == 'windows-latest'
-        run: echo "NX_NO_CLOUD=true" >> $env:GITHUB_ENV
-
-      - name: install tauri cli
-        run: cargo install tauri-cli --version "^2.0.0" --locked
-
-      - name: build release client
-        if: ${{ env.RELEASE_BUILDS == 'true' }}
-        run: |
-          pnpm nx build retrom-client --args="$TARGET_ARG"
-
-      - name: build debug client
-        if: ${{ env.DEBUG_BUILDS == 'true' }}
-        run: |
-          pnpm nx build retrom-client --args="$TARGET_ARG" --configuration="debug"
-
+      # using this until a manual implementation replaces it
       - name: upload artifacts to release
-        if: ${{ github.event_name != 'pull_request' }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_ARGS: ${{ matrix.target }}
         with:
           projectPath: packages/client
-          releaseId: ${{ inputs.release-id || github.event.release.id }}
-          releaseBody: ${{ inputs.release-body || github.event.release.body }}
-          releaseName: ${{ inputs.title || github.event.release.name }}
-          tagName: ${{ inputs.title || github.event.release.tag_name }}
-          prerelease: ${{ env.IS_PRERELEASE }}
-          releaseDraft: ${{ inputs.draft && 'true' || 'false' }}
-          includeDebug: ${{ env.DEBUG_BUILDS }}
-          includeRelease: ${{ env.RELEASE_BUILDS }}
+          releaseId: ${{ inputs.release_id }}
+          tagName: ${{ env.TAG_NAME }}
+          releaseDraft: true
+          includeRelease: true
+          includeDebug: false
           includeUpdaterJson: true
           updaterJsonPreferNsis: true
           tauriScript: echo # already built the app, just using this action for easy upload of artifacts + updater json
           args: ${{ env.TARGET_ARG }} # required for the action to look in the correct target subdir
 
-  publish-crates:
-    permissions:
-      contents: read
-    if: github.event_name == 'release'
-    name: Publish to Crates.io
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.RELEASE_PLEASE_GH_TOKEN }}
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libpq-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            libwebkit2gtk-4.1-0=2.44.0-2 \
-            libwebkit2gtk-4.1-dev=2.44.0-2 \
-            libjavascriptcoregtk-4.1-0=2.44.0-2 \
-            libjavascriptcoregtk-4.1-dev=2.44.0-2 \
-            gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
-            gir1.2-webkit2-4.1=2.44.0-2 \
-            xdg-utils
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Publish crates
-        run: cargo publish --token="${{ secrets.CARGO_REGISTRY_TOKEN }}"

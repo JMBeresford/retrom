@@ -37,6 +37,7 @@ export function useUpdateSaveStates() {
         update({
           title: "Save State Uploaded",
           description: "Your save state has been uploaded successfully",
+          duration: 2000,
         });
 
         return res;

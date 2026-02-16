@@ -1,0 +1,164 @@
+name: Publish Flatpak Manifest
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "The tag name of the release (e.g. `v1.2.3`)"
+        required: true
+        type: string
+  workflow_call:
+    secrets:
+      FLATHUB_PR_TOKEN:
+        required: true
+      RELEASE_GH_TOKEN:
+        required: true
+
+    inputs:
+      tag_name:
+        required: true
+        type: string
+
+env:
+  GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+
+jobs:
+  build-web-client:
+    uses: ./.github/workflows/build-web-client.yml
+    secrets: inherit
+
+  upload-web-artifact-to-release:
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact-sha: ${{ steps.upload.outputs.artifact-sha }}
+    needs:
+      - build-web-client
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download artifact
+        uses: actions/download-artifact@v7
+        with:
+          artifact-ids: ${{ needs.build-web-client.outputs.artifact-id }}
+
+      - name: Upload tarball
+        id: upload
+        env:
+          TAG_NAME: ${{ inputs.tag_name }}
+          TAR_FILE: desktop-frontend-dist.tar.gz
+        run: |
+          tar -czvf "$TAR_FILE" packages/client-web/dist/
+          gh release upload "$TAG_NAME" "$TAR_FILE" --clobber
+          SHA="$(sha256sum "$TAR_FILE")"
+          SHA=${SHA%% *}
+          echo "artifact-sha=$SHA" >> "$GITHUB_OUTPUT"
+
+  vendor-cargo-deps:
+    uses: ./.github/workflows/vendor-cargo-deps.yml
+    secrets: inherit
+
+  upload-cargo-deps-to-release:
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact-sha: ${{ steps.upload.outputs.artifact-sha }}
+    needs:
+      - vendor-cargo-deps
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download Cargo deps artifact
+        uses: actions/download-artifact@v7
+        with:
+          artifact-ids: ${{ needs.vendor-cargo-deps.outputs.artifact-id }}
+
+      - name: Upload Cargo deps tarball
+        id: upload
+        env:
+          TAG_NAME: ${{ inputs.tag_name }}
+          TAR_FILE: cargo-deps.tar.gz
+        run: |
+          tar -czvf "$TAR_FILE" vendor/
+          gh release upload "$TAG_NAME" "$TAR_FILE" --clobber
+          SHA="$(sha256sum "$TAR_FILE")"
+          SHA=${SHA%% *}
+          echo "artifact-sha=$SHA" >> "$GITHUB_OUTPUT"
+
+  create-manifest:
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    runs-on: ubuntu-24.04
+    needs:
+      - upload-web-artifact-to-release
+      - upload-cargo-deps-to-release
+
+    env:
+      COMMIT_HASH: ${{ github.sha }}
+      TAG_VALUE: ${{ inputs.tag_name }}
+      WEB_DIST_SHA: ${{ needs.upload-web-artifact-to-release.outputs.artifact-sha }}
+      CARGO_DEPS_SHA: ${{ needs.upload-cargo-deps-to-release.outputs.artifact-sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: check NX cloud access
+        id: nx-check
+        continue-on-error: true
+        run: pnpm nx noop
+
+      - name: disable NX cloud
+        if: steps.nx-check.outcome != 'success'
+        run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+
+      - name: Template manifest file
+        run: pnpm nx template:flatpak
+
+      - name: Upload output as artifact
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-manifest
+          path: dist/io.github.jmberesford.Retrom.yml
+
+  publish-manifest:
+    needs: create-manifest
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: "flathub/io.github.jmberesford.Retrom"
+          ref: master
+
+      - run: rm ./io.github.jmberesford.Retrom.yml
+
+      - name: Download manifest artifact
+        uses: actions/download-artifact@v7
+        with:
+          artifact-ids: ${{ needs.create-manifest.outputs.artifact-id }}
+
+      - name: Create PR with new manifest
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.FLATHUB_PR_TOKEN }}
+          commit-message: "chore(release): ${{ inputs.tag_name }}"
+          title: "Update Flatpak manifest for release ${{ inputs.tag_name }}"
+          body: "This PR updates the Flatpak manifest with the latest release artifacts."
+          push-to-fork: jmberesford/io.github.jmberesford.Retrom
+          maintainer-can-modify: false

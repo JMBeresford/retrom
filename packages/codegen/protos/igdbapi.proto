@@ -28,7 +28,7 @@ message AgeRatingResult {
 message AgeRating {
   uint64 id = 1;
   AgeRatingCategoryEnum category = 2 [deprecated = true];
-  repeated AgeRatingContentDescription content_descriptions = 3;
+  repeated AgeRatingContentDescription content_descriptions = 3 [deprecated = true];
   AgeRatingRatingEnum rating = 4 [deprecated = true];
   string rating_cover_url = 5;
   string synopsis = 6;
@@ -553,6 +553,32 @@ enum WebsiteCategoryEnum {
   WEBSITE_BLUESKY = 19 [deprecated = true];
 }
 
+message ContentSafetyRatingResult {
+  repeated ContentSafetyRating contentsafetyratings = 1;
+}
+
+message ContentSafetyRating {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
+}
+
+message ContentSafetyRatingDimensionResult {
+  repeated ContentSafetyRatingDimension contentsafetyratingdimensions = 1;
+}
+
+message ContentSafetyRatingDimension {
+  uint64 id = 1;
+  ContentSafetyRating content_safety_rating = 2;
+  int32 value = 3;
+  string description = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  string checksum = 7;
+}
+
 message CoverResult {
   repeated Cover covers = 1;
 }
@@ -809,6 +835,20 @@ enum GameStatusEnum {
   CANCELLED = 6 [deprecated = true];
   RUMORED = 7 [deprecated = true];
   DELISTED = 8 [deprecated = true];
+}
+
+message GameContentSafetyRatingResult {
+  repeated GameContentSafetyRating gamecontentsafetyratings = 1;
+}
+
+message GameContentSafetyRating {
+  uint64 id = 1;
+  Game game = 2;
+  ContentSafetyRatingDimension content_safety_rating_dimension = 3;
+  ContentSafetyRating content_safety_rating = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  string checksum = 7;
 }
 
 message GameEngineResult {

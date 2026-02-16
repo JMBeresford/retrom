@@ -21,7 +21,7 @@ export function CoverImage() {
   return (
     <div
       className={cn(
-        "relative border w-fit sm:min-w-full rounded-t-lg overflow-hidden",
+        "relative w-fit sm:min-w-full rounded-t-lg overflow-hidden",
         "min-h-[250px]",
       )}
     >

@@ -1,5 +1,4 @@
 import { cn } from "@retrom/ui/lib/utils";
-import { Input, InputStyles } from "@retrom/ui/components/input";
 import { SearchIcon, SortAscIcon, SortDescIcon } from "lucide-react";
 import {
   GameSortKey,
@@ -24,6 +23,11 @@ import {
   AccordionTrigger,
 } from "@retrom/ui/components/accordion";
 import { Checkbox } from "@retrom/ui/components/checkbox";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@retrom/ui/components/input-group";
 
 export function FiltersAndSorting() {
   const {
@@ -44,16 +48,17 @@ export function FiltersAndSorting() {
   const labelStyles = cn("pl-1 font-medium text-muted-foreground text-sm");
 
   return (
-    <div className="flex flex-col gap-3 px-3 sm:px-4 pt-2 pb-4">
-      <div className={cn(InputStyles, "flex items-stretch py-0 pr-0")}>
-        <SearchIcon className="w-[1rem] h-[1rem] my-auto" />
-        <Input
+    <div className="flex flex-col gap-3 px-3 sm:px-4 pt-2 pb-4 bg-background">
+      <InputGroup>
+        <InputGroupAddon align="inline-start">
+          <SearchIcon />
+        </InputGroupAddon>
+        <InputGroupInput
           defaultValue={filters.name}
           onChange={(e) => setFilter("name", e.target.value)}
-          className="m-0 border-none bg-transparent h-full flex-grow ring-inset"
           placeholder="Search Games"
         />
-      </div>
+      </InputGroup>
 
       <Accordion type="single" collapsible className="h-fit">
         <AccordionItem value="filters-and-sorting" className="border-none">

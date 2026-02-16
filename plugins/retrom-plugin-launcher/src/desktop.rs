@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use retrom_codegen::retrom::{
     GamePlayStatusUpdate, GetGameMetadataRequest, PlayStatus, UpdateGameMetadataRequest,
@@ -161,32 +161,53 @@ impl<R: Runtime> Launcher<R> {
         Ok(())
     }
 
-    pub(crate) fn get_open_cmd(&self, program: &str) -> Command {
-        #[cfg(target_os = "macos")]
+    fn prepare_command(&self, executable: std::path::PathBuf) -> Command {
+        #[cfg(not(target_os = "windows"))]
         {
-            let path = std::path::PathBuf::from(program);
-            let program = if path.extension().is_some_and(|ext| ext == "app") {
-                path.join("Contents/MacOS/").join(path.file_stem().unwrap())
+            let base_cmd = if cfg!(feature = "flatpak") {
+                // Must use flatpak-spawn to launch host executables from within a Flatpak
+                let mut cmd = Command::new("flatpak-spawn");
+                cmd.arg("--host").arg(executable);
+                cmd
             } else {
-                path
+                Command::new(executable)
             };
 
-            Command::new(program)
+            base_cmd
         }
+
         #[cfg(target_os = "windows")]
         {
-            let mut cmd = Command::new(program);
+            let mut base_cmd = Command::new(executable);
 
             // Don't show the console window
-            cmd.creation_flags(0x08000000);
+            base_cmd.creation_flags(0x08000000);
 
-            cmd
+            base_cmd
         }
-        #[cfg(target_os = "linux")]
-        {
-            let cmd = Command::new(program);
+    }
 
-            cmd
+    pub(crate) fn get_open_cmd(&self, program: impl Into<PathBuf>) -> Command {
+        let program: PathBuf = program.into();
+
+        #[cfg(target_os = "macos")]
+        {
+            let program = if program.extension().is_some_and(|ext| ext == "app") {
+                program.join("Contents/MacOS/").join(
+                    program
+                        .file_stem()
+                        .unwrap_or_else(|| panic!("Failed to get file stem for file: {program:?}")),
+                )
+            } else {
+                program
+            };
+
+            self.prepare_command(program)
+        }
+
+        #[cfg(not(target_os = "macos"))]
+        {
+            self.prepare_command(program)
         }
     }
 }

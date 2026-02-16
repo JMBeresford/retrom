@@ -1,0 +1,34 @@
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+
+name: Release (legacy)
+
+jobs:
+  release-please:
+    name: Run Release Please
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    outputs:
+      released: ${{ steps.release-please.outputs.releases_created }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install Rust stable
+        id: rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: update lock file
+        run: cargo update --workspace
+
+      - uses: googleapis/release-please-action@v4
+        id: release-please
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_GH_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
