@@ -2,7 +2,7 @@ on:
   workflow_call:
     secrets:
       NX_CLOUD_ACCESS_TOKEN:
-        required: true
+        required: false
   workflow_dispatch:
 
 name: Format

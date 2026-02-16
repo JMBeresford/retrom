@@ -8,6 +8,9 @@
     "build": {
       "syncGenerators": ["@nx/js:typescript-sync"]
     },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
     "prettier:format": {
       "executor": "nx:run-commands",
       "options": {

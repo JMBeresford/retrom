@@ -21,6 +21,9 @@
     },
     "build": {
       "dependsOn": ["generate"]
+    },
+    "typecheck": {
+      "dependsOn": ["build"]
     }
   }
 }

@@ -8,12 +8,12 @@ permissions:
   contents: read
 
 jobs:
-  announce:
-    name: Announce Release
-    uses: ./.github/workflows/announce.yml
-    secrets: inherit
-    with:
-      prerelease: ${{ github.event.release.prerelease }}
+  # announce:
+  #   name: Announce Release
+  #   uses: ./.github/workflows/announce.yml
+  #   secrets: inherit
+  #   with:
+  #     prerelease: ${{ github.event.release.prerelease }}
 
   publish-flatpak-manifest:
     name: Publish Flatpak Manifest
