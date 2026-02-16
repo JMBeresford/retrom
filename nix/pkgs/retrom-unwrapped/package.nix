@@ -1,6 +1,5 @@
 {
   lib,
-  fetchgit,
   pkg-config,
   rustPlatform,
   cargo-tauri,

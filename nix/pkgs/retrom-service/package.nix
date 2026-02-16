@@ -1,6 +1,5 @@
 {
   lib,
-  fetchgit,
   nodejs_22,
   pnpm_10,
   faketty,
@@ -48,7 +47,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     export VITE_BASE_URL=/web
     export VITE_UPTRACE_DSN=https://KgFBXOxX2RFeJurwr7R-4w@api.uptrace.dev?grpc=4317
 
-     # See https://github.com/nrwl/nx/issues/22445
+    # See https://github.com/nrwl/nx/issues/22445
     faketty pnpm nx build retrom-client-web
 
     runHook cargoBuildHook
