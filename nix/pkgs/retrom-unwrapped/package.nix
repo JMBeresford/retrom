@@ -3,8 +3,10 @@
   pkg-config,
   rustPlatform,
   cargo-tauri,
-  nodejs_22,
+  pnpmConfigHook,
+  fetchPnpmDeps,
   pnpm_10,
+  nodejs_22,
   faketty,
   perl,
   protobuf_29,
@@ -17,24 +19,25 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom";
-  version = "0.7.45"; # x-release-please-version
+  version = "0.7.52"; # x-release-please-version
 
   src = ./../../..;
 
-  pnpmDeps = pnpm_10.fetchDeps {
+  pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
-    fetcherVersion = 2;
-    hash = "sha256-q+IUP3WZWSR2JRHCnQjrq8ndndQOf0GbalQ9GF4niJ4=";
+    fetcherVersion = 3;
+    hash = "sha256-l0Ki0oZkR9GkYr/mnbgRk6An/y4X+sUuE8C/jLDWq30=";
   };
 
   cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
   buildAndTestSubdir = "packages/client";
 
   nativeBuildInputs = [
-    nodejs_22
-    pnpm_10.configHook
-    faketty
     pkg-config
+    pnpmConfigHook
+    pnpm_10
+    nodejs_22
+    faketty
     perl
     protobuf_29
     cargo-tauri.hook
