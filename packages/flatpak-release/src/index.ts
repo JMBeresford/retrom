@@ -90,8 +90,7 @@ function generateNotes(
     </release>
   `.replace("\n", "");
 
-  updatedMetainfo = /* xml */ `
-${before}
+  updatedMetainfo = `${before}
 ${nextVersion}
 ${after}
 `;
