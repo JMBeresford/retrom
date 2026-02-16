@@ -8,7 +8,6 @@ const config = tseslint.config(
       parserOptions: {
         projectService: {
           allowDefaultProject: ["*.js"],
-          defaultProject: "../tsconfig/default.json",
         },
       },
     },

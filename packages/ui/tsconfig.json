@@ -1,7 +1,7 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
   "files": [],
-  "include": ["*.config.ts", "*.config.js"],
+  "include": ["*.config.ts"],
   "compilerOptions": {
     "emitDeclarationOnly": true
   },
