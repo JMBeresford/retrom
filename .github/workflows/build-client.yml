@@ -14,11 +14,11 @@ on:
         default: false
     secrets:
       NX_CLOUD_ACCESS_TOKEN:
-        required: true
+        required: false
       UPTRACE_DSN:
-        required: true
+        required: false
       OTEL_EXPORTER_OTLP_HEADERS:
-        required: true
+        required: false
       TAURI_SIGNING_PRIVATE_KEY:
         required: false
       APPLE_CERTIFICATE:
