@@ -10,7 +10,7 @@
   ],
   "dependencies": {
     "@tauri-apps/api": "catalog:",
-    "@bufbuild/protobuf": "2.4.0",
+    "@bufbuild/protobuf": "catalog:",
     "@retrom/codegen": "workspace:*",
     "@tauri-apps/plugin-opener": "catalog:"
   },

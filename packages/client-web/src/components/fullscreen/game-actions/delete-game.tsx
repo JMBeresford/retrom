@@ -90,7 +90,7 @@ export function DeleteGameAction() {
 
                     <p>
                       Deleting only the entry will leave your file system as is,
-                      but Retrom will ignore the game's directory moving
+                      but Retrom will ignore the game&apos;s directory moving
                       forward.
                     </p>
                   </div>

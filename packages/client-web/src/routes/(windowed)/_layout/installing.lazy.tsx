@@ -430,3 +430,5 @@ const InstallationProgressChart = memo(function ({
     </ChartContainer>
   );
 });
+
+InstallationProgressChart.displayName = "InstallationProgressChart";

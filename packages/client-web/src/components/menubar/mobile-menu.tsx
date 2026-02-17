@@ -45,7 +45,9 @@ function MobileMainMenuItem(props: { item: MenuItem; lastInGroup?: boolean }) {
           >
             <SheetHeader className="sr-only">
               <SheetTitle>{item.label} Menu</SheetTitle>
-              <SheetDescription>Retrom's {item.label} menu</SheetDescription>
+              <SheetDescription>
+                Retrom&apos;s {item.label} menu
+              </SheetDescription>
             </SheetHeader>
 
             <SheetClose
@@ -154,7 +156,7 @@ export function MobileMenu(props: { root: MenuRoot }) {
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Menu</SheetTitle>
-            <SheetDescription>Retrom's main menu</SheetDescription>
+            <SheetDescription>Retrom&apos;s main menu</SheetDescription>
           </SheetHeader>
 
           {root.items.map((item, index) =>

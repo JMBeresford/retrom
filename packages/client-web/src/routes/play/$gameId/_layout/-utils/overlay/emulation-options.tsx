@@ -32,7 +32,6 @@ export function EmulationOptions() {
    */
   const setEmulatorVolume = useCallback(
     (value: number) => {
-      emulatorJS.volume = value / 100;
       emulatorJS.setVolume(value / 100);
       setVolume(value);
     },

@@ -144,3 +144,5 @@ export const PlayGameButton = forwardRef(
     );
   },
 );
+
+PlayGameButton.displayName = "PlayGameButton";

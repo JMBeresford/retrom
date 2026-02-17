@@ -45,3 +45,5 @@ export const DownloadGameButton = forwardRef(
     );
   },
 );
+
+DownloadGameButton.displayName = "DownloadGameButton";

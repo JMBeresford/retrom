@@ -37,6 +37,7 @@
     "@nx/eslint": "catalog:",
     "@nx/js": "catalog:",
     "@nx/vite": "catalog:",
+    "@nx/vitest": "catalog:",
     "@nx/web": "catalog:",
     "@retrom/configs": "workspace:*",
     "@retrom/flatpak-release": "workspace:*",

@@ -76,7 +76,7 @@ export function SteamConfig(props: {
           <a
             href="https://github.com/JMBeresford/retrom#steam"
             target="_blank"
-            className="underline text-accent-text"
+            className="underline text-accent-text" rel="noreferrer"
           >
             learn more
           </a>

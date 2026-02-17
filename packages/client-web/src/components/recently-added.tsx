@@ -10,19 +10,18 @@ import { Game } from "@retrom/codegen/retrom/models/games_pb";
 export function RecentlyAdded() {
   const { data, status } = useGames({ request: { withMetadata: true } });
 
-  const gamesByDate: Game[] =
-    useMemo(
-      () =>
-        data?.games
-          .sort((a, b) => {
-            const aTime = timestampToDate(a.createdAt).getTime();
-            const bTime = timestampToDate(b.createdAt).getTime();
+  const gamesByDate: Game[] = useMemo(
+    () =>
+      data?.games
+        .sort((a, b) => {
+          const aTime = timestampToDate(a.createdAt).getTime();
+          const bTime = timestampToDate(b.createdAt).getTime();
 
-            return bTime - aTime;
-          })
-          .slice(0, 20),
-      [data],
-    ) ?? [];
+          return bTime - aTime;
+        })
+        .slice(0, 20) ?? [],
+    [data],
+  );
 
   return (
     <div className="w-full">

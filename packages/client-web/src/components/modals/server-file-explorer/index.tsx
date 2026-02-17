@@ -55,7 +55,7 @@ const FilesystemNodeIcon: Record<
   (props: LucideProps) => ReactElement
 > = {
   [FilesystemNodeType.DIRECTORY]: ({ className, ...props }) => (
-    <FolderIcon className={cn("fill-primary stroke-0", className)} {...props} />
+    <FolderIcon {...props} className={cn("fill-primary stroke-0", className)} />
   ),
   [FilesystemNodeType.FILE]: ({ className, ...props }) => (
     <FileIcon

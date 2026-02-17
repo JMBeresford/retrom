@@ -11,8 +11,18 @@ const config = defineConfig(
   react.configs.flat["jsx-runtime"],
   reactHooks.configs.flat.recommended,
   {
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
     rules: {
       "react/react-in-jsx-scope": "off",
+      "react-hooks/refs": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/static-components": "warn",
+      "react/prop-types": ["off"],
+      "react/no-unknown-property": ["off"],
     },
   },
 );

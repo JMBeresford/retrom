@@ -9,27 +9,6 @@
   },
   "references": [
     {
-      "path": "../ui"
-    },
-    {
-      "path": "../../plugins/retrom-plugin-standalone"
-    },
-    {
-      "path": "../../plugins/retrom-plugin-launcher"
-    },
-    {
-      "path": "../../plugins/retrom-plugin-installer"
-    },
-    {
-      "path": "../../plugins/retrom-plugin-config"
-    },
-    {
-      "path": "../codegen"
-    },
-    {
-      "path": "../configs"
-    },
-    {
       "path": "./tsconfig.lib.json"
     },
     {

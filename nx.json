@@ -109,7 +109,7 @@
     "@monodon/rust"
   ],
   "tui": {
-    "enabled": false
+    "enabled": true
   },
   "nxCloudId": "68671fe5462f6a349cd487bd"
 }

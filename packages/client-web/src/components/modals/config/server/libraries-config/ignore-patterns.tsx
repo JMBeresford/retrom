@@ -146,7 +146,7 @@ export function IgnorePatternsTooltip() {
           <a
             href="https://github.com/JMBeresford/retrom/wiki/Configuration#ignore-patterns"
             target="_blank"
-            className="text-accent-text"
+            className="text-accent-text" rel="noreferrer"
           >
             See Documentation
           </a>

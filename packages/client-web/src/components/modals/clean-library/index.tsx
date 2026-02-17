@@ -113,7 +113,7 @@ export function CleanLibraryModal() {
           clean ? (
             <div className="text-center flex flex-col gap-1 text-muted-foreground py-4">
               <h3 className="text-2xl font-bold">Nothing to do</h3>
-              <p className="italic text-sm">It's so clean in here...</p>
+              <p className="italic text-sm">It&apos;s so clean in here...</p>
             </div>
           ) : (
             <ScrollArea className={cn("max-h-[450px] flex flex-col gap-2")}>
@@ -185,8 +185,8 @@ function List(props: { title: string; items: { id: number; path: string }[] }) {
               {item.path
                 .split("/")
                 .filter(Boolean)
-                .map((part) => (
-                  <span>
+                .map((part, idx) => (
+                  <span key={`${part}-${idx}`}>
                     /{part}
                     <wbr />
                   </span>

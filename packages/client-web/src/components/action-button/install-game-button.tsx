@@ -97,3 +97,5 @@ export const InstallGameButton = forwardRef(
     );
   },
 );
+
+InstallGameButton.displayName = "InstallGameButton";

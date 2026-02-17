@@ -55,6 +55,8 @@ export const HotkeyButton = forwardRef<
   );
 });
 
+HotkeyButton.displayName = "HotkeyButton";
+
 export function HotkeyIcon(
   props: ComponentProps<typeof Code> & { hotkey: Hotkey },
 ) {
