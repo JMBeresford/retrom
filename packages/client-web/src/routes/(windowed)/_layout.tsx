@@ -36,6 +36,7 @@ import { ExitModal } from "@/components/modals/exit";
 import { InstallationIndicator } from "@/components/menubar/installation-indicator";
 import { NotificationCenter } from "@/components/notification-center";
 import { Toaster } from "@retrom/ui/components/toast";
+import { ResolveCloudSaveConflictModal } from "@/components/modals/resolve-cloud-save-conflict";
 
 export const Route = createFileRoute("/(windowed)/_layout")({
   component: LayoutComponent,
@@ -134,6 +135,7 @@ function LayoutComponent() {
           <CleanLibraryModal />
           <UpdatePlatformMetadataModal />
           <ExitModal />
+          <ResolveCloudSaveConflictModal />
         </ModalActionProvider>
       )}
 

@@ -1,9 +1,12 @@
 syntax = "proto3";
 
-package retrom;
+package retrom.services.saves.v1;
 
 import "google/protobuf/timestamp.proto";
 import 'retrom/files.proto';
+
+// Deprecated: Use retrom.services.saves.v2.EmulatorSavesService instead.
+option deprecated = true;
 
 service SavesService {
   rpc StatSaveFiles(StatSaveFilesRequest) returns (StatSaveFilesResponse);

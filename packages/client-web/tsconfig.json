@@ -9,6 +9,9 @@
   },
   "references": [
     {
+      "path": "../../plugins/retrom-plugin-save-manager"
+    },
+    {
       "path": "../ui"
     },
     {

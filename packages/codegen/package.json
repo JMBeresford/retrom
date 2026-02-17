@@ -11,7 +11,7 @@
     "dist/**"
   ],
   "dependencies": {
-    "@bufbuild/protobuf": "2.4.0",
+    "@bufbuild/protobuf": "catalog:",
     "@bufbuild/protoc-gen-es": "2.4.0"
   },
   "devDependencies": {

@@ -22,6 +22,7 @@ retrom-service-common = { workspace = true }
 retrom-telemetry = { workspace = true }
 retrom-grpc-service = { workspace = true }
 retrom-rest-service = { workspace = true }
+retrom-webdav-service = { workspace = true }
 reqwest = { workspace = true }
 futures = { workspace = true }
 tower = { workspace = true }
