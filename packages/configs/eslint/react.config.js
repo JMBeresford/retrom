@@ -1,26 +1,17 @@
-import globals from "globals";
-import pluginReact from "eslint-plugin-react";
-import pluginReactHooks from "eslint-plugin-react-hooks";
-import tseslint from "typescript-eslint";
-import { config as baseConfig } from "./base.config.js";
+// @ts-check
 
-/** @type {import("typescript-eslint").ConfigArray} */
-const config = tseslint.config(
+import react from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import { config as baseConfig } from "./base.config.js";
+import { defineConfig } from "eslint/config";
+
+const config = defineConfig(
   baseConfig,
+  react.configs.flat.recommended,
+  react.configs.flat["jsx-runtime"],
+  reactHooks.configs.flat.recommended,
   {
-    languageOptions: {
-      ...pluginReact.configs.flat.recommended.languageOptions,
-      globals: { ...globals.browser },
-    },
-  },
-  {
-    plugins: {
-      "react-hooks": pluginReactHooks,
-    },
-    settings: { react: { version: "detect" } },
     rules: {
-      ...pluginReactHooks.configs.recommended.rules,
-      // React scope no longer necessary with new JSX transform.
       "react/react-in-jsx-scope": "off",
     },
   },
