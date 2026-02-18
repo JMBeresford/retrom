@@ -17,8 +17,15 @@ rustPlatform.buildRustPackage (finalAttrs: {
   version = "0.7.52";
 
   src = lib.cleanSourceWith {
-    src = ./../../..;
-    filter = path: _: baseNameOf path != "nix";
+    src = ../../../.;
+    filter = path: _: !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
+      /nix
+      /flake.nix
+      /flake.lock
+
+      /.github
+      /.gitignore
+    ]);
   };
 
   pnpmDeps = fetchPnpmDeps {
