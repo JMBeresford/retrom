@@ -16,7 +16,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom-service";
   version = "0.7.52";
 
-  src = ./../../..;
+  src = lib.cleanSourceWith {
+    src = ./../../..;
+    filter = path: _: baseNameOf path != "nix";
+  };
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
