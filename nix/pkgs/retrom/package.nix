@@ -51,7 +51,6 @@ in buildFHSEnv {
     tzdata
   ];
   extraInstallCommands = ''
-    mkdir $out/share
     ln -s ${retrom-unwrapped}/share $out
   '';
   runScript = lib.getExe retrom-unwrapped;
