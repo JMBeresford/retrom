@@ -2,8 +2,6 @@
   stdenv,
   lib,
   buildFHSEnv,
-  runCommand,
-  makeWrapper,
 
   glibc,
   zlib,
@@ -32,40 +30,32 @@ let
       ln -s ${src}/lib/libuuid.so.16 $out/lib/libossp-uuid.so.16
     '';
   };
-  retrom-unwrapped' = buildFHSEnv {
-    inherit (retrom-unwrapped) pname version meta;
-    executableName = retrom-unwrapped.meta.mainProgram;
-    targetPkgs = pkgs: with pkgs; [
-      glibc
-      zlib
-      python311
-      readline
-      postgresql.lib
-      lz4.lib
-      krb5.lib
-      zstd.out
-      openssl.out
-      libxslt.out
-      libxml2_13.out
+in buildFHSEnv {
+  inherit (retrom-unwrapped) pname version meta;
+  executableName = retrom-unwrapped.meta.mainProgram;
+  targetPkgs = pkgs: with pkgs; [
+    glibc
+    zlib
+    python311
+    readline
+    postgresql.lib
+    lz4.lib
+    krb5.lib
+    zstd.out
+    openssl.out
+    libxslt.out
+    libxml2_13.out
 
-      libossp_uuid'
+    libossp_uuid'
 
-      tzdata
-    ];
-    runScript = lib.getExe retrom-unwrapped;
-    profile = ''
-      ${lib.optionalString (supportNvidia && stdenv.isLinux) "export WEBKIT_DISABLE_DMABUF_RENDERER=1"}
-    '';
-  };
-in runCommand retrom-unwrapped'.name
-  {
-    inherit (retrom-unwrapped') pname version meta;
-    nativeBuildInputs = [
-      makeWrapper
-    ];
-  }
-  ''
-    mkdir -p $out/bin
-    ln -s ${retrom-unwrapped}/share $out/share
-    makeWrapper ${retrom-unwrapped'}/bin/Retrom $out/bin/Retrom
-  ''
+    tzdata
+  ];
+  extraInstallCommands = ''
+    mkdir $out/share
+    ln -s ${retrom-unwrapped}/share $out
+  '';
+  runScript = lib.getExe retrom-unwrapped;
+  profile = ''
+    ${lib.optionalString (supportNvidia && stdenv.isLinux) "export WEBKIT_DISABLE_DMABUF_RENDERER=1"}
+  '';
+}
