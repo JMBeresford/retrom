@@ -4,7 +4,7 @@
     "outDir": "./dist",
     "types": ["vite/client"]
   },
-  "include": ["**/*.ts"],
+  "include": [],
   "references": [
     {
       "path": "../configs/tsconfig.lib.json"

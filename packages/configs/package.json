@@ -13,17 +13,18 @@
     "vite/**"
   ],
   "devDependencies": {
-    "@eslint/js": "^9.25.1",
-    "@tanstack/eslint-plugin-query": "^5.73.3",
-    "@types/node": "^24.0.10",
-    "eslint": "^9.25.1",
+    "@eslint/js": "catalog:",
+    "@tanstack/eslint-plugin-query": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
+    "eslint-plugin-react": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
     "glob": "catalog:",
-    "globals": "^16.0.0",
-    "typescript-eslint": "^8.31.0"
+    "globals": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
   }
 }

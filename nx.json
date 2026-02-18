@@ -8,6 +8,9 @@
     "build": {
       "syncGenerators": ["@nx/js:typescript-sync"]
     },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
     "prettier:format": {
       "executor": "nx:run-commands",
       "options": {
@@ -106,7 +109,7 @@
     "@monodon/rust"
   ],
   "tui": {
-    "enabled": false
+    "enabled": true
   },
   "nxCloudId": "68671fe5462f6a349cd487bd"
 }

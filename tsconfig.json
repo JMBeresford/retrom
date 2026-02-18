@@ -1,6 +1,9 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
-  "files": [],
+  "files": ["./release.config.js", "./release-notes-template.js"],
+  "compilerOptions": {
+    "emitDeclarationOnly": true
+  },
   "references": [
     {
       "path": "./plugins/retrom-plugin-service-client"
@@ -31,6 +34,9 @@
     },
     {
       "path": "./packages/ui"
+    },
+    {
+      "path": "./packages/flatpak-release"
     }
   ]
 }

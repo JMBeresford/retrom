@@ -30,7 +30,7 @@ on:
           - release
           - both
 
-  pull_request:
+  # pull_request:
   # release:
   #   types: [created]
 

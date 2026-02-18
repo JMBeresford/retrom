@@ -43,7 +43,7 @@ export function LegacyEntry() {
         action: (
           <a
             target="_blank"
-            href="https://github.com/JMBeresford/retrom/wiki/Migration-Guides#v0730"
+            href="https://github.com/JMBeresford/retrom/wiki/Migration-Guides#v0730" rel="noreferrer"
           >
             Read more
           </a>

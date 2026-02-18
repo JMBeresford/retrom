@@ -53,6 +53,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: check NX cloud access
+        id: nx-check
+        continue-on-error: true
+        run: pnpm nx noop
+
+      - name: disable NX cloud
+        if: steps.nx-check.outcome != 'success'
+        shell: bash
+        run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+
+      - name: Build release-related packages
+        run: pnpm nx run retrom-flatpak-release:build
+
       - name: install Rust stable
         id: rust
         uses: dtolnay/rust-toolchain@stable

@@ -1,0 +1,28 @@
+{
+  "name": "@retrom/flatpak-release",
+  "description": "Script for generating the metainfo file for Flatpak releases.",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "default": "./dist/index.js"
+  },
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "devDependencies": {
+    "@retrom/configs": "workspace:*",
+    "@types/signale": "1.4.7",
+    "semantic-release": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vite": "catalog:"
+  },
+  "dependencies": {
+    "fs-extra": "catalog:"
+  }
+}

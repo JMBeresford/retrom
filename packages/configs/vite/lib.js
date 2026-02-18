@@ -1,24 +1,22 @@
-// @ts-check
-
 import dts from "vite-plugin-dts";
 import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 import { join, resolve } from "node:path";
-import { defineConfig } from "vite";
 
 /**
- * @param {import("vite").UserConfig} _config
+ * @param {import("vite").ConfigEnv} _config
+ * @returns {import("vite").UserConfig}
  */
 export const definePluginConfig = (_config) => {
   const __dirname = resolve(process.cwd());
 
-  return defineConfig({
+  return {
     root: __dirname,
     plugins: [
       nxViteTsPaths(),
       nxCopyAssetsPlugin(["*.md"]),
       dts({
-        entryRoot: "guest-js",
+        entryRoot: "src",
         tsconfigPath: join(__dirname, "tsconfig.lib.json"),
       }),
     ],
@@ -31,16 +29,16 @@ export const definePluginConfig = (_config) => {
       },
       lib: {
         // Could also be a dictionary or array of multiple entry points.
-        entry: "guest-js/index.ts",
+        entry: "src/index.ts",
         fileName: "index",
         // Change this to the formats you want to support.
         // Don't forget to update your package.json as well.
-        formats: ["es"],
+        formats: ["cjs"],
       },
       rollupOptions: {
         // External packages that should not be bundled into your library.
         external: [],
       },
     },
-  });
+  };
 };

@@ -64,6 +64,8 @@ const SaveFileInfoRender = forwardRef<HTMLButtonElement>((props, ref) => {
   );
 });
 
+SaveFileInfoRender.displayName = "SaveFileInfoRender";
+
 function GeneralSaveInfo() {
   const { data } = useStats();
 
@@ -203,6 +205,8 @@ const BackupsRender = forwardRef<HTMLButtonElement>((props, ref) => {
     </MenuEntryButton>
   );
 });
+
+BackupsRender.displayName = "BackupsRender";
 
 function BackupsList() {
   const { data } = useStats();

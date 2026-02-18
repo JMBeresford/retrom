@@ -1,12 +1,16 @@
-import tseslint from "typescript-eslint";
+// @ts-check
 
-/** @type {import("typescript-eslint").ConfigArray} */
-const config = tseslint.config(
-  ...tseslint.configs.recommendedTypeChecked,
+import tseslint from "typescript-eslint";
+import { defineConfig } from "eslint/config";
+
+const config = defineConfig(
+  tseslint.configs.recommendedTypeChecked,
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ["*.js"],
+        },
       },
     },
   },

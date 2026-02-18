@@ -4,9 +4,12 @@ import commitPartial from "./release-notes-template.js";
  * @type {import('semantic-release').GlobalConfig}
  */
 export default {
+  // repositoryUrl: "https://github.com/JMBeresford/retrom.git",
   repositoryUrl: "git@github.com:JMBeresford/retrom.git",
   branches: ["main", { name: "beta", prerelease: true }],
   dryRun: true,
+  preset: "conventionalcommits",
+  ci: false,
   plugins: [
     [
       "@semantic-release/commit-analyzer",
@@ -50,14 +53,24 @@ export default {
       },
     ],
     [
+      "@retrom/flatpak-release",
+      {
+        manifestFile: "io.github.jmberesford.Retrom.yml",
+        metainfoFile: "io.github.jmberesford.Retrom.metainfo.xml",
+      },
+    ],
+    [
       "@semantic-release/git",
       {
-        assets: ["CHANGELOG.md", "Cargo.toml", "Cargo.lock"],
+        assets: [
+          "CHANGELOG.md",
+          "Cargo.toml",
+          "Cargo.lock",
+          "io.github.jmberesford.Retrom.metainfo.xml",
+        ],
         message:
           "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}",
       },
     ],
   ],
-  preset: "conventionalcommits",
-  ci: false,
 };

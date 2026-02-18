@@ -1,16 +1,15 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
-  "files": [],
-  "include": ["*.config.ts"],
+  "include": ["**/*.ts"],
   "compilerOptions": {
-    "emitDeclarationOnly": true
+    "outDir": "dist",
+    "moduleResolution": "nodenext",
+    "rootDir": "src",
+    "module": "nodenext"
   },
   "references": [
     {
       "path": "../configs"
-    },
-    {
-      "path": "./tsconfig.lib.json"
     }
   ]
 }

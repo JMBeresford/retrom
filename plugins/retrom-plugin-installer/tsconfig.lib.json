@@ -4,7 +4,7 @@
     "outDir": "./dist",
     "types": ["vite/client"]
   },
-  "include": ["./**/*.ts", "./eslint.config.js", "package.json"],
+  "include": ["./**/*.ts", "package.json"],
   "references": [
     {
       "path": "../../packages/configs/tsconfig.lib.json"

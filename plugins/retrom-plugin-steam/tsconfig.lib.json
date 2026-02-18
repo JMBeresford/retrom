@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist"
   },
-  "include": ["./**/*.ts", "./eslint.config.js", "package.json"],
+  "include": ["./**/*.ts", "package.json"],
   "references": [
     {
       "path": "../../packages/configs/tsconfig.lib.json"

@@ -10,23 +10,22 @@ import { Game } from "@retrom/codegen/retrom/models/games_pb";
 export function RecentlyPlayed() {
   const { data, status } = useGames({ request: { withMetadata: true } });
 
-  const gamesByPlayedDate: Game[] =
-    useMemo(
-      () =>
-        data?.games
-          .map((game) => ({
-            ...game,
-            metadata: data.metadata?.find((meta) => meta.gameId === game.id),
-          }))
-          .sort((a, b) => {
-            const aTime = timestampToDate(a.metadata?.lastPlayed).getTime();
-            const bTime = timestampToDate(b.metadata?.lastPlayed).getTime();
+  const gamesByPlayedDate: Game[] = useMemo(
+    () =>
+      data?.games
+        .map((game) => ({
+          ...game,
+          metadata: data.metadata?.find((meta) => meta.gameId === game.id),
+        }))
+        .sort((a, b) => {
+          const aTime = timestampToDate(a.metadata?.lastPlayed).getTime();
+          const bTime = timestampToDate(b.metadata?.lastPlayed).getTime();
 
-            return bTime - aTime;
-          })
-          .slice(0, 20),
-      [data],
-    ) ?? [];
+          return bTime - aTime;
+        })
+        .slice(0, 20) ?? [],
+    [data],
+  );
 
   return (
     <div className="w-full">

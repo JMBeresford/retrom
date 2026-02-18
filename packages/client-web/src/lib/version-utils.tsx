@@ -75,10 +75,10 @@ export function Changelog(props: { update: Update }) {
         {body ? (
           <Markdown
             components={{
-              a: (props) => (
+              a: ({ className, ...props }) => (
                 <a
                   {...props}
-                  className={cn(props.className, "text-accent-text")}
+                  className={cn(className, "text-accent-text")}
                   target="_blank"
                 />
               ),

@@ -5,6 +5,7 @@ import {
   useContext,
   useCallback,
   useLayoutEffect,
+  useState,
 } from "react";
 import { useEmulatorJS } from ".";
 import { type File, FileSchema } from "@retrom/codegen/retrom/files_pb";
@@ -47,7 +48,7 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
     saveFilesSelectors: [{ gameId: game.id, emulatorId: emulator?.id }],
   });
 
-  const startTime = useMemo(() => Date.now(), []);
+  const [startTime] = useState(() => Date.now());
   const { mutateAsync: updateGameMetadata } = useUpdateGameMetadata();
 
   const extractSave: () => File | undefined = useCallback(() => {

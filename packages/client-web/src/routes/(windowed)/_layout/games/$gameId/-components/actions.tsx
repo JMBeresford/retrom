@@ -170,7 +170,7 @@ export function Actions() {
           <PlatformDependent
             web={
               <DropdownMenuItem asChild>
-                <a href={downloadUrl.href} target="_blank">
+                <a href={downloadUrl.href} target="_blank" rel="noreferrer">
                   Download
                 </a>
               </DropdownMenuItem>

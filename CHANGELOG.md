@@ -1,3 +1,10 @@
+## [0.7.53](https://github.com/JMBeresford/retrom/compare/v0.7.52...v0.7.53) (2026-02-16)
+
+### Bug Fixes
+
+
+* fix: flatpak metainfo ([a4feed68a85d944e29a9960b67fa36612f34f6b7](https://github.com/JMBeresford/retrom/commit/a4feed68a85d944e29a9960b67fa36612f34f6b7))
+
 ## [0.7.52](https://github.com/JMBeresford/retrom/compare/v0.7.51...v0.7.52) (2026-02-08)
 
 ### Features

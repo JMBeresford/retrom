@@ -3,12 +3,6 @@
   "files": [],
   "references": [
     {
-      "path": "../../packages/codegen"
-    },
-    {
-      "path": "../../packages/configs"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

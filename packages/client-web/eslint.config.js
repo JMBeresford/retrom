@@ -1,6 +1,8 @@
-import { config as base } from "@retrom/configs/eslint/web.config.js";
+// @ts-check
 
-/** @type {import("eslint").Linter.Config} */
-const config = [...base];
+import { config as base } from "@retrom/configs/eslint/web.config.js";
+import { defineConfig } from "eslint/config";
+
+const config = defineConfig(base);
 
 export default config;

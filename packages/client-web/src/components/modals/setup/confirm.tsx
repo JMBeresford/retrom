@@ -7,12 +7,11 @@ import {
 import { useSetupModal } from "./context";
 import { Button } from "@retrom/ui/components/button";
 import { useCreateClient } from "@/mutations/useCreateClient";
-import { useCallback } from "react";
 import { LoaderCircleIcon } from "lucide-react";
 import { useToast } from "@retrom/ui/hooks/use-toast";
 import { useClientInfo } from "@/queries/useClientInfo";
 import { useConfigStore } from "@/providers/config";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { timestampNow, TimestampSchema } from "@bufbuild/protobuf/wkt";
 import { toJson } from "@bufbuild/protobuf";
 
@@ -25,75 +24,70 @@ export function Confirm() {
   const clientInfo = useClientInfo();
   const queryClient = useQueryClient();
 
-  const save = useCallback(async () => {
-    try {
-      let client;
+  const { mutate } = useMutation({
+    mutationFn: async () => {
+      try {
+        let client;
 
-      if (
-        name &&
-        !clientInfo.data?.clients.find((client) => client.name === name)
-      ) {
-        const res = await createClient({
-          name,
-        });
+        if (
+          name &&
+          !clientInfo.data?.clients.find((client) => client.name === name)
+        ) {
+          const res = await createClient({
+            name,
+          });
 
-        client = res.clientCreated;
-      } else {
-        client = clientInfo.data?.clients.find(
-          (client) => client.name === name,
-        );
-      }
-
-      configStore.setState((prev) => {
-        if (client) {
-          prev.config = {
-            ...prev.config,
-            clientInfo: {
-              id: client.id,
-              name: client.name,
-              createdAt: toJson(
-                TimestampSchema,
-                client.createdAt ?? timestampNow(),
-              ),
-              updatedAt: toJson(
-                TimestampSchema,
-                client.updatedAt ?? timestampNow(),
-              ),
-            },
-          };
+          client = res.clientCreated;
+        } else {
+          client = clientInfo.data?.clients.find(
+            (client) => client.name === name,
+          );
         }
 
-        prev.flowCompletions = {
-          ...prev.flowCompletions,
-          setupComplete: true,
-        };
+        configStore.setState((prev) => {
+          if (client) {
+            prev.config = {
+              ...prev.config,
+              clientInfo: {
+                id: client.id,
+                name: client.name,
+                createdAt: toJson(
+                  TimestampSchema,
+                  client.createdAt ?? timestampNow(),
+                ),
+                updatedAt: toJson(
+                  TimestampSchema,
+                  client.updatedAt ?? timestampNow(),
+                ),
+              },
+            };
+          }
 
-        return { ...prev };
-      });
+          prev.flowCompletions = {
+            ...prev.flowCompletions,
+            setupComplete: true,
+          };
 
-      void queryClient.resetQueries();
+          return { ...prev };
+        });
 
-      if (nextStep) {
-        nextStep();
+        queryClient.resetQueries().catch(console.error);
+
+        if (nextStep) {
+          nextStep();
+        }
+      } catch {
+        toast({
+          title: "Failed to save config",
+          description:
+            "Failed to save the configuration. Please try again. If the problem persists, please report this as an issue.",
+          variant: "destructive",
+        });
       }
-    } catch {
-      toast({
-        title: "Failed to save config",
-        description:
-          "Failed to save the configuration. Please try again. If the problem persists, please report this as an issue.",
-        variant: "destructive",
-      });
-    }
-  }, [
-    queryClient,
-    createClient,
-    configStore,
-    toast,
-    clientInfo.data?.clients,
-    nextStep,
-    name,
-  ]);
+    },
+  });
 
+  const save = () => mutate();
   const pending = status === "pending";
   const error = status === "error";
 
