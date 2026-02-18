@@ -14,7 +14,7 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom-service";
-  version = "0.7.52"; # x-release-please-version
+  version = "0.7.52";
 
   src = ./../../..;
 
