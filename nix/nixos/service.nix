@@ -6,17 +6,14 @@
 }:
 let
   cfg = config.services.retrom;
+  pgPort = config.services.postgresql.settings.port;
   settings = cfg.settings // {
     connection = {
       inherit (cfg) port;
-      dbUrl =
-        if isNull cfg.dbUrl then
-          "postgres://${cfg.user}@localhost:${toString pgPort}/${cfg.user}"
-        else
-          cfg.dbUrl;
+      dbUrl = cfg.dbUrl or "postgres://${cfg.user}@localhost:${toString pgPort}/${cfg.user}";
     };
   };
-  pgPort = config.services.postgresql.settings.port;
+  configFile = cfg.configFile or pkgs.writeText "retrom-service-config.json" (builtins.toJSON settings);
 in
 {
   options.services.retrom = {
@@ -102,12 +99,7 @@ in
         WorkingDirectory = cfg.dataDir;
         Environment = [
           "RETROM_DATA_DIR=${cfg.dataDir}"
-          "RETROM_CONFIG=${
-            if isNull cfg.configFile then
-              pkgs.writeText "retrom-service-config.json" (builtins.toJSON settings)
-            else
-              cfg.configFile
-          }"
+          "RETROM_CONFIG=${configFile}"
         ];
       };
     };
