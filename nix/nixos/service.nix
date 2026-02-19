@@ -13,7 +13,7 @@ let
       dbUrl = cfg.dbUrl or "postgres://${cfg.user}@localhost:${toString pgPort}/${cfg.user}";
     };
   };
-  configFile = cfg.configFile or pkgs.writeText "retrom-service-config.json" (builtins.toJSON settings);
+  configFile = cfg.configFile or (pkgs.writeText "retrom-service-config.json" (builtins.toJSON settings));
 in
 {
   options.services.retrom = {
