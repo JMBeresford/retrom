@@ -31,6 +31,11 @@ in {
       default = "retrom";
       description = "System and database user to use for Retrom.";
     };
+    group = lib.mkOption {
+      type = lib.types.str;
+      default = "retrom";
+      description = "System group to use for Retrom.";
+    };
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/retrom-service";
@@ -66,9 +71,9 @@ in {
         home = cfg.dataDir;
         createHome = true;
         isSystemUser = true;
-        group = cfg.user;
+        group = cfg.group;
       };
-      groups.${cfg.user} = { };
+      groups.${cfg.group} = { };
     };
 
     services.postgresql = lib.mkIf cfg.enableDatabase {
@@ -98,7 +103,7 @@ in {
         ExecStart = "${lib.getExe cfg.package}";
         Restart = "on-failure";
         User = cfg.user;
-        Group = cfg.user;
+        Group = cfg.group;
         WorkingDirectory = cfg.dataDir;
         Environment = [
           "RETROM_DATA_DIR=${cfg.dataDir}"
