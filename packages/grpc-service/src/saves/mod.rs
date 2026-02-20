@@ -184,6 +184,7 @@ impl SavesService for SavesServiceHandlers {
 
                 let save_dir = save_file_manager
                     .get_saves_dir(emulator_id)
+                    .await
                     .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
                 for file_stat in save_file_stat.file_stats.into_iter() {
@@ -256,6 +257,7 @@ impl SavesService for SavesServiceHandlers {
 
             let states_dir = save_state_manager
                 .get_states_dir(emulator_id)
+                .await
                 .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
             for save_states_stat in save_states {

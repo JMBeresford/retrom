@@ -46,8 +46,8 @@ impl GameSaveStateManager {
 pub trait SaveStateManager {
     async fn resolve_save_states(&self, include_backups: bool) -> Result<Vec<SaveStatesStat>>;
     async fn reindex_backups(&self, emulator_id: Option<i32>) -> Result<()>;
-    fn get_states_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
-    fn get_states_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
+    async fn get_states_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
+    async fn get_states_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
 
     async fn backup_save_states(
         &self,
@@ -101,8 +101,8 @@ impl SaveStateManager for GameSaveStateManager {
         let mut files = vec![];
 
         for emulator_id in emulators.iter().map(|e| e.id) {
-            let states_dir = self.get_states_dir(Some(emulator_id))?;
-            let backups_dir = self.get_states_backup_dir(Some(emulator_id))?;
+            let states_dir = self.get_states_dir(Some(emulator_id)).await?;
+            let backups_dir = self.get_states_backup_dir(Some(emulator_id)).await?;
 
             let file_stats: Vec<FileStat> = if states_dir.exists() {
                 states_dir
@@ -234,25 +234,8 @@ impl SaveStateManager for GameSaveStateManager {
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    fn get_states_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
-        let states_dir = RetromDirs::new().data_dir().join("states");
-
-        let emulator_id = match emulator_id {
-            Some(id) => id,
-            None => {
-                return Err(SaveStateManagerError::InvalidArgument(
-                    "Emulator ID is required".to_string(),
-                ))
-            }
-        };
-
-        Ok(states_dir
-            .join(emulator_id.to_string())
-            .join(self.game.id.to_string()))
-    }
-
-    #[instrument(skip(self), fields(game_id = self.game.id))]
-    fn get_states_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+    async fn get_states_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+        let config = self.config.get_config().await;
         let backup_dir = RetromDirs::new().data_dir().join("states_backups");
 
         let emulator_id = match emulator_id {
@@ -264,9 +247,122 @@ impl SaveStateManager for GameSaveStateManager {
             }
         };
 
-        Ok(backup_dir
-            .join(emulator_id.to_string())
-            .join(self.game.id.to_string()))
+        // Check if we should use the game library path structure
+        if config.saves.as_ref().and_then(|s| s.save_dir_structure).map(|s| s == retrom_codegen::retrom::SaveDirStructure::MirrorLibrary as i32).unwrap_or(false) {
+            let game_path = PathBuf::from(&self.game.path);
+            
+            // Find the content directory that contains this game
+            let content_dirs = &config.content_directories;
+            for content_dir in content_dirs {
+                let content_path = PathBuf::from(&content_dir.path);
+                
+                // Try to get the relative path from the content directory to the game
+                if let Ok(relative_game_path) = game_path.strip_prefix(&content_path) {
+                    // Get the parent directory of the ROM file (game directory)
+                    if let Some(game_dir) = relative_game_path.parent() {
+                        let path_components: Vec<&str> = game_dir.components()
+                            .filter_map(|comp| {
+                                if let std::path::Component::Normal(os_str) = comp {
+                                    os_str.to_str()
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect();
+                        
+                        // We want platform/game_name structure (first two components)
+                        if path_components.len() >= 2 {
+                            let platform = path_components[0];
+                            let game_name = path_components[1];
+                            
+                            // Sanitize each component
+                            if !platform.contains("..") && !game_name.contains("..") 
+                                && !platform.is_empty() && !game_name.is_empty() {
+                                let save_path = format!("{}/{}", platform, game_name);
+                                return Ok(backup_dir.join(save_path));
+                            }
+                        }
+                    }
+                    break; // Found the matching content directory, no need to continue
+                }
+            }
+            
+            // Fallback to default structure if no content directory matched or path is invalid
+            Ok(backup_dir
+                .join(emulator_id.to_string())
+                .join(self.game.id.to_string()))
+        } else {
+            // Default directory structure
+            Ok(backup_dir
+                .join(emulator_id.to_string())
+                .join(self.game.id.to_string()))
+        }
+    }
+
+    #[instrument(skip(self), fields(game_id = self.game.id))]
+    async fn get_states_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+        let config = self.config.get_config().await;
+        let states_dir = RetromDirs::new().data_dir().join("states");
+
+        let emulator_id = match emulator_id {
+            Some(id) => id,
+            None => {
+                return Err(SaveStateManagerError::InvalidArgument(
+                    "Emulator ID is required".to_string(),
+                ))
+            }
+        };
+
+        // Check if we should use the game library path structure
+        if config.saves.as_ref().and_then(|s| s.save_dir_structure).map(|s| s == retrom_codegen::retrom::SaveDirStructure::MirrorLibrary as i32).unwrap_or(false) {
+            let game_path = PathBuf::from(&self.game.path);
+            
+            // Find the content directory that contains this game
+            let content_dirs = &config.content_directories;
+            for content_dir in content_dirs {
+                let content_path = PathBuf::from(&content_dir.path);
+                
+                // Try to get the relative path from the content directory to the game
+                if let Ok(relative_game_path) = game_path.strip_prefix(&content_path) {
+                    // Get the parent directory of the ROM file (game directory)
+                    if let Some(game_dir) = relative_game_path.parent() {
+                        let path_components: Vec<&str> = game_dir.components()
+                            .filter_map(|comp| {
+                                if let std::path::Component::Normal(os_str) = comp {
+                                    os_str.to_str()
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect();
+                        
+                        // We want platform/game_name structure (first two components)
+                        if path_components.len() >= 2 {
+                            let platform = path_components[0];
+                            let game_name = path_components[1];
+                            
+                            // Sanitize each component
+                            if !platform.contains("..") && !game_name.contains("..") 
+                                && !platform.is_empty() && !game_name.is_empty() {
+                                let save_path = format!("{}/{}", platform, game_name);
+                                return Ok(states_dir.join(save_path));
+                            }
+                        }
+                    }
+                    break; // Found the matching content directory, no need to continue
+                }
+            }
+            
+            // Fallback to default structure if no content directory matched or path is invalid
+            Ok(states_dir
+                .join(emulator_id.to_string())
+                .join(self.game.id.to_string()))
+        } else {
+            // Default directory structure
+            Ok(states_dir
+                .join(emulator_id.to_string())
+                .join(self.game.id.to_string()))
+        }
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
@@ -283,7 +379,7 @@ impl SaveStateManager for GameSaveStateManager {
 
         for save_states in all_save_states.iter_mut() {
             let states_path = PathBuf::from(&save_states.states_path);
-            let backups_dir = self.get_states_backup_dir(save_states.emulator_id)?;
+            let backups_dir = self.get_states_backup_dir(save_states.emulator_id).await?;
             let backup_dir =
                 backups_dir.join(chrono::Local::now().to_utc().format("%s.%f").to_string());
 
@@ -369,7 +465,7 @@ impl SaveStateManager for GameSaveStateManager {
 
     #[instrument(skip_all, fields(game_id = self.game.id))]
     async fn update_save_states(&self, save_states: SaveStates, dry_run: bool) -> Result<()> {
-        let states_dir = self.get_states_dir(save_states.emulator_id)?;
+        let states_dir = self.get_states_dir(save_states.emulator_id).await?;
         self.backup_save_states(save_states.emulator_id, dry_run)
             .await?;
 
@@ -509,7 +605,7 @@ impl SaveStateManager for GameSaveStateManager {
         emulator_id: Option<i32>,
         dry_run: bool,
     ) -> Result<()> {
-        let states_dir = self.get_states_dir(emulator_id)?;
+        let states_dir = self.get_states_dir(emulator_id).await?;
         let backup_path = PathBuf::from(backup.backup_path);
 
         if !backup_path.exists() {

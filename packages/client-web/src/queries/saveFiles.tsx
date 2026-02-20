@@ -22,10 +22,12 @@ export function useStatSaveFiles(
 
 export function useGetSaveFiles(
   request: MessageInitShape<typeof GetSaveFilesRequestSchema>,
+  options?: { enabled?: boolean },
 ) {
   const retromClient = useRetromClient();
 
   return useQuery({
+    enabled: options?.enabled !== false,
     queryFn: async () => {
       const { update } = toast({
         id: "download-remote-saves",
