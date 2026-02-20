@@ -10,12 +10,17 @@ let
   settings = cfg.settings // {
     connection = {
       inherit (cfg) port;
-      dbUrl = cfg.dbUrl or "postgres://${cfg.user}@localhost:${toString pgPort}/${cfg.user}";
+      dbUrl = if isNull cfg.dbUrl then
+        "postgres:///${cfg.user}?host=/var/run/postgresql"
+      else
+        cfg.dbUrl;
     };
   };
-  configFile = cfg.configFile or (pkgs.writeText "retrom-service-config.json" (builtins.toJSON settings));
-in
-{
+  configFile = if isNull cfg.configFile then
+    pkgs.writeText "retrom-service-config.json" (builtins.toJSON settings)
+  else
+    cfg.configFile;
+in {
   options.services.retrom = {
     enable = lib.mkEnableOption "Enable Retrom service.";
     package = lib.mkOption {
@@ -76,9 +81,7 @@ in
       ];
       ensureDatabases = [ cfg.user ];
       authentication = ''
-        local ${cfg.user} ${cfg.user} trust
-        host ${cfg.user} ${cfg.user} 127.0.0.1/32 trust
-        host ${cfg.user} ${cfg.user} ::1/128 trust
+        local ${cfg.user} ${cfg.user} peer
       '';
     };
 
