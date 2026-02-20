@@ -38,7 +38,7 @@ in {
     };
     dataDir = lib.mkOption {
       type = lib.types.str;
-      default = "/var/lib/retrom-service";
+      default = "/var/lib/retrom";
       description = "Directory to store service data. Will be set as the service user's home.";
     };
     enableDatabase = lib.mkEnableOption "Configure the local postgresql database for Retrom.";
