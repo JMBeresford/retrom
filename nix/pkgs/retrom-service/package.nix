@@ -67,7 +67,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   '';
 
   postInstall = ''
-    dst=$out/srv/www
+    dst=$out/share/retrom
     mkdir -p $dst
 
     # Work around for https://github.com/pnpm/pnpm/issues/5315
@@ -88,7 +88,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   '';
 
   postFixup = ''
-    wrapProgram $out/bin/retrom-service --set RETROM_WEB_DIR $out/srv/www
+    wrapProgram $out/bin/retrom-service --set RETROM_WEB_DIR $out/share/retrom
   '';
 
   meta = with lib; {
