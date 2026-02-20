@@ -11,7 +11,7 @@ let
     connection = {
       inherit (cfg) port;
       dbUrl = if isNull cfg.dbUrl then
-        "postgres:///${cfg.user}?host=/var/run/postgresql"
+        "postgres:///retrom?host=/var/run/postgresql"
       else
         cfg.dbUrl;
     };
@@ -29,12 +29,12 @@ in {
     user = lib.mkOption {
       type = lib.types.str;
       default = "retrom";
-      description = "System and database user to use for Retrom.";
+      description = "System user to use for retrom systemd service.";
     };
     group = lib.mkOption {
       type = lib.types.str;
       default = "retrom";
-      description = "System group to use for Retrom.";
+      description = "System group to use for retrom systemd service.";
     };
     dataDir = lib.mkOption {
       type = lib.types.str;
@@ -84,9 +84,9 @@ in {
           ensureDBOwnership = true;
         }
       ];
-      ensureDatabases = [ cfg.user ];
+      ensureDatabases = [ "retrom" ];
       authentication = ''
-        local ${cfg.user} ${cfg.user} peer
+        local retrom ${cfg.user} peer
       '';
     };
 
