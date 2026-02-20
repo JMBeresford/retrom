@@ -77,7 +77,8 @@ export function IgdbConfig(props: {
           <a
             href="https://github.com/JMBeresford/retrom#igdb"
             target="_blank"
-            className="underline text-accent-text" rel="noreferrer"
+            className="underline text-accent-text"
+            rel="noreferrer"
           >
             learn more
           </a>

@@ -57,7 +57,8 @@ export function Links() {
                 target="_blank"
                 className={cn(
                   "underline text-muted-foreground hover:text-card-foreground transition-colors flex items-baseline gap-1",
-                )} rel="noreferrer"
+                )}
+                rel="noreferrer"
               >
                 {hostname}
                 <ExternalLinkIcon className="h-[0.8rem] w-[0.8rem]" />

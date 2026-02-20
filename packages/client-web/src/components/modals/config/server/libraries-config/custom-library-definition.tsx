@@ -64,7 +64,8 @@ export function CustomLibraryDefinitionInput<
             <a
               className="text-accent-text underline"
               href="https://github.com/JMBeresford/retrom/wiki/Library-Structure#custom"
-              target="_blank" rel="noreferrer"
+              target="_blank"
+              rel="noreferrer"
             >
               documentation
             </a>{" "}
