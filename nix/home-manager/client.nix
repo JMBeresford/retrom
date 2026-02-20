@@ -17,6 +17,7 @@ in
     supportNvidia = lib.mkOption {
       type = lib.types.bool;
       default = if isNull osConfig then false else osConfig.hardware.nvidia.enabled;
+      defaultText = "osConfig.hardware.nvidia.enabled";
       description = ''
         Configure to run on nvidia hardware. Makes the following changes:
 
