@@ -7,7 +7,7 @@ import { join, resolve } from "node:path";
  * @param {import("vite").ConfigEnv} _config
  * @returns {import("vite").UserConfig}
  */
-export const definePluginConfig = (_config) => {
+export const defineLibConfig = (_config) => {
   const __dirname = resolve(process.cwd());
 
   return {
@@ -18,6 +18,7 @@ export const definePluginConfig = (_config) => {
       dts({
         entryRoot: "src",
         tsconfigPath: join(__dirname, "tsconfig.lib.json"),
+        skipDiagnostics: true,
       }),
     ],
     build: {

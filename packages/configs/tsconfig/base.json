@@ -2,6 +2,10 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "composite": true,
+    "outDir": "${configDir}/dist",
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "rootDir": "${configDir}/src",
     "strict": true,
     "target": "ES2022",
     "useDefineForClassFields": true,

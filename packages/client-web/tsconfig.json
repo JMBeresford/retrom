@@ -1,12 +1,6 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
   "files": [],
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
-  },
   "references": [
     {
       "path": "./tsconfig.lib.json"

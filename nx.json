@@ -8,9 +8,6 @@
     "build": {
       "syncGenerators": ["@nx/js:typescript-sync"]
     },
-    "typecheck": {
-      "dependsOn": ["^typecheck"]
-    },
     "prettier:format": {
       "executor": "nx:run-commands",
       "options": {
@@ -97,13 +94,14 @@
     },
     {
       "plugin": "@nx/vite/plugin",
-      "options": {}
+      "options": {
+        "typecheckTargetName": "vite:typecheck"
+      }
     },
     {
       "plugin": "@nx/js/typescript",
       "options": {
-        "build": false,
-        "typecheck": false
+        "build": false
       }
     },
     "@monodon/rust"

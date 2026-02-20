@@ -18,7 +18,7 @@ export const definePluginConfig = (_config) => {
       nxViteTsPaths(),
       nxCopyAssetsPlugin(["*.md"]),
       dts({
-        entryRoot: "guest-js",
+        entryRoot: join(__dirname, "guest-js"),
         tsconfigPath: join(__dirname, "tsconfig.lib.json"),
       }),
     ],

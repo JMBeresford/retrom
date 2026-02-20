@@ -1,14 +1,8 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
   "files": [],
-  "include": ["*.config.ts"],
-  "compilerOptions": {
-    "emitDeclarationOnly": true
-  },
+  "compilerOptions": {},
   "references": [
-    {
-      "path": "../configs"
-    },
     {
       "path": "./tsconfig.lib.json"
     }

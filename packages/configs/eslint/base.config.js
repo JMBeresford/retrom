@@ -2,6 +2,9 @@
 
 import tseslint from "typescript-eslint";
 import { defineConfig } from "eslint/config";
+import { resolve } from "node:path";
+
+const __dirname = resolve(process.cwd());
 
 const config = defineConfig(
   tseslint.configs.recommendedTypeChecked,
@@ -9,7 +12,8 @@ const config = defineConfig(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["*.js"],
+          tsconfigRootDir: __dirname,
+          allowDefaultProject: ["*.js", "*.config.ts"],
         },
       },
     },

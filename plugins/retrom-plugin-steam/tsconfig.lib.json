@@ -1,9 +1,6 @@
 {
-  "extends": "@retrom/configs/tsconfig/base.json",
-  "compilerOptions": {
-    "outDir": "./dist"
-  },
-  "include": ["./**/*.ts", "package.json"],
+  "extends": "@retrom/configs/tsconfig/plugin.json",
+  "compilerOptions": {},
   "references": [
     {
       "path": "../../packages/configs/tsconfig.lib.json"

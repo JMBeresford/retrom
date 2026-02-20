@@ -1,8 +1,7 @@
 {
   "extends": "./tsconfig/base.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "emitDeclarationOnly": true,
+    "rootDir": ".",
     "types": ["node", "vite/client"]
   },
   "include": ["./eslint/**/*", "./tsconfig/**/*", "./vite/**/*"]
