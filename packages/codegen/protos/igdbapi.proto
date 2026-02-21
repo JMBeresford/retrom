@@ -478,6 +478,8 @@ message Company {
   CompanyStatus status = 20;
   DateFormat start_date_format = 21;
   DateFormat change_date_format = 22;
+  CompanySize company_size = 23;
+  repeated CompanyTypeHistory company_type_histories = 24;
 }
 
 enum DateFormatChangeDateCategoryEnum {
@@ -506,6 +508,18 @@ message CompanyLogo {
   string checksum = 8;
 }
 
+message CompanySizeResult {
+  repeated CompanySize companysizes = 1;
+}
+
+message CompanySize {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
+}
+
 message CompanyStatusResult {
   repeated CompanyStatus companystatuses = 1;
 }
@@ -516,6 +530,32 @@ message CompanyStatus {
   google.protobuf.Timestamp created_at = 3;
   google.protobuf.Timestamp updated_at = 4;
   string checksum = 5;
+}
+
+message CompanyTypeResult {
+  repeated CompanyType companytypes = 1;
+}
+
+message CompanyType {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
+}
+
+message CompanyTypeHistoryResult {
+  repeated CompanyTypeHistory companytypehistories = 1;
+}
+
+message CompanyTypeHistory {
+  uint64 id = 1;
+  Company company = 2;
+  CompanyType company_type = 3;
+  Company parent_company = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  string checksum = 7;
 }
 
 message CompanyWebsiteResult {
