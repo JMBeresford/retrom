@@ -149,7 +149,16 @@ function ToastAction({ action, id }: ToastProps): React.ReactNode {
         {action.label}
       </Button>
     ) : (
-      <Button size="sm" variant="ghost-outline" asChild>
+      <Button
+        size="sm"
+        variant="ghost-outline"
+        asChild
+        onClick={(e) => {
+          if (!e.defaultPrevented) {
+            toast.dismiss(id);
+          }
+        }}
+      >
         {action}
       </Button>
     )
