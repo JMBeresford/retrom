@@ -37,14 +37,3 @@ jobs:
     secrets: inherit
     with:
       bundle: false
-
-  build-server-images:
-    uses: ./.github/workflows/publish-images.yml
-    concurrency:
-      group: "publish-server-images-${{ github.ref }}"
-      cancel-in-progress: true
-    secrets: inherit
-    with:
-      tag: ${{ github.ref_name }}
-      latest: false
-      publish: false

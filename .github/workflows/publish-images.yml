@@ -11,10 +11,6 @@ on:
         description: Tag this image as `latest`?
         type: boolean
         default: false
-      publish:
-        description: "Publish the image to the registry"
-        type: boolean
-        default: true
   workflow_call:
     inputs:
       tag:
@@ -23,9 +19,6 @@ on:
       latest:
         type: boolean
         default: false
-      publish:
-        type: boolean
-        default: true
 
 env:
   REGISTRY: ghcr.io
@@ -114,7 +107,6 @@ jobs:
 
   merge-digests:
     runs-on: ubuntu-latest
-    if: ${{ inputs.publish }}
     permissions:
       contents: read
       packages: write
