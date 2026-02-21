@@ -2,9 +2,11 @@ import { Card, CardContent } from "@retrom/ui/components/card";
 import { ReactNode, useMemo } from "react";
 import { getFileStub, timestampToDate } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
+import { readableByteSize } from "@/utils/files";
 
 export function GeneralInfo() {
-  const { gameMetadata, platformMetadata, game, platform } = useGameDetail();
+  const { gameMetadata, platformMetadata, game, platform, gameFiles } =
+    useGameDetail();
 
   const playTime = useMemo(() => {
     const time = gameMetadata?.minutesPlayed;
@@ -51,6 +53,11 @@ export function GeneralInfo() {
     return getFileStub(platform.path) ?? "Unknown";
   }, [platformMetadata, platform.path]);
 
+  const byteSize = useMemo(
+    () => gameFiles.reduce((acc, file) => acc + (file.byteSize ?? 0n), 0n),
+    [gameFiles],
+  );
+
   return (
     <Card className="py-0">
       <CardContent className="py-4">
@@ -61,6 +68,10 @@ export function GeneralInfo() {
         <InfoItem title="Added On" value={addedOn} />
 
         <InfoItem title="Platform" value={platformName} />
+
+        {byteSize > 0n ? (
+          <InfoItem title="Size on Disk" value={readableByteSize(byteSize)} />
+        ) : null}
       </CardContent>
     </Card>
   );
