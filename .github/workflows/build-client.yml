@@ -72,6 +72,10 @@ env:
   APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
   APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     strategy:
