@@ -17,7 +17,6 @@ export function EmptyLibraryPrompt() {
           <Link
             to="."
             search={(prev) => ({ ...prev, updateLibraryModal: { open: true } })}
-            className="text-sm underline"
           >
             Update Library
           </Link>
