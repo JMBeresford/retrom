@@ -57,7 +57,7 @@ jobs:
 
       - name: disable NX cloud
         if: steps.nx-check.outcome != 'success'
-        run: echo "NX_NO_CLOUD=true" >> $GITHUB_ENV
+        run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
 
       - name: fetch and compile cargo dependencies
         run: cargo check
