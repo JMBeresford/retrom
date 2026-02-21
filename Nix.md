@@ -110,7 +110,7 @@ Example config file:
 {
   "connection": {
     "port": 5101,
-    "dbUrl": "postgres://retrom@localhost/retrom"
+    "dbUrl": "postgres:///retrom?host=/var/run/postgresql"
   },
   "contentDirectories": [
     { "path": "/app/library1/", "storageType": "MultiFileGame" },
