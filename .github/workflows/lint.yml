@@ -97,6 +97,9 @@ jobs:
 
       - name: Check for unused cargo dependencies
         uses: bnjbvr/cargo-machete@main
+        # Action fails on Windows, uses unix paths unconditionally
+        # https://github.com/bnjbvr/cargo-machete/blob/cb0995971182a3babbea3f086bf306d5509cac47/action/entrypoint.sh#L25
+        if: ${{ matrix.os != 'windows-latest' }}
         with:
           args: "--with-metadata"
 
