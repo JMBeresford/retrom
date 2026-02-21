@@ -7,7 +7,6 @@ import { Link } from "@tanstack/react-router";
 import { match } from "ts-pattern";
 import { useEmulatorSaveFilesStat } from "@/queries/useEmulatorSaveFilesStat";
 import { readableByteSize } from "@/utils/files";
-import { Spinner } from "@retrom/ui/components/spinner";
 
 export function LaunchConfig() {
   const { emulator, defaultProfile } = useGameDetail();
@@ -47,37 +46,41 @@ export function LaunchConfig() {
 
         <InfoItem
           title="Save File Info"
-          value={match(saveFilesStatQuery)
-            .with({ status: "success" }, ({ data }) => {
-              if (!data) {
-                return "No save files found";
-              }
+          value={
+            !!emulator
+              ? match(saveFilesStatQuery)
+                  .with({ status: "success" }, ({ data }) => {
+                    if (!data) {
+                      return "No save files found";
+                    }
 
-              const totalSize = data.fileStats.reduce(
-                (acc, stat) => acc + (stat.byteSize ?? 0n),
-                0n,
-              );
+                    const totalSize = data.fileStats.reduce(
+                      (acc, stat) => acc + (stat.byteSize ?? 0n),
+                      0n,
+                    );
 
-              const size = readableByteSize(totalSize);
+                    const size = readableByteSize(totalSize);
 
-              return (
-                <span className="flex flex-col">
-                  <span>
-                    {size} in {data.fileStats.length} files
-                  </span>
-                  <span>{data.backups.length} backups available</span>
-                </span>
-              );
-            })
-            .with({ status: "error" }, () => (
-              <span className="text-red-500">Error fetching status</span>
-            ))
-            .with({ status: "pending" }, () => (
-              <span className="italic">
-                <Spinner /> Loading save data...
-              </span>
-            ))
-            .exhaustive()}
+                    return (
+                      <span className="flex flex-col">
+                        <span>
+                          {size} in {data.fileStats.length} files
+                        </span>
+                        <span>{data.backups.length} backups available</span>
+                      </span>
+                    );
+                  })
+                  .with({ status: "error" }, () => (
+                    <span className="text-red-500">Error fetching status</span>
+                  ))
+                  .with({ status: "pending" }, () => (
+                    <span className="italic animate-pulse">
+                      Loading save data...
+                    </span>
+                  ))
+                  .exhaustive()
+              : "N/A"
+          }
         />
 
         <Separator className="my-4" />

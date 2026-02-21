@@ -92,8 +92,6 @@ function LocalConfigRow(props: {
   const { emulator, config } = props;
   const clientId = useConfigStore().getState().config?.clientInfo?.id;
 
-  console.log(emulator.id, { emulator, config });
-
   if (!clientId) {
     throw new Error("Client ID not found");
   }
@@ -108,11 +106,17 @@ function LocalConfigRow(props: {
     reValidateMode: "onChange",
   });
 
-  const { mutateAsync: createConfig, isPending: creationPending } =
-    useCreateLocalEmulatorConfigs();
+  const {
+    mutateAsync: createConfig,
+    isPending: creationPending,
+    error: creationError,
+  } = useCreateLocalEmulatorConfigs();
 
-  const { mutateAsync: updateConfig, isPending: updatePending } =
-    useUpdateLocalEmulatorConfig();
+  const {
+    mutateAsync: updateConfig,
+    isPending: updatePending,
+    error: updateError,
+  } = useUpdateLocalEmulatorConfig();
 
   const handleSubmit = useCallback(
     async (values: ConfigSchema) => {
@@ -122,12 +126,14 @@ function LocalConfigRow(props: {
             { ...values, id: config.id, clientId, emulatorId: emulator.id },
           ],
         });
+
         form.reset(res.configsUpdated.at(0));
         return;
       } else {
         const res = await createConfig({
           configs: [{ ...values, clientId, emulatorId: emulator.id }],
         });
+
         form.reset(res.configsCreated.at(0));
         return;
       }
@@ -136,6 +142,7 @@ function LocalConfigRow(props: {
   );
 
   const pending = creationPending || updatePending;
+  const error = creationError || updateError;
 
   const { isDirty } = form.formState;
 
@@ -262,6 +269,14 @@ function LocalConfigRow(props: {
                 </FormItem>
               )}
             />
+
+            {error ? (
+              <FormMessage className="grid place-items-center">
+                <span className="max-w-[60ch] text-center">
+                  {error.message}
+                </span>
+              </FormMessage>
+            ) : null}
 
             <Button
               disabled={pending || !isDirty}
