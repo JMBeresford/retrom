@@ -60,6 +60,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:
