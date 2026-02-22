@@ -83,6 +83,33 @@ jobs:
         id: rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: install dependencies (ubuntu only)
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libwebkit2gtk-4.1-0=2.44.0-2 \
+            libwebkit2gtk-4.1-dev=2.44.0-2 \
+            libjavascriptcoregtk-4.1-0=2.44.0-2 \
+            libjavascriptcoregtk-4.1-dev=2.44.0-2 \
+            gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
+            gir1.2-webkit2-4.1=2.44.0-2 \
+            xdg-utils
+
+      - name: install dependencies (windows only)
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: pwsh
+        run: |
+          choco install -y postgresql17
+
+      - name: install dependencies (macos only)
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          brew install postgresql@17
+
       - name: Setup rustfmt
         run: rustup component add rustfmt
 
