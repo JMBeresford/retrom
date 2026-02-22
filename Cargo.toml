@@ -28,7 +28,7 @@ exclude = [
 
 [workspace.package]
 edition = "2021"
-version = "0.7.53"
+version = "0.7.54"
 authors = ["John Beresford <jberesford@volcaus.com>"]
 license = "GPL-3.0"
 readme = "./README.md"

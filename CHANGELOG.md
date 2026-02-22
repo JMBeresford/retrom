@@ -1,3 +1,11 @@
+## [0.7.54](https://github.com/JMBeresford/retrom/compare/v0.7.53...v0.7.54) (2026-02-22)
+
+### Features
+
+
+* feat: init nix flake (#439) ([1143bb52b79c18b21c55f740457aa73ca7662775](https://github.com/JMBeresford/retrom/commit/1143bb52b79c18b21c55f740457aa73ca7662775))
+  	Retrom now provides a community-maintained flake for Nix users. See the [Nix](https://github.com/JMBeresford/retrom/wiki/Nix) page in the docs for more information.
+
 ## [0.7.53](https://github.com/JMBeresford/retrom/compare/v0.7.52...v0.7.53) (2026-02-16)
 
 ### Bug Fixes
