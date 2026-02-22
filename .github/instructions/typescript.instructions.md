@@ -42,6 +42,7 @@ The project uses `typescript-eslint` with the following key rules:
 - **Required before commit**: All TypeScript code must pass type checking
 - Run type checking across all packages: `pnpm nx run-many -t typecheck`
 - Individual package type checking: `pnpm nx typecheck <package-name>`
+- Internally, `typecheck` delegates to `tsc:typecheck` (auto-inferred by `@nx/js/typescript`)
 
 ## React Patterns
 
@@ -182,10 +183,12 @@ Before committing TypeScript changes:
 
 TypeScript packages integrate with NX for:
 
-- `build` - Build the package with Vite
+- `build` - Build the package (delegates to `vite:build` or `tsc:build`)
+- `typecheck` - Type check the package (delegates to `tsc:typecheck`)
 - `dev` - Start development server
-- `typecheck` - Type check the package
 - `eslint:lint` - Lint with ESLint
 - `prettier:format` - Format with Prettier
 
-Run commands with: `pnpm nx <target> <package-name>`
+The granular tool-specific targets (`vite:build`, `tsc:build`, `tsc:typecheck`) are
+auto-inferred by the `@nx/vite/plugin` and `@nx/js/typescript` NX plugins. Each package's
+`project.json` wires `build` and `typecheck` to the appropriate underlying target.

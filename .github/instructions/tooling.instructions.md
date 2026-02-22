@@ -105,6 +105,9 @@ pnpm nx run-many -t typecheck
 pnpm nx typecheck client-web
 ```
 
+Internally, `typecheck` depends on `tsc:typecheck`, which is auto-inferred by the
+`@nx/js/typescript` plugin.
+
 #### Building
 
 **`build`** - Build packages
@@ -116,6 +119,10 @@ pnpm nx run-many -t build
 # Build specific package
 pnpm nx build client-web
 ```
+
+Internally, `build` depends on `typecheck` and then delegates to a tool-specific target
+(`vite:build` for Vite packages, `tsc:build` for TSC-only packages). These granular
+targets are auto-inferred by the `@nx/vite/plugin` and `@nx/js/typescript` NX plugins.
 
 **`cargo:build`** - Build Rust packages
 
@@ -478,8 +485,8 @@ Used by TypeScript packages for building and dev servers.
 **Run via NX**:
 
 ```bash
-pnpm nx dev <package-name>   # Dev server
-pnpm nx build <package-name> # Production build
+pnpm nx dev <package-name>     # Dev server (vite:dev)
+pnpm nx build <package-name>   # Production build (delegates to vite:build)
 ```
 
 ### Cargo

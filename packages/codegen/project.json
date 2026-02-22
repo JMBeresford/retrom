@@ -19,11 +19,17 @@
       ],
       "outputs": ["{projectRoot}/generated/**/*"]
     },
+    "vite:build": {
+      "dependsOn": ["generate"]
+    },
     "build": {
+      "dependsOn": ["vite:build"]
+    },
+    "tsc:typecheck": {
       "dependsOn": ["generate"]
     },
     "typecheck": {
-      "dependsOn": ["generate"]
+      "dependsOn": ["tsc:typecheck"]
     }
   }
 }

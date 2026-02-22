@@ -3,6 +3,12 @@
   "name": "retrom-plugin-launcher",
   "targets": {
     "prettier:format": {},
+    "build": {
+      "dependsOn": ["vite:build"]
+    },
+    "typecheck": {
+      "dependsOn": ["tsc:typecheck"]
+    },
     "cargo:lint": {},
     "cargo:format": {},
     "cargo:build": {}

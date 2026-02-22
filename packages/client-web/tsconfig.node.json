@@ -1,8 +1,0 @@
-{
-  "extends": "@retrom/configs/tsconfig/base.json",
-  "compilerOptions": {
-    "rootDir": ".",
-    "noEmit": true
-  },
-  "include": ["src/lib/node-utils.ts"]
-}

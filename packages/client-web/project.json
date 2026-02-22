@@ -3,6 +3,12 @@
   "name": "retrom-client-web",
   "targets": {
     "prettier:format": {},
+    "build": {
+      "dependsOn": ["vite:build"]
+    },
+    "typecheck": {
+      "dependsOn": ["tsc:typecheck"]
+    },
     "dev": {
       "dependsOn": ["^build", "retrom-service:cargo:run"]
     },

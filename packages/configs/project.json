@@ -4,14 +4,10 @@
   "targets": {
     "prettier:format": {},
     "build": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "inputs": ["{projectRoot}/**/*"],
-      "outputs": ["{projectRoot}/dist/**/*"],
-      "options": {
-        "command": "pnpm tsc --build",
-        "cwd": "{projectRoot}"
-      }
+      "dependsOn": ["tsc:build"]
+    },
+    "typecheck": {
+      "dependsOn": ["tsc:typecheck"]
     }
   }
 }

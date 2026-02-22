@@ -2,6 +2,12 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "retrom-ui",
   "targets": {
-    "prettier:format": {}
+    "prettier:format": {},
+    "build": {
+      "dependsOn": ["vite:build"]
+    },
+    "typecheck": {
+      "dependsOn": ["tsc:typecheck"]
+    }
   }
 }

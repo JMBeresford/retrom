@@ -2,6 +2,12 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "parallel": 5,
   "targetDefaults": {
+    "tsc:typecheck": {
+      "dependsOn": ["^tsc:typecheck"]
+    },
+    "build": {
+      "dependsOn": ["typecheck"]
+    },
     "prettier:format": {
       "executor": "nx:run-commands",
       "options": {
@@ -57,7 +63,7 @@
       }
     },
     "eslint:lint": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^typecheck"],
       "configurations": {
         "fix": {
           "args": ["--fix"]
@@ -106,7 +112,9 @@
           "targetName": "tsc:typecheck"
         },
         "build": {
-          "targetName": "tsc:build"
+          "targetName": "tsc:build",
+          "buildDepsName": "tsc:build-deps",
+          "watchDepsName": "tsc:watch-deps"
         }
       }
     },

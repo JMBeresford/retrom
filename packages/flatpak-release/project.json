@@ -2,6 +2,12 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "retrom-flatpak-release",
   "targets": {
-    "prettier:format": {}
+    "prettier:format": {},
+    "build": {
+      "dependsOn": ["tsc:build"]
+    },
+    "typecheck": {
+      "dependsOn": ["tsc:typecheck"]
+    }
   }
 }

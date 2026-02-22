@@ -69,18 +69,25 @@ NX is configured via:
 
 ### Target Definitions
 
-Targets are defined at two levels:
+Targets are defined at three levels:
 
-**1. Global defaults** (`nx.json` → `targetDefaults`):
+**1. NX plugins** (auto-inferred from project files):
+
+- `@nx/vite/plugin` — infers `vite:build`, `vite:dev`, `vite:typecheck`, `vite:build-deps`, `vite:watch-deps` for packages with a `vite.config.ts`
+- `@nx/js/typescript` — infers `tsc:typecheck`, `tsc:build`, `tsc:build-deps`, `tsc:watch-deps` for packages with a `tsconfig.json`
+
+**2. Global defaults** (`nx.json` → `targetDefaults`):
 
 - Apply to all packages
 - Define common configurations
 - Examples: `prettier:format`, `cargo:format`, `eslint:lint`
 
-**2. Package-specific** (`project.json` in each package):
+**3. Package-specific** (`project.json` in each package):
 
 - Override or extend global targets
-- Define package-specific targets
+- Wire `build` and `typecheck` to the appropriate tool-specific targets:
+  - `build` → `dependsOn: ["vite:build"]` (Vite packages) or `["tsc:build"]` (TSC-only packages)
+  - `typecheck` → `dependsOn: ["tsc:typecheck"]`
 - Examples: `build`, `dev`, `test`
 
 ### Running Tasks
