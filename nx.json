@@ -2,12 +2,6 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "parallel": 5,
   "targetDefaults": {
-    "dev": {
-      "syncGenerators": ["@nx/js:typescript-sync"]
-    },
-    "build": {
-      "syncGenerators": ["@nx/js:typescript-sync"]
-    },
     "prettier:format": {
       "executor": "nx:run-commands",
       "options": {
@@ -95,13 +89,25 @@
     {
       "plugin": "@nx/vite/plugin",
       "options": {
-        "typecheckTargetName": "vite:typecheck"
+        "typecheckTargetName": "vite:typecheck",
+        "buildTargetName": "vite:build",
+        "previewTargetName": "vite:preview",
+        "serveTargetName": "vite:serve",
+        "devTargetName": "vite:dev",
+        "serveStaticTargetName": "vite:serve-static",
+        "buildDepsTargetName": "vite:build-deps",
+        "watchDepsTargetName": "vite:watch-deps"
       }
     },
     {
       "plugin": "@nx/js/typescript",
       "options": {
-        "build": false
+        "typecheck": {
+          "targetName": "tsc:typecheck"
+        },
+        "build": {
+          "targetName": "tsc:build"
+        }
       }
     },
     "@monodon/rust"

@@ -5,15 +5,15 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    "types": "./dist/index.d.ts",
-    "default": "./dist/index.js"
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "files": [
     "dist/**"
   ],
-  "scripts": {
-    "build": "tsc -b"
-  },
   "devDependencies": {
     "@retrom/configs": "workspace:*",
     "@types/signale": "1.4.7",

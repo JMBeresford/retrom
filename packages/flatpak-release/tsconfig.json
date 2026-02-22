@@ -1,15 +1,9 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
-  "include": ["**/*.ts"],
-  "compilerOptions": {
-    "outDir": "dist",
-    "moduleResolution": "nodenext",
-    "rootDir": "src",
-    "module": "nodenext"
-  },
+  "files": [],
   "references": [
     {
-      "path": "../configs"
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

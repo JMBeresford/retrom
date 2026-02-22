@@ -1,0 +1,14 @@
+{
+  "extends": "@retrom/configs/tsconfig/base.json",
+  "include": ["**/*.ts"],
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "moduleResolution": "nodenext",
+    "module": "nodenext"
+  },
+  "references": [
+    {
+      "path": "../configs/tsconfig.lib.json"
+    }
+  ]
+}
