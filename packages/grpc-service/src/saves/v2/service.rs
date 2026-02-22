@@ -1,7 +1,11 @@
 use crate::saves::v2::ludusavi_manager::LudusaviManager;
 use diesel::{query_dsl::methods::FilterDsl, ExpressionMethods};
 use diesel_async::RunQueryDsl;
-use ludusavi::report::ApiGame;
+use futures::future::join_all;
+use ludusavi::{
+    api::{parameters::ListBackups, ApiOutput},
+    report::ApiGame,
+};
 use retrom_codegen::retrom::{
     files::FileStat,
     services::saves::v2::{
@@ -182,9 +186,51 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
     #[instrument(skip(self))]
     async fn restore_save_files_from_backup(
         &self,
-        _request: Request<RestoreSaveFilesFromBackupRequest>,
+        request: Request<RestoreSaveFilesFromBackupRequest>,
     ) -> Result<Response<RestoreSaveFilesFromBackupResponse>, Status> {
-        unimplemented!()
+        let request = request.into_inner();
+        let selectors = request.save_files_selectors;
+        let dry_run = request.config.and_then(|c| c.dry_run);
+
+        let emulator_ids: Vec<i32> = selectors.iter().map(|s| s.emulator_id).collect();
+
+        let emulators: Vec<Emulator> = {
+            use retrom_db::schema::emulators;
+
+            let mut conn = self
+                .db_pool
+                .get()
+                .await
+                .map_err(|e| Status::internal(format!("Failed to get DB connection: {}", e)))?;
+
+            emulators::table
+                .filter(emulators::id.eq_any(&emulator_ids))
+                .load(&mut conn)
+                .await
+                .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
+        };
+
+        let restore_jobs = selectors
+            .into_iter()
+            .map(|selector| {
+                let backup_id = selector.backup.map(|b| b.backup_id);
+
+                let mut ludusavi_manager = LudusaviManager::new(emulators.as_slice());
+                tokio::task::spawn_blocking(move || ludusavi_manager.restore(backup_id, dry_run))
+            })
+            .collect::<Vec<_>>();
+
+        let results = join_all(restore_jobs).await;
+
+        results.into_iter().for_each(|res| {
+            if let Err(e) = res {
+                tracing::error!("Failed to join Ludusavi restore task: {}", e);
+            } else if let Ok(Err(e)) = res {
+                tracing::error!("Failed to restore save files via Ludusavi: {}", e);
+            }
+        });
+
+        Ok(Response::new(RestoreSaveFilesFromBackupResponse::default()))
     }
 
     #[instrument(skip(self))]

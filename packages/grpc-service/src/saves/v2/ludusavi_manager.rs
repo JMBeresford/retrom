@@ -47,8 +47,8 @@ impl LudusaviManager {
                     ..Default::default()
                 },
                 retention: Retention {
-                    full: 3,
-                    differential: 5,
+                    full: 5,
+                    differential: 0,
                     force_new_full: false,
                 },
                 only_constructive: false,
@@ -88,7 +88,7 @@ impl LudusaviManager {
             resolve_cloud_conflict: None,
             wine_prefix: None,
             include_disabled: false,
-            skip_downgrade: true,
+            skip_downgrade: false,
         })?;
 
         Ok(output)
