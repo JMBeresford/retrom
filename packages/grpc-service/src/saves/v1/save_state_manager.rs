@@ -3,7 +3,9 @@ use diesel::{ExpressionMethods, PgArrayExpressionMethods, QueryDsl, SelectableHe
 use diesel_async::RunQueryDsl;
 use futures::future::join_all;
 use retrom_codegen::retrom::{
-    files::FileStat, BackupStats, Emulator, Game, SaveFiles, SaveFilesStat,
+    files::FileStat,
+    services::saves::v1::{BackupStats, SaveStates, SaveStatesStat},
+    Emulator, Game,
 };
 use retrom_db::Pool;
 use retrom_service_common::{config::ServerConfigManager, retrom_dirs::RetromDirs};
@@ -12,10 +14,10 @@ use tracing::instrument;
 use walkdir::WalkDir;
 
 #[derive(thiserror::Error, Debug)]
-pub enum SaveFileManagerError {
-    #[error("SaveFileManagerError: {0}")]
+pub enum SaveStateManagerError {
+    #[error("SaveStateManagerError: {0}")]
     InvalidArgument(String),
-    #[error("SaveFileManagerError: {0}")]
+    #[error("SaveStateManagerError: {0}")]
     Internal(String),
 
     #[error("DB Error: {0}")]
@@ -25,15 +27,15 @@ pub enum SaveFileManagerError {
     Io(#[from] std::io::Error),
 }
 
-type Result<T> = std::result::Result<T, SaveFileManagerError>;
+type Result<T> = std::result::Result<T, SaveStateManagerError>;
 
-pub struct GameSaveFileManager {
+pub struct GameSaveStateManager {
     game: Game,
     db_pool: Arc<Pool>,
     config: Arc<ServerConfigManager>,
 }
 
-impl GameSaveFileManager {
+impl GameSaveStateManager {
     pub fn new(game: Game, db_pool: Arc<Pool>, config: Arc<ServerConfigManager>) -> Self {
         Self {
             game,
@@ -43,23 +45,28 @@ impl GameSaveFileManager {
     }
 }
 
-pub trait SaveFileManager {
-    async fn resolve_save_files(&self, include_backups: bool) -> Result<Vec<SaveFilesStat>>;
+pub trait SaveStateManager {
+    async fn resolve_save_states(&self, include_backups: bool) -> Result<Vec<SaveStatesStat>>;
     async fn reindex_backups(&self, emulator_id: Option<i32>) -> Result<()>;
-    fn get_saves_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
-    fn get_saves_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
+    fn get_states_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
+    fn get_states_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
 
-    async fn backup_save_files(
+    async fn backup_save_states(
         &self,
         emulator_id: Option<i32>,
         dry_run: bool,
-    ) -> Result<Vec<SaveFilesStat>>;
+    ) -> Result<Vec<SaveStatesStat>>;
 
-    async fn update_save_files(&self, save_files: SaveFiles, dry_run: bool) -> Result<()>;
+    async fn update_save_states(&self, save_states: SaveStates, dry_run: bool) -> Result<()>;
 
-    async fn delete_save_files(&self, emulator_id: Option<i32>, dry_run: bool) -> Result<()>;
+    async fn delete_save_states(
+        &self,
+        emulator_id: Option<i32>,
+        files: Vec<FileStat>,
+        dry_run: bool,
+    ) -> Result<()>;
 
-    async fn restore_save_files_from_backup(
+    async fn restore_save_states_from_backup(
         &self,
         backup: BackupStats,
         reindex: bool,
@@ -68,11 +75,11 @@ pub trait SaveFileManager {
     ) -> Result<()>;
 }
 
-impl SaveFileManager for GameSaveFileManager {
+impl SaveStateManager for GameSaveStateManager {
     #[instrument(skip(self))]
-    async fn resolve_save_files(&self, include_backups: bool) -> Result<Vec<SaveFilesStat>> {
+    async fn resolve_save_states(&self, include_backups: bool) -> Result<Vec<SaveStatesStat>> {
         let mut conn = self.db_pool.get().await.map_err(|e| {
-            SaveFileManagerError::Internal(format!("Failed to get DB connection: {e:#?}"))
+            SaveStateManagerError::Internal(format!("Failed to get DB connection: {e:#?}"))
         })?;
 
         use retrom_db::schema::{emulators, platforms};
@@ -89,24 +96,23 @@ impl SaveFileManager for GameSaveFileManager {
             .load(&mut conn)
             .await?;
 
-        let saves_dir = RetromDirs::new().data_dir().join("saves");
+        let all_states_dir = RetromDirs::new().data_dir().join("states");
 
-        tokio::fs::create_dir_all(&saves_dir).await?;
+        tokio::fs::create_dir_all(&all_states_dir).await?;
 
         let mut files = vec![];
 
         for emulator_id in emulators.iter().map(|e| e.id) {
-            let save_dir = self.get_saves_dir(Some(emulator_id))?;
-            let backup_dir = self.get_saves_backup_dir(Some(emulator_id))?;
+            let states_dir = self.get_states_dir(Some(emulator_id))?;
+            let backups_dir = self.get_states_backup_dir(Some(emulator_id))?;
 
-            let file_stats: Vec<FileStat> = if save_dir.exists() {
-                WalkDir::new(&save_dir)
-                    .min_depth(1)
-                    .into_iter()
-                    .filter_map(|d| d.ok()?.into_path().try_into().ok())
+            let file_stats: Vec<FileStat> = if states_dir.exists() {
+                states_dir
+                    .read_dir()?
+                    .filter_map(|d| d.ok()?.path().try_into().ok())
                     .filter_map(|mut fs: FileStat| {
                         let path = PathBuf::from(&fs.path)
-                            .strip_prefix(&save_dir)
+                            .strip_prefix(&states_dir)
                             .ok()?
                             .to_str()?
                             .to_string();
@@ -122,9 +128,10 @@ impl SaveFileManager for GameSaveFileManager {
 
             let mut backups = vec![];
             if include_backups {
-                tokio::fs::create_dir_all(&backup_dir).await?;
+                tokio::fs::create_dir_all(&backups_dir).await?;
+
                 backups.extend(
-                    backup_dir
+                    backups_dir
                         .read_dir()?
                         .filter_map(|entry| entry.ok())
                         .filter_map(|entry| {
@@ -144,6 +151,7 @@ impl SaveFileManager for GameSaveFileManager {
 
                             let backup_file_stats: Vec<FileStat> = WalkDir::new(&backup_dir)
                                 .min_depth(1)
+                                .max_depth(1)
                                 .into_iter()
                                 .filter_map(|d| d.ok()?.into_path().try_into().ok())
                                 .filter_map(|mut fs: FileStat| {
@@ -169,28 +177,28 @@ impl SaveFileManager for GameSaveFileManager {
                 );
             }
 
-            let save_path = save_dir
+            let states_path = states_dir
                 .to_str()
                 .map(|s| s.to_string())
                 .expect("Failed to convert save path to string, are there invalid characters?");
 
-            let created_at = save_dir
+            let created_at = states_dir
                 .metadata()
                 .ok()
                 .and_then(|m| m.created().ok())
                 .map(|t| t.into());
 
-            files.push(SaveFilesStat {
+            files.push(SaveStatesStat {
                 file_stats,
                 backups,
                 emulator_id: Some(emulator_id),
                 game_id: self.game.id,
-                save_path,
+                states_path,
                 created_at,
             });
         }
 
-        tracing::debug!(save_files.count = files.len(), "Resolved save files");
+        tracing::debug!(save_states.count = files.len(), "Resolved save files");
 
         Ok(files)
     }
@@ -198,22 +206,23 @@ impl SaveFileManager for GameSaveFileManager {
     #[instrument(skip(self), fields(game_id = self.game.id))]
     async fn reindex_backups(&self, emulator_id: Option<i32>) -> Result<()> {
         let config = self.config.get_config().await;
-        let max_backup_count = config.saves.map(|s| s.max_save_files_backups).unwrap_or(5) as usize;
+        let max_backup_count =
+            config.saves.map(|s| s.max_save_states_backups).unwrap_or(5) as usize;
 
-        let mut current_save_files = self.resolve_save_files(true).await?;
+        let mut current_save_states = self.resolve_save_states(true).await?;
 
         if let Some(emulator_id) = emulator_id {
-            current_save_files.retain(|sf| sf.emulator_id == Some(emulator_id));
+            current_save_states.retain(|sf| sf.emulator_id == Some(emulator_id));
         }
 
-        for save_files in current_save_files.iter_mut() {
-            let backups = &mut save_files.backups;
+        for save_states in current_save_states.iter_mut() {
+            let backups = &mut save_states.backups;
             backups.sort_by(|a, b| b.created_at.cmp(&a.created_at));
 
             if backups.len() > max_backup_count {
                 for backup in &backups[max_backup_count..] {
                     tracing::info!(
-                        "Evicting save file backup {} for game {}",
+                        "Evicting save state backup {} for game {}",
                         backup.backup_path,
                         self.game.id
                     );
@@ -227,31 +236,31 @@ impl SaveFileManager for GameSaveFileManager {
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    fn get_saves_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
-        let saves_dir = RetromDirs::new().data_dir().join("saves");
+    fn get_states_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+        let states_dir = RetromDirs::new().data_dir().join("states");
 
         let emulator_id = match emulator_id {
             Some(id) => id,
             None => {
-                return Err(SaveFileManagerError::InvalidArgument(
+                return Err(SaveStateManagerError::InvalidArgument(
                     "Emulator ID is required".to_string(),
                 ))
             }
         };
 
-        Ok(saves_dir
+        Ok(states_dir
             .join(emulator_id.to_string())
             .join(self.game.id.to_string()))
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    fn get_saves_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
-        let backup_dir = RetromDirs::new().data_dir().join("saves_backups");
+    fn get_states_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+        let backup_dir = RetromDirs::new().data_dir().join("states_backups");
 
         let emulator_id = match emulator_id {
             Some(id) => id,
             None => {
-                return Err(SaveFileManagerError::InvalidArgument(
+                return Err(SaveStateManagerError::InvalidArgument(
                     "Emulator ID is required".to_string(),
                 ))
             }
@@ -263,20 +272,20 @@ impl SaveFileManager for GameSaveFileManager {
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    async fn backup_save_files(
+    async fn backup_save_states(
         &self,
         emulator_id: Option<i32>,
         dry_run: bool,
-    ) -> Result<Vec<SaveFilesStat>> {
-        let mut all_save_files = self.resolve_save_files(false).await?;
+    ) -> Result<Vec<SaveStatesStat>> {
+        let mut all_save_states = self.resolve_save_states(false).await?;
 
         if let Some(emulator_id) = emulator_id {
-            all_save_files.retain(|sf| sf.emulator_id == Some(emulator_id));
+            all_save_states.retain(|sf| sf.emulator_id == Some(emulator_id));
         }
 
-        for save_files in all_save_files.iter_mut() {
-            let save_path = PathBuf::from(&save_files.save_path);
-            let backups_dir = self.get_saves_backup_dir(save_files.emulator_id)?;
+        for save_states in all_save_states.iter_mut() {
+            let states_path = PathBuf::from(&save_states.states_path);
+            let backups_dir = self.get_states_backup_dir(save_states.emulator_id)?;
             let backup_dir =
                 backups_dir.join(chrono::Local::now().to_utc().format("%s.%f").to_string());
 
@@ -291,15 +300,15 @@ impl SaveFileManager for GameSaveFileManager {
 
             tokio::fs::create_dir_all(&backup_dir).await?;
 
-            for file_stat in save_files.file_stats.iter_mut() {
+            for file_stat in save_states.file_stats.iter_mut() {
                 let relative_path = PathBuf::from(&file_stat.path);
                 if relative_path.is_absolute() {
-                    return Err(SaveFileManagerError::Internal(
+                    return Err(SaveStateManagerError::Internal(
                         "Source path must be relative to the save directory".to_string(),
                     ));
                 }
 
-                let src_path = save_path.join(&relative_path);
+                let src_path = states_path.join(&relative_path);
                 let dest_path = backup_dir.join(relative_path);
 
                 if !src_path.exists() {
@@ -357,33 +366,22 @@ impl SaveFileManager for GameSaveFileManager {
             self.reindex_backups(emulator_id).await?;
         }
 
-        Ok(all_save_files)
+        Ok(all_save_states)
     }
 
     #[instrument(skip_all, fields(game_id = self.game.id))]
-    async fn update_save_files(&self, save_files: SaveFiles, dry_run: bool) -> Result<()> {
-        let save_dir = self.get_saves_dir(save_files.emulator_id)?;
-        self.backup_save_files(save_files.emulator_id, dry_run)
+    async fn update_save_states(&self, save_states: SaveStates, dry_run: bool) -> Result<()> {
+        let states_dir = self.get_states_dir(save_states.emulator_id)?;
+        self.backup_save_states(save_states.emulator_id, dry_run)
             .await?;
 
-        if save_dir.exists() {
-            if dry_run {
-                tracing::debug!(
-                    "Dry run: would remove existing save directory {}",
-                    save_dir.display()
-                );
-            } else {
-                tokio::fs::remove_dir_all(&save_dir).await?;
-            }
-        }
+        tokio::fs::create_dir_all(&states_dir).await?;
 
-        tokio::fs::create_dir_all(&save_dir).await?;
-
-        for file in save_files.files {
+        for file in save_states.files {
             let file_stat = match file.stat {
                 Some(stat) => stat,
                 None => {
-                    return Err(SaveFileManagerError::InvalidArgument(
+                    return Err(SaveStateManagerError::InvalidArgument(
                         "FileStat is required".to_string(),
                     ));
                 }
@@ -391,12 +389,24 @@ impl SaveFileManager for GameSaveFileManager {
 
             let relative_path = PathBuf::from(&file_stat.path);
             if relative_path.is_absolute() {
-                return Err(SaveFileManagerError::InvalidArgument(
+                return Err(SaveStateManagerError::InvalidArgument(
                     "Source path must be relative to the save directory".to_string(),
                 ));
             }
 
-            let dest_path = save_dir.join(&relative_path);
+            let dest_path = states_dir.join(&relative_path);
+
+            if dest_path.exists() {
+                if dry_run {
+                    tracing::info!(
+                        "Dry run: would overwrite existing file {}",
+                        dest_path.display()
+                    );
+                    continue;
+                } else {
+                    tokio::fs::remove_file(&dest_path).await?;
+                }
+            }
 
             if dry_run {
                 tracing::info!(
@@ -414,20 +424,27 @@ impl SaveFileManager for GameSaveFileManager {
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    async fn delete_save_files(&self, emulator_id: Option<i32>, dry_run: bool) -> Result<()> {
-        let mut all_save_files = self.resolve_save_files(false).await?;
+    async fn delete_save_states(
+        &self,
+        emulator_id: Option<i32>,
+        files: Vec<FileStat>,
+        dry_run: bool,
+    ) -> Result<()> {
+        let mut all_save_states = self.resolve_save_states(false).await?;
 
         if let Some(emulator_id) = emulator_id {
-            all_save_files.retain(|sf| sf.emulator_id == Some(emulator_id));
+            all_save_states.retain(|sf| sf.emulator_id == Some(emulator_id));
         }
 
-        for save_files in all_save_files.iter() {
-            let save_path = PathBuf::from(&save_files.save_path);
+        let files_specified = !files.is_empty();
 
-            if !save_path.exists() {
+        for save_states in all_save_states.iter() {
+            let states_path = PathBuf::from(&save_states.states_path);
+
+            if !states_path.exists() {
                 tracing::warn!(
-                    "Save path {} does not exist, skipping deletion",
-                    save_path.display()
+                    "Save states path {} does not exist, skipping deletion",
+                    states_path.display()
                 );
 
                 continue;
@@ -435,67 +452,101 @@ impl SaveFileManager for GameSaveFileManager {
 
             if dry_run {
                 tracing::info!(
-                    "Dry run: would delete save files at {}",
-                    save_path.display()
+                    "Dry run: would delete save states at {}",
+                    states_path.display()
                 );
 
                 continue;
             }
 
-            if let Err(e) = tokio::fs::remove_dir_all(&save_path).await {
-                tracing::error!(
-                    "Failed to delete save files at {}: {:#?}",
-                    save_path.display(),
-                    e
-                );
+            if !files_specified {
+                if let Err(e) = tokio::fs::remove_dir_all(&states_path).await {
+                    tracing::error!(
+                        "Failed to delete save states at {}: {:#?}",
+                        states_path.display(),
+                        e
+                    );
+                }
+            } else {
+                for file_stat in files.iter() {
+                    let relative_path = PathBuf::from(&file_stat.path);
+                    if relative_path.is_absolute() {
+                        return Err(SaveStateManagerError::InvalidArgument(
+                            "Source path must be relative to the save states directory".to_string(),
+                        ));
+                    }
+
+                    let file_path = states_path.join(&relative_path);
+
+                    if !file_path.exists() {
+                        tracing::warn!(
+                            "File {} does not exist, skipping deletion",
+                            file_path.display()
+                        );
+                        continue;
+                    }
+
+                    if file_path.is_file() {
+                        if dry_run {
+                            tracing::info!("Dry run: would delete file {}", file_path.display());
+                        } else if let Err(e) = tokio::fs::remove_file(&file_path).await {
+                            tracing::error!(
+                                "Failed to delete file {}: {:#?}",
+                                file_path.display(),
+                                e
+                            );
+                        }
+                    }
+                }
             }
         }
 
         Ok(())
     }
 
-    async fn restore_save_files_from_backup(
+    async fn restore_save_states_from_backup(
         &self,
         backup: BackupStats,
         reindex: bool,
         emulator_id: Option<i32>,
         dry_run: bool,
     ) -> Result<()> {
-        let saves_dir = self.get_saves_dir(emulator_id)?;
+        let states_dir = self.get_states_dir(emulator_id)?;
         let backup_path = PathBuf::from(backup.backup_path);
 
         if !backup_path.exists() {
-            return Err(SaveFileManagerError::InvalidArgument(
-                "Backup path does not exist".to_string(),
+            return Err(SaveStateManagerError::InvalidArgument(
+                "Backups path does not exist".to_string(),
             ));
         }
 
-        if saves_dir.exists() {
+        if states_dir.exists() {
             if dry_run {
                 tracing::info!(
-                    "Dry run: would remove existing save directory {}",
-                    saves_dir.display()
+                    "Dry run: would remove existing save states directory {}",
+                    states_dir.display()
                 );
             } else {
-                tokio::fs::remove_dir_all(&saves_dir).await?;
+                tokio::fs::remove_dir_all(&states_dir).await?;
             }
         }
 
         if dry_run {
             tracing::info!(
-                "Dry run: would restore save files from {} to {}",
+                "Dry run: would restore save states from {} to {}",
                 backup_path.display(),
-                saves_dir.display()
+                states_dir.display()
             );
         } else if reindex {
-            tokio::fs::rename(backup_path, &saves_dir).await?;
+            tokio::fs::rename(backup_path, &states_dir).await?;
             self.reindex_backups(emulator_id).await?;
         } else {
-            tokio::fs::create_dir_all(&saves_dir).await?;
+            tokio::fs::create_dir_all(&states_dir).await?;
 
             join_all(
                 WalkDir::new(&backup_path)
                     .min_depth(1)
+                    .max_depth(1)
                     .into_iter()
                     .filter_map(|e| e.ok())
                     .filter_map(|e| {
@@ -508,7 +559,7 @@ impl SaveFileManager for GameSaveFileManager {
                     })
                     .filter_map(|file_path| {
                         let relative_path = file_path.strip_prefix(&backup_path).ok()?;
-                        let dest_path = saves_dir.join(relative_path);
+                        let dest_path = states_dir.join(relative_path);
 
                         tracing::info!(
                             "Restoring save file from {} to {}",

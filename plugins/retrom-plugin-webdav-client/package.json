@@ -1,0 +1,16 @@
+{
+  "name": "@retrom/plugin-webdav-client",
+  "type": "module",
+  "files": [
+    "dist/**"
+  ],
+  "dependencies": {
+    "@tauri-apps/api": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "tslib": "catalog:",
+    "@retrom/configs": "workspace:*"
+  }
+}

@@ -13,7 +13,7 @@ config.dev.*
 .lazy.lua
 .turbo
 **/dist
-retrom.log
+retrom*.log
 
 .nx/cache
 .nx/workspace-data

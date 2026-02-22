@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package retrom.client.saves;
+
+import "google/protobuf/timestamp.proto";
+
+enum SaveSyncStatus {
+  // Either there is no upstream save, or the sync status is unknown.
+  SAVE_SYNC_STATUS_UNSPECIFIED = 0;
+
+  // The local and cloud saves are in sync.
+  SAVE_SYNC_STATUS_IN_SYNC = 1;
+
+  // The cloud save is newer than the local save.
+  SAVE_SYNC_STATUS_CLOUD_NEWER = 2;
+
+  // The local save is newer than the cloud save.
+  SAVE_SYNC_STATUS_LOCAL_NEWER = 3;
+
+  // The local save is in an error state of unknown cause.
+  // Generally this means there is a conflict that needs to be resolved manually,
+  // e.g. the local saves were modified while offline and now cannot be
+  // safely merged with the cloud saves.
+  SAVE_SYNC_STATUS_LOCAL_ERROR = 4;
+
+  // Sync is in progress.
+  SAVE_SYNC_STATUS_SYNCING = 5;
+
+  // Save is not being synced on this client.
+  SAVE_SYNC_STATUS_UNTRACKED = 6;
+}
+
+enum SyncBehavior {
+  // Default behavior, which infers the correct action based on
+  // the current sync status and will not force any overwrites.
+  SYNC_BEHAVIOR_UNSPECIFIED = 0;
+
+  // Force the cloud save to overwrite the local save.
+  SYNC_BEHAVIOR_FORCE_CLOUD = 1;
+
+  // Force the local save to overwrite the cloud save.
+  SYNC_BEHAVIOR_FORCE_LOCAL = 2;
+}
+
+message SyncEmulatorSavesPayload {
+  int32 emulator_id = 1;
+  optional SyncBehavior behavior = 2;
+}
+
+message ConflictReport {
+  google.protobuf.Timestamp local_last_modified = 1;
+  google.protobuf.Timestamp cloud_last_modified = 2;
+}
+
+message SyncEmulatorSavesResponse {
+  SaveSyncStatus status = 1;
+  int32 emulator_id = 2;
+  optional ConflictReport conflict_report = 3;
+}

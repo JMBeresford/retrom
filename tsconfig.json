@@ -37,6 +37,12 @@
     },
     {
       "path": "./packages/flatpak-release"
+    },
+    {
+      "path": "./plugins/retrom-plugin-webdav-client"
+    },
+    {
+      "path": "./plugins/retrom-plugin-save-manager"
     }
   ]
 }

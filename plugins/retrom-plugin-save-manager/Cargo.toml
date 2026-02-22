@@ -1,0 +1,40 @@
+[package]
+name = "retrom-plugin-save-manager"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Save manager plugin for the Retrom client application"
+rust-version = "1.80"
+exclude = ["/examples", "/dist", "/guest-js", "/node_modules"]
+links = "tauri-plugin-save-manager"
+
+[dependencies]
+tauri = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+retrom-codegen = { workspace = true }
+retrom-plugin-config = { workspace = true }
+retrom-plugin-service-client = { workspace = true }
+retrom-plugin-webdav-client = { workspace = true }
+reqwest = { workspace = true }
+tonic = { workspace = true }
+http = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+futures-util = { workspace = true }
+webdav-meta = { workspace = true }
+headers = { workspace = true }
+walkdir = { workspace = true }
+prost = { workspace = true }
+fs-set-times = "0.20.3"
+urlencoding = "2.1.3"
+
+[build-dependencies]
+tauri-plugin = { workspace = true }
+
+[package.metadata.cargo-machete]
+ignored = ["tauri-plugin"]

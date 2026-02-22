@@ -124,6 +124,7 @@ diesel::table! {
         updated_at -> Nullable<Timestamptz>,
         executable_path -> Text,
         nickname -> Nullable<Text>,
+        save_data_path -> Nullable<Text>,
     }
 }
 

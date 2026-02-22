@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-sync-saves"
+description = "Enables the sync_saves command without any pre-configured scope."
+commands.allow = ["sync_saves"]
+
+[[permission]]
+identifier = "deny-sync-saves"
+description = "Denies the sync_saves command without any pre-configured scope."
+commands.deny = ["sync_saves"]

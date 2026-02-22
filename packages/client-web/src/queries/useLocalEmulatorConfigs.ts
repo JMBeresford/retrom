@@ -33,10 +33,7 @@ export function useLocalEmulatorConfigs<T = GetLocalEmulatorConfigsResponse>(
     queryKey: ["local-emulator-configs", req, retromClient, clientId],
     select: selectFn,
     enabled,
-    queryFn: async () => {
-      const response =
-        await retromClient.emulatorClient.getLocalEmulatorConfigs(req);
-      return response;
-    },
+    queryFn: async () =>
+      retromClient.emulatorClient.getLocalEmulatorConfigs(req),
   });
 }
