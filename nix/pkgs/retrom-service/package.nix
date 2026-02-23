@@ -14,18 +14,20 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom-service";
-  version = "0.7.53";
+  inherit ((builtins.fromTOML (builtins.readFile ../../../Cargo.toml)).workspace.package) version;
 
   src = lib.cleanSourceWith {
     src = ../../../.;
-    filter = path: _: !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
-      /nix
-      /flake.nix
-      /flake.lock
+    filter =
+      path: _:
+      !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
+        /nix
+        /flake.nix
+        /flake.lock
 
-      /.github
-      /.gitignore
-    ]);
+        /.github
+        /.gitignore
+      ]);
   };
 
   pnpmDeps = fetchPnpmDeps {
