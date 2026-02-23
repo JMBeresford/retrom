@@ -1,6 +1,6 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
-  "files": ["./release.config.js", "./release-notes-template.js"],
+  "files": [],
   "compilerOptions": {
     "emitDeclarationOnly": true
   },
