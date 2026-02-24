@@ -1,0 +1,48 @@
+{
+  "name": "@retrom/docs",
+  "private": true,
+  "type": "module",
+  "files": [
+    "./dist/**",
+    "./vite.config.ts"
+  ],
+  "scripts": {
+    "dev": "nx vite:dev"
+  },
+  "dependencies": {
+    "@nx/vite": "catalog:",
+    "@retrom/ui": "workspace:*",
+    "@tailwindcss/vite": "^4.1.11",
+    "@tanstack/react-router": "1.120.20",
+    "@tanstack/router-generator": "1.120.20",
+    "@tanstack/router-plugin": "1.120.20",
+    "@types/react-syntax-highlighter": "catalog:",
+    "class-variance-authority": "^0.7.0",
+    "lucide-react": "^0.525.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-markdown": "catalog:",
+    "react-syntax-highlighter": "catalog:",
+    "rehype-autolink-headings": "catalog:",
+    "rehype-github-alerts": "catalog:",
+    "rehype-slug": "catalog:",
+    "remark-gfm": "catalog:",
+    "remark-toc": "catalog:",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.11"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@retrom/configs": "workspace:*",
+    "@tanstack/eslint-plugin-query": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "catalog:",
+    "globals": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vite": "catalog:"
+  }
+}

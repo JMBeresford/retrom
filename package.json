@@ -82,6 +82,8 @@
     "eslint-plugin-react": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",
-    "globals": "catalog:"
+    "globals": "catalog:",
+    "rehype-github-alerts": "catalog:",
+    "remark-gfm": "catalog:"
   }
 }

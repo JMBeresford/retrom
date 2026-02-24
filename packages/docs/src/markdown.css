@@ -1,0 +1,76 @@
+.markdown-root {
+  @apply flex flex-col gap-2 w-[80ch];
+
+  .markdown-alert {
+    @apply flex flex-col gap-1 px-4 pt-1 pb-2 border-l-2 border-[var(--alert-color)] my-2 bg-muted rounded-r;
+
+    .markdown-alert-title {
+      @apply flex gap-2 items-center font-bold fill-[var(--alert-color)] text-[var(--alert-color)];
+    }
+
+    &.markdown-alert-tip {
+      --alert-color: theme("colors.green.500");
+    }
+
+    &.markdown-alert-warning {
+      --alert-color: theme("colors.yellow.500");
+    }
+
+    &.markdown-alert-caution {
+      --alert-color: theme("colors.red.500");
+    }
+
+    &.markdown-alert-note {
+      --alert-color: theme("colors.blue.500");
+    }
+
+    &.markdown-alert-important {
+      --alert-color: theme("colors.purple.500");
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold mt-2;
+  }
+
+  hr {
+    @apply my-4;
+  }
+
+  h1 {
+    @apply text-4xl;
+  }
+
+  h2 {
+    @apply text-3xl;
+  }
+
+  h3 {
+    @apply text-2xl;
+  }
+
+  h4 {
+    @apply text-xl;
+  }
+
+  h5 {
+    @apply text-lg;
+  }
+
+  h6 {
+    @apply text-base;
+  }
+
+  > p {
+    @apply my-2;
+  }
+
+  ul {
+    @apply list-disc pl-4 my-2;
+  }
+}
