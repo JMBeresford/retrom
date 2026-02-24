@@ -37,6 +37,9 @@
     },
     {
       "path": "./packages/flatpak-release"
+    },
+    {
+      "path": "./packages/docs"
     }
   ]
 }

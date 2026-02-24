@@ -64,7 +64,7 @@
     "maath": "^0.10.8",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-markdown": "^9.0.1",
+    "react-markdown": "catalog:",
     "react-syntax-highlighter": "^15.6.1",
     "recharts": "catalog:",
     "rehype-parse": "^9.0.1",

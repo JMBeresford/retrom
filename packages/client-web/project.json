@@ -10,7 +10,7 @@
       "dependsOn": ["tsc:typecheck"]
     },
     "dev": {
-      "dependsOn": ["^build", "retrom-service:cargo:run"]
+      "dependsOn": ["vite:dev", "^build", "retrom-service:cargo:run"]
     },
     "dev:desktop": {
       "executor": "nx:run-commands",

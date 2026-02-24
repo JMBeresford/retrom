@@ -1,0 +1,25 @@
+@import "tailwindcss";
+@import "./markdown.css";
+@import "@retrom/ui/styles/index.css";
+
+@custom-variant focus-hover (&:is(:focus,:hover));
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: Exo2;
+  }
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentColor);
+  }
+}

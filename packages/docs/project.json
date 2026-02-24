@@ -1,0 +1,13 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "retrom-docs",
+  "targets": {
+    "prettier:format": {},
+    "build": {
+      "dependsOn": ["vite:build"]
+    },
+    "typecheck": {
+      "dependsOn": ["tsc:typecheck"]
+    }
+  }
+}
