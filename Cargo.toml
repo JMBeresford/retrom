@@ -118,7 +118,7 @@ retrom-plugin-standalone = { path = "./plugins/retrom-plugin-standalone" }
 
 config = { version = "0.13.4", features = ["json5"] }
 futures = "0.3.30"
-bytes = "1.6.0"
+bytes = "1.11.1"
 reqwest = { version = "0.12.3", features = ["json", "stream"] }
 axum = "0.8.6"
 tonic = { version = "0.14.2", features = [
