@@ -60,6 +60,13 @@ export default {
       },
     ],
     [
+      "@retrom/nix-release",
+      {
+        servicePackageFilePath: "nix/pkgs/retrom-service/package.nix",
+        clientPackageFilePath: "nix/pkgs/retrom-unwrapped/package.nix",
+      },
+    ],
+    [
       "@semantic-release/git",
       {
         assets: [

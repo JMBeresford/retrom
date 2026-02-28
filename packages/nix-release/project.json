@@ -1,0 +1,13 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "retrom-nix-release",
+  "targets": {
+    "prettier:format": {},
+    "build": {
+      "dependsOn": ["tsc:build"]
+    },
+    "typecheck": {
+      "dependsOn": ["tsc:typecheck"]
+    }
+  }
+}
