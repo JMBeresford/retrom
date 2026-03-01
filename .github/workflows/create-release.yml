@@ -50,7 +50,7 @@ jobs:
           # Both packages use the same pnpm store, so a single hash is sufficient
           # and the service will presumably build faster.
           current_hash="$(nix eval --raw .#retrom-service.pnpmDeps.outputHash)"
-          log="$(nix build --rebuild --no-link .#retrom-service 2>&1 || true)"
+          log="$(nix build --no-link .#retrom-service 2>&1 || true)"
           new_hash="$(echo "$log" | awk '/got/{print $2}')"
 
           echo "Log output: $log"
