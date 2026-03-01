@@ -64,7 +64,7 @@ jobs:
         run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
 
       - name: Build release-related packages
-        run: pnpm nx run retrom-flatpak-release:build
+        run: pnpm nx run-many -t build -p retrom-flatpak-release retrom-nix-release
 
       - name: install Rust stable
         id: rust
@@ -83,12 +83,12 @@ jobs:
         run: |
           nix flake update
 
-          PNPM_DEPS_SHA="$(nix eval --raw .#retrom-service.pnpmDeps.outputHash)"
-          echo "pnpm_deps_sha=$PNPM_DEPS_SHA" >> "$GITHUB_OUTPUT"
+          PNPM_DEPS_HASH="$(nix eval --raw .#retrom-service.pnpmDeps.outputHash)"
+          echo "pnpm_deps_hash=$PNPM_DEPS_HASH" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         env:
-          PNPM_DEPS_SHA: ${{ steps.pnpm-store.outputs.pnpm_deps_sha }}
+          PNPM_DEPS_HASH: ${{ steps.pnpm-store.outputs.pnpm_deps_hash }}
           GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
         run: |
           pnpm exec semantic-release --ci=true --dry-run="$DRY_RUN"

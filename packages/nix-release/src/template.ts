@@ -9,7 +9,7 @@ export function renderServicePackageTemplate(opts: { pnpmDepsHash: string }) {
   pnpmConfigHook,
   fetchPnpmDeps,
   pnpm_10,
-  nodejs_22,
+  nodejs_24,
   faketty,
   perl,
   protobuf_29,
@@ -121,7 +121,7 @@ export function renderClientPackageTemplate(opts: { pnpmDepsHash: string }) {
   pnpmConfigHook,
   fetchPnpmDeps,
   pnpm_10,
-  nodejs_22,
+  nodejs_24,
   faketty,
   perl,
   protobuf_29,
@@ -161,7 +161,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     pkg-config
     pnpmConfigHook
     pnpm_10
-    nodejs_22
+    nodejs_24
     faketty
     perl
     protobuf_29
