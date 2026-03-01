@@ -75,8 +75,20 @@ jobs:
       - name: install cargo-workspaces
         run: cargo install cargo-workspaces@0.3.2
 
+      - name: install nix
+        uses: DeterminateSystems/determinate-nix-action@v3.16.3
+
+      - name: get pnpm store hash for nix pkg
+        id: pnpm-store
+        run: |
+          nix flake update
+
+          PNPM_DEPS_SHA="$(nix eval --raw .#retrom-service.pnpmDeps.outputHash)"
+          echo "pnpm_deps_sha=$PNPM_DEPS_SHA" >> "$GITHUB_OUTPUT"
+
       - name: Create Release
         env:
+          PNPM_DEPS_SHA: ${{ steps.pnpm-store.outputs.pnpm_deps_sha }}
           GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
         run: |
           pnpm exec semantic-release --ci=true --dry-run="$DRY_RUN"

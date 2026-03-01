@@ -70,6 +70,9 @@ export default {
       "@semantic-release/git",
       {
         assets: [
+          "flake.lock",
+          "nix/pkgs/retrom-service/package.nix",
+          "nix/pkgs/retrom-unwrapped/package.nix",
           "CHANGELOG.md",
           "Cargo.toml",
           "Cargo.lock",
