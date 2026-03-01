@@ -52,7 +52,8 @@ function generateNotes(
   _pluginConfig: PluginConfig,
   context: GenerateNotesContext,
 ) {
-  const { logger } = context;
+  const { logger, options } = context;
+  const { dryRun } = options;
 
   if (!pnpmDepsHash) {
     throw new Error(
@@ -63,8 +64,10 @@ function generateNotes(
   serviceTemplate = renderServicePackageTemplate({ pnpmDepsHash });
   clientTemplate = renderClientPackageTemplate({ pnpmDepsHash });
 
-  logger.log(`Updated service package.nix file:\n${serviceTemplate}`);
-  logger.log(`Updated client package.nix file:\n${clientTemplate}`);
+  if (dryRun) {
+    logger.log(`Updated service package.nix file:\n${serviceTemplate}`);
+    logger.log(`Updated client package.nix file:\n${clientTemplate}`);
+  }
 }
 
 function prepare(pluginConfig: PluginConfig, _context: PrepareContext) {
