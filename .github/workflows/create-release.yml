@@ -83,8 +83,20 @@ jobs:
         run: |
           nix flake update
 
-          PNPM_DEPS_HASH="$(nix eval --raw .#retrom-service.pnpmDeps.outputHash)"
-          echo "pnpm_deps_hash=$PNPM_DEPS_HASH" >> "$GITHUB_OUTPUT"
+          # Both packages use the same pnpm store, so a single hash is sufficient
+          # and the service will presumably build faster.
+          current_hash="$(nix eval --raw .#retrom-service.pnpmDeps.outputHash)"
+          log="$(nix build --rebuild --no-link .#retrom-service 2>&1 || true)"
+          new_hash="$(echo "$log" | awk '/got/{print $2}')"
+
+          echo "Current hash: $current_hash"
+          echo "New hash: $new_hash"
+
+          if [ ! "$new_hash" = "" ]; then
+            echo "pnpm_deps_hash=$new_hash" >> "$GITHUB_OUTPUT"
+          else
+            echo "pnpm_deps_hash=$current_hash" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create Release
         env:
