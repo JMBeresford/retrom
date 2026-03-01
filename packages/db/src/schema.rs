@@ -125,6 +125,7 @@ diesel::table! {
         executable_path -> Text,
         nickname -> Nullable<Text>,
         save_data_path -> Nullable<Text>,
+        save_states_path -> Nullable<Text>,
     }
 }
 

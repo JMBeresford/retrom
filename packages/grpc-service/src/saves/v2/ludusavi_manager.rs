@@ -20,25 +20,47 @@ pub struct LudusaviManager {
     ludusavi: Ludusavi,
 }
 
+pub enum SaveKind {
+    /// SRAM saves
+    Saves,
+    /// Emulator save states
+    SaveStates,
+}
+
 impl LudusaviManager {
-    pub fn new(emulators: &[Emulator]) -> Self {
+    pub fn new(emulators: &[Emulator], save_kind: SaveKind) -> Self {
         let custom_games: Vec<CustomGame> = emulators
             .iter()
             .filter_map(|emulator| {
-                let save_directory = Self::get_emulator_save_dir(emulator).to_str()?.to_string();
+                let files_directory = match save_kind {
+                    SaveKind::Saves => Self::get_emulator_save_dir(emulator).to_str()?.to_string(),
+                    SaveKind::SaveStates => Self::get_emulator_save_states_dir(emulator)
+                        .to_str()?
+                        .to_string(),
+                };
 
                 Some(CustomGame {
                     name: emulator.id.to_string(),
-                    files: vec![save_directory],
+                    files: vec![files_directory],
                     ..Default::default()
                 })
             })
             .collect();
 
+        let backup_path = match save_kind {
+            SaveKind::Saves => RetromDirs::new().saves_backups_dir(),
+            SaveKind::SaveStates => RetromDirs::new().save_states_backups_dir(),
+        };
+
+        let root = match save_kind {
+            SaveKind::Saves => RetromDirs::new().saves_dir(),
+            SaveKind::SaveStates => RetromDirs::new().save_states_dir(),
+        };
+
         let config = Config {
-            roots: vec![Root::default().with_path(RetromDirs::new().saves_dir().into())],
+            roots: vec![Root::default().with_path(root.into())],
             backup: BackupConfig {
-                path: RetromDirs::new().saves_backups_dir().into(),
+                path: backup_path.into(),
                 format: BackupFormats {
                     chosen: BackupFormat::Zip,
                     zip: ZipConfig {
@@ -73,6 +95,12 @@ impl LudusaviManager {
 
     pub fn get_emulator_save_dir(emulator: &Emulator) -> PathBuf {
         RetromDirs::new().saves_dir().join(emulator.id.to_string())
+    }
+
+    pub fn get_emulator_save_states_dir(emulator: &Emulator) -> PathBuf {
+        RetromDirs::new()
+            .save_states_dir()
+            .join(emulator.id.to_string())
     }
 
     #[instrument(skip(self))]

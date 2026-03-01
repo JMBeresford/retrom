@@ -101,7 +101,8 @@ message SaveStatesStat {
   // Backup stats for this emulator's states
   repeated Backup backups = 3;
 
-  string etag = 4;
+  // Directory where the save states are stored on disk
+  string save_states_directory = 4;
 }
 
 message SaveStates {

@@ -40,6 +40,7 @@ type ConfigSchema = z.infer<typeof configSchema>;
 const configSchema = z.object({
   executablePath: z.string().min(1, { message: "Executable path is required" }),
   saveDataPath: z.string().optional(),
+  saveStatesPath: z.string().optional(),
 }) satisfies z.ZodObject<
   Record<
     keyof Omit<
@@ -100,6 +101,7 @@ function LocalConfigRow(props: {
     defaultValues: {
       executablePath: config?.executablePath || "",
       saveDataPath: config?.saveDataPath || "",
+      saveStatesPath: config?.saveStatesPath || "",
     } satisfies Required<ConfigSchema>,
     resolver: zodResolver(configSchema),
     mode: "onSubmit",
@@ -260,6 +262,55 @@ function LocalConfigRow(props: {
                         {...field}
                         value={field.value || ""}
                         placeholder="Enter path save data location"
+                        className={cn(!isDirty && "text-muted-foreground")}
+                      />
+                    </InputGroup>
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="saveStatesPath"
+              render={({ field, fieldState: { isDirty } }) => (
+                <FormItem className="flex flex-col items-start">
+                  <FormLabel>Save States Path</FormLabel>
+
+                  <FormControl>
+                    <InputGroup>
+                      <InputGroupAddon align="inline-start">
+                        <InputGroupButton
+                          variant="secondary"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            open({
+                              title: "Select Save States Directory",
+                              directory: true,
+                            })
+                              .then((result) => {
+                                if (result) {
+                                  field.onChange(result);
+                                }
+                              })
+                              .catch((e) => {
+                                console.error(e);
+                              });
+                          }}
+                        >
+                          <FolderOpenIcon />
+                          Browse
+                        </InputGroupButton>
+                      </InputGroupAddon>
+
+                      <InputGroupInput
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="Enter path save states location"
                         className={cn(!isDirty && "text-muted-foreground")}
                       />
                     </InputGroup>
