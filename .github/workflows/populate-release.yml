@@ -16,10 +16,11 @@ env:
   GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
 
 jobs:
-  get-release-id:
-    name: Get Release ID
+  get-release-info:
+    name: Get Release Info
     outputs:
       release_id: ${{ steps.get_release_id.outputs.release_id }}
+      release_body: ${{ steps.get_release_body.outputs.release_body }}
     runs-on: ubuntu-24.04
     steps:
       - name: Get Release ID
@@ -29,18 +30,26 @@ jobs:
           RELEASE_ID="$(gh api repos/jmberesford/retrom/releases --jq '.[] | select(.tag_name == "${{ github.ref_name }}").id')"
           echo "release_id=$RELEASE_ID" >> "$GITHUB_OUTPUT"
 
+      - name: Get Release Body
+        id: get_release_body
+        shell: bash
+        run: |
+          RELEASE_BODY="$(gh api repos/jmberesford/retrom/releases --jq '.[] | select(.tag_name == "${{ github.ref_name }}").body')"
+          echo "release_body=$RELEASE_BODY" >> "$GITHUB_OUTPUT"
+
   publish-clients:
     name: Publish Clients
     concurrency:
       group: "publish-clients-${{ github.ref_name }}"
       cancel-in-progress: false
     needs:
-      - get-release-id
+      - get-release-info
     uses: ./.github/workflows/publish-clients.yml
     secrets: inherit
     with:
       tag_name: ${{ github.ref_name }}
-      release_id: ${{ fromJson(needs.get-release-id.outputs.release_id) }}
+      release_id: ${{ fromJson(needs.get-release-info.outputs.release_id) }}
+      release_body: ${{ needs.get-release-info.outputs.release_body }}
 
   publish-server-images:
     name: Publish Server Images

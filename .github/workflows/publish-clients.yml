@@ -7,6 +7,10 @@ on:
         description: "The ID of the release to publish clients for"
         required: true
         type: number
+      release_body:
+        description: "The body of the release (release notes)"
+        default: ""
+        type: string
       tag_name:
         description: "The tag name of the release (e.g. `v1.2.3`)"
         required: true
@@ -16,6 +20,9 @@ on:
       release_id:
         required: true
         type: number
+      release_body:
+        default: ""
+        type: string
       tag_name:
         required: true
         type: string
@@ -78,6 +85,7 @@ jobs:
         with:
           projectPath: packages/client
           releaseId: ${{ inputs.release_id }}
+          releaseBody: ${{ inputs.release_body }}
           tagName: ${{ env.TAG_NAME }}
           releaseDraft: true
           includeRelease: true
