@@ -53,6 +53,7 @@ jobs:
           log="$(nix build --rebuild --no-link .#retrom-service 2>&1 || true)"
           new_hash="$(echo "$log" | awk '/got/{print $2}')"
 
+          echo "Log output: $log"
           echo "Current hash: $current_hash"
           echo "New hash: $new_hash"
 
