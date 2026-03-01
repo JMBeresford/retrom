@@ -28,8 +28,43 @@ permissions:
   id-token: write
 
 jobs:
+  nix-template-values:
+    name: Get Nix Template Values
+    runs-on: ubuntu-latest
+    outputs:
+      pnpm_deps_hash: ${{ steps.pnpm-store.outputs.pnpm_deps_hash }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: install nix
+        uses: DeterminateSystems/determinate-nix-action@v3.16.3
+
+      - name: get pnpm store hash for nix pkg
+        id: pnpm-store
+        run: |
+          nix flake update
+
+          # Both packages use the same pnpm store, so a single hash is sufficient
+          # and the service will presumably build faster.
+          current_hash="$(nix eval --raw .#retrom-service.pnpmDeps.outputHash)"
+          log="$(nix build --rebuild --no-link .#retrom-service 2>&1 || true)"
+          new_hash="$(echo "$log" | awk '/got/{print $2}')"
+
+          echo "Current hash: $current_hash"
+          echo "New hash: $new_hash"
+
+          if [ ! "$new_hash" = "" ]; then
+            echo "pnpm_deps_hash=$new_hash" >> "$GITHUB_OUTPUT"
+          else
+            echo "pnpm_deps_hash=$current_hash" >> "$GITHUB_OUTPUT"
+          fi
+
   release:
     name: Release
+    needs: nix-template-values
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -75,32 +110,9 @@ jobs:
       - name: install cargo-workspaces
         run: cargo install cargo-workspaces@0.3.2
 
-      - name: install nix
-        uses: DeterminateSystems/determinate-nix-action@v3.16.3
-
-      - name: get pnpm store hash for nix pkg
-        id: pnpm-store
-        run: |
-          nix flake update
-
-          # Both packages use the same pnpm store, so a single hash is sufficient
-          # and the service will presumably build faster.
-          current_hash="$(nix eval --raw .#retrom-service.pnpmDeps.outputHash)"
-          log="$(nix build --rebuild --no-link .#retrom-service 2>&1 || true)"
-          new_hash="$(echo "$log" | awk '/got/{print $2}')"
-
-          echo "Current hash: $current_hash"
-          echo "New hash: $new_hash"
-
-          if [ ! "$new_hash" = "" ]; then
-            echo "pnpm_deps_hash=$new_hash" >> "$GITHUB_OUTPUT"
-          else
-            echo "pnpm_deps_hash=$current_hash" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Create Release
         env:
-          PNPM_DEPS_HASH: ${{ steps.pnpm-store.outputs.pnpm_deps_hash }}
+          PNPM_DEPS_HASH: ${{ needs.nix-template-values.outputs.pnpm_deps_hash }}
           GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
         run: |
           pnpm exec semantic-release --ci=true --dry-run="$DRY_RUN"
