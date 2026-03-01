@@ -60,9 +60,19 @@ export default {
       },
     ],
     [
+      "@retrom/nix-release",
+      {
+        servicePackageFilePath: "nix/pkgs/retrom-service/package.nix",
+        clientPackageFilePath: "nix/pkgs/retrom-unwrapped/package.nix",
+      },
+    ],
+    [
       "@semantic-release/git",
       {
         assets: [
+          "flake.lock",
+          "nix/pkgs/retrom-service/package.nix",
+          "nix/pkgs/retrom-unwrapped/package.nix",
           "CHANGELOG.md",
           "Cargo.toml",
           "Cargo.lock",

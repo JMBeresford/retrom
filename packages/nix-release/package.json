@@ -1,0 +1,28 @@
+{
+  "name": "@retrom/nix-release",
+  "description": "Script for generating package.nix file(s) for Nix releases.",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**"
+  ],
+  "devDependencies": {
+    "@retrom/configs": "workspace:*",
+    "@types/signale": "1.4.7",
+    "semantic-release": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vite": "catalog:"
+  },
+  "dependencies": {
+    "fs-extra": "catalog:"
+  }
+}
