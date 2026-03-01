@@ -3,8 +3,7 @@ name: Bug report
 about: Create a report to help Retrom improve
 title: "[Bug]"
 labels: bug
-assignees: ''
-
+assignees: ""
 ---
 
 # Before Filing A Bug Report
@@ -53,9 +52,9 @@ Please attach any relevant logs from docker containers, browser console etc
 
 Client logs will be in OS-dependant locations:
 
-- Windows: `$APP_DATA/roaming/com.retrom.app/logs` or `$APP_DATA/local/com.retrom.app/logs`
-- MacOS: `$HOME/Library/Logs/com.retrom.app`
-- Linux: `$XDG_CONFIG_HOME/com.retrom.app/logs` or `$HOME/.config/com.retrom.app/logs`
+- Windows: `$APP_DATA/roaming/com.retrom.client/logs` or `$APP_DATA/local/com.retrom.client/logs`
+- MacOS: `$HOME/Library/Logs/com.retrom.client`
+- Linux: `$XDG_CONFIG_HOME/com.retrom.client/logs` or `$HOME/.config/com.retrom.client/logs`
 
 ### Additional context
 
