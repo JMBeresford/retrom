@@ -117,6 +117,7 @@ message LocalEmulatorConfig {
   string executable_path = 6;
   optional string nickname = 7;
   optional string save_data_path = 8;
+  optional string save_states_path = 9;
 }
 
 message NewLocalEmulatorConfig {
@@ -127,6 +128,7 @@ message NewLocalEmulatorConfig {
   string executable_path = 5;
   optional string nickname = 6;
   optional string save_data_path = 7;
+  optional string save_states_path = 8;
 }
 
 message UpdatedLocalEmulatorConfig {
@@ -138,4 +140,5 @@ message UpdatedLocalEmulatorConfig {
   optional string executable_path = 6;
   optional string nickname = 7;
   optional string save_data_path = 8;
+  optional string save_states_path = 9;
 }

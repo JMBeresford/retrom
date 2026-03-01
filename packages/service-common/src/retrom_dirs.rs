@@ -120,6 +120,14 @@ impl RetromDirs {
     pub fn saves_backups_dir(&self) -> PathBuf {
         self.data_dir.join("saves_backups")
     }
+
+    pub fn save_states_dir(&self) -> PathBuf {
+        self.data_dir.join("save_states")
+    }
+
+    pub fn save_states_backups_dir(&self) -> PathBuf {
+        self.data_dir.join("save_states_backups")
+    }
 }
 
 impl Default for RetromDirs {

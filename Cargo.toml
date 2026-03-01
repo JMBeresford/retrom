@@ -167,4 +167,4 @@ zeroize = "1.8.1"
 rayon = { version = "1.11.0" }
 ludusavi = { version = "0.30", default-features = false, git = "https://github.com/mtkennerly/ludusavi.git", rev = "fea63791158bcb0159ce5388d6c52cd5e7348326" }
 webdav-meta = { git = "https://github.com/jmberesford/webdav-rs.git", rev = "39c459aa781360a0b755e5be841e1c4dd2fd18b7" }
-dav-server = "0.8.0"
+dav-server = "0.11.0"
