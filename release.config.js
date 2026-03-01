@@ -6,7 +6,7 @@ import commitPartial from "./release-notes-template.js";
 export default {
   // repositoryUrl: "https://github.com/JMBeresford/retrom.git",
   repositoryUrl: "git@github.com:JMBeresford/retrom.git",
-  branches: ["main", { name: "beta", prerelease: true }],
+  branches: ["main", { name: "*", prerelease: true }],
   dryRun: true,
   preset: "conventionalcommits",
   ci: false,
