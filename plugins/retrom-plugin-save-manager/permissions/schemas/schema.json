@@ -295,6 +295,18 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the get_emulator_save_states_sync_status command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-emulator-save-states-sync-status",
+          "markdownDescription": "Enables the get_emulator_save_states_sync_status command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_emulator_save_states_sync_status command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-emulator-save-states-sync-status",
+          "markdownDescription": "Denies the get_emulator_save_states_sync_status command without any pre-configured scope."
+        },
+        {
           "description": "Enables the get_emulator_saves_sync_status command without any pre-configured scope.",
           "type": "string",
           "const": "allow-get-emulator-saves-sync-status",
@@ -329,6 +341,18 @@
           "type": "string",
           "const": "deny-ping",
           "markdownDescription": "Denies the ping command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the sync_emulator_save_states command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-sync-emulator-save-states",
+          "markdownDescription": "Enables the sync_emulator_save_states command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the sync_emulator_save_states command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-sync-emulator-save-states",
+          "markdownDescription": "Denies the sync_emulator_save_states command without any pre-configured scope."
         },
         {
           "description": "Enables the sync_emulator_saves command without any pre-configured scope.",

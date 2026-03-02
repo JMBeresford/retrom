@@ -6,9 +6,14 @@ use futures_util::{future::join_all, StreamExt};
 use headers::HeaderMapExt;
 use http::StatusCode;
 use retrom_codegen::retrom::{
-    client::saves::{ConflictReport, SaveSyncStatus, SyncEmulatorSavesResponse},
+    client::saves::{
+        ConflictReport, SaveSyncStatus, SyncEmulatorSaveStatesResponse, SyncEmulatorSavesResponse,
+    },
     files::FileStat,
-    services::saves::v2::{backup_save_files_request, BackupSaveFilesRequest},
+    services::saves::v2::{
+        backup_save_files_request, backup_save_states_request, BackupSaveFilesRequest,
+        BackupSaveStatesRequest,
+    },
     Client, FilesystemNodeType, GetLocalEmulatorConfigsRequest, LocalEmulatorConfig,
 };
 use retrom_plugin_config::ConfigExt;
@@ -47,17 +52,53 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
     Ok(SaveManager::new(app.clone()))
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum SaveKind {
+    Saves,
+    SaveStates,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct SyncStatusReport {
+    pub emulator_id: i32,
+    pub save_kind: SaveKind,
+    pub status: SaveSyncStatus,
+    pub conflict_report: Option<ConflictReport>,
+}
+
+impl From<SyncStatusReport> for SyncEmulatorSavesResponse {
+    fn from(val: SyncStatusReport) -> Self {
+        SyncEmulatorSavesResponse {
+            status: val.status.into(),
+            emulator_id: val.emulator_id,
+            conflict_report: val.conflict_report,
+        }
+    }
+}
+
+impl From<SyncStatusReport> for SyncEmulatorSaveStatesResponse {
+    fn from(val: SyncStatusReport) -> Self {
+        SyncEmulatorSaveStatesResponse {
+            status: val.status.into(),
+            emulator_id: val.emulator_id,
+            conflict_report: val.conflict_report,
+        }
+    }
+}
+
 /// Access to the save-manager APIs.
 pub struct SaveManager<R: Runtime> {
     app_handle: AppHandle<R>,
-    active_syncs: RwLock<HashSet<i32>>,
+    active_save_syncs: RwLock<HashSet<i32>>,
+    active_save_states_syncs: RwLock<HashSet<i32>>,
 }
 
 impl<R: Runtime> SaveManager<R> {
     pub fn new(app_handle: AppHandle<R>) -> Self {
         Self {
             app_handle,
-            active_syncs: RwLock::new(HashSet::new()),
+            active_save_syncs: RwLock::new(HashSet::new()),
+            active_save_states_syncs: RwLock::new(HashSet::new()),
         }
     }
 
@@ -99,11 +140,30 @@ impl<R: Runtime> SaveManager<R> {
     }
 
     #[instrument(skip(self))]
-    async fn write_snapshot_file(&self, emulator_id: i32, snapshot: &Snapshot) -> Result<()> {
-        let Some(local_save_dir) = self.get_local_save_dir(emulator_id).await? else {
-            return Err(SaveManagerError::Internal(
-                "Local save directory not found for emulator".into(),
-            ));
+    async fn get_local_save_states_dir(&self, emulator_id: i32) -> Result<Option<PathBuf>> {
+        let local_config = self.get_local_emulator_config(emulator_id).await?;
+        let local_save_states_dir =
+            local_config.and_then(|c| c.save_states_path.map(PathBuf::from));
+
+        Ok(local_save_states_dir)
+    }
+
+    #[instrument(skip(self, snapshot))]
+    async fn write_snapshot_file(
+        &self,
+        emulator_id: i32,
+        snapshot: &Snapshot,
+        save_kind: SaveKind,
+    ) -> Result<()> {
+        let local_save_dir = match save_kind {
+            SaveKind::Saves => self.get_local_save_dir(emulator_id).await?,
+            SaveKind::SaveStates => self.get_local_save_states_dir(emulator_id).await?,
+        };
+
+        let Some(local_save_dir) = local_save_dir else {
+            return Err(SaveManagerError::Internal(format!(
+                "Local {save_kind:?} directory not found for emulator {emulator_id}"
+            )));
         };
 
         let snapshot_file_path = local_save_dir.join(SNAPSHOT_FILE_NAME);
@@ -118,11 +178,20 @@ impl<R: Runtime> SaveManager<R> {
     }
 
     #[instrument(skip(self))]
-    async fn read_snapshot_file(&self, emulator_id: i32) -> Result<Option<Snapshot>> {
-        let Some(local_save_dir) = self.get_local_save_dir(emulator_id).await? else {
-            return Err(SaveManagerError::Internal(
-                "Local save directory not found for emulator".into(),
-            ));
+    async fn read_snapshot_file(
+        &self,
+        emulator_id: i32,
+        save_kind: SaveKind,
+    ) -> Result<Option<Snapshot>> {
+        let local_save_dir = match save_kind {
+            SaveKind::Saves => self.get_local_save_dir(emulator_id).await?,
+            SaveKind::SaveStates => self.get_local_save_states_dir(emulator_id).await?,
+        };
+
+        let Some(local_save_dir) = local_save_dir else {
+            return Err(SaveManagerError::Internal(format!(
+                "Local {save_kind:?} directory not found for emulator {emulator_id}"
+            )));
         };
 
         let snapshot_file_path = local_save_dir.join(SNAPSHOT_FILE_NAME);
@@ -289,39 +358,65 @@ impl<R: Runtime> SaveManager<R> {
     }
 
     #[instrument(skip(self))]
-    pub async fn download_cloud_save_files(&self, emulator_id: i32) -> Result<()> {
-        if self.active_syncs.read().await.contains(&emulator_id) {
+    pub async fn download_cloud_save_files(
+        &self,
+        emulator_id: i32,
+        save_kind: SaveKind,
+    ) -> Result<()> {
+        let active_syncs = match save_kind {
+            SaveKind::Saves => &self.active_save_syncs,
+            SaveKind::SaveStates => &self.active_save_states_syncs,
+        };
+
+        if active_syncs.read().await.contains(&emulator_id) {
             return Err(SaveManagerError::Internal(
                 "A sync is already in progress for this emulator".into(),
             ));
         }
 
-        let Some(local_save_dir) = self.get_local_save_dir(emulator_id).await? else {
-            return Err(SaveManagerError::Internal(
-                "Local save directory not found for emulator".into(),
-            ));
+        let local_dir = match save_kind {
+            SaveKind::Saves => self.get_local_save_dir(emulator_id).await?,
+            SaveKind::SaveStates => self.get_local_save_states_dir(emulator_id).await?,
         };
 
-        let Some(cloud_snapshot) = self.get_cloud_snapshot(emulator_id).await? else {
+        let Some(local_dir) = local_dir else {
+            return Err(SaveManagerError::Internal(format!(
+                "Local directory not found for emulator {emulator_id} and save kind {save_kind:?}"
+            )));
+        };
+
+        let Some(cloud_snapshot) = self.get_cloud_snapshot(emulator_id, save_kind).await? else {
             return Err(SaveManagerError::NoCloudSave(emulator_id));
         };
 
-        self.active_syncs.write().await.insert(emulator_id);
+        match save_kind {
+            SaveKind::Saves => self.active_save_syncs.write().await.insert(emulator_id),
+            SaveKind::SaveStates => self
+                .active_save_states_syncs
+                .write()
+                .await
+                .insert(emulator_id),
+        };
 
-        if local_save_dir.exists() {
-            tokio::fs::remove_dir_all(&local_save_dir).await?;
+        if local_dir.exists() {
+            tokio::fs::remove_dir_all(&local_dir).await?;
         }
+
+        let path_prefix = match save_kind {
+            SaveKind::Saves => "saves",
+            SaveKind::SaveStates => "save_states",
+        };
 
         let download_jobs = cloud_snapshot
             .clone()
             .into_files()
             .into_iter()
             .map(|file_stat| {
-                let mut remote_path = PathBuf::from("saves");
+                let mut remote_path = PathBuf::from(path_prefix);
                 remote_path.push(emulator_id.to_string());
                 remote_path.push(&file_stat.path);
 
-                let local_path = local_save_dir.join(&file_stat.path);
+                let local_path = local_dir.join(&file_stat.path);
 
                 async { self.download_file(remote_path, local_path, file_stat).await }
             })
@@ -334,7 +429,7 @@ impl<R: Runtime> SaveManager<R> {
 
         // Write snapshot file *before* updating metadata, else the write
         // will modify the root directory's metadata.
-        self.write_snapshot_file(emulator_id, &cloud_snapshot)
+        self.write_snapshot_file(emulator_id, &cloud_snapshot, save_kind)
             .await?;
 
         let all_files = cloud_snapshot.files().clone();
@@ -342,7 +437,7 @@ impl<R: Runtime> SaveManager<R> {
         let metadata_update_jobs = all_files
             .into_iter()
             .map(|file_stat| {
-                let local_path = local_save_dir.join(&file_stat.path);
+                let local_path = local_dir.join(&file_stat.path);
                 async move {
                     self.update_local_file_metadata(local_path, &file_stat)
                         .await
@@ -355,7 +450,14 @@ impl<R: Runtime> SaveManager<R> {
             .into_iter()
             .collect::<Vec<_>>();
 
-        self.active_syncs.write().await.remove(&emulator_id);
+        match save_kind {
+            SaveKind::Saves => self.active_save_syncs.write().await.remove(&emulator_id),
+            SaveKind::SaveStates => self
+                .active_save_states_syncs
+                .write()
+                .await
+                .remove(&emulator_id),
+        };
 
         if let Some(Err(e)) = res.into_iter().find(|r| r.is_err()) {
             tracing::error!("Error during download jobs: {:?}", e);
@@ -376,7 +478,11 @@ impl<R: Runtime> SaveManager<R> {
     }
 
     #[instrument(skip(self))]
-    async fn get_cloud_snapshot(&self, emulator_id: i32) -> Result<Option<Snapshot>> {
+    async fn get_cloud_snapshot(
+        &self,
+        emulator_id: i32,
+        save_kind: SaveKind,
+    ) -> Result<Option<Snapshot>> {
         let webdav_client = self.app_handle.webdav_client();
 
         let properties = Properties::new()
@@ -385,7 +491,12 @@ impl<R: Runtime> SaveManager<R> {
             .with_name::<CreationDate>()
             .with_name::<LastModified>();
 
-        let remote_save_dir = PathBuf::from("saves").join(emulator_id.to_string());
+        let path_prefix = match save_kind {
+            SaveKind::Saves => "saves",
+            SaveKind::SaveStates => "save_states",
+        };
+
+        let remote_save_dir = PathBuf::from(path_prefix).join(emulator_id.to_string());
         let response = webdav_client
             .propfind(
                 &remote_save_dir,
@@ -412,26 +523,39 @@ impl<R: Runtime> SaveManager<R> {
     pub async fn check_save_sync_status(
         &self,
         emulator_id: i32,
-    ) -> Result<SyncEmulatorSavesResponse> {
-        if self.active_syncs.read().await.contains(&emulator_id) {
-            return Ok(SyncEmulatorSavesResponse {
-                status: SaveSyncStatus::Syncing.into(),
+        save_kind: SaveKind,
+    ) -> Result<SyncStatusReport> {
+        let active_syncs = match save_kind {
+            SaveKind::Saves => &self.active_save_syncs,
+            SaveKind::SaveStates => &self.active_save_states_syncs,
+        };
+
+        if active_syncs.read().await.contains(&emulator_id) {
+            return Ok(SyncStatusReport {
+                status: SaveSyncStatus::Syncing,
+                save_kind,
                 emulator_id,
                 conflict_report: None,
             });
         }
 
-        let Some(local_save_dir) = self.get_local_save_dir(emulator_id).await? else {
-            return Ok(SyncEmulatorSavesResponse {
-                status: SaveSyncStatus::Untracked.into(),
+        let local_dir = match save_kind {
+            SaveKind::Saves => self.get_local_save_dir(emulator_id).await?,
+            SaveKind::SaveStates => self.get_local_save_states_dir(emulator_id).await?,
+        };
+
+        let Some(local_dir) = local_dir else {
+            return Ok(SyncStatusReport {
+                status: SaveSyncStatus::Untracked,
+                save_kind,
                 emulator_id,
                 conflict_report: None,
             });
         };
 
-        let cloud_snapshot = self.get_cloud_snapshot(emulator_id).await?;
-        let cached_snapshot = self.read_snapshot_file(emulator_id).await?;
-        let current_snapshot = Snapshot::from_root(&local_save_dir);
+        let cloud_snapshot = self.get_cloud_snapshot(emulator_id, save_kind).await?;
+        let cached_snapshot = self.read_snapshot_file(emulator_id, save_kind).await?;
+        let current_snapshot = Snapshot::from_root(&local_dir);
 
         tracing::debug!(
             "Current snapshot for emulator {}: {:?}",
@@ -486,45 +610,88 @@ impl<R: Runtime> SaveManager<R> {
             local_last_modified,
         });
 
-        Ok(SyncEmulatorSavesResponse {
-            status: status.into(),
+        Ok(SyncStatusReport {
+            status,
             emulator_id,
             conflict_report,
+            save_kind,
         })
     }
 
     #[instrument(skip(self))]
-    pub async fn upload_local_save_files(&self, emulator_id: i32) -> Result<()> {
-        if self.active_syncs.read().await.contains(&emulator_id) {
+    pub async fn upload_local_save_files(
+        &self,
+        emulator_id: i32,
+        save_kind: SaveKind,
+    ) -> Result<()> {
+        let active_syncs = match save_kind {
+            SaveKind::Saves => &self.active_save_syncs,
+            SaveKind::SaveStates => &self.active_save_states_syncs,
+        };
+
+        if active_syncs.read().await.contains(&emulator_id) {
             return Err(SaveManagerError::Internal(
                 "A download is already in progress for this emulator".into(),
             ));
         }
 
-        let Some(local_save_dir) = self.get_local_save_dir(emulator_id).await? else {
+        let local_dir = match save_kind {
+            SaveKind::Saves => self.get_local_save_dir(emulator_id).await?,
+            SaveKind::SaveStates => self.get_local_save_states_dir(emulator_id).await?,
+        };
+
+        let Some(local_dir) = local_dir else {
             return Err(SaveManagerError::Internal(
                 "Local save directory not found for emulator".into(),
             ));
         };
 
-        let Some(snapshot) = Snapshot::from_root(&local_save_dir) else {
+        let Some(snapshot) = Snapshot::from_root(&local_dir) else {
             return Err(SaveManagerError::Internal(
                 "Failed to create snapshot from local save directory".into(),
             ));
         };
 
-        let remote_save_dir = PathBuf::from("/saves").join(emulator_id.to_string());
+        let path_prefix = match save_kind {
+            SaveKind::Saves => "/saves",
+            SaveKind::SaveStates => "/save_states",
+        };
+
+        let remote_save_dir = PathBuf::from(path_prefix).join(emulator_id.to_string());
         let webdav_client = self.app_handle.webdav_client();
         let mut saves_client = self.app_handle.get_emulator_saves_client().await;
 
-        self.active_syncs.write().await.insert(emulator_id);
+        match save_kind {
+            SaveKind::Saves => self.active_save_syncs.write().await.insert(emulator_id),
+            SaveKind::SaveStates => self
+                .active_save_states_syncs
+                .write()
+                .await
+                .insert(emulator_id),
+        };
 
-        saves_client
-            .backup_save_files(BackupSaveFilesRequest {
-                save_files_selectors: vec![backup_save_files_request::Selector { emulator_id }],
-                ..Default::default()
-            })
-            .await?;
+        match save_kind {
+            SaveKind::Saves => {
+                saves_client
+                    .backup_save_files(BackupSaveFilesRequest {
+                        save_files_selectors: vec![backup_save_files_request::Selector {
+                            emulator_id,
+                        }],
+                        ..Default::default()
+                    })
+                    .await?;
+            }
+            SaveKind::SaveStates => {
+                saves_client
+                    .backup_save_states(BackupSaveStatesRequest {
+                        save_states_selectors: vec![backup_save_states_request::Selector {
+                            emulator_id,
+                        }],
+                        ..Default::default()
+                    })
+                    .await?;
+            }
+        };
 
         // Clear out the remote save directory before uploading new files.
         if let Err(err) = webdav_client
@@ -622,7 +789,7 @@ impl<R: Runtime> SaveManager<R> {
         let upload_jobs = files
             .into_iter()
             .filter_map(|path| {
-                let local_path = local_save_dir.join(&path);
+                let local_path = local_dir.join(&path);
                 let remote_path = remote_save_dir.join(path);
                 let if_header = If::from_str(&if_header_str).ok()?;
 
@@ -632,20 +799,21 @@ impl<R: Runtime> SaveManager<R> {
 
         let res = join_all(upload_jobs).await.into_iter().collect::<Vec<_>>();
 
-        let Some(new_cloud_snapshot) = self.get_cloud_snapshot(emulator_id).await? else {
+        let Some(new_cloud_snapshot) = self.get_cloud_snapshot(emulator_id, save_kind).await?
+        else {
             return Err(SaveManagerError::Internal(
                 "Failed to retrieve cloud snapshot after upload".into(),
             ));
         };
 
-        self.write_snapshot_file(emulator_id, &new_cloud_snapshot)
+        self.write_snapshot_file(emulator_id, &new_cloud_snapshot, save_kind)
             .await?;
 
         let metadata_update_jobs = new_cloud_snapshot
             .files()
             .iter()
             .map(|file_stat| {
-                let local_path = local_save_dir.join(&file_stat.path);
+                let local_path = local_dir.join(&file_stat.path);
                 async move { self.update_local_file_metadata(local_path, file_stat).await }
             })
             .collect::<Vec<_>>();
@@ -655,7 +823,14 @@ impl<R: Runtime> SaveManager<R> {
             .into_iter()
             .collect::<Vec<_>>();
 
-        self.active_syncs.write().await.remove(&emulator_id);
+        match save_kind {
+            SaveKind::Saves => self.active_save_syncs.write().await.remove(&emulator_id),
+            SaveKind::SaveStates => self
+                .active_save_states_syncs
+                .write()
+                .await
+                .remove(&emulator_id),
+        };
 
         webdav_client
             .unlock(&remote_save_dir, UnlockOptions { lock_token })
