@@ -176,7 +176,7 @@ impl LudusaviManager {
     }
 
     #[instrument(skip(self))]
-    pub fn list_backup_files(&mut self) -> Result<Vec<(i32, BTreeMap<String, ApiFile>)>> {
+    pub fn _list_backup_files(&mut self) -> Result<Vec<(i32, BTreeMap<String, ApiFile>)>> {
         let with_parsed_id = self
             .restore(None, Some(true))?
             .games

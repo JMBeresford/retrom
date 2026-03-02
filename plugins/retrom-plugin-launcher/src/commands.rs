@@ -8,7 +8,7 @@ use retrom_codegen::retrom::{
 };
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_installer::InstallerExt;
-use retrom_plugin_save_manager::SaveManagerExt;
+use retrom_plugin_save_manager::{SaveKind, SaveManagerExt};
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
 use retrom_plugin_steam::SteamExt;
 use std::{ffi::OsStr, path::PathBuf, sync::Arc};
@@ -277,15 +277,21 @@ pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -
 
     let save_manager = app.save_manager();
     let sync_saves = || async move {
-        match save_manager.check_save_sync_status(emulator_id).await {
+        match save_manager
+            .check_save_sync_status(emulator_id, SaveKind::Saves)
+            .await
+        {
             Ok(result) => {
                 tracing::debug!(
                     "Save sync status for emulator {emulator_id}: {:?}",
-                    result.status()
+                    result.status
                 );
 
-                if let SaveSyncStatus::LocalNewer = result.status() {
-                    if let Err(why) = save_manager.upload_local_save_files(emulator_id).await {
+                if let SaveSyncStatus::LocalNewer = result.status {
+                    if let Err(why) = save_manager
+                        .upload_local_save_files(emulator_id, SaveKind::Saves)
+                        .await
+                    {
                         tracing::warn!(
                             "Failed to upload local save files for emulator {emulator_id}: {:#?}",
                             why

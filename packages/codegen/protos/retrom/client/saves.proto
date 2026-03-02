@@ -47,12 +47,23 @@ message SyncEmulatorSavesPayload {
   optional SyncBehavior behavior = 2;
 }
 
+message SyncEmulatorSaveStatesPayload {
+  int32 emulator_id = 1;
+  optional SyncBehavior behavior = 2;
+}
+
 message ConflictReport {
   google.protobuf.Timestamp local_last_modified = 1;
   google.protobuf.Timestamp cloud_last_modified = 2;
 }
 
 message SyncEmulatorSavesResponse {
+  SaveSyncStatus status = 1;
+  int32 emulator_id = 2;
+  optional ConflictReport conflict_report = 3;
+}
+
+message SyncEmulatorSaveStatesResponse {
   SaveSyncStatus status = 1;
   int32 emulator_id = 2;
   optional ConflictReport conflict_report = 3;

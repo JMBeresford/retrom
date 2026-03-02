@@ -19,6 +19,32 @@ Default permissions for the plugin
 <tr>
 <td>
 
+`retrom-plugin-save-manager:allow-get-emulator-save-states-sync-status`
+
+</td>
+<td>
+
+Enables the get_emulator_save_states_sync_status command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-save-manager:deny-get-emulator-save-states-sync-status`
+
+</td>
+<td>
+
+Denies the get_emulator_save_states_sync_status command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `retrom-plugin-save-manager:allow-get-emulator-saves-sync-status`
 
 </td>
@@ -90,6 +116,32 @@ Enables the ping command without any pre-configured scope.
 <td>
 
 Denies the ping command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-save-manager:allow-sync-emulator-save-states`
+
+</td>
+<td>
+
+Enables the sync_emulator_save_states command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`retrom-plugin-save-manager:deny-sync-emulator-save-states`
+
+</td>
+<td>
+
+Denies the sync_emulator_save_states command without any pre-configured scope.
 
 </td>
 </tr>
