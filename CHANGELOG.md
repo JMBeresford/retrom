@@ -1,3 +1,10 @@
+## [0.7.55](https://github.com/JMBeresford/retrom/compare/v0.7.54...v0.7.55) (2026-03-02)
+
+### Bug Fixes
+
+
+* fix: nix package versioning (#482) ([b1bcc6e003eb4326f9d340fc2b1fdbbb671a7832](https://github.com/JMBeresford/retrom/commit/b1bcc6e003eb4326f9d340fc2b1fdbbb671a7832))
+
 ## [0.7.54](https://github.com/JMBeresford/retrom/compare/v0.7.53...v0.7.54) (2026-02-22)
 
 ### Features

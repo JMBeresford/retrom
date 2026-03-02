@@ -5,16 +5,17 @@
   pnpmConfigHook,
   fetchPnpmDeps,
   pnpm_10,
-  nodejs_22,
+  nodejs_24,
   faketty,
   perl,
   protobuf_29,
   openssl,
   makeWrapper,
 }:
+
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom-service";
-  version = "0.7.53";
+  inherit ((builtins.fromTOML (builtins.readFile ../../../Cargo.toml)).workspace.package) version;
 
   src = lib.cleanSourceWith {
     src = ../../../.;
@@ -31,7 +32,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     fetcherVersion = 3;
-    hash = "sha256-LR7wy5hTHfRn3ypAeq6DayCv5+sfFS4OJYTCAmiHCn4=";
+    hash = "sha256-SEfCBq76zMJ1toImkAf2PJXAV5I/j456R4+ugQhX8Oc=";
   };
 
   cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
@@ -41,7 +42,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     pkg-config
     pnpmConfigHook
     pnpm_10
-    nodejs_22
+    nodejs_24
     faketty
     perl
     protobuf_29
