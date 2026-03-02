@@ -35,7 +35,11 @@ jobs:
         shell: bash
         run: |
           RELEASE_BODY="$(gh api repos/jmberesford/retrom/releases --jq '.[] | select(.tag_name == "${{ github.ref_name }}").body')"
-          echo "release_body=$RELEASE_BODY" >> "$GITHUB_OUTPUT"
+          {
+            echo 'release_body<<EOF'
+            echo "$RELEASE_BODY"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
 
   publish-clients:
     name: Publish Clients
