@@ -1,6 +1,16 @@
 {
   description = "Retrom - A centralized game library/collection management service with a focus on emulation";
 
+  nixConfig = {
+    extra-substituters = [
+      "https://retrom.cachix.org"
+    ];
+
+    extra-trusted-public-keys = [
+      "retrom.cachix.org-1:6fjezFeBSDzHkUvpyLMe58wfi99V4RO8M5Iod4sMxFE="
+    ];
+  };
+
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";

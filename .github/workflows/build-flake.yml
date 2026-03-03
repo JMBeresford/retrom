@@ -21,7 +21,7 @@ jobs:
 
       - uses: cachix/cachix-action@v14
         with:
-          name: jmberesford-retrom
+          name: retrom
           authToken: "${{ secrets.CACHIX_TOKEN }}"
 
       - name: Build client package
