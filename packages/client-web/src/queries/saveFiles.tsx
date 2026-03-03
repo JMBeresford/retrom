@@ -9,6 +9,10 @@ import { toast } from "@retrom/ui/hooks/use-toast";
 import { Progress } from "@retrom/ui/components/progress";
 import { create, MessageInitShape } from "@bufbuild/protobuf";
 
+/**
+ * @deprecated This is no longer used and will be removed in a future release.
+ *   Prefer `useEmulatorSaveFiles*` hooks
+ */
 export function useStatSaveFiles(
   request: MessageInitShape<typeof StatSaveFilesRequestSchema>,
 ) {
@@ -20,6 +24,10 @@ export function useStatSaveFiles(
   });
 }
 
+/**
+ * @deprecated This is no longer used and will be removed in a future release.
+ *   Prefer `useEmulatorSaveFiles*` hooks
+ */
 export function useGetSaveFiles(
   request: MessageInitShape<typeof GetSaveFilesRequestSchema>,
 ) {

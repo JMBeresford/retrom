@@ -6,6 +6,7 @@ import {
   SaveSyncStatus,
   SyncBehavior,
   SyncEmulatorSavesResponse,
+  SyncEmulatorSaveStatesResponse,
 } from "@retrom/codegen/retrom/client/saves_pb";
 import { Button } from "@retrom/ui/components/button";
 import {
@@ -29,6 +30,7 @@ import { Spinner } from "@retrom/ui/components/spinner";
 import { CloudIcon, ServerIcon } from "lucide-react";
 import { useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useSyncEmulatorSaveStates } from "@/mutations/useSyncEmulatorSaveStates";
 
 type Choice = "local" | "cloud" | "skip";
 
@@ -36,24 +38,44 @@ declare global {
   namespace RetromModals {
     interface ModalActions {
       resolveCloudSaveConflict: BaseModalActionProps & {
-        status: SyncEmulatorSavesResponse;
         onResolved?: (
           choice: Choice,
           status: SaveSyncStatus,
         ) => Promise<void> | void;
-      };
+      } & (
+          | {
+              saveKind: "saves";
+              status: SyncEmulatorSavesResponse;
+            }
+          | {
+              saveKind: "saveStates";
+              status: SyncEmulatorSaveStatesResponse;
+            }
+        );
     }
   }
 }
 
 export function ResolveCloudSaveConflictModal() {
   const { modalState, closeModal } = useModalAction("resolveCloudSaveConflict");
-  const { status, onResolved, onClose, onOpen, description, title } =
+  const { status, onResolved, onClose, onOpen, description, title, saveKind } =
     modalState ?? {};
 
   const { conflictReport } = status ?? {};
 
-  const { mutateAsync: handleSync } = useSyncEmulatorSaves();
+  const { mutateAsync: handleSyncSaves } = useSyncEmulatorSaves();
+  const { mutateAsync: handleSyncSaveStates } = useSyncEmulatorSaveStates();
+
+  const handleSync = useCallback(
+    (params: { emulatorId: number; behavior: SyncBehavior }) => {
+      if (saveKind === "saves") {
+        return handleSyncSaves(params);
+      } else {
+        return handleSyncSaveStates(params);
+      }
+    },
+    [saveKind, handleSyncSaves, handleSyncSaveStates],
+  );
 
   const {
     mutateAsync: selectCloud,
@@ -122,13 +144,18 @@ export function ResolveCloudSaveConflictModal() {
     >
       <DialogContent userCanClose={false}>
         <DialogHeader>
-          <DialogTitle>{title ?? "Cloud Save Conflict"}</DialogTitle>
+          <DialogTitle>
+            {title ??
+              `Cloud ${saveKind === "saves" ? "Save" : "Save States"} Conflict`}
+          </DialogTitle>
           <DialogDescription className="max-w-[45ch]">
             {description ? (
               description
             ) : (
               <>
-                Your local save data conflicts with the cloud save data. Please
+                Your local {saveKind === "saves" ? "save" : "save state"} data
+                conflicts with the cloud{" "}
+                {saveKind === "saves" ? "save" : "save state"} data. Please
                 choose which version you would like to keep.
               </>
             )}
@@ -142,7 +169,9 @@ export function ResolveCloudSaveConflictModal() {
             </ItemMedia>
 
             <ItemContent>
-              <ItemTitle className="flex items-center">Cloud Save</ItemTitle>
+              <ItemTitle className="flex items-center">
+                Cloud {saveKind === "saves" ? "Save" : "Save States"}
+              </ItemTitle>
               <ItemDescription>
                 {timestampDate(
                   conflictReport.cloudLastModified,
@@ -188,7 +217,9 @@ export function ResolveCloudSaveConflictModal() {
             </ItemMedia>
 
             <ItemContent>
-              <ItemTitle>Local Save</ItemTitle>
+              <ItemTitle>
+                Local {saveKind === "saves" ? "Save" : "Save States"}
+              </ItemTitle>
               <ItemDescription>
                 {timestampDate(
                   conflictReport.localLastModified,

@@ -657,7 +657,8 @@ impl<R: Runtime> SaveManager<R> {
             SaveKind::SaveStates => "/save_states",
         };
 
-        let remote_save_dir = PathBuf::from(path_prefix).join(emulator_id.to_string());
+        let remote_save_root = PathBuf::from(path_prefix);
+        let remote_save_dir = remote_save_root.join(emulator_id.to_string());
         let webdav_client = self.app_handle.webdav_client();
         let mut saves_client = self.app_handle.get_emulator_saves_client().await;
 
@@ -705,6 +706,21 @@ impl<R: Runtime> SaveManager<R> {
                     return Err(err)?;
                 }
             };
+        };
+
+        // Ensure remote save root directory exists, as MKCOL will fail if the parent directory does
+        // not exist.
+        match webdav_client
+            .mkcol(&remote_save_root, None)
+            .await?
+            .error_for_status()
+        {
+            Ok(_) => {}
+            Err(e) => match e.status() {
+                // 405 indicates the directory already exists, which is fine.
+                Some(StatusCode::METHOD_NOT_ALLOWED) => {}
+                _ => return Err(e)?,
+            },
         };
 
         // Re-create the remote save directory, then immediately lock it for the upload.
