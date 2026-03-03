@@ -25,14 +25,12 @@ jobs:
     steps:
       - name: Get Release ID
         id: get_release_id
-        shell: bash
         run: |
           RELEASE_ID="$(gh api repos/jmberesford/retrom/releases --jq '.[] | select(.tag_name == "${{ github.ref_name }}").id')"
           echo "release_id=$RELEASE_ID" >> "$GITHUB_OUTPUT"
 
       - name: Get Release Body
         id: get_release_body
-        shell: bash
         run: |
           RELEASE_BODY="$(gh api repos/jmberesford/retrom/releases --jq '.[] | select(.tag_name == "${{ github.ref_name }}").body')"
           {
