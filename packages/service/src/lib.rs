@@ -9,9 +9,9 @@ use retrom_rest_service::rest_service;
 use retrom_service_common::{config::ServerConfigManager, emulator_js};
 use retrom_webdav_service::webdav_service;
 use retry::retry;
-use std::{convert::Infallible, net::SocketAddr, process::exit, sync::Arc};
+use std::{net::SocketAddr, process::exit, sync::Arc};
 use tokio::{net::TcpListener, task::JoinHandle};
-use tower::{service_fn, ServiceExt};
+use tower::ServiceExt;
 use tracing::{info_span, Instrument};
 
 #[cfg(feature = "embedded_db")]

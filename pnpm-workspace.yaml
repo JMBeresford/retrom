@@ -65,6 +65,7 @@ catalog:
   recharts: "2.15.4"
   semantic-release: "^25.0.2"
   tauri-plugin-system-info-api: "2.0.10"
+  ts-pattern: ^5.9.0
   tslib: "2.8.1"
   typescript: "5.9.2"
   typescript-eslint: "^8.56.0"
@@ -72,7 +73,7 @@ catalog:
   vite-plugin-dts: "~4.5.0"
   vitest: "^3.0.0"
   zustand: "^4.5.5"
-catalogMode: "strict"
+
 onlyBuiltDependencies:
   - "@bufbuild/buf"
   - "@swc/core"
@@ -83,6 +84,7 @@ onlyBuiltDependencies:
   - "nx"
   - "@parcel/watcher"
   - "protobufjs"
+
 overrides:
   glob: "^11.1.0"
   vite: "7.3.1"

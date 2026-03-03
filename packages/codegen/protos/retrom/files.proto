@@ -12,6 +12,7 @@ message FileStat {
   google.protobuf.Timestamp updated_at = 3;
   FilesystemNodeType node_type = 4;
   optional uint64 byte_size = 5;
+  string etag = 6;
 }
 
 message File {

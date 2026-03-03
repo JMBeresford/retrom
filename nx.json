@@ -46,15 +46,15 @@
     },
     "cargo:run": {
       "executor": "@monodon/rust:run",
-      "dependsOn": ["^cargo:build"],
+      "dependsOn": [],
       "continuous": true
     },
     "cargo:test": {
       "executor": "@monodon/rust:test",
-      "dependsOn": ["^cargo:build"]
+      "dependsOn": []
     },
     "cargo:lint": {
-      "dependsOn": ["^cargo:lint"],
+      "dependsOn": [],
       "executor": "@monodon/rust:lint",
       "configurations": {
         "fix": {
