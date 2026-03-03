@@ -20,7 +20,7 @@ pub async fn main() {
 
             let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| "info,".into())
-                .add_directive("app=warn".parse().unwrap());
+                .add_directive("app=info".parse().unwrap());
 
             let fmt_layer = tracing_subscriber::fmt::layer()
                 .pretty()
@@ -69,6 +69,12 @@ pub async fn main() {
 
             registry.with(file_layer).init();
 
+            if config.telemetry.is_some_and(|t| t.enabled) {
+                tracing::info!("Telemetry enabled");
+            } else {
+                tracing::info!("Telemetry disabled");
+            }
+
             if let Err(why) = app
                 .handle()
                 .plugin(tauri_plugin_window_state::Builder::default().build())
@@ -109,6 +115,8 @@ pub async fn main() {
         .plugin(retrom_plugin_steam::init())
         .plugin(retrom_plugin_installer::init())
         .plugin(retrom_plugin_launcher::init().await)
+        .plugin(retrom_plugin_webdav_client::init())
+        .plugin(retrom_plugin_save_manager::init())
         .invoke_handler(tauri::generate_handler![])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

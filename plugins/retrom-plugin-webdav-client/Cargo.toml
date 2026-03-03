@@ -1,0 +1,26 @@
+[package]
+name = "retrom-plugin-webdav-client"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "WebDav client plugin for the Retrom client application"
+rust-version = "1.80"
+exclude = ["/examples", "/dist", "/guest-js", "/node_modules"]
+links = "tauri-plugin-webdav-client"
+
+[dependencies]
+tauri = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+reqwest = { workspace = true }
+webdav-meta = { workspace = true }
+retrom-plugin-config = { workspace = true }
+http = { workspace = true }
+url = { workspace = true }
+tracing = { workspace = true }
+headers = { workspace = true }
+
+[build-dependencies]
+tauri-plugin = { workspace = true, features = ["build"] }

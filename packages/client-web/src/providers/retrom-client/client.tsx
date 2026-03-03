@@ -9,6 +9,7 @@ import { ServerService } from "@retrom/codegen/retrom/services/server-service_pb
 import { JobService } from "@retrom/codegen/retrom/services/job-service_pb";
 import { FileExplorerService } from "@retrom/codegen/retrom/services/file-explorer-service_pb";
 import { SavesService } from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
+import { EmulatorSavesService } from "@retrom/codegen/retrom/services/saves/v2/emulator-saves-service_pb";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
 import { otelInterceptor } from "./otel";
 
@@ -24,6 +25,7 @@ export class RetromClient {
   readonly jobClient;
   readonly fileExplorerClient;
   readonly savesClient;
+  readonly emulatorSavesClient;
 
   constructor(host: string) {
     if (host.endsWith("/")) {
@@ -56,5 +58,7 @@ export class RetromClient {
     this.jobClient = createClient(JobService, transport);
 
     this.fileExplorerClient = createClient(FileExplorerService, transport);
+
+    this.emulatorSavesClient = createClient(EmulatorSavesService, transport);
   }
 }

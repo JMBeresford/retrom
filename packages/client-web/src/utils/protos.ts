@@ -1,7 +1,7 @@
 import { Message } from "@bufbuild/protobuf";
 import { Prettify } from "./typescript";
 
-export type RawMessage<T> =
+export type RawMessage<T extends Message> =
   T extends Message<infer M>
     ? Prettify<
         Omit<

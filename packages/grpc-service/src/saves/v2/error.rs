@@ -4,12 +4,12 @@ use thiserror::Error;
 pub enum SavesServiceError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
-    #[error("Internal error: {0}")]
-    Internal(String),
     #[error("Ludusavi error: {0:?}")]
     Ludusavi(ludusavi::prelude::Error),
     #[error("Status error: {0}")]
     TonicStatus(#[from] tonic::Status),
+    #[error("Join error: {0}")]
+    JoinError(#[from] tokio::task::JoinError),
 }
 
 impl From<ludusavi::prelude::Error> for SavesServiceError {
