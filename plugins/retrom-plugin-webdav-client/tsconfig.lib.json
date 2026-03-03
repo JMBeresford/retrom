@@ -1,9 +1,8 @@
 {
-  "extends": "@retrom/configs/tsconfig/base.json",
+  "extends": "@retrom/configs/tsconfig/plugin.json",
   "compilerOptions": {
-    "outDir": "./dist"
+    "types": ["vite/client"]
   },
-  "include": ["./**/*.ts", "./eslint.config.js", "package.json"],
   "references": [
     {
       "path": "../../packages/configs/tsconfig.lib.json"

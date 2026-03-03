@@ -306,6 +306,36 @@ pub(crate) async fn play_game<R: Runtime>(app: AppHandle<R>, payload: Vec<u8>) -
                 );
             }
         };
+
+        match save_manager
+            .check_save_sync_status(emulator_id, SaveKind::SaveStates)
+            .await
+        {
+            Ok(result) => {
+                tracing::debug!(
+                    "Save state sync status for emulator {emulator_id}: {:?}",
+                    result.status
+                );
+
+                if let SaveSyncStatus::LocalNewer = result.status {
+                    if let Err(why) = save_manager
+                        .upload_local_save_files(emulator_id, SaveKind::SaveStates)
+                        .await
+                    {
+                        tracing::warn!(
+                            "Failed to upload local save state files for emulator {emulator_id}: {:#?}",
+                            why
+                        );
+                    }
+                }
+            }
+            Err(why) => {
+                tracing::warn!(
+                    "Failed to check save state sync status for emulator {emulator_id}: {:#?}",
+                    why
+                );
+            }
+        };
     };
 
     let app = app.clone();

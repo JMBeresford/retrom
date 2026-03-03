@@ -6,6 +6,8 @@ Default permissions for the plugin
 
 - `allow-get-emulator-saves-sync-status`
 - `allow-sync-emulator-saves`
+- `allow-get-emulator-save-states-sync-status`
+- `allow-sync-emulator-save-states`
 
 ## Permission Table
 

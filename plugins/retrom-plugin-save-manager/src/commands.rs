@@ -105,7 +105,7 @@ pub(crate) async fn sync_emulator_save_states<R: Runtime>(
     let save_manager = app.save_manager();
 
     let result: SyncEmulatorSaveStatesResponse = save_manager
-        .check_save_sync_status(emulator_id, SaveKind::Saves)
+        .check_save_sync_status(emulator_id, SaveKind::SaveStates)
         .await?
         .into();
 

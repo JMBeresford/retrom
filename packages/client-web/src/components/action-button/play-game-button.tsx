@@ -25,12 +25,15 @@ import { match } from "ts-pattern";
 import {
   SaveSyncStatus,
   SyncBehavior,
+  SyncEmulatorSavesResponse,
+  SyncEmulatorSaveStatesResponse,
 } from "@retrom/codegen/retrom/client/saves_pb";
 import { useModalAction } from "@/providers/modal-action";
 import { useSyncEmulatorSaves } from "@/mutations/useSyncEmulatorSaves";
 import { Emulator } from "@retrom/codegen/retrom/models/emulators_pb";
 import { Spinner } from "@retrom/ui/components/spinner";
 import { RawMessage } from "@/utils/protos";
+import { syncEmulatorSaveStates } from "@retrom/plugin-save-manager";
 
 type PlayGameButtonProps = { game: Game } & ComponentProps<typeof Button>;
 
@@ -47,6 +50,44 @@ export const PlayGameButton = forwardRef(
       request: { gameIds: [game.id] },
       selectFn: (data) => data.gameFiles.filter((f) => f.gameId === game.id),
     });
+
+    const resolveConflict = async (
+      emulatorId: number,
+      response: SyncEmulatorSavesResponse | SyncEmulatorSaveStatesResponse,
+      saveKind: "saves" | "saveStates",
+    ) => {
+      return await new Promise((resolve, reject) => {
+        resolveSaveConflictModal.openModal({
+          status: response,
+          saveKind,
+          onClose: () => {
+            reject(new Error("Save conflict not resolved"));
+          },
+          onResolved: (choice) =>
+            match(choice)
+              .with("local", () =>
+                syncEmulatorSaves({
+                  emulatorId,
+                  behavior: SyncBehavior.FORCE_LOCAL,
+                })
+                  .then((res) => resolve(res))
+                  .catch(reject),
+              )
+              .with("cloud", () =>
+                syncEmulatorSaves({
+                  emulatorId,
+                  behavior: SyncBehavior.FORCE_CLOUD,
+                })
+                  .then((res) => resolve(res))
+                  .catch(reject),
+              )
+              .with("skip", () => {
+                resolve(null);
+              })
+              .exhaustive(),
+        });
+      });
+    };
 
     const { mutateAsync: maybeSyncEmulatorSaves } = useMutation({
       mutationFn: async (emulator: RawMessage<Emulator>) => {
@@ -66,36 +107,39 @@ export const PlayGameButton = forwardRef(
           response.status === SaveSyncStatus.LOCAL_ERROR &&
           response.conflictReport
         ) {
-          return await new Promise((resolve, reject) => {
-            resolveSaveConflictModal.openModal({
-              status: response,
-              onClose: () => {
-                reject(new Error("Save conflict not resolved"));
-              },
-              onResolved: (choice) =>
-                match(choice)
-                  .with("local", () =>
-                    syncEmulatorSaves({
-                      emulatorId,
-                      behavior: SyncBehavior.FORCE_LOCAL,
-                    })
-                      .then((res) => resolve(res))
-                      .catch(reject),
-                  )
-                  .with("cloud", () =>
-                    syncEmulatorSaves({
-                      emulatorId,
-                      behavior: SyncBehavior.FORCE_CLOUD,
-                    })
-                      .then((res) => resolve(res))
-                      .catch(reject),
-                  )
-                  .with("skip", () => {
-                    resolve(null);
-                  })
-                  .exhaustive(),
-            });
-          });
+          await resolveConflict(emulatorId, response, "saves");
+        }
+
+        syncToast.update({
+          title: `Saves synced: ${emulator.name}`,
+          icon: undefined,
+          dismissible: true,
+          duration: 5000,
+        });
+
+        return response;
+      },
+    });
+
+    const { mutateAsync: maybeSyncEmulatorSaveStates } = useMutation({
+      mutationFn: async (emulator: RawMessage<Emulator>) => {
+        const emulatorId = emulator.id;
+        const syncToast = toast({
+          title: `Syncing Save States: ${emulator.name}`,
+          duration: Infinity,
+          dismissible: false,
+          icon: <Spinner className="text-primary" />,
+        });
+
+        const response = await syncEmulatorSaveStates({
+          emulatorId,
+        });
+
+        if (
+          response.status === SaveSyncStatus.LOCAL_ERROR &&
+          response.conflictReport
+        ) {
+          await resolveConflict(emulatorId, response, "saveStates");
         }
 
         syncToast.update({
@@ -137,6 +181,7 @@ export const PlayGameButton = forwardRef(
         if (checkIsDesktop() && emulator) {
           try {
             await maybeSyncEmulatorSaves(emulator);
+            await maybeSyncEmulatorSaveStates(emulator);
           } catch (error) {
             const errorMsg =
               error instanceof Error

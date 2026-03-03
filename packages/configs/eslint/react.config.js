@@ -23,6 +23,7 @@ const config = defineConfig(
       "react-hooks/static-components": "warn",
       "react/prop-types": ["off"],
       "react/no-unknown-property": ["off"],
+      "react-hooks/preserve-manual-memoization": ["off"],
     },
   },
 );

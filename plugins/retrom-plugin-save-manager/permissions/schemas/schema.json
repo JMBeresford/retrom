@@ -379,10 +379,10 @@
           "markdownDescription": "Denies the sync_saves command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-get-emulator-saves-sync-status`\n- `allow-sync-emulator-saves`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-get-emulator-saves-sync-status`\n- `allow-sync-emulator-saves`\n- `allow-get-emulator-save-states-sync-status`\n- `allow-sync-emulator-save-states`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-get-emulator-saves-sync-status`\n- `allow-sync-emulator-saves`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-get-emulator-saves-sync-status`\n- `allow-sync-emulator-saves`\n- `allow-get-emulator-save-states-sync-status`\n- `allow-sync-emulator-save-states`"
         }
       ]
     }
