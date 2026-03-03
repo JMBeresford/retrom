@@ -26,7 +26,7 @@ import { create } from "@bufbuild/protobuf";
 import { UpdateServerConfigRequestSchema } from "@retrom/codegen/retrom/services/server-service_pb";
 
 type IgdbConfigShape = Record<
-  keyof NonNullable<RawMessage<ServerConfig["igdb"]>>,
+  keyof NonNullable<RawMessage<ServerConfig>["igdb"]>,
   z.ZodTypeAny
 >;
 const igdbSchema = z.object({

@@ -9,6 +9,9 @@ import {
 } from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+/**
+ * @deprecated This is no longer used and will be removed in a future release.
+ */
 export function useUpdateSaveStates() {
   const retromClient = useRetromClient();
   const queryClient = useQueryClient();
@@ -57,6 +60,9 @@ export function useUpdateSaveStates() {
   });
 }
 
+/**
+ * @deprecated This is no longer used and will be removed in a future release.
+ */
 export function useRestoreSaveStatesFromBackup() {
   const retromClient = useRetromClient();
 
@@ -69,6 +75,9 @@ export function useRestoreSaveStatesFromBackup() {
   });
 }
 
+/**
+ * @deprecated This is no longer used and will be removed in a future release.
+ */
 export function useDeleteSaveStates() {
   const retromClient = useRetromClient();
 
