@@ -24,8 +24,5 @@ jobs:
           name: retrom
           authToken: "${{ secrets.CACHIX_TOKEN }}"
 
-      - name: Build client package
-        run: nix build .#retrom
-
-      - name: Build service package
-        run: nix build .#retrom-service
+      - name: Build packages
+        run: nix build .#retrom-unwrapped .#retrom-service
