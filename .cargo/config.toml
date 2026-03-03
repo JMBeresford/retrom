@@ -1,0 +1,3 @@
+[env]
+# https://github.com/tauri-apps/tauri/issues/11577#issuecomment-3077450570
+MACOSX_DEPLOYMENT_TARGET = { value = "10.13", force = true }
