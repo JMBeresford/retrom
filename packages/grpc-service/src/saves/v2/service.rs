@@ -210,12 +210,17 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
 
         let restore_jobs = selectors
             .into_iter()
-            .map(|selector| {
+            .filter_map(|selector| {
                 let backup_id = selector.backup.map(|b| b.backup_id);
+                let emulator = emulators
+                    .iter()
+                    .find(|e| e.id == selector.emulator_id)?
+                    .clone();
 
-                let mut ludusavi_manager =
-                    LudusaviManager::new(emulators.as_slice(), SaveKind::Saves);
-                tokio::task::spawn_blocking(move || ludusavi_manager.restore(backup_id, dry_run))
+                let mut ludusavi_manager = LudusaviManager::new(&[emulator], SaveKind::Saves);
+                Some(tokio::task::spawn_blocking(move || {
+                    ludusavi_manager.restore(backup_id, dry_run)
+                }))
             })
             .collect::<Vec<_>>();
 

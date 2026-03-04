@@ -4,14 +4,12 @@ use tauri::{
 };
 
 mod commands;
-#[cfg(desktop)]
 mod desktop;
 mod error;
 mod snapshot;
 
 pub use error::{Result, SaveManagerError};
 
-#[cfg(desktop)]
 pub use desktop::{SaveKind, SaveManager};
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the save-manager APIs.
@@ -35,7 +33,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::sync_emulator_save_states,
         ])
         .setup(|app, api| {
-            #[cfg(desktop)]
             let save_manager = desktop::init(app, api)?;
 
             app.manage(save_manager);

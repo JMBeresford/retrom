@@ -1,6 +1,7 @@
 packages:
   - "packages/*"
   - "plugins/*"
+catalogMode: strict
 catalog:
   "@bufbuild/protobuf": 2.4.0
   "@eslint/js": "^10.0.0"

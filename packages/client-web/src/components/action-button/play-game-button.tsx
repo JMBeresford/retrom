@@ -33,7 +33,7 @@ import { useSyncEmulatorSaves } from "@/mutations/useSyncEmulatorSaves";
 import { Emulator } from "@retrom/codegen/retrom/models/emulators_pb";
 import { Spinner } from "@retrom/ui/components/spinner";
 import { RawMessage } from "@/utils/protos";
-import { syncEmulatorSaveStates } from "@retrom/plugin-save-manager";
+import { useSyncEmulatorSaveStates } from "@/mutations/useSyncEmulatorSaveStates";
 
 type PlayGameButtonProps = { game: Game } & ComponentProps<typeof Button>;
 
@@ -45,6 +45,7 @@ export const PlayGameButton = forwardRef(
     const { game } = props;
     const resolveSaveConflictModal = useModalAction("resolveCloudSaveConflict");
     const { mutateAsync: syncEmulatorSaves } = useSyncEmulatorSaves();
+    const { mutateAsync: syncEmulatorSaveStates } = useSyncEmulatorSaveStates();
     const { data: emulatorData } = useDefaultEmulator(game);
     const { data: gameFiles } = useGameFiles({
       request: { gameIds: [game.id] },
@@ -56,6 +57,9 @@ export const PlayGameButton = forwardRef(
       response: SyncEmulatorSavesResponse | SyncEmulatorSaveStatesResponse,
       saveKind: "saves" | "saveStates",
     ) => {
+      const sync =
+        saveKind === "saves" ? syncEmulatorSaves : syncEmulatorSaveStates;
+
       return await new Promise((resolve, reject) => {
         resolveSaveConflictModal.openModal({
           status: response,
@@ -66,7 +70,7 @@ export const PlayGameButton = forwardRef(
           onResolved: (choice) =>
             match(choice)
               .with("local", () =>
-                syncEmulatorSaves({
+                sync({
                   emulatorId,
                   behavior: SyncBehavior.FORCE_LOCAL,
                 })
@@ -74,7 +78,7 @@ export const PlayGameButton = forwardRef(
                   .catch(reject),
               )
               .with("cloud", () =>
-                syncEmulatorSaves({
+                sync({
                   emulatorId,
                   behavior: SyncBehavior.FORCE_CLOUD,
                 })
