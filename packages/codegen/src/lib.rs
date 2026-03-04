@@ -10,7 +10,7 @@ tonic_include_proto::namespaced!(
     "retrom.files",
     "retrom.client.installation",
     "retrom.client.saves",
-    "retrom.services.saves.v1"
+    "retrom.services.saves.v1",
     "retrom.services.saves.v2"
 );
 
