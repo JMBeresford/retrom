@@ -46,8 +46,8 @@ impl GameSaveFileManager {
 pub trait SaveFileManager {
     async fn resolve_save_files(&self, include_backups: bool) -> Result<Vec<SaveFilesStat>>;
     async fn reindex_backups(&self, emulator_id: Option<i32>) -> Result<()>;
-    fn get_saves_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
-    fn get_saves_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
+    async fn get_saves_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
+    async fn get_saves_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
 
     async fn backup_save_files(
         &self,
@@ -96,8 +96,8 @@ impl SaveFileManager for GameSaveFileManager {
         let mut files = vec![];
 
         for emulator_id in emulators.iter().map(|e| e.id) {
-            let save_dir = self.get_saves_dir(Some(emulator_id))?;
-            let backup_dir = self.get_saves_backup_dir(Some(emulator_id))?;
+            let save_dir = self.get_saves_dir(Some(emulator_id)).await?;
+            let backup_dir = self.get_saves_backup_dir(Some(emulator_id)).await?;
 
             let file_stats: Vec<FileStat> = if save_dir.exists() {
                 WalkDir::new(&save_dir)
@@ -227,7 +227,8 @@ impl SaveFileManager for GameSaveFileManager {
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    fn get_saves_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+    async fn get_saves_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+        let config = self.config.get_config().await;
         let saves_dir = RetromDirs::new().data_dir().join("saves");
 
         let emulator_id = match emulator_id {
@@ -239,13 +240,79 @@ impl SaveFileManager for GameSaveFileManager {
             }
         };
 
-        Ok(saves_dir
-            .join(emulator_id.to_string())
-            .join(self.game.id.to_string()))
+        // Check if we should use the game library path structure
+        let save_dir_structure = config.saves.as_ref().and_then(|s| s.save_dir_structure);
+        let mirror_library_value = retrom_codegen::retrom::SaveDirStructure::MirrorLibrary as i32;
+        tracing::info!(
+            "get_saves_dir - Game ID: {}, Save dir structure config: {:?}, MirrorLibrary enum value: {}, comparison: {}",
+            self.game.id,
+            save_dir_structure,
+            mirror_library_value,
+            save_dir_structure.map(|s| s == mirror_library_value).unwrap_or(false)
+        );
+        
+        if save_dir_structure.map(|s| s == mirror_library_value).unwrap_or(false) {
+            let game_path = PathBuf::from(&self.game.path);
+            tracing::info!("Mirror library mode - Game path: {:?}", game_path);
+            
+            // Find the content directory that contains this game
+            let content_dirs = &config.content_directories;
+            tracing::info!("Content directories: {:?}", content_dirs);
+            for content_dir in content_dirs {
+                let content_path = PathBuf::from(&content_dir.path);
+                tracing::info!("Checking content path: {:?}", content_path);
+                
+                // Try to get the relative path from the content directory to the game
+                if let Ok(relative_game_path) = game_path.strip_prefix(&content_path) {
+                    tracing::info!("Found matching content dir! Relative game path: {:?}", relative_game_path);
+                    
+                    // Extract platform and game name from the relative path
+                    let path_components: Vec<&str> = relative_game_path.components()
+                        .filter_map(|comp| {
+                            if let std::path::Component::Normal(os_str) = comp {
+                                os_str.to_str()
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    
+                    tracing::info!("Path components: {:?}", path_components);
+                    
+                    // For both single-file and multi-file games, we want platform/game_name structure
+                    if path_components.len() >= 2 {
+                        let platform = path_components[0];
+                        let game_name = path_components[1];
+                        
+                        tracing::info!("Using platform: {:?}, game_name: {:?}", platform, game_name);
+                        
+                        // Sanitize each component
+                        if !platform.contains("..") && !game_name.contains("..") 
+                            && !platform.is_empty() && !game_name.is_empty() {
+                            let save_path = format!("{}/{}", platform, game_name);
+                            tracing::info!("Final save path: {:?}", save_path);
+                            return Ok(saves_dir.join(save_path));
+                        }
+                    }
+                    break; // Found the matching content directory, no need to continue
+                }
+            }
+            
+            // Fallback to default structure if no content directory matched or path is invalid
+            Ok(saves_dir
+                .join(emulator_id.to_string())
+                .join(self.game.id.to_string()))
+        } else {
+            // Default directory structure
+            Ok(saves_dir
+                .join(emulator_id.to_string())
+                .join(self.game.id.to_string()))
+        }
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    fn get_saves_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+    async fn get_saves_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+        let config = self.config.get_config().await;
         let backup_dir = RetromDirs::new().data_dir().join("saves_backups");
 
         let emulator_id = match emulator_id {
@@ -257,9 +324,56 @@ impl SaveFileManager for GameSaveFileManager {
             }
         };
 
-        Ok(backup_dir
-            .join(emulator_id.to_string())
-            .join(self.game.id.to_string()))
+        // Check if we should use the game library path structure
+        if config.saves.as_ref().and_then(|s| s.save_dir_structure).map(|s| s == retrom_codegen::retrom::SaveDirStructure::MirrorLibrary as i32).unwrap_or(false) {
+            let game_path = PathBuf::from(&self.game.path);
+            
+            // Find the content directory that contains this game
+            let content_dirs = &config.content_directories;
+            for content_dir in content_dirs {
+                let content_path = PathBuf::from(&content_dir.path);
+                
+                // Try to get the relative path from the content directory to the game
+                if let Ok(relative_game_path) = game_path.strip_prefix(&content_path) {
+                    // Get the parent directory of the game file (game directory)
+                    if let Some(game_dir) = relative_game_path.parent() {
+                        let path_components: Vec<&str> = game_dir.components()
+                            .filter_map(|comp| {
+                                if let std::path::Component::Normal(os_str) = comp {
+                                    os_str.to_str()
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect();
+                        
+                        // We want platform/game_name structure (first two components)
+                        if path_components.len() >= 2 {
+                            let platform = path_components[0];
+                            let game_name = path_components[1];
+                            
+                            // Sanitize each component
+                            if !platform.contains("..") && !game_name.contains("..") 
+                                && !platform.is_empty() && !game_name.is_empty() {
+                                let save_path = format!("{}/{}", platform, game_name);
+                                return Ok(backup_dir.join(save_path));
+                            }
+                        }
+                    }
+                    break; // Found the matching content directory, no need to continue
+                }
+            }
+            
+            // Fallback to default structure if no content directory matched or path is invalid
+            Ok(backup_dir
+                .join(emulator_id.to_string())
+                .join(self.game.id.to_string()))
+        } else {
+            // Default directory structure
+            Ok(backup_dir
+                .join(emulator_id.to_string())
+                .join(self.game.id.to_string()))
+        }
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
@@ -276,7 +390,7 @@ impl SaveFileManager for GameSaveFileManager {
 
         for save_files in all_save_files.iter_mut() {
             let save_path = PathBuf::from(&save_files.save_path);
-            let backups_dir = self.get_saves_backup_dir(save_files.emulator_id)?;
+            let backups_dir = self.get_saves_backup_dir(save_files.emulator_id).await?;
             let backup_dir =
                 backups_dir.join(chrono::Local::now().to_utc().format("%s.%f").to_string());
 
@@ -362,7 +476,7 @@ impl SaveFileManager for GameSaveFileManager {
 
     #[instrument(skip_all, fields(game_id = self.game.id))]
     async fn update_save_files(&self, save_files: SaveFiles, dry_run: bool) -> Result<()> {
-        let save_dir = self.get_saves_dir(save_files.emulator_id)?;
+        let save_dir = self.get_saves_dir(save_files.emulator_id).await?;
         self.backup_save_files(save_files.emulator_id, dry_run)
             .await?;
 
@@ -461,7 +575,7 @@ impl SaveFileManager for GameSaveFileManager {
         emulator_id: Option<i32>,
         dry_run: bool,
     ) -> Result<()> {
-        let saves_dir = self.get_saves_dir(emulator_id)?;
+        let saves_dir = self.get_saves_dir(emulator_id).await?;
         let backup_path = PathBuf::from(backup.backup_path);
 
         if !backup_path.exists() {

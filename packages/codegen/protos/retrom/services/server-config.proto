@@ -1,0 +1,4 @@
+syntax = "proto3";
+package retrom;
+
+// This file was moved to server/config.proto

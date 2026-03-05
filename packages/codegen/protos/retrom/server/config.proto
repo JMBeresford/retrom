@@ -49,9 +49,17 @@ message SteamConfig {
   string user_id = 2;
 }
 
+enum SaveDirStructure {
+  // Default save directory structure: <data_dir>/saves/<emulator_id>/<game_id>/
+  EMULATOR_GAME = 0;
+  // Mirror game library structure: <data_dir>/saves/<game_library_path>/
+  MIRROR_LIBRARY = 1;
+}
+
 message SavesConfig {
   int32 max_save_files_backups = 1;
   int32 max_save_states_backups = 2;
+  optional SaveDirStructure save_dir_structure = 3;
 }
 
 message MetadataConfig {
