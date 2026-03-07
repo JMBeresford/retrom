@@ -103,15 +103,24 @@ export function RestoreCloudSavesModal() {
             behavior: SyncBehavior.FORCE_CLOUD,
           });
         }
-      } catch (error) {
-        console.error("Failed to restore backup", error);
-      } finally {
-        setRestoring(null);
+
         close();
+
         toast({
           title: `Restored Backup ${saveKind === "saves" ? "Saves" : "Save States"}`,
           description: `Successfully restored backup for ${emulatorName}.`,
         });
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error("Unknown error");
+        console.error("Failed to restore backup", error);
+
+        toast({
+          title: `Failed to Restore ${saveKind === "saves" ? "Saves" : "Save States"} Backup`,
+          description: `An error occurred while restoring the backup: ${error.message}`,
+          variant: "destructive",
+        });
+      } finally {
+        setRestoring(null);
       }
     },
     [
@@ -128,7 +137,7 @@ export function RestoreCloudSavesModal() {
 
   const sortedBackups = useMemo(
     () =>
-      backups?.sort((a, b) => {
+      backups?.slice().sort((a, b) => {
         const timeA = a.createdAt ? timestampDate(a.createdAt).getTime() : 0;
         const timeB = b.createdAt ? timestampDate(b.createdAt).getTime() : 0;
 

@@ -11,7 +11,7 @@ pub fn webdav_service(base_url: Option<&str>) -> Router {
     let mut builder = DavHandler::builder()
         .filesystem(LocalFs::new(dir, false, false, mac_os))
         .locksystem(MemLs::new())
-        .autoindex(true);
+        .autoindex(false);
 
     if let Some(base) = base_url {
         builder = builder.strip_prefix(base);

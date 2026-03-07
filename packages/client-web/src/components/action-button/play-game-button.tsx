@@ -117,7 +117,6 @@ export const PlayGameButton = forwardRef(
 
           syncToast.update({
             title: `Saves synced: ${emulator.name}`,
-            icon: undefined,
             dismissible: true,
             duration: 5000,
           });
@@ -151,8 +150,7 @@ export const PlayGameButton = forwardRef(
         }
 
         syncToast.update({
-          title: `Saves synced: ${emulator.name}`,
-          icon: undefined,
+          title: `Save states synced: ${emulator.name}`,
           dismissible: true,
           duration: 5000,
         });
