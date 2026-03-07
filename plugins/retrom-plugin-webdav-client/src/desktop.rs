@@ -150,11 +150,23 @@ impl<R: Runtime> WebDAVClient<R> {
         }
 
         let resource_path = PathBuf::from("dav").join(relative_path);
-        let resource_path_str = resource_path.to_str().ok_or_else(|| {
-            Error::Other("Resource path contains invalid UTF-8 characters".into())
-        })?;
 
-        let url = self.get_host().await?.join(resource_path_str)?;
+        let mut url = self.get_host().await?;
+
+        for segment in resource_path.components() {
+            if let Component::Normal(component) = segment {
+                if let Some(component) = component.to_str() {
+                    url.path_segments_mut()
+                        .map_err(|_| Error::InvalidConfig("Invalid base URL".into()))?
+                        .push(component);
+                } else {
+                    return Err(Error::InvalidConfig(format!(
+                        "Invalid path segment: {:?}",
+                        component
+                    )));
+                }
+            }
+        }
 
         tracing::debug!("Resource URL: {}", url);
 
