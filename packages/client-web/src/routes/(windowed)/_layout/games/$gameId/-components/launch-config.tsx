@@ -13,9 +13,11 @@ import { match } from "ts-pattern";
 import { useEmulatorSaveFilesStat } from "@/queries/useEmulatorSaveFilesStat";
 import { useEmulatorSaveStatesStat } from "@/queries/useEmulatorSaveStatesStat";
 import { readableByteSize } from "@/utils/files";
+import { useModalAction } from "@/providers/modal-action";
 
 export function LaunchConfig() {
   const { emulator, defaultProfile } = useGameDetail();
+  const { openModal } = useModalAction("restoreCloudSaves");
   const saveFilesStatQuery = useEmulatorSaveFilesStat(
     {
       saveFilesSelectors: emulator ? [{ emulatorId: emulator.id }] : [],
@@ -89,7 +91,20 @@ export function LaunchConfig() {
                         <span>
                           {size} in {data.fileStats.length} files
                         </span>
-                        <span>{data.backups.length} backups available</span>
+                        <Button
+                          variant="inline"
+                          onClick={() =>
+                            openModal({
+                              emulatorId: emulator.id,
+                              emulatorName: emulator.name,
+                              backups: data.backups,
+                              saveKind: "saves",
+                            })
+                          }
+                          className="w-min p-0 inline h-min underline"
+                        >
+                          {data.backups.length} backups available
+                        </Button>
                       </span>
                     );
                   })
@@ -128,7 +143,20 @@ export function LaunchConfig() {
                         <span>
                           {size} in {data.fileStats.length} save states
                         </span>
-                        <span>{data.backups.length} backups available</span>
+                        <Button
+                          variant="inline"
+                          onClick={() =>
+                            openModal({
+                              emulatorId: emulator.id,
+                              emulatorName: emulator.name,
+                              backups: data.backups,
+                              saveKind: "saveStates",
+                            })
+                          }
+                          className="w-min p-0 inline h-min underline"
+                        >
+                          {data.backups.length} backups available
+                        </Button>
                       </span>
                     );
                   })

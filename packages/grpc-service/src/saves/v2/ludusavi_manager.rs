@@ -52,6 +52,11 @@ impl LudusaviManager {
             SaveKind::SaveStates => RetromDirs::new().save_states_backups_dir(),
         };
 
+        let restore_path = match save_kind {
+            SaveKind::Saves => RetromDirs::new().saves_dir(),
+            SaveKind::SaveStates => RetromDirs::new().save_states_dir(),
+        };
+
         let root = match save_kind {
             SaveKind::Saves => RetromDirs::new().saves_dir(),
             SaveKind::SaveStates => RetromDirs::new().save_states_dir(),
@@ -77,7 +82,7 @@ impl LudusaviManager {
                 ..Default::default()
             },
             restore: RestoreConfig {
-                path: StrictPath::from(RetromDirs::new().saves_dir()),
+                path: restore_path.into(),
                 ..Default::default()
             },
             custom_games,
@@ -134,7 +139,7 @@ impl LudusaviManager {
             games: self.emulators.iter().map(|e| e.id.to_string()).collect(),
             resolve_cloud_conflict: None,
             include_disabled: false,
-            skip_downgrade: true,
+            skip_downgrade: false,
             backup,
         })?;
 

@@ -1,4 +1,9 @@
-import { Card, CardContent } from "@retrom/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@retrom/ui/components/card";
 import { ReactNode, useMemo } from "react";
 import { getFileStub, timestampToDate } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
@@ -59,8 +64,12 @@ export function GeneralInfo() {
   );
 
   return (
-    <Card className="py-0">
-      <CardContent className="py-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>General Info</CardTitle>
+      </CardHeader>
+
+      <CardContent>
         <InfoItem title="Play Time" value={playTime} />
 
         <InfoItem title="Last Played" value={lastPlayed} />
@@ -80,7 +89,7 @@ export function GeneralInfo() {
 export function InfoItem(props: { title: string; value: ReactNode }) {
   return (
     <div className="mb-2">
-      <h3 className="font-extrabold">{props.title}</h3>
+      <h3 className="font-bold text-sm">{props.title}</h3>
       <p className="text-muted-foreground text-sm">{props.value}</p>
     </div>
   );
