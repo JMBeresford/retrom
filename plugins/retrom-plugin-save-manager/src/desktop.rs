@@ -389,6 +389,9 @@ impl<R: Runtime> SaveManager<R> {
             return Err(SaveManagerError::NoCloudSave(emulator_id));
         };
 
+        // TODO: Implement a method to mark entries as 'not syncing' on failure or cancellation, to
+        // ensure we don't leave emulators in a permanently 'syncing' state if something goes wrong
+        // during the sync process. e.g. using a drop guard
         match save_kind {
             SaveKind::Saves => self.active_save_syncs.write().await.insert(emulator_id),
             SaveKind::SaveStates => self
@@ -662,6 +665,9 @@ impl<R: Runtime> SaveManager<R> {
         let webdav_client = self.app_handle.webdav_client();
         let mut saves_client = self.app_handle.get_emulator_saves_client().await;
 
+        // TODO: Implement a method to mark entries as 'not syncing' on failure or cancellation, to
+        // ensure we don't leave emulators in a permanently 'syncing' state if something goes wrong
+        // during the sync process. e.g. using a drop guard
         match save_kind {
             SaveKind::Saves => self.active_save_syncs.write().await.insert(emulator_id),
             SaveKind::SaveStates => self
@@ -726,6 +732,8 @@ impl<R: Runtime> SaveManager<R> {
         // Re-create the remote save directory, then immediately lock it for the upload.
         webdav_client.mkcol(&remote_save_dir, None).await?;
 
+        // TODO: Create a struct that holds the lock and automatically releases it when dropped, to
+        // ensure we don't accidentally leave locks hanging.
         let lock_token = self
             .acquire_lock_for_resource(
                 &remote_save_dir,
