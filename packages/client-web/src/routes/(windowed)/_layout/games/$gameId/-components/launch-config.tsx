@@ -14,10 +14,24 @@ import { useEmulatorSaveFilesStat } from "@/queries/useEmulatorSaveFilesStat";
 import { useEmulatorSaveStatesStat } from "@/queries/useEmulatorSaveStatesStat";
 import { readableByteSize } from "@/utils/files";
 import { useModalAction } from "@/providers/modal-action";
+import { useLocalEmulatorConfigs } from "@/queries/useLocalEmulatorConfigs";
+import { useConfig } from "@/providers/config";
 
 export function LaunchConfig() {
   const { emulator, defaultProfile } = useGameDetail();
   const { openModal } = useModalAction("restoreCloudSaves");
+  const clientId = useConfig((store) => store.config?.clientInfo?.id);
+
+  const { data: localConfig } = useLocalEmulatorConfigs({
+    enabled: !!emulator && clientId !== undefined,
+    request: {
+      emulatorIds: emulator ? [emulator.id] : [],
+      clientId,
+    },
+    selectFn: (data) =>
+      data.configs.find((config) => config.emulatorId === emulator?.id) ?? null,
+  });
+
   const saveFilesStatQuery = useEmulatorSaveFilesStat(
     {
       saveFilesSelectors: emulator ? [{ emulatorId: emulator.id }] : [],
@@ -72,7 +86,7 @@ export function LaunchConfig() {
         <InfoItem
           title="Save File Info"
           value={
-            !!emulator
+            !!emulator && !!localConfig?.saveDataPath
               ? match(saveFilesStatQuery)
                   .with({ status: "success" }, ({ data }) => {
                     if (!data) {
@@ -124,7 +138,7 @@ export function LaunchConfig() {
         <InfoItem
           title="Save State Info"
           value={
-            !!emulator
+            !!emulator && !!localConfig?.saveStatesPath
               ? match(saveStatesStatQuery)
                   .with({ status: "success" }, ({ data }) => {
                     if (!data) {
