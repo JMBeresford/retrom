@@ -104,7 +104,6 @@ export const PlayGameButton = forwardRef(
             icon: <Spinner className="text-primary" />,
           });
 
-          await new Promise((resolve) => setTimeout(resolve, 5000)); // Artificial delay for better UX
           const response = await syncEmulatorSaves({
             emulatorId,
           });

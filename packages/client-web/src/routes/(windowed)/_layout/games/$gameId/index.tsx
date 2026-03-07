@@ -21,6 +21,7 @@ import { LaunchConfig } from "./-components/launch-config";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { DeleteFileModal } from "@/components/modals/delete-file";
 import { RenameFileModal } from "@/components/modals/rename-file";
+import { RestoreCloudSavesModal } from "@/components/modals/restore-cloud-saves";
 
 const modalsSchema = z.object({
   updateMetadataModal: z
@@ -126,6 +127,7 @@ function Game() {
       <DeleteGameModal />
       <DeleteFileModal />
       <RenameFileModal />
+      <RestoreCloudSavesModal />
     </GameDetailProvider>
   );
 }

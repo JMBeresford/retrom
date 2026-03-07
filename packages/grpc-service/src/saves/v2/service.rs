@@ -208,7 +208,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
                 .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
         };
 
-        let restore_jobs = selectors
+        let restore_jobs: Vec<_> = selectors
             .into_iter()
             .filter_map(|selector| {
                 let backup_id = selector.backup.map(|b| b.backup_id);
@@ -217,12 +217,30 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
                     .find(|e| e.id == selector.emulator_id)?
                     .clone();
 
+                let dir = LudusaviManager::get_emulator_save_dir(&emulator);
                 let mut ludusavi_manager = LudusaviManager::new(&[emulator], SaveKind::Saves);
+
                 Some(tokio::task::spawn_blocking(move || {
+                    if let Some(true) = dry_run {
+                        tracing::debug!(
+                            "Performing dry run restore for backup_id: {:?}",
+                            backup_id
+                        );
+                    } else if dir.exists() {
+                        // Remove existing save files
+                        if let Err(e) = std::fs::remove_dir_all(&dir) {
+                            tracing::error!(
+                                "Failed to remove existing save directory {:?}: {}",
+                                dir,
+                                e
+                            );
+                        }
+                    }
+
                     ludusavi_manager.restore(backup_id, dry_run)
                 }))
             })
-            .collect::<Vec<_>>();
+            .collect();
 
         let results = join_all(restore_jobs).await;
 
@@ -414,13 +432,35 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
 
         let restore_jobs = selectors
             .into_iter()
-            .map(|selector| {
+            .filter_map(|selector| {
                 let backup_id = selector.backup.map(|b| b.backup_id);
+                let emulator = emulators
+                    .iter()
+                    .find(|e| e.id == selector.emulator_id)?
+                    .clone();
 
-                let mut ludusavi_manager =
-                    LudusaviManager::new(emulators.as_slice(), SaveKind::SaveStates);
+                let dir = LudusaviManager::get_emulator_save_states_dir(&emulator);
+                let mut ludusavi_manager = LudusaviManager::new(&[emulator], SaveKind::SaveStates);
 
-                tokio::task::spawn_blocking(move || ludusavi_manager.restore(backup_id, dry_run))
+                Some(tokio::task::spawn_blocking(move || {
+                    if let Some(true) = dry_run {
+                        tracing::debug!(
+                            "Performing dry run restore for backup_id: {:?}",
+                            backup_id
+                        );
+                    } else if dir.exists() {
+                        // Remove existing save states
+                        if let Err(e) = std::fs::remove_dir_all(&dir) {
+                            tracing::error!(
+                                "Failed to remove existing save states directory {:?}: {}",
+                                dir,
+                                e
+                            );
+                        }
+                    }
+
+                    ludusavi_manager.restore(backup_id, dry_run)
+                }))
             })
             .collect::<Vec<_>>();
 
