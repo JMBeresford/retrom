@@ -55,6 +55,7 @@ export function useSaveEJSState() {
           stat: {
             path: `${slot}.state`,
             nodeType: FilesystemNodeType.FILE,
+            etag: "",
           },
         };
 
@@ -63,6 +64,7 @@ export function useSaveEJSState() {
           stat: {
             nodeType: FilesystemNodeType.FILE,
             path: `${slot}.png`,
+            etag: "",
           },
         };
 

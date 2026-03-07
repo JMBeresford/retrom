@@ -1,0 +1,18 @@
+[package]
+name = "retrom-webdav-service"
+resolver = "2"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "The Retrom video game library WebDAV service handlers"
+
+[dependencies]
+tokio = { workspace = true }
+tracing = { workspace = true }
+retrom-service-common = { workspace = true }
+retrom-telemetry = { workspace = true }
+dav-server = { workspace = true }
+axum = { workspace = true }
+axum-tracing-opentelemetry = { workspace = true }

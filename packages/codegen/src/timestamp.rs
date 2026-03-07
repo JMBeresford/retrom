@@ -7,6 +7,7 @@ use diesel::{
     pg::PgValue,
     serialize::{Output, ToSql},
 };
+use prost_types::TimestampError;
 
 fn pg_epoch() -> SystemTime {
     let thirty_years = Duration::from_secs(946_684_800);
@@ -47,14 +48,12 @@ impl Timestamp {
     }
 }
 
-impl TryFrom<Timestamp> for prost_types::Timestamp {
-    type Error = prost::DecodeError;
-
-    fn try_from(value: Timestamp) -> Result<Self, Self::Error> {
-        Ok(prost_types::Timestamp {
+impl From<Timestamp> for prost_types::Timestamp {
+    fn from(value: Timestamp) -> Self {
+        prost_types::Timestamp {
             seconds: value.seconds,
             nanos: value.nanos,
-        })
+        }
     }
 }
 
@@ -70,6 +69,15 @@ impl From<prost_types::Timestamp> for Timestamp {
 impl From<std::time::SystemTime> for Timestamp {
     fn from(time: std::time::SystemTime) -> Self {
         prost_types::Timestamp::from(time).into()
+    }
+}
+
+impl TryFrom<Timestamp> for SystemTime {
+    type Error = TimestampError;
+
+    fn try_from(value: Timestamp) -> Result<Self, Self::Error> {
+        let prost_timestamp: prost_types::Timestamp = value.into();
+        prost_timestamp.try_into()
     }
 }
 

@@ -112,6 +112,22 @@ impl RetromDirs {
     pub fn media_dir(&self) -> PathBuf {
         self.public_dir.join("media")
     }
+
+    pub fn saves_dir(&self) -> PathBuf {
+        self.data_dir.join("saves")
+    }
+
+    pub fn saves_backups_dir(&self) -> PathBuf {
+        self.data_dir.join("saves_backups")
+    }
+
+    pub fn save_states_dir(&self) -> PathBuf {
+        self.data_dir.join("save_states")
+    }
+
+    pub fn save_states_backups_dir(&self) -> PathBuf {
+        self.data_dir.join("save_states_backups")
+    }
 }
 
 impl Default for RetromDirs {

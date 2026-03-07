@@ -1,0 +1,8 @@
+[default]
+description = "Default permissions for the plugin"
+permissions = [
+  "allow-get-emulator-saves-sync-status",
+  "allow-sync-emulator-saves",
+  "allow-get-emulator-save-states-sync-status",
+  "allow-sync-emulator-save-states",
+]

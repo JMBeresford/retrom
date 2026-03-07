@@ -4,12 +4,16 @@ import {
   GetSaveStatesRequest,
   GetSaveStatesResponseSchema,
   StatSaveStatesRequest,
-} from "@retrom/codegen/retrom/services/saves-service_pb";
+} from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { toast } from "@retrom/ui/hooks/use-toast";
 import { Progress } from "@retrom/ui/components/progress";
 import { RawMessage } from "@/utils/protos";
 import { create } from "@bufbuild/protobuf";
 
+/**
+ * @deprecated This is no longer used and will be removed in a future release.
+ *   Prefer `useEmulatorSaveStates*` hooks
+ */
 export function useStatSaveStates(request: RawMessage<StatSaveStatesRequest>) {
   const retromClient = useRetromClient();
 
@@ -19,6 +23,10 @@ export function useStatSaveStates(request: RawMessage<StatSaveStatesRequest>) {
   });
 }
 
+/**
+ * @deprecated This is no longer used and will be removed in a future release.
+ *   Prefer `useEmulatorSaveStates*` hooks
+ */
 export function useGetSaveStates(request: RawMessage<GetSaveStatesRequest>) {
   const retromClient = useRetromClient();
 

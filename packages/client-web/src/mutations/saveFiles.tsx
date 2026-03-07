@@ -5,9 +5,12 @@ import { create, MessageInitShape } from "@bufbuild/protobuf";
 import {
   RestoreSaveFilesFromBackupRequestSchema,
   UpdateSaveFilesRequestSchema,
-} from "@retrom/codegen/retrom/services/saves-service_pb";
+} from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+/**
+ * @deprecated This is no longer used and will be removed in a future release.
+ */
 export function useUpdateSaveFiles() {
   const retromClient = useRetromClient();
   const queryClient = useQueryClient();
@@ -60,6 +63,9 @@ export function useUpdateSaveFiles() {
   });
 }
 
+/**
+ * @deprecated This is no longer used and will be removed in a future release.
+ */
 export function useRestoreSaveFromBackup() {
   const retromClient = useRetromClient();
 

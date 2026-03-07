@@ -1,10 +1,17 @@
-import { Card, CardContent } from "@retrom/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@retrom/ui/components/card";
 import { ReactNode, useMemo } from "react";
 import { getFileStub, timestampToDate } from "@/lib/utils";
 import { useGameDetail } from "@/providers/game-details";
+import { readableByteSize } from "@/utils/files";
 
 export function GeneralInfo() {
-  const { gameMetadata, platformMetadata, game, platform } = useGameDetail();
+  const { gameMetadata, platformMetadata, game, platform, gameFiles } =
+    useGameDetail();
 
   const playTime = useMemo(() => {
     const time = gameMetadata?.minutesPlayed;
@@ -51,9 +58,18 @@ export function GeneralInfo() {
     return getFileStub(platform.path) ?? "Unknown";
   }, [platformMetadata, platform.path]);
 
+  const byteSize = useMemo(
+    () => gameFiles.reduce((acc, file) => acc + (file.byteSize ?? 0n), 0n),
+    [gameFiles],
+  );
+
   return (
-    <Card className="py-0">
-      <CardContent className="py-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>General Info</CardTitle>
+      </CardHeader>
+
+      <CardContent>
         <InfoItem title="Play Time" value={playTime} />
 
         <InfoItem title="Last Played" value={lastPlayed} />
@@ -61,6 +77,10 @@ export function GeneralInfo() {
         <InfoItem title="Added On" value={addedOn} />
 
         <InfoItem title="Platform" value={platformName} />
+
+        {byteSize > 0n ? (
+          <InfoItem title="Size on Disk" value={readableByteSize(byteSize)} />
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -69,7 +89,7 @@ export function GeneralInfo() {
 export function InfoItem(props: { title: string; value: ReactNode }) {
   return (
     <div className="mb-2">
-      <h3 className="font-extrabold">{props.title}</h3>
+      <h3 className="font-bold text-sm">{props.title}</h3>
       <p className="text-muted-foreground text-sm">{props.value}</p>
     </div>
   );

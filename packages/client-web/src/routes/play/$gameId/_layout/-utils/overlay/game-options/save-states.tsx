@@ -120,8 +120,16 @@ function StateList(props: { listKind: "save" | "load" }) {
             gameId: game.id,
             emulatorId: emulator?.id,
             files: [
-              { path: `${slot}.state`, nodeType: FilesystemNodeType.FILE },
-              { path: `${slot}.png`, nodeType: FilesystemNodeType.FILE },
+              {
+                path: `${slot}.state`,
+                nodeType: FilesystemNodeType.FILE,
+                etag: "",
+              },
+              {
+                path: `${slot}.png`,
+                nodeType: FilesystemNodeType.FILE,
+                etag: "",
+              },
             ],
           },
         ],

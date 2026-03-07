@@ -25,7 +25,7 @@ import { RawMessage } from "@/utils/protos";
 import { create } from "@bufbuild/protobuf";
 
 type SavesConfigShape = Record<
-  keyof NonNullable<RawMessage<ServerConfig["saves"]>>,
+  keyof NonNullable<RawMessage<ServerConfig>["saves"]>,
   z.ZodTypeAny
 >;
 const savesSchema = z.object({

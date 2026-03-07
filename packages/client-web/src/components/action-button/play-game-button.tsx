@@ -1,7 +1,10 @@
 import { Button } from "@retrom/ui/components/button";
 import { usePlayGame } from "@/mutations/usePlayGame";
 import { usePlayStatusQuery } from "@/queries/usePlayStatus";
-import { PlayStatus } from "@retrom/codegen/retrom/client/client-utils_pb";
+import {
+  PlayGamePayload,
+  PlayStatus,
+} from "@retrom/codegen/retrom/client/client-utils_pb";
 import { useStopGame } from "@/mutations/useStopGame";
 import {
   ComponentProps,
@@ -10,12 +13,27 @@ import {
   useCallback,
   useMemo,
 } from "react";
-import { LoaderCircleIcon, PlayIcon, PlusIcon, Square } from "lucide-react";
+import { PlayIcon, PlusIcon, Square } from "lucide-react";
 import { useMatch, useNavigate } from "@tanstack/react-router";
-import { useToast } from "@retrom/ui/hooks/use-toast";
+import { toast } from "@retrom/ui/hooks/use-toast";
 import { Game } from "@retrom/codegen/retrom/models/games_pb";
 import { useDefaultEmulator } from "@/queries/useDefaultEmulator";
 import { useGameFiles } from "@/queries/useGameFiles";
+import { useMutation } from "@tanstack/react-query";
+import { checkIsDesktop } from "@/lib/env";
+import { match } from "ts-pattern";
+import {
+  SaveSyncStatus,
+  SyncBehavior,
+  SyncEmulatorSavesResponse,
+  SyncEmulatorSaveStatesResponse,
+} from "@retrom/codegen/retrom/client/saves_pb";
+import { useModalAction } from "@/providers/modal-action";
+import { useSyncEmulatorSaves } from "@/mutations/useSyncEmulatorSaves";
+import { Emulator } from "@retrom/codegen/retrom/models/emulators_pb";
+import { Spinner } from "@retrom/ui/components/spinner";
+import { RawMessage } from "@/utils/protos";
+import { useSyncEmulatorSaveStates } from "@/mutations/useSyncEmulatorSaveStates";
 
 type PlayGameButtonProps = { game: Game } & ComponentProps<typeof Button>;
 
@@ -25,11 +43,120 @@ export const PlayGameButton = forwardRef(
     forwardedRef: ForwardedRef<HTMLButtonElement>,
   ) => {
     const { game } = props;
-    const { toast } = useToast();
+    const resolveSaveConflictModal = useModalAction("resolveCloudSaveConflict");
+    const { mutateAsync: syncEmulatorSaves } = useSyncEmulatorSaves();
+    const { mutateAsync: syncEmulatorSaveStates } = useSyncEmulatorSaveStates();
     const { data: emulatorData } = useDefaultEmulator(game);
     const { data: gameFiles } = useGameFiles({
       request: { gameIds: [game.id] },
       selectFn: (data) => data.gameFiles.filter((f) => f.gameId === game.id),
+    });
+
+    const resolveConflict = async (
+      emulatorId: number,
+      response: SyncEmulatorSavesResponse | SyncEmulatorSaveStatesResponse,
+      saveKind: "saves" | "saveStates",
+    ) => {
+      const sync =
+        saveKind === "saves" ? syncEmulatorSaves : syncEmulatorSaveStates;
+
+      return await new Promise((resolve, reject) => {
+        resolveSaveConflictModal.openModal({
+          status: response,
+          saveKind,
+          onClose: () => {
+            reject(new Error("Save conflict not resolved"));
+          },
+          onResolved: (choice) =>
+            match(choice)
+              .with("local", () =>
+                sync({
+                  emulatorId,
+                  behavior: SyncBehavior.FORCE_LOCAL,
+                })
+                  .then((res) => resolve(res))
+                  .catch(reject),
+              )
+              .with("cloud", () =>
+                sync({
+                  emulatorId,
+                  behavior: SyncBehavior.FORCE_CLOUD,
+                })
+                  .then((res) => resolve(res))
+                  .catch(reject),
+              )
+              .with("skip", () => {
+                resolve(null);
+              })
+              .exhaustive(),
+        });
+      });
+    };
+
+    const { mutateAsync: maybeSyncEmulatorSaves, status: syncSavesStatus } =
+      useMutation({
+        mutationFn: async (emulator: RawMessage<Emulator>) => {
+          const emulatorId = emulator.id;
+          const syncToast = toast({
+            title: `Syncing Saves: ${emulator.name}`,
+            duration: Infinity,
+            dismissible: false,
+            icon: <Spinner className="text-primary" />,
+          });
+
+          const response = await syncEmulatorSaves({
+            emulatorId,
+          });
+
+          if (
+            response.status === SaveSyncStatus.LOCAL_ERROR &&
+            response.conflictReport
+          ) {
+            await resolveConflict(emulatorId, response, "saves");
+          }
+
+          syncToast.update({
+            title: `Saves synced: ${emulator.name}`,
+            dismissible: true,
+            duration: 5000,
+          });
+
+          return response;
+        },
+      });
+
+    const {
+      mutateAsync: maybeSyncEmulatorSaveStates,
+      status: syncStatesStatus,
+    } = useMutation({
+      mutationFn: async (emulator: RawMessage<Emulator>) => {
+        const emulatorId = emulator.id;
+        const syncToast = toast({
+          title: `Syncing Save States: ${emulator.name}`,
+          duration: Infinity,
+          dismissible: false,
+          icon: <Spinner className="text-primary" />,
+        });
+
+        const response = await syncEmulatorSaveStates({
+          emulatorId,
+        });
+
+        if (
+          response.status === SaveSyncStatus.LOCAL_ERROR &&
+          response.conflictReport
+        ) {
+          await resolveConflict(emulatorId, response, "saveStates");
+        }
+
+        syncToast.update({
+          title: `Save states synced: ${emulator.name}`,
+          dismissible: true,
+          duration: 5000,
+        });
+
+        return response;
+      },
     });
 
     const { mutate: playAction } = usePlayGame(game);
@@ -50,8 +177,45 @@ export const PlayGameButton = forwardRef(
       [game.defaultFileId, gameFiles],
     );
 
-    const disabled = queryStatus !== "success";
+    const disabled =
+      queryStatus !== "success" ||
+      syncSavesStatus === "pending" ||
+      syncStatesStatus === "pending";
+
     const shouldAddEmulator = !emulator && !fullscreenMatch && !game.thirdParty;
+
+    const { mutate: playGame } = useMutation({
+      mutationFn: async (args: RawMessage<PlayGamePayload>) => {
+        const { emulator } = args;
+
+        if (checkIsDesktop() && emulator) {
+          try {
+            await maybeSyncEmulatorSaves(emulator);
+            await maybeSyncEmulatorSaveStates(emulator);
+          } catch (error) {
+            const errorMsg =
+              error instanceof Error
+                ? error.message
+                : "An unknown error occurred.";
+
+            toast({
+              title: "Unable to Launch Game",
+              description: errorMsg,
+            });
+
+            return;
+          }
+        }
+
+        toast({
+          title: game.thirdParty ? "Launching External Game" : "Launching Game",
+          description: "Launching the game, this may take a few seconds.",
+          duration: 3000,
+        });
+
+        playAction(args);
+      },
+    });
 
     const onClick = useCallback(() => {
       if (disabled) return;
@@ -68,69 +232,24 @@ export const PlayGameButton = forwardRef(
         });
       }
 
-      toast({
-        title: game.thirdParty ? "Launching External Game" : "Launching Game",
-        description: "Launching the game, this may take a few seconds.",
-        duration: 3000,
-      });
-
-      playAction({
+      playGame({
         game,
         emulatorProfile: defaultProfile,
-        emulator: emulator,
+        emulator,
         file,
       });
     }, [
-      toast,
       navigate,
       disabled,
       defaultProfile,
       emulator,
       file,
       game,
-      playAction,
+      playGame,
       playStatusUpdate,
       stopAction,
       shouldAddEmulator,
     ]);
-
-    const Content = () => {
-      if (queryStatus === "pending") {
-        return (
-          <>
-            <LoaderCircleIcon className="h-[1.2rem] w-[1.2rem]" />
-            Launching...
-          </>
-        );
-      }
-
-      if (playStatusUpdate?.playStatus === PlayStatus.PLAYING) {
-        return (
-          <>
-            <Square className="h-[1.2rem] w-[1.2rem] fill-current" />
-            Stop
-          </>
-        );
-      }
-
-      if (shouldAddEmulator) {
-        return (
-          <>
-            <PlusIcon className="h-[1.2rem] w-[1.2rem] stroke-[3] stroke-current fill-current" />
-            Add Emulator
-          </>
-        );
-      }
-
-      const text = game.thirdParty ? "Launch In Steam" : "Play";
-
-      return (
-        <div className="flex gap-2 items-center">
-          <PlayIcon className="fill-current" />
-          <p>{text}</p>
-        </div>
-      );
-    };
 
     return (
       <Button
@@ -139,7 +258,32 @@ export const PlayGameButton = forwardRef(
         disabled={disabled}
         onClick={onClick}
       >
-        <Content />
+        {syncSavesStatus === "pending" || syncStatesStatus === "pending" ? (
+          <>
+            <Spinner className="h-[1.2rem] w-[1.2rem]" />
+            Syncing Cloud
+          </>
+        ) : queryStatus === "pending" ? (
+          <>
+            <Spinner className="h-[1.2rem] w-[1.2rem]" />
+            Launching...
+          </>
+        ) : playStatusUpdate?.playStatus === PlayStatus.PLAYING ? (
+          <>
+            <Square className="h-[1.2rem] w-[1.2rem] fill-current" />
+            Stop
+          </>
+        ) : shouldAddEmulator ? (
+          <>
+            <PlusIcon className="h-[1.2rem] w-[1.2rem] stroke-[3] stroke-current fill-current" />
+            Add Emulator
+          </>
+        ) : (
+          <div className="flex gap-2 items-center">
+            <PlayIcon className="fill-current" />
+            <p>{game.thirdParty ? "Launch In Steam" : "Play"}</p>
+          </div>
+        )}
       </Button>
     );
   },
