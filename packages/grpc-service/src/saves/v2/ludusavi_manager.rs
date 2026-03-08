@@ -2,7 +2,7 @@ use super::error::Result;
 use ludusavi::{
     api::{
         parameters::{BackUp, ListBackups, Restore},
-        ApiOutput, Config, Finality, Ludusavi, Manifest, StrictPath,
+        ApiOutput, Config, Finality, Ludusavi, Manifest,
     },
     report::{ApiFile, ApiGame},
     resource::config::{

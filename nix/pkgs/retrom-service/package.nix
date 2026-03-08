@@ -10,6 +10,7 @@
   perl,
   protobuf_29,
   openssl,
+  rustfmt,
   makeWrapper,
 }:
 
@@ -19,23 +20,31 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   src = lib.cleanSourceWith {
     src = ../../../.;
-    filter = path: _: !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
-      /nix
-      /flake.nix
-      /flake.lock
+    filter =
+      path: _:
+      !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
+        /nix
+        /flake.nix
+        /flake.lock
 
-      /.github
-      /.gitignore
-    ]);
+        /.github
+        /.gitignore
+      ]);
   };
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     fetcherVersion = 3;
-    hash = "sha256-SEfCBq76zMJ1toImkAf2PJXAV5I/j456R4+ugQhX8Oc=";
+    hash = "sha256-r3TFgV07do9qDSv9prUyzRMi4buj4QkhhrtHqJ4p37Y=";
   };
 
   cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
+
+  cargoLock.outputHashes = {
+    "ludusavi-0.30.0" = "sha256-tDGfnX3fDDvrLvSnWvurIBwgDTWCjmbIJXDxgxQV5Og=";
+    "webdav-meta-0.1.0" = "sha256-1XWBxlkdftg/Et7TexNmhKDZXl7ro+agMXodCRMV+e8=";
+  };
+
   buildAndTestSubdir = "packages/service";
 
   nativeBuildInputs = [
@@ -50,6 +59,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   ];
 
   buildInputs = [
+    rustfmt
     openssl
   ];
 

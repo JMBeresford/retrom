@@ -40,6 +40,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
   };
 
   cargoLock.lockFile = "\${finalAttrs.src}/Cargo.lock";
+
+  cargoLock.outputHashes = {
+    "ludusavi-0.30.0" = "sha256-tDGfnX3fDDvrLvSnWvurIBwgDTWCjmbIJXDxgxQV5Og=";
+    "webdav-meta-0.1.0" = "sha256-1XWBxlkdftg/Et7TexNmhKDZXl7ro+agMXodCRMV+e8=";
+  };
+
   buildAndTestSubdir = "packages/service";
 
   nativeBuildInputs = [
@@ -155,6 +161,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
   };
 
   cargoLock.lockFile = "\${finalAttrs.src}/Cargo.lock";
+  
+  cargoLock.outputHashes = {
+    "ludusavi-0.30.0" = "sha256-tDGfnX3fDDvrLvSnWvurIBwgDTWCjmbIJXDxgxQV5Og=";
+    "webdav-meta-0.1.0" = "sha256-1XWBxlkdftg/Et7TexNmhKDZXl7ro+agMXodCRMV+e8=";
+  };
+
   buildAndTestSubdir = "packages/client";
 
   nativeBuildInputs = [
