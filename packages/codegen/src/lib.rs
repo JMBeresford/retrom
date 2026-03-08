@@ -5,14 +5,35 @@ pub mod igdb {
     tonic::include_proto!("igdb");
 }
 
-tonic_include_proto::namespaced!(
-    "retrom",
-    "retrom.files",
-    "retrom.client.installation",
-    "retrom.client.saves",
-    "retrom.services.saves.v1",
-    "retrom.services.saves.v2"
-);
+pub mod retrom {
+    tonic::include_proto!("retrom");
+
+    pub mod files {
+        tonic::include_proto!("retrom.files");
+    }
+
+    pub mod client {
+        pub mod installation {
+            tonic::include_proto!("retrom.client.installation");
+        }
+
+        pub mod saves {
+            tonic::include_proto!("retrom.client.saves");
+        }
+    }
+
+    pub mod services {
+        pub mod saves {
+            pub mod v1 {
+                tonic::include_proto!("retrom.services.saves.v1");
+            }
+
+            pub mod v2 {
+                tonic::include_proto!("retrom.services.saves.v2");
+            }
+        }
+    }
+}
 
 use std::path::{Component, Path, PathBuf};
 
