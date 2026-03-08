@@ -1,3 +1,24 @@
+## [0.8.0](https://github.com/JMBeresford/retrom/compare/v0.7.55...v0.8.0) (2026-03-08)
+
+### ⚠ BREAKING CHANGES
+
+* This includes a breaking change to the saves API
+
+### Features
+
+
+* feat: add save data path to config modal ([260ac836b1c9c1bbf95d4e35c5c082881d1d9557](https://github.com/JMBeresford/retrom/commit/260ac836b1c9c1bbf95d4e35c5c082881d1d9557))
+* feat: cloud save state support for standalone emulators ([78256bc6f14cc2a8567941de12687c1253155af2](https://github.com/JMBeresford/retrom/commit/78256bc6f14cc2a8567941de12687c1253155af2))
+* feat: cloud save support for standalone emulators ([f2a1efac0105a69a1d1464ebfa950907ecf0eaa5](https://github.com/JMBeresford/retrom/commit/f2a1efac0105a69a1d1464ebfa950907ecf0eaa5))
+* feat!: enable save file and state syncing for desktop clients ([8896af67cdb839a68823f6e7714c0d9830b6c064](https://github.com/JMBeresford/retrom/commit/8896af67cdb839a68823f6e7714c0d9830b6c064))
+* feat: restore standalone emulator save states from backups ([cd93f52b899a15237a0ff4889e99fbde4ded3ebe](https://github.com/JMBeresford/retrom/commit/cd93f52b899a15237a0ff4889e99fbde4ded3ebe))
+* feat: restore standalone emulator saves from backups ([efb409d877ef4591498e1e42e34ae75d5aea7693](https://github.com/JMBeresford/retrom/commit/efb409d877ef4591498e1e42e34ae75d5aea7693))
+### Bug Fixes
+
+
+* fix: notification buttons properly dismiss the notification ([79f0d6eb1d436fad0ac912012a36ccb47ae74bb0](https://github.com/JMBeresford/retrom/commit/79f0d6eb1d436fad0ac912012a36ccb47ae74bb0))
+* fix: update library prompt opens correct menu ([f9278828997b2bc5bc184e9f679257c620b79eab](https://github.com/JMBeresford/retrom/commit/f9278828997b2bc5bc184e9f679257c620b79eab))
+
 ## [0.7.55](https://github.com/JMBeresford/retrom/compare/v0.7.54...v0.7.55) (2026-03-02)
 
 ### Bug Fixes
