@@ -82,6 +82,18 @@ export function EmulatorJSProvider(props: { children: ReactNode }) {
           disableDatabases: true,
           gameName: gameMetadata?.name ?? getFileStub(game.path),
           gameID: game.id,
+          ...(isDosBoxPure && {
+            externalFiles: {
+              "/system/MT32_CONTROL.ROM": new URL(
+                "./rest/public/system/MT32_CONTROL.ROM",
+                apiUrl,
+              ).toString(),
+              "/system/MT32_PCM.ROM": new URL(
+                "./rest/public/system/MT32_PCM.ROM",
+                apiUrl,
+              ).toString(),
+            },
+          }),
           ready: () => {
             const ejs = window.EJS_emulator;
 
