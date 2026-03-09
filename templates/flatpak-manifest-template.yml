@@ -60,11 +60,23 @@ modules:
     build-commands:
       - cargo fetch --offline
         --config source.crates-io.replace-with=\"vendored-sources\"
+        --config source.\"git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7\".replace-with=\"vendored-sources\"
+        --config source.\"git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7\".git=\"https://github.com/jmberesford/webdav-rs.git\"
+        --config source.\"git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7\".rev=\"39c459aa781360a0b755e5be841e1c4dd2fd18b7\"
+        --config source.\"git+https://github.com/mtkennerly/ludusavi.git?rev=fea63791158bcb0159ce5388d6c52cd5e7348326\".replace-with=\"vendored-sources\"
+        --config source.\"git+https://github.com/mtkennerly/ludusavi.git?rev=fea63791158bcb0159ce5388d6c52cd5e7348326\".git=\"https://github.com/mtkennerly/ludusavi.git\"
+        --config source.\"git+https://github.com/mtkennerly/ludusavi.git?rev=fea63791158bcb0159ce5388d6c52cd5e7348326\".rev=\"fea63791158bcb0159ce5388d6c52cd5e7348326\"
         --config source.vendored-sources.directory=\"vendor\"
         --manifest-path packages/client/Cargo.toml
 
       - cargo install --offline --path vendor/tauri-cli
         --config source.crates-io.replace-with=\"vendored-sources\"
+        --config source.\"git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7\".replace-with=\"vendored-sources\"
+        --config source.\"git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7\".git=\"https://github.com/jmberesford/webdav-rs.git\"
+        --config source.\"git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7\".rev=\"39c459aa781360a0b755e5be841e1c4dd2fd18b7\"
+        --config source.\"git+https://github.com/mtkennerly/ludusavi.git?rev=fea63791158bcb0159ce5388d6c52cd5e7348326\".replace-with=\"vendored-sources\"
+        --config source.\"git+https://github.com/mtkennerly/ludusavi.git?rev=fea63791158bcb0159ce5388d6c52cd5e7348326\".git=\"https://github.com/mtkennerly/ludusavi.git\"
+        --config source.\"git+https://github.com/mtkennerly/ludusavi.git?rev=fea63791158bcb0159ce5388d6c52cd5e7348326\".rev=\"fea63791158bcb0159ce5388d6c52cd5e7348326\"
         --config source.vendored-sources.directory=\"vendor\"
 
       - cd packages/client && cargo --offline
@@ -72,6 +84,12 @@ modules:
         --features "flatpak"
         --offline
         --config source.crates-io.replace-with=\"vendored-sources\"
+        --config source.\"git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7\".replace-with=\"vendored-sources\"
+        --config source.\"git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7\".git=\"https://github.com/jmberesford/webdav-rs.git\"
+        --config source.\"git+https://github.com/jmberesford/webdav-rs.git?rev=39c459aa781360a0b755e5be841e1c4dd2fd18b7\".rev=\"39c459aa781360a0b755e5be841e1c4dd2fd18b7\"
+        --config source.\"git+https://github.com/mtkennerly/ludusavi.git?rev=fea63791158bcb0159ce5388d6c52cd5e7348326\".replace-with=\"vendored-sources\"
+        --config source.\"git+https://github.com/mtkennerly/ludusavi.git?rev=fea63791158bcb0159ce5388d6c52cd5e7348326\".git=\"https://github.com/mtkennerly/ludusavi.git\"
+        --config source.\"git+https://github.com/mtkennerly/ludusavi.git?rev=fea63791158bcb0159ce5388d6c52cd5e7348326\".rev=\"fea63791158bcb0159ce5388d6c52cd5e7348326\"
         --config source.vendored-sources.directory=\"../../vendor\"
 
       - install -Dm644 -t /app/share/metainfo/ io.github.jmberesford.Retrom.metainfo.xml
