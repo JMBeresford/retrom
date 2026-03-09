@@ -613,6 +613,13 @@ impl<R: Runtime> SaveManager<R> {
             local_last_modified,
         });
 
+        tracing::debug!(
+            "Sync status for emulator {}: {:?}, conflict report: {:?}",
+            emulator_id,
+            status,
+            conflict_report
+        );
+
         Ok(SyncStatusReport {
             status,
             emulator_id,

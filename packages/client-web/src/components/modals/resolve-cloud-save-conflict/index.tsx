@@ -122,12 +122,7 @@ export function ResolveCloudSaveConflictModal() {
     [selectCloud, selectLocal, status, onResolved, close],
   );
 
-  if (
-    !conflictReport?.cloudLastModified ||
-    !conflictReport?.localLastModified
-  ) {
-    return null;
-  }
+  const { cloudLastModified, localLastModified } = conflictReport ?? {};
 
   const pending = cloudStatus === "pending" || localStatus === "pending";
 
@@ -173,9 +168,9 @@ export function ResolveCloudSaveConflictModal() {
                 Cloud {saveKind === "saves" ? "Save" : "Save States"}
               </ItemTitle>
               <ItemDescription>
-                {timestampDate(
-                  conflictReport.cloudLastModified,
-                ).toLocaleString()}
+                {cloudLastModified
+                  ? timestampDate(cloudLastModified).toLocaleString()
+                  : "No cloud data found"}
               </ItemDescription>
             </ItemContent>
 
@@ -183,7 +178,7 @@ export function ResolveCloudSaveConflictModal() {
               <Button
                 type="button"
                 size="sm"
-                disabled={pending}
+                disabled={pending || !cloudLastModified}
                 variant={match(cloudStatus)
                   .with("error", () => "destructive" as const)
                   .otherwise(() => "accent" as const)}
@@ -221,9 +216,9 @@ export function ResolveCloudSaveConflictModal() {
                 Local {saveKind === "saves" ? "Save" : "Save States"}
               </ItemTitle>
               <ItemDescription>
-                {timestampDate(
-                  conflictReport.localLastModified,
-                ).toLocaleString()}
+                {localLastModified
+                  ? timestampDate(localLastModified).toLocaleString()
+                  : "No local data found"}
               </ItemDescription>
             </ItemContent>
 
@@ -231,7 +226,7 @@ export function ResolveCloudSaveConflictModal() {
               <Button
                 type="button"
                 size="sm"
-                disabled={pending}
+                disabled={pending || !localLastModified}
                 variant={match(localStatus)
                   .with("error", () => "destructive" as const)
                   .otherwise(() => "accent" as const)}
