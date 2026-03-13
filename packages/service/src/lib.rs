@@ -56,9 +56,12 @@ pub async fn get_server(
         tracing::info!("Using port from configuration: {}", port);
     }
 
-    if let Some(config_db_url) = conn_config.as_ref().and_then(|conn| conn.db_url.clone()) {
-        db_url = config_db_url;
-        tracing::info!("Using database url from configuration: {}", db_url);
+    if conn_config
+        .as_ref()
+        .map(|conn| conn.db_url.as_ref())
+        .is_some()
+    {
+        tracing::info!("Using database url from configuration file");
     }
 
     let mut addr: SocketAddr = format!("0.0.0.0:{port}").parse().unwrap();
