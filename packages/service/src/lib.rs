@@ -56,11 +56,8 @@ pub async fn get_server(
         tracing::info!("Using port from configuration: {}", port);
     }
 
-    if conn_config
-        .as_ref()
-        .map(|conn| conn.db_url.as_ref())
-        .is_some()
-    {
+    if let Some(config_db_url) = conn_config.as_ref().and_then(|conn| conn.db_url.clone()) {
+        db_url = config_db_url;
         tracing::info!("Using database url from configuration file");
     }
 
