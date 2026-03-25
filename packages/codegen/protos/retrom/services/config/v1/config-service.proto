@@ -1,15 +1,14 @@
 syntax = "proto3";
 
-package retrom;
+package retrom.services.config.v1;
 
-import 'retrom/server/config.proto';
-import 'retrom/server/server-info.proto';
+import "retrom/server/config.proto";
+import "retrom/server/server-info.proto";
 
-// Deprecated: Use retrom.services.config.v1.ConfigService instead.
-option deprecated = true;
-
-service ServerService {
-  option deprecated = true;
+// ConfigService replaces ServerService for reading and writing the server
+// configuration file and retrieving server metadata.
+service ConfigService {
+  // Read and write the server's configuration file
   rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
   rpc GetServerConfig(GetServerConfigRequest) returns (GetServerConfigResponse);
   rpc UpdateServerConfig(UpdateServerConfigRequest) returns (UpdateServerConfigResponse);
@@ -18,19 +17,19 @@ service ServerService {
 message GetServerInfoRequest {}
 
 message GetServerInfoResponse {
-  ServerInfo server_info = 1;
+  retrom.ServerInfo server_info = 1;
 }
 
 message GetServerConfigRequest {}
 
 message GetServerConfigResponse {
-  ServerConfig config = 1;
+  retrom.ServerConfig config = 1;
 }
 
 message UpdateServerConfigRequest {
-  ServerConfig config = 1;
+  retrom.ServerConfig config = 1;
 }
 
 message UpdateServerConfigResponse {
-  ServerConfig config_updated = 1;
+  retrom.ServerConfig config_updated = 1;
 }

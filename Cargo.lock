@@ -9022,6 +9022,7 @@ dependencies = [
  "retrom-codegen",
  "retrom-db",
  "retrom-service-common",
+ "retrom-service-config",
  "retrom-telemetry",
  "sanitize-filename",
  "tempfile",
@@ -9271,6 +9272,18 @@ dependencies = [
  "tower 0.5.3",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "retrom-service-config"
+version = "0.8.0"
+dependencies = [
+ "axum",
+ "retrom-codegen",
+ "retrom-service-common",
+ "tonic 0.14.5",
+ "tonic-web",
+ "tracing",
 ]
 
 [[package]]

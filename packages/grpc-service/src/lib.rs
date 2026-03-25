@@ -20,9 +20,12 @@ use retrom_codegen::{
         metadata_service_server::MetadataServiceServer,
         platform_service_server::PlatformServiceServer,
         server_service_server::ServerServiceServer,
-        services::saves::{
-            v1::saves_service_server::SavesServiceServer,
-            v2::emulator_saves_service_server::EmulatorSavesServiceServer,
+        services::{
+            config::v1::config_service_server::ConfigServiceServer,
+            saves::{
+                v1::saves_service_server::SavesServiceServer,
+                v2::emulator_saves_service_server::EmulatorSavesServiceServer,
+            },
         },
     },
 };
@@ -32,6 +35,7 @@ use retrom_service_common::{
     metadata_providers::{igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider},
     retrom_dirs::RetromDirs,
 };
+use retrom_service_config::ConfigServiceHandlers;
 use retrom_telemetry::grpc::{GrpcOnRequestSpan, GrpcOnResponseSpanHandler};
 use saves::v1::service::SavesServiceHandlers;
 use saves::v2::service::EmulatorSavesServiceHandlers;
@@ -141,6 +145,9 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         config: config_manager.clone(),
     });
 
+    let config_service =
+        ConfigServiceServer::new(ConfigServiceHandlers::new(config_manager.clone()));
+
     let emulator_service =
         EmulatorServiceServer::new(EmulatorServiceHandlers::new(shared_pool.clone()));
 
@@ -169,6 +176,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         .add_service(platform_service)
         .add_service(metadata_service)
         .add_service(client_service)
+        .add_service(config_service)
         .add_service(server_service)
         .add_service(emulator_service)
         .add_service(job_service)

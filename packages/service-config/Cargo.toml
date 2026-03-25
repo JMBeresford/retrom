@@ -1,0 +1,17 @@
+[package]
+name = "retrom-service-config"
+resolver = "2"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Config service handler for the Retrom video game library service"
+
+[dependencies]
+retrom-codegen = { workspace = true }
+retrom-service-common = { workspace = true }
+tonic = { workspace = true }
+tonic-web = { workspace = true }
+axum = { workspace = true }
+tracing = { workspace = true }
