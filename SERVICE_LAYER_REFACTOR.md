@@ -1,5 +1,65 @@
 # Service Layer Refactor: Implementation Plan
 
+## Progress Tracker
+
+### Phase 1: Data Layer Foundation
+
+- [x] 1.1 New database tables — migrations created for `libraries`, `root_directories`,
+      `metadata_providers`, `tag_domains`, `tags`, `video_metadata`, `screenshot_metadata`,
+      `artwork_metadata`
+- [x] 1.2 Modified existing tables — `game_metadata` (`id`, `provider_id`, `logo_url`);
+      `platform_metadata` (`provider_id`, `icon_url`); `local_emulator_configs`
+      (`default_profile_id`, `bios_directory`, `extra_files_directory`)
+- [x] 1.3 New relational mapping tables — `library_root_directory_maps`,
+      `platform_root_directory_maps`, `game_root_directory_maps`, `library_platform_maps`,
+      `game_platform_maps`, `platform_tag_maps`, `game_tag_maps`, `emulator_platform_maps`
+- [x] 1.4 Tables to retire — identified; deferred to Phase 4
+- [x] 1.5 Proto model updates — new proto files under `retrom/services/{library,metadata,tags}/v1/`;
+      `metadata.proto` and `emulators.proto` updated with new fields; `field_behavior` annotations
+      and `[deprecated = true]` options applied
+- [ ] 1.6 sqlx schema and model updates — Diesel schema updated; sqlx migration pending (Phase 3)
+- [ ] 1.7 Acceptance criteria — migrations not yet verified on SQLite
+
+### Phase 2: Service Interface Redesign
+
+- [ ] 2.1 Config Service — proto file, Rust handler, deprecate `ServerService`
+- [ ] 2.2 Enhanced Library Service — absorb `GameService` / `PlatformService` RPCs
+- [ ] 2.3 Updated Metadata Service — provider-aware RPCs
+- [ ] 2.4 Updated Emulator Service — mapping-table RPCs, `LocalEmulatorConfig` fields
+- [ ] 2.5 Updated Client Service — move to per-service crate
+- [ ] 2.6 Job Service — dedicated gRPC crate with `WatchJob` streaming RPC
+- [ ] 2.7 File Explorer Service — extract to own crate
+- [ ] 2.8 Tag Service — new service with tag domain management
+- [ ] 2.9 Saves Service — move to per-service crate (no interface changes)
+- [ ] 2.10 Deprecated services — `GameService`, `PlatformService`, `ServerService` forwarding stubs
+- [ ] 2.11 Acceptance criteria
+
+### Phase 3: Service Decomposition
+
+- [ ] 3.1 Create per-service crates (`retrom-service-{library,metadata,emulators,clients,config,jobs,tags,files,saves}`)
+- [ ] 3.2 Refactor `retrom-db` for sqlx + `AnyPool` support (replaces Diesel)
+- [ ] 3.3 Create `retrom-metadata` crate (provider traits, IGDB, Steam, registry)
+- [ ] 3.4 Update binary wiring (`packages/service`) to assemble per-crate routers
+- [ ] 3.5 Acceptance criteria
+
+### Phase 4: Data Migration
+
+- [ ] 4.1 Seed metadata providers and tag domains
+- [ ] 4.2 Normalise `video_urls` / `screenshot_urls` / `artwork_urls` into relation tables
+- [ ] 4.3 Normalise `emulators.supported_platforms` into `emulator_platform_maps`
+- [ ] 4.4 Migrate library model from `ServerConfig.content_directories`
+- [ ] 4.5 Migrate game-platform relationships to `game_platform_maps`; drop `games.platform_id`
+- [ ] 4.6 Migrate genre tags to `tags` / `game_tag_maps`; drop `game_genres` / `game_genre_maps`
+- [ ] 4.7 Acceptance criteria
+
+### Phase 5: Client Compatibility
+
+- [ ] 5.1 TypeScript client updates — migrate to new `LibraryService` / `ConfigService` RPCs
+- [ ] 5.2 Tauri plugin updates — regenerate from updated protos, update Rust-side calls
+- [ ] 5.3 Acceptance criteria
+
+---
+
 <!--toc:start-->
 
 - [Service Layer Refactor: Implementation Plan](#service-layer-refactor-implementation-plan)
