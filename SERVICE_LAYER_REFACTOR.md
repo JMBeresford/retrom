@@ -20,7 +20,7 @@
     - [1.3 New Relational Mapping Tables](#13-new-relational-mapping-tables)
     - [1.4 Tables to Retire](#14-tables-to-retire)
     - [1.5 Proto Model Updates](#15-proto-model-updates)
-    - [1.6 Diesel Schema and Model Updates](#16-diesel-schema-and-model-updates)
+    - [1.6 sqlx Schema and Model Updates](#16-sqlx-schema-and-model-updates)
     - [1.7 Acceptance Criteria](#17-acceptance-criteria)
   - [Phase 2: Service Interface Redesign](#phase-2-service-interface-redesign)
     - [2.1 Config Service (Replaces ServerService)](#21-config-service-replaces-serverservice)
@@ -29,17 +29,18 @@
     - [2.4 Updated Emulator Service](#24-updated-emulator-service)
     - [2.5 Updated Client Service](#25-updated-client-service)
     - [2.6 Job Service (Dedicated gRPC Service Crate)](#26-job-service-dedicated-grpc-service-crate)
-    - [2.7 Saves Service (Minimal Change)](#27-saves-service-minimal-change)
-    - [2.8 Deprecated Services](#28-deprecated-services)
-    - [2.9 Acceptance Criteria](#29-acceptance-criteria)
+    - [2.7 File Explorer Service](#27-file-explorer-service)
+    - [2.8 Saves Service](#28-saves-service)
+    - [2.9 Deprecated Services](#29-deprecated-services)
+    - [2.10 Acceptance Criteria](#210-acceptance-criteria)
   - [Phase 3: Service Decomposition](#phase-3-service-decomposition)
     - [3.1 Create Per-Service Crates](#31-create-per-service-crates)
-    - [3.2 Refactor retrom-db for sqlx + SQLite/PostgreSQL Support](#32-refactor-retrom-db-for-sqlx--sqlitepostgresql-support)
-    - [3.3 MetadataProvider Registry in retrom-service-common](#33-metadataprovider-registry-in-retrom-service-common)
+    - [3.2 Refactor retrom-db for sqlx + AnyPool Support](#32-refactor-retrom-db-for-sqlx--anypool-support)
+    - [3.3 Create retrom-metadata Crate](#33-create-retrom-metadata-crate)
     - [3.4 Update Binary Wiring](#34-update-binary-wiring)
     - [3.5 Acceptance Criteria](#35-acceptance-criteria)
   - [Phase 4: Data Migration](#phase-4-data-migration)
-    - [4.1 Seed Metadata Providers](#41-seed-metadata-providers)
+    - [4.1 Seed Metadata Providers and Tag Domains](#41-seed-metadata-providers-and-tag-domains)
     - [4.2 Normalize Metadata Arrays](#42-normalize-metadata-arrays)
     - [4.3 Normalize Emulator Platform Support](#43-normalize-emulator-platform-support)
     - [4.4 Migrate Library Model](#44-migrate-library-model)
@@ -135,7 +136,7 @@ packages/
 ├── rest-service/     # REST: file downloads, game routes, web app, public assets
 ├── webdav-service/   # WebDAV: serves entire data directory
 ├── service-common/   # Config, MediaCache, MetadataProviders (IGDB, Steam), RetromDirs
-├── db/               # Diesel schema, migrations, connection pool types
+├── db/               # Diesel schema, migrations, connection pool types (replaced by sqlx in Phase 3)
 ├── codegen/          # Protobuf definitions + generated Rust/TypeScript
 └── telemetry/        # OpenTelemetry setup
 ```
@@ -214,12 +215,14 @@ packages/
 ├── service-clients/      # retrom-service-clients — ClientService handler + Router
 ├── service-config/       # retrom-service-config — ConfigService handler + Router
 ├── service-jobs/         # retrom-service-jobs — JobService handler + Router + JobManager
+├── service-files/        # retrom-service-files — FileExplorerService handler + Router
 ├── service-saves/        # retrom-service-saves — SavesService (v1 + v2) handler + Router
 ├── grpc-service/         # DEPRECATED shell kept only during the transition period
 ├── rest-service/         # (unchanged)
 ├── webdav-service/       # (unchanged)
-├── service-common/       # Shared utilities: config, media cache, metadata providers
-├── db/                   # sqlx-based query layer + migrations (Postgres + SQLite)
+├── service-common/       # Shared utilities: config, media cache
+├── metadata/             # retrom-metadata — provider traits, IGDB, Steam, MetadataProviderRegistry
+├── db/                   # sqlx-based query layer + migrations (AnyPool; Postgres + SQLite)
 ├── codegen/              # Protobuf definitions only (no committed generated Rust code)
 └── telemetry/            # (unchanged)
 ```
@@ -231,17 +234,18 @@ packages/
 
 | Service | gRPC Package | Replaces / Notes |
 |---|---|---|
-| `ConfigService` | `retrom.services.config.v1` | Replaces `ServerService`; adds client config persistence |
+| `ConfigService` | `retrom.services.config.v1` | Replaces `ServerService`; gRPC gateway to the server config file — all other services read/write config through this service instead of accessing the file directly |
 | `LibraryService` | `retrom.services.library.v1` | Expanded; absorbs `GameService` and `PlatformService` |
 | `MetadataService` | `retrom.services.metadata.v1` | Updated; provider-aware |
 | `EmulatorService` | `retrom.services.emulators.v1` | Updated; mapping-table based |
-| `ClientService` | `retrom.services.clients.v1` | Expanded with client config |
+| `ClientService` | `retrom.services.clients.v1` | Unchanged |
 | `JobService` | `retrom.services.jobs.v1` | Dedicated service crate; exposes job progress over gRPC |
+| `FileExplorerService` | `retrom.services.files.v1` | Retained (omission from architecture doc was accidental); extracted to its own crate |
 | `SavesService` (v1) | `retrom.services.saves.v1` | Unchanged |
 | `EmulatorSavesService` (v2) | `retrom.services.saves.v2` | Unchanged |
 | ~~`GameService`~~ | ~~`retrom`~~ | Deprecated (`option deprecated = true`) — RPCs moved to `LibraryService` |
 | ~~`PlatformService`~~ | ~~`retrom`~~ | Deprecated (`option deprecated = true`) — RPCs moved to `LibraryService` |
-| ~~`FileExplorerService`~~ | ~~`retrom`~~ | Deprecated (`option deprecated = true`) — evaluate separate treatment |
+| ~~`ServerService`~~ | ~~`retrom`~~ | Deprecated (`option deprecated = true`) — RPCs moved to `ConfigService` |
 
 ---
 
@@ -252,12 +256,10 @@ packages/
 
 ### 1.1 New Database Tables
 
-Each item below requires:
+Each new table requires:
 
-1. A Diesel migration under `packages/db/migrations/`
-2. An update to `packages/db/src/schema.rs`
-3. A new Rust model struct (typically in a new file under `packages/db/src/` or within the
-   relevant service handler module)
+1. A new sqlx migration file under `packages/db/migrations/`
+2. A new Rust model struct in `packages/db/src/` (deriving `sqlx::FromRow`)
 
 #### `libraries`
 
@@ -273,9 +275,10 @@ CREATE TABLE libraries (
 );
 ```
 
-> `structure_definition` stores the scanning policy for this library (maps to the existing
-> `StorageType` enum + `CustomLibraryDefinition` message; encoded as a JSON text string so that
-> the same schema works on both PostgreSQL and SQLite).
+> `structure_definition` is a parameterized path template string that describes how the
+> library's file tree maps to game entities. For example, `{root}/{platform}/{game}` means
+> each sub-directory of the root represents a platform, and each sub-directory of a platform
+> represents a game. No JSON encoding or decoding is required.
 
 #### `root_directories`
 
@@ -317,19 +320,31 @@ Seed values (inserted in a migration, not at application startup):
 | 1 | IGDB |
 | 2 | Steam |
 
+#### `tag_domains`
+
+Groups tags by domain (e.g. `genre`, `play_status`, `region`). Using a table instead of a
+free-text `key` column enforces consistency and enables FK-level integrity on the `tags` table.
+
+```sql
+CREATE TABLE tag_domains (
+  id   INTEGER PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE
+);
+```
+
 #### `tags`
 
-General-purpose key/value tagging for games and platforms. Replaces the IGDB-specific
-`game_genres` / `game_genre_maps` system.
+General-purpose value tagging for games and platforms, grouped by domain. Replaces the
+IGDB-specific `game_genres` / `game_genre_maps` system.
 
 ```sql
 CREATE TABLE tags (
-  id         INTEGER PRIMARY KEY,
-  key        TEXT NOT NULL,
-  value      TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE (key, value)
+  id            INTEGER PRIMARY KEY,
+  tag_domain_id INTEGER NOT NULL REFERENCES tag_domains(id) ON DELETE CASCADE,
+  value         TEXT NOT NULL,
+  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (tag_domain_id, value)
 );
 ```
 
@@ -603,129 +618,118 @@ All changes below live in `packages/codegen/protos/retrom/`. After each change, 
 `pnpm nx build codegen` to regenerate TypeScript client code. **Do not commit generated
 Rust code** — Rust stubs are generated at compile-time by the Prost crate via `build.rs`.
 
-#### New message files
+#### Model co-location with service definitions
 
-**`retrom/models/libraries.proto`**
+Rather than maintaining separate `retrom/models/*.proto` files, each model definition should
+live in the same `.proto` file as the service that owns it. This keeps the contract
+self-contained and avoids cross-file import cycles. Shared primitive types (e.g.
+`google.protobuf.Timestamp`) are imported from the well-known types. Services that need to
+reference a model from another service domain (e.g. `LibraryService` returning a `Platform`)
+import the owning service's proto file.
+
+#### Output-only fields via field behavior annotations
+
+Rather than defining separate `NewX` / `UpdatedX` message types for create and update RPCs,
+use a single message per entity with
+[`google.api.field_behavior`](https://cloud.google.com/apis/design/design_patterns#output_only)
+annotations to mark server-set fields:
 
 ```protobuf
-syntax = "proto3";
-package retrom.models.libraries.v1;
-
-import "google/protobuf/timestamp.proto";
+import "google/api/field_behavior.proto";
 
 message Library {
-  int32  id                = 1;
-  string name              = 2;
+  int32  id                   = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string name                 = 2;
   string structure_definition = 3;
-  google.protobuf.Timestamp created_at = 4;
-  google.protobuf.Timestamp updated_at = 5;
-}
-
-message NewLibrary {
-  string name                 = 1;
-  string structure_definition = 2;
-}
-
-message UpdatedLibrary {
-  int32  id                            = 1;
-  optional string name                 = 2;
-  optional string structure_definition = 3;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 ```
 
-**`retrom/models/root-directories.proto`**
+Clients and code generators treat `OUTPUT_ONLY` fields as informational (populated by the
+server on reads, ignored or absent on creates/updates). All entity messages below follow this
+pattern.
+
+#### New message definitions
+
+**`retrom/services/library/v1/library-service.proto`** (added to the LibraryService file)
 
 ```protobuf
-syntax = "proto3";
-package retrom.models.root_directories.v1;
+message Library {
+  int32  id                   = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string name                 = 2;
+  string structure_definition = 3;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
 
-import "google/protobuf/timestamp.proto";
+// structure_definition is a parameterized path template, e.g. "{root}/{platform}/{game}"
+```
 
+**`retrom/services/library/v1/library-service.proto`** — `RootDirectory`
+
+```protobuf
 message RootDirectory {
-  int32  id         = 1;
+  int32  id         = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string path       = 2;
-  google.protobuf.Timestamp created_at = 3;
-  google.protobuf.Timestamp updated_at = 4;
-}
-
-message NewRootDirectory {
-  string path = 1;
-}
-
-message UpdatedRootDirectory {
-  int32           id   = 1;
-  optional string path = 2;
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 ```
 
-**`retrom/models/metadata-providers.proto`**
+**`retrom/services/metadata/v1/metadata-service.proto`** — `MetadataProvider`
 
 ```protobuf
-syntax = "proto3";
-package retrom.models.metadata_providers.v1;
-
-import "google/protobuf/timestamp.proto";
-
 message MetadataProvider {
-  int32  id   = 1;
+  int32  id   = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string name = 2;
-  google.protobuf.Timestamp created_at = 3;
-  google.protobuf.Timestamp updated_at = 4;
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 ```
 
-**`retrom/models/tags.proto`**
+**`retrom/services/library/v1/library-service.proto`** — `TagDomain` and `Tag`
 
 ```protobuf
-syntax = "proto3";
-package retrom.models.tags.v1;
-
-import "google/protobuf/timestamp.proto";
+message TagDomain {
+  int32  id   = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string name = 2;
+}
 
 message Tag {
-  int32  id    = 1;
-  string key   = 2;
-  string value = 3;
-  google.protobuf.Timestamp created_at = 4;
-  google.protobuf.Timestamp updated_at = 5;
-}
-
-message NewTag {
-  string key   = 1;
-  string value = 2;
+  int32     id            = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  TagDomain domain        = 2;
+  string    value         = 3;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 ```
 
-**`retrom/models/media-metadata.proto`**
+**`retrom/services/metadata/v1/metadata-service.proto`** — media metadata
 
 ```protobuf
-syntax = "proto3";
-package retrom.models.media_metadata.v1;
-
-import "google/protobuf/timestamp.proto";
-
 message VideoMetadata {
-  int32  id               = 1;
-  int32  game_metadata_id = 2;
+  int32  id               = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  int32  game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
   string url              = 3;
-  google.protobuf.Timestamp created_at = 4;
-  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 message ScreenshotMetadata {
-  int32  id               = 1;
-  int32  game_metadata_id = 2;
+  int32  id               = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  int32  game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
   string url              = 3;
-  google.protobuf.Timestamp created_at = 4;
-  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 message ArtworkMetadata {
-  int32  id               = 1;
-  int32  game_metadata_id = 2;
+  int32  id               = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  int32  game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
   string url              = 3;
-  google.protobuf.Timestamp created_at = 4;
-  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 ```
 
@@ -790,34 +794,11 @@ versioned package names (`retrom.services.<domain>.v1`).
 syntax = "proto3";
 package retrom.services.config.v1;
 
-option deprecated = false; // new service — not deprecated
-
 service ConfigService {
-  // Existing (from ServerService)
+  // Read and write the server's configuration file
   rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
   rpc GetServerConfig(GetServerConfigRequest) returns (GetServerConfigResponse);
   rpc UpdateServerConfig(UpdateServerConfigRequest) returns (UpdateServerConfigResponse);
-
-  // New — client config persistence
-  rpc GetClientConfig(GetClientConfigRequest) returns (GetClientConfigResponse);
-  rpc UpsertClientConfig(UpsertClientConfigRequest) returns (UpsertClientConfigResponse);
-}
-
-message GetClientConfigRequest {
-  int32 client_id = 1;
-}
-
-message GetClientConfigResponse {
-  RetromClientConfig config = 1;
-}
-
-message UpsertClientConfigRequest {
-  int32 client_id           = 1;
-  RetromClientConfig config = 2;
-}
-
-message UpsertClientConfigResponse {
-  RetromClientConfig config_updated = 1;
 }
 ```
 
@@ -836,28 +817,11 @@ service ServerService {
 **Rust handler changes (`packages/service-config/src/lib.rs`):**
 
 - Implement `ConfigServiceHandlers` in the new `retrom-service-config` crate.
-- Add `db_pool` to the handler struct.
-- Implement `get_client_config` and `upsert_client_config` using a new `client_configs` table
-  (see database note below).
+- The handler **owns** the `ServerConfigManager` (reads/writes the config file). Other service
+  crates that previously accessed the config file directly must now call this service over gRPC
+  instead.
+- No database pool is needed for the core config RPCs.
 - Export a `config_router() -> axum::Router` function that registers the service.
-
-**Database note:** Client config persistence requires a new table:
-
-```sql
-CREATE TABLE client_configs (
-  client_id  INTEGER PRIMARY KEY REFERENCES clients(id) ON DELETE CASCADE,
-  config     TEXT NOT NULL DEFAULT '{}',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-> Store `RetromClientConfig` serialised as JSON text. `TEXT` is used instead of `JSONB` for
-> SQLite compatibility (`JSONB` is PostgreSQL-specific).
-
-**Backward compatibility:** Register both `ConfigService` and a forwarding stub for
-`ServerService` (which delegates to `ConfigService` internally) during the transition period.
-Remove the stub once the client-web and Tauri plugins are updated.
 
 ---
 
@@ -1011,11 +975,9 @@ message EmulatorPlatformMap {
 
 **Rust handler changes (`packages/service-clients/src/lib.rs`):**
 
-- Update `ClientServiceHandlers` to use `ConfigService`'s client config storage when creating
-  or updating clients (as a convenience: creating a client can optionally seed an empty
-  `client_configs` row).
-
-No new RPCs are required here; client config persistence is handled by `ConfigService`.
+- Move handler code to the `retrom-service-clients` crate.
+- No new RPCs are required.
+- Export a `clients_router() -> axum::Router` function.
 
 ---
 
@@ -1103,7 +1065,26 @@ CREATE TABLE jobs (
 
 ---
 
-### 2.7 Saves Service
+### 2.7 File Explorer Service
+
+`FileExplorerService` was accidentally omitted from the architecture doc but must be retained.
+Extract it to its own crate.
+
+**Proto file:** `retrom/services/files/v1/file-explorer-service.proto`
+
+**Package:** `retrom.services.files.v1`
+
+No interface changes are planned; the RPC signatures remain the same. The goal is extraction
+only.
+
+**Rust implementation (`packages/service-files/src/lib.rs`):**
+
+- Move handler code from `grpc-service/src/file_explorer/` (or equivalent) into the new crate.
+- Export a `files_router() -> axum::Router` function.
+
+---
+
+### 2.8 Saves Service
 
 No proto interface changes planned in this refactor. The handler implementation moves to the
 `retrom-service-saves` crate as part of Phase 3. Both v1 (`SavesService` —
@@ -1112,7 +1093,7 @@ remain interface-compatible.
 
 ---
 
-### 2.8 Deprecated Services
+### 2.9 Deprecated Services
 
 The proto definitions for deprecated services and their messages **must** be annotated with
 `option deprecated = true;` at both the file level and the service/message level. This causes
@@ -1134,22 +1115,25 @@ service GameService {
 }
 ```
 
-Register forwarding stub implementations for the following services during the transition
-period so that existing clients do not receive an immediate `Unimplemented` error:
+Because client and server are always released together under the same version number, there is
+no need to maintain a multi-release backward compatibility window. Deprecated stubs are removed
+as soon as the corresponding client code is updated in the same release.
+
+Register forwarding stub implementations for the following services so that any in-flight
+clients during the development cycle do not receive an `Unimplemented` error before they are
+updated:
 
 | Service | Stub behaviour |
 |---|---|
 | `GameService` | Forward all RPCs to `LibraryService` (`retrom.services.library.v1`) equivalents |
 | `PlatformService` | Forward all RPCs to `LibraryService` equivalents |
 | `ServerService` | Forward all RPCs to `ConfigService` (`retrom.services.config.v1`) equivalents |
-| `FileExplorerService` | Return `Unimplemented` status with a descriptive message |
 
-Remove stubs and deregister the services in a subsequent minor release once all known clients
-are updated. Track readiness in a dedicated issue.
+Remove stubs and deregister the services in the same release that the client code is updated.
 
 ---
 
-### 2.9 Acceptance Criteria
+### 2.10 Acceptance Criteria
 
 - [ ] `pnpm nx build codegen` succeeds with all new/updated proto files.
 - [ ] All deprecated proto files have `option deprecated = true;` at the file, service, and
@@ -1179,12 +1163,13 @@ For each domain below, create a new Cargo crate following this pattern:
 
 1. `cargo new --lib packages/service-<domain>` (or equivalent NX scaffold)
 2. Declare the crate in `[workspace.members]` in the root `Cargo.toml`.
-3. Add the appropriate `retrom-codegen`, `retrom-db`, `retrom-service-common`, `tonic`,
-   `tonic-web`, `axum`, `tokio`, and `tracing` dependencies.
+3. Add the appropriate `retrom-codegen`, `retrom-db`, `retrom-metadata` (for metadata
+   provider types), `tonic`, `tonic-web`, `axum`, `tokio`, and `tracing` dependencies.
 4. Move the handler implementation from `grpc-service/src/<domain>/` into the new crate's
    `src/lib.rs` (and sub-modules as needed).
-5. Expose a `pub fn <domain>_router(db_pool: Arc<SqlitePool | PgPool>) -> axum::Router`
-   function (use a `DbPool` type alias defined in `retrom-db`).
+5. Expose a `pub fn <domain>_router(db_pool: sqlx::AnyPool) -> axum::Router` function.
+   Each crate receives an `sqlx::AnyPool` — the specific database backend is determined at
+   runtime from the connection URL; no feature flags are needed.
 6. Add a `project.json` for NX integration.
 
 **Crates to create:**
@@ -1197,75 +1182,82 @@ For each domain below, create a new Cargo crate following this pattern:
 | `retrom-service-clients` | ClientService | `grpc-service/src/clients/` |
 | `retrom-service-config` | ConfigService | `grpc-service/src/server/` |
 | `retrom-service-jobs` | JobService | `grpc-service/src/jobs/` |
+| `retrom-service-files` | FileExplorerService | `grpc-service/src/file_explorer/` |
 | `retrom-service-saves` | SavesService (v1 + v2) | `grpc-service/src/saves/` |
 
 ---
 
-### 3.2 Refactor retrom-db for sqlx + SQLite/PostgreSQL Support
+### 3.2 Refactor retrom-db for sqlx + AnyPool Support
 
 The existing `retrom-db` crate uses Diesel and is PostgreSQL-only. This step replaces it with a
-sqlx-based implementation that supports both SQLite (embedded mode, tests) and PostgreSQL
-(production).
+sqlx-based implementation using `sqlx::AnyPool`, which selects the database driver at runtime
+from the connection URL (e.g. `sqlite://...` or `postgres://...`) — no compile-time feature
+flags are needed.
 
 **Steps:**
 
-1. Add `sqlx` with the `sqlite`, `postgres`, `runtime-tokio-rustls`, and `macros` features to
-   `Cargo.toml`.
-2. Replace all `diesel::prelude::*` imports and Diesel DSL query code with `sqlx::query!` /
-   `sqlx::query_as!` macros.
-3. Define a `DbPool` type alias:
-
-   ```rust
-   #[cfg(feature = "sqlite")]
-   pub type DbPool = sqlx::SqlitePool;
-
-   #[cfg(feature = "postgres")]
-   pub type DbPool = sqlx::PgPool;
-   ```
-
-4. Move all migration files to `packages/db/migrations/` and use `sqlx::migrate!` for
-   embedded migration execution.
-5. Ensure all SQL in query macros uses only generic SQL (see Guiding Principle 5).
+1. Add `sqlx` with the `any`, `sqlite`, `postgres`, `runtime-tokio-rustls`, and `macros`
+   features to `Cargo.toml`.
+2. Replace all `diesel::prelude::*` imports and Diesel DSL query code with `sqlx::query` /
+   `sqlx::query_as` (use the non-macro forms for `AnyPool` compatibility, since
+   `sqlx::query!` macros require a concrete pool type at compile time).
+3. Expose `pub type DbPool = sqlx::AnyPool;` and a `connect(url: &str) -> DbPool` helper.
+4. Move all migration files to `packages/db/migrations/` and use `sqlx::migrate!` or a
+   runtime `sqlx::migrate::Migrator` for embedded migration execution.
+5. Ensure all SQL uses only generic syntax (see Guiding Principle 5).
 6. Remove `packages/db/src/schema.rs` (Diesel-generated; no longer needed).
+
+> **Note on compile-time query checks:** `sqlx::query!` macros require a concrete pool type
+> and a live database at compile time. With `AnyPool` these checks are opted out of for now.
+> Adding focused compile-time query verification is tracked as a follow-up item (not in scope
+> for this refactor).
 
 ---
 
-### 3.3 MetadataProvider Registry in retrom-service-common
+### 3.3 Create retrom-metadata Crate
 
-Currently `IGDBProvider` and `SteamWebApiProvider` are constructed directly in the service
-binary. A `MetadataProviderRegistry` allows providers to be registered at startup and retrieved
-by name or ID.
+Metadata provider trait definitions and IGDB/Steam implementations move to a dedicated
+`retrom-metadata` crate. This separates the provider contract from both the service-common
+utilities and the handler implementation.
 
-**Target file:** `packages/service-common/src/metadata_providers/registry.rs`
+**Target directory:** `packages/metadata/`
+
+**What moves here:**
+
+- `GameMetadataProvider` and `PlatformMetadataProvider` traits
+- `IGDBProvider` and `SteamWebApiProvider` implementations
+- `MetadataProviderRegistry`
+
+The `retrom-service-metadata` crate depends on `retrom-metadata` for the provider types and
+registry, and the binary (`packages/service`) registers IGDB and Steam at startup.
+
+**Why a registry rather than letting MetadataService own and construct providers?**
+
+The `retrom-service-metadata` crate is a gRPC handler crate — its job is to respond to RPCs,
+not to own the lifecycle of external API clients (which need API keys, rate limiters, and retry
+logic from configuration). Constructing providers in the binary and injecting them keeps the
+handler crate testable in isolation (inject a mock provider in tests) and allows multiple
+services to query provider metadata without duplicating construction logic.
 
 ```rust
-use std::collections::HashMap;
-use std::sync::Arc;
-use super::{GameMetadataProvider, PlatformMetadataProvider};
+// packages/metadata/src/lib.rs
+pub trait GameMetadataProvider: Send + Sync { ... }
+pub trait PlatformMetadataProvider: Send + Sync { ... }
 
 pub struct MetadataProviderRegistry {
-    game_providers: HashMap<String, Arc<dyn GameMetadataProvider + Send + Sync>>,
-    platform_providers: HashMap<String, Arc<dyn PlatformMetadataProvider + Send + Sync>>,
+    game_providers: HashMap<String, Arc<dyn GameMetadataProvider>>,
+    platform_providers: HashMap<String, Arc<dyn PlatformMetadataProvider>>,
 }
 
 impl MetadataProviderRegistry {
     pub fn new() -> Self { ... }
     pub fn register_game_provider(
-        &mut self, name: impl Into<String>, p: Arc<dyn GameMetadataProvider + Send + Sync>,
+        &mut self, name: impl Into<String>, p: Arc<dyn GameMetadataProvider>,
     ) { ... }
-    pub fn register_platform_provider(
-        &mut self, name: impl Into<String>, p: Arc<dyn PlatformMetadataProvider + Send + Sync>,
-    ) { ... }
-    pub fn game_provider(
-        &self, name: &str,
-    ) -> Option<Arc<dyn GameMetadataProvider + Send + Sync>> { ... }
-    pub fn platform_provider(
-        &self, name: &str,
-    ) -> Option<Arc<dyn PlatformMetadataProvider + Send + Sync>> { ... }
+    pub fn game_provider(&self, name: &str) -> Option<Arc<dyn GameMetadataProvider>> { ... }
+    // ... platform equivalents
 }
 ```
-
-Register IGDB and Steam at binary startup in `packages/service/src/lib.rs`.
 
 ---
 
@@ -1280,25 +1272,27 @@ use retrom_service_emulators::emulators_router;
 use retrom_service_clients::clients_router;
 use retrom_service_config::config_router;
 use retrom_service_jobs::jobs_router;
+use retrom_service_files::files_router;
 use retrom_service_saves::saves_router;
 
-let db_pool = Arc::new(retrom_db::connect(&db_url).await?);
-let metadata_providers = Arc::new(build_metadata_provider_registry(&config));
+let db_pool: sqlx::AnyPool = retrom_db::connect(&db_url).await?;
+let metadata_registry = build_metadata_provider_registry(&config);
 
 let app = axum::Router::new()
     .merge(library_router(db_pool.clone()))
-    .merge(metadata_router(db_pool.clone(), metadata_providers.clone()))
+    .merge(metadata_router(db_pool.clone(), Arc::new(metadata_registry)))
     .merge(emulators_router(db_pool.clone()))
     .merge(clients_router(db_pool.clone()))
-    .merge(config_router(db_pool.clone(), config_manager.clone()))
+    .merge(config_router(config_manager.clone()))   // no db_pool; owns config file
     .merge(jobs_router(db_pool.clone()))
+    .merge(files_router(db_pool.clone()))
     .merge(saves_router(db_pool.clone()))
     // REST routes
     .merge(rest_router(...))
     // Deprecated stubs
     .merge(deprecated_game_service_stub(db_pool.clone()))
     .merge(deprecated_platform_service_stub(db_pool.clone()))
-    .merge(deprecated_server_service_stub(db_pool.clone()));
+    .merge(deprecated_server_service_stub(config_manager.clone()));
 ```
 
 The `grpc-service` crate becomes a transitional shell and is removed once all domain crates
@@ -1309,9 +1303,10 @@ are stable.
 ### 3.5 Acceptance Criteria
 
 - [ ] Each new service crate compiles independently (`cargo build -p retrom-service-<domain>`).
-- [ ] `retrom-db` compiles with `--features sqlite` and `--features postgres`.
+- [ ] `retrom-db` connects to both SQLite and PostgreSQL via `sqlx::AnyPool`.
+- [ ] `retrom-metadata` crate compiles independently with IGDB and Steam providers.
 - [ ] `MetadataProviderRegistry` is populated at startup with IGDB and Steam providers.
-- [ ] `pnpm nx cargo:lint` passes for all new service crates and `retrom-db`.
+- [ ] `pnpm nx cargo:lint` passes for all new service crates, `retrom-db`, and `retrom-metadata`.
 - [ ] `pnpm nx cargo:test` passes for all new service crates.
 - [ ] The binary starts and all registered services respond to a smoke test request.
 
@@ -1322,96 +1317,85 @@ are stable.
 > **Prerequisite:** Phases 1, 2, and 3 are complete and deployed to a staging environment.
 > Run migrations against a copy of production data before applying to production.
 
-Each item below is a standalone sqlx migration. Because the source data (PostgreSQL `ARRAY`
-columns, `game_genres`, etc.) uses PostgreSQL-specific types that are not representable in
-SQLite, the "read from old shape, write to new shape" migrations are implemented as Rust
-application code using `sqlx::query!` rather than raw SQL. This keeps the migration logic in
-the type-safe, database-agnostic Rust layer rather than in database-flavored SQL scripts.
+Each item below is a standalone SQL migration file executed at runtime via
+`sqlx::migrate!()` or a dynamic `sqlx::migrate::Migrator`. Migration files live in
+`packages/db/migrations/` and use only generic SQL (see Guiding Principle 5). For any
+migration that reads PostgreSQL-specific data (e.g. `ARRAY` columns), the SQL reads the
+data in a database-agnostic way and the migration is only applicable when running against a
+PostgreSQL database that is being migrated from the old schema.
 
-### 4.1 Seed Metadata Providers
-
-This can be a plain SQL migration (compatible with both databases):
+### 4.1 Seed Metadata Providers and Tag Domains
 
 ```sql
+-- V4_1__seed_metadata_providers.sql
 INSERT INTO metadata_providers (id, name) VALUES (1, 'IGDB')
   ON CONFLICT DO NOTHING;
 INSERT INTO metadata_providers (id, name) VALUES (2, 'Steam')
+  ON CONFLICT DO NOTHING;
+
+-- V4_1__seed_tag_domains.sql
+INSERT INTO tag_domains (name) VALUES ('genre')
   ON CONFLICT DO NOTHING;
 ```
 
 ### 4.2 Normalize Metadata Arrays
 
 The existing `video_urls`, `screenshot_urls`, and `artwork_urls` columns are PostgreSQL
-`ARRAY(TEXT)` — they have no SQLite equivalent. The normalisation is implemented as a
-startup migration task in Rust:
-
-```rust
-// packages/service/src/migrations/normalize_metadata_arrays.rs
-pub async fn run(pool: &PgPool) -> anyhow::Result<()> {
-    let rows = sqlx::query!("SELECT id, video_urls, screenshot_urls, artwork_urls
-                             FROM game_metadata")
-        .fetch_all(pool).await?;
-
-    for row in rows {
-        for url in row.video_urls.unwrap_or_default() {
-            sqlx::query!("INSERT INTO video_metadata (game_metadata_id, url)
-                          VALUES ($1, $2) ON CONFLICT DO NOTHING",
-                         row.id, url)
-                .execute(pool).await?;
-        }
-        // ... screenshot_urls, artwork_urls similarly
-    }
-
-    // After all rows are migrated, drop the old columns (run as a separate migration step)
-    Ok(())
-}
-```
-
-After verifying row counts, apply a follow-up migration to drop the old columns:
+`ARRAY(TEXT)` — they have no SQLite equivalent. For an existing PostgreSQL deployment being
+migrated, the normalisation is expressed as a SQL migration that reads the arrays via
+`unnest()` (PostgreSQL-specific; this migration file is run only against PostgreSQL):
 
 ```sql
--- PostgreSQL only (run after verification):
+-- V4_2__normalize_video_metadata.sql  (PostgreSQL migration only)
+INSERT INTO video_metadata (game_metadata_id, url)
+SELECT m.id, unnest(m.video_urls)
+FROM game_metadata m
+WHERE m.video_urls IS NOT NULL AND array_length(m.video_urls, 1) > 0
+ON CONFLICT DO NOTHING;
+```
+
+Repeat for `screenshot_urls` and `artwork_urls`. Then drop the old columns in a follow-up
+migration:
+
+```sql
+-- V4_2b__drop_metadata_arrays.sql (PostgreSQL only)
 ALTER TABLE game_metadata DROP COLUMN video_urls;
 ALTER TABLE game_metadata DROP COLUMN screenshot_urls;
 ALTER TABLE game_metadata DROP COLUMN artwork_urls;
 ```
 
+New installations (SQLite or fresh PostgreSQL) never have these array columns, so these
+migration files are effectively no-ops for them.
+
 ### 4.3 Normalize Emulator Platform Support
 
-Same pattern — `supported_platforms` is a PostgreSQL `ARRAY(INT4)`:
-
-```rust
-// packages/service/src/migrations/normalize_emulator_platforms.rs
-pub async fn run(pool: &PgPool) -> anyhow::Result<()> {
-    let rows = sqlx::query!("SELECT id, supported_platforms FROM emulators")
-        .fetch_all(pool).await?;
-
-    for row in rows {
-        for platform_id in row.supported_platforms.unwrap_or_default() {
-            sqlx::query!("INSERT INTO emulator_platform_maps (emulator_id, platform_id)
-                          VALUES ($1, $2) ON CONFLICT DO NOTHING",
-                         row.id, platform_id)
-                .execute(pool).await?;
-        }
-    }
-    Ok(())
-}
+```sql
+-- V4_3__normalize_emulator_platforms.sql  (PostgreSQL migration only)
+INSERT INTO emulator_platform_maps (emulator_id, platform_id)
+SELECT e.id, unnest(e.supported_platforms)
+FROM emulators e
+WHERE e.supported_platforms IS NOT NULL
+  AND array_length(e.supported_platforms, 1) > 0
+ON CONFLICT DO NOTHING;
 ```
 
-After verification:
+Drop column in a follow-up migration after verification:
 
 ```sql
+-- V4_3b__drop_supported_platforms.sql (PostgreSQL only)
 ALTER TABLE emulators DROP COLUMN supported_platforms;
 ```
 
 ### 4.4 Migrate Library Model
 
-> **Implementation note:** Because `ServerConfig.content_directories` is a runtime JSON file
+> **Implementation note:** Because `ServerConfig.content_directories` is a runtime config file
 > (not stored in the database), the library seeding migration cannot be a pure SQL migration.
 > Implement a one-time startup task in `packages/service/src/lib.rs` that reads the config
 > and, for each content directory:
 >
-> 1. Inserts a `Library` row if the `libraries` table is empty.
+> 1. Inserts a `Library` row if the `libraries` table is empty. The `structure_definition`
+>    field is set to the appropriate path template string (e.g. `{root}/{platform}/{game}`)
+>    derived from the existing `StorageType` value.
 > 2. Inserts a `root_directories` row for the directory path (if not already present).
 > 3. Inserts a `library_root_directory_maps` row linking the library to the directory.
 >
@@ -1421,36 +1405,52 @@ ALTER TABLE emulators DROP COLUMN supported_platforms;
 ### 4.5 Migrate Game-Platform Relationships
 
 ```sql
+-- V4_5__migrate_game_platform_maps.sql
 INSERT INTO game_platform_maps (game_id, platform_id)
 SELECT g.id, g.platform_id
 FROM games g
 WHERE g.platform_id IS NOT NULL
 ON CONFLICT DO NOTHING;
+```
 
--- Defer dropping the column to a future release to maintain query compatibility:
--- ALTER TABLE games DROP COLUMN platform_id;
+Drop the old column in the same release (no backward compatibility window needed):
+
+```sql
+-- V4_5b__drop_games_platform_id.sql
+ALTER TABLE games DROP COLUMN platform_id;
 ```
 
 ### 4.6 Migrate Genre Tags
 
 ```sql
--- Insert genre values as tags with key = 'genre'
-INSERT INTO tags (key, value)
-SELECT DISTINCT 'genre', gg.slug
+-- V4_6__migrate_genre_tags.sql
+
+-- Ensure the 'genre' domain exists
+INSERT INTO tag_domains (name) VALUES ('genre') ON CONFLICT DO NOTHING;
+
+-- Insert unique genre values into tags
+INSERT INTO tags (tag_domain_id, value)
+SELECT d.id, gg.slug
 FROM game_genres gg
+CROSS JOIN tag_domains d WHERE d.name = 'genre'
 ON CONFLICT DO NOTHING;
 
 -- Map games to their genre tags
 INSERT INTO game_tag_maps (game_id, tag_id)
 SELECT ggm.game_id, t.id
 FROM game_genre_maps ggm
-JOIN game_genres     gg ON gg.id  = ggm.genre_id
-JOIN tags             t  ON t.key = 'genre' AND t.value = gg.slug
+JOIN game_genres gg ON gg.id = ggm.genre_id
+JOIN tag_domains d  ON d.name = 'genre'
+JOIN tags        t  ON t.tag_domain_id = d.id AND t.value = gg.slug
 ON CONFLICT DO NOTHING;
+```
 
--- After verification:
--- DROP TABLE game_genre_maps;
--- DROP TABLE game_genres;
+Drop the old tables in the same release:
+
+```sql
+-- V4_6b__drop_game_genres.sql
+DROP TABLE game_genre_maps;
+DROP TABLE game_genres;
 ```
 
 ### 4.7 Acceptance Criteria
@@ -1499,13 +1499,11 @@ ON CONFLICT DO NOTHING;
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Breaking existing clients during service consolidation | High | High | Register deprecated service stubs with `option deprecated = true` protos; forward to new handlers; track client update readiness |
-| `game_metadata` array normalization loses data on migration failure | Medium | High | Run Rust migration code against a copy of production data first; verify counts before dropping columns |
-| `emulators.supported_platforms` migration breaks emulator-platform lookup | Medium | High | Keep old array column until `emulator_platform_maps` is verified; derive array from JOIN in API responses for backward compat |
+| `game_metadata` array normalization loses data on migration failure | Medium | High | Run migration against a copy of production data first; verify row counts before dropping columns |
+| `emulators.supported_platforms` migration breaks emulator-platform lookup | Medium | High | Keep old array column until `emulator_platform_maps` is verified in staging; derive array from JOIN in responses during migration window |
 | `libraries` table seeding is non-deterministic (config-driven) | Low | Medium | Implement startup seed task idempotently (check before insert); log clearly when seeding |
-| Proto field renaming (`cover_url` → `cover_image_url`) breaks serialized messages | Medium | Medium | Use deprecated proto field annotations alongside new fields; serve both during transition |
-| `FileExplorerService` removal breaks clients using directory browsing | Low | Low | Return `Unimplemented` with a clear message; document the deprecation in release notes |
-| sqlx + SQLite support breaks existing query logic (especially PostgreSQL `ARRAY` queries) | High | High | Identified array columns are migrated via Rust application code; all new SQL uses generic syntax |
+| Proto field renaming (`cover_url` → `cover_image_url`) produces mismatched serialized messages | Medium | Medium | Apply `option deprecated = true` and serve old field as an alias during the release that introduces the rename |
+| sqlx `AnyPool` loses compile-time query verification | Medium | Low | Accepted trade-off; focused follow-up to add query verification is tracked separately |
 | Per-service crate decomposition causes extended merge divergence | Medium | Medium | Extract one crate at a time; keep `grpc-service` shell until all crates are stable |
 
 ---
@@ -1530,46 +1528,30 @@ Phase 1 (Data Layer + Proto models)
 
 1. Phase 1 (parallel tracks: schema migrations + proto model changes)
 2. Phase 2 (service interface redesign; handler changes can begin in `grpc-service` immediately)
-3. Phase 3.2 (sqlx / retrom-db rewrite — high-value, do early to unblock SQLite support)
-4. Phase 3.1 + 3.3 + 3.4 (per-crate extraction + registry + binary wiring)
-5. Phase 4 (data migration against staging, then production)
-6. Phase 5 (client updates — can overlap with 2–4)
+3. Phase 3.2 (sqlx / `AnyPool` retrom-db rewrite — high-value, do early to unblock multi-DB support)
+4. Phase 3.3 (retrom-metadata crate extraction)
+5. Phase 3.1 + 3.4 (per-crate extraction + binary wiring)
+6. Phase 4 (data migration against staging, then production)
+7. Phase 5 (client updates — can overlap with 2–5)
 
 ---
 
 ## Open Questions
 
-1. **`FileExplorerService` fate** — the architecture spec does not include it. Should it be
-   fully removed, moved to REST, or kept as an internal tool? Decision needed before Phase 2
-   stub work.
+1. **`structure_definition` path template syntax** — what tokens are valid? Is `{root}` a
+   literal placeholder or inferred from the `root_directories` mapping? Should the set of valid
+   tokens be documented or enforced at the proto layer (e.g. via custom validation options)?
 
-2. **Library `structure_definition` encoding** — the field is stored as a `TEXT` JSON blob for
-   SQLite compatibility. Should the server validate the JSON structure on write, and if so, at
-   what layer (proto validation, sqlx, or application logic)?
+2. **`tag_domain` seeding strategy** — `genre` is seeded in the migration. Should other
+   well-known domains (`play_status`, `region`, etc.) also be seeded, or added on demand? Who
+   has permission to create new domains?
 
-3. **Backward compatibility window** — how many release cycles should deprecated service stubs
-   remain registered? A suggested policy: stubs are removed no sooner than the release after the
-   one in which client packages are updated, and no later than two minor releases after that.
+3. **`sqlx::AnyPool` query verification follow-up** — the current plan opts out of
+   compile-time query checks to allow `AnyPool`. A follow-up issue should be created to
+   investigate `sqlx::query_as` with a concrete pool type in tests, or an alternative approach
+   such as integration-test-time verification.
 
-4. **`games.platform_id` nullable FK** — after `game_platform_maps` is populated, should the
-   old FK column be kept for single-platform convenience queries, or dropped entirely? Dropping
-   it simplifies the schema but is a breaking change for any code doing
-   `JOIN games ON games.platform_id = platforms.id`.
-
-5. **Tag key/value constraints** — should well-known keys (e.g. `genre`, `play_status`,
-   `region`) be enforced at the database level, or left open? An `ENUM` or a separate
-   `tag_keys` table would enforce consistency but adds migration overhead when new keys are
-   introduced.
-
-6. **`client_configs` TEXT vs columns** — `RetromClientConfig` is deeply nested. Storing it as
-   JSON text is portable, but makes server-side querying and partial updates more complex.
-   Evaluate whether any server-side filtering on config values is needed before finalising the
-   schema.
-
-7. **sqlx offline mode** — should `cargo sqlx prepare` artifacts be committed to the repo so
-   that CI can build without a live database, or should CI spin up a database container for all
-   builds? The offline mode artifacts can cause drift if not kept in sync.
-
-8. **Per-crate feature flags** — should each service crate expose a `sqlite` / `postgres`
-   feature flag, or should the database backend be determined entirely by the `retrom-db` crate
-   and injected as a `DbPool` at construction time?
+4. **`MetadataService` RPC for tag domain management** — should CRUD for `TagDomain` and `Tag`
+   live in `LibraryService` (alongside game/platform tagging) or in a separate
+   `TagService`? The current plan puts it in `LibraryService` for simplicity, but a dedicated
+   service may be preferable if tags are expected to grow independently.
