@@ -3,39 +3,36 @@ syntax = "proto3";
 package retrom.services.library.v1;
 
 import "google/protobuf/timestamp.proto";
+import "google/api/field_behavior.proto";
 
 // Library is a first-class entity representing a game library.
-//
-// structure_definition is a parameterized path template that describes how the
-// library's file tree maps to game entities.  Well-known tokens:
-//   {library}  — the root directory for this library
-//   {platform} — a platform sub-directory
-//   {game}     — a game sub-directory
-//
-// Example: "{library}/{platform}/{game}" means each sub-directory of the root
-// represents a platform, and each sub-directory of a platform represents a game.
-//
-// Arbitrary tokens (e.g. {region}) are also supported and will eventually be used
-// to populate tag values for library items during library scans.
 message Library {
   // OUTPUT_ONLY — set by the server; omit on create/update.
-  int32 id = 1;
+  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string name = 2;
+
+  // structure_definition is a parameterized path template that describes how the
+  // library's file tree maps to game entities.  Well-known tokens:
+  //   {library}  — the root directory for this library
+  //   {platform} — a platform sub-directory
+  //   {game}     — a game sub-directory
+  //
+  // Example: "{library}/{platform}/{game}" means each sub-directory of the root
+  // represents a platform, and each sub-directory of a platform represents a game.
+  //
+  // Arbitrary tokens (e.g. {region}) are also supported and will eventually be used
+  // to populate tag values for library items during library scans.
   string structure_definition = 3;
-  // OUTPUT_ONLY
-  google.protobuf.Timestamp created_at = 4;
-  // OUTPUT_ONLY
-  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // RootDirectory is a filesystem path that can be assigned to libraries, platforms,
 // or games via mapping tables, enabling flexible directory sharing across entities.
 message RootDirectory {
   // OUTPUT_ONLY — set by the server; omit on create/update.
-  int32 id = 1;
+  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string path = 2;
-  // OUTPUT_ONLY
-  google.protobuf.Timestamp created_at = 3;
-  // OUTPUT_ONLY
-  google.protobuf.Timestamp updated_at = 4;
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
