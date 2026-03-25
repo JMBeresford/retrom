@@ -5,12 +5,17 @@ package retrom.services.config.v1;
 import "retrom/server/config.proto";
 import "retrom/server/server-info.proto";
 
-// ConfigService replaces ServerService for reading and writing the server
-// configuration file and retrieving server metadata.
+// ConfigService manages server configuration and exposes server metadata.
 service ConfigService {
-  // Read and write the server's configuration file
+  // GetServerInfo returns metadata about the running server instance, such as
+  // the current version.
   rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
+
+  // GetServerConfig returns the current server configuration.
   rpc GetServerConfig(GetServerConfigRequest) returns (GetServerConfigResponse);
+
+  // UpdateServerConfig replaces the server configuration with the provided
+  // value and persists it to disk.
   rpc UpdateServerConfig(UpdateServerConfigRequest) returns (UpdateServerConfigResponse);
 }
 

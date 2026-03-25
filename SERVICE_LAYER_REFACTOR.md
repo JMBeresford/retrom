@@ -885,6 +885,8 @@ service ServerService {
   instead.
 - No database pool is needed for the core config RPCs.
 - Export a `config_router() -> axum::Router` function that registers the service.
+- Add a `src/main.rs` and a `[[bin]]` entry in `Cargo.toml` so the crate can be started as a
+  standalone service process. All subsequent per-service crates must follow this same pattern.
 
 ---
 
@@ -1300,7 +1302,12 @@ For each domain below, create a new Cargo crate following this pattern:
 5. Expose a `pub fn <domain>_router(db_pool: sqlx::AnyPool) -> axum::Router` function.
    Each crate receives an `sqlx::AnyPool` — the specific database backend is determined at
    runtime from the connection URL; no feature flags are needed.
-6. Add a `project.json` for NX integration.
+6. Add a `src/main.rs` entry point and a `[[bin]]` section in `Cargo.toml` so the service
+   can be started as a standalone process. The binary must read the server configuration
+   via `ServerConfigManager`, initialise tracing with `init_tracing_subscriber`, bind to a
+   TCP listener, and serve the router with `axum::serve`. This is established as convention
+   by `retrom-service-config` (see `packages/service-config/src/main.rs`).
+7. Add a `project.json` for NX integration.
 
 **Crates to create:**
 

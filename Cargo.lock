@@ -9281,6 +9281,8 @@ dependencies = [
  "axum",
  "retrom-codegen",
  "retrom-service-common",
+ "retrom-telemetry",
+ "tokio",
  "tonic 0.14.5",
  "tonic-web",
  "tracing",
