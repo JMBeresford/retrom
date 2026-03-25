@@ -30,9 +30,10 @@ impl<R: Runtime> RetromPluginServiceClient<R> {
                 .expect("Failed to install default crypto provider");
         }
 
-        let roots = RootCertStore {
-            roots: webpki_roots::TLS_SERVER_ROOTS.to_vec(),
-        };
+        let mut roots = RootCertStore::empty();
+        for cert in rustls_native_certs::load_native_certs().expect("Failed to load native certs") {
+            roots.add(cert).ok();
+        }
 
         let tls = ClientConfig::builder()
             .with_root_certificates(roots)
