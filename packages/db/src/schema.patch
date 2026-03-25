@@ -1,9 +1,8 @@
 diff --git a/packages/db/src/schema.rs b/packages/db/src/schema.rs
-index bc814db..b68dac2 100644
+index 0000000..0000000 100644
 --- a/packages/db/src/schema.rs
 +++ b/packages/db/src/schema.rs
-@@ -21,29 +21,29 @@ diesel::table! {
- 
+@@ -41,12 +41,12 @@ diesel::table! {
  diesel::table! {
      emulator_profiles (id) {
          id -> Int4,
@@ -18,7 +17,7 @@ index bc814db..b68dac2 100644
          built_in -> Bool,
      }
  }
- 
+@@ -54,13 +54,13 @@ diesel::table! {
  diesel::table! {
      emulators (id) {
          id -> Int4,
@@ -34,11 +33,7 @@ index bc814db..b68dac2 100644
 +        operating_systems -> Array<Int4>,
      }
  }
- 
- diesel::table! {
-@@ -86,16 +86,16 @@ diesel::table! {
-         cover_url -> Nullable<Text>,
-         background_url -> Nullable<Text>,
+@@ -107,12 +107,12 @@ diesel::table! {
          icon_url -> Nullable<Text>,
          igdb_id -> Nullable<Int8>,
          created_at -> Nullable<Timestamptz>,
@@ -54,6 +49,4 @@ index bc814db..b68dac2 100644
          release_date -> Nullable<Timestamptz>,
          last_played -> Nullable<Timestamptz>,
          minutes_played -> Nullable<Int4>,
-     }
- }
- 
+         id -> Int4,
