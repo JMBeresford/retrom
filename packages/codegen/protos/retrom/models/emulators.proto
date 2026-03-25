@@ -118,6 +118,10 @@ message LocalEmulatorConfig {
   optional string nickname = 7;
   optional string save_data_path = 8;
   optional string save_states_path = 9;
+  // FK to emulator_profiles.id; the default profile used when launching this emulator.
+  optional int32 default_profile_id = 10;
+  optional string bios_directory = 11;
+  optional string extra_files_directory = 12;
 }
 
 message NewLocalEmulatorConfig {
@@ -129,6 +133,9 @@ message NewLocalEmulatorConfig {
   optional string nickname = 6;
   optional string save_data_path = 7;
   optional string save_states_path = 8;
+  optional int32 default_profile_id = 9;
+  optional string bios_directory = 10;
+  optional string extra_files_directory = 11;
 }
 
 message UpdatedLocalEmulatorConfig {
@@ -141,4 +148,7 @@ message UpdatedLocalEmulatorConfig {
   optional string nickname = 7;
   optional string save_data_path = 8;
   optional string save_states_path = 9;
+  optional int32 default_profile_id = 10;
+  optional string bios_directory = 11;
+  optional string extra_files_directory = 12;
 }

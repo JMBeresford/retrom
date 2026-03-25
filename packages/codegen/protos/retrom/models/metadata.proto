@@ -3,6 +3,7 @@ syntax = "proto3";
 package retrom;
 
 import "google/protobuf/timestamp.proto";
+import "google/api/field_behavior.proto";
 
 message GameMetadata {
   int32 game_id = 1;
@@ -12,15 +13,23 @@ message GameMetadata {
   optional string background_url = 5;
   optional string icon_url = 6;
   optional int64 igdb_id = 7;
-  google.protobuf.Timestamp created_at = 8;
-  google.protobuf.Timestamp updated_at = 9;
+  google.protobuf.Timestamp created_at = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
   repeated string links = 10;
-  repeated string video_urls = 11;
-  repeated string screenshot_urls = 12;
-  repeated string artwork_urls = 13;
+  // Deprecated: use VideoMetadata relation (retrom.services.metadata.v1.VideoMetadata).
+  repeated string video_urls = 11 [deprecated = true];
+  // Deprecated: use ScreenshotMetadata relation (retrom.services.metadata.v1.ScreenshotMetadata).
+  repeated string screenshot_urls = 12 [deprecated = true];
+  // Deprecated: use ArtworkMetadata relation (retrom.services.metadata.v1.ArtworkMetadata).
+  repeated string artwork_urls = 13 [deprecated = true];
   google.protobuf.Timestamp release_date = 14;
   google.protobuf.Timestamp last_played = 15;
   optional int32 minutes_played = 16;
+  // Surrogate id; required as FK target for video/screenshot/artwork tables.
+  int32 id = 17 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // FK to metadata_providers.id; nullable until backfill is complete (Phase 4).
+  optional int32 provider_id = 18;
+  optional string logo_url = 19;
 }
 
 message NewGameMetadata {
@@ -34,9 +43,9 @@ message NewGameMetadata {
   optional google.protobuf.Timestamp created_at = 8;
   optional google.protobuf.Timestamp updated_at = 9;
   repeated string links = 10;
-  repeated string video_urls = 11;
-  repeated string screenshot_urls = 12;
-  repeated string artwork_urls = 13;
+  repeated string video_urls = 11 [deprecated = true];
+  repeated string screenshot_urls = 12 [deprecated = true];
+  repeated string artwork_urls = 13 [deprecated = true];
   optional google.protobuf.Timestamp release_date = 14;
   optional google.protobuf.Timestamp last_played = 15;
   optional int32 minutes_played = 16;
@@ -53,9 +62,9 @@ message UpdatedGameMetadata {
   optional google.protobuf.Timestamp created_at = 8;
   optional google.protobuf.Timestamp updated_at = 9;
   repeated string links = 10;
-  repeated string video_urls = 11;
-  repeated string screenshot_urls = 12;
-  repeated string artwork_urls = 13;
+  repeated string video_urls = 11 [deprecated = true];
+  repeated string screenshot_urls = 12 [deprecated = true];
+  repeated string artwork_urls = 13 [deprecated = true];
   optional google.protobuf.Timestamp release_date = 14;
   optional google.protobuf.Timestamp last_played = 15;
   optional int32 minutes_played = 16;
@@ -68,8 +77,11 @@ message PlatformMetadata {
   optional string background_url = 4;
   optional string logo_url = 5;
   optional int64 igdb_id = 6;
-  google.protobuf.Timestamp created_at = 7;
-  google.protobuf.Timestamp updated_at = 8;
+  google.protobuf.Timestamp created_at = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // FK to metadata_providers.id; nullable until backfill is complete (Phase 4).
+  optional int32 provider_id = 9;
+  optional string icon_url = 10;
 }
 
 message NewPlatformMetadata {
