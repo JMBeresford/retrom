@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package retrom.services.tags.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// TagDomain groups tags by semantic category.
+//
+// Well-known domains are static (seeded by Phase 4 migration, is_well_known = true)
+// and cannot be deleted via the TagService.  Users can register custom domains via
+// the UI using CreateTagDomains.
+//
+// Initial well-known domains:
+//   genre     — game genre (migrated from game_genres / game_genre_maps)
+//   favorites — user favourites flag
+//   franchise — game franchise / series
+//   region    — release region (also populated automatically from {region} path token)
+message TagDomain {
+  // OUTPUT_ONLY — set by the server; omit on create.
+  int32 id = 1;
+  string name = 2;
+  // OUTPUT_ONLY — true for system-seeded domains that cannot be deleted.
+  bool is_well_known = 3;
+}
+
+// Tag is a (domain, value) pair used to label games and platforms.
+// Uniqueness is enforced per (tag_domain_id, value) pair in the database.
+message Tag {
+  // OUTPUT_ONLY
+  int32 id = 1;
+  TagDomain domain = 2;
+  string value = 3;
+  // OUTPUT_ONLY
+  google.protobuf.Timestamp created_at = 4;
+  // OUTPUT_ONLY
+  google.protobuf.Timestamp updated_at = 5;
+}

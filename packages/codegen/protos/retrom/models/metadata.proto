@@ -15,12 +15,20 @@ message GameMetadata {
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_at = 9;
   repeated string links = 10;
+  // Deprecated: use VideoMetadata relation (retrom.services.metadata.v1.VideoMetadata).
   repeated string video_urls = 11;
+  // Deprecated: use ScreenshotMetadata relation (retrom.services.metadata.v1.ScreenshotMetadata).
   repeated string screenshot_urls = 12;
+  // Deprecated: use ArtworkMetadata relation (retrom.services.metadata.v1.ArtworkMetadata).
   repeated string artwork_urls = 13;
   google.protobuf.Timestamp release_date = 14;
   google.protobuf.Timestamp last_played = 15;
   optional int32 minutes_played = 16;
+  // OUTPUT_ONLY — surrogate id; required as FK target for video/screenshot/artwork tables.
+  int32 id = 17;
+  // FK to metadata_providers.id; nullable until backfill is complete (Phase 4).
+  optional int32 provider_id = 18;
+  optional string logo_url = 19;
 }
 
 message NewGameMetadata {
@@ -70,6 +78,9 @@ message PlatformMetadata {
   optional int64 igdb_id = 6;
   google.protobuf.Timestamp created_at = 7;
   google.protobuf.Timestamp updated_at = 8;
+  // FK to metadata_providers.id; nullable until backfill is complete (Phase 4).
+  optional int32 provider_id = 9;
+  optional string icon_url = 10;
 }
 
 message NewPlatformMetadata {
