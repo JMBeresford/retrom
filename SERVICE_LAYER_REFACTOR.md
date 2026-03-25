@@ -1426,7 +1426,7 @@ let app = axum::Router::new()
     .merge(metadata_router(db_pool.clone(), Arc::new(metadata_registry)))
     .merge(emulators_router(db_pool.clone()))
     .merge(clients_router(db_pool.clone()))
-    .merge(config_router(config_manager.clone()))   // no db_pool; owns config file
+    .merge(config_router())                         // no db_pool; owns config file and manager
     .merge(jobs_router(db_pool.clone()))
     .merge(tags_router(db_pool.clone()))
     .merge(files_router(db_pool.clone()))

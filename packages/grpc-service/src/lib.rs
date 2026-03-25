@@ -145,8 +145,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         config: config_manager.clone(),
     });
 
-    let config_service =
-        ConfigServiceServer::new(ConfigServiceHandlers::new(config_manager.clone()));
+    let config_service = ConfigServiceServer::new(ConfigServiceHandlers::new());
 
     let emulator_service =
         EmulatorServiceServer::new(EmulatorServiceHandlers::new(shared_pool.clone()));

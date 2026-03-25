@@ -1,3 +1,7 @@
+pub mod config;
+pub mod retrom_dirs;
+
+use crate::config::ServerConfigManager;
 use retrom_codegen::retrom::{
     services::config::v1::{
         config_service_server::{ConfigService, ConfigServiceServer},
@@ -7,7 +11,6 @@ use retrom_codegen::retrom::{
     version::Pre,
     ServerInfo, Version,
 };
-use retrom_service_common::config::ServerConfigManager;
 use std::sync::Arc;
 use tracing::instrument;
 
@@ -18,8 +21,18 @@ pub struct ConfigServiceHandlers {
 }
 
 impl ConfigServiceHandlers {
-    pub fn new(config: Arc<ServerConfigManager>) -> Self {
-        Self { config }
+    pub fn new() -> Self {
+        let config_manager = ServerConfigManager::new()
+            .expect("Failed to initialize ServerConfigManager");
+        Self {
+            config: Arc::new(config_manager),
+        }
+    }
+}
+
+impl Default for ConfigServiceHandlers {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -109,8 +122,8 @@ impl ConfigService for ConfigServiceHandlers {
 }
 
 /// Build an [`axum::Router`] that serves the [`ConfigService`] gRPC endpoints.
-pub fn config_router(config_manager: Arc<ServerConfigManager>) -> axum::Router {
-    let config_service = ConfigServiceServer::new(ConfigServiceHandlers::new(config_manager));
+pub fn config_router() -> axum::Router {
+    let config_service = ConfigServiceServer::new(ConfigServiceHandlers::new());
 
     let mut routes_builder = tonic::service::Routes::builder();
     routes_builder.add_service(config_service);

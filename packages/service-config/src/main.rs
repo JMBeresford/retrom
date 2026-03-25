@@ -1,14 +1,13 @@
-use retrom_service_common::config::ServerConfigManager;
-use retrom_service_config::config_router;
+use retrom_service_config::{config::ServerConfigManager, config_router};
 use retrom_telemetry::init_tracing_subscriber;
-use std::{net::SocketAddr, process::exit, sync::Arc};
+use std::{net::SocketAddr, process::exit};
 
 const DEFAULT_PORT: u16 = 5103;
 
 #[tokio::main]
 async fn main() {
     let config_manager = match ServerConfigManager::new() {
-        Ok(config) => Arc::new(config),
+        Ok(config) => config,
         Err(err) => {
             eprintln!("Could not load configuration: {err:#?}");
             exit(1);
@@ -25,7 +24,7 @@ async fn main() {
 
     let addr: SocketAddr = format!("0.0.0.0:{DEFAULT_PORT}").parse().unwrap();
 
-    let router = config_router(config_manager).layer(tonic_web::GrpcWebLayer::new());
+    let router = config_router().layer(tonic_web::GrpcWebLayer::new());
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await
