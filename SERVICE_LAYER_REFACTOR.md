@@ -30,9 +30,10 @@
     - [2.5 Updated Client Service](#25-updated-client-service)
     - [2.6 Job Service (Dedicated gRPC Service Crate)](#26-job-service-dedicated-grpc-service-crate)
     - [2.7 File Explorer Service](#27-file-explorer-service)
-    - [2.8 Saves Service](#28-saves-service)
-    - [2.9 Deprecated Services](#29-deprecated-services)
-    - [2.10 Acceptance Criteria](#210-acceptance-criteria)
+    - [2.8 Tag Service](#28-tag-service)
+    - [2.9 Saves Service](#29-saves-service)
+    - [2.10 Deprecated Services](#210-deprecated-services)
+    - [2.11 Acceptance Criteria](#211-acceptance-criteria)
   - [Phase 3: Service Decomposition](#phase-3-service-decomposition)
     - [3.1 Create Per-Service Crates](#31-create-per-service-crates)
     - [3.2 Refactor retrom-db for sqlx + AnyPool Support](#32-refactor-retrom-db-for-sqlx--anypool-support)
@@ -215,6 +216,7 @@ packages/
 ├── service-clients/      # retrom-service-clients — ClientService handler + Router
 ├── service-config/       # retrom-service-config — ConfigService handler + Router
 ├── service-jobs/         # retrom-service-jobs — JobService handler + Router + JobManager
+├── service-tags/         # retrom-service-tags — TagService handler + Router
 ├── service-files/        # retrom-service-files — FileExplorerService handler + Router
 ├── service-saves/        # retrom-service-saves — SavesService (v1 + v2) handler + Router
 ├── grpc-service/         # DEPRECATED shell kept only during the transition period
@@ -238,6 +240,7 @@ packages/
 | `LibraryService` | `retrom.services.library.v1` | Expanded; absorbs `GameService` and `PlatformService` |
 | `MetadataService` | `retrom.services.metadata.v1` | Updated; provider-aware |
 | `EmulatorService` | `retrom.services.emulators.v1` | Updated; mapping-table based |
+| `TagService` | `retrom.services.tags.v1` | New; manages tag domains and tags; game/platform tagging |
 | `ClientService` | `retrom.services.clients.v1` | Unchanged |
 | `JobService` | `retrom.services.jobs.v1` | Dedicated service crate; exposes job progress over gRPC |
 | `FileExplorerService` | `retrom.services.files.v1` | Retained (omission from architecture doc was accidental); extracted to its own crate |
@@ -868,23 +871,14 @@ service LibraryService {
   rpc GetGameFiles(GetGameFilesRequest) returns (GetGameFilesResponse);
   rpc DeleteGameFiles(DeleteGameFilesRequest) returns (DeleteGameFilesResponse);
   rpc UpdateGameFiles(UpdateGameFilesRequest) returns (UpdateGameFilesResponse);
-
-  // Tag management (new)
-  rpc GetTags(GetTagsRequest) returns (GetTagsResponse);
-  rpc CreateTags(CreateTagsRequest) returns (CreateTagsResponse);
-  rpc DeleteTags(DeleteTagsRequest) returns (DeleteTagsResponse);
-  rpc GetGameTags(GetGameTagsRequest) returns (GetGameTagsResponse);
-  rpc UpdateGameTags(UpdateGameTagsRequest) returns (UpdateGameTagsResponse);
-  rpc GetPlatformTags(GetPlatformTagsRequest) returns (GetPlatformTagsResponse);
-  rpc UpdatePlatformTags(UpdatePlatformTagsRequest) returns (UpdatePlatformTagsResponse);
 }
 ```
 
 **Rust handler changes (`packages/service-library/src/lib.rs`):**
 
 - Implement `LibraryServiceHandlers` in the `retrom-service-library` crate.
-- Include sub-modules: `library_handlers.rs`, `root_directory_handlers.rs`, `tag_handlers.rs`,
-  `game_handlers.rs`, `platform_handlers.rs`.
+- Include sub-modules: `library_handlers.rs`, `root_directory_handlers.rs`, `game_handlers.rs`,
+  `platform_handlers.rs`.
 - Export a `library_router() -> axum::Router` function.
 
 **Note on request/response types:** Request/response messages for game and platform RPCs being
@@ -1084,7 +1078,83 @@ only.
 
 ---
 
-### 2.8 Saves Service
+### 2.8 Tag Service
+
+`TagService` is a new service that owns all tag domain and tag management, as well as
+game/platform tagging. Tag concerns are kept separate from `LibraryService` to allow the
+tagging surface to evolve independently.
+
+**Proto file:** `retrom/services/tags/v1/tag-service.proto` (new file)
+
+**Package:** `retrom.services.tags.v1`
+
+```protobuf
+syntax = "proto3";
+package retrom.services.tags.v1;
+
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+
+service TagService {
+  // Tag domain management
+  rpc GetTagDomains(GetTagDomainsRequest) returns (GetTagDomainsResponse);
+  rpc CreateTagDomains(CreateTagDomainsRequest) returns (CreateTagDomainsResponse);
+  rpc DeleteTagDomains(DeleteTagDomainsRequest) returns (DeleteTagDomainsResponse);
+
+  // Tag management
+  rpc GetTags(GetTagsRequest) returns (GetTagsResponse);
+  rpc CreateTags(CreateTagsRequest) returns (CreateTagsResponse);
+  rpc DeleteTags(DeleteTagsRequest) returns (DeleteTagsResponse);
+
+  // Game tagging
+  rpc GetGameTags(GetGameTagsRequest) returns (GetGameTagsResponse);
+  rpc UpdateGameTags(UpdateGameTagsRequest) returns (UpdateGameTagsResponse);
+
+  // Platform tagging
+  rpc GetPlatformTags(GetPlatformTagsRequest) returns (GetPlatformTagsResponse);
+  rpc UpdatePlatformTags(UpdatePlatformTagsRequest) returns (UpdatePlatformTagsResponse);
+}
+
+message TagDomain {
+  int32  id   = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string name = 2;
+  bool   is_well_known = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message Tag {
+  int32     id     = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  TagDomain domain = 2;
+  string    value  = 3;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+```
+
+**Well-known tag domains** are seeded at startup and cannot be deleted. The initial set is:
+
+| Domain | Description |
+|---|---|
+| `genre` | Game or platform genre (e.g. RPG, Action) |
+| `favorites` | User-marked favourites |
+| `franchise` | Game franchise / series (e.g. "Final Fantasy") |
+| `region` | Geographic/release region (e.g. NTSC-U, PAL) |
+
+Users can register and manage additional custom domains via the UI. Well-known domains are
+distinguished by `is_well_known = true` (set by the server; `OUTPUT_ONLY`). Arbitrary path
+template tokens in `structure_definition` (e.g. `{region}` in `{library}/{platform}/{region}/{game}`)
+can automatically populate tag values for library items during the library scan — this
+feature is intentionally left for a follow-up implementation ticket.
+
+**Rust implementation (`packages/service-tags/src/lib.rs`):**
+
+- Implement `TagServiceHandlers` in the new `retrom-service-tags` crate.
+- Well-known domains are defined as constants and seeded idempotently at startup.
+- `DeleteTagDomains` rejects deletion of well-known domains (return `Status::failed_precondition`).
+- Export a `tags_router() -> axum::Router` function.
+
+---
+
+### 2.9 Saves Service
 
 No proto interface changes planned in this refactor. The handler implementation moves to the
 `retrom-service-saves` crate as part of Phase 3. Both v1 (`SavesService` —
@@ -1093,7 +1163,7 @@ remain interface-compatible.
 
 ---
 
-### 2.9 Deprecated Services
+### 2.10 Deprecated Services
 
 The proto definitions for deprecated services and their messages **must** be annotated with
 `option deprecated = true;` at both the file level and the service/message level. This causes
@@ -1133,7 +1203,7 @@ Remove stubs and deregister the services in the same release that the client cod
 
 ---
 
-### 2.10 Acceptance Criteria
+### 2.11 Acceptance Criteria
 
 - [ ] `pnpm nx build codegen` succeeds with all new/updated proto files.
 - [ ] All deprecated proto files have `option deprecated = true;` at the file, service, and
@@ -1182,6 +1252,7 @@ For each domain below, create a new Cargo crate following this pattern:
 | `retrom-service-clients` | ClientService | `grpc-service/src/clients/` |
 | `retrom-service-config` | ConfigService | `grpc-service/src/server/` |
 | `retrom-service-jobs` | JobService | `grpc-service/src/jobs/` |
+| `retrom-service-tags` | TagService | new |
 | `retrom-service-files` | FileExplorerService | `grpc-service/src/file_explorer/` |
 | `retrom-service-saves` | SavesService (v1 + v2) | `grpc-service/src/saves/` |
 
@@ -1272,6 +1343,7 @@ use retrom_service_emulators::emulators_router;
 use retrom_service_clients::clients_router;
 use retrom_service_config::config_router;
 use retrom_service_jobs::jobs_router;
+use retrom_service_tags::tags_router;
 use retrom_service_files::files_router;
 use retrom_service_saves::saves_router;
 
@@ -1285,6 +1357,7 @@ let app = axum::Router::new()
     .merge(clients_router(db_pool.clone()))
     .merge(config_router(config_manager.clone()))   // no db_pool; owns config file
     .merge(jobs_router(db_pool.clone()))
+    .merge(tags_router(db_pool.clone()))
     .merge(files_router(db_pool.clone()))
     .merge(saves_router(db_pool.clone()))
     // REST routes
@@ -1306,6 +1379,7 @@ are stable.
 - [ ] `retrom-db` connects to both SQLite and PostgreSQL via `sqlx::AnyPool`.
 - [ ] `retrom-metadata` crate compiles independently with IGDB and Steam providers.
 - [ ] `MetadataProviderRegistry` is populated at startup with IGDB and Steam providers.
+- [ ] Well-known tag domains are seeded at startup.
 - [ ] `pnpm nx cargo:lint` passes for all new service crates, `retrom-db`, and `retrom-metadata`.
 - [ ] `pnpm nx cargo:test` passes for all new service crates.
 - [ ] The binary starts and all registered services respond to a smoke test request.
@@ -1334,8 +1408,11 @@ INSERT INTO metadata_providers (id, name) VALUES (2, 'Steam')
   ON CONFLICT DO NOTHING;
 
 -- V4_1__seed_tag_domains.sql
-INSERT INTO tag_domains (name) VALUES ('genre')
-  ON CONFLICT DO NOTHING;
+-- Well-known tag domains are static and cannot be deleted by users
+INSERT INTO tag_domains (name) VALUES ('genre')     ON CONFLICT DO NOTHING;
+INSERT INTO tag_domains (name) VALUES ('favorites') ON CONFLICT DO NOTHING;
+INSERT INTO tag_domains (name) VALUES ('franchise') ON CONFLICT DO NOTHING;
+INSERT INTO tag_domains (name) VALUES ('region')    ON CONFLICT DO NOTHING;
 ```
 
 ### 4.2 Normalize Metadata Arrays
@@ -1394,8 +1471,11 @@ ALTER TABLE emulators DROP COLUMN supported_platforms;
 > and, for each content directory:
 >
 > 1. Inserts a `Library` row if the `libraries` table is empty. The `structure_definition`
->    field is set to the appropriate path template string (e.g. `{root}/{platform}/{game}`)
->    derived from the existing `StorageType` value.
+>    field is set to the appropriate path template string derived from the existing
+>    `StorageType` value. The well-known tokens are `{library}` (the root directory for this
+>    library), `{platform}`, and `{game}`; a typical value would be
+>    `{library}/{platform}/{game}`. Arbitrary tokens (e.g. `{region}`) are also supported and
+>    will eventually populate tags during library scans.
 > 2. Inserts a `root_directories` row for the directory path (if not already present).
 > 3. Inserts a `library_root_directory_maps` row linking the library to the directory.
 >
@@ -1422,13 +1502,14 @@ ALTER TABLE games DROP COLUMN platform_id;
 
 ### 4.6 Migrate Genre Tags
 
+> The `genre` tag domain is already seeded by the Phase 4.1 migration. This migration maps
+> the existing `game_genres` / `game_genre_maps` data into the new `tags` / `game_tag_maps`
+> tables.
+
 ```sql
 -- V4_6__migrate_genre_tags.sql
 
--- Ensure the 'genre' domain exists
-INSERT INTO tag_domains (name) VALUES ('genre') ON CONFLICT DO NOTHING;
-
--- Insert unique genre values into tags
+-- Insert unique genre values into the tags table
 INSERT INTO tags (tag_domain_id, value)
 SELECT d.id, gg.slug
 FROM game_genres gg
@@ -1538,20 +1619,11 @@ Phase 1 (Data Layer + Proto models)
 
 ## Open Questions
 
-1. **`structure_definition` path template syntax** — what tokens are valid? Is `{root}` a
-   literal placeholder or inferred from the `root_directories` mapping? Should the set of valid
-   tokens be documented or enforced at the proto layer (e.g. via custom validation options)?
-
-2. **`tag_domain` seeding strategy** — `genre` is seeded in the migration. Should other
-   well-known domains (`play_status`, `region`, etc.) also be seeded, or added on demand? Who
-   has permission to create new domains?
-
-3. **`sqlx::AnyPool` query verification follow-up** — the current plan opts out of
+1. **`sqlx::AnyPool` query verification follow-up** — the current plan opts out of
    compile-time query checks to allow `AnyPool`. A follow-up issue should be created to
    investigate `sqlx::query_as` with a concrete pool type in tests, or an alternative approach
    such as integration-test-time verification.
 
-4. **`MetadataService` RPC for tag domain management** — should CRUD for `TagDomain` and `Tag`
-   live in `LibraryService` (alongside game/platform tagging) or in a separate
-   `TagService`? The current plan puts it in `LibraryService` for simplicity, but a dedicated
-   service may be preferable if tags are expected to grow independently.
+2. **`TagService` RPC permissions** — custom tag domains can be registered by users via the UI.
+   Should there be a role/permission gate on `CreateTagDomains` and `DeleteTagDomains`, or is
+   this deferred to a later security iteration?
