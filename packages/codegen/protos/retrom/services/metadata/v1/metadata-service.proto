@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package retrom.services.metadata.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/api/field_behavior.proto";
+
+// MetadataProvider represents a registered metadata source (e.g. IGDB, Steam).
+// Well-known providers are seeded at startup.
+message MetadataProvider {
+  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// VideoMetadata is a single video URL associated with a game_metadata record.
+// Normalises the deprecated game_metadata.video_urls array column.
+message VideoMetadata {
+  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // References game_metadata.id.
+  int32 game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string url = 3;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// ScreenshotMetadata is a single screenshot URL associated with a game_metadata record.
+// Normalises the deprecated game_metadata.screenshot_urls array column.
+message ScreenshotMetadata {
+  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // References game_metadata.id.
+  int32 game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string url = 3;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// ArtworkMetadata is a single artwork URL associated with a game_metadata record.
+// Normalises the deprecated game_metadata.artwork_urls array column.
+message ArtworkMetadata {
+  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // References game_metadata.id.
+  int32 game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string url = 3;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
