@@ -9547,7 +9547,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-config"
-version = "0.8.0"
+version = "0.8.4"
 dependencies = [
  "axum",
  "config",
