@@ -291,6 +291,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
+    // Diesel type attributes for retrom.services.library.v1 model types
+    let library_v1_row_derives = format!("#[derive({diesel_row_derivations})]",);
+    let library_v1_macro_library = get_diesel_macro("libraries", None, vec![]);
+    let library_v1_macro_root_dir = get_diesel_macro("root_directories", None, vec![]);
+
+    build = build
+        .type_attribute(
+            "retrom.services.library.v1.Library",
+            format!("{library_v1_row_derives}\n{library_v1_macro_library}"),
+        )
+        .type_attribute(
+            "retrom.services.library.v1.RootDirectory",
+            format!("{library_v1_row_derives}\n{library_v1_macro_root_dir}"),
+        );
+
     build
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))
         .compile_protos(&proto_paths, &[PathBuf::from("./protos/")])?;

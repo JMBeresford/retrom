@@ -4,6 +4,10 @@ package retrom.services.library.v1;
 
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
+import "retrom/models/game-files.proto";
+import "retrom/models/games.proto";
+import "retrom/models/metadata.proto";
+import "retrom/models/platforms.proto";
 
 // Library is a first-class entity representing a game library.
 message Library {
@@ -35,4 +39,222 @@ message RootDirectory {
   string path = 2;
   google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+service LibraryService {
+  // Existing operations
+  rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
+  rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
+  rpc DeleteLibrary(DeleteLibraryRequest) returns (DeleteLibraryResponse);
+  rpc DeleteMissingEntries(DeleteMissingEntriesRequest) returns (DeleteMissingEntriesResponse);
+
+  // Library CRUD (new)
+  rpc GetLibraries(GetLibrariesRequest) returns (GetLibrariesResponse);
+  rpc CreateLibraries(CreateLibrariesRequest) returns (CreateLibrariesResponse);
+  rpc UpdateLibraries(UpdateLibrariesRequest) returns (UpdateLibrariesResponse);
+
+  // Root Directory management (new)
+  rpc GetRootDirectories(GetRootDirectoriesRequest) returns (GetRootDirectoriesResponse);
+  rpc CreateRootDirectories(CreateRootDirectoriesRequest) returns (CreateRootDirectoriesResponse);
+  rpc UpdateRootDirectories(UpdateRootDirectoriesRequest) returns (UpdateRootDirectoriesResponse);
+  rpc DeleteRootDirectories(DeleteRootDirectoriesRequest) returns (DeleteRootDirectoriesResponse);
+
+  // Platform operations (migrated from PlatformService)
+  rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse);
+  rpc DeletePlatforms(DeletePlatformsRequest) returns (DeletePlatformsResponse);
+  rpc UpdatePlatforms(UpdatePlatformsRequest) returns (UpdatePlatformsResponse);
+
+  // Game operations (migrated from GameService)
+  rpc GetGames(GetGamesRequest) returns (GetGamesResponse);
+  rpc DeleteGames(DeleteGamesRequest) returns (DeleteGamesResponse);
+  rpc UpdateGames(UpdateGamesRequest) returns (UpdateGamesResponse);
+  rpc GetGameFiles(GetGameFilesRequest) returns (GetGameFilesResponse);
+  rpc DeleteGameFiles(DeleteGameFilesRequest) returns (DeleteGameFilesResponse);
+  rpc UpdateGameFiles(UpdateGameFilesRequest) returns (UpdateGameFilesResponse);
+}
+
+// ---- Existing operations ----
+
+message UpdateLibraryRequest {}
+
+message UpdateLibraryResponse {
+  repeated string job_ids = 1;
+}
+
+message UpdateLibraryMetadataRequest {
+  optional bool overwrite = 1;
+}
+
+message UpdateLibraryMetadataResponse {
+  string platform_metadata_job_id = 1;
+  string game_metadata_job_id = 2;
+  string extra_metadata_job_id = 3;
+  optional string steam_metadata_job_id = 4;
+}
+
+message DeleteLibraryRequest {}
+
+message DeleteLibraryResponse {}
+
+message DeleteMissingEntriesRequest {
+  bool dry_run = 1;
+}
+
+message DeleteMissingEntriesResponse {
+  repeated retrom.Platform platforms_deleted = 1;
+  repeated retrom.Game games_deleted = 2;
+  repeated retrom.GameFile game_files_deleted = 3;
+}
+
+// ---- Library CRUD ----
+
+message GetLibrariesRequest {
+  repeated int32 ids = 1;
+}
+
+message GetLibrariesResponse {
+  repeated Library libraries = 1;
+}
+
+message CreateLibrariesRequest {
+  repeated Library libraries = 1;
+}
+
+message CreateLibrariesResponse {
+  repeated Library libraries_created = 1;
+}
+
+message UpdateLibrariesRequest {
+  repeated Library libraries = 1;
+}
+
+message UpdateLibrariesResponse {
+  repeated Library libraries_updated = 1;
+}
+
+// ---- Root Directory management ----
+
+message GetRootDirectoriesRequest {
+  repeated int32 ids = 1;
+}
+
+message GetRootDirectoriesResponse {
+  repeated RootDirectory root_directories = 1;
+}
+
+message CreateRootDirectoriesRequest {
+  repeated RootDirectory root_directories = 1;
+}
+
+message CreateRootDirectoriesResponse {
+  repeated RootDirectory root_directories_created = 1;
+}
+
+message UpdateRootDirectoriesRequest {
+  repeated RootDirectory root_directories = 1;
+}
+
+message UpdateRootDirectoriesResponse {
+  repeated RootDirectory root_directories_updated = 1;
+}
+
+message DeleteRootDirectoriesRequest {
+  repeated int32 ids = 1;
+}
+
+message DeleteRootDirectoriesResponse {
+  repeated RootDirectory root_directories_deleted = 1;
+}
+
+// ---- Platform operations ----
+
+message GetPlatformsRequest {
+  repeated int32 ids = 1;
+  optional bool with_metadata = 2;
+  optional bool include_deleted = 3;
+}
+
+message GetPlatformsResponse {
+  repeated retrom.Platform platforms = 1;
+  repeated retrom.PlatformMetadata metadata = 2;
+}
+
+message DeletePlatformsRequest {
+  repeated int32 ids = 1;
+  bool delete_from_disk = 2;
+  bool blacklist_entries = 3;
+}
+
+message DeletePlatformsResponse {
+  repeated retrom.Platform platforms_deleted = 1;
+}
+
+message UpdatePlatformsRequest {
+  repeated retrom.UpdatedPlatform platforms = 1;
+}
+
+message UpdatePlatformsResponse {
+  repeated retrom.Platform platforms_updated = 1;
+}
+
+// ---- Game operations ----
+
+message GetGamesRequest {
+  repeated int32 platform_ids = 1;
+  repeated int32 ids = 2;
+  optional bool with_metadata = 3;
+  optional bool with_files = 4;
+  optional bool include_deleted = 5;
+}
+
+message GetGamesResponse {
+  repeated retrom.Game games = 1;
+  repeated retrom.GameMetadata metadata = 2;
+  repeated retrom.GameFile game_files = 3;
+}
+
+message DeleteGamesRequest {
+  repeated int32 ids = 1;
+  bool delete_from_disk = 2;
+  bool blacklist_entries = 3;
+}
+
+message DeleteGamesResponse {
+  repeated retrom.Game games_deleted = 1;
+}
+
+message UpdateGamesRequest {
+  repeated retrom.UpdatedGame games = 1;
+}
+
+message UpdateGamesResponse {
+  repeated retrom.Game games_updated = 1;
+}
+
+message GetGameFilesRequest {
+  repeated int32 ids = 1;
+  optional bool include_deleted = 2;
+  repeated int32 game_ids = 3;
+}
+
+message GetGameFilesResponse {
+  repeated retrom.GameFile game_files = 1;
+}
+
+message DeleteGameFilesRequest {
+  repeated int32 ids = 1;
+  bool delete_from_disk = 2;
+  bool blacklist_entries = 3;
+}
+
+message DeleteGameFilesResponse {
+  repeated retrom.GameFile game_files_deleted = 1;
+}
+
+message UpdateGameFilesRequest {
+  repeated retrom.UpdatedGameFile game_files = 1;
+}
+
+message UpdateGameFilesResponse {
+  repeated retrom.GameFile game_files_updated = 1;
 }

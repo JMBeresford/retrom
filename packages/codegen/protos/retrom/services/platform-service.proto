@@ -1,14 +1,25 @@
+// Deprecated: use retrom.services.library.v1.LibraryService instead.
 syntax = "proto3";
 
 package retrom;
+
+option deprecated = true;
 
 import 'retrom/models/metadata.proto';
 import 'retrom/models/platforms.proto';
 
 service PlatformService {
-  rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse);
-  rpc DeletePlatforms(DeletePlatformsRequest) returns (DeletePlatformsResponse);
-  rpc UpdatePlatforms(UpdatePlatformsRequest) returns (UpdatePlatformsResponse);
+  option deprecated = true;
+
+  rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse) {
+    option deprecated = true;
+  }
+  rpc DeletePlatforms(DeletePlatformsRequest) returns (DeletePlatformsResponse) {
+    option deprecated = true;
+  }
+  rpc UpdatePlatforms(UpdatePlatformsRequest) returns (UpdatePlatformsResponse) {
+    option deprecated = true;
+  }
 }
 
 message GetPlatformsRequest {
