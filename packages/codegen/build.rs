@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .filter(|path| path.extension() == Some("proto".as_ref()))
         .collect();
 
-    let queryable_models: [ModelDefinitionParams; 15] = [
+    let queryable_models: [ModelDefinitionParams; 16] = [
         ("Platform", "platforms", None, vec![]),
         ("Game", "games", None, vec!["Platform"]),
         (
@@ -120,6 +120,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (
             "services.library.v1.RootDirectory",
             "root_directories",
+            None,
+            vec![],
+        ),
+        (
+            "services.metadata.v1.MetadataProvider",
+            "metadata_providers",
             None,
             vec![],
         ),
