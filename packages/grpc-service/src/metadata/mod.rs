@@ -28,7 +28,7 @@ use retrom_service_common::{
     metadata_providers::{
         igdb::provider::{IGDBProvider, IgdbSearchData},
         steam::provider::SteamWebApiProvider,
-        GameMetadataProvider, MetadataProvider, PlatformMetadataProvider,
+        GameMetadataProvider, MetadataProvider as MetadataProviderTrait, PlatformMetadataProvider,
     },
     retrom_dirs::RetromDirs,
 };
@@ -40,6 +40,7 @@ use walkdir::WalkDir;
 
 use super::jobs::job_manager::JobManager;
 
+#[derive(Clone)]
 pub struct MetadataServiceHandlers {
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,
@@ -787,5 +788,101 @@ impl MetadataService for MetadataServiceHandlers {
         }
 
         Ok(Response::new(DeleteLocalMetadataResponse {}))
+    }
+}
+
+use retrom_codegen::retrom::services::metadata::v1::{
+    metadata_service_server::MetadataService as MetadataServiceV1, GetMetadataProvidersRequest,
+    GetMetadataProvidersResponse, MetadataProvider as MetadataProviderModel,
+};
+
+#[tonic::async_trait]
+impl MetadataServiceV1 for MetadataServiceHandlers {
+    async fn get_game_metadata(
+        &self,
+        request: Request<GetGameMetadataRequest>,
+    ) -> Result<Response<GetGameMetadataResponse>, Status> {
+        <Self as MetadataService>::get_game_metadata(self, request).await
+    }
+
+    async fn update_game_metadata(
+        &self,
+        request: Request<UpdateGameMetadataRequest>,
+    ) -> Result<Response<UpdateGameMetadataResponse>, Status> {
+        <Self as MetadataService>::update_game_metadata(self, request).await
+    }
+
+    async fn get_platform_metadata(
+        &self,
+        request: Request<GetPlatformMetadataRequest>,
+    ) -> Result<Response<GetPlatformMetadataResponse>, Status> {
+        <Self as MetadataService>::get_platform_metadata(self, request).await
+    }
+
+    async fn update_platform_metadata(
+        &self,
+        request: Request<UpdatePlatformMetadataRequest>,
+    ) -> Result<Response<UpdatePlatformMetadataResponse>, Status> {
+        <Self as MetadataService>::update_platform_metadata(self, request).await
+    }
+
+    async fn get_igdb_search(
+        &self,
+        request: Request<GetIgdbSearchRequest>,
+    ) -> Result<Response<GetIgdbSearchResponse>, Status> {
+        <Self as MetadataService>::get_igdb_search(self, request).await
+    }
+
+    async fn get_igdb_game_search_results(
+        &self,
+        request: Request<GetIgdbGameSearchResultsRequest>,
+    ) -> Result<Response<GetIgdbGameSearchResultsResponse>, Status> {
+        <Self as MetadataService>::get_igdb_game_search_results(self, request).await
+    }
+
+    async fn get_igdb_platform_search_results(
+        &self,
+        request: Request<GetIgdbPlatformSearchResultsRequest>,
+    ) -> Result<Response<GetIgdbPlatformSearchResultsResponse>, Status> {
+        <Self as MetadataService>::get_igdb_platform_search_results(self, request).await
+    }
+
+    async fn sync_steam_metadata(
+        &self,
+        request: Request<SyncSteamMetadataRequest>,
+    ) -> Result<Response<SyncSteamMetadataResponse>, Status> {
+        <Self as MetadataService>::sync_steam_metadata(self, request).await
+    }
+
+    async fn get_local_metadata_status(
+        &self,
+        request: Request<GetLocalMetadataStatusRequest>,
+    ) -> Result<Response<GetLocalMetadataStatusResponse>, Status> {
+        <Self as MetadataService>::get_local_metadata_status(self, request).await
+    }
+
+    async fn delete_local_metadata(
+        &self,
+        request: Request<DeleteLocalMetadataRequest>,
+    ) -> Result<Response<DeleteLocalMetadataResponse>, Status> {
+        <Self as MetadataService>::delete_local_metadata(self, request).await
+    }
+
+    async fn get_metadata_providers(
+        &self,
+        _request: Request<GetMetadataProvidersRequest>,
+    ) -> Result<Response<GetMetadataProvidersResponse>, Status> {
+        let mut conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let providers = schema::metadata_providers::table
+            .load::<MetadataProviderModel>(&mut conn)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        Ok(Response::new(GetMetadataProvidersResponse { providers }))
     }
 }
