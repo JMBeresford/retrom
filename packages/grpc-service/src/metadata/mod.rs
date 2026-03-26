@@ -10,6 +10,11 @@ use retrom_codegen::{
         get_igdb_search_request::IgdbSearchType,
         get_igdb_search_response::SearchResults,
         metadata_service_server::MetadataService,
+        services::metadata::v1::{
+            metadata_service_server::MetadataService as MetadataServiceV1,
+            GetMetadataProvidersRequest, GetMetadataProvidersResponse,
+            MetadataProvider as MetadataProviderModel,
+        },
         DeleteLocalMetadataRequest, DeleteLocalMetadataResponse, Game, GameGenre, GameGenreMap,
         GetGameMetadataRequest, GetGameMetadataResponse, GetIgdbGameSearchResultsRequest,
         GetIgdbGameSearchResultsResponse, GetIgdbPlatformSearchResultsRequest,
@@ -790,11 +795,6 @@ impl MetadataService for MetadataServiceHandlers {
         Ok(Response::new(DeleteLocalMetadataResponse {}))
     }
 }
-
-use retrom_codegen::retrom::services::metadata::v1::{
-    metadata_service_server::MetadataService as MetadataServiceV1, GetMetadataProvidersRequest,
-    GetMetadataProvidersResponse, MetadataProvider as MetadataProviderModel,
-};
 
 #[tonic::async_trait]
 impl MetadataServiceV1 for MetadataServiceHandlers {

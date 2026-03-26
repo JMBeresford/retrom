@@ -35,6 +35,7 @@ type FormFieldRenderer = ({
 type EditableGameMetadata = Omit<
   GameMetadata,
   | "gameId"
+  | "id"
   | "igdbId"
   | "steamId"
   | "createdAt"
@@ -46,6 +47,7 @@ type EditableGameMetadata = Omit<
   | "videoUrls"
   | "artworkUrls"
   | "screenshotUrls"
+  | "providerId"
 >;
 type FormSchema = z.infer<typeof formSchema>;
 const formSchema = z.object({
@@ -62,6 +64,10 @@ const formSchema = z.object({
   iconUrl: z
     .literal("")
     .or(z.string().url({ message: "Icon URL must be a valid URL" })),
+
+  logoUrl: z
+    .literal("")
+    .or(z.string().url({ message: "Logo URL must be a valid URL" })),
 
   // links: z.array(z.string().url({ message: "Link must be a valid URL" })),
   // videoUrls: z.array(
@@ -93,6 +99,7 @@ export function ManualTab() {
       coverUrl: gameMetadata?.coverUrl ?? "",
       backgroundUrl: gameMetadata?.backgroundUrl ?? "",
       iconUrl: gameMetadata?.iconUrl ?? "",
+      logoUrl: gameMetadata?.logoUrl ?? "",
       // links: gameMetadata?.links ?? [],
       // videoUrls: gameMetadata?.videoUrls ?? [],
       // artworkUrls: gameMetadata?.artworkUrls ?? [],
@@ -321,6 +328,27 @@ const fields: Record<
       render={({ field, fieldState }) => (
         <FormItem>
           <FormLabel>Icon Image URL</FormLabel>
+          <FormControl>
+            <Input
+              {...field}
+              className={cn(
+                fieldState.isDirty ? "text-unset" : "text-muted-foreground",
+                "transition-colors",
+              )}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  ),
+  logoUrl: ({ form }) => (
+    <FormField
+      name="logoUrl"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <FormItem>
+          <FormLabel>Logo Image URL</FormLabel>
           <FormControl>
             <Input
               {...field}
