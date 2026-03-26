@@ -24,7 +24,7 @@
 
 - [x] 2.1 Config Service — proto file, Rust handler, deprecate `ServerService`
 - [x] 2.2 Enhanced Library Service — absorb `GameService` / `PlatformService` RPCs
-- [ ] 2.3 Updated Metadata Service — provider-aware RPCs
+- [x] 2.3 Updated Metadata Service — provider-aware RPCs
 - [ ] 2.4 Updated Emulator Service — mapping-table RPCs, `LocalEmulatorConfig` fields
 - [ ] 2.5 Updated Client Service — move to per-service crate
 - [ ] 2.6 Job Service — dedicated gRPC crate with `WatchJob` streaming RPC

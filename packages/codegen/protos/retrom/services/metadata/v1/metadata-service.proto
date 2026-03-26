@@ -4,6 +4,35 @@ package retrom.services.metadata.v1;
 
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
+// The v1 service reuses the legacy request/response message types while the
+// message definitions are still in the top-level retrom package.  They will
+// be migrated to this package in a later phase.
+import "retrom/services/metadata-service.proto";
+
+service MetadataService {
+  rpc GetGameMetadata(retrom.GetGameMetadataRequest) returns (retrom.GetGameMetadataResponse);
+  rpc UpdateGameMetadata(retrom.UpdateGameMetadataRequest) returns (retrom.UpdateGameMetadataResponse);
+
+  rpc GetPlatformMetadata(retrom.GetPlatformMetadataRequest) returns (retrom.GetPlatformMetadataResponse);
+  rpc UpdatePlatformMetadata(retrom.UpdatePlatformMetadataRequest) returns (retrom.UpdatePlatformMetadataResponse);
+
+  rpc GetIgdbSearch(retrom.GetIgdbSearchRequest) returns (retrom.GetIgdbSearchResponse);
+  rpc GetIgdbGameSearchResults(retrom.GetIgdbGameSearchResultsRequest) returns (retrom.GetIgdbGameSearchResultsResponse);
+  rpc GetIgdbPlatformSearchResults(retrom.GetIgdbPlatformSearchResultsRequest) returns (retrom.GetIgdbPlatformSearchResultsResponse);
+
+  rpc SyncSteamMetadata(retrom.SyncSteamMetadataRequest) returns (retrom.SyncSteamMetadataResponse);
+
+  rpc GetLocalMetadataStatus(retrom.GetLocalMetadataStatusRequest) returns (retrom.GetLocalMetadataStatusResponse);
+  rpc DeleteLocalMetadata(retrom.DeleteLocalMetadataRequest) returns (retrom.DeleteLocalMetadataResponse);
+
+  rpc GetMetadataProviders(GetMetadataProvidersRequest) returns (GetMetadataProvidersResponse);
+}
+
+message GetMetadataProvidersRequest {}
+
+message GetMetadataProvidersResponse {
+  repeated MetadataProvider providers = 1;
+}
 
 // MetadataProvider represents a registered metadata source (e.g. IGDB, Steam).
 // Well-known providers are seeded at startup.
