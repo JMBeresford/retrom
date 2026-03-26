@@ -35,8 +35,8 @@ service EmulatorService {
 }
 
 message EmulatorPlatformMap {
-  int32 emulator_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  int32 platform_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  int32 emulator_id = 1;
+  int32 platform_id = 2;
   google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
