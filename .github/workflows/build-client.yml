@@ -178,11 +178,21 @@ jobs:
       - name: install tauri cli
         run: cargo install tauri-cli --version "^2.0.0" --locked
 
-      - name: build client
+      - name: build client (unix)
+        if: matrix.os != 'windows-latest'
         env:
           CONFIGURATION: ${{ inputs.debug && 'debug' || 'release' }}
         run: |
           pnpm nx build retrom-client --args="$BUNDLE_ARG $TARGET_ARG $SIGN_ARG" --configuration="$CONFIGURATION"
+
+      - name: build client (windows)
+        if: matrix.os == 'windows-latest'
+        env:
+          CONFIGURATION: ${{ inputs.debug && 'debug' || 'release' }}
+        run: |
+          pnpm nx build retrom-client `
+            --args="$env:BUNDLE_ARG $env:TARGET_ARG $env:SIGN_ARG" `
+            --configuration="$env:CONFIGURATION"
 
       - name: upload build bundle
         uses: actions/upload-artifact@v6
