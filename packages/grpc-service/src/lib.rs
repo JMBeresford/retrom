@@ -22,6 +22,7 @@ use retrom_codegen::{
         server_service_server::ServerServiceServer,
         services::{
             config::v1::config_service_server::ConfigServiceServer,
+            library::v1::library_service_server::LibraryServiceServer as LibraryServiceServerV1,
             saves::{
                 v1::saves_service_server::SavesServiceServer,
                 v2::emulator_saves_service_server::EmulatorSavesServiceServer,
@@ -117,13 +118,16 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         .build_v1alpha()
         .unwrap();
 
-    let library_service = LibraryServiceServer::new(LibraryServiceHandlers::new(
+    let lib_handlers = LibraryServiceHandlers::new(
         library_pool.clone(),
         igdb_client.clone(),
         steam_web_api_client.clone(),
         job_manager.clone(),
         config_manager.clone(),
-    ));
+    );
+
+    let library_service = LibraryServiceServer::new(lib_handlers.clone());
+    let library_service_v1 = LibraryServiceServerV1::new(lib_handlers);
 
     let metadata_service = MetadataServiceServer::new(MetadataServiceHandlers::new(
         shared_pool.clone(),
@@ -171,6 +175,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
 
     routes_builder
         .add_service(library_service)
+        .add_service(library_service_v1)
         .add_service(game_service)
         .add_service(platform_service)
         .add_service(metadata_service)

@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .filter(|path| path.extension() == Some("proto".as_ref()))
         .collect();
 
-    let queryable_models: [ModelDefinitionParams; 13] = [
+    let queryable_models: [ModelDefinitionParams; 15] = [
         ("Platform", "platforms", None, vec![]),
         ("Game", "games", None, vec!["Platform"]),
         (
@@ -115,6 +115,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "local_emulator_configs",
             None,
             vec!["Emulator", "Client"],
+        ),
+        ("services.library.v1.Library", "libraries", None, vec![]),
+        (
+            "services.library.v1.RootDirectory",
+            "root_directories",
+            None,
+            vec![],
         ),
     ];
 
