@@ -29,7 +29,6 @@ packages/codegen/
 │   ├── service.proto     # Service definitions
 │   └── types.proto       # Message types
 ├── src/
-│   └── gen/              # Generated Rust code (committed)
 ├── dist/                 # Generated TypeScript code (gitignored)
 ├── buf.yaml              # Buf workspace configuration
 └── buf.gen.yaml          # Code generation configuration
@@ -173,17 +172,16 @@ pnpm buf generate
 **Output**:
 
 - **TypeScript**: `packages/codegen/dist/`
-- **Rust**: `packages/codegen/src/gen/`
+- **Rust**: Cargo `OUT_DIR` (within `target/`, gitignored)
 
 ### Rust Code
 
-Generated Rust code is **committed to the repository**:
+Generated Rust code is **NOT committed** (gitignored):
 
-- Allows building without Buf toolchain
-- Faster CI/CD builds
-- Easier for contributors
+- Output to the Cargo `OUT_DIR` inside `target/`
+- Regenerated automatically by `build.rs` on each `cargo build`
 
-**Location**: `packages/codegen/src/gen/`
+**Location**: Cargo build `OUT_DIR` (gitignored)
 
 **Generated items**:
 
@@ -326,7 +324,7 @@ pnpm buf breaking --against '.git#branch=main'
 6. **Update Rust services** to implement new/changed APIs
 7. **Update TypeScript clients** to use new/changed APIs
 8. **Test** changes end-to-end
-9. **Commit** (includes Rust generated code)
+9. **Commit** (no generated code to include — Rust output is in `target/`, TypeScript output is gitignored)
 
 ## Connect-RPC
 
@@ -476,8 +474,8 @@ pnpm buf --version
 cd packages/codegen
 pnpm buf lint
 
-# Clear generated files and regenerate
-rm -rf dist/ src/gen/
+# Clear generated TypeScript files and regenerate
+rm -rf dist/
 pnpm nx build codegen
 ```
 
@@ -497,12 +495,8 @@ pnpm nx build codegen --skip-nx-cache
 ### Rust Compilation Errors
 
 ```bash
-# Check generated Rust code exists
-ls packages/codegen/src/gen/
-
-# Regenerate if needed
-cd packages/codegen
-pnpm buf generate
+# Regenerate by running a cargo build (output goes to target/)
+cargo check -p retrom-codegen
 
 # Check Rust compilation
 cargo check -p retrom-codegen
