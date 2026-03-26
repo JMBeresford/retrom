@@ -23,6 +23,12 @@ pub mod retrom {
     }
 
     pub mod services {
+        pub mod config {
+            pub mod v1 {
+                tonic::include_proto!("retrom.services.config.v1");
+            }
+        }
+
         pub mod saves {
             pub mod v1 {
                 tonic::include_proto!("retrom.services.saves.v1");

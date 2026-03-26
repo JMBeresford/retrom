@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package retrom.services.metadata.v1;
 
-import "google/protobuf/timestamp.proto";
 import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
 
 // MetadataProvider represents a registered metadata source (e.g. IGDB, Steam).
 // Well-known providers are seeded at startup.
