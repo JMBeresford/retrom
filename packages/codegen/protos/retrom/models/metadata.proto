@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package retrom;
 
-import "google/protobuf/timestamp.proto";
 import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
 
 message GameMetadata {
   int32 game_id = 1;
