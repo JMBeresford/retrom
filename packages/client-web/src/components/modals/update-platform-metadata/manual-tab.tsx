@@ -33,7 +33,7 @@ type FormFieldRenderer = ({
 
 type EditablePlatformMetadata = Omit<
   PlatformMetadata,
-  "platformId" | "igdbId" | "createdAt" | "updatedAt"
+  "platformId" | "igdbId" | "createdAt" | "updatedAt" | "providerId"
 >;
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -46,6 +46,9 @@ const formSchema = z.object({
   logoUrl: z
     .literal("")
     .or(z.string().url({ message: "Logo URL must be a valid URL" })),
+  iconUrl: z
+    .literal("")
+    .or(z.string().url({ message: "Icon URL must be a valid URL" })),
   renameDirectory: z.boolean().optional(),
 }) satisfies InferSchema<RawMessage<EditablePlatformMetadata>>;
 
@@ -68,6 +71,7 @@ export function ManualTab(props: {
       description: platformMetadata?.description ?? "",
       backgroundUrl: platformMetadata?.backgroundUrl ?? "",
       logoUrl: platformMetadata?.logoUrl ?? "",
+      iconUrl: platformMetadata?.iconUrl ?? "",
       renameDirectory: false,
     },
   });
@@ -249,6 +253,27 @@ const fields: Record<
       render={({ field, fieldState }) => (
         <FormItem>
           <FormLabel>Logo Image URL</FormLabel>
+          <FormControl>
+            <Input
+              {...field}
+              className={cn(
+                fieldState.isDirty ? "text-unset" : "text-muted-foreground",
+                "transition-colors",
+              )}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  ),
+  iconUrl: ({ form }) => (
+    <FormField
+      name="iconUrl"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <FormItem>
+          <FormLabel>Icon Image URL</FormLabel>
           <FormControl>
             <Input
               {...field}

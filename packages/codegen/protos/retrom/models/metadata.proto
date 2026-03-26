@@ -68,6 +68,8 @@ message UpdatedGameMetadata {
   optional google.protobuf.Timestamp release_date = 14;
   optional google.protobuf.Timestamp last_played = 15;
   optional int32 minutes_played = 16;
+  // FK to metadata_providers.id.
+  optional int32 provider_id = 17;
 }
 
 message PlatformMetadata {
@@ -104,6 +106,8 @@ message UpdatedPlatformMetadata {
   optional int64 igdb_id = 6;
   optional google.protobuf.Timestamp created_at = 7;
   optional google.protobuf.Timestamp updated_at = 8;
+  // FK to metadata_providers.id.
+  optional int32 provider_id = 9;
 }
 
 message GameGenre {

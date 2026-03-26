@@ -23,6 +23,7 @@ use retrom_codegen::{
         services::{
             config::v1::config_service_server::ConfigServiceServer,
             library::v1::library_service_server::LibraryServiceServer as LibraryServiceServerV1,
+            metadata::v1::metadata_service_server::MetadataServiceServer as MetadataServiceServerV1,
             saves::{
                 v1::saves_service_server::SavesServiceServer,
                 v2::emulator_saves_service_server::EmulatorSavesServiceServer,
@@ -129,14 +130,16 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
     let library_service = LibraryServiceServer::new(lib_handlers.clone());
     let library_service_v1 = LibraryServiceServerV1::new(lib_handlers);
 
-    let metadata_service = MetadataServiceServer::new(MetadataServiceHandlers::new(
+    let metadata_handlers = MetadataServiceHandlers::new(
         shared_pool.clone(),
         igdb_client.clone(),
         steam_web_api_client.clone(),
         media_cache.clone(),
         job_manager.clone(),
         config_manager.clone(),
-    ));
+    );
+    let metadata_service = MetadataServiceServer::new(metadata_handlers.clone());
+    let metadata_service_v1 = MetadataServiceServerV1::new(metadata_handlers);
 
     let game_service = GameServiceServer::new(GameServiceHandlers::new(shared_pool.clone()));
     let platform_service =
@@ -179,6 +182,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         .add_service(game_service)
         .add_service(platform_service)
         .add_service(metadata_service)
+        .add_service(metadata_service_v1)
         .add_service(client_service)
         .add_service(config_service)
         .add_service(server_service)
