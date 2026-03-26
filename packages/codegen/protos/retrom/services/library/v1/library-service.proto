@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package retrom.services.library.v1;
 
-import "google/protobuf/timestamp.proto";
 import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
 
 // Library is a first-class entity representing a game library.
 message Library {

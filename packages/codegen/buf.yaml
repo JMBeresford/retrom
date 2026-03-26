@@ -1,8 +1,6 @@
 version: v2
 modules:
   - path: protos
-    deps:
-      - buf.build/googleapis/googleapis
 lint:
   use:
     - MINIMAL
