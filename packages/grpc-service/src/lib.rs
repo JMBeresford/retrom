@@ -22,6 +22,7 @@ use retrom_codegen::{
         server_service_server::ServerServiceServer,
         services::{
             config::v1::config_service_server::ConfigServiceServer,
+            emulators::v1::emulator_service_server::EmulatorServiceServer as EmulatorServiceServerV1,
             library::v1::library_service_server::LibraryServiceServer as LibraryServiceServerV1,
             metadata::v1::metadata_service_server::MetadataServiceServer as MetadataServiceServerV1,
             saves::{
@@ -157,6 +158,9 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
     let emulator_service =
         EmulatorServiceServer::new(EmulatorServiceHandlers::new(shared_pool.clone()));
 
+    let emulator_service_v1 =
+        EmulatorServiceServerV1::new(EmulatorServiceHandlers::new(shared_pool.clone()));
+
     let job_service = JobServiceServer::new(JobServiceHandlers::new(job_manager.clone()));
     let file_explorer_service = FileExplorerServiceServer::new(FileExplorerServiceHandlers::new());
 
@@ -187,6 +191,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         .add_service(config_service)
         .add_service(server_service)
         .add_service(emulator_service)
+        .add_service(emulator_service_v1)
         .add_service(job_service)
         .add_service(file_explorer_service)
         .add_service(saves_service_v1)
