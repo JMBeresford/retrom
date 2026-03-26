@@ -45,7 +45,15 @@ const configSchema = z.object({
   Record<
     keyof Omit<
       LocalEmulatorConfigJson,
-      "createdAt" | "updatedAt" | "id" | "emulatorId" | "clientId" | "nickname"
+      | "createdAt"
+      | "updatedAt"
+      | "id"
+      | "emulatorId"
+      | "clientId"
+      | "nickname"
+      | "defaultProfileId"
+      | "biosDirectory"
+      | "extraFilesDirectory"
     >,
     z.ZodType
   >
