@@ -1,0 +1,18 @@
+[package]
+name = "retrom-service-clients"
+resolver = "2"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Client service handler for the Retrom video game library service"
+
+[dependencies]
+retrom-codegen = { workspace = true }
+retrom-db = { workspace = true }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+tonic = { workspace = true }
+axum = { workspace = true }
+tracing = { workspace = true }

@@ -9021,6 +9021,7 @@ dependencies = [
  "regex",
  "retrom-codegen",
  "retrom-db",
+ "retrom-service-clients",
  "retrom-service-common",
  "retrom-service-config",
  "retrom-telemetry",
@@ -9242,6 +9243,19 @@ dependencies = [
  "signal-hook-tokio",
  "tokio",
  "tower 0.5.3",
+ "tracing",
+]
+
+[[package]]
+name = "retrom-service-clients"
+version = "0.8.0"
+dependencies = [
+ "axum",
+ "diesel",
+ "diesel-async",
+ "retrom-codegen",
+ "retrom-db",
+ "tonic 0.14.5",
  "tracing",
 ]
 
