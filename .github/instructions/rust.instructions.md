@@ -314,6 +314,7 @@ Before committing Rust changes:
 - Use `//!` for module-level documentation
 - Include examples in doc comments
 - Run `cargo doc` to verify documentation builds
+- Do **not** add section-header comments (e.g. `// ---- Game operations ----`) inside `impl` blocks or modules; group related items with whitespace instead
 
 ## NX Integration
 
