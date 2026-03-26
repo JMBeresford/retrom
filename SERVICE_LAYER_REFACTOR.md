@@ -22,7 +22,7 @@
 
 ### Phase 2: Service Interface Redesign
 
-- [ ] 2.1 Config Service — proto file, Rust handler, deprecate `ServerService`
+- [x] 2.1 Config Service — proto file, Rust handler, deprecate `ServerService`
 - [ ] 2.2 Enhanced Library Service — absorb `GameService` / `PlatformService` RPCs
 - [ ] 2.3 Updated Metadata Service — provider-aware RPCs
 - [ ] 2.4 Updated Emulator Service — mapping-table RPCs, `LocalEmulatorConfig` fields
@@ -885,6 +885,10 @@ service ServerService {
   instead.
 - No database pool is needed for the core config RPCs.
 - Export a `config_router() -> axum::Router` function that registers the service.
+- Add a `src/main.rs` and a `[[bin]]` entry in `Cargo.toml` so the crate can be started as a
+  standalone service process. This is the required convention for all subsequent per-service
+  crates; however, unlike `ConfigService`, those crates must **not** use `ServerConfigManager`
+  directly — they must obtain configuration by calling `ConfigService` over gRPC.
 
 ---
 
@@ -1300,7 +1304,14 @@ For each domain below, create a new Cargo crate following this pattern:
 5. Expose a `pub fn <domain>_router(db_pool: sqlx::AnyPool) -> axum::Router` function.
    Each crate receives an `sqlx::AnyPool` — the specific database backend is determined at
    runtime from the connection URL; no feature flags are needed.
-6. Add a `project.json` for NX integration.
+6. Add a `src/main.rs` entry point and a `[[bin]]` section in `Cargo.toml` so the service
+   can be started as a standalone process. The binary must **not** use `ServerConfigManager`
+   directly — only `retrom-service-config` owns the config file. Instead, the binary should
+   connect to the already-running `ConfigService` (assumed to be on the host) via gRPC and
+   call `GetServerConfig` / `GetServerInfo` to obtain any required configuration (e.g. port,
+   telemetry settings). The binary then initialises tracing with `init_tracing_subscriber`,
+   binds to a TCP listener, and serves the router with `axum::serve`.
+7. Add a `project.json` for NX integration.
 
 **Crates to create:**
 
@@ -1415,7 +1426,7 @@ let app = axum::Router::new()
     .merge(metadata_router(db_pool.clone(), Arc::new(metadata_registry)))
     .merge(emulators_router(db_pool.clone()))
     .merge(clients_router(db_pool.clone()))
-    .merge(config_router(config_manager.clone()))   // no db_pool; owns config file
+    .merge(config_router())                         // no db_pool; owns config file and manager
     .merge(jobs_router(db_pool.clone()))
     .merge(tags_router(db_pool.clone()))
     .merge(files_router(db_pool.clone()))

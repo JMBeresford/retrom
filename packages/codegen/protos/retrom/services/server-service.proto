@@ -5,7 +5,11 @@ package retrom;
 import 'retrom/server/config.proto';
 import 'retrom/server/server-info.proto';
 
+// Deprecated: Use retrom.services.config.v1.ConfigService instead.
+option deprecated = true;
+
 service ServerService {
+  option deprecated = true;
   rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
   rpc GetServerConfig(GetServerConfigRequest) returns (GetServerConfigResponse);
   rpc UpdateServerConfig(UpdateServerConfigRequest) returns (UpdateServerConfigResponse);

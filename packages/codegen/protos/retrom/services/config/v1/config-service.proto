@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package retrom.services.config.v1;
+
+import "retrom/server/config.proto";
+import "retrom/server/server-info.proto";
+
+// ConfigService manages server configuration and exposes server metadata.
+service ConfigService {
+  // GetServerInfo returns metadata about the running server instance, such as
+  // the current version.
+  rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
+
+  // GetServerConfig returns the current server configuration.
+  rpc GetServerConfig(GetServerConfigRequest) returns (GetServerConfigResponse);
+
+  // UpdateServerConfig replaces the server configuration with the provided
+  // value and persists it to disk.
+  rpc UpdateServerConfig(UpdateServerConfigRequest) returns (UpdateServerConfigResponse);
+}
+
+message GetServerInfoRequest {}
+
+message GetServerInfoResponse {
+  retrom.ServerInfo server_info = 1;
+}
+
+message GetServerConfigRequest {}
+
+message GetServerConfigResponse {
+  retrom.ServerConfig config = 1;
+}
+
+message UpdateServerConfigRequest {
+  retrom.ServerConfig config = 1;
+}
+
+message UpdateServerConfigResponse {
+  retrom.ServerConfig config_updated = 1;
+}
