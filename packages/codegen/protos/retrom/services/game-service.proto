@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package retrom;
 
-// Deprecated: use retrom.services.library.v1.LibraryService instead.
-option deprecated = true;
-
 import 'retrom/models/game-files.proto';
 import 'retrom/models/games.proto';
 import 'retrom/models/metadata.proto';
+
+// Deprecated: use retrom.services.library.v1.LibraryService instead.
+option deprecated = true;
 
 service GameService {
   option deprecated = true;
