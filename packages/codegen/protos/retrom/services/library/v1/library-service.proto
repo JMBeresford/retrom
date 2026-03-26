@@ -42,29 +42,24 @@ message RootDirectory {
 }
 
 service LibraryService {
-  // Existing operations
   rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
   rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
   rpc DeleteLibrary(DeleteLibraryRequest) returns (DeleteLibraryResponse);
   rpc DeleteMissingEntries(DeleteMissingEntriesRequest) returns (DeleteMissingEntriesResponse);
 
-  // Library CRUD (new)
   rpc GetLibraries(GetLibrariesRequest) returns (GetLibrariesResponse);
   rpc CreateLibraries(CreateLibrariesRequest) returns (CreateLibrariesResponse);
   rpc UpdateLibraries(UpdateLibrariesRequest) returns (UpdateLibrariesResponse);
 
-  // Root Directory management (new)
   rpc GetRootDirectories(GetRootDirectoriesRequest) returns (GetRootDirectoriesResponse);
   rpc CreateRootDirectories(CreateRootDirectoriesRequest) returns (CreateRootDirectoriesResponse);
   rpc UpdateRootDirectories(UpdateRootDirectoriesRequest) returns (UpdateRootDirectoriesResponse);
   rpc DeleteRootDirectories(DeleteRootDirectoriesRequest) returns (DeleteRootDirectoriesResponse);
 
-  // Platform operations (migrated from PlatformService)
   rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse);
   rpc DeletePlatforms(DeletePlatformsRequest) returns (DeletePlatformsResponse);
   rpc UpdatePlatforms(UpdatePlatformsRequest) returns (UpdatePlatformsResponse);
 
-  // Game operations (migrated from GameService)
   rpc GetGames(GetGamesRequest) returns (GetGamesResponse);
   rpc DeleteGames(DeleteGamesRequest) returns (DeleteGamesResponse);
   rpc UpdateGames(UpdateGamesRequest) returns (UpdateGamesResponse);
@@ -72,8 +67,6 @@ service LibraryService {
   rpc DeleteGameFiles(DeleteGameFilesRequest) returns (DeleteGameFilesResponse);
   rpc UpdateGameFiles(UpdateGameFilesRequest) returns (UpdateGameFilesResponse);
 }
-
-// ---- Existing operations ----
 
 message UpdateLibraryRequest {}
 
@@ -106,8 +99,6 @@ message DeleteMissingEntriesResponse {
   repeated retrom.GameFile game_files_deleted = 3;
 }
 
-// ---- Library CRUD ----
-
 message GetLibrariesRequest {
   repeated int32 ids = 1;
 }
@@ -131,8 +122,6 @@ message UpdateLibrariesRequest {
 message UpdateLibrariesResponse {
   repeated Library libraries_updated = 1;
 }
-
-// ---- Root Directory management ----
 
 message GetRootDirectoriesRequest {
   repeated int32 ids = 1;
@@ -166,8 +155,6 @@ message DeleteRootDirectoriesResponse {
   repeated RootDirectory root_directories_deleted = 1;
 }
 
-// ---- Platform operations ----
-
 message GetPlatformsRequest {
   repeated int32 ids = 1;
   optional bool with_metadata = 2;
@@ -196,8 +183,6 @@ message UpdatePlatformsRequest {
 message UpdatePlatformsResponse {
   repeated retrom.Platform platforms_updated = 1;
 }
-
-// ---- Game operations ----
 
 message GetGamesRequest {
   repeated int32 platform_ids = 1;

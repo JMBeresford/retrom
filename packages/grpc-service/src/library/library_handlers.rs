@@ -1,5 +1,5 @@
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
+use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use retrom_codegen::retrom::services::library::v1::{
     CreateLibrariesRequest, CreateLibrariesResponse, GetLibrariesRequest, GetLibrariesResponse,
     Library, UpdateLibrariesRequest, UpdateLibrariesResponse,
@@ -42,21 +42,23 @@ pub async fn create_libraries(
         Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
     };
 
-    let mut libraries_created = Vec::new();
+    let values: Vec<_> = request
+        .libraries
+        .iter()
+        .map(|lib| {
+            (
+                schema::libraries::name.eq(lib.name.clone()),
+                schema::libraries::structure_definition.eq(lib.structure_definition.clone()),
+            )
+        })
+        .collect();
 
-    for lib in request.libraries {
-        let created: Library = diesel::insert_into(schema::libraries::table)
-            .values((
-                schema::libraries::name.eq(&lib.name),
-                schema::libraries::structure_definition.eq(&lib.structure_definition),
-            ))
-            .returning(Library::as_returning())
-            .get_result(&mut conn)
-            .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-        libraries_created.push(created);
-    }
+    let libraries_created: Vec<Library> = diesel::insert_into(schema::libraries::table)
+        .values(values)
+        .returning(Library::as_returning())
+        .get_results(&mut conn)
+        .await
+        .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
 
     Ok(CreateLibrariesResponse { libraries_created })
 }
@@ -70,24 +72,34 @@ pub async fn update_libraries(
         Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
     };
 
-    let mut libraries_updated = Vec::new();
+    let libraries = request.libraries;
 
-    for lib in request.libraries {
-        let id = lib.id;
+    let libraries_updated = conn
+        .transaction(|conn| {
+            async move {
+                let mut updated = Vec::with_capacity(libraries.len());
 
-        let updated: Library =
-            diesel::update(schema::libraries::table.filter(schema::libraries::id.eq(id)))
-                .set((
-                    schema::libraries::name.eq(&lib.name),
-                    schema::libraries::structure_definition.eq(&lib.structure_definition),
-                ))
-                .returning(Library::as_returning())
-                .get_result(&mut conn)
-                .await
-                .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
+                for lib in libraries {
+                    let row: Library = diesel::update(
+                        schema::libraries::table.filter(schema::libraries::id.eq(lib.id)),
+                    )
+                    .set((
+                        schema::libraries::name.eq(&lib.name),
+                        schema::libraries::structure_definition.eq(&lib.structure_definition),
+                    ))
+                    .returning(Library::as_returning())
+                    .get_result(conn)
+                    .await?;
 
-        libraries_updated.push(updated);
-    }
+                    updated.push(row);
+                }
+
+                Ok::<_, diesel::result::Error>(updated)
+            }
+            .scope_boxed()
+        })
+        .await
+        .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
 
     Ok(UpdateLibrariesResponse { libraries_updated })
 }

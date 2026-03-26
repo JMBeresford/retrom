@@ -94,7 +94,8 @@ message Game {
 
 **Documentation**:
 
-- Add comments to services, messages, and fields
+- Only add doc comments on services, messages, fields, or RPCs when the behavior is non-trivial or unclear at a glance
+- Do **not** add section-header comments (e.g. `// ---- Game operations ----`) in `.proto` files; the message/service names are self-documenting
 - Comments become documentation in generated code
 
 ## Buf Configuration

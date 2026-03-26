@@ -1,5 +1,5 @@
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
+use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use retrom_codegen::retrom::services::library::v1::{
     CreateRootDirectoriesRequest, CreateRootDirectoriesResponse, DeleteRootDirectoriesRequest,
     DeleteRootDirectoriesResponse, GetRootDirectoriesRequest, GetRootDirectoriesResponse,
@@ -43,18 +43,19 @@ pub async fn create_root_directories(
         Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
     };
 
-    let mut root_directories_created = Vec::new();
+    let values: Vec<_> = request
+        .root_directories
+        .iter()
+        .map(|dir| schema::root_directories::path.eq(dir.path.clone()))
+        .collect();
 
-    for dir in request.root_directories {
-        let created: RootDirectory = diesel::insert_into(schema::root_directories::table)
-            .values(schema::root_directories::path.eq(&dir.path))
+    let root_directories_created: Vec<RootDirectory> =
+        diesel::insert_into(schema::root_directories::table)
+            .values(values)
             .returning(RootDirectory::as_returning())
-            .get_result(&mut conn)
+            .get_results(&mut conn)
             .await
             .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-        root_directories_created.push(created);
-    }
 
     Ok(CreateRootDirectoriesResponse {
         root_directories_created,
@@ -70,22 +71,32 @@ pub async fn update_root_directories(
         Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
     };
 
-    let mut root_directories_updated = Vec::new();
+    let dirs = request.root_directories;
 
-    for dir in request.root_directories {
-        let id = dir.id;
+    let root_directories_updated = conn
+        .transaction(|conn| {
+            async move {
+                let mut updated = Vec::with_capacity(dirs.len());
 
-        let updated: RootDirectory = diesel::update(
-            schema::root_directories::table.filter(schema::root_directories::id.eq(id)),
-        )
-        .set(schema::root_directories::path.eq(&dir.path))
-        .returning(RootDirectory::as_returning())
-        .get_result(&mut conn)
+                for dir in dirs {
+                    let row: RootDirectory = diesel::update(
+                        schema::root_directories::table
+                            .filter(schema::root_directories::id.eq(dir.id)),
+                    )
+                    .set(schema::root_directories::path.eq(&dir.path))
+                    .returning(RootDirectory::as_returning())
+                    .get_result(conn)
+                    .await?;
+
+                    updated.push(row);
+                }
+
+                Ok::<_, diesel::result::Error>(updated)
+            }
+            .scope_boxed()
+        })
         .await
         .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-        root_directories_updated.push(updated);
-    }
 
     Ok(UpdateRootDirectoriesResponse {
         root_directories_updated,

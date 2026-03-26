@@ -117,14 +117,10 @@ impl LibraryService for LibraryServiceHandlers {
 /// and root-directory operations are implemented in dedicated sub-modules.
 #[tonic::async_trait]
 impl LibraryServiceV1 for LibraryServiceHandlers {
-    // ---- Existing operations ----
-
     async fn update_library(
         &self,
         request: Request<UpdateLibraryRequestV1>,
     ) -> Result<Response<UpdateLibraryResponseV1>, Status> {
-        // Delegate to the legacy handler — the request has no fields, so no
-        // conversion is required.
         let _request = request.into_inner();
         let legacy_request = tonic::Request::new(UpdateLibraryRequest {});
         match update_handlers::update_library(self, legacy_request).await {
@@ -179,8 +175,6 @@ impl LibraryServiceV1 for LibraryServiceHandlers {
         }
     }
 
-    // ---- Library CRUD ----
-
     async fn get_libraries(
         &self,
         request: Request<GetLibrariesRequest>,
@@ -207,8 +201,6 @@ impl LibraryServiceV1 for LibraryServiceHandlers {
             .await
             .map(Response::new)
     }
-
-    // ---- Root Directory management ----
 
     async fn get_root_directories(
         &self,
@@ -246,13 +238,10 @@ impl LibraryServiceV1 for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    // ---- Platform operations ----
-
     async fn get_platforms(
         &self,
         request: Request<GetPlatformsRequest>,
     ) -> Result<Response<GetPlatformsResponse>, Status> {
-        // Convert v1 request to retrom package request and delegate.
         let req = request.into_inner();
         let legacy_req = retrom_codegen::retrom::GetPlatformsRequest {
             ids: req.ids,
@@ -304,8 +293,6 @@ impl LibraryServiceV1 for LibraryServiceHandlers {
                 })
             })
     }
-
-    // ---- Game operations ----
 
     async fn get_games(
         &self,

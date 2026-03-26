@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .filter(|path| path.extension() == Some("proto".as_ref()))
         .collect();
 
-    let queryable_models: [ModelDefinitionParams; 13] = [
+    let queryable_models: [ModelDefinitionParams; 15] = [
         ("Platform", "platforms", None, vec![]),
         ("Game", "games", None, vec!["Platform"]),
         (
@@ -115,6 +115,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "local_emulator_configs",
             None,
             vec!["Emulator", "Client"],
+        ),
+        ("services.library.v1.Library", "libraries", None, vec![]),
+        (
+            "services.library.v1.RootDirectory",
+            "root_directories",
+            None,
+            vec![],
         ),
     ];
 
@@ -290,21 +297,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             format!("{derives}\n{diesel_macro_clause}",),
         );
     }
-
-    // Diesel type attributes for retrom.services.library.v1 model types
-    let library_v1_row_derives = format!("#[derive({diesel_row_derivations})]",);
-    let library_v1_macro_library = get_diesel_macro("libraries", None, vec![]);
-    let library_v1_macro_root_dir = get_diesel_macro("root_directories", None, vec![]);
-
-    build = build
-        .type_attribute(
-            "retrom.services.library.v1.Library",
-            format!("{library_v1_row_derives}\n{library_v1_macro_library}"),
-        )
-        .type_attribute(
-            "retrom.services.library.v1.RootDirectory",
-            format!("{library_v1_row_derives}\n{library_v1_macro_root_dir}"),
-        );
 
     build
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))
