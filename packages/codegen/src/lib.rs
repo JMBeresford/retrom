@@ -56,6 +56,12 @@ pub mod retrom {
                 tonic::include_proto!("retrom.services.saves.v2");
             }
         }
+
+        pub mod jobs {
+            pub mod v1 {
+                tonic::include_proto!("retrom.services.jobs.v1");
+            }
+        }
     }
 }
 

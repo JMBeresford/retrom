@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package retrom.services.jobs.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service JobService {
+  rpc CreateJob(CreateJobRequest) returns (CreateJobResponse);
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  rpc WatchJob(WatchJobRequest) returns (stream JobProgress);
+  rpc CompleteJob(CompleteJobRequest) returns (CompleteJobResponse);
+}
+
+enum JobStatus {
+  JOB_STATUS_UNSPECIFIED = 0;
+  JOB_STATUS_PENDING     = 1;
+  JOB_STATUS_RUNNING     = 2;
+  JOB_STATUS_COMPLETE    = 3;
+  JOB_STATUS_FAILED      = 4;
+}
+
+message Job {
+  string    id          = 1;
+  string    name        = 2;
+  JobStatus status      = 3;
+  float     progress    = 4;
+  string    message     = 5;
+  google.protobuf.Timestamp created_at  = 6;
+  google.protobuf.Timestamp updated_at  = 7;
+  google.protobuf.Timestamp finished_at = 8;
+}
+
+message JobProgress {
+  string    id       = 1;
+  JobStatus status   = 2;
+  float     progress = 3;
+  string    message  = 4;
+}
+
+message CreateJobRequest {
+  string name    = 1;
+  string message = 2;
+}
+
+message CreateJobResponse {
+  Job job = 1;
+}
+
+message GetJobRequest {
+  string id = 1;
+}
+
+message GetJobResponse {
+  Job job = 1;
+}
+
+message ListJobsRequest {
+  optional JobStatus status = 1;
+}
+
+message ListJobsResponse {
+  repeated Job jobs = 1;
+}
+
+message WatchJobRequest {
+  string id = 1;
+}
+
+message CompleteJobRequest {
+  string id      = 1;
+  bool   failed  = 2;
+  string message = 3;
+}
+
+message CompleteJobResponse {
+  Job job = 1;
+}

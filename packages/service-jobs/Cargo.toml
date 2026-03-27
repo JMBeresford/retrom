@@ -1,0 +1,26 @@
+[package]
+name = "retrom-service-jobs"
+resolver = "2"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Job service handler for the Retrom video game library service"
+
+[[bin]]
+name = "retrom-service-jobs"
+path = "src/main.rs"
+
+[dependencies]
+retrom-codegen = { workspace = true }
+retrom-telemetry = { workspace = true }
+tonic = { workspace = true }
+tonic-web = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+tokio-stream = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+futures = { workspace = true }

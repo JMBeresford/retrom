@@ -27,7 +27,7 @@
 - [x] 2.3 Updated Metadata Service — provider-aware RPCs
 - [x] 2.4 Updated Emulator Service — mapping-table RPCs, `LocalEmulatorConfig` fields
 - [x] 2.5 Updated Client Service — move to per-service crate
-- [ ] 2.6 Job Service — dedicated gRPC crate with `WatchJob` streaming RPC
+- [x] 2.6 Job Service — dedicated gRPC crate with `WatchJob` streaming RPC
 - [ ] 2.7 File Explorer Service — extract to own crate
 - [ ] 2.8 Tag Service — new service with tag domain management
 - [ ] 2.9 Saves Service — move to per-service crate (no interface changes)
