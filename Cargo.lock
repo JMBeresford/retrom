@@ -9251,11 +9251,17 @@ name = "retrom-service-clients"
 version = "0.8.0"
 dependencies = [
  "axum",
+ "deadpool",
  "diesel",
  "diesel-async",
+ "dotenvy",
  "retrom-codegen",
  "retrom-db",
+ "retrom-service-config",
+ "retrom-telemetry",
+ "tokio",
  "tonic 0.14.5",
+ "tonic-web",
  "tracing",
 ]
 
