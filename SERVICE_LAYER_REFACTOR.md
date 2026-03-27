@@ -38,9 +38,20 @@
 
 - [ ] 3.1 Create per-service crates (`retrom-service-{library,metadata,emulators,clients,config,jobs,tags,files,saves}`)
 - [ ] 3.2 Refactor `retrom-db` for sqlx + `AnyPool` support (replaces Diesel)
-- [ ] 3.3 Create `retrom-metadata` crate (provider traits, IGDB, Steam, registry)
-- [ ] 3.4 Update binary wiring (`packages/service`) to assemble per-crate routers
-- [ ] 3.5 Acceptance criteria
+- [ ] 3.3 Migrate per-service crates to sqlx (after 3.2):
+  - [ ] `retrom-service-library`
+  - [ ] `retrom-service-metadata`
+  - [ ] `retrom-service-emulators`
+  - [ ] `retrom-service-clients`
+  - [ ] `retrom-service-config`
+  - [ ] `retrom-service-jobs`
+  - [ ] `retrom-service-tags`
+  - [ ] `retrom-service-files`
+  - [ ] `retrom-service-saves`
+- [ ] 3.4 Migrate per-service crates to use `ConfigService` via RPC
+- [ ] 3.5 Create `retrom-metadata` crate (provider traits, IGDB, Steam, registry)
+- [ ] 3.6 Update binary wiring (`packages/service`) to assemble per-crate routers
+- [ ] 3.7 Acceptance criteria
 
 ### Phase 4: Data Migration
 
@@ -97,9 +108,11 @@
   - [Phase 3: Service Decomposition](#phase-3-service-decomposition)
     - [3.1 Create Per-Service Crates](#31-create-per-service-crates)
     - [3.2 Refactor retrom-db for sqlx + AnyPool Support](#32-refactor-retrom-db-for-sqlx--anypool-support)
-    - [3.3 Create retrom-metadata Crate](#33-create-retrom-metadata-crate)
-    - [3.4 Update Binary Wiring](#34-update-binary-wiring)
-    - [3.5 Acceptance Criteria](#35-acceptance-criteria)
+    - [3.3 Migrate Per-Service Crates to sqlx](#33-migrate-per-service-crates-to-sqlx)
+    - [3.4 Migrate Per-Service Crates to Use ConfigService via RPC](#34-migrate-per-service-crates-to-use-configservice-via-rpc)
+    - [3.5 Create retrom-metadata Crate](#35-create-retrom-metadata-crate)
+    - [3.6 Update Binary Wiring](#36-update-binary-wiring)
+    - [3.7 Acceptance Criteria](#37-acceptance-criteria)
   - [Phase 4: Data Migration](#phase-4-data-migration)
     - [4.1 Seed Metadata Providers and Tag Domains](#41-seed-metadata-providers-and-tag-domains)
     - [4.2 Normalize Metadata Arrays](#42-normalize-metadata-arrays)
@@ -1356,7 +1369,120 @@ flags are needed.
 
 ---
 
-### 3.3 Create retrom-metadata Crate
+### 3.3 Migrate Per-Service Crates to sqlx
+
+> **Prerequisite:** Step 3.2 is complete and `retrom-db` exposes `sqlx::AnyPool`.
+> Each service crate is migrated independently; track completion using the sub-items
+> in the Progress Tracker above.
+
+Even after the core `retrom-db` migration to sqlx, individual per-service crates may still
+contain Diesel-specific imports, derive macros, and query logic that was not yet moved into
+`retrom-db`. Each crate therefore requires its own dedicated migration step.
+
+**Rationale for per-crate migration:**
+
+- Migrating all service crates in a single PR is high-risk and produces an enormous diff that
+  is difficult to review safely.
+- Splitting by crate allows each PR to be reviewed and merged independently, keeping the
+  codebase in a releasable state after every merge.
+- Failures are isolated: a bug introduced in the `retrom-service-metadata` sqlx migration does
+  not block work on `retrom-service-library`.
+
+**Steps (repeat for each crate in the table below):**
+
+1. **Inventory Diesel usage** — search for `diesel::`, `use diesel`, `#[derive(Queryable`,
+   `#[derive(Insertable`, `#[derive(AsChangeset`, and similar macros in the crate.
+2. **Replace Diesel imports and macros** — substitute with `sqlx` equivalents. Models should
+   derive `sqlx::FromRow` instead of Diesel derive macros.
+3. **Rewrite all queries** — replace Diesel query DSL with `sqlx::query` / `sqlx::query_as`
+   using the non-macro forms (required for `AnyPool` compatibility). Ensure all SQL uses only
+   generic, portable syntax (see Guiding Principle 5).
+4. **Update error handling** — `sqlx::Error` differs from `diesel::result::Error`; update
+   match arms and `From` impls accordingly.
+5. **Remove Diesel dependencies** — delete `diesel`, `diesel-async`, and any Diesel feature
+   flags from the crate's `Cargo.toml` once all usage is removed.
+6. **Run and expand tests** — `pnpm nx cargo:test retrom-service-<domain>`. Add or update
+   integration tests that exercise the database layer directly.
+
+**Migration status:**
+
+| Service Crate              | Migrate to sqlx | Use ConfigService via RPC |
+|----------------------------|:---------------:|:-------------------------:|
+| `retrom-service-library`   |        ☐        |             ☐             |
+| `retrom-service-metadata`  |        ☐        |             ☐             |
+| `retrom-service-emulators` |        ☐        |             ☐             |
+| `retrom-service-clients`   |        ☐        |             ☐             |
+| `retrom-service-config`    |        ☐        |             ☐             |
+| `retrom-service-jobs`      |        ☐        |             ☐             |
+| `retrom-service-tags`      |        ☐        |             ☐             |
+| `retrom-service-files`     |        ☐        |             ☐             |
+| `retrom-service-saves`     |        ☐        |             ☐             |
+
+> **Suggested order:** Migrate `retrom-service-config` first (smallest surface area, no
+> external metadata provider dependencies), then proceed to `retrom-service-library`,
+> `retrom-service-metadata`, and the remaining crates.
+
+**Acceptance criteria per crate:**
+
+- The crate compiles without any Diesel imports (`cargo build -p retrom-service-<domain>`).
+- All existing tests pass (`pnpm nx cargo:test retrom-service-<domain>`).
+- `pnpm nx cargo:lint retrom-service-<domain>` reports no warnings.
+- No Diesel dependency remains in the crate's `Cargo.toml`.
+
+---
+
+### 3.4 Migrate Per-Service Crates to Use ConfigService via RPC
+
+> **Prerequisite:** Step 3.2 is complete and `retrom-service-config` is implemented and
+> running.
+
+The target architecture mandates that **only** `retrom-service-config` reads the server
+configuration file or holds a `ServerConfigManager`. All other service crates must obtain
+configuration exclusively via gRPC calls to `ConfigService`
+(`retrom.services.config.v1.ConfigService`). This ensures a clean separation of concerns,
+makes the system deployable as microservices, and prevents config-file access from spreading
+across the codebase. Once `retrom-service-config` is stable, all remaining service crates
+are updated in a single pass.
+
+**Steps (apply across all service crates):**
+
+1. **Locate all direct config access** — search for `ServerConfigManager`, `RetromDirs`,
+   direct reads from `retrom-service-common`'s config module, or any `std::fs` / environment
+   variable reads that retrieve server configuration values.
+2. **Add a `ConfigService` gRPC client** — add the generated
+   `retrom_codegen::retrom::services::config::v1::config_service_client::ConfigServiceClient`
+   as a dependency injected into the crate's router constructor (e.g.
+   `library_router(db_pool, config_client)`).
+3. **Replace config reads with RPC calls** — use `GetServerConfig` or `GetServerInfo` to
+   fetch the values previously read from the config file. Cache the response in an
+   `Arc<tokio::sync::RwLock<ServerConfig>>` if repeated access is needed within a single
+   request, but prefer fetching on demand to avoid stale state.
+4. **Handle bootstrapping and errors** — the service must wait for `ConfigService` to be
+   reachable before accepting requests (use a retry loop with exponential back-off). Propagate
+   `ConfigService` unavailability as a `tonic::Status::unavailable` to the caller rather than
+   panicking.
+5. **Remove direct config dependencies** — delete `retrom-service-common` config imports and
+   any `ServerConfigManager` construction from the crate once all direct access is removed.
+   Only `retrom-service-config` should construct a `ServerConfigManager`.
+6. **Run and expand tests** — `pnpm nx cargo:test retrom-service-<domain>`. Add or update
+   tests that mock the `ConfigService` gRPC client to verify that the crate behaves correctly
+   when configuration is served via RPC.
+
+> **Note:** `retrom-service-config` itself is exempt from this step — it *is* the config
+> service and therefore owns the `ServerConfigManager` and config file access by design.
+
+**Acceptance criteria:**
+
+- All service crates (except `retrom-service-config`) compile with no direct references to
+  `ServerConfigManager` or config-file paths.
+- `pnpm nx run-many -t cargo:test` passes for all service crates.
+- `pnpm nx run-many -t cargo:lint` reports no warnings for any service crate.
+- Integration smoke test: each service crate correctly reads a value from `ConfigService` and
+  applies it (e.g. telemetry endpoint, content directory path).
+
+---
+
+### 3.5 Create retrom-metadata Crate
 
 Metadata provider trait definitions and IGDB/Steam implementations move to a dedicated
 `retrom-metadata` crate. This separates the provider contract from both the service-common
@@ -1403,9 +1529,9 @@ impl MetadataProviderRegistry {
 
 ---
 
-### 3.4 Update Binary Wiring
+### 3.6 Update Binary Wiring
 
-After 3.1–3.3, `packages/service/src/lib.rs` assembles the routers from each domain crate:
+After 3.1–3.5, `packages/service/src/lib.rs` assembles the routers from each domain crate:
 
 ```rust
 use retrom_service_library::library_router;
@@ -1444,10 +1570,16 @@ are stable.
 
 ---
 
-### 3.5 Acceptance Criteria
+### 3.7 Acceptance Criteria
 
 - [ ] Each new service crate compiles independently (`cargo build -p retrom-service-<domain>`).
 - [ ] `retrom-db` connects to both SQLite and PostgreSQL via `sqlx::AnyPool`.
+- [ ] Each per-service crate compiles and all tests pass after its sqlx migration (step 3.3).
+- [ ] No per-service crate imports Diesel after the sqlx migration.
+- [ ] Each per-service crate compiles and all tests pass after its ConfigService RPC migration
+      (step 3.4).
+- [ ] No per-service crate reads the config file or uses `ServerConfigManager` directly after
+      step 3.4; all config reads are routed via the `ConfigService` gRPC client.
 - [ ] `retrom-metadata` crate compiles independently with IGDB and Steam providers.
 - [ ] `MetadataProviderRegistry` is populated at startup with IGDB and Steam providers.
 - [ ] Well-known tag domains are seeded at startup.
@@ -1681,10 +1813,12 @@ Phase 1 (Data Layer + Proto models)
 1. Phase 1 (parallel tracks: schema migrations + proto model changes)
 2. Phase 2 (service interface redesign; handler changes can begin in `grpc-service` immediately)
 3. Phase 3.2 (sqlx / `AnyPool` retrom-db rewrite — high-value, do early to unblock multi-DB support)
-4. Phase 3.3 (retrom-metadata crate extraction)
-5. Phase 3.1 + 3.4 (per-crate extraction + binary wiring)
-6. Phase 4 (data migration against staging, then production)
-7. Phase 5 (client updates — can overlap with 2–5)
+4. Phase 3.3 (per-service crate sqlx migrations — one crate at a time, after 3.2)
+5. Phase 3.4 (per-service crate ConfigService RPC migrations — one crate at a time, can overlap with 3.3)
+6. Phase 3.5 (retrom-metadata crate extraction)
+7. Phase 3.1 + 3.6 (per-crate extraction + binary wiring)
+8. Phase 4 (data migration against staging, then production)
+9. Phase 5 (client updates — can overlap with 2–5)
 
 ---
 
