@@ -550,49 +550,12 @@ impl EmulatorServiceV1 for EmulatorServiceHandlers {
         let mut emulators_updated = vec![];
 
         for emulator in emulators {
-            let platform_ids = emulator.supported_platforms.clone();
-
             let updated_emulator = diesel::update(schema::emulators::table)
                 .filter(schema::emulators::id.eq(emulator.id))
                 .set(&emulator)
                 .get_result::<Emulator>(&mut conn)
                 .await
                 .map_err(|why| Status::internal(why.to_string()))?;
-
-            if !platform_ids.is_empty() {
-                // Only sync the mapping table when `supported_platforms` is non-empty.
-                // In proto3, an absent repeated field is indistinguishable from an explicitly
-                // empty one, so treating an empty list as "no change" avoids accidentally
-                // clearing all platform mappings when a caller only intends to update other
-                // emulator fields.  To explicitly remove all mappings, callers should use
-                // `DeleteEmulatorPlatformMaps`.
-                diesel::delete(schema::emulator_platform_maps::table)
-                    .filter(schema::emulator_platform_maps::emulator_id.eq(updated_emulator.id))
-                    .execute(&mut conn)
-                    .await
-                    .map_err(|why| Status::internal(why.to_string()))?;
-
-                let new_maps: Vec<EmulatorPlatformMap> = platform_ids
-                    .into_iter()
-                    .map(|platform_id| EmulatorPlatformMap {
-                        emulator_id: updated_emulator.id,
-                        platform_id,
-                        created_at: None,
-                        updated_at: None,
-                    })
-                    .collect();
-
-                diesel::insert_into(schema::emulator_platform_maps::table)
-                    .values(&new_maps)
-                    .on_conflict((
-                        schema::emulator_platform_maps::emulator_id,
-                        schema::emulator_platform_maps::platform_id,
-                    ))
-                    .do_nothing()
-                    .execute(&mut conn)
-                    .await
-                    .map_err(|why| Status::internal(why.to_string()))?;
-            }
 
             emulators_updated.push(updated_emulator);
         }
@@ -761,6 +724,12 @@ impl EmulatorServiceV1 for EmulatorServiceHandlers {
         let request = request.into_inner();
         let emulator_ids = request.emulator_ids;
         let platform_ids = request.platform_ids;
+
+        if emulator_ids.is_empty() && platform_ids.is_empty() {
+            return Err(Status::invalid_argument(
+                "at least one of emulator_ids or platform_ids must be provided",
+            ));
+        }
 
         let mut conn = self
             .db_pool
