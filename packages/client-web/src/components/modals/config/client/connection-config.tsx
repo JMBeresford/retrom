@@ -44,8 +44,28 @@ export function ConnectionConfig() {
 
   const toggleStandaloneMode = useCallback(async () => {
     if (serverConfig?.standalone) {
-      await disable(undefined);
-      queryClient.invalidateQueries().catch(console.error);
+      confirm({
+        title: "Are you sure?",
+        description:
+          "Switching to a remote server will uninstall all currently installed games",
+        onConfirm: async () => {
+          await disable(undefined);
+
+          try {
+            await clearInstallationDir();
+          } catch (error) {
+            console.error(error);
+            toast({
+              title: "Failed to clear installation directory",
+              variant: "destructive",
+            });
+
+            return;
+          }
+
+          queryClient.invalidateQueries().catch(console.error);
+        },
+      });
     } else {
       confirm({
         title: "Are you sure?",

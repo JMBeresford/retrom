@@ -549,7 +549,9 @@ impl<R: Runtime> Installer<R> {
             .await
             .extend(installed_games);
 
-        self.update_steam_installations().await?;
+        if let Err(e) = self.update_steam_installations().await {
+            tracing::warn!("Failed to update steam installations: {:#?}", e);
+        }
 
         Ok(())
     }
