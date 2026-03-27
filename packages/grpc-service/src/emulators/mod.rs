@@ -705,9 +705,7 @@ impl EmulatorServiceV1 for EmulatorServiceHandlers {
                     schema::emulator_platform_maps::platform_id,
                 ))
                 .do_update()
-                .set(
-                    schema::emulator_platform_maps::updated_at.eq(diesel::dsl::now),
-                )
+                .set(schema::emulator_platform_maps::updated_at.eq(diesel::dsl::now))
                 .get_results::<EmulatorPlatformMap>(&mut conn)
                 .await
                 .map_err(|why| Status::internal(why.to_string()))?;
