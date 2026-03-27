@@ -38,8 +38,17 @@
 
 - [ ] 3.1 Create per-service crates (`retrom-service-{library,metadata,emulators,clients,config,jobs,tags,files,saves}`)
 - [ ] 3.2 Refactor `retrom-db` for sqlx + `AnyPool` support (replaces Diesel)
-- [ ] 3.3 Migrate per-service crates to sqlx (one crate at a time, after 3.2)
-- [ ] 3.4 Migrate per-service crates to use `ConfigService` via RPC (one crate at a time)
+- [ ] 3.3 Migrate per-service crates to sqlx (after 3.2):
+  - [ ] `retrom-service-library`
+  - [ ] `retrom-service-metadata`
+  - [ ] `retrom-service-emulators`
+  - [ ] `retrom-service-clients`
+  - [ ] `retrom-service-config`
+  - [ ] `retrom-service-jobs`
+  - [ ] `retrom-service-tags`
+  - [ ] `retrom-service-files`
+  - [ ] `retrom-service-saves`
+- [ ] 3.4 Migrate per-service crates to use `ConfigService` via RPC
 - [ ] 3.5 Create `retrom-metadata` crate (provider traits, IGDB, Steam, registry)
 - [ ] 3.6 Update binary wiring (`packages/service`) to assemble per-crate routers
 - [ ] 3.7 Acceptance criteria
@@ -1363,8 +1372,8 @@ flags are needed.
 ### 3.3 Migrate Per-Service Crates to sqlx
 
 > **Prerequisite:** Step 3.2 is complete and `retrom-db` exposes `sqlx::AnyPool`.
-> Migrate one crate at a time; each migration is reviewed and merged independently
-> to reduce risk and keep PRs reviewable.
+> Each service crate is migrated independently; track completion using the sub-items
+> in the Progress Tracker above.
 
 Even after the core `retrom-db` migration to sqlx, individual per-service crates may still
 contain Diesel-specific imports, derive macros, and query logic that was not yet moved into
@@ -1425,24 +1434,17 @@ contain Diesel-specific imports, derive macros, and query logic that was not yet
 ### 3.4 Migrate Per-Service Crates to Use ConfigService via RPC
 
 > **Prerequisite:** Step 3.2 is complete and `retrom-service-config` is implemented and
-> running. Migrate one crate at a time; each migration is reviewed and merged independently.
+> running.
 
 The target architecture mandates that **only** `retrom-service-config` reads the server
 configuration file or holds a `ServerConfigManager`. All other service crates must obtain
 configuration exclusively via gRPC calls to `ConfigService`
 (`retrom.services.config.v1.ConfigService`). This ensures a clean separation of concerns,
 makes the system deployable as microservices, and prevents config-file access from spreading
-across the codebase.
+across the codebase. Once `retrom-service-config` is stable, all remaining service crates
+are updated in a single pass.
 
-**Rationale for per-crate migration:**
-
-- Changing config-access patterns touches startup wiring, error handling, and potentially
-  connection-lifecycle code in each crate, making a single large PR very risky.
-- Migrating one crate at a time keeps each PR focused and independently verifiable.
-- The `retrom-service-config` crate can be fully stabilised and tested before other crates
-  depend on its RPC interface.
-
-**Steps (repeat for each crate in the table above):**
+**Steps (apply across all service crates):**
 
 1. **Locate all direct config access** — search for `ServerConfigManager`, `RetromDirs`,
    direct reads from `retrom-service-common`'s config module, or any `std::fs` / environment
@@ -1469,14 +1471,14 @@ across the codebase.
 > **Note:** `retrom-service-config` itself is exempt from this step — it *is* the config
 > service and therefore owns the `ServerConfigManager` and config file access by design.
 
-**Acceptance criteria per crate:**
+**Acceptance criteria:**
 
-- The crate compiles with no direct references to `ServerConfigManager` or config-file paths
-  (`cargo build -p retrom-service-<domain>`).
-- All existing tests pass (`pnpm nx cargo:test retrom-service-<domain>`).
-- `pnpm nx cargo:lint retrom-service-<domain>` reports no warnings.
-- Integration smoke test: the crate correctly reads a value from `ConfigService` and applies
-  it (e.g. telemetry endpoint, content directory path).
+- All service crates (except `retrom-service-config`) compile with no direct references to
+  `ServerConfigManager` or config-file paths.
+- `pnpm nx run-many -t cargo:test` passes for all service crates.
+- `pnpm nx run-many -t cargo:lint` reports no warnings for any service crate.
+- Integration smoke test: each service crate correctly reads a value from `ConfigService` and
+  applies it (e.g. telemetry endpoint, content directory path).
 
 ---
 
