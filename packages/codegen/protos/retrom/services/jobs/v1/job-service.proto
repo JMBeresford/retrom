@@ -20,22 +20,20 @@ enum JobStatus {
   JOB_STATUS_FAILED      = 4;
 }
 
-message Job {
-  string    id          = 1;
-  string    name        = 2;
-  JobStatus status      = 3;
-  float     progress    = 4;
-  string    message     = 5;
-  google.protobuf.Timestamp created_at  = 6;
-  google.protobuf.Timestamp updated_at  = 7;
-  google.protobuf.Timestamp finished_at = 8;
-}
-
 message JobProgress {
   string    id       = 1;
   JobStatus status   = 2;
   float     progress = 3;
   string    message  = 4;
+}
+
+message Job {
+  string      id          = 1;
+  string      name        = 2;
+  JobProgress progress    = 4;
+  google.protobuf.Timestamp created_at  = 6;
+  google.protobuf.Timestamp updated_at  = 7;
+  google.protobuf.Timestamp finished_at = 8;
 }
 
 message CreateJobRequest {

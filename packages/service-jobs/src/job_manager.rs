@@ -40,9 +40,12 @@ impl JobManager {
         let job = Job {
             id: id.clone(),
             name,
-            status: JobStatus::Pending.into(),
-            progress: 0.0,
-            message,
+            progress: Some(JobProgress {
+                id: id.clone(),
+                status: JobStatus::Pending.into(),
+                progress: 0.0,
+                message,
+            }),
             created_at: Some(now),
             updated_at: Some(now),
             finished_at: None,
@@ -67,7 +70,10 @@ impl JobManager {
         let mut result: Vec<Job> = jobs
             .values()
             .filter(|job| match status_filter {
-                Some(status) => job.status == status as i32,
+                Some(status) => job
+                    .progress
+                    .as_ref()
+                    .is_some_and(|p| p.status == status as i32),
                 None => true,
             })
             .cloned()
@@ -95,9 +101,13 @@ impl JobManager {
             let job = jobs
                 .get_mut(id)
                 .ok_or_else(|| JobError::NotFound(id.to_string()))?;
-            job.status = status.into();
-            job.progress = 1.0;
-            job.message = message;
+
+            if let Some(progress) = job.progress.as_mut() {
+                progress.status = status.into();
+                progress.progress = 1.0;
+                progress.message = message;
+            }
+
             job.updated_at = Some(now);
             job.finished_at = Some(now);
         }
@@ -122,15 +132,12 @@ impl JobManager {
                     match guard.get(&id) {
                         None => break,
                         Some(job) => {
-                            let progress = JobProgress {
-                                id: job.id.clone(),
-                                status: job.status,
-                                progress: job.progress,
-                                message: job.message.clone(),
+                            let Some(progress) = job.progress.clone() else {
+                                break;
                             };
 
                             let is_terminal = matches!(
-                                JobStatus::try_from(job.status),
+                                JobStatus::try_from(progress.status),
                                 Ok(JobStatus::Complete) | Ok(JobStatus::Failed)
                             );
 

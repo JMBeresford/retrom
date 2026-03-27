@@ -9317,6 +9317,7 @@ dependencies = [
  "axum",
  "futures",
  "retrom-codegen",
+ "retrom-service-config",
  "retrom-telemetry",
  "thiserror 1.0.69",
  "tokio",
