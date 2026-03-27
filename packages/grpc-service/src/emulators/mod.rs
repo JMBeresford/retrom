@@ -743,8 +743,7 @@ impl EmulatorServiceV1 for EmulatorServiceHandlers {
                 ))
                 .do_update()
                 .set(
-                    schema::emulator_platform_maps::updated_at
-                        .eq(excluded(schema::emulator_platform_maps::updated_at)),
+                    schema::emulator_platform_maps::updated_at.eq(diesel::dsl::now),
                 )
                 .get_results::<EmulatorPlatformMap>(&mut conn)
                 .await
