@@ -14,10 +14,8 @@ pub use v2::service::EmulatorSavesServiceHandlers;
 
 /// Build an [`axum::Router`] that serves the saves gRPC endpoints.
 pub fn saves_router(db_pool: Arc<Pool>, config_manager: Arc<ServerConfigManager>) -> axum::Router {
-    let saves_service_v1 = SavesServiceServer::new(SavesServiceHandlers::new(
-        db_pool.clone(),
-        config_manager,
-    ));
+    let saves_service_v1 =
+        SavesServiceServer::new(SavesServiceHandlers::new(db_pool.clone(), config_manager));
 
     let emulator_saves_service_v2 =
         EmulatorSavesServiceServer::new(EmulatorSavesServiceHandlers::new(db_pool));
