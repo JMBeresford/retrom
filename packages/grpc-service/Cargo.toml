@@ -15,6 +15,7 @@ retrom-codegen = { workspace = true }
 retrom-db = { workspace = true }
 retrom-service-common = { workspace = true }
 retrom-service-clients = { workspace = true }
+retrom-service-saves = { workspace = true }
 retrom-service-config = { workspace = true }
 retrom-telemetry = { workspace = true }
 walkdir = { workspace = true }

@@ -8,6 +8,7 @@ members = [
   "packages/grpc-service",
   "packages/rest-service",
   "packages/service-clients",
+  "packages/service-saves",
   "packages/service-common",
   "packages/service-config",
   "packages/telemetry",
@@ -113,6 +114,7 @@ retrom-grpc-service = { path = "./packages/grpc-service" }
 retrom-rest-service = { path = "./packages/rest-service" }
 retrom-service-common = { path = "./packages/service-common" }
 retrom-service-clients = { path = "./packages/service-clients" }
+retrom-service-saves = { path = "./packages/service-saves" }
 retrom-service-config = { path = "./packages/service-config" }
 retrom-telemetry = { path = "./packages/telemetry" }
 retrom-codegen = { path = "./packages/codegen" }

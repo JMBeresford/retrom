@@ -40,8 +40,8 @@ use retrom_service_common::{
 };
 use retrom_service_config::ConfigServiceHandlers;
 use retrom_telemetry::grpc::{GrpcOnRequestSpan, GrpcOnResponseSpanHandler};
-use saves::v1::service::SavesServiceHandlers;
-use saves::v2::service::EmulatorSavesServiceHandlers;
+use retrom_service_saves::v1::service::SavesServiceHandlers;
+use retrom_service_saves::v2::service::EmulatorSavesServiceHandlers;
 use std::{sync::Arc, time::Duration};
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
@@ -53,7 +53,6 @@ pub mod jobs;
 pub mod library;
 pub mod metadata;
 pub mod platforms;
-mod saves;
 pub mod server;
 
 const DEFAULT_MAX_AGE: Duration = Duration::from_secs(24 * 60 * 60);
