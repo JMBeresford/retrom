@@ -38,9 +38,9 @@ use retrom_service_common::{
     retrom_dirs::RetromDirs,
 };
 use retrom_service_config::ConfigServiceHandlers;
-use retrom_telemetry::grpc::{GrpcOnRequestSpan, GrpcOnResponseSpanHandler};
 use retrom_service_saves::v1::service::SavesServiceHandlers;
 use retrom_service_saves::v2::service::EmulatorSavesServiceHandlers;
+use retrom_telemetry::grpc::{GrpcOnRequestSpan, GrpcOnResponseSpanHandler};
 use std::{sync::Arc, time::Duration};
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
