@@ -1,12 +1,13 @@
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use retrom_codegen::retrom::{
-    client_service_server::ClientService, Client, CreateClientRequest, CreateClientResponse,
-    DeleteClientsRequest, DeleteClientsResponse, GetClientsRequest, GetClientsResponse,
-    UpdateClientsRequest, UpdateClientsResponse,
+    client_service_server::{ClientService, ClientServiceServer},
+    Client, CreateClientRequest, CreateClientResponse, DeleteClientsRequest, DeleteClientsResponse,
+    GetClientsRequest, GetClientsResponse, UpdateClientsRequest, UpdateClientsResponse,
 };
 use retrom_db::{schema, Pool};
 use std::sync::Arc;
+use tracing::instrument;
 
 pub struct ClientServiceHandlers {
     db_pool: Arc<Pool>,
@@ -20,6 +21,7 @@ impl ClientServiceHandlers {
 
 #[tonic::async_trait]
 impl ClientService for ClientServiceHandlers {
+    #[instrument(skip_all)]
     async fn create_client(
         &self,
         request: tonic::Request<CreateClientRequest>,
@@ -55,6 +57,7 @@ impl ClientService for ClientServiceHandlers {
         }))
     }
 
+    #[instrument(skip_all)]
     async fn get_clients(
         &self,
         request: tonic::Request<GetClientsRequest>,
@@ -89,6 +92,7 @@ impl ClientService for ClientServiceHandlers {
         Ok(tonic::Response::new(GetClientsResponse { clients }))
     }
 
+    #[instrument(skip_all)]
     async fn update_clients(
         &self,
         request: tonic::Request<UpdateClientsRequest>,
@@ -114,8 +118,7 @@ impl ClientService for ClientServiceHandlers {
                         )
                         .set(client)
                         .get_result(&mut conn)
-                        .await
-                        .unwrap();
+                        .await?;
 
                         updated.push(updated_client);
                     }
@@ -135,6 +138,7 @@ impl ClientService for ClientServiceHandlers {
         }))
     }
 
+    #[instrument(skip_all)]
     async fn delete_clients(
         &self,
         request: tonic::Request<DeleteClientsRequest>,
@@ -167,4 +171,14 @@ impl ClientService for ClientServiceHandlers {
             clients_deleted,
         }))
     }
+}
+
+/// Build an [`axum::Router`] that serves the [`ClientService`] gRPC endpoints.
+pub fn clients_router(db_pool: Arc<Pool>) -> axum::Router {
+    let client_service = ClientServiceServer::new(ClientServiceHandlers::new(db_pool));
+
+    let mut routes_builder = tonic::service::Routes::builder();
+    routes_builder.add_service(client_service);
+
+    routes_builder.routes().into_axum_router()
 }
