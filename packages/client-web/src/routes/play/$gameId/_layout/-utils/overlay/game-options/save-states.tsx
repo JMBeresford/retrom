@@ -24,7 +24,7 @@ import { OverlayMenuItem } from "..";
 import { useGetSaveStates } from "@/queries/saveStates";
 import { File } from "@retrom/codegen/retrom/files_pb";
 import { useDeleteSaveStates } from "@/mutations/saveStates";
-import { FilesystemNodeType } from "@retrom/codegen/retrom/services/files/v1/file-explorer_pb";
+import { FilesystemNodeType } from "@retrom/codegen/retrom/files_pb";
 import { uInt8ToBase64 } from "@/utils/binary";
 
 export const saveStateList: OverlayMenuItem = {

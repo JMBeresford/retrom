@@ -1,9 +1,8 @@
 use retrom_codegen::retrom::{
-    files::FileStat,
+    files::{FileStat, FilesystemNode},
     services::files::v1::{
         file_explorer_service_server::{FileExplorerService, FileExplorerServiceServer},
-        FilesystemNode, GetFilesystemNodeRequest, GetFilesystemNodeResponse, GetStatRequest,
-        GetStatResponse,
+        GetFilesystemNodeRequest, GetFilesystemNodeResponse, GetStatRequest, GetStatResponse,
     },
 };
 use retrom_service_config::retrom_dirs::RetromDirs;

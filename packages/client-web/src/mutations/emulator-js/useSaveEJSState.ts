@@ -1,6 +1,6 @@
 import { toast } from "@retrom/ui/hooks/use-toast";
 import { useEmulatorJS } from "@/providers/emulator-js";
-import { FilesystemNodeType } from "@retrom/codegen/retrom/services/files/v1/file-explorer_pb";
+import { FilesystemNodeType } from "@retrom/codegen/retrom/files_pb";
 import { File } from "@retrom/codegen/retrom/files_pb";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUpdateSaveStates } from "../saveStates";

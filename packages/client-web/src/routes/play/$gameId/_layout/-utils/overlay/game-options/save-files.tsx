@@ -6,7 +6,7 @@ import { useStatSaveFiles } from "@/queries/saveFiles";
 import { AlertCircle, LoaderCircle } from "lucide-react";
 import { forwardRef, useCallback, useState } from "react";
 import { OverlayMenuItem } from "..";
-import { FilesystemNodeType } from "@retrom/codegen/retrom/services/files/v1/file-explorer_pb";
+import { FilesystemNodeType } from "@retrom/codegen/retrom/files_pb";
 import { readableByteSize } from "@/utils/files";
 import { DateTime } from "luxon";
 import { useRestoreSaveFromBackup } from "@/mutations/saveFiles";
