@@ -28,7 +28,7 @@ use retrom_codegen::{
                 v1::saves_service_server::SavesServiceServer,
                 v2::emulator_saves_service_server::EmulatorSavesServiceServer,
             },
-            tags::v1::tag_service_server::TagServiceServer,
+            tags::v1::tags_service_server::TagsServiceServer,
         },
     },
 };
@@ -171,14 +171,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
     let emulator_saves_service_v2 =
         EmulatorSavesServiceServer::new(EmulatorSavesServiceHandlers::new(shared_pool.clone()));
 
-    let tag_handlers = TagServiceHandlers::new(shared_pool.clone());
-    let tag_service = TagServiceServer::new(tag_handlers.clone());
-
-    tokio::spawn(async move {
-        if let Err(why) = tag_handlers.seed_well_known_domains().await {
-            tracing::error!("Failed to seed well-known tag domains: {why}");
-        }
-    });
+    let tag_service = TagsServiceServer::new(TagServiceHandlers::new(shared_pool.clone()));
 
     let mut routes_builder = tonic::service::Routes::builder();
     let mut reflection_route_builder = tonic::service::Routes::builder();

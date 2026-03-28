@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .filter(|path| path.extension() == Some("proto".as_ref()))
         .collect();
 
-    let queryable_models: [ModelDefinitionParams; 18] = [
+    let queryable_models: [ModelDefinitionParams; 19] = [
         ("Platform", "platforms", None, vec![]),
         ("Game", "games", None, vec!["Platform"]),
         (
@@ -136,6 +136,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             vec![],
         ),
         ("services.tags.v1.TagDomain", "tag_domains", None, vec![]),
+        ("services.tags.v1.Tag", "tags", None, vec![]),
     ];
 
     let insertable_models: [ModelDefinitionParams; 11] = [

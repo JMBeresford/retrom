@@ -296,6 +296,8 @@ diesel::table! {
         id -> Int4,
         name -> Text,
         is_well_known -> Bool,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 

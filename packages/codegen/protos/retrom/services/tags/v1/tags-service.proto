@@ -7,15 +7,9 @@ import "google/protobuf/timestamp.proto";
 
 // TagDomain groups tags by semantic category.
 //
-// Well-known domains are static (seeded at startup, is_well_known = true)
-// and cannot be deleted via the TagService.  Users can register custom domains via
+// Well-known domains are static (seeded via DB migration, is_well_known = true)
+// and cannot be deleted via the TagsService. Users can register custom domains via
 // the UI using CreateTagDomains.
-//
-// Initial well-known domains:
-//   genre     — game genre (migrated from game_genres / game_genre_maps)
-//   favorites — user favourites flag
-//   franchise — game franchise / series
-//   region    — release region (also populated automatically from {region} path token)
 message TagDomain {
   int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string name = 2;
@@ -27,7 +21,7 @@ message TagDomain {
 // Uniqueness is enforced per (tag_domain_id, value) pair in the database.
 message Tag {
   int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  TagDomain domain = 2;
+  int32 tag_domain_id = 2;
   string value = 3;
   google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
@@ -45,7 +39,7 @@ message PlatformTagMap {
   repeated Tag tags = 2;
 }
 
-service TagService {
+service TagsService {
   rpc GetTagDomains(GetTagDomainsRequest) returns (GetTagDomainsResponse);
   rpc CreateTagDomains(CreateTagDomainsRequest) returns (CreateTagDomainsResponse);
   rpc DeleteTagDomains(DeleteTagDomainsRequest) returns (DeleteTagDomainsResponse);

@@ -1,7 +1,7 @@
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use retrom_codegen::retrom::services::tags::v1::{
-    tag_service_server::{TagService, TagServiceServer},
+    tags_service_server::{TagsService, TagsServiceServer},
     CreateTagDomainsRequest, CreateTagDomainsResponse, CreateTagsRequest, CreateTagsResponse,
     DeleteTagDomainsRequest, DeleteTagDomainsResponse, DeleteTagsRequest, DeleteTagsResponse,
     GameTagMap, GetGameTagsRequest, GetGameTagsResponse, GetPlatformTagsRequest,
@@ -13,53 +13,6 @@ use retrom_db::{schema, Pool};
 use std::sync::Arc;
 use tracing::instrument;
 
-/// Well-known tag domain names seeded idempotently at startup.
-const WELL_KNOWN_DOMAINS: [&str; 4] = ["genre", "favorites", "franchise", "region"];
-
-/// Local DB struct for the `tags` table (the proto `Tag` has a nested `TagDomain`
-/// which does not match the flat DB row, so we use a dedicated struct here).
-#[derive(diesel::Queryable, diesel::Selectable, diesel::Identifiable)]
-#[diesel(table_name = retrom_db::schema::tags, check_for_backend(diesel::pg::Pg))]
-struct DbTag {
-    pub id: i32,
-    pub tag_domain_id: i32,
-    pub value: String,
-    pub created_at: Option<retrom_codegen::timestamp::Timestamp>,
-    pub updated_at: Option<retrom_codegen::timestamp::Timestamp>,
-}
-
-/// Insertable struct for the `tags` table.
-#[derive(diesel::Insertable)]
-#[diesel(table_name = retrom_db::schema::tags, check_for_backend(diesel::pg::Pg))]
-struct NewDbTag {
-    pub tag_domain_id: i32,
-    pub value: String,
-}
-
-/// Insertable struct for the `tag_domains` table (custom, non-well-known domains).
-#[derive(diesel::Insertable)]
-#[diesel(table_name = retrom_db::schema::tag_domains, check_for_backend(diesel::pg::Pg))]
-struct NewTagDomain {
-    pub name: String,
-    pub is_well_known: bool,
-}
-
-/// Insertable struct for `game_tag_maps`.
-#[derive(diesel::Insertable)]
-#[diesel(table_name = retrom_db::schema::game_tag_maps, check_for_backend(diesel::pg::Pg))]
-struct NewGameTagMap {
-    pub game_id: i32,
-    pub tag_id: i32,
-}
-
-/// Insertable struct for `platform_tag_maps`.
-#[derive(diesel::Insertable)]
-#[diesel(table_name = retrom_db::schema::platform_tag_maps, check_for_backend(diesel::pg::Pg))]
-struct NewPlatformTagMap {
-    pub platform_id: i32,
-    pub tag_id: i32,
-}
-
 #[derive(Clone)]
 pub struct TagServiceHandlers {
     db_pool: Arc<Pool>,
@@ -70,82 +23,22 @@ impl TagServiceHandlers {
         Self { db_pool }
     }
 
-    /// Seed well-known tag domains idempotently. This should be called once at startup.
-    pub async fn seed_well_known_domains(&self) -> Result<(), String> {
-        let mut conn = self.db_pool.get().await.map_err(|e| e.to_string())?;
-
-        conn.transaction(|conn| {
-            async move {
-                for name in WELL_KNOWN_DOMAINS {
-                    diesel::insert_into(schema::tag_domains::table)
-                        .values(NewTagDomain {
-                            name: name.to_string(),
-                            is_well_known: true,
-                        })
-                        .on_conflict(schema::tag_domains::name)
-                        .do_nothing()
-                        .execute(conn)
-                        .await?;
-                }
-                Ok::<(), diesel::result::Error>(())
-            }
-            .scope_boxed()
-        })
-        .await
-        .map_err(|e| e.to_string())
-    }
-
-    /// Fetch tags by their IDs, joining with `tag_domains` to build proto `Tag` messages.
     async fn fetch_tags_by_ids(
         conn: &mut retrom_db::DBConnection,
         tag_ids: &[i32],
     ) -> Result<Vec<Tag>, tonic::Status> {
-        let db_tags: Vec<DbTag> = schema::tags::table
+        schema::tags::table
             .into_boxed()
-            .select(DbTag::as_select())
+            .select(Tag::as_select())
             .filter(schema::tags::id.eq_any(tag_ids))
             .load(conn)
             .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-        Self::db_tags_to_proto(conn, db_tags).await
-    }
-
-    /// Convert `DbTag` rows into proto `Tag` messages by fetching the associated domains.
-    async fn db_tags_to_proto(
-        conn: &mut retrom_db::DBConnection,
-        db_tags: Vec<DbTag>,
-    ) -> Result<Vec<Tag>, tonic::Status> {
-        let domain_ids: Vec<i32> = db_tags.iter().map(|t| t.tag_domain_id).collect();
-
-        let domains: Vec<TagDomain> = schema::tag_domains::table
-            .into_boxed()
-            .select(TagDomain::as_select())
-            .filter(schema::tag_domains::id.eq_any(&domain_ids))
-            .load(conn)
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-        let tags = db_tags
-            .into_iter()
-            .map(|t| {
-                let domain = domains.iter().find(|d| d.id == t.tag_domain_id).cloned();
-                Tag {
-                    id: t.id,
-                    domain,
-                    value: t.value,
-                    created_at: t.created_at,
-                    updated_at: t.updated_at,
-                }
-            })
-            .collect();
-
-        Ok(tags)
+            .map_err(|e| tonic::Status::internal(e.to_string()))
     }
 }
 
 #[tonic::async_trait]
-impl TagService for TagServiceHandlers {
+impl TagsService for TagServiceHandlers {
     #[instrument(skip_all)]
     async fn get_tag_domains(
         &self,
@@ -188,20 +81,18 @@ impl TagService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let new_domains: Vec<NewTagDomain> = request
-            .tag_domains
-            .into_iter()
-            .map(|d| NewTagDomain {
-                name: d.name,
-                is_well_known: false,
-            })
-            .collect();
+        let mut tag_domains_created: Vec<TagDomain> = Vec::new();
 
-        let tag_domains_created: Vec<TagDomain> = diesel::insert_into(schema::tag_domains::table)
-            .values(&new_domains)
-            .get_results(&mut conn)
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        for domain in request.tag_domains {
+            let created: TagDomain = diesel::insert_into(schema::tag_domains::table)
+                .values(schema::tag_domains::name.eq(&domain.name))
+                .returning(TagDomain::as_select())
+                .get_result(&mut conn)
+                .await
+                .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+            tag_domains_created.push(created);
+        }
 
         Ok(tonic::Response::new(CreateTagDomainsResponse {
             tag_domains_created,
@@ -241,6 +132,7 @@ impl TagService for TagServiceHandlers {
 
         let tag_domains_deleted: Vec<TagDomain> = diesel::delete(schema::tag_domains::table)
             .filter(schema::tag_domains::id.eq_any(request.ids))
+            .returning(TagDomain::as_select())
             .get_results(&mut conn)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
@@ -263,7 +155,7 @@ impl TagService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let mut query = schema::tags::table.into_boxed().select(DbTag::as_select());
+        let mut query = schema::tags::table.into_boxed().select(Tag::as_select());
 
         if !request.ids.is_empty() {
             query = query.filter(schema::tags::id.eq_any(request.ids));
@@ -273,12 +165,10 @@ impl TagService for TagServiceHandlers {
             query = query.filter(schema::tags::tag_domain_id.eq_any(request.tag_domain_ids));
         }
 
-        let db_tags: Vec<DbTag> = query
+        let tags: Vec<Tag> = query
             .load(&mut conn)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-        let tags = Self::db_tags_to_proto(&mut conn, db_tags).await?;
 
         Ok(tonic::Response::new(GetTagsResponse { tags }))
     }
@@ -296,34 +186,26 @@ impl TagService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let new_tags: Result<Vec<NewDbTag>, tonic::Status> = request
-            .tags
-            .into_iter()
-            .map(|t| {
-                let tag_domain_id = t
-                    .domain
-                    .ok_or_else(|| {
-                        tonic::Status::invalid_argument(
-                            "Each tag must specify a domain with a valid id",
-                        )
-                    })?
-                    .id;
-                Ok(NewDbTag {
-                    tag_domain_id,
-                    value: t.value,
-                })
-            })
-            .collect();
+        let mut tags_created: Vec<Tag> = Vec::new();
 
-        let new_tags = new_tags?;
+        for tag in request.tags {
+            if tag.tag_domain_id == 0 {
+                return Err(tonic::Status::invalid_argument(
+                    "Each tag must specify a non-zero tag_domain_id",
+                ));
+            }
 
-        let created_db_tags: Vec<DbTag> = diesel::insert_into(schema::tags::table)
-            .values(&new_tags)
-            .get_results(&mut conn)
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+            let created: Tag = diesel::insert_into(schema::tags::table)
+                .values((
+                    schema::tags::tag_domain_id.eq(tag.tag_domain_id),
+                    schema::tags::value.eq(&tag.value),
+                ))
+                .get_result(&mut conn)
+                .await
+                .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let tags_created = Self::db_tags_to_proto(&mut conn, created_db_tags).await?;
+            tags_created.push(created);
+        }
 
         Ok(tonic::Response::new(CreateTagsResponse { tags_created }))
     }
@@ -341,13 +223,11 @@ impl TagService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let deleted_db_tags: Vec<DbTag> = diesel::delete(schema::tags::table)
+        let tags_deleted: Vec<Tag> = diesel::delete(schema::tags::table)
             .filter(schema::tags::id.eq_any(request.ids))
             .get_results(&mut conn)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-        let tags_deleted = Self::db_tags_to_proto(&mut conn, deleted_db_tags).await?;
 
         Ok(tonic::Response::new(DeleteTagsResponse { tags_deleted }))
     }
@@ -437,18 +317,12 @@ impl TagService for TagServiceHandlers {
                             .execute(conn)
                             .await?;
 
-                        let new_maps: Vec<NewGameTagMap> = map
-                            .tags
-                            .iter()
-                            .map(|t| NewGameTagMap {
-                                game_id,
-                                tag_id: t.id,
-                            })
-                            .collect();
-
-                        if !new_maps.is_empty() {
+                        for tag in &map.tags {
                             diesel::insert_into(schema::game_tag_maps::table)
-                                .values(&new_maps)
+                                .values((
+                                    schema::game_tag_maps::game_id.eq(game_id),
+                                    schema::game_tag_maps::tag_id.eq(tag.id),
+                                ))
                                 .execute(conn)
                                 .await?;
                         }
@@ -561,18 +435,12 @@ impl TagService for TagServiceHandlers {
                             .execute(conn)
                             .await?;
 
-                        let new_maps: Vec<NewPlatformTagMap> = map
-                            .tags
-                            .iter()
-                            .map(|t| NewPlatformTagMap {
-                                platform_id,
-                                tag_id: t.id,
-                            })
-                            .collect();
-
-                        if !new_maps.is_empty() {
+                        for tag in &map.tags {
                             diesel::insert_into(schema::platform_tag_maps::table)
-                                .values(&new_maps)
+                                .values((
+                                    schema::platform_tag_maps::platform_id.eq(platform_id),
+                                    schema::platform_tag_maps::tag_id.eq(tag.id),
+                                ))
                                 .execute(conn)
                                 .await?;
                         }
@@ -596,9 +464,9 @@ impl TagService for TagServiceHandlers {
     }
 }
 
-/// Build an [`axum::Router`] that serves the [`TagService`] gRPC endpoints.
+/// Build an [`axum::Router`] that serves the [`TagsService`] gRPC endpoints.
 pub fn tags_router(db_pool: Arc<Pool>) -> axum::Router {
-    let tag_service = TagServiceServer::new(TagServiceHandlers::new(db_pool));
+    let tag_service = TagsServiceServer::new(TagServiceHandlers::new(db_pool));
 
     let mut routes_builder = tonic::service::Routes::builder();
     routes_builder.add_service(tag_service);
