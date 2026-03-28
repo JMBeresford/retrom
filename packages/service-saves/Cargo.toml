@@ -1,0 +1,37 @@
+[package]
+name = "retrom-service-saves"
+resolver = "2"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "Saves service handler for the Retrom video game library service"
+
+[[bin]]
+name = "retrom-service-saves"
+path = "src/main.rs"
+
+[dependencies]
+retrom-codegen = { workspace = true }
+retrom-db = { workspace = true }
+retrom-service-common = { workspace = true }
+retrom-service-config = { workspace = true }
+retrom-telemetry = { workspace = true }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+deadpool = { workspace = true }
+tonic = { workspace = true }
+tonic-web = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+dotenvy = { workspace = true }
+futures = { workspace = true }
+walkdir = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+ludusavi = { workspace = true }
+tempfile = { workspace = true }
+sanitize-filename = { workspace = true }
+bigdecimal = { workspace = true }
