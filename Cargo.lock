@@ -9024,6 +9024,7 @@ dependencies = [
  "retrom-service-clients",
  "retrom-service-common",
  "retrom-service-config",
+ "retrom-service-tags",
  "retrom-telemetry",
  "sanitize-filename",
  "tempfile",
@@ -9304,6 +9305,25 @@ dependencies = [
  "serde_json",
  "tempfile",
  "thiserror 1.0.69",
+ "tokio",
+ "tonic 0.14.5",
+ "tonic-web",
+ "tracing",
+]
+
+[[package]]
+name = "retrom-service-tags"
+version = "0.8.0"
+dependencies = [
+ "axum",
+ "deadpool",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "retrom-codegen",
+ "retrom-db",
+ "retrom-service-config",
+ "retrom-telemetry",
  "tokio",
  "tonic 0.14.5",
  "tonic-web",
