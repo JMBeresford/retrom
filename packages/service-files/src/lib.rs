@@ -1,12 +1,10 @@
-use retrom_codegen::retrom::services::files::v1::{
-    GetFilesystemNodeRequest, GetFilesystemNodeResponse, GetStatRequest, GetStatResponse,
-};
 use retrom_codegen::retrom::{
     files::FileStat,
-    services::files::v1::file_explorer_service_server::{
-        FileExplorerService, FileExplorerServiceServer,
+    services::files::v1::{
+        file_explorer_service_server::{FileExplorerService, FileExplorerServiceServer},
+        FilesystemNode, GetFilesystemNodeRequest, GetFilesystemNodeResponse, GetStatRequest,
+        GetStatResponse,
     },
-    FilesystemNode,
 };
 use retrom_service_config::retrom_dirs::RetromDirs;
 use std::path::PathBuf;
