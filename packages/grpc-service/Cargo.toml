@@ -16,6 +16,7 @@ retrom-db = { workspace = true }
 retrom-service-common = { workspace = true }
 retrom-service-clients = { workspace = true }
 retrom-service-config = { workspace = true }
+retrom-service-files = { workspace = true }
 retrom-telemetry = { workspace = true }
 walkdir = { workspace = true }
 tonic = { workspace = true }

@@ -28,7 +28,7 @@
 - [x] 2.4 Updated Emulator Service — mapping-table RPCs, `LocalEmulatorConfig` fields
 - [x] 2.5 Updated Client Service — move to per-service crate
 - [ ] 2.6 Job Service — dedicated gRPC crate with `WatchJob` streaming RPC
-- [ ] 2.7 File Explorer Service — extract to own crate
+- [x] 2.7 File Explorer Service — extract to own crate
 - [ ] 2.8 Tag Service — new service with tag domain management
 - [ ] 2.9 Saves Service — move to per-service crate (no interface changes)
 - [ ] 2.10 Deprecated services — `GameService`, `PlatformService`, `ServerService` forwarding stubs

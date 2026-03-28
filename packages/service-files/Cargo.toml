@@ -1,0 +1,25 @@
+[package]
+name = "retrom-service-files"
+resolver = "2"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+description = "File explorer service handler for the Retrom video game library service"
+
+[[bin]]
+name = "retrom-service-files"
+path = "src/main.rs"
+
+[dependencies]
+retrom-codegen = { workspace = true }
+retrom-service-config = { workspace = true }
+retrom-telemetry = { workspace = true }
+walkdir = { workspace = true }
+tonic = { workspace = true }
+tonic-web = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+dotenvy = { workspace = true }
