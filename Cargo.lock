@@ -9311,6 +9311,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "retrom-service-jobs"
+version = "0.8.0"
+dependencies = [
+ "axum",
+ "futures",
+ "retrom-codegen",
+ "retrom-service-config",
+ "retrom-telemetry",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+ "tonic 0.14.5",
+ "tonic-reflection",
+ "tonic-web",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "retrom-telemetry"
 version = "0.8.0"
 dependencies = [

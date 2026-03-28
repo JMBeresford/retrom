@@ -10,6 +10,7 @@ members = [
   "packages/service-clients",
   "packages/service-common",
   "packages/service-config",
+  "packages/service-jobs",
   "packages/telemetry",
   "packages/webdav-service",
 

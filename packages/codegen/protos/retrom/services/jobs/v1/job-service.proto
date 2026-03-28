@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package retrom.services.jobs.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service JobService {
+  rpc CreateJob(CreateJobRequest) returns (CreateJobResponse);
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  rpc UpdateJob(UpdateJobRequest) returns (UpdateJobResponse);
+  // Streams JobProgress updates until the job reaches a terminal state.
+  rpc WatchJob(WatchJobRequest) returns (stream JobProgress);
+  rpc CompleteJob(CompleteJobRequest) returns (CompleteJobResponse);
+}
+
+enum JobStatus {
+  JOB_STATUS_UNSPECIFIED = 0;
+  JOB_STATUS_PENDING = 1;
+  JOB_STATUS_RUNNING = 2;
+  JOB_STATUS_COMPLETE = 3;
+  JOB_STATUS_FAILED = 4;
+}
+
+// Live mutable state of a job; emitted by WatchJob and embedded in Job.
+message JobProgress {
+  string id = 1;
+  JobStatus status = 2;
+  // Completion ratio in the range [0.0, 1.0].
+  float percent_complete = 3;
+  string message = 4;
+}
+
+message Job {
+  string id = 1;
+  string name = 2;
+  JobProgress progress = 4;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+  // Populated when the job reaches a terminal state (complete or failed).
+  google.protobuf.Timestamp finished_at = 8;
+}
+
+message CreateJobRequest {
+  string name = 1;
+  string message = 2;
+}
+
+message CreateJobResponse {
+  Job job = 1;
+}
+
+message GetJobRequest {
+  string id = 1;
+}
+
+message GetJobResponse {
+  Job job = 1;
+}
+
+message ListJobsRequest {
+  // When provided, only jobs matching this status are returned.
+  optional JobStatus status = 1;
+}
+
+message ListJobsResponse {
+  repeated Job jobs = 1;
+}
+
+// Reports incremental progress on a running job.
+// Only provided fields are updated; omitted fields retain their current value.
+message UpdateJobRequest {
+  string id = 1;
+  optional float percent_complete = 2;
+  optional JobStatus status = 3;
+  optional string message = 4;
+}
+
+message UpdateJobResponse {
+  Job job = 1;
+}
+
+message WatchJobRequest {
+  string id = 1;
+}
+
+message CompleteJobRequest {
+  string id = 1;
+  bool failed = 2;
+  string message = 3;
+}
+
+message CompleteJobResponse {
+  Job job = 1;
+}
