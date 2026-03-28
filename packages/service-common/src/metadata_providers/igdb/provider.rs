@@ -1,8 +1,3 @@
-use std::{
-    env,
-    sync::Arc,
-    time::{Duration, Instant},
-};
 use crate::{
     config::ServerConfigManager,
     metadata_providers::{MetadataProvider, RetryAttempts},
@@ -16,6 +11,11 @@ use retrom_codegen::{
         igdb_filters::{FilterOperator, FilterValue},
         GetIgdbSearchRequest,
     },
+};
+use std::{
+    env,
+    sync::Arc,
+    time::{Duration, Instant},
 };
 use tokio::sync::{mpsc, oneshot, RwLock};
 use tower::{Service, ServiceExt};

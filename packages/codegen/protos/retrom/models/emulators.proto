@@ -19,7 +19,7 @@ message Emulator {
   }
 
   int32 id = 1;
-  repeated int32 supported_platforms = 2;
+  repeated int32 supported_platforms = 2 [deprecated = true];
   string name = 3;
   SaveStrategy save_strategy = 4;
   google.protobuf.Timestamp created_at = 5;
@@ -30,7 +30,7 @@ message Emulator {
 }
 
 message NewEmulator {
-  repeated int32 supported_platforms = 1;
+  repeated int32 supported_platforms = 1 [deprecated = true];
   string name = 2;
   SaveStrategy save_strategy = 3;
   optional google.protobuf.Timestamp created_at = 4;
@@ -42,7 +42,7 @@ message NewEmulator {
 
 message UpdatedEmulator {
   int32 id = 1;
-  repeated int32 supported_platforms = 2;
+  repeated int32 supported_platforms = 2 [deprecated = true];
   optional string name = 3;
   optional SaveStrategy save_strategy = 4;
   optional google.protobuf.Timestamp created_at = 5;
