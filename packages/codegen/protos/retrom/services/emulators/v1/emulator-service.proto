@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package retrom.services.emulators.v1;
+
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+// The v1 service reuses the legacy request/response message types while the
+// message definitions are still in the top-level retrom package.  They will
+// be migrated to this package in a later phase.
+import "retrom/services/emulator-service.proto";
+
+service EmulatorService {
+  rpc CreateEmulators(retrom.CreateEmulatorsRequest) returns (retrom.CreateEmulatorsResponse);
+  rpc GetEmulators(retrom.GetEmulatorsRequest) returns (retrom.GetEmulatorsResponse);
+  rpc UpdateEmulators(retrom.UpdateEmulatorsRequest) returns (retrom.UpdateEmulatorsResponse);
+  rpc DeleteEmulators(retrom.DeleteEmulatorsRequest) returns (retrom.DeleteEmulatorsResponse);
+
+  rpc CreateEmulatorProfiles(retrom.CreateEmulatorProfilesRequest) returns (retrom.CreateEmulatorProfilesResponse);
+  rpc GetEmulatorProfiles(retrom.GetEmulatorProfilesRequest) returns (retrom.GetEmulatorProfilesResponse);
+  rpc UpdateEmulatorProfiles(retrom.UpdateEmulatorProfilesRequest) returns (retrom.UpdateEmulatorProfilesResponse);
+  rpc DeleteEmulatorProfiles(retrom.DeleteEmulatorProfilesRequest) returns (retrom.DeleteEmulatorProfilesResponse);
+
+  rpc GetDefaultEmulatorProfiles(retrom.GetDefaultEmulatorProfilesRequest) returns (retrom.GetDefaultEmulatorProfilesResponse);
+  rpc UpdateDefaultEmulatorProfiles(retrom.UpdateDefaultEmulatorProfilesRequest) returns (retrom.UpdateDefaultEmulatorProfilesResponse);
+  rpc DeleteDefaultEmulatorProfiles(retrom.DeleteDefaultEmulatorProfilesRequest) returns (retrom.DeleteDefaultEmulatorProfilesResponse);
+
+  rpc CreateLocalEmulatorConfigs(retrom.CreateLocalEmulatorConfigsRequest) returns (retrom.CreateLocalEmulatorConfigsResponse);
+  rpc GetLocalEmulatorConfigs(retrom.GetLocalEmulatorConfigsRequest) returns (retrom.GetLocalEmulatorConfigsResponse);
+  rpc UpdateLocalEmulatorConfigs(retrom.UpdateLocalEmulatorConfigsRequest) returns (retrom.UpdateLocalEmulatorConfigsResponse);
+  rpc DeleteLocalEmulatorConfigs(retrom.DeleteLocalEmulatorConfigsRequest) returns (retrom.DeleteLocalEmulatorConfigsResponse);
+
+  rpc GetEmulatorPlatformMaps(GetEmulatorPlatformMapsRequest) returns (GetEmulatorPlatformMapsResponse);
+  rpc UpdateEmulatorPlatformMaps(UpdateEmulatorPlatformMapsRequest) returns (UpdateEmulatorPlatformMapsResponse);
+  rpc DeleteEmulatorPlatformMaps(DeleteEmulatorPlatformMapsRequest) returns (DeleteEmulatorPlatformMapsResponse);
+}
+
+message EmulatorPlatformMap {
+  int32 emulator_id = 1;
+  int32 platform_id = 2;
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message GetEmulatorPlatformMapsRequest {
+  repeated int32 emulator_ids = 1;
+  repeated int32 platform_ids = 2;
+}
+
+message GetEmulatorPlatformMapsResponse {
+  repeated EmulatorPlatformMap emulator_platform_maps = 1;
+}
+
+message UpdateEmulatorPlatformMapsRequest {
+  repeated EmulatorPlatformMap emulator_platform_maps = 1;
+}
+
+message UpdateEmulatorPlatformMapsResponse {
+  repeated EmulatorPlatformMap emulator_platform_maps_updated = 1;
+}
+
+message DeleteEmulatorPlatformMapsRequest {
+  repeated int32 emulator_ids = 1;
+  repeated int32 platform_ids = 2;
+}
+
+message DeleteEmulatorPlatformMapsResponse {
+  repeated EmulatorPlatformMap emulator_platform_maps_deleted = 1;
+}
