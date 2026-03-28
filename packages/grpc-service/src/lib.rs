@@ -45,7 +45,7 @@ use saves::v2::service::EmulatorSavesServiceHandlers;
 use std::{sync::Arc, time::Duration};
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
-pub mod clients;
+use retrom_service_clients::ClientServiceHandlers;
 pub mod emulators;
 pub mod file_explorer;
 pub mod games;
@@ -148,8 +148,7 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         config_manager.clone(),
     ));
 
-    let client_service =
-        ClientServiceServer::new(clients::ClientServiceHandlers::new(shared_pool.clone()));
+    let client_service = ClientServiceServer::new(ClientServiceHandlers::new(shared_pool.clone()));
 
     let server_service = ServerServiceServer::new(server::ServerServiceHandlers {
         config: config_manager.clone(),
