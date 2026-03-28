@@ -26,7 +26,7 @@
 - [x] 2.2 Enhanced Library Service — absorb `GameService` / `PlatformService` RPCs
 - [x] 2.3 Updated Metadata Service — provider-aware RPCs
 - [x] 2.4 Updated Emulator Service — mapping-table RPCs, `LocalEmulatorConfig` fields
-- [ ] 2.5 Updated Client Service — move to per-service crate
+- [x] 2.5 Updated Client Service — move to per-service crate
 - [ ] 2.6 Job Service — dedicated gRPC crate with `WatchJob` streaming RPC
 - [ ] 2.7 File Explorer Service — extract to own crate
 - [ ] 2.8 Tag Service — new service with tag domain management
