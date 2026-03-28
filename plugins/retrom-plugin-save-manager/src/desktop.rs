@@ -9,12 +9,12 @@ use retrom_codegen::retrom::{
     client::saves::{
         ConflictReport, SaveSyncStatus, SyncEmulatorSaveStatesResponse, SyncEmulatorSavesResponse,
     },
-    files::FileStat,
+    files::{FileStat, FilesystemNodeType},
     services::saves::v2::{
         backup_save_files_request, backup_save_states_request, BackupSaveFilesRequest,
         BackupSaveStatesRequest,
     },
-    Client, FilesystemNodeType, GetLocalEmulatorConfigsRequest, LocalEmulatorConfig,
+    Client, GetLocalEmulatorConfigsRequest, LocalEmulatorConfig,
 };
 use retrom_plugin_config::ConfigExt;
 use retrom_plugin_service_client::RetromPluginServiceClientExt;
