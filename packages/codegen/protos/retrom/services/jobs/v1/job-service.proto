@@ -14,30 +14,30 @@ service JobService {
 
 enum JobStatus {
   JOB_STATUS_UNSPECIFIED = 0;
-  JOB_STATUS_PENDING     = 1;
-  JOB_STATUS_RUNNING     = 2;
-  JOB_STATUS_COMPLETE    = 3;
-  JOB_STATUS_FAILED      = 4;
+  JOB_STATUS_PENDING = 1;
+  JOB_STATUS_RUNNING = 2;
+  JOB_STATUS_COMPLETE = 3;
+  JOB_STATUS_FAILED = 4;
 }
 
 message JobProgress {
-  string    id       = 1;
-  JobStatus status   = 2;
-  float     progress = 3;
-  string    message  = 4;
+  string id = 1;
+  JobStatus status = 2;
+  float progress = 3;
+  string message = 4;
 }
 
 message Job {
-  string      id          = 1;
-  string      name        = 2;
-  JobProgress progress    = 4;
-  google.protobuf.Timestamp created_at  = 6;
-  google.protobuf.Timestamp updated_at  = 7;
+  string id = 1;
+  string name = 2;
+  JobProgress progress = 4;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
   google.protobuf.Timestamp finished_at = 8;
 }
 
 message CreateJobRequest {
-  string name    = 1;
+  string name = 1;
   string message = 2;
 }
 
@@ -66,8 +66,8 @@ message WatchJobRequest {
 }
 
 message CompleteJobRequest {
-  string id      = 1;
-  bool   failed  = 2;
+  string id = 1;
+  bool failed = 2;
   string message = 3;
 }
 
