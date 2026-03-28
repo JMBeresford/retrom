@@ -1,5 +1,11 @@
 use diesel::{prelude::*, upsert::excluded};
 use diesel_async::RunQueryDsl;
+use retrom_codegen::retrom::services::emulators::v1::{
+    emulator_service_server::EmulatorService as EmulatorServiceV1,
+    DeleteEmulatorPlatformMapsRequest, DeleteEmulatorPlatformMapsResponse, EmulatorPlatformMap,
+    GetEmulatorPlatformMapsRequest, GetEmulatorPlatformMapsResponse,
+    UpdateEmulatorPlatformMapsRequest, UpdateEmulatorPlatformMapsResponse,
+};
 use retrom_codegen::retrom::{
     self, emulator_service_server::EmulatorService, CreateEmulatorsRequest,
     CreateEmulatorsResponse, DefaultEmulatorProfile, DeleteEmulatorsRequest,
@@ -7,7 +13,7 @@ use retrom_codegen::retrom::{
     UpdateEmulatorsRequest, UpdateEmulatorsResponse,
 };
 use retrom_db::{schema, Pool};
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 use tonic::{Request, Response, Status};
 
 pub struct EmulatorServiceHandlers {
@@ -450,6 +456,302 @@ impl EmulatorService for EmulatorServiceHandlers {
 
         Ok(Response::new(retrom::DeleteLocalEmulatorConfigsResponse {
             configs_deleted,
+        }))
+    }
+}
+
+#[tonic::async_trait]
+impl EmulatorServiceV1 for EmulatorServiceHandlers {
+    async fn create_emulators(
+        &self,
+        request: Request<retrom::CreateEmulatorsRequest>,
+    ) -> Result<Response<retrom::CreateEmulatorsResponse>, Status> {
+        <Self as EmulatorService>::create_emulators(self, request).await
+    }
+
+    async fn get_emulators(
+        &self,
+        request: Request<retrom::GetEmulatorsRequest>,
+    ) -> Result<Response<retrom::GetEmulatorsResponse>, Status> {
+        let request = request.into_inner();
+        let ids = &request.ids;
+        let supported_platform_ids = &request.supported_platform_ids;
+
+        let mut conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let mut emulator_query = schema::emulators::table
+            .into_boxed()
+            .select(retrom::Emulator::as_select());
+
+        if !ids.is_empty() {
+            emulator_query = emulator_query.filter(schema::emulators::id.eq_any(ids));
+        }
+
+        if !supported_platform_ids.is_empty() {
+            let emulator_ids_with_platform = schema::emulator_platform_maps::table
+                .filter(
+                    schema::emulator_platform_maps::platform_id
+                        .eq_any(supported_platform_ids.as_slice()),
+                )
+                .select(schema::emulator_platform_maps::emulator_id)
+                .load::<i32>(&mut conn)
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
+
+            emulator_query =
+                emulator_query.filter(schema::emulators::id.eq_any(emulator_ids_with_platform));
+        }
+
+        let mut emulators = emulator_query
+            .load::<Emulator>(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let emulator_ids: Vec<i32> = emulators.iter().map(|e| e.id).collect();
+
+        let platform_maps = schema::emulator_platform_maps::table
+            .filter(schema::emulator_platform_maps::emulator_id.eq_any(&emulator_ids))
+            .load::<EmulatorPlatformMap>(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let mut maps_by_emulator: HashMap<i32, Vec<i32>> = HashMap::new();
+        for map in platform_maps {
+            maps_by_emulator
+                .entry(map.emulator_id)
+                .or_default()
+                .push(map.platform_id);
+        }
+
+        for emulator in &mut emulators {
+            emulator.supported_platforms =
+                maps_by_emulator.remove(&emulator.id).unwrap_or_default();
+        }
+
+        Ok(Response::new(retrom::GetEmulatorsResponse { emulators }))
+    }
+
+    async fn update_emulators(
+        &self,
+        request: Request<retrom::UpdateEmulatorsRequest>,
+    ) -> Result<Response<retrom::UpdateEmulatorsResponse>, Status> {
+        let emulators = request.into_inner().emulators;
+
+        let mut conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let mut emulators_updated = vec![];
+
+        for emulator in emulators {
+            let updated_emulator = diesel::update(schema::emulators::table)
+                .filter(schema::emulators::id.eq(emulator.id))
+                .set(&emulator)
+                .get_result::<Emulator>(&mut conn)
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
+
+            emulators_updated.push(updated_emulator);
+        }
+
+        Ok(Response::new(retrom::UpdateEmulatorsResponse {
+            emulators_updated,
+        }))
+    }
+
+    async fn delete_emulators(
+        &self,
+        request: Request<retrom::DeleteEmulatorsRequest>,
+    ) -> Result<Response<retrom::DeleteEmulatorsResponse>, Status> {
+        <Self as EmulatorService>::delete_emulators(self, request).await
+    }
+
+    async fn create_emulator_profiles(
+        &self,
+        request: Request<retrom::CreateEmulatorProfilesRequest>,
+    ) -> Result<Response<retrom::CreateEmulatorProfilesResponse>, Status> {
+        <Self as EmulatorService>::create_emulator_profiles(self, request).await
+    }
+
+    async fn get_emulator_profiles(
+        &self,
+        request: Request<retrom::GetEmulatorProfilesRequest>,
+    ) -> Result<Response<retrom::GetEmulatorProfilesResponse>, Status> {
+        <Self as EmulatorService>::get_emulator_profiles(self, request).await
+    }
+
+    async fn update_emulator_profiles(
+        &self,
+        request: Request<retrom::UpdateEmulatorProfilesRequest>,
+    ) -> Result<Response<retrom::UpdateEmulatorProfilesResponse>, Status> {
+        <Self as EmulatorService>::update_emulator_profiles(self, request).await
+    }
+
+    async fn delete_emulator_profiles(
+        &self,
+        request: Request<retrom::DeleteEmulatorProfilesRequest>,
+    ) -> Result<Response<retrom::DeleteEmulatorProfilesResponse>, Status> {
+        <Self as EmulatorService>::delete_emulator_profiles(self, request).await
+    }
+
+    async fn get_default_emulator_profiles(
+        &self,
+        request: Request<retrom::GetDefaultEmulatorProfilesRequest>,
+    ) -> Result<Response<retrom::GetDefaultEmulatorProfilesResponse>, Status> {
+        <Self as EmulatorService>::get_default_emulator_profiles(self, request).await
+    }
+
+    async fn update_default_emulator_profiles(
+        &self,
+        request: Request<retrom::UpdateDefaultEmulatorProfilesRequest>,
+    ) -> Result<Response<retrom::UpdateDefaultEmulatorProfilesResponse>, Status> {
+        <Self as EmulatorService>::update_default_emulator_profiles(self, request).await
+    }
+
+    async fn delete_default_emulator_profiles(
+        &self,
+        request: Request<retrom::DeleteDefaultEmulatorProfilesRequest>,
+    ) -> Result<Response<retrom::DeleteDefaultEmulatorProfilesResponse>, Status> {
+        <Self as EmulatorService>::delete_default_emulator_profiles(self, request).await
+    }
+
+    async fn create_local_emulator_configs(
+        &self,
+        request: Request<retrom::CreateLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<retrom::CreateLocalEmulatorConfigsResponse>, Status> {
+        <Self as EmulatorService>::create_local_emulator_configs(self, request).await
+    }
+
+    async fn get_local_emulator_configs(
+        &self,
+        request: Request<retrom::GetLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<retrom::GetLocalEmulatorConfigsResponse>, Status> {
+        <Self as EmulatorService>::get_local_emulator_configs(self, request).await
+    }
+
+    async fn update_local_emulator_configs(
+        &self,
+        request: Request<retrom::UpdateLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<retrom::UpdateLocalEmulatorConfigsResponse>, Status> {
+        <Self as EmulatorService>::update_local_emulator_configs(self, request).await
+    }
+
+    async fn delete_local_emulator_configs(
+        &self,
+        request: Request<retrom::DeleteLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<retrom::DeleteLocalEmulatorConfigsResponse>, Status> {
+        <Self as EmulatorService>::delete_local_emulator_configs(self, request).await
+    }
+
+    async fn get_emulator_platform_maps(
+        &self,
+        request: Request<GetEmulatorPlatformMapsRequest>,
+    ) -> Result<Response<GetEmulatorPlatformMapsResponse>, Status> {
+        let request = request.into_inner();
+        let emulator_ids = request.emulator_ids;
+        let platform_ids = request.platform_ids;
+
+        let mut conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let mut query = schema::emulator_platform_maps::table
+            .into_boxed()
+            .select(EmulatorPlatformMap::as_select());
+
+        if !emulator_ids.is_empty() {
+            query = query.filter(schema::emulator_platform_maps::emulator_id.eq_any(&emulator_ids));
+        }
+
+        if !platform_ids.is_empty() {
+            query = query.filter(schema::emulator_platform_maps::platform_id.eq_any(&platform_ids));
+        }
+
+        let emulator_platform_maps = query
+            .load::<EmulatorPlatformMap>(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(GetEmulatorPlatformMapsResponse {
+            emulator_platform_maps,
+        }))
+    }
+
+    async fn update_emulator_platform_maps(
+        &self,
+        request: Request<UpdateEmulatorPlatformMapsRequest>,
+    ) -> Result<Response<UpdateEmulatorPlatformMapsResponse>, Status> {
+        let maps = request.into_inner().emulator_platform_maps;
+
+        let mut conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let emulator_platform_maps_updated =
+            diesel::insert_into(schema::emulator_platform_maps::table)
+                .values(&maps)
+                .on_conflict((
+                    schema::emulator_platform_maps::emulator_id,
+                    schema::emulator_platform_maps::platform_id,
+                ))
+                .do_update()
+                .set(schema::emulator_platform_maps::updated_at.eq(diesel::dsl::now))
+                .get_results::<EmulatorPlatformMap>(&mut conn)
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(UpdateEmulatorPlatformMapsResponse {
+            emulator_platform_maps_updated,
+        }))
+    }
+
+    async fn delete_emulator_platform_maps(
+        &self,
+        request: Request<DeleteEmulatorPlatformMapsRequest>,
+    ) -> Result<Response<DeleteEmulatorPlatformMapsResponse>, Status> {
+        let request = request.into_inner();
+        let emulator_ids = request.emulator_ids;
+        let platform_ids = request.platform_ids;
+
+        if emulator_ids.is_empty() && platform_ids.is_empty() {
+            return Err(Status::invalid_argument(
+                "at least one of emulator_ids or platform_ids must be provided",
+            ));
+        }
+
+        let mut conn = self
+            .db_pool
+            .get()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let mut query = diesel::delete(schema::emulator_platform_maps::table).into_boxed();
+
+        if !emulator_ids.is_empty() {
+            query = query.filter(schema::emulator_platform_maps::emulator_id.eq_any(&emulator_ids));
+        }
+
+        if !platform_ids.is_empty() {
+            query = query.filter(schema::emulator_platform_maps::platform_id.eq_any(&platform_ids));
+        }
+
+        let emulator_platform_maps_deleted = query
+            .get_results::<EmulatorPlatformMap>(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(DeleteEmulatorPlatformMapsResponse {
+            emulator_platform_maps_deleted,
         }))
     }
 }
