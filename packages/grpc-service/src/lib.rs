@@ -1,7 +1,6 @@
 use axum::Router;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use emulators::EmulatorServiceHandlers;
-use file_explorer::FileExplorerServiceHandlers;
 use games::GameServiceHandlers;
 use http::HeaderName;
 use jobs::{job_manager::JobManager, JobServiceHandlers};
@@ -13,7 +12,6 @@ use retrom_codegen::{
     retrom::{
         client_service_server::ClientServiceServer,
         emulator_service_server::EmulatorServiceServer,
-        file_explorer_service_server::FileExplorerServiceServer,
         game_service_server::GameServiceServer,
         job_service_server::JobServiceServer,
         library_service_server::LibraryServiceServer,
@@ -23,6 +21,7 @@ use retrom_codegen::{
         services::{
             config::v1::config_service_server::ConfigServiceServer,
             emulators::v1::emulator_service_server::EmulatorServiceServer as EmulatorServiceServerV1,
+            files::v1::file_explorer_service_server::FileExplorerServiceServer,
             library::v1::library_service_server::LibraryServiceServer as LibraryServiceServerV1,
             metadata::v1::metadata_service_server::MetadataServiceServer as MetadataServiceServerV1,
             saves::{
@@ -46,8 +45,8 @@ use std::{sync::Arc, time::Duration};
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
 use retrom_service_clients::ClientServiceHandlers;
+use retrom_service_files::FileExplorerServiceHandlers;
 pub mod emulators;
-pub mod file_explorer;
 pub mod games;
 pub mod jobs;
 pub mod library;

@@ -1,10 +1,17 @@
-use retrom_codegen::retrom::{
-    file_explorer_service_server::FileExplorerService, files::FileStat, FilesystemNode,
+use retrom_codegen::retrom::services::files::v1::{
     GetFilesystemNodeRequest, GetFilesystemNodeResponse, GetStatRequest, GetStatResponse,
 };
-use retrom_service_common::retrom_dirs::RetromDirs;
+use retrom_codegen::retrom::{
+    files::FileStat,
+    services::files::v1::file_explorer_service_server::{
+        FileExplorerService, FileExplorerServiceServer,
+    },
+    FilesystemNode,
+};
+use retrom_service_config::retrom_dirs::RetromDirs;
 use std::path::PathBuf;
 use walkdir::WalkDir;
+
 pub struct FileExplorerServiceHandlers {}
 
 impl Default for FileExplorerServiceHandlers {
@@ -85,4 +92,14 @@ impl FileExplorerService for FileExplorerServiceHandlers {
 
         Ok(tonic::Response::new(GetStatResponse { stats }))
     }
+}
+
+/// Build an [`axum::Router`] that serves the [`FileExplorerService`] gRPC endpoints.
+pub fn files_router() -> axum::Router {
+    let file_explorer_service = FileExplorerServiceServer::new(FileExplorerServiceHandlers::new());
+
+    let mut routes_builder = tonic::service::Routes::builder();
+    routes_builder.add_service(file_explorer_service);
+
+    routes_builder.routes().into_axum_router()
 }
