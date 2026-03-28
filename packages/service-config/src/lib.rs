@@ -22,8 +22,8 @@ pub struct ConfigServiceHandlers {
 
 impl ConfigServiceHandlers {
     pub fn new() -> Self {
-        let config_manager = ServerConfigManager::new()
-            .expect("Failed to initialize ServerConfigManager");
+        let config_manager =
+            ServerConfigManager::new().expect("Failed to initialize ServerConfigManager");
         Self {
             config: Arc::new(config_manager),
         }
