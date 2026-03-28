@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@retrom/ui/components/table";
-import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer_pb";
+import { FilesystemNodeType } from "@retrom/codegen/retrom/services/files/v1/file-explorer_pb";
 import {
   FileIcon,
   FolderIcon,

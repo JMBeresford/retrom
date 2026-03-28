@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package retrom;
+package retrom.services.files.v1;
 
 enum FilesystemNodeType {
   DIRECTORY = 0;

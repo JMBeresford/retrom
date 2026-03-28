@@ -76,7 +76,7 @@ pub mod descriptors {
     }
 }
 
-impl TryFrom<PathBuf> for crate::retrom::FilesystemNode {
+impl TryFrom<PathBuf> for crate::retrom::services::files::v1::FilesystemNode {
     type Error = ();
 
     fn try_from(_path: PathBuf) -> Result<Self, Self::Error> {
@@ -84,8 +84,8 @@ impl TryFrom<PathBuf> for crate::retrom::FilesystemNode {
         let path = _path.to_str().ok_or(())?.into();
 
         if path == "/" {
-            return Ok(crate::retrom::FilesystemNode {
-                node_type: crate::retrom::FilesystemNodeType::Directory.into(),
+            return Ok(crate::retrom::services::files::v1::FilesystemNode {
+                node_type: crate::retrom::services::files::v1::FilesystemNodeType::Directory.into(),
                 path,
                 name: "/".into(),
             });
@@ -94,11 +94,11 @@ impl TryFrom<PathBuf> for crate::retrom::FilesystemNode {
         let name = _path.file_name().ok_or(())?.to_str().ok_or(())?.into();
 
         let node_type = match _path.is_dir() {
-            true => crate::retrom::FilesystemNodeType::Directory.into(),
-            false => crate::retrom::FilesystemNodeType::File.into(),
+            true => crate::retrom::services::files::v1::FilesystemNodeType::Directory.into(),
+            false => crate::retrom::services::files::v1::FilesystemNodeType::File.into(),
         };
 
-        Ok(crate::retrom::FilesystemNode {
+        Ok(crate::retrom::services::files::v1::FilesystemNode {
             node_type,
             path,
             name,
@@ -138,9 +138,9 @@ impl TryFrom<PathBuf> for crate::retrom::files::FileStat {
         let path = path_buf.to_str().ok_or(())?.into();
 
         let node_type = match metadata.as_ref().map(|m| m.is_dir()) {
-            Some(true) => crate::retrom::FilesystemNodeType::Directory as i32,
-            Some(false) => crate::retrom::FilesystemNodeType::File as i32,
-            None => crate::retrom::FilesystemNodeType::Unknown as i32,
+            Some(true) => crate::retrom::services::files::v1::FilesystemNodeType::Directory as i32,
+            Some(false) => crate::retrom::services::files::v1::FilesystemNodeType::File as i32,
+            None => crate::retrom::services::files::v1::FilesystemNodeType::Unknown as i32,
         };
 
         let created_at = metadata

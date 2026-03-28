@@ -9,7 +9,7 @@ import {
 } from "react";
 import { useEmulatorJS } from ".";
 import { type File, FileSchema } from "@retrom/codegen/retrom/files_pb";
-import { FilesystemNodeType } from "@retrom/codegen/retrom/file-explorer_pb";
+import { FilesystemNodeType } from "@retrom/codegen/retrom/services/files/v1/file-explorer_pb";
 import { emitFromFrame } from "@/routes/play/$gameId/_layout/frame.lazy";
 import { checkIsDesktop } from "@/lib/env";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
