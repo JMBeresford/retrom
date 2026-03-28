@@ -9323,6 +9323,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tonic 0.14.5",
+ "tonic-reflection",
  "tonic-web",
  "tracing",
  "uuid",
