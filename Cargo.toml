@@ -10,6 +10,7 @@ members = [
   "packages/service-clients",
   "packages/service-common",
   "packages/service-config",
+  "packages/service-files",
   "packages/telemetry",
   "packages/webdav-service",
 
@@ -114,6 +115,7 @@ retrom-rest-service = { path = "./packages/rest-service" }
 retrom-service-common = { path = "./packages/service-common" }
 retrom-service-clients = { path = "./packages/service-clients" }
 retrom-service-config = { path = "./packages/service-config" }
+retrom-service-files = { path = "./packages/service-files" }
 retrom-telemetry = { path = "./packages/telemetry" }
 retrom-codegen = { path = "./packages/codegen" }
 retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer" }
