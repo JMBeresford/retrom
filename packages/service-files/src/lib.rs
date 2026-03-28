@@ -1,6 +1,6 @@
 use retrom_codegen::retrom::{
     files::{FileStat, FilesystemNode},
-    services::files::v1::{
+    services::file_explorer::v1::{
         file_explorer_service_server::{FileExplorerService, FileExplorerServiceServer},
         GetFilesystemNodeRequest, GetFilesystemNodeResponse, GetStatRequest, GetStatResponse,
     },

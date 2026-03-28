@@ -47,9 +47,9 @@ pub mod retrom {
             }
         }
 
-        pub mod files {
+        pub mod file_explorer {
             pub mod v1 {
-                tonic::include_proto!("retrom.services.files.v1");
+                tonic::include_proto!("retrom.services.file_explorer.v1");
             }
         }
 
