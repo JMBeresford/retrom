@@ -176,15 +176,15 @@ model, protobuf service definitions, Rust service implementations, and TypeScrip
 
 ### Scope
 
-| In Scope | Out of Scope |
-|---|---|
-| `packages/db` — sqlx migrations and query layer | `packages/client-web` UI layer |
-| `packages/codegen` — proto definitions | `packages/client` Tauri shell |
-| `packages/grpc-service` and successor per-service crates | Docker/deployment configuration |
-| `packages/rest-service` — REST endpoints | Authentication / multi-user support |
-| `packages/service-common` — shared utilities | WebDAV service internals |
-| `packages/service` — binary wiring | CI/CD pipeline changes |
-| `plugins/retrom-plugin-service-client` — Tauri gRPC client | |
+| In Scope                                                   | Out of Scope                        |
+| ---------------------------------------------------------- | ----------------------------------- |
+| `packages/db` — sqlx migrations and query layer            | `packages/client-web` UI layer      |
+| `packages/codegen` — proto definitions                     | `packages/client` Tauri shell       |
+| `packages/grpc-service` and successor per-service crates   | Docker/deployment configuration     |
+| `packages/rest-service` — REST endpoints                   | Authentication / multi-user support |
+| `packages/service-common` — shared utilities               | WebDAV service internals            |
+| `packages/service` — binary wiring                         | CI/CD pipeline changes              |
+| `plugins/retrom-plugin-service-client` — Tauri gRPC client |                                     |
 
 ---
 
@@ -217,18 +217,18 @@ packages/
 
 ### Service Inventory
 
-| Service | gRPC Package | Status |
-|---|---|---|
-| `LibraryService` | `retrom` | Active |
-| `GameService` | `retrom` | Active |
-| `PlatformService` | `retrom` | Active |
-| `MetadataService` | `retrom` | Active |
-| `EmulatorService` | `retrom` | Active |
-| `ClientService` | `retrom` | Active |
-| `ServerService` | `retrom` | Active |
-| `JobService` | `retrom` | Active |
-| `FileExplorerService` | `retrom` | Active |
-| `SavesService` (v1) | `retrom.services.saves.v1` | Active |
+| Service                     | gRPC Package               | Status |
+| --------------------------- | -------------------------- | ------ |
+| `LibraryService`            | `retrom`                   | Active |
+| `GameService`               | `retrom`                   | Active |
+| `PlatformService`           | `retrom`                   | Active |
+| `MetadataService`           | `retrom`                   | Active |
+| `EmulatorService`           | `retrom`                   | Active |
+| `ClientService`             | `retrom`                   | Active |
+| `ServerService`             | `retrom`                   | Active |
+| `JobService`                | `retrom`                   | Active |
+| `FileExplorerService`       | `retrom`                   | Active |
+| `SavesService` (v1)         | `retrom.services.saves.v1` | Active |
 | `EmulatorSavesService` (v2) | `retrom.services.saves.v2` | Active |
 
 ### Known Limitations
@@ -307,21 +307,21 @@ packages/
 
 ### Service Inventory
 
-| Service | gRPC Package | Replaces / Notes |
-|---|---|---|
-| `ConfigService` | `retrom.services.config.v1` | Replaces `ServerService`; gRPC gateway to the server config file — all other services read/write config through this service instead of accessing the file directly |
-| `LibraryService` | `retrom.services.library.v1` | Expanded; absorbs `GameService` and `PlatformService` |
-| `MetadataService` | `retrom.services.metadata.v1` | Updated; provider-aware |
-| `EmulatorService` | `retrom.services.emulators.v1` | Updated; mapping-table based |
-| `TagService` | `retrom.services.tags.v1` | New; manages tag domains and tags; game/platform tagging |
-| `ClientService` | `retrom.services.clients.v1` | Unchanged |
-| `JobService` | `retrom.services.jobs.v1` | Dedicated service crate; exposes job progress over gRPC |
-| `FileExplorerService` | `retrom.services.files.v1` | Retained (omission from architecture doc was accidental); extracted to its own crate |
-| `SavesService` (v1) | `retrom.services.saves.v1` | Unchanged |
-| `EmulatorSavesService` (v2) | `retrom.services.saves.v2` | Unchanged |
-| ~~`GameService`~~ | ~~`retrom`~~ | Deprecated (`option deprecated = true`) — RPCs moved to `LibraryService` |
-| ~~`PlatformService`~~ | ~~`retrom`~~ | Deprecated (`option deprecated = true`) — RPCs moved to `LibraryService` |
-| ~~`ServerService`~~ | ~~`retrom`~~ | Deprecated (`option deprecated = true`) — RPCs moved to `ConfigService` |
+| Service                     | gRPC Package                   | Replaces / Notes                                                                                                                                                    |
+| --------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ConfigService`             | `retrom.services.config.v1`    | Replaces `ServerService`; gRPC gateway to the server config file — all other services read/write config through this service instead of accessing the file directly |
+| `LibraryService`            | `retrom.services.library.v1`   | Expanded; absorbs `GameService` and `PlatformService`                                                                                                               |
+| `MetadataService`           | `retrom.services.metadata.v1`  | Updated; provider-aware                                                                                                                                             |
+| `EmulatorService`           | `retrom.services.emulators.v1` | Updated; mapping-table based                                                                                                                                        |
+| `TagService`                | `retrom.services.tags.v1`      | New; manages tag domains and tags; game/platform tagging                                                                                                            |
+| `ClientService`             | `retrom.services.clients.v1`   | Unchanged                                                                                                                                                           |
+| `JobService`                | `retrom.services.jobs.v1`      | Dedicated service crate; exposes job progress over gRPC                                                                                                             |
+| `FileExplorerService`       | `retrom.services.files.v1`     | Retained (omission from architecture doc was accidental); extracted to its own crate                                                                                |
+| `SavesService` (v1)         | `retrom.services.saves.v1`     | Unchanged                                                                                                                                                           |
+| `EmulatorSavesService` (v2) | `retrom.services.saves.v2`     | Unchanged                                                                                                                                                           |
+| ~~`GameService`~~           | ~~`retrom`~~                   | Deprecated (`option deprecated = true`) — RPCs moved to `LibraryService`                                                                                            |
+| ~~`PlatformService`~~       | ~~`retrom`~~                   | Deprecated (`option deprecated = true`) — RPCs moved to `LibraryService`                                                                                            |
+| ~~`ServerService`~~         | ~~`retrom`~~                   | Deprecated (`option deprecated = true`) — RPCs moved to `ConfigService`                                                                                             |
 
 ---
 
@@ -391,10 +391,10 @@ CREATE TABLE metadata_providers (
 
 Seed values (inserted in a migration, not at application startup):
 
-| id | name |
-|----|------|
-| 1 | IGDB |
-| 2 | Steam |
+| id  | name  |
+| --- | ----- |
+| 1   | IGDB  |
+| 2   | Steam |
 
 #### `tag_domains`
 
@@ -671,20 +671,20 @@ CREATE TABLE emulator_platform_maps (
 The following tables are scheduled for removal **in Phase 4**, after data has been migrated to
 their replacements. Do **not** remove them in Phase 1.
 
-| Table | Replaced by |
-|---|---|
-| `game_genres` | `tags` |
+| Table             | Replaced by     |
+| ----------------- | --------------- |
+| `game_genres`     | `tags`          |
 | `game_genre_maps` | `game_tag_maps` |
 
 The following **columns** are retired in Phase 4:
 
-| Table.Column | Replaced by |
-|---|---|
-| `game_metadata.video_urls` | `video_metadata` table |
-| `game_metadata.screenshot_urls` | `screenshot_metadata` table |
-| `game_metadata.artwork_urls` | `artwork_metadata` table |
-| `emulators.supported_platforms` | `emulator_platform_maps` table |
-| `games.platform_id` (nullable FK) | `game_platform_maps` table |
+| Table.Column                      | Replaced by                    |
+| --------------------------------- | ------------------------------ |
+| `game_metadata.video_urls`        | `video_metadata` table         |
+| `game_metadata.screenshot_urls`   | `screenshot_metadata` table    |
+| `game_metadata.artwork_urls`      | `artwork_metadata` table       |
+| `emulators.supported_platforms`   | `emulator_platform_maps` table |
+| `games.platform_id` (nullable FK) | `game_platform_maps` table     |
 
 ---
 
@@ -1209,12 +1209,12 @@ message Tag {
 
 **Well-known tag domains** are seeded at startup and cannot be deleted. The initial set is:
 
-| Domain | Description |
-|---|---|
-| `genre` | Game or platform genre (e.g. RPG, Action) |
-| `favorites` | User-marked favourites |
+| Domain      | Description                                    |
+| ----------- | ---------------------------------------------- |
+| `genre`     | Game or platform genre (e.g. RPG, Action)      |
+| `favorites` | User-marked favourites                         |
 | `franchise` | Game franchise / series (e.g. "Final Fantasy") |
-| `region` | Geographic/release region (e.g. NTSC-U, PAL) |
+| `region`    | Geographic/release region (e.g. NTSC-U, PAL)   |
 
 Users can register and manage additional custom domains via the UI. Well-known domains are
 distinguished by `is_well_known = true` (set by the server; `OUTPUT_ONLY`). Arbitrary path
@@ -1270,11 +1270,11 @@ Register forwarding stub implementations for the following services so that any 
 clients during the development cycle do not receive an `Unimplemented` error before they are
 updated:
 
-| Service | Stub behaviour |
-|---|---|
-| `GameService` | Forward all RPCs to `LibraryService` (`retrom.services.library.v1`) equivalents |
-| `PlatformService` | Forward all RPCs to `LibraryService` equivalents |
-| `ServerService` | Forward all RPCs to `ConfigService` (`retrom.services.config.v1`) equivalents |
+| Service           | Stub behaviour                                                                  |
+| ----------------- | ------------------------------------------------------------------------------- |
+| `GameService`     | Forward all RPCs to `LibraryService` (`retrom.services.library.v1`) equivalents |
+| `PlatformService` | Forward all RPCs to `LibraryService` equivalents                                |
+| `ServerService`   | Forward all RPCs to `ConfigService` (`retrom.services.config.v1`) equivalents   |
 
 Remove stubs and deregister the services in the same release that the client code is updated.
 
@@ -1328,17 +1328,17 @@ For each domain below, create a new Cargo crate following this pattern:
 
 **Crates to create:**
 
-| New crate | Domain | Replaces |
-|---|---|---|
-| `retrom-service-library` | LibraryService | `grpc-service/src/library/` + `games.rs` + `platforms.rs` |
-| `retrom-service-metadata` | MetadataService | `grpc-service/src/metadata/` |
-| `retrom-service-emulators` | EmulatorService | `grpc-service/src/emulators/` |
-| `retrom-service-clients` | ClientService | `grpc-service/src/clients/` |
-| `retrom-service-config` | ConfigService | `grpc-service/src/server/` |
-| `retrom-service-jobs` | JobService | `grpc-service/src/jobs/` |
-| `retrom-service-tags` | TagService | new |
-| `retrom-service-files` | FileExplorerService | `grpc-service/src/file_explorer/` |
-| `retrom-service-saves` | SavesService (v1 + v2) | `grpc-service/src/saves/` |
+| New crate                  | Domain                 | Replaces                                                  |
+| -------------------------- | ---------------------- | --------------------------------------------------------- |
+| `retrom-service-library`   | LibraryService         | `grpc-service/src/library/` + `games.rs` + `platforms.rs` |
+| `retrom-service-metadata`  | MetadataService        | `grpc-service/src/metadata/`                              |
+| `retrom-service-emulators` | EmulatorService        | `grpc-service/src/emulators/`                             |
+| `retrom-service-clients`   | ClientService          | `grpc-service/src/clients/`                               |
+| `retrom-service-config`    | ConfigService          | `grpc-service/src/server/`                                |
+| `retrom-service-jobs`      | JobService             | `grpc-service/src/jobs/`                                  |
+| `retrom-service-tags`      | TagService             | new                                                       |
+| `retrom-service-files`     | FileExplorerService    | `grpc-service/src/file_explorer/`                         |
+| `retrom-service-saves`     | SavesService (v1 + v2) | `grpc-service/src/saves/`                                 |
 
 ---
 
@@ -1407,7 +1407,7 @@ contain Diesel-specific imports, derive macros, and query logic that was not yet
 **Migration status:**
 
 | Service Crate              | Migrate to sqlx | Use ConfigService via RPC |
-|----------------------------|:---------------:|:-------------------------:|
+| -------------------------- | :-------------: | :-----------------------: |
 | `retrom-service-library`   |        ☐        |             ☐             |
 | `retrom-service-metadata`  |        ☐        |             ☐             |
 | `retrom-service-emulators` |        ☐        |             ☐             |
@@ -1468,7 +1468,7 @@ are updated in a single pass.
    tests that mock the `ConfigService` gRPC client to verify that the crate behaves correctly
    when configuration is served via RPC.
 
-> **Note:** `retrom-service-config` itself is exempt from this step — it *is* the config
+> **Note:** `retrom-service-config` itself is exempt from this step — it _is_ the config
 > service and therefore owns the `ServerConfigManager` and config file access by design.
 
 **Acceptance criteria:**
@@ -1781,14 +1781,14 @@ DROP TABLE game_genres;
 
 ## Risk Analysis
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| `game_metadata` array normalization loses data on migration failure | Medium | High | Run migration against a copy of production data first; verify row counts before dropping columns |
-| `emulators.supported_platforms` migration breaks emulator-platform lookup | Medium | High | Keep old array column until `emulator_platform_maps` is verified in staging; derive array from JOIN in responses during migration window |
-| `libraries` table seeding is non-deterministic (config-driven) | Low | Medium | Implement startup seed task idempotently (check before insert); log clearly when seeding |
-| Proto field renaming (`cover_url` → `cover_image_url`) produces mismatched serialized messages | Medium | Medium | Apply `option deprecated = true` and serve old field as an alias during the release that introduces the rename |
-| sqlx `AnyPool` loses compile-time query verification | Medium | Low | Accepted trade-off; focused follow-up to add query verification is tracked separately |
-| Per-service crate decomposition causes extended merge divergence | Medium | Medium | Extract one crate at a time; keep `grpc-service` shell until all crates are stable |
+| Risk                                                                                           | Likelihood | Impact | Mitigation                                                                                                                               |
+| ---------------------------------------------------------------------------------------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `game_metadata` array normalization loses data on migration failure                            | Medium     | High   | Run migration against a copy of production data first; verify row counts before dropping columns                                         |
+| `emulators.supported_platforms` migration breaks emulator-platform lookup                      | Medium     | High   | Keep old array column until `emulator_platform_maps` is verified in staging; derive array from JOIN in responses during migration window |
+| `libraries` table seeding is non-deterministic (config-driven)                                 | Low        | Medium | Implement startup seed task idempotently (check before insert); log clearly when seeding                                                 |
+| Proto field renaming (`cover_url` → `cover_image_url`) produces mismatched serialized messages | Medium     | Medium | Apply `option deprecated = true` and serve old field as an alias during the release that introduces the rename                           |
+| sqlx `AnyPool` loses compile-time query verification                                           | Medium     | Low    | Accepted trade-off; focused follow-up to add query verification is tracked separately                                                    |
+| Per-service crate decomposition causes extended merge divergence                               | Medium     | Medium | Extract one crate at a time; keep `grpc-service` shell until all crates are stable                                                       |
 
 ---
 
