@@ -5,15 +5,13 @@ package retrom.services.tags.v1;
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
 
-// TagDomain groups tags by semantic category.
-//
-// Well-known domains are static (seeded via DB migration, is_well_known = true)
-// and cannot be deleted via the TagsService. Users can register custom domains via
-// the UI using CreateTagDomains.
 message TagDomain {
   int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string name = 2;
-  // OUTPUT_ONLY — true for system-seeded domains that cannot be deleted.
+
+  // Well-known domains are static (seeded via DB migration, is_well_known = true)
+  // and cannot be deleted via the TagsService. Users can register custom domains via
+  // the UI using CreateTagDomains.
   bool is_well_known = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
@@ -27,18 +25,6 @@ message Tag {
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
-// GameTagMap associates a game with its set of tags.
-message GameTagMap {
-  int32 game_id = 1;
-  repeated Tag tags = 2;
-}
-
-// PlatformTagMap associates a platform with its set of tags.
-message PlatformTagMap {
-  int32 platform_id = 1;
-  repeated Tag tags = 2;
-}
-
 service TagsService {
   rpc GetTagDomains(GetTagDomainsRequest) returns (GetTagDomainsResponse);
   rpc CreateTagDomains(CreateTagDomainsRequest) returns (CreateTagDomainsResponse);
@@ -49,10 +35,12 @@ service TagsService {
   rpc DeleteTags(DeleteTagsRequest) returns (DeleteTagsResponse);
 
   rpc GetGameTags(GetGameTagsRequest) returns (GetGameTagsResponse);
-  rpc UpdateGameTags(UpdateGameTagsRequest) returns (UpdateGameTagsResponse);
+  rpc AddGameTags(AddGameTagsRequest) returns (AddGameTagsResponse);
+  rpc DeleteGameTags(DeleteGameTagsRequest) returns (DeleteGameTagsResponse);
 
   rpc GetPlatformTags(GetPlatformTagsRequest) returns (GetPlatformTagsResponse);
-  rpc UpdatePlatformTags(UpdatePlatformTagsRequest) returns (UpdatePlatformTagsResponse);
+  rpc AddPlatformTags(AddPlatformTagsRequest) returns (AddPlatformTagsResponse);
+  rpc DeletePlatformTags(DeletePlatformTagsRequest) returns (DeletePlatformTagsResponse);
 }
 
 message GetTagDomainsRequest {
@@ -105,33 +93,53 @@ message DeleteTagsResponse {
 }
 
 message GetGameTagsRequest {
-  repeated int32 game_ids = 1;
+  int32 game_id = 1;
 }
 
 message GetGameTagsResponse {
-  repeated GameTagMap game_tag_maps = 1;
+  repeated Tag tags = 1;
 }
 
-message UpdateGameTagsRequest {
-  repeated GameTagMap game_tag_maps = 1;
+message AddGameTagsRequest {
+  int32 game_id = 1;
+  repeated int32 tag_ids = 2;
 }
 
-message UpdateGameTagsResponse {
-  repeated GameTagMap game_tag_maps_updated = 1;
+message AddGameTagsResponse {
+  repeated Tag tags_added = 1;
+}
+
+message DeleteGameTagsRequest {
+  int32 game_id = 1;
+  repeated int32 tag_ids = 2;
+}
+
+message DeleteGameTagsResponse {
+  repeated Tag tags_deleted = 1;
 }
 
 message GetPlatformTagsRequest {
-  repeated int32 platform_ids = 1;
+  int32 platform_id = 1;
 }
 
 message GetPlatformTagsResponse {
-  repeated PlatformTagMap platform_tag_maps = 1;
+  repeated Tag tags = 1;
 }
 
-message UpdatePlatformTagsRequest {
-  repeated PlatformTagMap platform_tag_maps = 1;
+message AddPlatformTagsRequest {
+  int32 platform_id = 1;
+  repeated int32 tag_ids = 2;
 }
 
-message UpdatePlatformTagsResponse {
-  repeated PlatformTagMap platform_tag_maps_updated = 1;
+message AddPlatformTagsResponse {
+  repeated Tag tags_added = 1;
+}
+
+message DeletePlatformTagsRequest {
+  int32 platform_id = 1;
+  repeated int32 tag_ids = 2;
+}
+
+message DeletePlatformTagsResponse {
+  repeated Tag tags_deleted = 1;
 }
