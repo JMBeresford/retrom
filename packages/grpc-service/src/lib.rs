@@ -21,7 +21,7 @@ use retrom_codegen::{
         services::{
             config::v1::config_service_server::ConfigServiceServer,
             emulators::v1::emulator_service_server::EmulatorServiceServer as EmulatorServiceServerV1,
-            files::v1::file_explorer_service_server::FileExplorerServiceServer,
+            file_explorer::v1::file_explorer_service_server::FileExplorerServiceServer,
             library::v1::library_service_server::LibraryServiceServer as LibraryServiceServerV1,
             metadata::v1::metadata_service_server::MetadataServiceServer as MetadataServiceServerV1,
             saves::{
