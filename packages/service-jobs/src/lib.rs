@@ -7,7 +7,8 @@ use job_manager::JobManager;
 use retrom_codegen::retrom::services::jobs::v1::{
     job_service_server::{JobService, JobServiceServer},
     CompleteJobRequest, CompleteJobResponse, CreateJobRequest, CreateJobResponse, GetJobRequest,
-    GetJobResponse, JobProgress, JobStatus, ListJobsRequest, ListJobsResponse, WatchJobRequest,
+    GetJobResponse, JobProgress, JobStatus, ListJobsRequest, ListJobsResponse, UpdateJobRequest,
+    UpdateJobResponse, WatchJobRequest,
 };
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
@@ -74,6 +75,31 @@ impl JobService for JobServiceHandlers {
 
         let jobs = self.job_manager.list_jobs(status_filter).await;
         Ok(Response::new(ListJobsResponse { jobs }))
+    }
+
+    #[instrument(skip_all)]
+    async fn update_job(
+        &self,
+        request: Request<UpdateJobRequest>,
+    ) -> Result<Response<UpdateJobResponse>, Status> {
+        let inner = request.into_inner();
+
+        let status = inner
+            .status
+            .map(|s| {
+                JobStatus::try_from(s)
+                    .map_err(|_| Status::invalid_argument(format!("Unknown job status: {s}")))
+            })
+            .transpose()?
+            .filter(|s| *s != JobStatus::Unspecified);
+
+        let job = self
+            .job_manager
+            .update_job(&inner.id, inner.percent_complete, status, inner.message)
+            .await
+            .map_err(|e| Status::not_found(e.to_string()))?;
+
+        Ok(Response::new(UpdateJobResponse { job: Some(job) }))
     }
 
     type WatchJobStream = Pin<Box<dyn Stream<Item = Result<JobProgress, Status>> + Send>>;
