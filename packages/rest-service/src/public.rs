@@ -4,7 +4,7 @@ use axum::{
     routing::any_service,
     Json, Router,
 };
-use retrom_codegen::retrom::{files::File, services::files::v1::FilesystemNodeType};
+use retrom_codegen::retrom::{files::File, files::FilesystemNodeType};
 use retrom_service_common::retrom_dirs::RetromDirs;
 use std::path::PathBuf;
 use tower_http::services::ServeDir;

@@ -2,29 +2,45 @@ syntax = "proto3";
 
 package retrom;
 
-import "retrom/services/files/v1/file-explorer.proto";
+option deprecated = true;
+
 import "retrom/files.proto";
 
 service FileExplorerService {
-  rpc GetFilesystemNode(GetFilesystemNodeRequest) returns (GetFilesystemNodeResponse);
-  rpc GetStat(GetStatRequest) returns (GetStatResponse);
+  option deprecated = true;
+
+  rpc GetFilesystemNode(GetFilesystemNodeRequest) returns (GetFilesystemNodeResponse) {
+    option deprecated = true;
+  }
+
+  rpc GetStat(GetStatRequest) returns (GetStatResponse) {
+    option deprecated = true;
+  }
 }
 
 message GetFilesystemNodeRequest {
+  option deprecated = true;
+
   optional string path = 1;
 }
 
 message GetFilesystemNodeResponse {
-  optional retrom.services.files.v1.FilesystemNode node = 1;
-  repeated retrom.services.files.v1.FilesystemNode children = 2;
+  option deprecated = true;
+
+  optional retrom.files.FilesystemNode node = 1;
+  repeated retrom.files.FilesystemNode children = 2;
 }
 
 message GetStatRequest {
+  option deprecated = true;
+
   string path = 1;
   optional int32 max_depth = 2;
   optional bool include_directories = 3;
 }
 
 message GetStatResponse {
+  option deprecated = true;
+
   repeated retrom.files.FileStat stats = 1;
 }
