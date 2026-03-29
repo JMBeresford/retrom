@@ -3,7 +3,18 @@ syntax = "proto3";
 package retrom.files;
 
 import "google/protobuf/timestamp.proto";
-import "retrom/file-explorer.proto";
+
+enum FilesystemNodeType {
+  FILESYSTEM_NODE_TYPE_UNKNOWN = 0;
+  FILESYSTEM_NODE_TYPE_DIRECTORY = 1;
+  FILESYSTEM_NODE_TYPE_FILE = 2;
+}
+
+message FilesystemNode {
+  string path = 1;
+  string name = 2;
+  FilesystemNodeType node_type = 3;
+}
 
 message FileStat {
   /* Relative path to the file, usually from the public directory */
