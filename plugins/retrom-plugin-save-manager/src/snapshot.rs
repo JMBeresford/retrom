@@ -1,4 +1,4 @@
-use retrom_codegen::retrom::{files::FileStat, FilesystemNodeType};
+use retrom_codegen::retrom::files::{FileStat, FilesystemNodeType};
 use serde::{Deserialize, Serialize};
 use std::{
     path::{Path, PathBuf},
