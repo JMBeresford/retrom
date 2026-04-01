@@ -35,7 +35,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     fetcherVersion = 3;
-    hash = "sha256-r3TFgV07do9qDSv9prUyzRMi4buj4QkhhrtHqJ4p37Y=";
+    hash = "sha256-MmWCpe7NzzT8W/Ic9y1VzGAp4rk0vxoOxbz5sRRlQs0=";
   };
 
   cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
