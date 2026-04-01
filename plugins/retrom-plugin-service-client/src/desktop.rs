@@ -1,9 +1,10 @@
 use crate::GrpcWebClient;
 use hyper_util::rt::TokioExecutor;
 use retrom_plugin_config::ConfigExt;
+use rustls_platform_verifier::ConfigVerifierExt;
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Runtime};
-use tokio_rustls::rustls::{crypto, ClientConfig, RootCertStore};
+use tokio_rustls::rustls::crypto;
 use tonic_web::GrpcWebClientLayer;
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
@@ -30,13 +31,7 @@ impl<R: Runtime> RetromPluginServiceClient<R> {
                 .expect("Failed to install default crypto provider");
         }
 
-        let roots = RootCertStore {
-            roots: webpki_roots::TLS_SERVER_ROOTS.to_vec(),
-        };
-
-        let tls = ClientConfig::builder()
-            .with_root_certificates(roots)
-            .with_no_client_auth();
+        let tls = rustls_platform_verifier::tls_config();
 
         let mut http = hyper_util::client::legacy::connect::HttpConnector::new();
         http.enforce_http(false);
