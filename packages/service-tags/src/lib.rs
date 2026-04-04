@@ -1,5 +1,5 @@
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
+use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::services::tags::v1::{
     tags_service_server::{TagsService, TagsServiceServer},
     AddGameTagsRequest, AddGameTagsResponse, AddPlatformTagsRequest, AddPlatformTagsResponse,
@@ -247,14 +247,13 @@ impl TagsService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let tag_ids: Vec<i32> = schema::game_tag_maps::table
-            .select(schema::game_tag_maps::tag_id)
+        let tags: Vec<Tag> = schema::game_tag_maps::table
+            .inner_join(schema::tags::table)
+            .select(Tag::as_select())
             .filter(schema::game_tag_maps::game_id.eq(game_id))
             .load(&mut conn)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-        let tags = Self::fetch_tags_by_ids(&mut conn, &tag_ids).await?;
 
         Ok(tonic::Response::new(GetGameTagsResponse { tags }))
     }
@@ -284,21 +283,15 @@ impl TagsService for TagServiceHandlers {
             })
             .collect();
 
-        conn.transaction(|conn| {
-            let values = values.clone();
-            async move {
-                diesel::insert_into(schema::game_tag_maps::table)
-                    .values(&values)
-                    .on_conflict_do_nothing()
-                    .execute(conn)
-                    .await
-            }
-            .scope_boxed()
-        })
-        .await
-        .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let inserted_ids: Vec<i32> = diesel::insert_into(schema::game_tag_maps::table)
+            .values(&values)
+            .on_conflict_do_nothing()
+            .returning(schema::game_tag_maps::tag_id)
+            .get_results(&mut conn)
+            .await
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let tags_added = Self::fetch_tags_by_ids(&mut conn, &request.tag_ids).await?;
+        let tags_added = Self::fetch_tags_by_ids(&mut conn, &inserted_ids).await?;
 
         Ok(tonic::Response::new(AddGameTagsResponse { tags_added }))
     }
@@ -317,14 +310,15 @@ impl TagsService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let tags_deleted = Self::fetch_tags_by_ids(&mut conn, &request.tag_ids).await?;
-
-        diesel::delete(schema::game_tag_maps::table)
+        let deleted_tag_ids: Vec<i32> = diesel::delete(schema::game_tag_maps::table)
             .filter(schema::game_tag_maps::game_id.eq(game_id))
             .filter(schema::game_tag_maps::tag_id.eq_any(&request.tag_ids))
-            .execute(&mut conn)
+            .returning(schema::game_tag_maps::tag_id)
+            .get_results(&mut conn)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+        let tags_deleted = Self::fetch_tags_by_ids(&mut conn, &deleted_tag_ids).await?;
 
         Ok(tonic::Response::new(DeleteGameTagsResponse {
             tags_deleted,
@@ -344,14 +338,13 @@ impl TagsService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let tag_ids: Vec<i32> = schema::platform_tag_maps::table
-            .select(schema::platform_tag_maps::tag_id)
+        let tags: Vec<Tag> = schema::platform_tag_maps::table
+            .inner_join(schema::tags::table)
+            .select(Tag::as_select())
             .filter(schema::platform_tag_maps::platform_id.eq(platform_id))
             .load(&mut conn)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-        let tags = Self::fetch_tags_by_ids(&mut conn, &tag_ids).await?;
 
         Ok(tonic::Response::new(GetPlatformTagsResponse { tags }))
     }
@@ -381,21 +374,15 @@ impl TagsService for TagServiceHandlers {
             })
             .collect();
 
-        conn.transaction(|conn| {
-            let values = values.clone();
-            async move {
-                diesel::insert_into(schema::platform_tag_maps::table)
-                    .values(&values)
-                    .on_conflict_do_nothing()
-                    .execute(conn)
-                    .await
-            }
-            .scope_boxed()
-        })
-        .await
-        .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let inserted_ids: Vec<i32> = diesel::insert_into(schema::platform_tag_maps::table)
+            .values(&values)
+            .on_conflict_do_nothing()
+            .returning(schema::platform_tag_maps::tag_id)
+            .get_results(&mut conn)
+            .await
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let tags_added = Self::fetch_tags_by_ids(&mut conn, &request.tag_ids).await?;
+        let tags_added = Self::fetch_tags_by_ids(&mut conn, &inserted_ids).await?;
 
         Ok(tonic::Response::new(AddPlatformTagsResponse { tags_added }))
     }
@@ -414,14 +401,15 @@ impl TagsService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let tags_deleted = Self::fetch_tags_by_ids(&mut conn, &request.tag_ids).await?;
-
-        diesel::delete(schema::platform_tag_maps::table)
+        let deleted_tag_ids: Vec<i32> = diesel::delete(schema::platform_tag_maps::table)
             .filter(schema::platform_tag_maps::platform_id.eq(platform_id))
             .filter(schema::platform_tag_maps::tag_id.eq_any(&request.tag_ids))
-            .execute(&mut conn)
+            .returning(schema::platform_tag_maps::tag_id)
+            .get_results(&mut conn)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+        let tags_deleted = Self::fetch_tags_by_ids(&mut conn, &deleted_tag_ids).await?;
 
         Ok(tonic::Response::new(DeletePlatformTagsResponse {
             tags_deleted,
