@@ -16,6 +16,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { FocusedHotkeyLayerProvider } from "@/providers/hotkeys/layers";
 import { configStore } from "@/providers/config";
+import { ModalActionProvider } from "@/providers/modal-action";
+import { ResolveCloudSaveConflictModal } from "@/components/modals/resolve-cloud-save-conflict";
 
 declare global {
   export interface HotkeyZones {
@@ -66,7 +68,7 @@ export const Route = createFileRoute("/_fullscreenLayout")({
 });
 
 function FullscreenLayout() {
-  const container = useRef<HTMLDivElement>(null!);
+  const container = useRef<HTMLDivElement>(null);
 
   useHotkeys({
     handlers: {
@@ -90,21 +92,25 @@ function FullscreenLayout() {
   });
 
   return (
-    <FocusedHotkeyLayerProvider>
-      <GamepadProvider>
-        <GroupContextProvider>
-          <div
-            ref={container}
-            className={cn("h-[100dvh] w-screen relative", "flex flex-col")}
-          >
-            <FullscreenMenubar className="w-full border-b z-[50] bg-background" />
+    <ModalActionProvider>
+      <FocusedHotkeyLayerProvider>
+        <GamepadProvider>
+          <GroupContextProvider>
+            <div
+              ref={container}
+              className={cn("h-[100dvh] w-screen relative", "flex flex-col")}
+            >
+              <FullscreenMenubar className="w-full border-b z-[50] bg-background" />
 
-            <div className="flex flex-col h-full max-h-full overflow-hidden w-full *:overflow-y-auto">
-              <Outlet />
+              <div className="flex flex-col h-full max-h-full overflow-hidden w-full *:overflow-y-auto">
+                <Outlet />
+              </div>
             </div>
-          </div>
-        </GroupContextProvider>
-      </GamepadProvider>
-    </FocusedHotkeyLayerProvider>
+
+            <ResolveCloudSaveConflictModal />
+          </GroupContextProvider>
+        </GamepadProvider>
+      </FocusedHotkeyLayerProvider>
+    </ModalActionProvider>
   );
 }
