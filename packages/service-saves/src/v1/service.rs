@@ -564,9 +564,8 @@ impl SavesService for SavesServiceHandlers {
             for stat in save.file_stats {
                 let path = save_dir_path.join(&stat.path);
                 if !path.is_file() {
-                    continue;
-                } else {
                     tracing::info!("Skipping non-file path: {}", path.display());
+                    continue;
                 }
 
                 let content = tokio::fs::read(&path)
@@ -661,9 +660,8 @@ impl SavesService for SavesServiceHandlers {
             for stat in states.file_stats {
                 let path = save_states_path.join(&stat.path);
                 if !path.is_file() {
-                    continue;
-                } else {
                     tracing::info!("Skipping non-file path: {}", path.display());
+                    continue;
                 }
 
                 let content = tokio::fs::read(&path)
