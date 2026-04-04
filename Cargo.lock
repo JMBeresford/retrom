@@ -9291,7 +9291,6 @@ dependencies = [
  "diesel-async",
  "futures",
  "http 1.4.0",
- "ludusavi",
  "regex",
  "retrom-codegen",
  "retrom-db",
@@ -9626,7 +9625,6 @@ name = "retrom-service-saves"
 version = "0.8.0"
 dependencies = [
  "axum",
- "bigdecimal",
  "chrono",
  "deadpool",
  "diesel",
@@ -9639,8 +9637,6 @@ dependencies = [
  "retrom-service-common",
  "retrom-service-config",
  "retrom-telemetry",
- "sanitize-filename",
- "tempfile",
  "thiserror 1.0.69",
  "tokio",
  "tonic 0.14.5",
