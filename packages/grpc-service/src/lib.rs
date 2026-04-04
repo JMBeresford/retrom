@@ -28,6 +28,7 @@ use retrom_codegen::{
                 v1::saves_service_server::SavesServiceServer,
                 v2::emulator_saves_service_server::EmulatorSavesServiceServer,
             },
+            tags::v1::tags_service_server::TagsServiceServer,
         },
     },
 };
@@ -46,6 +47,7 @@ use tower_http::cors::{AllowOrigin, CorsLayer};
 
 use retrom_service_clients::ClientServiceHandlers;
 use retrom_service_files::FileExplorerServiceHandlers;
+use retrom_service_tags::TagServiceHandlers;
 pub mod emulators;
 pub mod games;
 pub mod jobs;
@@ -171,6 +173,8 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
     let emulator_saves_service_v2 =
         EmulatorSavesServiceServer::new(EmulatorSavesServiceHandlers::new(shared_pool.clone()));
 
+    let tag_service = TagsServiceServer::new(TagServiceHandlers::new(shared_pool.clone()));
+
     let mut routes_builder = tonic::service::Routes::builder();
     let mut reflection_route_builder = tonic::service::Routes::builder();
     reflection_route_builder
@@ -194,7 +198,8 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
         .add_service(job_service)
         .add_service(file_explorer_service)
         .add_service(saves_service_v1)
-        .add_service(emulator_saves_service_v2);
+        .add_service(emulator_saves_service_v2)
+        .add_service(tag_service);
 
     routes_builder
         .routes()

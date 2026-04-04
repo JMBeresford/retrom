@@ -18,6 +18,7 @@ retrom-service-clients = { workspace = true }
 retrom-service-saves = { workspace = true }
 retrom-service-config = { workspace = true }
 retrom-service-files = { workspace = true }
+retrom-service-tags = { workspace = true }
 retrom-telemetry = { workspace = true }
 walkdir = { workspace = true }
 tonic = { workspace = true }
