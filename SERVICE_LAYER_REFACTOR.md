@@ -31,7 +31,7 @@
 - [x] 2.7 File Explorer Service — extract to own crate
 - [x] 2.8 Tag Service — new service with tag domain management
 - [x] 2.9 Saves Service — move to per-service crate (no interface changes)
-- [ ] 2.10 Deprecated services — `GameService`, `PlatformService`, `ServerService` forwarding stubs
+- [x] 2.10 Deprecated services — `GameService`, `PlatformService`, `ServerService` forwarding stubs
 - [ ] 2.11 Acceptance criteria
 
 ### Phase 3: Service Decomposition
