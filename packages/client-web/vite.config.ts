@@ -17,7 +17,7 @@ try {
   }
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   process.env = {
     ...process.env,
     ...loadEnv(mode, process.cwd()),
@@ -109,13 +109,11 @@ export default defineConfig(({ mode }) => {
         },
       },
       tailwindcss(),
-      TanStackRouterVite({
-        enableRouteGeneration: process.env.NODE_ENV === "development",
-      }),
+      command !== "preview" && TanStackRouterVite(),
       react(),
       glslify(),
       nxViteTsPaths(),
-    ],
+    ].filter(Boolean),
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
