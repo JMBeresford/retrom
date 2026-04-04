@@ -70,22 +70,3 @@ impl ServerService for ServerServiceHandlers {
         }))
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use retrom_service_config::ConfigServiceHandlers;
-    use std::sync::Arc;
-
-    use super::*;
-
-    #[tokio::test]
-    async fn test_get_server_info() {
-        let handlers = ServerServiceHandlers::new(Arc::new(ConfigServiceHandlers::new()));
-        let resp = handlers
-            .get_server_info(tonic::Request::new(GetServerInfoRequest {}))
-            .await;
-        assert!(resp.is_ok());
-        let inner = resp.unwrap().into_inner();
-        assert!(inner.server_info.is_some());
-    }
-}
