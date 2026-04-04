@@ -214,12 +214,12 @@ export function GeneralConfig() {
                 <FormControl>
                   <div className="flex items-top gap-2">
                     <Checkbox
-                      id="fullscreen-by-default"
+                      id="windowed-fullscreen-mode"
                       checked={field.value}
                       onCheckedChange={(val) => field.onChange(val)}
                     />
                     <div className={cn("grid gap-1 leading-none")}>
-                      <label htmlFor="fullscreen-by-default">
+                      <label htmlFor="windowed-fullscreen-mode">
                         Windowed fullscreen mode
                       </label>
 
