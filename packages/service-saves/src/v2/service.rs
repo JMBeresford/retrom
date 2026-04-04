@@ -1,4 +1,4 @@
-use crate::saves::v2::ludusavi_manager::{LudusaviManager, SaveKind};
+use crate::v2::ludusavi_manager::{LudusaviManager, SaveKind};
 use diesel::{query_dsl::methods::FilterDsl, ExpressionMethods};
 use diesel_async::RunQueryDsl;
 use futures::future::join_all;

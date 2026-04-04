@@ -9291,7 +9291,6 @@ dependencies = [
  "diesel-async",
  "futures",
  "http 1.4.0",
- "ludusavi",
  "regex",
  "retrom-codegen",
  "retrom-db",
@@ -9299,6 +9298,7 @@ dependencies = [
  "retrom-service-common",
  "retrom-service-config",
  "retrom-service-files",
+ "retrom-service-saves",
  "retrom-telemetry",
  "sanitize-filename",
  "tempfile",
@@ -9618,6 +9618,31 @@ dependencies = [
  "tonic-web",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "retrom-service-saves"
+version = "0.8.0"
+dependencies = [
+ "axum",
+ "chrono",
+ "deadpool",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "futures",
+ "ludusavi",
+ "retrom-codegen",
+ "retrom-db",
+ "retrom-service-common",
+ "retrom-service-config",
+ "retrom-telemetry",
+ "thiserror 1.0.69",
+ "tokio",
+ "tonic 0.14.5",
+ "tonic-web",
+ "tracing",
+ "walkdir",
 ]
 
 [[package]]
