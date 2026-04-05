@@ -19,6 +19,9 @@ retrom-service-saves = { workspace = true }
 retrom-service-config = { workspace = true }
 retrom-service-files = { workspace = true }
 retrom-service-tags = { workspace = true }
+retrom-service-library = { workspace = true }
+retrom-service-metadata = { workspace = true }
+retrom-service-emulators = { workspace = true }
 retrom-telemetry = { workspace = true }
 walkdir = { workspace = true }
 tonic = { workspace = true }
