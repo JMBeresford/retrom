@@ -10,7 +10,6 @@
   perl,
   protobuf_29,
   openssl,
-  rustfmt,
   makeWrapper,
 }:
 
@@ -20,16 +19,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   src = lib.cleanSourceWith {
     src = ../../../.;
-    filter =
-      path: _:
-      !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
-        /nix
-        /flake.nix
-        /flake.lock
+    filter = path: _: !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
+      /nix
+      /flake.nix
+      /flake.lock
 
-        /.github
-        /.gitignore
-      ]);
+      /.github
+      /.gitignore
+    ]);
   };
 
   pnpmDeps = fetchPnpmDeps {
@@ -59,7 +56,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
   ];
 
   buildInputs = [
-    rustfmt
     openssl
   ];
 

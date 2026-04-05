@@ -12,7 +12,6 @@
   protobuf_29,
   webkitgtk_4_1,
   openssl,
-  rustfmt,
   glib-networking,
   gst_all_1,
   wrapGAppsHook3,
@@ -24,16 +23,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   src = lib.cleanSourceWith {
     src = ../../../.;
-    filter =
-      path: _:
-      !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
-        /nix
-        /flake.nix
-        /flake.lock
+    filter = path: _: !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
+      /nix
+      /flake.nix
+      /flake.lock
 
-        /.github
-        /.gitignore
-      ]);
+      /.github
+      /.gitignore
+    ]);
   };
 
   pnpmDeps = fetchPnpmDeps {
@@ -43,7 +40,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   };
 
   cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
-
+  
   cargoLock.outputHashes = {
     "ludusavi-0.30.0" = "sha256-tDGfnX3fDDvrLvSnWvurIBwgDTWCjmbIJXDxgxQV5Og=";
     "webdav-meta-0.1.0" = "sha256-1XWBxlkdftg/Et7TexNmhKDZXl7ro+agMXodCRMV+e8=";
@@ -65,7 +62,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   buildInputs = [
     openssl
-    rustfmt
     webkitgtk_4_1
     glib-networking
     gst_all_1.gst-plugins-base

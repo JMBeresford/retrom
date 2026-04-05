@@ -9209,7 +9209,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-client"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "dotenvy",
  "openssl-sys",
@@ -9246,7 +9246,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-codegen"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "diesel",
  "prost 0.14.3",
@@ -9265,7 +9265,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-db"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "deadpool",
  "diesel",
@@ -9281,7 +9281,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-grpc-service"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "axum",
  "bigdecimal",
@@ -9313,7 +9313,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-config"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "config",
  "prost 0.14.3",
@@ -9329,7 +9329,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-installer"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "futures",
  "prost 0.14.3",
@@ -9350,7 +9350,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-launcher"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "prost 0.14.3",
  "retrom-codegen",
@@ -9371,7 +9371,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-save-manager"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "fs-set-times",
  "futures-util",
@@ -9399,7 +9399,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-service-client"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "hyper 1.9.0",
  "hyper-rustls 0.27.7",
@@ -9420,7 +9420,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-standalone"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "local-ip-address",
  "retrom-plugin-config",
@@ -9435,7 +9435,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-steam"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "notify 7.0.0",
  "retrom-codegen",
@@ -9450,7 +9450,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-plugin-webdav-client"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "headers",
  "http 1.4.0",
@@ -9467,7 +9467,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-rest-service"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "async_zip",
  "axum",
@@ -9490,7 +9490,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "config",
  "deadpool",
@@ -9520,7 +9520,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-common"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -9549,7 +9549,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-telemetry"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "http 1.4.0",
  "hyper 1.9.0",
@@ -9566,7 +9566,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-webdav-service"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "axum",
  "axum-tracing-opentelemetry",

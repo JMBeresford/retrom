@@ -1,3 +1,17 @@
+## [0.8.1](https://github.com/JMBeresford/retrom/compare/v0.8.0...v0.8.1) (2026-04-05)
+
+### Features
+
+
+* feat: support custom TLS certificates for clients ([c64e9385bacb3f8e9e9476c3aa858f32dddd5615](https://github.com/JMBeresford/retrom/commit/c64e9385bacb3f8e9e9476c3aa858f32dddd5615))
+### Bug Fixes
+
+
+* fix: cloud save resolution on fullscreen mode ([c07c10b2a77cf24cb32e1dc5dac05cc9e4f1bdc1](https://github.com/JMBeresford/retrom/commit/c07c10b2a77cf24cb32e1dc5dac05cc9e4f1bdc1))
+* fix: custom DB url handling ([268bcb8200937141452dd00c3c3db97b57539398](https://github.com/JMBeresford/retrom/commit/268bcb8200937141452dd00c3c3db97b57539398))
+* fix: resolve save conflicts when cloud is empty ([88b13c5748a269a1bf1a7f7c3a80401624cc03c8](https://github.com/JMBeresford/retrom/commit/88b13c5748a269a1bf1a7f7c3a80401624cc03c8))
+* fix: windowed fullscreen mode checkbox behavior ([49a8199a10ddc36a8cebe3ea2c4376821e2c6f53](https://github.com/JMBeresford/retrom/commit/49a8199a10ddc36a8cebe3ea2c4376821e2c6f53))
+
 ## [0.8.0](https://github.com/JMBeresford/retrom/compare/v0.7.55...v0.8.0) (2026-03-08)
 
 ### ⚠ BREAKING CHANGES

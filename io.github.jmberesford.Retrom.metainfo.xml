@@ -56,6 +56,10 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release date="2026-04-05" version="0.8.1">
+      <url type="details">https://github.com/JMBeresford/retrom/releases/tag/v0.8.1</url>
+    </release>
+  
     <release date="2026-03-08" version="0.8.0">
       <url type="details">https://github.com/JMBeresford/retrom/releases/tag/v0.8.0</url>
     </release>
@@ -76,6 +80,7 @@
   </releases>
   <update_contact>jberesford@volcaus.com</update_contact>
 </component>
+
 
 
 
