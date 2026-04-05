@@ -150,11 +150,12 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
 
     let client_service = ClientServiceServer::new(ClientServiceHandlers::new(shared_pool.clone()));
 
-    let server_service = ServerServiceServer::new(server::ServerServiceHandlers {
-        config: config_manager.clone(),
-    });
+    let config_handlers = Arc::new(ConfigServiceHandlers::with_config(config_manager.clone()));
 
-    let config_service = ConfigServiceServer::new(ConfigServiceHandlers::new());
+    let config_service = ConfigServiceServer::from_arc(config_handlers.clone());
+
+    let server_service =
+        ServerServiceServer::new(server::ServerServiceHandlers::new(config_handlers));
 
     let emulator_service =
         EmulatorServiceServer::new(EmulatorServiceHandlers::new(shared_pool.clone()));
