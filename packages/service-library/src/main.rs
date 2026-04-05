@@ -4,7 +4,6 @@ use retrom_service_library::{job_manager::JobManager, library_router};
 use retrom_service_common::metadata_providers::{
     igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider,
 };
-use retrom_service_common::media_cache::MediaCache;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit, sync::Arc};
 
@@ -47,7 +46,6 @@ async fn main() {
     let config_manager = Arc::new(config_manager);
     let igdb_client = Arc::new(IGDBProvider::new(config_manager.clone()));
     let steam_web_api_client = Arc::new(SteamWebApiProvider::new(config_manager.clone()));
-    let _media_cache = Arc::new(MediaCache::new(config_manager.clone()));
     let job_manager = Arc::new(JobManager::new());
 
     let addr: SocketAddr = format!("0.0.0.0:{DEFAULT_PORT}").parse().unwrap();
