@@ -29,6 +29,10 @@ impl ConfigServiceHandlers {
             config: Arc::new(config_manager),
         }
     }
+
+    pub fn with_config(config: Arc<ServerConfigManager>) -> Self {
+        Self { config }
+    }
 }
 
 impl Default for ConfigServiceHandlers {
