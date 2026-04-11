@@ -591,7 +591,7 @@ impl MetadataService for MetadataServiceHandlers {
     ) -> Result<Response<GetIgdbSearchResponse>, Status> {
         let request = request.into_inner();
         let search_type = IgdbSearchType::try_from(request.search_type)
-            .map_err(|_| Status::invalid_argument("Invalid search type provided"));
+            .map_err(|_| Status::invalid_argument("Invalid search type provided"))?;
 
         let igdb_provider = self.igdb_client.clone();
 
@@ -617,14 +617,11 @@ impl MetadataService for MetadataServiceHandlers {
                 SearchResults::PlatformMatches(IgdbSearchPlatformResponse { platforms })
             }
             None => match search_type {
-                Ok(IgdbSearchType::Game) => {
+                IgdbSearchType::Game => {
                     SearchResults::GameMatches(IgdbSearchGameResponse { games: vec![] })
                 }
-                Ok(IgdbSearchType::Platform) => {
+                IgdbSearchType::Platform => {
                     SearchResults::PlatformMatches(IgdbSearchPlatformResponse { platforms: vec![] })
-                }
-                Err(why) => {
-                    return Err(why);
                 }
             },
         }
