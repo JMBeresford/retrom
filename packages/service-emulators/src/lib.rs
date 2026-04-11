@@ -262,9 +262,11 @@ impl EmulatorService for EmulatorServiceHandlers {
         let client_id = match request.metadata().get("x-client-id") {
             Some(client_id) => client_id
                 .to_str()
-                .unwrap()
+                .map_err(|_| Status::invalid_argument("x-client-id header must be valid UTF-8"))?
                 .parse::<i32>()
-                .expect("malformed client_id"),
+                .map_err(|_| {
+                    Status::invalid_argument("x-client-id header must be a valid integer")
+                })?,
             None => return Err(Status::unauthenticated("Client ID not found")),
         };
 
