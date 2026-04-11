@@ -1,9 +1,9 @@
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use retrom_service_config::config::ServerConfigManager;
 use retrom_service_common::{
     media_cache::MediaCache,
     metadata_providers::{igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider},
 };
+use retrom_service_config::config::ServerConfigManager;
 use retrom_service_library::job_manager::JobManager;
 use retrom_service_metadata::metadata_router;
 use retrom_telemetry::init_tracing_subscriber;

@@ -1,9 +1,9 @@
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use retrom_service_config::config::ServerConfigManager;
-use retrom_service_library::{job_manager::JobManager, library_router};
 use retrom_service_common::metadata_providers::{
     igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider,
 };
+use retrom_service_config::config::ServerConfigManager;
+use retrom_service_library::{job_manager::JobManager, library_router};
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit, sync::Arc};
 

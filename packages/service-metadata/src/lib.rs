@@ -1,4 +1,3 @@
-use retrom_service_library::job_manager::JobError;
 use chrono::DateTime;
 use diesel::prelude::*;
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
@@ -37,6 +36,7 @@ use retrom_service_common::{
     },
 };
 use retrom_service_config::{config::ServerConfigManager, retrom_dirs::RetromDirs};
+use retrom_service_library::job_manager::JobError;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
 use tonic::{Request, Response, Status};
@@ -888,7 +888,9 @@ impl MetadataServiceV1 for MetadataServiceHandlers {
 pub fn metadata_router(
     db_pool: Arc<Pool>,
     igdb_client: Arc<IGDBProvider>,
-    steam_provider: Arc<retrom_service_common::metadata_providers::steam::provider::SteamWebApiProvider>,
+    steam_provider: Arc<
+        retrom_service_common::metadata_providers::steam::provider::SteamWebApiProvider,
+    >,
     media_cache: Arc<retrom_service_common::media_cache::MediaCache>,
     job_manager: Arc<JobManager>,
     config_manager: Arc<ServerConfigManager>,

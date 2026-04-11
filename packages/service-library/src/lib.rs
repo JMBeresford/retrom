@@ -1,6 +1,7 @@
 use crate::job_manager::JobManager;
 use retrom_codegen::retrom::services::library::v1::{
-    library_service_server::LibraryService as LibraryServiceV1, CreateLibrariesRequest,
+    library_service_server::LibraryService as LibraryServiceV1,
+    library_service_server::LibraryServiceServer as LibraryServiceServerV1, CreateLibrariesRequest,
     CreateLibrariesResponse, CreateRootDirectoriesRequest, CreateRootDirectoriesResponse,
     DeleteGameFilesRequest, DeleteGameFilesResponse, DeleteGamesRequest, DeleteGamesResponse,
     DeleteLibraryRequest as DeleteLibraryRequestV1,
@@ -17,37 +18,33 @@ use retrom_codegen::retrom::services::library::v1::{
     UpdateLibraryRequest as UpdateLibraryRequestV1,
     UpdateLibraryResponse as UpdateLibraryResponseV1, UpdatePlatformsRequest,
     UpdatePlatformsResponse, UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
-    library_service_server::LibraryServiceServer as LibraryServiceServerV1,
 };
 use retrom_codegen::retrom::{
-    library_service_server::LibraryService, library_service_server::LibraryServiceServer,
-    DeleteLibraryRequest, DeleteLibraryResponse, DeleteMissingEntriesRequest,
-    DeleteMissingEntriesResponse, UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse,
-    UpdateLibraryRequest, UpdateLibraryResponse,
     game_service_server::GameService, game_service_server::GameServiceServer,
+    library_service_server::LibraryService, library_service_server::LibraryServiceServer,
     platform_service_server::PlatformService, platform_service_server::PlatformServiceServer,
     DeleteGameFilesRequest as LegacyDeleteGameFilesRequest,
     DeleteGameFilesResponse as LegacyDeleteGameFilesResponse,
     DeleteGamesRequest as LegacyDeleteGamesRequest,
-    DeleteGamesResponse as LegacyDeleteGamesResponse,
+    DeleteGamesResponse as LegacyDeleteGamesResponse, DeleteLibraryRequest, DeleteLibraryResponse,
+    DeleteMissingEntriesRequest, DeleteMissingEntriesResponse,
+    DeletePlatformsRequest as LegacyDeletePlatformsRequest,
+    DeletePlatformsResponse as LegacyDeletePlatformsResponse,
     GetGameFilesRequest as LegacyGetGameFilesRequest,
-    GetGameFilesResponse as LegacyGetGameFilesResponse,
-    GetGamesRequest as LegacyGetGamesRequest,
-    GetGamesResponse as LegacyGetGamesResponse,
+    GetGameFilesResponse as LegacyGetGameFilesResponse, GetGamesRequest as LegacyGetGamesRequest,
+    GetGamesResponse as LegacyGetGamesResponse, GetPlatformsRequest as LegacyGetPlatformsRequest,
+    GetPlatformsResponse as LegacyGetPlatformsResponse,
     UpdateGameFilesRequest as LegacyUpdateGameFilesRequest,
     UpdateGameFilesResponse as LegacyUpdateGameFilesResponse,
     UpdateGamesRequest as LegacyUpdateGamesRequest,
-    UpdateGamesResponse as LegacyUpdateGamesResponse,
-    DeletePlatformsRequest as LegacyDeletePlatformsRequest,
-    DeletePlatformsResponse as LegacyDeletePlatformsResponse,
-    GetPlatformsRequest as LegacyGetPlatformsRequest,
-    GetPlatformsResponse as LegacyGetPlatformsResponse,
+    UpdateGamesResponse as LegacyUpdateGamesResponse, UpdateLibraryMetadataRequest,
+    UpdateLibraryMetadataResponse, UpdateLibraryRequest, UpdateLibraryResponse,
     UpdatePlatformsRequest as LegacyUpdatePlatformsRequest,
     UpdatePlatformsResponse as LegacyUpdatePlatformsResponse,
 };
 use retrom_db::Pool;
-use retrom_service_common::{
-    metadata_providers::{igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider},
+use retrom_service_common::metadata_providers::{
+    igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider,
 };
 use retrom_service_config::config::ServerConfigManager;
 use std::sync::Arc;
