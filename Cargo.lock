@@ -9284,16 +9284,11 @@ name = "retrom-grpc-service"
 version = "0.8.0"
 dependencies = [
  "axum",
- "bigdecimal",
- "chrono",
  "deadpool",
- "diesel",
  "diesel-async",
  "futures",
  "http 1.4.0",
- "regex",
  "retrom-codegen",
- "retrom-db",
  "retrom-service-clients",
  "retrom-service-common",
  "retrom-service-config",
@@ -9304,9 +9299,6 @@ dependencies = [
  "retrom-service-saves",
  "retrom-service-tags",
  "retrom-telemetry",
- "sanitize-filename",
- "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
  "tonic 0.14.5",
@@ -9315,7 +9307,6 @@ dependencies = [
  "tower-http",
  "tracing",
  "uuid",
- "walkdir",
 ]
 
 [[package]]
@@ -9649,7 +9640,6 @@ version = "0.8.0"
 dependencies = [
  "axum",
  "bigdecimal",
- "chrono",
  "deadpool",
  "diesel",
  "diesel-async",

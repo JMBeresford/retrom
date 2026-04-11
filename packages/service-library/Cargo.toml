@@ -33,7 +33,6 @@ bigdecimal = { workspace = true }
 regex = { workspace = true }
 thiserror = { workspace = true }
 dotenvy = { workspace = true }
-chrono = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]
