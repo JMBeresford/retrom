@@ -15,7 +15,7 @@ prost-wkt = { version = "0.7" }
 prost-wkt-types = { version = "0.7" }
 serde = { workspace = true }
 diesel = { workspace = true }
-retrom-db = { workspace = true }
+sqlx = { workspace = true }
 tonic-prost = { workspace = true }
 
 [build-dependencies]
@@ -36,7 +36,6 @@ ignored = [
   "prost-wkt-types",
   "tonic-prost-build",
   "walkdir",
-  "retrom-db",
   "tonic-prost",
   "protobuf-src",
 ]
