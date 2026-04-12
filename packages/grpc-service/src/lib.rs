@@ -3,7 +3,7 @@ use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use emulators::EmulatorServiceHandlers;
 use games::GameServiceHandlers;
 use http::HeaderName;
-use jobs::{job_manager::JobManager, JobServiceHandlers};
+use jobs::JobServiceHandlers;
 use library::LibraryServiceHandlers;
 use metadata::MetadataServiceHandlers;
 use platforms::PlatformServiceHandlers;
@@ -39,6 +39,7 @@ use retrom_service_common::{
     retrom_dirs::RetromDirs,
 };
 use retrom_service_config::ConfigServiceHandlers;
+use retrom_service_library::job_manager::JobManager;
 use retrom_service_saves::v1::service::SavesServiceHandlers;
 use retrom_service_saves::v2::service::EmulatorSavesServiceHandlers;
 use retrom_telemetry::grpc::{GrpcOnRequestSpan, GrpcOnResponseSpanHandler};

@@ -9284,26 +9284,21 @@ name = "retrom-grpc-service"
 version = "0.8.2"
 dependencies = [
  "axum",
- "bigdecimal",
- "chrono",
  "deadpool",
- "diesel",
  "diesel-async",
  "futures",
  "http 1.4.0",
- "regex",
  "retrom-codegen",
- "retrom-db",
  "retrom-service-clients",
  "retrom-service-common",
  "retrom-service-config",
+ "retrom-service-emulators",
  "retrom-service-files",
+ "retrom-service-library",
+ "retrom-service-metadata",
  "retrom-service-saves",
  "retrom-service-tags",
  "retrom-telemetry",
- "sanitize-filename",
- "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
  "tonic 0.14.5",
@@ -9312,7 +9307,6 @@ dependencies = [
  "tower-http",
  "tracing",
  "uuid",
- "walkdir",
 ]
 
 [[package]]
@@ -9587,6 +9581,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "retrom-service-emulators"
+version = "0.8.0"
+dependencies = [
+ "axum",
+ "deadpool",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "retrom-codegen",
+ "retrom-db",
+ "retrom-service-config",
+ "retrom-telemetry",
+ "tokio",
+ "tonic 0.14.5",
+ "tonic-web",
+ "tracing",
+]
+
+[[package]]
 name = "retrom-service-files"
 version = "0.8.0"
 dependencies = [
@@ -9619,6 +9632,58 @@ dependencies = [
  "tonic-web",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "retrom-service-library"
+version = "0.8.0"
+dependencies = [
+ "axum",
+ "bigdecimal",
+ "deadpool",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "futures",
+ "regex",
+ "retrom-codegen",
+ "retrom-db",
+ "retrom-service-common",
+ "retrom-service-config",
+ "retrom-telemetry",
+ "sanitize-filename",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tonic 0.14.5",
+ "tonic-web",
+ "tracing",
+ "uuid",
+ "walkdir",
+]
+
+[[package]]
+name = "retrom-service-metadata"
+version = "0.8.0"
+dependencies = [
+ "axum",
+ "chrono",
+ "deadpool",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "futures",
+ "retrom-codegen",
+ "retrom-db",
+ "retrom-service-common",
+ "retrom-service-config",
+ "retrom-service-library",
+ "retrom-telemetry",
+ "tokio",
+ "tonic 0.14.5",
+ "tonic-web",
+ "tracing",
+ "walkdir",
 ]
 
 [[package]]
