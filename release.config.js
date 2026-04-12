@@ -82,5 +82,12 @@ export default {
           "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}",
       },
     ],
+    [
+      "@semantic-release/exec",
+      {
+        publishCmd:
+          '[ -z "${nextRelease.channel}" ] && git tag -f latest && git push origin latest --force || true',
+      },
+    ],
   ],
 };
