@@ -1,14 +1,15 @@
 use std::path::PathBuf;
 use walkdir::WalkDir;
 
-// Derives that are used for structs representing existing rows in db
-const DIESEL_ROW_DERIVES: [&str; 5] = [
-    "Queryable",
-    "Selectable",
-    "Identifiable",
-    "Insertable",
-    "AsChangeset",
-];
+// Derives for structs representing existing rows read from the DB.
+// sqlx::FromRow enables row deserialization via AnyPool.
+// diesel::Queryable is kept for backward compatibility during the Diesel → sqlx
+// transition (step 3.3 removes it per service crate).
+// diesel::Selectable (needs table_name), diesel::Identifiable (needs table_name),
+// diesel::Insertable (needs table_name), diesel::AsChangeset (needs table_name),
+// and diesel::Associations (needs belongs_to attributes) are all omitted because
+// retrom_db::schema no longer exists after step 3.2.
+const ROW_DERIVES: [&str; 2] = ["sqlx::FromRow", "diesel::Queryable"];
 
 type ModelDefinitionParams = (
     &'static str,
@@ -17,11 +18,15 @@ type ModelDefinitionParams = (
     Vec<&'static str>,
 );
 
-// Derives that are used for structs representing new rows to be inserted into db
-const DIESEL_INSERTABLE_DERIVES: [&str; 1] = ["Insertable"];
+// Derives for structs representing new rows to be inserted into the DB.
+// Insertable requires #[diesel(table_name)] which is no longer available;
+// kept empty until per-service crates are migrated in step 3.3.
+const INSERTABLE_DERIVES: [&str; 0] = [];
 
-// Derives that are used for structs representing changesets, or to-be-updated rows
-const DIESEL_UPDATE_DERIVES: [&str; 3] = ["AsChangeset", "Insertable", "Identifiable"];
+// Derives for changesets / to-be-updated rows.
+// AsChangeset and Identifiable require #[diesel(table_name)]; omitted for the
+// same reason as above.
+const UPDATE_DERIVES: [&str; 0] = [];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "protobuf-src")]
@@ -29,22 +34,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not set"));
 
-    let diesel_row_derivations = DIESEL_ROW_DERIVES
+    let row_derivations = ROW_DERIVES
         .iter()
-        .map(|d| format!("diesel::{d}"))
-        .collect::<Vec<String>>()
+        .copied()
+        .collect::<Vec<_>>()
         .join(",");
 
-    let diesel_insertable_derivations = DIESEL_INSERTABLE_DERIVES
+    let insertable_derivations = INSERTABLE_DERIVES
         .iter()
-        .map(|d| format!("diesel::{d}"))
-        .collect::<Vec<String>>()
+        .copied()
+        .collect::<Vec<_>>()
         .join(",");
 
-    let diesel_update_derivations = DIESEL_UPDATE_DERIVES
+    let update_derivations = UPDATE_DERIVES
         .iter()
-        .map(|d| format!("diesel::{d}"))
-        .collect::<Vec<String>>()
+        .copied()
+        .collect::<Vec<_>>()
         .join(",");
 
     let proto_paths: Vec<PathBuf> = WalkDir::new("./protos")
@@ -270,46 +275,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 alias = \"storage_type\", alias = \"storageType\")]",
         );
 
-    for (model_name, table_name, primary_key, belongs_to) in queryable_models.into_iter() {
-        let derives = match belongs_to.len() {
-            0 => format!("#[derive({diesel_row_derivations})]",),
-            _ => format!("#[derive({diesel_row_derivations},diesel::Associations)]",),
-        };
-
-        let diesel_macro_clause = get_diesel_macro(table_name, primary_key, belongs_to);
-
+    for (model_name, _table_name, _primary_key, _belongs_to) in queryable_models.into_iter() {
         build = build.type_attribute(
             format!("retrom.{model_name}"),
-            format!("{derives}\n{diesel_macro_clause}",),
+            format!("#[derive({row_derivations})]"),
         );
     }
 
-    for (model_name, table_name, primary_key, belongs_to) in insertable_models.into_iter() {
-        let derives = match belongs_to.len() {
-            0 => format!("#[derive({diesel_insertable_derivations})]",),
-            _ => format!("#[derive({diesel_insertable_derivations},diesel::Associations)]",),
-        };
-
-        let diesel_macro_clause = get_diesel_macro(table_name, primary_key, belongs_to);
-
-        build = build.type_attribute(
-            format!("retrom.{model_name}"),
-            format!("{derives}\n{diesel_macro_clause}",),
-        );
+    for (model_name, _table_name, _primary_key, _belongs_to) in insertable_models.into_iter() {
+        if !insertable_derivations.is_empty() {
+            build = build.type_attribute(
+                format!("retrom.{model_name}"),
+                format!("#[derive({insertable_derivations})]"),
+            );
+        }
     }
 
-    for (model_name, table_name, primary_key, belongs_to) in updatable_models.into_iter() {
-        let derives = match belongs_to.len() {
-            0 => format!("#[derive({diesel_update_derivations})]",),
-            _ => format!("#[derive({diesel_update_derivations},diesel::Associations)]",),
-        };
-
-        let diesel_macro_clause = get_diesel_macro(table_name, primary_key, belongs_to);
-
-        build = build.type_attribute(
-            format!("retrom.{model_name}"),
-            format!("{derives}\n{diesel_macro_clause}",),
-        );
+    for (model_name, _table_name, _primary_key, _belongs_to) in updatable_models.into_iter() {
+        if !update_derivations.is_empty() {
+            build = build.type_attribute(
+                format!("retrom.{model_name}"),
+                format!("#[derive({update_derivations})]"),
+            );
+        }
     }
 
     build
@@ -317,22 +305,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .compile_protos(&proto_paths, &[PathBuf::from("./protos/")])?;
 
     Ok(())
-}
-
-fn get_diesel_macro(table_name: &str, primary_key: Option<&str>, belongs_to: Vec<&str>) -> String {
-    let primary_key_clause = match primary_key {
-        Some(pk) => format!(", primary_key({pk})"),
-        None => "".to_string(),
-    };
-
-    let belongs_to_clauses = belongs_to
-        .iter()
-        .map(|b| format!(", belongs_to({b})"))
-        .collect::<Vec<String>>()
-        .join("");
-
-    format!(
-        "#[diesel(table_name = retrom_db::schema::{table_name}, \
-        check_for_backend(diesel::pg::Pg){primary_key_clause}{belongs_to_clauses})]"
-    )
 }
