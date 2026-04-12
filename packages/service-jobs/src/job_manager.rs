@@ -265,14 +265,8 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(
-            manager.list_jobs(Some(JobStatus::Pending)).await.len(),
-            1
-        );
-        assert_eq!(
-            manager.list_jobs(Some(JobStatus::Complete)).await.len(),
-            1
-        );
+        assert_eq!(manager.list_jobs(Some(JobStatus::Pending)).await.len(), 1);
+        assert_eq!(manager.list_jobs(Some(JobStatus::Complete)).await.len(), 1);
     }
 
     #[tokio::test]
@@ -346,10 +340,7 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(
-            failed.progress.unwrap().status,
-            JobStatus::Failed as i32
-        );
+        assert_eq!(failed.progress.unwrap().status, JobStatus::Failed as i32);
     }
 
     #[tokio::test]
@@ -396,6 +387,9 @@ mod tests {
             }
         }
 
-        assert!(saw_complete, "expected a Complete progress update before channel closed");
+        assert!(
+            saw_complete,
+            "expected a Complete progress update before channel closed"
+        );
     }
 }
