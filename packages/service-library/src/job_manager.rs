@@ -115,7 +115,7 @@ impl JobManager {
         }
 
         if invalidate_sender.send(id).is_err() {
-            tracing::debug!("No recievers for new job: {:?}", name);
+            tracing::debug!("No receivers for new job: {:?}", name);
         }
 
         let mut maybe_wait_ids = opts.and_then(|opts| opts.wait_on_jobs).unwrap_or_default();
@@ -259,7 +259,7 @@ impl JobManager {
                         let is_done = job.percent == 100;
 
                         if tx.send(job).is_err() {
-                            tracing::debug!("Job progress reciever closed");
+                            tracing::debug!("Job progress receiver closed");
                             break;
                         }
 
@@ -294,7 +294,7 @@ impl JobManager {
                     all_progress.sort_by(|a, b| b.percent.cmp(&a.percent));
 
                     if tx.send(all_progress).is_err() {
-                        tracing::debug!("Bulk job progress reciever closed");
+                        tracing::debug!("Bulk job progress receiver closed");
                         break;
                     }
                 }
