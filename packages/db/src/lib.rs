@@ -1,9 +1,4 @@
-use diesel::{migration::MigrationVersion, prelude::*};
-use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection};
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use std::fmt::Debug;
-
-pub mod schema;
+pub type DbPool = sqlx::AnyPool;
 
 #[cfg(feature = "embedded")]
 pub mod embedded;
@@ -12,6 +7,9 @@ pub mod embedded;
 pub enum Error {
     #[error("Error running migrations: {0}")]
     MigrationError(String),
+
+    #[error("Error connecting to database: {0}")]
+    ConnectionError(String),
 
     #[cfg(feature = "embedded")]
     #[error("Embedded DB error")]
@@ -26,23 +24,23 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub type PoolConfig = AsyncDieselConnectionManager<AsyncPgConnection>;
-pub type Pool = deadpool::managed::Pool<PoolConfig>;
-pub type DBConnection = deadpool::managed::Object<PoolConfig>;
+/// Install the default sqlx drivers and open a connection pool for the given URL.
+///
+/// The driver is selected at runtime from the URL scheme:
+/// - `postgres://` or `postgresql://` → PostgreSQL
+/// - `sqlite://` → SQLite
+pub async fn connect(url: &str) -> Result<DbPool> {
+    sqlx::any::install_default_drivers();
 
-pub type DBConnectionSync = diesel::pg::PgConnection;
-
-pub fn get_db_connection_sync(
-    db_url: &str,
-) -> std::result::Result<DBConnectionSync, diesel::ConnectionError> {
-    diesel::pg::PgConnection::establish(db_url)
+    sqlx::AnyPool::connect(url)
+        .await
+        .map_err(|e| Error::ConnectionError(e.to_string()))
 }
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
-
-pub fn run_migrations(
-    conn: &mut impl MigrationHarness<diesel::pg::Pg>,
-) -> Result<Vec<MigrationVersion<'_>>> {
-    conn.run_pending_migrations(MIGRATIONS)
+/// Run all pending migrations against the given pool.
+pub async fn run_migrations(pool: &DbPool) -> Result<()> {
+    sqlx::migrate!("./migrations")
+        .run(pool)
+        .await
         .map_err(|e| Error::MigrationError(e.to_string()))
 }
