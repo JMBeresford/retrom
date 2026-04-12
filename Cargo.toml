@@ -14,6 +14,9 @@ members = [
   "packages/service-jobs",
   "packages/service-files",
   "packages/service-tags",
+  "packages/service-library",
+  "packages/service-metadata",
+  "packages/service-emulators",
   "packages/telemetry",
   "packages/webdav-service",
 
@@ -121,6 +124,9 @@ retrom-service-saves = { path = "./packages/service-saves" }
 retrom-service-config = { path = "./packages/service-config" }
 retrom-service-files = { path = "./packages/service-files" }
 retrom-service-tags = { path = "./packages/service-tags" }
+retrom-service-library = { path = "./packages/service-library" }
+retrom-service-metadata = { path = "./packages/service-metadata" }
+retrom-service-emulators = { path = "./packages/service-emulators" }
 retrom-telemetry = { path = "./packages/telemetry" }
 retrom-codegen = { path = "./packages/codegen" }
 retrom-plugin-installer = { path = "./plugins/retrom-plugin-installer" }

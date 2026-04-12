@@ -36,7 +36,7 @@
 
 ### Phase 3: Service Decomposition
 
-- [ ] 3.1 Create per-service crates (`retrom-service-{library,metadata,emulators,clients,config,jobs,tags,files,saves}`)
+- [x] 3.1 Create per-service crates (`retrom-service-{library,metadata,emulators,clients,config,jobs,tags,files,saves}`)
 - [ ] 3.2 Refactor `retrom-db` for sqlx + `AnyPool` support (replaces Diesel)
 - [ ] 3.3 Migrate per-service crates to sqlx (after 3.2):
   - [ ] `retrom-service-library`
