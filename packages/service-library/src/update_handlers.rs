@@ -1,4 +1,4 @@
-use crate::jobs::job_manager::JobError;
+use crate::job_manager::JobError;
 use bigdecimal::ToPrimitive;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
