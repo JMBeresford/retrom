@@ -1416,10 +1416,13 @@ checksum lookup.
 `v2_baseline.sql` is a complete, self-contained schema written in generic SQL (compatible with
 both PostgreSQL and SQLite). It must:
 
-- Use `INTEGER PRIMARY KEY` for auto-increment columns (not `GENERATED ALWAYS AS IDENTITY` or
-  `SERIAL`).
+- Use `TEXT PRIMARY KEY` with UUID values for all identifier columns — ID generation is handled
+  by the application layer, not the database (no `SERIAL`, `GENERATED ALWAYS AS IDENTITY`, or
+  `INTEGER` auto-increment primary keys).
 - Use `TEXT` for all string columns (not `VARCHAR`, `CHAR`).
-- Use `TEXT` (ISO-8601) or `INTEGER` (Unix epoch) for timestamps — **not** `TIMESTAMP WITH TIME ZONE` or `TIMESTAMPTZ`.
+- Use `TIMESTAMP` for all timestamp columns, storing ISO-8601 string values — SQLite stores
+  `TIMESTAMP` columns as text transparently. Do **not** use `TIMESTAMP WITH TIME ZONE`,
+  `TIMESTAMPTZ`, `TEXT`, or `INTEGER` for timestamp columns.
 - Use **no** array columns (`integer[]`, `text[]`). The following v1 array columns are replaced
   by relational tables in the v2 schema:
 
@@ -1428,15 +1431,15 @@ both PostgreSQL and SQLite). It must:
   | `emulators.supported_platforms integer[]` | `emulator_supported_platforms(emulator_id, platform_id)` |
   | `emulators.operating_systems integer[]` | `emulator_operating_systems(emulator_id, os_id)` |
   | `emulator_profiles.supported_extensions text[]` | `emulator_profile_extensions(profile_id, extension)` |
-  | `emulator_profiles.custom_args text[]` | `emulator_profile_custom_args(profile_id, position INTEGER, arg TEXT)` — **ordered**; `position` preserves original array index |
+  | `emulator_profiles.custom_args text[]` | `emulator_profiles.custom_args TEXT` — array elements joined into a single space-separated string; order is preserved |
   | `game_metadata.links text[]` | `game_metadata_links(game_id, url)` |
   | `game_metadata.video_urls text[]` | `game_metadata_videos(game_id, url)` |
   | `game_metadata.screenshot_urls text[]` | `game_metadata_screenshots(game_id, url)` |
   | `game_metadata.artwork_urls text[]` | `game_metadata_artwork(game_id, url)` |
 
-- Contain **no** PL/pgSQL functions or triggers. The `update_modified_column_timestamp` trigger
-  and the `create_default_emulator_profile` trigger from v1 must not appear. The `updated_at`
-  column is maintained by application code on write.
+- Use triggers for `created_at` and `updated_at` maintenance — SQLite and PostgreSQL both
+  support `CREATE TRIGGER IF NOT EXISTS`. Use portable trigger syntax (no PL/pgSQL in trigger
+  bodies; use `BEGIN ... END` with plain SQL statements).
 - Contain **no** PostgreSQL composite types (e.g. `CREATE TYPE emujs_names`). Built-in emulator
   seed rows are inserted with individual `INSERT` statements.
 - All `CREATE TABLE` and `CREATE INDEX` statements must use `IF NOT EXISTS`.
@@ -1497,17 +1500,18 @@ BEGIN
     ALTER TABLE emulator_profiles DROP COLUMN supported_extensions;
   END IF;
 
-  -- emulator_profiles.custom_args → emulator_profile_custom_args (ordered)
+  -- emulator_profiles.custom_args → TEXT (flatten array to space-separated string)
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'emulator_profiles' AND column_name = 'custom_args'
+      AND data_type = 'ARRAY'
   ) THEN
-    INSERT INTO emulator_profile_custom_args (profile_id, position, arg)
-      SELECT id, (ordinality - 1)::integer, arg
-      FROM emulator_profiles,
-           unnest(custom_args) WITH ORDINALITY AS t(arg, ordinality)
-    ON CONFLICT DO NOTHING;
+    ALTER TABLE emulator_profiles ADD COLUMN custom_args_new TEXT;
+    UPDATE emulator_profiles
+      SET custom_args_new = array_to_string(custom_args, ' ')
+      WHERE custom_args IS NOT NULL;
     ALTER TABLE emulator_profiles DROP COLUMN custom_args;
+    ALTER TABLE emulator_profiles RENAME COLUMN custom_args_new TO custom_args;
   END IF;
 
   -- game_metadata.links → game_metadata_links
@@ -1567,34 +1571,37 @@ END $$;
 > **Note on `v1_compat.sql` and SQLite:** `v1_compat.sql` uses PL/pgSQL (`DO $$ ... $$`) and
 > `information_schema`, which are PostgreSQL-specific. This is intentional — no SQLite database
 > will ever have v1 array columns. For SQLite users (all new installs post-3.3), `v1_compat`
-> is pre-marked as applied by `bootstrap_from_diesel` / `run_migrations` when it detects a
-> fresh SQLite database, so it is never executed. See implementation notes below.
+> is pre-marked as applied by `run_migrations` when it detects a fresh SQLite database, so it
+> is never executed. See implementation notes below.
 
-#### `bootstrap_from_diesel` changes
+#### `run_migrations` diesel-bootstrap logic
 
-Extend the existing `bootstrap_from_diesel` function in `packages/db/src/lib.rs`:
+Extend the existing `run_migrations` function in `packages/db/src/lib.rs` with a pre-migration
+bootstrap step that handles three scenarios before the main `sqlx::migrate!` call:
 
-1. **Existing behavior** (unchanged): detect `__diesel_schema_migrations`, translate each entry
-   into `_sqlx_migrations` with the correct SHA-384 checksum from
-   `sqlx::migrate!("migrations/legacy")`, and drop `__diesel_schema_migrations`.
+1. **Existing PostgreSQL databases (v1 schema)**: if `__diesel_schema_migrations` exists,
+   translate each entry into `_sqlx_migrations` with the correct SHA-384 checksum sourced from
+   `sqlx::migrate!("migrations/legacy")`, then drop `__diesel_schema_migrations`. After
+   translating the legacy entries, also pre-mark `v2_baseline` (`20260419000001`) as applied —
+   the schema already fully reflects it after all 17 legacy migrations have run. Do **not**
+   pre-mark `v1_compat`; it must run to convert the array columns.
 
-2. **New behavior for existing PostgreSQL users**: after translating legacy migrations, also
-   pre-mark `v2_baseline` (`20260419000001`) as applied — the schema already fully reflects it
-   after all 17 legacy migrations have run. Do **not** pre-mark `v1_compat`; it must run to
-   decompose the array columns.
+2. **Fresh PostgreSQL databases**: no `__diesel_schema_migrations` table exists; no bootstrap
+   action needed. `v2_baseline` and `v1_compat` both run normally — `v1_compat` is a no-op
+   because none of the v1 array columns exist.
 
-3. **New behavior for fresh SQLite databases**: if `_sqlx_migrations` does not exist and
-   `__diesel_schema_migrations` does not exist (clean install), detect the database type from
-   the connection URL. For SQLite, pre-mark `v1_compat` (`20260419000002`) as applied before
-   the migration runner starts, since a fresh SQLite database will never have v1 array columns
-   and `v1_compat` uses PL/pgSQL that SQLite cannot execute.
-
-#### `run_migrations` orchestration
+3. **Fresh SQLite databases**: if neither `_sqlx_migrations` nor `__diesel_schema_migrations`
+   exists and the connection URL begins with `sqlite://`, pre-mark `v1_compat`
+   (`20260419000002`) as applied before the migration runner starts, since a fresh SQLite
+   database will never have v1 array columns and `v1_compat` contains PL/pgSQL that SQLite
+   cannot execute.
 
 ```rust
 pub async fn run_migrations(pool: &DbPool) -> Result<()> {
-    bootstrap_from_diesel(pool).await?;  // handles all three cases above; no-op if already done
-    sqlx::migrate!("migrations/").run(pool).await?;  // single linear run
+    // Bootstrap step: translates legacy Diesel migration records and pre-marks
+    // migrations that should not run on the current database.
+    diesel_migration_bootstrap(pool).await?;
+    sqlx::migrate!("migrations/").run(pool).await?;
     Ok(())
 }
 ```
@@ -1603,7 +1610,7 @@ pub async fn run_migrations(pool: &DbPool) -> Result<()> {
 
 - [ ] Fresh PostgreSQL database: only `v2_baseline` and `v1_compat` run; `v1_compat` is a no-op
       (all `IF EXISTS` guards find no array columns); final schema matches v2 spec.
-- [ ] Existing PostgreSQL database (v1): `bootstrap_from_diesel` translates legacy entries;
+- [ ] Existing PostgreSQL database (v1): diesel bootstrap logic translates legacy entries;
       `v2_baseline` is pre-marked; `v1_compat` runs and successfully migrates all array data to
       relational tables; array columns are dropped; no data loss.
 - [ ] Fresh SQLite database: `v2_baseline` runs; `v1_compat` is pre-marked as applied and never
