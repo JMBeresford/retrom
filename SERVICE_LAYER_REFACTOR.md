@@ -1402,14 +1402,58 @@ packages/db/migrations/
     20251220232024_add-local-emulator-save-path.sql
     20260301230705_add-local-emulator-save-states-path.sql
 
-  20260419000001_v2_baseline.sql       # Full DB-agnostic schema from scratch (new users)
-  20260419000002_v1_compat.sql         # Data migration for existing users (guarded; no-op on fresh DB)
+  20260419000001_v1_rename.sql         # Renames v1 tables to _v1_* prefix (guarded PL/pgSQL; no-op on fresh DB)
+  20260419000002_v2_baseline.sql       # Full DB-agnostic schema from scratch
+  20260419000003_v1_compat.sql         # Migrates data from _v1_* → v2 tables; drops _v1_* (guarded PL/pgSQL; no-op on fresh DB)
 ```
 
 `sqlx::migrate!("migrations/")` is pointed at `packages/db/migrations/` (not `legacy/`), so
 the legacy files are **never run** by the migration runner. They are embedded separately via a
-second `sqlx::migrate!("migrations/legacy")` call used only inside `bootstrap_from_diesel` for
-checksum lookup.
+second `sqlx::migrate!("migrations/legacy")` call used only inside the diesel-bootstrap step
+for checksum lookup.
+
+> **Why three migrations?** The v1 and v2 schemas share table names (`games`, `platforms`,
+> `emulators`, …) but are structurally incompatible — v1 uses `INTEGER PRIMARY KEY` with
+> auto-increment sequences and `TIMESTAMP WITH TIME ZONE`, while v2 uses `TEXT PRIMARY KEY`
+> with application-generated UUIDs and plain `TIMESTAMP`. Running `v2_baseline` while v1 tables
+> exist (even with `IF NOT EXISTS`) would silently leave the v1 structure in place rather than
+> creating the correct v2 structure. The `v1_rename` migration solves this by renaming all v1
+> tables to a `_v1_` prefix **before** `v2_baseline` runs, giving `v2_baseline` a clean slate
+> for all three database scenarios. `v1_compat` then migrates data from the renamed `_v1_*`
+> tables into the new v2 tables and drops the `_v1_*` tables.
+
+#### `v1_rename.sql` — eliminate table-name collisions
+
+`v1_rename.sql` renames every v1 table to a `_v1_` prefixed name so that `v2_baseline` can
+create the new v2 tables without any collision. Each rename is wrapped in a PL/pgSQL
+`IF EXISTS` guard, making the migration a no-op on a fresh database (no v1 tables to rename).
+
+```sql
+-- 20260419000001_v1_rename.sql
+-- Rename all v1 tables to _v1_* so v2_baseline can create clean v2 tables.
+-- All statements are guarded: safe to run on a fresh database (becomes a no-op).
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'games') THEN
+    ALTER TABLE games RENAME TO _v1_games;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'platforms') THEN
+    ALTER TABLE platforms RENAME TO _v1_platforms;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'game_files') THEN
+    ALTER TABLE game_files RENAME TO _v1_game_files;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'game_metadata') THEN
+    ALTER TABLE game_metadata RENAME TO _v1_game_metadata;
+  END IF;
+  -- … (one block per v1 table; see full list in §3.3 acceptance criteria)
+END $$;
+```
+
+> **SQLite note:** `v1_rename.sql` uses PL/pgSQL and is pre-marked as applied for fresh SQLite
+> databases by the bootstrap step (see below). An existing PostgreSQL-to-SQLite upgrade path is
+> not supported.
 
 #### `v2_baseline.sql` — portable schema
 
@@ -1446,133 +1490,53 @@ both PostgreSQL and SQLite). It must:
 
 #### `v1_compat.sql` — data migration for existing users
 
-`v1_compat.sql` migrates existing PostgreSQL data (v1 schema) into the v2 relational tables. It
-is safe to run on a fresh v2 database because every operation is guarded with an `IF EXISTS`
-check on the relevant v1 column. On a fresh database, none of the v1 columns exist, so the
-entire migration is a no-op.
+`v1_compat.sql` migrates all existing PostgreSQL data from the `_v1_*` tables (renamed by
+`v1_rename.sql`) into the new v2 tables and then drops the `_v1_*` tables. It is safe to run
+on a fresh database because every operation is guarded by an `IF EXISTS` check on the relevant
+`_v1_*` table; on a fresh database no `_v1_*` tables exist, so the entire migration is a no-op.
 
-The migration is wrapped in a single `DO $$ ... $$` PL/pgSQL block. Each array column is handled
-by a separate `IF EXISTS` guard:
+The migration covers:
+
+- **Structural column changes**: v1 uses `INTEGER` primary keys and foreign keys; v2 uses `TEXT`
+  UUID values. `v1_compat` generates new UUIDs for each row in every v1 table, builds a
+  temporary mapping from old integer ID to new UUID, and rewrites all foreign key columns using
+  that mapping before inserting into the v2 tables.
+- **Timestamp conversion**: `TIMESTAMP WITH TIME ZONE` values from v1 are cast to ISO-8601
+  `TEXT` and stored in the v2 `TIMESTAMP` columns.
+- **Array column decomposition**: v1 array columns are migrated to their v2 replacements (see
+  the table in the `v2_baseline.sql` section above).
 
 ```sql
--- 20260419000002_v1_compat.sql
--- Migrate v1 array columns into v2 relational tables.
+-- 20260419000003_v1_compat.sql
+-- Migrate all data from _v1_* tables into v2 tables and drop _v1_* tables.
 -- All blocks are guarded: safe to run on a fresh v2 database (becomes a no-op).
 
 DO $$
 BEGIN
-  -- emulators.supported_platforms → emulator_supported_platforms
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'emulators' AND column_name = 'supported_platforms'
-  ) THEN
-    INSERT INTO emulator_supported_platforms (emulator_id, platform_id)
-      SELECT id, unnest(supported_platforms)
-      FROM emulators
-      WHERE array_length(supported_platforms, 1) > 0
+  -- Example: games
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '_v1_games') THEN
+    INSERT INTO games (id, path, platform_id, created_at, updated_at)
+      SELECT
+        gen_random_uuid()::text,
+        path,
+        NULL,                              -- platform_id remapped in a separate pass
+        to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+        to_char(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+      FROM _v1_games
     ON CONFLICT DO NOTHING;
-    ALTER TABLE emulators DROP COLUMN supported_platforms;
+    DROP TABLE _v1_games;
   END IF;
 
-  -- emulators.operating_systems → emulator_operating_systems
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'emulators' AND column_name = 'operating_systems'
-  ) THEN
-    INSERT INTO emulator_operating_systems (emulator_id, os_id)
-      SELECT id, unnest(operating_systems)
-      FROM emulators
-      WHERE array_length(operating_systems, 1) > 0
-    ON CONFLICT DO NOTHING;
-    ALTER TABLE emulators DROP COLUMN operating_systems;
-  END IF;
-
-  -- emulator_profiles.supported_extensions → emulator_profile_extensions
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'emulator_profiles' AND column_name = 'supported_extensions'
-  ) THEN
-    INSERT INTO emulator_profile_extensions (profile_id, extension)
-      SELECT id, unnest(supported_extensions)
-      FROM emulator_profiles
-      WHERE array_length(supported_extensions, 1) > 0
-    ON CONFLICT DO NOTHING;
-    ALTER TABLE emulator_profiles DROP COLUMN supported_extensions;
-  END IF;
-
-  -- emulator_profiles.custom_args → TEXT (flatten array to space-separated string)
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'emulator_profiles' AND column_name = 'custom_args'
-      AND data_type = 'ARRAY'
-  ) THEN
-    ALTER TABLE emulator_profiles ADD COLUMN custom_args_new TEXT;
-    UPDATE emulator_profiles
-      SET custom_args_new = array_to_string(custom_args, ' ')
-      WHERE custom_args IS NOT NULL;
-    ALTER TABLE emulator_profiles DROP COLUMN custom_args;
-    ALTER TABLE emulator_profiles RENAME COLUMN custom_args_new TO custom_args;
-  END IF;
-
-  -- game_metadata.links → game_metadata_links
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'game_metadata' AND column_name = 'links'
-  ) THEN
-    INSERT INTO game_metadata_links (game_id, url)
-      SELECT game_id, unnest(links)
-      FROM game_metadata
-      WHERE array_length(links, 1) > 0
-    ON CONFLICT DO NOTHING;
-    ALTER TABLE game_metadata DROP COLUMN links;
-  END IF;
-
-  -- game_metadata.video_urls → game_metadata_videos
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'game_metadata' AND column_name = 'video_urls'
-  ) THEN
-    INSERT INTO game_metadata_videos (game_id, url)
-      SELECT game_id, unnest(video_urls)
-      FROM game_metadata
-      WHERE array_length(video_urls, 1) > 0
-    ON CONFLICT DO NOTHING;
-    ALTER TABLE game_metadata DROP COLUMN video_urls;
-  END IF;
-
-  -- game_metadata.screenshot_urls → game_metadata_screenshots
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'game_metadata' AND column_name = 'screenshot_urls'
-  ) THEN
-    INSERT INTO game_metadata_screenshots (game_id, url)
-      SELECT game_id, unnest(screenshot_urls)
-      FROM game_metadata
-      WHERE array_length(screenshot_urls, 1) > 0
-    ON CONFLICT DO NOTHING;
-    ALTER TABLE game_metadata DROP COLUMN screenshot_urls;
-  END IF;
-
-  -- game_metadata.artwork_urls → game_metadata_artwork
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'game_metadata' AND column_name = 'artwork_urls'
-  ) THEN
-    INSERT INTO game_metadata_artwork (game_id, url)
-      SELECT game_id, unnest(artwork_urls)
-      FROM game_metadata
-      WHERE array_length(artwork_urls, 1) > 0
-    ON CONFLICT DO NOTHING;
-    ALTER TABLE game_metadata DROP COLUMN artwork_urls;
-  END IF;
+  -- … (one block per v1 table; full implementation details left to the implementer)
+  -- Foreign key columns (e.g. platform_id, game_id) must be remapped from integer
+  -- to UUID using a temporary id-mapping CTE or temp table built before the inserts.
 END $$;
 ```
 
-> **Note on `v1_compat.sql` and SQLite:** `v1_compat.sql` uses PL/pgSQL (`DO $$ ... $$`) and
-> `information_schema`, which are PostgreSQL-specific. This is intentional — no SQLite database
-> will ever have v1 array columns. For SQLite users (all new installs post-3.3), `v1_compat`
-> is pre-marked as applied by `run_migrations` when it detects a fresh SQLite database, so it
-> is never executed. See implementation notes below.
+> **Note on `v1_rename.sql` / `v1_compat.sql` and SQLite:** Both files use PL/pgSQL
+> (`DO $$ ... $$`) and `information_schema`, which are PostgreSQL-specific. For fresh SQLite
+> databases, both migrations are pre-marked as applied by the bootstrap step so they are never
+> executed. See implementation notes below.
 
 #### `run_migrations` diesel-bootstrap logic
 
@@ -1581,20 +1545,19 @@ bootstrap step that handles three scenarios before the main `sqlx::migrate!` cal
 
 1. **Existing PostgreSQL databases (v1 schema)**: if `__diesel_schema_migrations` exists,
    translate each entry into `_sqlx_migrations` with the correct SHA-384 checksum sourced from
-   `sqlx::migrate!("migrations/legacy")`, then drop `__diesel_schema_migrations`. After
-   translating the legacy entries, also pre-mark `v2_baseline` (`20260419000001`) as applied —
-   the schema already fully reflects it after all 17 legacy migrations have run. Do **not**
-   pre-mark `v1_compat`; it must run to convert the array columns.
+   `sqlx::migrate!("migrations/legacy")`, then drop `__diesel_schema_migrations`. All three new
+   migrations (`v1_rename`, `v2_baseline`, `v1_compat`) then run normally in sequence —
+   `v1_rename` renames the legacy tables, `v2_baseline` creates the v2 tables, and `v1_compat`
+   migrates the data and drops the `_v1_*` tables.
 
 2. **Fresh PostgreSQL databases**: no `__diesel_schema_migrations` table exists; no bootstrap
-   action needed. `v2_baseline` and `v1_compat` both run normally — `v1_compat` is a no-op
-   because none of the v1 array columns exist.
+   action needed. All three migrations run normally — `v1_rename` and `v1_compat` are no-ops
+   (no `_v1_*` or v1 tables exist), and `v2_baseline` creates all tables from scratch.
 
 3. **Fresh SQLite databases**: if neither `_sqlx_migrations` nor `__diesel_schema_migrations`
-   exists and the connection URL begins with `sqlite://`, pre-mark `v1_compat`
-   (`20260419000002`) as applied before the migration runner starts, since a fresh SQLite
-   database will never have v1 array columns and `v1_compat` contains PL/pgSQL that SQLite
-   cannot execute.
+   exists and the connection URL begins with `sqlite://`, pre-mark both `v1_rename`
+   (`20260419000001`) and `v1_compat` (`20260419000003`) as applied before the migration runner
+   starts. Only `v2_baseline` runs; the two PL/pgSQL migrations are skipped entirely.
 
 ```rust
 pub async fn run_migrations(pool: &DbPool) -> Result<()> {
@@ -1608,13 +1571,14 @@ pub async fn run_migrations(pool: &DbPool) -> Result<()> {
 
 #### Acceptance Criteria
 
-- [ ] Fresh PostgreSQL database: only `v2_baseline` and `v1_compat` run; `v1_compat` is a no-op
-      (all `IF EXISTS` guards find no array columns); final schema matches v2 spec.
+- [ ] Fresh PostgreSQL database: `v1_rename` and `v1_compat` are no-ops; `v2_baseline` creates
+      all tables from scratch; final schema matches v2 spec.
 - [ ] Existing PostgreSQL database (v1): diesel bootstrap logic translates legacy entries;
-      `v2_baseline` is pre-marked; `v1_compat` runs and successfully migrates all array data to
-      relational tables; array columns are dropped; no data loss.
-- [ ] Fresh SQLite database: `v2_baseline` runs; `v1_compat` is pre-marked as applied and never
-      executed; final schema matches v2 spec.
+      `v1_rename` renames all legacy tables; `v2_baseline` creates clean v2 tables; `v1_compat`
+      migrates all data (with UUID remapping and timestamp conversion) and drops `_v1_*` tables;
+      no data loss.
+- [ ] Fresh SQLite database: `v1_rename` and `v1_compat` are pre-marked as applied and never
+      executed; `v2_baseline` runs and creates all tables; final schema matches v2 spec.
 - [ ] `cargo test -p retrom-db` passes for all three scenarios above (use an in-process SQLite
       database for SQLite tests; use a Docker PostgreSQL instance for PostgreSQL tests).
 - [ ] `cargo clippy -p retrom-db` reports no warnings.
