@@ -38,7 +38,8 @@
 
 - [x] 3.1 Create per-service crates (`retrom-service-{library,metadata,emulators,clients,config,jobs,tags,files,saves}`)
 - [x] 3.2 Refactor `retrom-db` for sqlx + `AnyPool` support (replaces Diesel)
-- [ ] 3.3 Migrate per-service crates to sqlx (after 3.2):
+- [ ] 3.3 Replace legacy migrations with DB-agnostic migrations; support existing-user data migration (after 3.2)
+- [ ] 3.4 Migrate per-service crates to sqlx (after 3.3):
   - [ ] `retrom-service-library`
   - [ ] `retrom-service-metadata`
   - [ ] `retrom-service-emulators`
@@ -48,10 +49,10 @@
   - [ ] `retrom-service-tags`
   - [ ] `retrom-service-files`
   - [ ] `retrom-service-saves`
-- [ ] 3.4 Migrate per-service crates to use `ConfigService` via RPC
-- [ ] 3.5 Create `retrom-metadata` crate (provider traits, IGDB, Steam, registry)
-- [ ] 3.6 Update binary wiring (`packages/service`) to assemble per-crate routers
-- [ ] 3.7 Acceptance criteria
+- [ ] 3.5 Migrate per-service crates to use `ConfigService` via RPC
+- [ ] 3.6 Create `retrom-metadata` crate (provider traits, IGDB, Steam, registry)
+- [ ] 3.7 Update binary wiring (`packages/service`) to assemble per-crate routers
+- [ ] 3.8 Acceptance criteria
 
 ### Phase 4: Data Migration
 
@@ -108,11 +109,12 @@
   - [Phase 3: Service Decomposition](#phase-3-service-decomposition)
     - [3.1 Create Per-Service Crates](#31-create-per-service-crates)
     - [3.2 Refactor retrom-db for sqlx + AnyPool Support](#32-refactor-retrom-db-for-sqlx--anypool-support)
-    - [3.3 Migrate Per-Service Crates to sqlx](#33-migrate-per-service-crates-to-sqlx)
-    - [3.4 Migrate Per-Service Crates to Use ConfigService via RPC](#34-migrate-per-service-crates-to-use-configservice-via-rpc)
-    - [3.5 Create retrom-metadata Crate](#35-create-retrom-metadata-crate)
-    - [3.6 Update Binary Wiring](#36-update-binary-wiring)
-    - [3.7 Acceptance Criteria](#37-acceptance-criteria)
+    - [3.3 Replace Legacy Migrations with DB-Agnostic Migrations](#33-replace-legacy-migrations-with-db-agnostic-migrations)
+    - [3.4 Migrate Per-Service Crates to sqlx](#34-migrate-per-service-crates-to-sqlx)
+    - [3.5 Migrate Per-Service Crates to Use ConfigService via RPC](#35-migrate-per-service-crates-to-use-configservice-via-rpc)
+    - [3.6 Create retrom-metadata Crate](#36-create-retrom-metadata-crate)
+    - [3.7 Update Binary Wiring](#37-update-binary-wiring)
+    - [3.8 Acceptance Criteria](#38-acceptance-criteria)
   - [Phase 4: Data Migration](#phase-4-data-migration)
     - [4.1 Seed Metadata Providers and Tag Domains](#41-seed-metadata-providers-and-tag-domains)
     - [4.2 Normalize Metadata Arrays](#42-normalize-metadata-arrays)
@@ -1369,9 +1371,252 @@ flags are needed.
 
 ---
 
-### 3.3 Migrate Per-Service Crates to sqlx
+### 3.3 Replace Legacy Migrations with DB-Agnostic Migrations
 
-> **Prerequisite:** Step 3.2 is complete and `retrom-db` exposes `sqlx::AnyPool`.
+> **Prerequisite:** Step 3.2 complete (`retrom-db` rewritten for sqlx + `AnyPool`).
+
+The v1 migrations (all 17 legacy Diesel migrations) are PostgreSQL-specific and cannot run on
+SQLite. This step replaces them with a DB-agnostic migration set while preserving all existing
+user data.
+
+#### Migration directory layout
+
+```
+packages/db/migrations/
+  legacy/                              # Read-only; embedded only for checksum bootstrap
+    20240415050330_create_tables.sql
+    20240419034531_create_metadata_table.sql
+    20240608185554_emulator_tables.sql
+    20240710235125_update_trigger.sql
+    20240819040945_model_deletion_and_mutations.sql
+    20240920182440_game-storage-type.sql
+    20240925191410_similar-games-check-ids.sql
+    20241009023627_per-client-default-profiles.sql
+    20241017012359_local-emulator-configs.sql
+    20241124040401_third-party-games.sql
+    20250211190915_built-in-profiles.sql
+    20250306201526_built-in-emulators.sql
+    20250713234604_fix-builtin-emu-os-lists.sql
+    20251104043457_add_performance_indexes.sql
+    20251130005415_add-ejs-cores.sql
+    20251220232024_add-local-emulator-save-path.sql
+    20260301230705_add-local-emulator-save-states-path.sql
+
+  20260419000001_v2_baseline.sql       # Full DB-agnostic schema from scratch (new users)
+  20260419000002_v1_compat.sql         # Data migration for existing users (guarded; no-op on fresh DB)
+```
+
+`sqlx::migrate!("migrations/")` is pointed at `packages/db/migrations/` (not `legacy/`), so
+the legacy files are **never run** by the migration runner. They are embedded separately via a
+second `sqlx::migrate!("migrations/legacy")` call used only inside `bootstrap_from_diesel` for
+checksum lookup.
+
+#### `v2_baseline.sql` — portable schema
+
+`v2_baseline.sql` is a complete, self-contained schema written in generic SQL (compatible with
+both PostgreSQL and SQLite). It must:
+
+- Use `INTEGER PRIMARY KEY` for auto-increment columns (not `GENERATED ALWAYS AS IDENTITY` or
+  `SERIAL`).
+- Use `TEXT` for all string columns (not `VARCHAR`, `CHAR`).
+- Use `TEXT` (ISO-8601) or `INTEGER` (Unix epoch) for timestamps — **not** `TIMESTAMP WITH TIME ZONE` or `TIMESTAMPTZ`.
+- Use **no** array columns (`integer[]`, `text[]`). The following v1 array columns are replaced
+  by relational tables in the v2 schema:
+
+  | v1 column | v2 replacement |
+  |---|---|
+  | `emulators.supported_platforms integer[]` | `emulator_supported_platforms(emulator_id, platform_id)` |
+  | `emulators.operating_systems integer[]` | `emulator_operating_systems(emulator_id, os_id)` |
+  | `emulator_profiles.supported_extensions text[]` | `emulator_profile_extensions(profile_id, extension)` |
+  | `emulator_profiles.custom_args text[]` | `emulator_profile_custom_args(profile_id, position INTEGER, arg TEXT)` — **ordered**; `position` preserves original array index |
+  | `game_metadata.links text[]` | `game_metadata_links(game_id, url)` |
+  | `game_metadata.video_urls text[]` | `game_metadata_videos(game_id, url)` |
+  | `game_metadata.screenshot_urls text[]` | `game_metadata_screenshots(game_id, url)` |
+  | `game_metadata.artwork_urls text[]` | `game_metadata_artwork(game_id, url)` |
+
+- Contain **no** PL/pgSQL functions or triggers. The `update_modified_column_timestamp` trigger
+  and the `create_default_emulator_profile` trigger from v1 must not appear. The `updated_at`
+  column is maintained by application code on write.
+- Contain **no** PostgreSQL composite types (e.g. `CREATE TYPE emujs_names`). Built-in emulator
+  seed rows are inserted with individual `INSERT` statements.
+- All `CREATE TABLE` and `CREATE INDEX` statements must use `IF NOT EXISTS`.
+
+#### `v1_compat.sql` — data migration for existing users
+
+`v1_compat.sql` migrates existing PostgreSQL data (v1 schema) into the v2 relational tables. It
+is safe to run on a fresh v2 database because every operation is guarded with an `IF EXISTS`
+check on the relevant v1 column. On a fresh database, none of the v1 columns exist, so the
+entire migration is a no-op.
+
+The migration is wrapped in a single `DO $$ ... $$` PL/pgSQL block. Each array column is handled
+by a separate `IF EXISTS` guard:
+
+```sql
+-- 20260419000002_v1_compat.sql
+-- Migrate v1 array columns into v2 relational tables.
+-- All blocks are guarded: safe to run on a fresh v2 database (becomes a no-op).
+
+DO $$
+BEGIN
+  -- emulators.supported_platforms → emulator_supported_platforms
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'emulators' AND column_name = 'supported_platforms'
+  ) THEN
+    INSERT INTO emulator_supported_platforms (emulator_id, platform_id)
+      SELECT id, unnest(supported_platforms)
+      FROM emulators
+      WHERE array_length(supported_platforms, 1) > 0
+    ON CONFLICT DO NOTHING;
+    ALTER TABLE emulators DROP COLUMN supported_platforms;
+  END IF;
+
+  -- emulators.operating_systems → emulator_operating_systems
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'emulators' AND column_name = 'operating_systems'
+  ) THEN
+    INSERT INTO emulator_operating_systems (emulator_id, os_id)
+      SELECT id, unnest(operating_systems)
+      FROM emulators
+      WHERE array_length(operating_systems, 1) > 0
+    ON CONFLICT DO NOTHING;
+    ALTER TABLE emulators DROP COLUMN operating_systems;
+  END IF;
+
+  -- emulator_profiles.supported_extensions → emulator_profile_extensions
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'emulator_profiles' AND column_name = 'supported_extensions'
+  ) THEN
+    INSERT INTO emulator_profile_extensions (profile_id, extension)
+      SELECT id, unnest(supported_extensions)
+      FROM emulator_profiles
+      WHERE array_length(supported_extensions, 1) > 0
+    ON CONFLICT DO NOTHING;
+    ALTER TABLE emulator_profiles DROP COLUMN supported_extensions;
+  END IF;
+
+  -- emulator_profiles.custom_args → emulator_profile_custom_args (ordered)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'emulator_profiles' AND column_name = 'custom_args'
+  ) THEN
+    INSERT INTO emulator_profile_custom_args (profile_id, position, arg)
+      SELECT id, (ordinality - 1)::integer, arg
+      FROM emulator_profiles,
+           unnest(custom_args) WITH ORDINALITY AS t(arg, ordinality)
+    ON CONFLICT DO NOTHING;
+    ALTER TABLE emulator_profiles DROP COLUMN custom_args;
+  END IF;
+
+  -- game_metadata.links → game_metadata_links
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'game_metadata' AND column_name = 'links'
+  ) THEN
+    INSERT INTO game_metadata_links (game_id, url)
+      SELECT game_id, unnest(links)
+      FROM game_metadata
+      WHERE array_length(links, 1) > 0
+    ON CONFLICT DO NOTHING;
+    ALTER TABLE game_metadata DROP COLUMN links;
+  END IF;
+
+  -- game_metadata.video_urls → game_metadata_videos
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'game_metadata' AND column_name = 'video_urls'
+  ) THEN
+    INSERT INTO game_metadata_videos (game_id, url)
+      SELECT game_id, unnest(video_urls)
+      FROM game_metadata
+      WHERE array_length(video_urls, 1) > 0
+    ON CONFLICT DO NOTHING;
+    ALTER TABLE game_metadata DROP COLUMN video_urls;
+  END IF;
+
+  -- game_metadata.screenshot_urls → game_metadata_screenshots
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'game_metadata' AND column_name = 'screenshot_urls'
+  ) THEN
+    INSERT INTO game_metadata_screenshots (game_id, url)
+      SELECT game_id, unnest(screenshot_urls)
+      FROM game_metadata
+      WHERE array_length(screenshot_urls, 1) > 0
+    ON CONFLICT DO NOTHING;
+    ALTER TABLE game_metadata DROP COLUMN screenshot_urls;
+  END IF;
+
+  -- game_metadata.artwork_urls → game_metadata_artwork
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'game_metadata' AND column_name = 'artwork_urls'
+  ) THEN
+    INSERT INTO game_metadata_artwork (game_id, url)
+      SELECT game_id, unnest(artwork_urls)
+      FROM game_metadata
+      WHERE array_length(artwork_urls, 1) > 0
+    ON CONFLICT DO NOTHING;
+    ALTER TABLE game_metadata DROP COLUMN artwork_urls;
+  END IF;
+END $$;
+```
+
+> **Note on `v1_compat.sql` and SQLite:** `v1_compat.sql` uses PL/pgSQL (`DO $$ ... $$`) and
+> `information_schema`, which are PostgreSQL-specific. This is intentional — no SQLite database
+> will ever have v1 array columns. For SQLite users (all new installs post-3.3), `v1_compat`
+> is pre-marked as applied by `bootstrap_from_diesel` / `run_migrations` when it detects a
+> fresh SQLite database, so it is never executed. See implementation notes below.
+
+#### `bootstrap_from_diesel` changes
+
+Extend the existing `bootstrap_from_diesel` function in `packages/db/src/lib.rs`:
+
+1. **Existing behavior** (unchanged): detect `__diesel_schema_migrations`, translate each entry
+   into `_sqlx_migrations` with the correct SHA-384 checksum from
+   `sqlx::migrate!("migrations/legacy")`, and drop `__diesel_schema_migrations`.
+
+2. **New behavior for existing PostgreSQL users**: after translating legacy migrations, also
+   pre-mark `v2_baseline` (`20260419000001`) as applied — the schema already fully reflects it
+   after all 17 legacy migrations have run. Do **not** pre-mark `v1_compat`; it must run to
+   decompose the array columns.
+
+3. **New behavior for fresh SQLite databases**: if `_sqlx_migrations` does not exist and
+   `__diesel_schema_migrations` does not exist (clean install), detect the database type from
+   the connection URL. For SQLite, pre-mark `v1_compat` (`20260419000002`) as applied before
+   the migration runner starts, since a fresh SQLite database will never have v1 array columns
+   and `v1_compat` uses PL/pgSQL that SQLite cannot execute.
+
+#### `run_migrations` orchestration
+
+```rust
+pub async fn run_migrations(pool: &DbPool) -> Result<()> {
+    bootstrap_from_diesel(pool).await?;  // handles all three cases above; no-op if already done
+    sqlx::migrate!("migrations/").run(pool).await?;  // single linear run
+    Ok(())
+}
+```
+
+#### Acceptance Criteria
+
+- [ ] Fresh PostgreSQL database: only `v2_baseline` and `v1_compat` run; `v1_compat` is a no-op
+      (all `IF EXISTS` guards find no array columns); final schema matches v2 spec.
+- [ ] Existing PostgreSQL database (v1): `bootstrap_from_diesel` translates legacy entries;
+      `v2_baseline` is pre-marked; `v1_compat` runs and successfully migrates all array data to
+      relational tables; array columns are dropped; no data loss.
+- [ ] Fresh SQLite database: `v2_baseline` runs; `v1_compat` is pre-marked as applied and never
+      executed; final schema matches v2 spec.
+- [ ] `cargo test -p retrom-db` passes for all three scenarios above (use an in-process SQLite
+      database for SQLite tests; use a Docker PostgreSQL instance for PostgreSQL tests).
+- [ ] `cargo clippy -p retrom-db` reports no warnings.
+
+---
+
+### 3.4 Migrate Per-Service Crates to sqlx
+
+> **Prerequisite:** Step 3.3 is complete and `retrom-db` exposes `sqlx::AnyPool`.
 > Each service crate is migrated independently; track completion using the sub-items
 > in the Progress Tracker above.
 
@@ -1431,7 +1676,7 @@ contain Diesel-specific imports, derive macros, and query logic that was not yet
 
 ---
 
-### 3.4 Migrate Per-Service Crates to Use ConfigService via RPC
+### 3.5 Migrate Per-Service Crates to Use ConfigService via RPC
 
 > **Prerequisite:** Step 3.2 is complete and `retrom-service-config` is implemented and
 > running.
@@ -1482,7 +1727,7 @@ are updated in a single pass.
 
 ---
 
-### 3.5 Create retrom-metadata Crate
+### 3.6 Create retrom-metadata Crate
 
 Metadata provider trait definitions and IGDB/Steam implementations move to a dedicated
 `retrom-metadata` crate. This separates the provider contract from both the service-common
@@ -1529,9 +1774,9 @@ impl MetadataProviderRegistry {
 
 ---
 
-### 3.6 Update Binary Wiring
+### 3.7 Update Binary Wiring
 
-After 3.1–3.5, `packages/service/src/lib.rs` assembles the routers from each domain crate:
+After 3.1–3.6, `packages/service/src/lib.rs` assembles the routers from each domain crate:
 
 ```rust
 use retrom_service_library::library_router;
@@ -1570,16 +1815,16 @@ are stable.
 
 ---
 
-### 3.7 Acceptance Criteria
+### 3.8 Acceptance Criteria
 
 - [ ] Each new service crate compiles independently (`cargo build -p retrom-service-<domain>`).
 - [ ] `retrom-db` connects to both SQLite and PostgreSQL via `sqlx::AnyPool`.
-- [ ] Each per-service crate compiles and all tests pass after its sqlx migration (step 3.3).
+- [ ] Each per-service crate compiles and all tests pass after its sqlx migration (step 3.4).
 - [ ] No per-service crate imports Diesel after the sqlx migration.
 - [ ] Each per-service crate compiles and all tests pass after its ConfigService RPC migration
-      (step 3.4).
+      (step 3.5).
 - [ ] No per-service crate reads the config file or uses `ServerConfigManager` directly after
-      step 3.4; all config reads are routed via the `ConfigService` gRPC client.
+      step 3.5; all config reads are routed via the `ConfigService` gRPC client.
 - [ ] `retrom-metadata` crate compiles independently with IGDB and Steam providers.
 - [ ] `MetadataProviderRegistry` is populated at startup with IGDB and Steam providers.
 - [ ] Well-known tag domains are seeded at startup.
@@ -1813,10 +2058,11 @@ Phase 1 (Data Layer + Proto models)
 1. Phase 1 (parallel tracks: schema migrations + proto model changes)
 2. Phase 2 (service interface redesign; handler changes can begin in `grpc-service` immediately)
 3. Phase 3.2 (sqlx / `AnyPool` retrom-db rewrite — high-value, do early to unblock multi-DB support)
-4. Phase 3.3 (per-service crate sqlx migrations — one crate at a time, after 3.2)
-5. Phase 3.4 (per-service crate ConfigService RPC migrations — one crate at a time, can overlap with 3.3)
-6. Phase 3.5 (retrom-metadata crate extraction)
-7. Phase 3.1 + 3.6 (per-crate extraction + binary wiring)
+4. Phase 3.3 (DB-agnostic migrations — baseline schema + existing-user data migration, after 3.2)
+5. Phase 3.4 (per-service crate sqlx migrations — one crate at a time, after 3.3)
+6. Phase 3.5 (per-service crate ConfigService RPC migrations — one crate at a time, can overlap with 3.4)
+7. Phase 3.6 (retrom-metadata crate extraction)
+8. Phase 3.1 + 3.7 (per-crate extraction + binary wiring)
 8. Phase 4 (data migration against staging, then production)
 9. Phase 5 (client updates — can overlap with 2–5)
 
