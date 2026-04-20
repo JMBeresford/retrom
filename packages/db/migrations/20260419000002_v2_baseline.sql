@@ -136,25 +136,8 @@ CREATE TABLE IF NOT EXISTS game_metadata_artwork (
 );
 
 -- ────────────────────────────────────────────────────────────────────────────
--- Genre / tag tables
+-- Tag tables (genres are represented as tags in the 'genre' domain)
 -- ────────────────────────────────────────────────────────────────────────────
-
-CREATE TABLE IF NOT EXISTS game_genres (
-    id         TEXT NOT NULL PRIMARY KEY,
-    slug       TEXT NOT NULL,
-    name       TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT game_genres_slug_name_unique UNIQUE (slug, name)
-);
-
-CREATE TABLE IF NOT EXISTS game_genre_maps (
-    game_id    TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-    genre_id   TEXT NOT NULL REFERENCES game_genres(id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (game_id, genre_id)
-);
 
 CREATE TABLE IF NOT EXISTS similar_game_maps (
     game_id         TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
@@ -492,5 +475,4 @@ CREATE INDEX IF NOT EXISTS idx_game_files_game_id_is_deleted  ON game_files(game
 CREATE INDEX IF NOT EXISTS idx_game_metadata_igdb_id          ON game_metadata(igdb_id);
 CREATE INDEX IF NOT EXISTS idx_platform_metadata_igdb_id      ON platform_metadata(igdb_id);
 CREATE INDEX IF NOT EXISTS idx_games_steam_app_id             ON games(steam_app_id);
-CREATE INDEX IF NOT EXISTS idx_game_genre_maps_game_id        ON game_genre_maps(game_id);
 CREATE INDEX IF NOT EXISTS idx_similar_game_maps_game_id      ON similar_game_maps(game_id);
