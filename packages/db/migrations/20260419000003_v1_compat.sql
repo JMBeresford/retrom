@@ -56,11 +56,6 @@ BEGIN
     SELECT id AS old_id, gen_random_uuid()::text AS new_id
     FROM _v1_game_files;
 
-  -- game_genres
-  CREATE TEMP TABLE _map_game_genres AS
-    SELECT id AS old_id, gen_random_uuid()::text AS new_id
-    FROM _v1_game_genres;
-
   -- tag_domains – well-known rows use the stable UUIDs from v2_baseline
   CREATE TEMP TABLE _map_tag_domains AS
     SELECT
@@ -381,23 +376,30 @@ BEGIN
     ON CONFLICT DO NOTHING;
   END IF;
 
-  -- game_genres
-  INSERT INTO game_genres (id, slug, name, created_at, updated_at)
-  SELECT m.new_id, v.slug, v.name,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+  -- Migrate legacy genres to tags in the 'genre' well-known domain.
+  -- Each unique genre name becomes a tag with value = genre name.
+  INSERT INTO tags (id, tag_domain_id, value, created_at, updated_at)
+  SELECT
+    gen_random_uuid()::text,
+    '00000000-0000-0000-0000-000000000001',
+    v.name,
+    to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+    to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
   FROM _v1_game_genres v
-  JOIN _map_game_genres m ON v.id = m.old_id
   ON CONFLICT DO NOTHING;
 
-  -- game_genre_maps
-  INSERT INTO game_genre_maps (game_id, genre_id, created_at, updated_at)
-  SELECT mg.new_id, mgg.new_id,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_game_genre_maps v
-  JOIN _map_games       mg  ON v.game_id  = mg.old_id
-  JOIN _map_game_genres mgg ON v.genre_id = mgg.old_id
+  -- Migrate legacy game_genre_maps to game_tag_maps.
+  INSERT INTO game_tag_maps (game_id, tag_id, created_at, updated_at)
+  SELECT
+    mg.new_id,
+    t.id,
+    to_char(m.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+    to_char(m.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+  FROM _v1_game_genre_maps m
+  JOIN _map_games        mg ON m.game_id  = mg.old_id
+  JOIN _v1_game_genres    g ON m.genre_id = g.id
+  JOIN tags               t ON t.value = g.name
+                            AND t.tag_domain_id = '00000000-0000-0000-0000-000000000001'
   ON CONFLICT DO NOTHING;
 
   -- similar_game_maps
@@ -639,7 +641,6 @@ BEGIN
   DROP TABLE IF EXISTS _map_clients;
   DROP TABLE IF EXISTS _map_tags;
   DROP TABLE IF EXISTS _map_tag_domains;
-  DROP TABLE IF EXISTS _map_game_genres;
   DROP TABLE IF EXISTS _map_game_files;
   DROP TABLE IF EXISTS _map_games;
   DROP TABLE IF EXISTS _map_platforms;
