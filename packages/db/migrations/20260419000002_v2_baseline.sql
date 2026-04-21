@@ -50,30 +50,38 @@ CREATE TABLE IF NOT EXISTS platforms (
 );
 
 CREATE TABLE IF NOT EXISTS games (
-    id              TEXT NOT NULL PRIMARY KEY,
-    path            TEXT NOT NULL,
-    platform_id     TEXT REFERENCES platforms(id) ON DELETE CASCADE,
-    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at      TIMESTAMP,
-    is_deleted      INTEGER NOT NULL DEFAULT 0,
-    storage_type    INTEGER NOT NULL DEFAULT 1,
-    third_party     INTEGER NOT NULL DEFAULT 0,
-    steam_app_id    TEXT,
-    default_file_id TEXT,
+    id           TEXT NOT NULL PRIMARY KEY,
+    path         TEXT NOT NULL,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP,
+    is_deleted   INTEGER NOT NULL DEFAULT 0,
+    storage_type INTEGER NOT NULL DEFAULT 1,
+    third_party  INTEGER NOT NULL DEFAULT 0,
+    steam_app_id TEXT,
     CONSTRAINT games_path_unique UNIQUE (path)
 );
 
 CREATE TABLE IF NOT EXISTS game_files (
-    id         TEXT    NOT NULL PRIMARY KEY,
-    byte_size  INTEGER NOT NULL,
-    path       TEXT    NOT NULL,
-    game_id    TEXT    NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP,
-    is_deleted INTEGER NOT NULL DEFAULT 0,
+    id          TEXT    NOT NULL PRIMARY KEY,
+    byte_size   INTEGER NOT NULL,
+    path        TEXT    NOT NULL,
+    game_id     TEXT    NOT NULL REFERENCES games(id)     ON DELETE CASCADE,
+    platform_id TEXT    NOT NULL REFERENCES platforms(id) ON DELETE CASCADE,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at  TIMESTAMP,
+    is_deleted  INTEGER NOT NULL DEFAULT 0,
     CONSTRAINT game_files_path_unique UNIQUE (path)
+);
+
+CREATE TABLE IF NOT EXISTS default_game_files (
+    game_id      TEXT NOT NULL REFERENCES games(id)      ON DELETE CASCADE,
+    platform_id  TEXT NOT NULL REFERENCES platforms(id)  ON DELETE CASCADE,
+    game_file_id TEXT NOT NULL REFERENCES game_files(id) ON DELETE CASCADE,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (game_id, platform_id)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────
@@ -468,10 +476,11 @@ ON CONFLICT DO NOTHING;
 -- ────────────────────────────────────────────────────────────────────────────
 
 CREATE INDEX IF NOT EXISTS idx_game_files_game_id             ON game_files(game_id);
-CREATE INDEX IF NOT EXISTS idx_games_platform_id              ON games(platform_id);
+CREATE INDEX IF NOT EXISTS idx_game_files_platform_id         ON game_files(platform_id);
 CREATE INDEX IF NOT EXISTS idx_game_files_is_deleted          ON game_files(is_deleted);
-CREATE INDEX IF NOT EXISTS idx_games_is_deleted               ON games(is_deleted);
 CREATE INDEX IF NOT EXISTS idx_game_files_game_id_is_deleted  ON game_files(game_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_default_game_files_game_id     ON default_game_files(game_id);
+CREATE INDEX IF NOT EXISTS idx_games_is_deleted               ON games(is_deleted);
 CREATE INDEX IF NOT EXISTS idx_game_metadata_igdb_id          ON game_metadata(igdb_id);
 CREATE INDEX IF NOT EXISTS idx_platform_metadata_igdb_id      ON platform_metadata(igdb_id);
 CREATE INDEX IF NOT EXISTS idx_games_steam_app_id             ON games(steam_app_id);

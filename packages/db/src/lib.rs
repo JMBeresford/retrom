@@ -266,6 +266,7 @@ mod tests {
             "platforms",
             "games",
             "game_files",
+            "default_game_files",
             "game_metadata",
             "platform_metadata",
             "emulators",
