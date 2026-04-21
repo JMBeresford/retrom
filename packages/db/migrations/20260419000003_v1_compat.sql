@@ -234,12 +234,11 @@ BEGIN
   JOIN _map_platforms m ON v.id = m.old_id
   ON CONFLICT DO NOTHING;
 
-  -- games (default_file_id filled after game_files are migrated)
-  INSERT INTO games (id, path, platform_id, created_at, updated_at, deleted_at,
+  -- games
+  INSERT INTO games (id, path, created_at, updated_at, deleted_at,
                      is_deleted, storage_type, third_party, steam_app_id)
   SELECT
     mg.new_id, v.path,
-    mp.new_id,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     CASE WHEN v.deleted_at IS NOT NULL
@@ -250,16 +249,16 @@ BEGIN
     CASE WHEN v.third_party THEN 1 ELSE 0 END,
     v.steam_app_id::text
   FROM _v1_games v
-  JOIN _map_games    mg ON v.id          = mg.old_id
-  LEFT JOIN _map_platforms mp ON v.platform_id = mp.old_id
+  JOIN _map_games mg ON v.id = mg.old_id
   ON CONFLICT DO NOTHING;
 
-  -- game_files
-  INSERT INTO game_files (id, byte_size, path, game_id, created_at, updated_at,
+  -- game_files (platform_id comes from the game's v1 platform_id)
+  INSERT INTO game_files (id, byte_size, path, game_id, platform_id, created_at, updated_at,
                            deleted_at, is_deleted)
   SELECT
     mf.new_id, v.byte_size, v.path,
     mg.new_id,
+    mp.new_id,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     CASE WHEN v.deleted_at IS NOT NULL
@@ -267,17 +266,25 @@ BEGIN
          ELSE NULL END,
     CASE WHEN v.is_deleted THEN 1 ELSE 0 END
   FROM _v1_game_files v
-  JOIN _map_game_files mf ON v.id      = mf.old_id
-  JOIN _map_games      mg ON v.game_id = mg.old_id
+  JOIN _map_game_files mf  ON v.id         = mf.old_id
+  JOIN _map_games      mg  ON v.game_id    = mg.old_id
+  JOIN _v1_games       g   ON v.game_id    = g.id
+  JOIN _map_platforms  mp  ON g.platform_id = mp.old_id
   ON CONFLICT DO NOTHING;
 
-  -- Back-fill games.default_file_id now that game_files exist
-  UPDATE games g
-  SET default_file_id = mf.new_id
+  -- default_game_files (derived from v1 games.default_file_id)
+  INSERT INTO default_game_files (game_id, platform_id, game_file_id, created_at, updated_at)
+  SELECT
+    mg.new_id,
+    mp.new_id,
+    mf.new_id,
+    to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+    to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
   FROM _v1_games v
   JOIN _map_games      mg ON v.id              = mg.old_id
   JOIN _map_game_files mf ON v.default_file_id = mf.old_id
-  WHERE g.id = mg.new_id;
+  JOIN _map_platforms  mp ON v.platform_id     = mp.old_id
+  ON CONFLICT DO NOTHING;
 
   -- platform_metadata
   INSERT INTO platform_metadata (platform_id, name, description, background_url, logo_url,
