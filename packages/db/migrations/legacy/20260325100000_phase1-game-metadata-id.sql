@@ -6,9 +6,9 @@
 create sequence game_metadata_id_seq;
 
 alter table game_metadata
-    add column id integer not null default nextval('game_metadata_id_seq');
+add column id integer not null default nextval('game_metadata_id_seq');
 
 alter sequence game_metadata_id_seq owned by game_metadata.id;
 
 alter table game_metadata
-    add constraint game_metadata_id_unique unique (id);
+add constraint game_metadata_id_unique unique (id);
