@@ -5,7 +5,7 @@
 -- This file uses PL/pgSQL and is intentionally pre-marked as applied on SQLite
 -- databases by the diesel_migration_bootstrap helper.
 
-DO $$
+do $$
 DECLARE
     _v1_tables_present boolean;
 BEGIN
