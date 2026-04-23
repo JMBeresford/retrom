@@ -117,7 +117,7 @@ async fn diesel_migration_bootstrap(pool: &DbPool, url: &str) -> Result<()> {
                     sqlx::query(
                         "INSERT INTO _sqlx_migrations
                              (version, description, success, checksum, execution_time)
-                         VALUES ($1, $2, TRUE, $3, 0)
+                         VALUES (?, ?, TRUE, ?, 0)
                          ON CONFLICT DO NOTHING",
                     )
                     .bind(migration.version)
