@@ -10,322 +10,322 @@
 -- Structural / support tables (no foreign keys from these to other new tables)
 -- ────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE IF NOT EXISTS metadata_providers (
-    id         TEXT    NOT NULL PRIMARY KEY,
-    name       TEXT    NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT metadata_providers_name_unique UNIQUE (name)
+create table if not exists metadata_providers (
+    id text not null primary key,
+    name text not null,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    constraint metadata_providers_name_unique unique (name)
 );
 
-CREATE TABLE IF NOT EXISTS libraries (
-    id                   TEXT NOT NULL PRIMARY KEY,
-    name                 TEXT NOT NULL,
-    structure_definition TEXT NOT NULL,
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+create table if not exists libraries (
+    id text not null primary key,
+    name text not null,
+    structure_definition text not null,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp
 );
 
-CREATE TABLE IF NOT EXISTS root_directories (
-    id         TEXT NOT NULL PRIMARY KEY,
-    path       TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT root_directories_path_unique UNIQUE (path)
+create table if not exists root_directories (
+    id text not null primary key,
+    path text not null,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    constraint root_directories_path_unique unique (path)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────
 -- Core entity tables
 -- ────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE IF NOT EXISTS platforms (
-    id           TEXT    NOT NULL PRIMARY KEY,
-    path         TEXT    NOT NULL,
-    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at   TIMESTAMP,
-    is_deleted   INTEGER NOT NULL DEFAULT 0,
-    third_party  INTEGER NOT NULL DEFAULT 0,
-    CONSTRAINT platforms_path_unique UNIQUE (path)
+create table if not exists platforms (
+    id text not null primary key,
+    path text not null,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    deleted_at timestamp,
+    is_deleted integer not null default 0,
+    third_party integer not null default 0,
+    constraint platforms_path_unique unique (path)
 );
 
-CREATE TABLE IF NOT EXISTS games (
-    id           TEXT NOT NULL PRIMARY KEY,
-    path         TEXT NOT NULL,
-    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at   TIMESTAMP,
-    is_deleted   INTEGER NOT NULL DEFAULT 0,
-    storage_type INTEGER NOT NULL DEFAULT 1,
-    third_party  INTEGER NOT NULL DEFAULT 0,
-    steam_app_id TEXT,
-    CONSTRAINT games_path_unique UNIQUE (path)
+create table if not exists games (
+    id text not null primary key,
+    path text not null,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    deleted_at timestamp,
+    is_deleted integer not null default 0,
+    storage_type integer not null default 1,
+    third_party integer not null default 0,
+    steam_app_id text,
+    constraint games_path_unique unique (path)
 );
 
-CREATE TABLE IF NOT EXISTS game_files (
-    id          TEXT    NOT NULL PRIMARY KEY,
-    byte_size   INTEGER NOT NULL,
-    path        TEXT    NOT NULL,
-    game_id     TEXT    NOT NULL REFERENCES games(id)     ON DELETE CASCADE,
-    platform_id TEXT    NOT NULL REFERENCES platforms(id) ON DELETE CASCADE,
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at  TIMESTAMP,
-    is_deleted  INTEGER NOT NULL DEFAULT 0,
-    CONSTRAINT game_files_path_unique UNIQUE (path)
+create table if not exists game_files (
+    id text not null primary key,
+    byte_size integer not null,
+    path text not null,
+    game_id text not null references games (id) on delete cascade,
+    platform_id text not null references platforms (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    deleted_at timestamp,
+    is_deleted integer not null default 0,
+    constraint game_files_path_unique unique (path)
 );
 
-CREATE TABLE IF NOT EXISTS default_game_files (
-    game_id      TEXT NOT NULL REFERENCES games(id)      ON DELETE CASCADE,
-    platform_id  TEXT NOT NULL REFERENCES platforms(id)  ON DELETE CASCADE,
-    game_file_id TEXT NOT NULL REFERENCES game_files(id) ON DELETE CASCADE,
-    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (game_id, platform_id)
+create table if not exists default_game_files (
+    game_id text not null references games (id) on delete cascade,
+    platform_id text not null references platforms (id) on delete cascade,
+    game_file_id text not null references game_files (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (game_id, platform_id)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────
 -- Metadata tables
 -- ────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE IF NOT EXISTS platform_metadata (
-    platform_id    TEXT NOT NULL PRIMARY KEY REFERENCES platforms(id) ON DELETE CASCADE,
-    name           TEXT,
-    description    TEXT,
-    background_url TEXT,
-    logo_url       TEXT,
-    igdb_id        TEXT,
-    created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    provider_id    TEXT REFERENCES metadata_providers(id),
-    icon_url       TEXT
+create table if not exists platform_metadata (
+    platform_id text not null primary key references platforms (id) on delete cascade,
+    name text,
+    description text,
+    background_url text,
+    logo_url text,
+    igdb_id text,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    provider_id text references metadata_providers (id),
+    icon_url text
 );
 
-CREATE TABLE IF NOT EXISTS game_metadata (
-    game_id        TEXT NOT NULL PRIMARY KEY REFERENCES games(id) ON DELETE CASCADE,
-    name           TEXT,
-    description    TEXT,
-    cover_url      TEXT,
-    background_url TEXT,
-    icon_url       TEXT,
-    igdb_id        TEXT,
-    created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    release_date   TIMESTAMP,
-    last_played    TIMESTAMP,
-    minutes_played INTEGER,
-    logo_url       TEXT,
-    provider_id    TEXT REFERENCES metadata_providers(id)
+create table if not exists game_metadata (
+    game_id text not null primary key references games (id) on delete cascade,
+    name text,
+    description text,
+    cover_url text,
+    background_url text,
+    icon_url text,
+    igdb_id text,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    release_date timestamp,
+    last_played timestamp,
+    minutes_played integer,
+    logo_url text,
+    provider_id text references metadata_providers (id)
 );
 
 -- Relational replacements for the v1 array columns on game_metadata
-CREATE TABLE IF NOT EXISTS game_metadata_links (
-    game_id TEXT NOT NULL REFERENCES game_metadata(game_id) ON DELETE CASCADE,
-    url     TEXT NOT NULL,
-    PRIMARY KEY (game_id, url)
+create table if not exists game_metadata_links (
+    game_id text not null references game_metadata (game_id) on delete cascade,
+    url text not null,
+    primary key (game_id, url)
 );
 
-CREATE TABLE IF NOT EXISTS game_metadata_videos (
-    game_id TEXT NOT NULL REFERENCES game_metadata(game_id) ON DELETE CASCADE,
-    url     TEXT NOT NULL,
-    PRIMARY KEY (game_id, url)
+create table if not exists game_metadata_videos (
+    game_id text not null references game_metadata (game_id) on delete cascade,
+    url text not null,
+    primary key (game_id, url)
 );
 
-CREATE TABLE IF NOT EXISTS game_metadata_screenshots (
-    game_id TEXT NOT NULL REFERENCES game_metadata(game_id) ON DELETE CASCADE,
-    url     TEXT NOT NULL,
-    PRIMARY KEY (game_id, url)
+create table if not exists game_metadata_screenshots (
+    game_id text not null references game_metadata (game_id) on delete cascade,
+    url text not null,
+    primary key (game_id, url)
 );
 
-CREATE TABLE IF NOT EXISTS game_metadata_artwork (
-    game_id TEXT NOT NULL REFERENCES game_metadata(game_id) ON DELETE CASCADE,
-    url     TEXT NOT NULL,
-    PRIMARY KEY (game_id, url)
+create table if not exists game_metadata_artwork (
+    game_id text not null references game_metadata (game_id) on delete cascade,
+    url text not null,
+    primary key (game_id, url)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────
 -- Tag tables (genres are represented as tags in the 'genre' domain)
 -- ────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE IF NOT EXISTS similar_game_maps (
-    game_id         TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-    similar_game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (game_id, similar_game_id),
-    CONSTRAINT similar_game_maps_distinct_ids CHECK (game_id != similar_game_id)
+create table if not exists similar_game_maps (
+    game_id text not null references games (id) on delete cascade,
+    similar_game_id text not null references games (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (game_id, similar_game_id),
+    constraint similar_game_maps_distinct_ids check (game_id != similar_game_id)
 );
 
-CREATE TABLE IF NOT EXISTS tag_domains (
-    id           TEXT    NOT NULL PRIMARY KEY,
-    name         TEXT    NOT NULL,
-    is_well_known INTEGER NOT NULL DEFAULT 0,
-    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT tag_domains_name_unique UNIQUE (name)
+create table if not exists tag_domains (
+    id text not null primary key,
+    name text not null,
+    is_well_known integer not null default 0,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    constraint tag_domains_name_unique unique (name)
 );
 
 -- Seed well-known tag domains with stable UUIDs
-INSERT INTO tag_domains (id, name, is_well_known) VALUES
-    ('00000000-0000-0000-0000-000000000001', 'genre',     1),
-    ('00000000-0000-0000-0000-000000000002', 'favorites', 1),
-    ('00000000-0000-0000-0000-000000000003', 'franchise', 1),
-    ('00000000-0000-0000-0000-000000000004', 'region',    1)
-ON CONFLICT DO NOTHING;
+insert into tag_domains (id, name, is_well_known) values
+('00000000-0000-0000-0000-000000000001', 'genre', 1),
+('00000000-0000-0000-0000-000000000002', 'favorites', 1),
+('00000000-0000-0000-0000-000000000003', 'franchise', 1),
+('00000000-0000-0000-0000-000000000004', 'region', 1)
+on conflict do nothing;
 
-CREATE TABLE IF NOT EXISTS tags (
-    id            TEXT NOT NULL PRIMARY KEY,
-    tag_domain_id TEXT NOT NULL REFERENCES tag_domains(id) ON DELETE CASCADE,
-    value         TEXT NOT NULL,
-    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT tags_domain_value_unique UNIQUE (tag_domain_id, value)
+create table if not exists tags (
+    id text not null primary key,
+    tag_domain_id text not null references tag_domains (id) on delete cascade,
+    value text not null,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    constraint tags_domain_value_unique unique (tag_domain_id, value)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────
 -- Client / emulator tables
 -- ────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE IF NOT EXISTS clients (
-    id         TEXT NOT NULL PRIMARY KEY,
-    name       TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT clients_name_unique UNIQUE (name)
+create table if not exists clients (
+    id text not null primary key,
+    name text not null,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    constraint clients_name_unique unique (name)
 );
 
-CREATE TABLE IF NOT EXISTS emulators (
-    id            TEXT    NOT NULL PRIMARY KEY,
-    name          TEXT    NOT NULL,
-    save_strategy INTEGER NOT NULL,
-    built_in      INTEGER NOT NULL DEFAULT 0,
-    libretro_name TEXT,
-    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+create table if not exists emulators (
+    id text not null primary key,
+    name text not null,
+    save_strategy integer not null,
+    built_in integer not null default 0,
+    libretro_name text,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp
 );
 
 -- Relational replacement for emulators.supported_platforms integer[]
-CREATE TABLE IF NOT EXISTS emulator_supported_platforms (
-    emulator_id TEXT NOT NULL REFERENCES emulators(id) ON DELETE CASCADE,
-    platform_id TEXT NOT NULL REFERENCES platforms(id) ON DELETE CASCADE,
-    PRIMARY KEY (emulator_id, platform_id)
+create table if not exists emulator_supported_platforms (
+    emulator_id text not null references emulators (id) on delete cascade,
+    platform_id text not null references platforms (id) on delete cascade,
+    primary key (emulator_id, platform_id)
 );
 
 -- Relational replacement for emulators.operating_systems integer[]
-CREATE TABLE IF NOT EXISTS emulator_operating_systems (
-    emulator_id TEXT    NOT NULL REFERENCES emulators(id) ON DELETE CASCADE,
-    os_id       INTEGER NOT NULL,
-    PRIMARY KEY (emulator_id, os_id)
+create table if not exists emulator_operating_systems (
+    emulator_id text not null references emulators (id) on delete cascade,
+    os_id integer not null,
+    primary key (emulator_id, os_id)
 );
 
-CREATE TABLE IF NOT EXISTS emulator_profiles (
-    id          TEXT    NOT NULL PRIMARY KEY,
-    emulator_id TEXT    NOT NULL REFERENCES emulators(id) ON DELETE CASCADE,
-    name        TEXT    NOT NULL,
-    custom_args TEXT    NOT NULL DEFAULT '',
-    built_in    INTEGER NOT NULL DEFAULT 0,
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+create table if not exists emulator_profiles (
+    id text not null primary key,
+    emulator_id text not null references emulators (id) on delete cascade,
+    name text not null,
+    custom_args text not null default '',
+    built_in integer not null default 0,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp
 );
 
 -- Relational replacement for emulator_profiles.supported_extensions text[]
-CREATE TABLE IF NOT EXISTS emulator_profile_extensions (
-    profile_id TEXT NOT NULL REFERENCES emulator_profiles(id) ON DELETE CASCADE,
-    extension  TEXT NOT NULL,
-    PRIMARY KEY (profile_id, extension)
+create table if not exists emulator_profile_extensions (
+    profile_id text not null references emulator_profiles (id) on delete cascade,
+    extension text not null,
+    primary key (profile_id, extension)
 );
 
-CREATE TABLE IF NOT EXISTS default_emulator_profiles (
-    platform_id         TEXT NOT NULL REFERENCES platforms(id) ON DELETE CASCADE,
-    emulator_profile_id TEXT NOT NULL REFERENCES emulator_profiles(id) ON DELETE CASCADE,
-    client_id           TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-    created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (platform_id, client_id)
+create table if not exists default_emulator_profiles (
+    platform_id text not null references platforms (id) on delete cascade,
+    emulator_profile_id text not null references emulator_profiles (id) on delete cascade,
+    client_id text not null references clients (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (platform_id, client_id)
 );
 
-CREATE TABLE IF NOT EXISTS local_emulator_configs (
-    id                    TEXT NOT NULL PRIMARY KEY,
-    emulator_id           TEXT NOT NULL REFERENCES emulators(id) ON DELETE CASCADE,
-    client_id             TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    executable_path       TEXT NOT NULL,
-    nickname              TEXT,
-    save_data_path        TEXT,
-    save_states_path      TEXT,
-    default_profile_id    TEXT REFERENCES emulator_profiles(id),
-    bios_directory        TEXT,
-    extra_files_directory TEXT,
-    CONSTRAINT local_emulator_configs_emulator_client_unique UNIQUE (emulator_id, client_id)
+create table if not exists local_emulator_configs (
+    id text not null primary key,
+    emulator_id text not null references emulators (id) on delete cascade,
+    client_id text not null references clients (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    executable_path text not null,
+    nickname text,
+    save_data_path text,
+    save_states_path text,
+    default_profile_id text references emulator_profiles (id),
+    bios_directory text,
+    extra_files_directory text,
+    constraint local_emulator_configs_emulator_client_unique unique (emulator_id, client_id)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────
 -- Library / directory mapping tables
 -- ────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE IF NOT EXISTS library_root_directory_maps (
-    library_id        TEXT NOT NULL REFERENCES libraries(id) ON DELETE CASCADE,
-    root_directory_id TEXT NOT NULL REFERENCES root_directories(id) ON DELETE CASCADE,
-    created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (library_id, root_directory_id)
+create table if not exists library_root_directory_maps (
+    library_id text not null references libraries (id) on delete cascade,
+    root_directory_id text not null references root_directories (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (library_id, root_directory_id)
 );
 
-CREATE TABLE IF NOT EXISTS platform_root_directory_maps (
-    platform_id       TEXT NOT NULL REFERENCES platforms(id) ON DELETE CASCADE,
-    root_directory_id TEXT NOT NULL REFERENCES root_directories(id) ON DELETE CASCADE,
-    created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (platform_id, root_directory_id)
+create table if not exists platform_root_directory_maps (
+    platform_id text not null references platforms (id) on delete cascade,
+    root_directory_id text not null references root_directories (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (platform_id, root_directory_id)
 );
 
-CREATE TABLE IF NOT EXISTS game_root_directory_maps (
-    game_id           TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-    root_directory_id TEXT NOT NULL REFERENCES root_directories(id) ON DELETE CASCADE,
-    created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (game_id, root_directory_id)
+create table if not exists game_root_directory_maps (
+    game_id text not null references games (id) on delete cascade,
+    root_directory_id text not null references root_directories (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (game_id, root_directory_id)
 );
 
-CREATE TABLE IF NOT EXISTS library_platform_maps (
-    library_id  TEXT NOT NULL REFERENCES libraries(id) ON DELETE CASCADE,
-    platform_id TEXT NOT NULL REFERENCES platforms(id) ON DELETE CASCADE,
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (library_id, platform_id)
+create table if not exists library_platform_maps (
+    library_id text not null references libraries (id) on delete cascade,
+    platform_id text not null references platforms (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (library_id, platform_id)
 );
 
-CREATE TABLE IF NOT EXISTS game_platform_maps (
-    game_id     TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-    platform_id TEXT NOT NULL REFERENCES platforms(id) ON DELETE CASCADE,
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (game_id, platform_id)
+create table if not exists game_platform_maps (
+    game_id text not null references games (id) on delete cascade,
+    platform_id text not null references platforms (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (game_id, platform_id)
 );
 
-CREATE TABLE IF NOT EXISTS platform_tag_maps (
-    platform_id TEXT NOT NULL REFERENCES platforms(id) ON DELETE CASCADE,
-    tag_id      TEXT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (platform_id, tag_id)
+create table if not exists platform_tag_maps (
+    platform_id text not null references platforms (id) on delete cascade,
+    tag_id text not null references tags (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (platform_id, tag_id)
 );
 
-CREATE TABLE IF NOT EXISTS game_tag_maps (
-    game_id    TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-    tag_id     TEXT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (game_id, tag_id)
+create table if not exists game_tag_maps (
+    game_id text not null references games (id) on delete cascade,
+    tag_id text not null references tags (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (game_id, tag_id)
 );
 
-CREATE TABLE IF NOT EXISTS emulator_platform_maps (
-    emulator_id TEXT NOT NULL REFERENCES emulators(id) ON DELETE CASCADE,
-    platform_id TEXT NOT NULL REFERENCES platforms(id) ON DELETE CASCADE,
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (emulator_id, platform_id)
+create table if not exists emulator_platform_maps (
+    emulator_id text not null references emulators (id) on delete cascade,
+    platform_id text not null references platforms (id) on delete cascade,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp,
+    primary key (emulator_id, platform_id)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────
@@ -336,152 +336,404 @@ CREATE TABLE IF NOT EXISTS emulator_platform_maps (
 -- All built-ins: os_id = 3, save_strategy = 1, custom_args = '{file}'
 -- ────────────────────────────────────────────────────────────────────────────
 
-INSERT INTO emulators (id, name, libretro_name, built_in, save_strategy) VALUES
-    ('00000000-0000-0000-0001-000000000001', 'mGBA',                          'mgba',              1, 1),
-    ('00000000-0000-0000-0001-000000000002', 'Atari 5200',                    'a5200',             1, 1),
-    ('00000000-0000-0000-0001-000000000003', 'Beetle VB',                     'beetle_vb',         1, 1),
-    ('00000000-0000-0000-0001-000000000004', 'MelonDS',                       'melonds',           1, 1),
-    ('00000000-0000-0000-0001-000000000005', 'DeSmuME',                       'desmume',           1, 1),
-    ('00000000-0000-0000-0001-000000000006', 'DeSmeME 2015',                  'desmume2015',       1, 1),
-    ('00000000-0000-0000-0001-000000000007', 'FinalBurn Neo',                 'fbneo',             1, 1),
-    ('00000000-0000-0000-0001-000000000008', 'FinalBurn Alpha 2012 - CPS1',   'fbalpha2012_cps1',  1, 1),
-    ('00000000-0000-0000-0001-000000000009', 'FinalBurn Alpha 2012 - CPS2',   'fbalpha2012_cps2',  1, 1),
-    ('00000000-0000-0000-0001-00000000000a', 'FCEUmm',                        'fceumm',            1, 1),
-    ('00000000-0000-0000-0001-00000000000b', 'Nestopia',                      'nestopia',          1, 1),
-    ('00000000-0000-0000-0001-00000000000c', 'Gambatte',                      'gambatte',          1, 1),
-    ('00000000-0000-0000-0001-00000000000d', 'Gearcoleco',                    'gearcoleco',        1, 1),
-    ('00000000-0000-0000-0001-00000000000e', 'SMSPlus',                       'smsplus',           1, 1),
-    ('00000000-0000-0000-0001-00000000000f', 'Genesis Plus GX',               'genesis_plus_gx',  1, 1),
-    ('00000000-0000-0000-0001-000000000010', 'PicoDrive',                     'picodrive',         1, 1),
-    ('00000000-0000-0000-0001-000000000011', 'Handy',                         'handy',             1, 1),
-    ('00000000-0000-0000-0001-000000000012', 'MAME 2003-Plus',                'mame2003_plus',     1, 1),
-    ('00000000-0000-0000-0001-000000000013', 'MAME 2003',                     'mame2003',          1, 1),
-    ('00000000-0000-0000-0001-000000000014', 'Mednafen - Neo Geo Pocket',     'mednafen_ngp',      1, 1),
-    ('00000000-0000-0000-0001-000000000015', 'Mednafen - PC Engine',          'mednafen_pce',      1, 1),
-    ('00000000-0000-0000-0001-000000000016', 'Mednafen - PCFX',               'mednafen_pcfx',     1, 1),
-    ('00000000-0000-0000-0001-000000000017', 'PCSX ReARMed',                  'pcsx_rearmed',      1, 1),
-    ('00000000-0000-0000-0001-000000000018', 'Mednafen - Playstation',        'mednafen_psx_hw',   1, 1),
-    ('00000000-0000-0000-0001-000000000019', 'Mednafen - WonderSwan',         'mednafen_wswan',    1, 1),
-    ('00000000-0000-0000-0001-00000000001a', 'Mupen64Plus Next',              'mupen64plus_next',  1, 1),
-    ('00000000-0000-0000-0001-00000000001b', 'ParaLLEl N64',                  'parallel_n64',      1, 1),
-    ('00000000-0000-0000-0001-00000000001c', 'opera',                         'opera',             1, 1),
-    ('00000000-0000-0000-0001-00000000001d', 'PPSSPP',                        'ppsspp',            1, 1),
-    ('00000000-0000-0000-0001-00000000001e', 'ProSystem',                     'prosystem',         1, 1),
-    ('00000000-0000-0000-0001-00000000001f', 'Snes9x',                        'snes9x',            1, 1),
-    ('00000000-0000-0000-0001-000000000020', 'Stella2014',                    'stella2014',        1, 1),
-    ('00000000-0000-0000-0001-000000000021', 'Virtual Jaguar',                'virtualjaguar',     1, 1),
-    ('00000000-0000-0000-0001-000000000022', 'Yabause',                       'yabause',           1, 1),
-    ('00000000-0000-0000-0001-000000000023', 'PUAE',                          'puae',              1, 1),
-    ('00000000-0000-0000-0001-000000000024', 'Vice x64sc',                    'vice_x64sc',        1, 1),
-    ('00000000-0000-0000-0001-000000000025', 'Vice x128',                     'vice_x128',         1, 1),
-    ('00000000-0000-0000-0001-000000000026', 'Vice xPET',                     'vice_xpet',         1, 1),
-    ('00000000-0000-0000-0001-000000000027', 'Vice xPlus4',                   'vice_xplus4',       1, 1),
-    ('00000000-0000-0000-0001-000000000028', 'Vice xVIC',                     'vice_xvic',         1, 1),
-    ('00000000-0000-0000-0001-000000000029', 'SAME CDI',                      'same_cdi',          1, 1),
-    ('00000000-0000-0000-0001-00000000002a', 'DOSBox Pure',                   'dosbox_pure',       1, 1)
-ON CONFLICT DO NOTHING;
+insert into emulators (id, name, libretro_name, built_in, save_strategy) values
+('00000000-0000-0000-0001-000000000001', 'mGBA', 'mgba', 1, 1),
+('00000000-0000-0000-0001-000000000002', 'Atari 5200', 'a5200', 1, 1),
+('00000000-0000-0000-0001-000000000003', 'Beetle VB', 'beetle_vb', 1, 1),
+('00000000-0000-0000-0001-000000000004', 'MelonDS', 'melonds', 1, 1),
+('00000000-0000-0000-0001-000000000005', 'DeSmuME', 'desmume', 1, 1),
+('00000000-0000-0000-0001-000000000006', 'DeSmeME 2015', 'desmume2015', 1, 1),
+('00000000-0000-0000-0001-000000000007', 'FinalBurn Neo', 'fbneo', 1, 1),
+('00000000-0000-0000-0001-000000000008', 'FinalBurn Alpha 2012 - CPS1', 'fbalpha2012_cps1', 1, 1),
+('00000000-0000-0000-0001-000000000009', 'FinalBurn Alpha 2012 - CPS2', 'fbalpha2012_cps2', 1, 1),
+('00000000-0000-0000-0001-00000000000a', 'FCEUmm', 'fceumm', 1, 1),
+('00000000-0000-0000-0001-00000000000b', 'Nestopia', 'nestopia', 1, 1),
+('00000000-0000-0000-0001-00000000000c', 'Gambatte', 'gambatte', 1, 1),
+('00000000-0000-0000-0001-00000000000d', 'Gearcoleco', 'gearcoleco', 1, 1),
+('00000000-0000-0000-0001-00000000000e', 'SMSPlus', 'smsplus', 1, 1),
+('00000000-0000-0000-0001-00000000000f', 'Genesis Plus GX', 'genesis_plus_gx', 1, 1),
+('00000000-0000-0000-0001-000000000010', 'PicoDrive', 'picodrive', 1, 1),
+('00000000-0000-0000-0001-000000000011', 'Handy', 'handy', 1, 1),
+('00000000-0000-0000-0001-000000000012', 'MAME 2003-Plus', 'mame2003_plus', 1, 1),
+('00000000-0000-0000-0001-000000000013', 'MAME 2003', 'mame2003', 1, 1),
+('00000000-0000-0000-0001-000000000014', 'Mednafen - Neo Geo Pocket', 'mednafen_ngp', 1, 1),
+('00000000-0000-0000-0001-000000000015', 'Mednafen - PC Engine', 'mednafen_pce', 1, 1),
+('00000000-0000-0000-0001-000000000016', 'Mednafen - PCFX', 'mednafen_pcfx', 1, 1),
+('00000000-0000-0000-0001-000000000017', 'PCSX ReARMed', 'pcsx_rearmed', 1, 1),
+('00000000-0000-0000-0001-000000000018', 'Mednafen - Playstation', 'mednafen_psx_hw', 1, 1),
+('00000000-0000-0000-0001-000000000019', 'Mednafen - WonderSwan', 'mednafen_wswan', 1, 1),
+('00000000-0000-0000-0001-00000000001a', 'Mupen64Plus Next', 'mupen64plus_next', 1, 1),
+('00000000-0000-0000-0001-00000000001b', 'ParaLLEl N64', 'parallel_n64', 1, 1),
+('00000000-0000-0000-0001-00000000001c', 'opera', 'opera', 1, 1),
+('00000000-0000-0000-0001-00000000001d', 'PPSSPP', 'ppsspp', 1, 1),
+('00000000-0000-0000-0001-00000000001e', 'ProSystem', 'prosystem', 1, 1),
+('00000000-0000-0000-0001-00000000001f', 'Snes9x', 'snes9x', 1, 1),
+('00000000-0000-0000-0001-000000000020', 'Stella2014', 'stella2014', 1, 1),
+('00000000-0000-0000-0001-000000000021', 'Virtual Jaguar', 'virtualjaguar', 1, 1),
+('00000000-0000-0000-0001-000000000022', 'Yabause', 'yabause', 1, 1),
+('00000000-0000-0000-0001-000000000023', 'PUAE', 'puae', 1, 1),
+('00000000-0000-0000-0001-000000000024', 'Vice x64sc', 'vice_x64sc', 1, 1),
+('00000000-0000-0000-0001-000000000025', 'Vice x128', 'vice_x128', 1, 1),
+('00000000-0000-0000-0001-000000000026', 'Vice xPET', 'vice_xpet', 1, 1),
+('00000000-0000-0000-0001-000000000027', 'Vice xPlus4', 'vice_xplus4', 1, 1),
+('00000000-0000-0000-0001-000000000028', 'Vice xVIC', 'vice_xvic', 1, 1),
+('00000000-0000-0000-0001-000000000029', 'SAME CDI', 'same_cdi', 1, 1),
+('00000000-0000-0000-0001-00000000002a', 'DOSBox Pure', 'dosbox_pure', 1, 1)
+on conflict do nothing;
 
-INSERT INTO emulator_operating_systems (emulator_id, os_id) VALUES
-    ('00000000-0000-0000-0001-000000000001', 3),
-    ('00000000-0000-0000-0001-000000000002', 3),
-    ('00000000-0000-0000-0001-000000000003', 3),
-    ('00000000-0000-0000-0001-000000000004', 3),
-    ('00000000-0000-0000-0001-000000000005', 3),
-    ('00000000-0000-0000-0001-000000000006', 3),
-    ('00000000-0000-0000-0001-000000000007', 3),
-    ('00000000-0000-0000-0001-000000000008', 3),
-    ('00000000-0000-0000-0001-000000000009', 3),
-    ('00000000-0000-0000-0001-00000000000a', 3),
-    ('00000000-0000-0000-0001-00000000000b', 3),
-    ('00000000-0000-0000-0001-00000000000c', 3),
-    ('00000000-0000-0000-0001-00000000000d', 3),
-    ('00000000-0000-0000-0001-00000000000e', 3),
-    ('00000000-0000-0000-0001-00000000000f', 3),
-    ('00000000-0000-0000-0001-000000000010', 3),
-    ('00000000-0000-0000-0001-000000000011', 3),
-    ('00000000-0000-0000-0001-000000000012', 3),
-    ('00000000-0000-0000-0001-000000000013', 3),
-    ('00000000-0000-0000-0001-000000000014', 3),
-    ('00000000-0000-0000-0001-000000000015', 3),
-    ('00000000-0000-0000-0001-000000000016', 3),
-    ('00000000-0000-0000-0001-000000000017', 3),
-    ('00000000-0000-0000-0001-000000000018', 3),
-    ('00000000-0000-0000-0001-000000000019', 3),
-    ('00000000-0000-0000-0001-00000000001a', 3),
-    ('00000000-0000-0000-0001-00000000001b', 3),
-    ('00000000-0000-0000-0001-00000000001c', 3),
-    ('00000000-0000-0000-0001-00000000001d', 3),
-    ('00000000-0000-0000-0001-00000000001e', 3),
-    ('00000000-0000-0000-0001-00000000001f', 3),
-    ('00000000-0000-0000-0001-000000000020', 3),
-    ('00000000-0000-0000-0001-000000000021', 3),
-    ('00000000-0000-0000-0001-000000000022', 3),
-    ('00000000-0000-0000-0001-000000000023', 3),
-    ('00000000-0000-0000-0001-000000000024', 3),
-    ('00000000-0000-0000-0001-000000000025', 3),
-    ('00000000-0000-0000-0001-000000000026', 3),
-    ('00000000-0000-0000-0001-000000000027', 3),
-    ('00000000-0000-0000-0001-000000000028', 3),
-    ('00000000-0000-0000-0001-000000000029', 3),
-    ('00000000-0000-0000-0001-00000000002a', 3)
-ON CONFLICT DO NOTHING;
+insert into emulator_operating_systems (emulator_id, os_id) values
+('00000000-0000-0000-0001-000000000001', 3),
+('00000000-0000-0000-0001-000000000002', 3),
+('00000000-0000-0000-0001-000000000003', 3),
+('00000000-0000-0000-0001-000000000004', 3),
+('00000000-0000-0000-0001-000000000005', 3),
+('00000000-0000-0000-0001-000000000006', 3),
+('00000000-0000-0000-0001-000000000007', 3),
+('00000000-0000-0000-0001-000000000008', 3),
+('00000000-0000-0000-0001-000000000009', 3),
+('00000000-0000-0000-0001-00000000000a', 3),
+('00000000-0000-0000-0001-00000000000b', 3),
+('00000000-0000-0000-0001-00000000000c', 3),
+('00000000-0000-0000-0001-00000000000d', 3),
+('00000000-0000-0000-0001-00000000000e', 3),
+('00000000-0000-0000-0001-00000000000f', 3),
+('00000000-0000-0000-0001-000000000010', 3),
+('00000000-0000-0000-0001-000000000011', 3),
+('00000000-0000-0000-0001-000000000012', 3),
+('00000000-0000-0000-0001-000000000013', 3),
+('00000000-0000-0000-0001-000000000014', 3),
+('00000000-0000-0000-0001-000000000015', 3),
+('00000000-0000-0000-0001-000000000016', 3),
+('00000000-0000-0000-0001-000000000017', 3),
+('00000000-0000-0000-0001-000000000018', 3),
+('00000000-0000-0000-0001-000000000019', 3),
+('00000000-0000-0000-0001-00000000001a', 3),
+('00000000-0000-0000-0001-00000000001b', 3),
+('00000000-0000-0000-0001-00000000001c', 3),
+('00000000-0000-0000-0001-00000000001d', 3),
+('00000000-0000-0000-0001-00000000001e', 3),
+('00000000-0000-0000-0001-00000000001f', 3),
+('00000000-0000-0000-0001-000000000020', 3),
+('00000000-0000-0000-0001-000000000021', 3),
+('00000000-0000-0000-0001-000000000022', 3),
+('00000000-0000-0000-0001-000000000023', 3),
+('00000000-0000-0000-0001-000000000024', 3),
+('00000000-0000-0000-0001-000000000025', 3),
+('00000000-0000-0000-0001-000000000026', 3),
+('00000000-0000-0000-0001-000000000027', 3),
+('00000000-0000-0000-0001-000000000028', 3),
+('00000000-0000-0000-0001-000000000029', 3),
+('00000000-0000-0000-0001-00000000002a', 3)
+on conflict do nothing;
 
-INSERT INTO emulator_profiles (id, emulator_id, name, built_in, custom_args) VALUES
-    ('00000000-0000-0000-0002-000000000001', '00000000-0000-0000-0001-000000000001', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000002', '00000000-0000-0000-0001-000000000002', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000003', '00000000-0000-0000-0001-000000000003', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000004', '00000000-0000-0000-0001-000000000004', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000005', '00000000-0000-0000-0001-000000000005', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000006', '00000000-0000-0000-0001-000000000006', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000007', '00000000-0000-0000-0001-000000000007', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000008', '00000000-0000-0000-0001-000000000008', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000009', '00000000-0000-0000-0001-000000000009', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000000a', '00000000-0000-0000-0001-00000000000a', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000000b', '00000000-0000-0000-0001-00000000000b', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000000c', '00000000-0000-0000-0001-00000000000c', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000000d', '00000000-0000-0000-0001-00000000000d', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000000e', '00000000-0000-0000-0001-00000000000e', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000000f', '00000000-0000-0000-0001-00000000000f', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000010', '00000000-0000-0000-0001-000000000010', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000011', '00000000-0000-0000-0001-000000000011', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000012', '00000000-0000-0000-0001-000000000012', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000013', '00000000-0000-0000-0001-000000000013', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000014', '00000000-0000-0000-0001-000000000014', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000015', '00000000-0000-0000-0001-000000000015', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000016', '00000000-0000-0000-0001-000000000016', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000017', '00000000-0000-0000-0001-000000000017', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000018', '00000000-0000-0000-0001-000000000018', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000019', '00000000-0000-0000-0001-000000000019', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000001a', '00000000-0000-0000-0001-00000000001a', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000001b', '00000000-0000-0000-0001-00000000001b', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000001c', '00000000-0000-0000-0001-00000000001c', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000001d', '00000000-0000-0000-0001-00000000001d', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000001e', '00000000-0000-0000-0001-00000000001e', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000001f', '00000000-0000-0000-0001-00000000001f', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000020', '00000000-0000-0000-0001-000000000020', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000021', '00000000-0000-0000-0001-000000000021', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000022', '00000000-0000-0000-0001-000000000022', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000023', '00000000-0000-0000-0001-000000000023', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000024', '00000000-0000-0000-0001-000000000024', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000025', '00000000-0000-0000-0001-000000000025', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000026', '00000000-0000-0000-0001-000000000026', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000027', '00000000-0000-0000-0001-000000000027', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000028', '00000000-0000-0000-0001-000000000028', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-000000000029', '00000000-0000-0000-0001-000000000029', 'Default', 1, '{file}'),
-    ('00000000-0000-0000-0002-00000000002a', '00000000-0000-0000-0001-00000000002a', 'Default', 1, '{file}')
-ON CONFLICT DO NOTHING;
+insert into emulator_profiles (id, emulator_id, name, built_in, custom_args) values
+(
+    '00000000-0000-0000-0002-000000000001',
+    '00000000-0000-0000-0001-000000000001',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000002',
+    '00000000-0000-0000-0001-000000000002',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000003',
+    '00000000-0000-0000-0001-000000000003',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000004',
+    '00000000-0000-0000-0001-000000000004',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000005',
+    '00000000-0000-0000-0001-000000000005',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000006',
+    '00000000-0000-0000-0001-000000000006',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000007',
+    '00000000-0000-0000-0001-000000000007',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000008',
+    '00000000-0000-0000-0001-000000000008',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000009',
+    '00000000-0000-0000-0001-000000000009',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000000a',
+    '00000000-0000-0000-0001-00000000000a',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000000b',
+    '00000000-0000-0000-0001-00000000000b',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000000c',
+    '00000000-0000-0000-0001-00000000000c',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000000d',
+    '00000000-0000-0000-0001-00000000000d',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000000e',
+    '00000000-0000-0000-0001-00000000000e',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000000f',
+    '00000000-0000-0000-0001-00000000000f',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000010',
+    '00000000-0000-0000-0001-000000000010',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000011',
+    '00000000-0000-0000-0001-000000000011',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000012',
+    '00000000-0000-0000-0001-000000000012',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000013',
+    '00000000-0000-0000-0001-000000000013',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000014',
+    '00000000-0000-0000-0001-000000000014',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000015',
+    '00000000-0000-0000-0001-000000000015',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000016',
+    '00000000-0000-0000-0001-000000000016',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000017',
+    '00000000-0000-0000-0001-000000000017',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000018',
+    '00000000-0000-0000-0001-000000000018',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000019',
+    '00000000-0000-0000-0001-000000000019',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000001a',
+    '00000000-0000-0000-0001-00000000001a',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000001b',
+    '00000000-0000-0000-0001-00000000001b',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000001c',
+    '00000000-0000-0000-0001-00000000001c',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000001d',
+    '00000000-0000-0000-0001-00000000001d',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000001e',
+    '00000000-0000-0000-0001-00000000001e',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000001f',
+    '00000000-0000-0000-0001-00000000001f',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000020',
+    '00000000-0000-0000-0001-000000000020',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000021',
+    '00000000-0000-0000-0001-000000000021',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000022',
+    '00000000-0000-0000-0001-000000000022',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000023',
+    '00000000-0000-0000-0001-000000000023',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000024',
+    '00000000-0000-0000-0001-000000000024',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000025',
+    '00000000-0000-0000-0001-000000000025',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000026',
+    '00000000-0000-0000-0001-000000000026',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000027',
+    '00000000-0000-0000-0001-000000000027',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000028',
+    '00000000-0000-0000-0001-000000000028',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-000000000029',
+    '00000000-0000-0000-0001-000000000029',
+    'Default',
+    1,
+    '{file}'
+),
+(
+    '00000000-0000-0000-0002-00000000002a',
+    '00000000-0000-0000-0001-00000000002a',
+    'Default',
+    1,
+    '{file}'
+)
+on conflict do nothing;
 
 -- ────────────────────────────────────────────────────────────────────────────
 -- Performance indexes
 -- ────────────────────────────────────────────────────────────────────────────
 
-CREATE INDEX IF NOT EXISTS idx_game_files_game_id             ON game_files(game_id);
-CREATE INDEX IF NOT EXISTS idx_game_files_platform_id         ON game_files(platform_id);
-CREATE INDEX IF NOT EXISTS idx_game_files_is_deleted          ON game_files(is_deleted);
-CREATE INDEX IF NOT EXISTS idx_game_files_game_id_is_deleted  ON game_files(game_id, is_deleted);
-CREATE INDEX IF NOT EXISTS idx_default_game_files_game_id     ON default_game_files(game_id);
-CREATE INDEX IF NOT EXISTS idx_games_is_deleted               ON games(is_deleted);
-CREATE INDEX IF NOT EXISTS idx_game_metadata_igdb_id          ON game_metadata(igdb_id);
-CREATE INDEX IF NOT EXISTS idx_platform_metadata_igdb_id      ON platform_metadata(igdb_id);
-CREATE INDEX IF NOT EXISTS idx_games_steam_app_id             ON games(steam_app_id);
-CREATE INDEX IF NOT EXISTS idx_similar_game_maps_game_id      ON similar_game_maps(game_id);
+create index if not exists idx_game_files_game_id on game_files (game_id);
+create index if not exists idx_game_files_platform_id on game_files (platform_id);
+create index if not exists idx_game_files_is_deleted on game_files (is_deleted);
+create index if not exists idx_game_files_game_id_is_deleted on game_files (game_id, is_deleted);
+create index if not exists idx_default_game_files_game_id on default_game_files (game_id);
+create index if not exists idx_games_is_deleted on games (is_deleted);
+create index if not exists idx_game_metadata_igdb_id on game_metadata (igdb_id);
+create index if not exists idx_platform_metadata_igdb_id on platform_metadata (igdb_id);
+create index if not exists idx_games_steam_app_id on games (steam_app_id);
+create index if not exists idx_similar_game_maps_game_id on similar_game_maps (game_id);
