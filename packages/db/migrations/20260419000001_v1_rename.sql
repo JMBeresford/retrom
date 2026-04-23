@@ -6,7 +6,7 @@
 -- This file uses PL/pgSQL and is intentionally pre-marked as applied on SQLite
 -- databases by the diesel_migration_bootstrap helper.
 
-DO $$
+do $$
 BEGIN
 
   -- Core entity tables
