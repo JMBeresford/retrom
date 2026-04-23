@@ -1,7 +1,8 @@
 [sqlfluff]
 dialect = postgres
 max_line_length = 100
-exclude_rules = none
+exclude_rules = references.keywords
+large_file_skip_byte_limit = 0
 
 [sqlfluff:layout:type:comma]
 spacing_before = touch
