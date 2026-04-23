@@ -9,6 +9,6 @@ create table tags (
     created_at timestamp with time zone default current_timestamp,
     updated_at timestamp with time zone default current_timestamp,
     constraint fk_tags_tag_domain_id
-        foreign key (tag_domain_id) references tag_domains (id) on delete cascade,
+    foreign key (tag_domain_id) references tag_domains (id) on delete cascade,
     constraint tags_domain_value_unique unique (tag_domain_id, value)
 );

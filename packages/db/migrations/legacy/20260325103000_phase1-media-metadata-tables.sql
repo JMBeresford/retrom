@@ -9,7 +9,7 @@ create table video_metadata (
     created_at timestamp with time zone default current_timestamp,
     updated_at timestamp with time zone default current_timestamp,
     constraint fk_video_metadata_game_metadata_id
-        foreign key (game_metadata_id) references game_metadata (id) on delete cascade
+    foreign key (game_metadata_id) references game_metadata (id) on delete cascade
 );
 
 create table screenshot_metadata (
@@ -19,7 +19,7 @@ create table screenshot_metadata (
     created_at timestamp with time zone default current_timestamp,
     updated_at timestamp with time zone default current_timestamp,
     constraint fk_screenshot_metadata_game_metadata_id
-        foreign key (game_metadata_id) references game_metadata (id) on delete cascade
+    foreign key (game_metadata_id) references game_metadata (id) on delete cascade
 );
 
 create table artwork_metadata (
@@ -29,5 +29,5 @@ create table artwork_metadata (
     created_at timestamp with time zone default current_timestamp,
     updated_at timestamp with time zone default current_timestamp,
     constraint fk_artwork_metadata_game_metadata_id
-        foreign key (game_metadata_id) references game_metadata (id) on delete cascade
+    foreign key (game_metadata_id) references game_metadata (id) on delete cascade
 );
