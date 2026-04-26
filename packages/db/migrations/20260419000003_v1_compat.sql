@@ -435,6 +435,7 @@ BEGIN
   DROP TABLE IF EXISTS _v1_game_genres;
   DROP TABLE IF EXISTS _v1_game_metadata;
   DROP TABLE IF EXISTS _v1_platform_metadata;
+  ALTER TABLE _v1_games DROP COLUMN default_file_id;
   DROP TABLE IF EXISTS _v1_game_files;
   DROP TABLE IF EXISTS _v1_games;
   DROP TABLE IF EXISTS _v1_platforms;
