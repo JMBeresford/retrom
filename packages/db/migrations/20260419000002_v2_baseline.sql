@@ -750,4 +750,4 @@ create index if not exists idx_games_is_deleted on games (is_deleted);
 create index if not exists idx_game_metadata_igdb_id on game_metadata (igdb_id);
 create index if not exists idx_platform_metadata_igdb_id on platform_metadata (igdb_id);
 create index if not exists idx_games_steam_app_id on games (steam_app_id);
-create index if not exists idx_similar_game_maps_game_id on similar_game_maps (game_id);
+create index if not exists idx_similar_game_game_id on similar_game (game_id);
