@@ -147,13 +147,13 @@ create table if not exists game_metadata_artwork (
 -- Tag tables (genres are represented as tags in the 'genre' domain)
 -- ────────────────────────────────────────────────────────────────────────────
 
-create table if not exists similar_game_maps (
+create table if not exists similar_game (
     game_id text not null references games (id) on delete cascade,
     similar_game_id text not null references games (id) on delete cascade,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     primary key (game_id, similar_game_id),
-    constraint similar_game_maps_distinct_ids check (game_id != similar_game_id)
+    constraint similar_game_distinct_ids check (game_id != similar_game_id)
 );
 
 create table if not exists tag_domains (
@@ -194,6 +194,19 @@ create table if not exists clients (
     constraint clients_name_unique unique (name)
 );
 
+create table if not exists operating_systems (
+    id text not null primary key,
+    name text not null,
+    constraint operating_systems_name_unique unique (name)
+);
+
+insert into operating_systems (id, name) values
+('00000000-0000-0000-0003-000000000001', 'Windows'),
+('00000000-0000-0000-0003-000000000002', 'MacOS'),
+('00000000-0000-0000-0003-000000000003', 'Linux'),
+('00000000-0000-0000-0003-000000000004', 'Web')
+on conflict do nothing;
+
 create table if not exists emulators (
     id text not null primary key,
     name text not null,
@@ -214,7 +227,7 @@ create table if not exists emulator_supported_platforms (
 -- Relational replacement for emulators.operating_systems integer[]
 create table if not exists emulator_operating_systems (
     emulator_id text not null references emulators (id) on delete cascade,
-    os_id integer not null,
+    os_id text not null references operating_systems (id) on delete cascade,
     primary key (emulator_id, os_id)
 );
 
@@ -264,7 +277,7 @@ create table if not exists local_emulator_configs (
 -- Library / directory mapping tables
 -- ────────────────────────────────────────────────────────────────────────────
 
-create table if not exists library_root_directory_maps (
+create table if not exists library_root_directory (
     library_id text not null references libraries (id) on delete cascade,
     root_directory_id text not null references root_directories (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -272,7 +285,7 @@ create table if not exists library_root_directory_maps (
     primary key (library_id, root_directory_id)
 );
 
-create table if not exists platform_root_directory_maps (
+create table if not exists platform_root_directory (
     platform_id text not null references platforms (id) on delete cascade,
     root_directory_id text not null references root_directories (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -280,7 +293,7 @@ create table if not exists platform_root_directory_maps (
     primary key (platform_id, root_directory_id)
 );
 
-create table if not exists game_root_directory_maps (
+create table if not exists game_root_directory (
     game_id text not null references games (id) on delete cascade,
     root_directory_id text not null references root_directories (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -288,15 +301,15 @@ create table if not exists game_root_directory_maps (
     primary key (game_id, root_directory_id)
 );
 
-create table if not exists library_platform_maps (
-    library_id text not null references libraries (id) on delete cascade,
+create table if not exists platform_library (
     platform_id text not null references platforms (id) on delete cascade,
+    library_id text not null references libraries (id) on delete cascade,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
-    primary key (library_id, platform_id)
+    primary key (platform_id, library_id)
 );
 
-create table if not exists game_platform_maps (
+create table if not exists game_platform (
     game_id text not null references games (id) on delete cascade,
     platform_id text not null references platforms (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -304,7 +317,7 @@ create table if not exists game_platform_maps (
     primary key (game_id, platform_id)
 );
 
-create table if not exists platform_tag_maps (
+create table if not exists platform_tag (
     platform_id text not null references platforms (id) on delete cascade,
     tag_id text not null references tags (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -312,7 +325,7 @@ create table if not exists platform_tag_maps (
     primary key (platform_id, tag_id)
 );
 
-create table if not exists game_tag_maps (
+create table if not exists game_tag (
     game_id text not null references games (id) on delete cascade,
     tag_id text not null references tags (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -320,7 +333,7 @@ create table if not exists game_tag_maps (
     primary key (game_id, tag_id)
 );
 
-create table if not exists emulator_platform_maps (
+create table if not exists emulator_platform (
     emulator_id text not null references emulators (id) on delete cascade,
     platform_id text not null references platforms (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -333,7 +346,8 @@ create table if not exists emulator_platform_maps (
 -- UUID scheme:
 --   emulator  → 00000000-0000-0000-0001-<12-hex>
 --   profile   → 00000000-0000-0000-0002-<12-hex> (same index)
--- All built-ins: os_id = 3, save_strategy = 1, custom_args = '{file}'
+--   os        → 00000000-0000-0000-0003-<12-hex>
+-- All built-ins: os = Web (WASM), save_strategy = 1, custom_args = '{file}'
 -- ────────────────────────────────────────────────────────────────────────────
 
 insert into emulators (id, name, libretro_name, built_in, save_strategy) values
@@ -382,48 +396,48 @@ insert into emulators (id, name, libretro_name, built_in, save_strategy) values
 on conflict do nothing;
 
 insert into emulator_operating_systems (emulator_id, os_id) values
-('00000000-0000-0000-0001-000000000001', 3),
-('00000000-0000-0000-0001-000000000002', 3),
-('00000000-0000-0000-0001-000000000003', 3),
-('00000000-0000-0000-0001-000000000004', 3),
-('00000000-0000-0000-0001-000000000005', 3),
-('00000000-0000-0000-0001-000000000006', 3),
-('00000000-0000-0000-0001-000000000007', 3),
-('00000000-0000-0000-0001-000000000008', 3),
-('00000000-0000-0000-0001-000000000009', 3),
-('00000000-0000-0000-0001-00000000000a', 3),
-('00000000-0000-0000-0001-00000000000b', 3),
-('00000000-0000-0000-0001-00000000000c', 3),
-('00000000-0000-0000-0001-00000000000d', 3),
-('00000000-0000-0000-0001-00000000000e', 3),
-('00000000-0000-0000-0001-00000000000f', 3),
-('00000000-0000-0000-0001-000000000010', 3),
-('00000000-0000-0000-0001-000000000011', 3),
-('00000000-0000-0000-0001-000000000012', 3),
-('00000000-0000-0000-0001-000000000013', 3),
-('00000000-0000-0000-0001-000000000014', 3),
-('00000000-0000-0000-0001-000000000015', 3),
-('00000000-0000-0000-0001-000000000016', 3),
-('00000000-0000-0000-0001-000000000017', 3),
-('00000000-0000-0000-0001-000000000018', 3),
-('00000000-0000-0000-0001-000000000019', 3),
-('00000000-0000-0000-0001-00000000001a', 3),
-('00000000-0000-0000-0001-00000000001b', 3),
-('00000000-0000-0000-0001-00000000001c', 3),
-('00000000-0000-0000-0001-00000000001d', 3),
-('00000000-0000-0000-0001-00000000001e', 3),
-('00000000-0000-0000-0001-00000000001f', 3),
-('00000000-0000-0000-0001-000000000020', 3),
-('00000000-0000-0000-0001-000000000021', 3),
-('00000000-0000-0000-0001-000000000022', 3),
-('00000000-0000-0000-0001-000000000023', 3),
-('00000000-0000-0000-0001-000000000024', 3),
-('00000000-0000-0000-0001-000000000025', 3),
-('00000000-0000-0000-0001-000000000026', 3),
-('00000000-0000-0000-0001-000000000027', 3),
-('00000000-0000-0000-0001-000000000028', 3),
-('00000000-0000-0000-0001-000000000029', 3),
-('00000000-0000-0000-0001-00000000002a', 3)
+('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000003', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000004', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000005', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000006', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000007', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000008', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000009', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000000a', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000000b', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000000c', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000000d', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000000e', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000000f', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000010', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000011', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000012', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000013', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000014', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000015', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000016', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000017', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000018', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000019', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000001a', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000001b', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000001c', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000001d', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000001e', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000001f', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000020', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000021', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000022', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000023', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000024', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000025', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000026', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000027', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000028', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-000000000029', '00000000-0000-0000-0003-000000000004'),
+('00000000-0000-0000-0001-00000000002a', '00000000-0000-0000-0003-000000000004')
 on conflict do nothing;
 
 insert into emulator_profiles (id, emulator_id, name, built_in, custom_args) values
