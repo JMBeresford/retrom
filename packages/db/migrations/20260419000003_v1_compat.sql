@@ -26,21 +26,6 @@ BEGIN
   -- configured references (e.g. default_emulator_profiles) remain valid.
   -- ──────────────────────────────────────────────────────────────────────────
 
-  -- metadata_providers
-  CREATE TEMP TABLE _map_metadata_providers AS
-    SELECT id AS old_id, gen_random_uuid()::text AS new_id
-    FROM _v1_metadata_providers;
-
-  -- libraries
-  CREATE TEMP TABLE _map_libraries AS
-    SELECT id AS old_id, gen_random_uuid()::text AS new_id
-    FROM _v1_libraries;
-
-  -- root_directories
-  CREATE TEMP TABLE _map_root_directories AS
-    SELECT id AS old_id, gen_random_uuid()::text AS new_id
-    FROM _v1_root_directories;
-
   -- platforms
   CREATE TEMP TABLE _map_platforms AS
     SELECT id AS old_id, gen_random_uuid()::text AS new_id
@@ -55,24 +40,6 @@ BEGIN
   CREATE TEMP TABLE _map_game_files AS
     SELECT id AS old_id, gen_random_uuid()::text AS new_id
     FROM _v1_game_files;
-
-  -- tag_domains – well-known rows use the stable UUIDs from v2_baseline
-  CREATE TEMP TABLE _map_tag_domains AS
-    SELECT
-      id AS old_id,
-      CASE name
-        WHEN 'genre'     THEN '00000000-0000-0000-0000-000000000001'
-        WHEN 'favorites' THEN '00000000-0000-0000-0000-000000000002'
-        WHEN 'franchise' THEN '00000000-0000-0000-0000-000000000003'
-        WHEN 'region'    THEN '00000000-0000-0000-0000-000000000004'
-        ELSE gen_random_uuid()::text
-      END AS new_id
-    FROM _v1_tag_domains;
-
-  -- tags
-  CREATE TEMP TABLE _map_tags AS
-    SELECT id AS old_id, gen_random_uuid()::text AS new_id
-    FROM _v1_tags;
 
   -- clients
   CREATE TEMP TABLE _map_clients AS
@@ -192,33 +159,6 @@ BEGIN
   -- (ON CONFLICT DO NOTHING guards against re-runs on the same DB)
   -- ──────────────────────────────────────────────────────────────────────────
 
-  -- metadata_providers
-  INSERT INTO metadata_providers (id, name, created_at, updated_at)
-  SELECT m.new_id, v.name,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_metadata_providers v
-  JOIN _map_metadata_providers m ON v.id = m.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- libraries
-  INSERT INTO libraries (id, name, structure_definition, created_at, updated_at)
-  SELECT m.new_id, v.name, COALESCE(v.structure_definition, ''),
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_libraries v
-  JOIN _map_libraries m ON v.id = m.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- root_directories
-  INSERT INTO root_directories (id, path, created_at, updated_at)
-  SELECT m.new_id, v.path,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_root_directories v
-  JOIN _map_root_directories m ON v.id = m.old_id
-  ON CONFLICT DO NOTHING;
-
   -- platforms
   INSERT INTO platforms (id, path, created_at, updated_at, deleted_at, is_deleted, third_party)
   SELECT
@@ -288,23 +228,20 @@ BEGIN
 
   -- platform_metadata
   INSERT INTO platform_metadata (platform_id, name, description, background_url, logo_url,
-                                  igdb_id, created_at, updated_at, provider_id, icon_url)
+                                  igdb_id, created_at, updated_at)
   SELECT
     mp.new_id, v.name, v.description, v.background_url, v.logo_url,
     v.igdb_id::text,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-    to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-    mprov.new_id, v.icon_url
+    to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
   FROM _v1_platform_metadata v
-  JOIN _map_platforms            mp    ON v.platform_id  = mp.old_id
-  LEFT JOIN _map_metadata_providers mprov ON v.provider_id = mprov.old_id
+  JOIN _map_platforms mp ON v.platform_id = mp.old_id
   ON CONFLICT DO NOTHING;
 
   -- game_metadata
   INSERT INTO game_metadata (game_id, name, description, cover_url, background_url,
                               icon_url, igdb_id, created_at, updated_at,
-                              release_date, last_played, minutes_played,
-                              logo_url, provider_id)
+                              release_date, last_played, minutes_played)
   SELECT
     mg.new_id, v.name, v.description, v.cover_url, v.background_url,
     v.icon_url, v.igdb_id::text,
@@ -316,12 +253,9 @@ BEGIN
     CASE WHEN v.last_played IS NOT NULL
          THEN to_char(v.last_played  AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
          ELSE NULL END,
-    v.minutes_played,
-    v.logo_url,
-    mprov.new_id
+    v.minutes_played
   FROM _v1_game_metadata v
-  JOIN _map_games              mg    ON v.game_id     = mg.old_id
-  LEFT JOIN _map_metadata_providers mprov ON v.provider_id = mprov.old_id
+  JOIN _map_games mg ON v.game_id = mg.old_id
   ON CONFLICT DO NOTHING;
 
   -- game_metadata_links (from v1 links text[])
@@ -332,56 +266,29 @@ BEGIN
   WHERE array_length(v.links, 1) > 0
   ON CONFLICT DO NOTHING;
 
-  -- game_metadata_videos (prefer phase-1 video_metadata rows; fall back to array)
-  IF EXISTS (SELECT 1 FROM information_schema.tables
-             WHERE table_schema = 'public' AND table_name = '_v1_video_metadata') THEN
-    INSERT INTO game_metadata_videos (game_id, url)
-    SELECT mg.new_id, v.url
-    FROM _v1_video_metadata v
-    JOIN _map_games mg ON v.game_metadata_id = mg.old_id
-    ON CONFLICT DO NOTHING;
-  ELSE
-    INSERT INTO game_metadata_videos (game_id, url)
-    SELECT mg.new_id, unnest(v.video_urls)
-    FROM _v1_game_metadata v
-    JOIN _map_games mg ON v.game_id = mg.old_id
-    WHERE array_length(v.video_urls, 1) > 0
-    ON CONFLICT DO NOTHING;
-  END IF;
+  -- game_metadata_videos (from v1 video_urls text[])
+  INSERT INTO game_metadata_videos (game_id, url)
+  SELECT mg.new_id, unnest(v.video_urls)
+  FROM _v1_game_metadata v
+  JOIN _map_games mg ON v.game_id = mg.old_id
+  WHERE array_length(v.video_urls, 1) > 0
+  ON CONFLICT DO NOTHING;
 
-  -- game_metadata_screenshots
-  IF EXISTS (SELECT 1 FROM information_schema.tables
-             WHERE table_schema = 'public' AND table_name = '_v1_screenshot_metadata') THEN
-    INSERT INTO game_metadata_screenshots (game_id, url)
-    SELECT mg.new_id, v.url
-    FROM _v1_screenshot_metadata v
-    JOIN _map_games mg ON v.game_metadata_id = mg.old_id
-    ON CONFLICT DO NOTHING;
-  ELSE
-    INSERT INTO game_metadata_screenshots (game_id, url)
-    SELECT mg.new_id, unnest(v.screenshot_urls)
-    FROM _v1_game_metadata v
-    JOIN _map_games mg ON v.game_id = mg.old_id
-    WHERE array_length(v.screenshot_urls, 1) > 0
-    ON CONFLICT DO NOTHING;
-  END IF;
+  -- game_metadata_screenshots (from v1 screenshot_urls text[])
+  INSERT INTO game_metadata_screenshots (game_id, url)
+  SELECT mg.new_id, unnest(v.screenshot_urls)
+  FROM _v1_game_metadata v
+  JOIN _map_games mg ON v.game_id = mg.old_id
+  WHERE array_length(v.screenshot_urls, 1) > 0
+  ON CONFLICT DO NOTHING;
 
-  -- game_metadata_artwork
-  IF EXISTS (SELECT 1 FROM information_schema.tables
-             WHERE table_schema = 'public' AND table_name = '_v1_artwork_metadata') THEN
-    INSERT INTO game_metadata_artwork (game_id, url)
-    SELECT mg.new_id, v.url
-    FROM _v1_artwork_metadata v
-    JOIN _map_games mg ON v.game_metadata_id = mg.old_id
-    ON CONFLICT DO NOTHING;
-  ELSE
-    INSERT INTO game_metadata_artwork (game_id, url)
-    SELECT mg.new_id, unnest(v.artwork_urls)
-    FROM _v1_game_metadata v
-    JOIN _map_games mg ON v.game_id = mg.old_id
-    WHERE array_length(v.artwork_urls, 1) > 0
-    ON CONFLICT DO NOTHING;
-  END IF;
+  -- game_metadata_artwork (from v1 artwork_urls text[])
+  INSERT INTO game_metadata_artwork (game_id, url)
+  SELECT mg.new_id, unnest(v.artwork_urls)
+  FROM _v1_game_metadata v
+  JOIN _map_games mg ON v.game_id = mg.old_id
+  WHERE array_length(v.artwork_urls, 1) > 0
+  ON CONFLICT DO NOTHING;
 
   -- Migrate legacy genres to tags in the 'genre' well-known domain.
   -- Each unique genre name becomes a tag with value = genre name.
@@ -419,24 +326,14 @@ BEGIN
   JOIN _map_games ms ON v.similar_game_id = ms.old_id
   ON CONFLICT DO NOTHING;
 
-  -- tag_domains (well-known rows already seeded by v2_baseline – skip via DO NOTHING)
-  INSERT INTO tag_domains (id, name, is_well_known, created_at, updated_at)
-  SELECT m.new_id, v.name,
-         CASE WHEN v.is_well_known THEN 1 ELSE 0 END,
+  -- game_platform_maps (derived from v1 games.platform_id)
+  INSERT INTO game_platform_maps (game_id, platform_id, created_at, updated_at)
+  SELECT mg.new_id, mp.new_id,
          to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
          to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_tag_domains v
-  JOIN _map_tag_domains m ON v.id = m.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- tags
-  INSERT INTO tags (id, tag_domain_id, value, created_at, updated_at)
-  SELECT mt.new_id, mtd.new_id, v.value,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_tags v
-  JOIN _map_tags        mt  ON v.id            = mt.old_id
-  JOIN _map_tag_domains mtd ON v.tag_domain_id = mtd.old_id
+  FROM _v1_games v
+  JOIN _map_games    mg ON v.id          = mg.old_id
+  JOIN _map_platforms mp ON v.platform_id = mp.old_id
   ON CONFLICT DO NOTHING;
 
   -- clients
@@ -507,128 +404,32 @@ BEGIN
   JOIN _map_clients            mc  ON v.client_id           = mc.old_id
   ON CONFLICT DO NOTHING;
 
-  -- local_emulator_configs
+  -- local_emulator_configs (phase1 columns default_profile_id / bios_directory /
+  -- extra_files_directory did not exist in v1 and are left NULL in v2)
   INSERT INTO local_emulator_configs (id, emulator_id, client_id, created_at, updated_at,
                                        executable_path, nickname, save_data_path,
-                                       save_states_path, default_profile_id,
-                                       bios_directory, extra_files_directory)
+                                       save_states_path)
   SELECT
     mlec.new_id, me.new_id, mc.new_id,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     COALESCE(v.executable_path, ''),
-    v.nickname, v.save_data_path, v.save_states_path,
-    mep.new_id,
-    v.bios_directory, v.extra_files_directory
+    v.nickname, v.save_data_path, v.save_states_path
   FROM _v1_local_emulator_configs v
-  JOIN _map_local_emulator_configs mlec ON v.id               = mlec.old_id
-  JOIN _map_emulators              me   ON v.emulator_id       = me.old_id
-  JOIN _map_clients                mc   ON v.client_id         = mc.old_id
-  LEFT JOIN _map_emulator_profiles mep  ON v.default_profile_id = mep.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- library_root_directory_maps
-  INSERT INTO library_root_directory_maps (library_id, root_directory_id, created_at, updated_at)
-  SELECT ml.new_id, mr.new_id,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_library_root_directory_maps v
-  JOIN _map_libraries        ml ON v.library_id        = ml.old_id
-  JOIN _map_root_directories mr ON v.root_directory_id = mr.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- platform_root_directory_maps
-  INSERT INTO platform_root_directory_maps (platform_id, root_directory_id, created_at, updated_at)
-  SELECT mp.new_id, mr.new_id,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_platform_root_directory_maps v
-  JOIN _map_platforms        mp ON v.platform_id        = mp.old_id
-  JOIN _map_root_directories mr ON v.root_directory_id  = mr.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- game_root_directory_maps
-  INSERT INTO game_root_directory_maps (game_id, root_directory_id, created_at, updated_at)
-  SELECT mg.new_id, mr.new_id,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_game_root_directory_maps v
-  JOIN _map_games            mg ON v.game_id           = mg.old_id
-  JOIN _map_root_directories mr ON v.root_directory_id = mr.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- library_platform_maps
-  INSERT INTO library_platform_maps (library_id, platform_id, created_at, updated_at)
-  SELECT ml.new_id, mp.new_id,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_library_platform_maps v
-  JOIN _map_libraries ml ON v.library_id  = ml.old_id
-  JOIN _map_platforms mp ON v.platform_id = mp.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- game_platform_maps
-  INSERT INTO game_platform_maps (game_id, platform_id, created_at, updated_at)
-  SELECT mg.new_id, mp.new_id,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_game_platform_maps v
-  JOIN _map_games    mg ON v.game_id     = mg.old_id
-  JOIN _map_platforms mp ON v.platform_id = mp.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- platform_tag_maps
-  INSERT INTO platform_tag_maps (platform_id, tag_id, created_at, updated_at)
-  SELECT mp.new_id, mt.new_id,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_platform_tag_maps v
-  JOIN _map_platforms mp ON v.platform_id = mp.old_id
-  JOIN _map_tags      mt ON v.tag_id      = mt.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- game_tag_maps
-  INSERT INTO game_tag_maps (game_id, tag_id, created_at, updated_at)
-  SELECT mg.new_id, mt.new_id,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_game_tag_maps v
-  JOIN _map_games mg ON v.game_id = mg.old_id
-  JOIN _map_tags  mt ON v.tag_id  = mt.old_id
-  ON CONFLICT DO NOTHING;
-
-  -- emulator_platform_maps
-  INSERT INTO emulator_platform_maps (emulator_id, platform_id, created_at, updated_at)
-  SELECT me.new_id, mp.new_id,
-         to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-         to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_emulator_platform_maps v
-  JOIN _map_emulators me ON v.emulator_id = me.old_id
-  JOIN _map_platforms mp ON v.platform_id = mp.old_id
+  JOIN _map_local_emulator_configs mlec ON v.id         = mlec.old_id
+  JOIN _map_emulators              me   ON v.emulator_id = me.old_id
+  JOIN _map_clients                mc   ON v.client_id   = mc.old_id
   ON CONFLICT DO NOTHING;
 
   -- ──────────────────────────────────────────────────────────────────────────
   -- Drop _v1_* shadow tables (reverse FK order)
   -- ──────────────────────────────────────────────────────────────────────────
 
-  DROP TABLE IF EXISTS _v1_emulator_platform_maps;
-  DROP TABLE IF EXISTS _v1_game_tag_maps;
-  DROP TABLE IF EXISTS _v1_platform_tag_maps;
-  DROP TABLE IF EXISTS _v1_game_platform_maps;
-  DROP TABLE IF EXISTS _v1_library_platform_maps;
-  DROP TABLE IF EXISTS _v1_game_root_directory_maps;
-  DROP TABLE IF EXISTS _v1_platform_root_directory_maps;
-  DROP TABLE IF EXISTS _v1_library_root_directory_maps;
   DROP TABLE IF EXISTS _v1_local_emulator_configs;
   DROP TABLE IF EXISTS _v1_default_emulator_profiles;
   DROP TABLE IF EXISTS _v1_emulator_profiles;
   DROP TABLE IF EXISTS _v1_emulators;
   DROP TABLE IF EXISTS _v1_clients;
-  DROP TABLE IF EXISTS _v1_tags;
-  DROP TABLE IF EXISTS _v1_tag_domains;
-  DROP TABLE IF EXISTS _v1_artwork_metadata;
-  DROP TABLE IF EXISTS _v1_screenshot_metadata;
-  DROP TABLE IF EXISTS _v1_video_metadata;
   DROP TABLE IF EXISTS _v1_similar_game_maps;
   DROP TABLE IF EXISTS _v1_game_genre_maps;
   DROP TABLE IF EXISTS _v1_game_genres;
@@ -637,22 +438,14 @@ BEGIN
   DROP TABLE IF EXISTS _v1_game_files;
   DROP TABLE IF EXISTS _v1_games;
   DROP TABLE IF EXISTS _v1_platforms;
-  DROP TABLE IF EXISTS _v1_metadata_providers;
-  DROP TABLE IF EXISTS _v1_root_directories;
-  DROP TABLE IF EXISTS _v1_libraries;
 
   -- Drop temp mapping tables
   DROP TABLE IF EXISTS _map_local_emulator_configs;
   DROP TABLE IF EXISTS _map_emulator_profiles;
   DROP TABLE IF EXISTS _map_emulators;
   DROP TABLE IF EXISTS _map_clients;
-  DROP TABLE IF EXISTS _map_tags;
-  DROP TABLE IF EXISTS _map_tag_domains;
   DROP TABLE IF EXISTS _map_game_files;
   DROP TABLE IF EXISTS _map_games;
   DROP TABLE IF EXISTS _map_platforms;
-  DROP TABLE IF EXISTS _map_root_directories;
-  DROP TABLE IF EXISTS _map_libraries;
-  DROP TABLE IF EXISTS _map_metadata_providers;
 
 END $$;
