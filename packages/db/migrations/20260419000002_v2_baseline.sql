@@ -13,8 +13,8 @@
 create table if not exists metadata_providers (
     id text not null primary key,
     name text not null,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     constraint metadata_providers_name_unique unique (name)
 );
 
@@ -22,15 +22,15 @@ create table if not exists libraries (
     id text not null primary key,
     name text not null,
     structure_definition text not null,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp
 );
 
 create table if not exists root_directories (
     id text not null primary key,
     path text not null,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     constraint root_directories_path_unique unique (path)
 );
 
@@ -41,9 +41,9 @@ create table if not exists root_directories (
 create table if not exists platforms (
     id text not null primary key,
     path text not null,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
-    deleted_at timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
+    deleted_at text,
     is_deleted integer not null default 0,
     third_party integer not null default 0,
     constraint platforms_path_unique unique (path)
@@ -52,9 +52,9 @@ create table if not exists platforms (
 create table if not exists games (
     id text not null primary key,
     path text not null,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
-    deleted_at timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
+    deleted_at text,
     is_deleted integer not null default 0,
     storage_type integer not null default 1,
     third_party integer not null default 0,
@@ -68,9 +68,9 @@ create table if not exists game_files (
     path text not null,
     game_id text not null references games (id) on delete cascade,
     platform_id text not null references platforms (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
-    deleted_at timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
+    deleted_at text,
     is_deleted integer not null default 0,
     constraint game_files_path_unique unique (path)
 );
@@ -79,8 +79,8 @@ create table if not exists default_game_files (
     game_id text not null references games (id) on delete cascade,
     platform_id text not null references platforms (id) on delete cascade,
     game_file_id text not null references game_files (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (game_id, platform_id)
 );
 
@@ -95,8 +95,8 @@ create table if not exists platform_metadata (
     background_url text,
     logo_url text,
     igdb_id text,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     provider_id text references metadata_providers (id),
     icon_url text
 );
@@ -109,10 +109,10 @@ create table if not exists game_metadata (
     background_url text,
     icon_url text,
     igdb_id text,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
-    release_date timestamp,
-    last_played timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
+    release_date text,
+    last_played text,
     minutes_played integer,
     logo_url text,
     provider_id text references metadata_providers (id)
@@ -150,8 +150,8 @@ create table if not exists game_metadata_artwork (
 create table if not exists similar_game_maps (
     game_id text not null references games (id) on delete cascade,
     similar_game_id text not null references games (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (game_id, similar_game_id),
     constraint similar_game_maps_distinct_ids check (game_id != similar_game_id)
 );
@@ -160,8 +160,8 @@ create table if not exists tag_domains (
     id text not null primary key,
     name text not null,
     is_well_known integer not null default 0,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     constraint tag_domains_name_unique unique (name)
 );
 
@@ -177,8 +177,8 @@ create table if not exists tags (
     id text not null primary key,
     tag_domain_id text not null references tag_domains (id) on delete cascade,
     value text not null,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     constraint tags_domain_value_unique unique (tag_domain_id, value)
 );
 
@@ -189,8 +189,8 @@ create table if not exists tags (
 create table if not exists clients (
     id text not null primary key,
     name text not null,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     constraint clients_name_unique unique (name)
 );
 
@@ -200,8 +200,8 @@ create table if not exists emulators (
     save_strategy integer not null,
     built_in integer not null default 0,
     libretro_name text,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp
 );
 
 -- Relational replacement for emulators.supported_platforms integer[]
@@ -224,8 +224,8 @@ create table if not exists emulator_profiles (
     name text not null,
     custom_args text not null default '',
     built_in integer not null default 0,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp
 );
 
 -- Relational replacement for emulator_profiles.supported_extensions text[]
@@ -239,8 +239,8 @@ create table if not exists default_emulator_profiles (
     platform_id text not null references platforms (id) on delete cascade,
     emulator_profile_id text not null references emulator_profiles (id) on delete cascade,
     client_id text not null references clients (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (platform_id, client_id)
 );
 
@@ -248,8 +248,8 @@ create table if not exists local_emulator_configs (
     id text not null primary key,
     emulator_id text not null references emulators (id) on delete cascade,
     client_id text not null references clients (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     executable_path text not null,
     nickname text,
     save_data_path text,
@@ -267,64 +267,64 @@ create table if not exists local_emulator_configs (
 create table if not exists library_root_directory_maps (
     library_id text not null references libraries (id) on delete cascade,
     root_directory_id text not null references root_directories (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (library_id, root_directory_id)
 );
 
 create table if not exists platform_root_directory_maps (
     platform_id text not null references platforms (id) on delete cascade,
     root_directory_id text not null references root_directories (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (platform_id, root_directory_id)
 );
 
 create table if not exists game_root_directory_maps (
     game_id text not null references games (id) on delete cascade,
     root_directory_id text not null references root_directories (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (game_id, root_directory_id)
 );
 
 create table if not exists library_platform_maps (
     library_id text not null references libraries (id) on delete cascade,
     platform_id text not null references platforms (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (library_id, platform_id)
 );
 
 create table if not exists game_platform_maps (
     game_id text not null references games (id) on delete cascade,
     platform_id text not null references platforms (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (game_id, platform_id)
 );
 
 create table if not exists platform_tag_maps (
     platform_id text not null references platforms (id) on delete cascade,
     tag_id text not null references tags (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (platform_id, tag_id)
 );
 
 create table if not exists game_tag_maps (
     game_id text not null references games (id) on delete cascade,
     tag_id text not null references tags (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (game_id, tag_id)
 );
 
 create table if not exists emulator_platform_maps (
     emulator_id text not null references emulators (id) on delete cascade,
     platform_id text not null references platforms (id) on delete cascade,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     primary key (emulator_id, platform_id)
 );
 
