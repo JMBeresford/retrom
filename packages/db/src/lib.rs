@@ -46,7 +46,7 @@ pub async fn connect(url: &str) -> Result<DbPool> {
 ///    Diesel tracking table is then dropped.  The three new v2 migrations run
 ///    normally on the next call to [`run_migrations`].
 ///
-/// 2. **Phase-1 sqlx database** (`_sqlx_migrations` present with legacy rows):
+/// 2. **Existing sqlx database** (`_sqlx_migrations` present with legacy rows):
 ///    sqlx's `ignore_missing = true` flag handles these transparently — no
 ///    action required here.
 ///
@@ -143,7 +143,7 @@ async fn diesel_migration_bootstrap(pool: &DbPool, url: &str) -> Result<()> {
             return Ok(());
         }
 
-        // Scenario 2 (phase-1 sqlx rows): handled by ignore_missing in the caller.
+        // Scenario 2 (legacy sqlx rows): handled by ignore_missing in the caller.
         return Ok(());
     }
 
@@ -216,9 +216,9 @@ pub async fn run_migrations(pool: &DbPool, url: &str) -> Result<()> {
     diesel_migration_bootstrap(pool, url).await?;
 
     sqlx::migrate!("./migrations")
-        // Phase-1 and legacy Diesel rows in _sqlx_migrations refer to files
-        // that have been moved to migrations/legacy/.  Telling sqlx to ignore
-        // those missing entries lets it simply run the three v2 migrations.
+        // Legacy Diesel rows in _sqlx_migrations refer to files that have been
+        // moved to migrations/legacy/.  Telling sqlx to ignore those missing
+        // entries lets it simply run the three v2 migrations.
         .set_ignore_missing(true)
         .run(pool)
         .await
