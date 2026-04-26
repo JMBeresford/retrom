@@ -361,7 +361,7 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- similar_game
-  INSERT INTO similar_game (game_id, similar_game_id, created_at, updated_at)
+  INSERT INTO similar_games (game_id, similar_game_id, created_at, updated_at)
   SELECT mg.new_id, ms.new_id,
          to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
          to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
