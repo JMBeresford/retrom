@@ -184,8 +184,8 @@ BEGIN
   FROM _v1_platforms v
   ON CONFLICT DO NOTHING;
 
-  -- platform_root_directory_maps (one entry per platform, keyed by path)
-  INSERT INTO platform_root_directory_maps (platform_id, root_directory_id, created_at, updated_at)
+  -- platform_root_directory (one entry per platform, keyed by path)
+  INSERT INTO platform_root_directory (platform_id, root_directory_id, created_at, updated_at)
   SELECT
     mp.new_id,
     rd.id,
@@ -224,8 +224,8 @@ BEGIN
   FROM _v1_games v
   ON CONFLICT DO NOTHING;
 
-  -- game_root_directory_maps (one entry per game, keyed by path)
-  INSERT INTO game_root_directory_maps (game_id, root_directory_id, created_at, updated_at)
+  -- game_root_directory (one entry per game, keyed by path)
+  INSERT INTO game_root_directory (game_id, root_directory_id, created_at, updated_at)
   SELECT
     mg.new_id,
     rd.id,
@@ -346,8 +346,8 @@ BEGIN
   FROM _v1_game_genres v
   ON CONFLICT DO NOTHING;
 
-  -- Migrate legacy game_genre_maps to game_tag_maps.
-  INSERT INTO game_tag_maps (game_id, tag_id, created_at, updated_at)
+  -- Migrate legacy game_genre_maps to game_tag.
+  INSERT INTO game_tag (game_id, tag_id, created_at, updated_at)
   SELECT
     mg.new_id,
     t.id,
@@ -360,8 +360,8 @@ BEGIN
                             AND t.tag_domain_id = '00000000-0000-0000-0000-000000000001'
   ON CONFLICT DO NOTHING;
 
-  -- similar_game_maps
-  INSERT INTO similar_game_maps (game_id, similar_game_id, created_at, updated_at)
+  -- similar_game
+  INSERT INTO similar_game (game_id, similar_game_id, created_at, updated_at)
   SELECT mg.new_id, ms.new_id,
          to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
          to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
@@ -370,8 +370,8 @@ BEGIN
   JOIN _map_games ms ON v.similar_game_id = ms.old_id
   ON CONFLICT DO NOTHING;
 
-  -- game_platform_maps (derived from v1 games.platform_id)
-  INSERT INTO game_platform_maps (game_id, platform_id, created_at, updated_at)
+  -- game_platform (derived from v1 games.platform_id)
+  INSERT INTO game_platform (game_id, platform_id, created_at, updated_at)
   SELECT mg.new_id, mp.new_id,
          to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
          to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
@@ -410,10 +410,23 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- emulator_operating_systems (from v1 integer array; built-ins already seeded)
+  -- Map legacy integer OS IDs to operating_systems UUIDs:
+  --   0 (WINDOWS) → 00000000-0000-0000-0003-000000000001
+  --   1 (MACOS)   → 00000000-0000-0000-0003-000000000002
+  --   2 (LINUX)   → 00000000-0000-0000-0003-000000000003
+  --   3 (WASM)    → 00000000-0000-0000-0003-000000000004
   INSERT INTO emulator_operating_systems (emulator_id, os_id)
-  SELECT DISTINCT me.new_id, unnest(e.operating_systems)
+  SELECT DISTINCT me.new_id,
+    CASE old_os_id
+      WHEN 0 THEN '00000000-0000-0000-0003-000000000001'
+      WHEN 1 THEN '00000000-0000-0000-0003-000000000002'
+      WHEN 2 THEN '00000000-0000-0000-0003-000000000003'
+      WHEN 3 THEN '00000000-0000-0000-0003-000000000004'
+    END
   FROM _v1_emulators e
   JOIN _map_emulators me ON e.id = me.old_id
+  JOIN LATERAL unnest(e.operating_systems) AS old_os_id ON TRUE
+  WHERE old_os_id BETWEEN 0 AND 3
   ON CONFLICT DO NOTHING;
 
   -- emulator_profiles (built-in Default profiles already seeded – skip via DO NOTHING)
