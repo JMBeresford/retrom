@@ -174,6 +174,28 @@ BEGIN
   JOIN _map_platforms m ON v.id = m.old_id
   ON CONFLICT DO NOTHING;
 
+  -- root_directories from v1 platform paths
+  INSERT INTO root_directories (id, path, created_at, updated_at)
+  SELECT
+    gen_random_uuid()::text,
+    v.path,
+    to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+    to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+  FROM _v1_platforms v
+  ON CONFLICT DO NOTHING;
+
+  -- platform_root_directory_maps (one entry per platform, keyed by path)
+  INSERT INTO platform_root_directory_maps (platform_id, root_directory_id, created_at, updated_at)
+  SELECT
+    mp.new_id,
+    rd.id,
+    to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+    to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+  FROM _v1_platforms v
+  JOIN _map_platforms   mp ON v.id   = mp.old_id
+  JOIN root_directories rd ON rd.path = v.path
+  ON CONFLICT DO NOTHING;
+
   -- games
   INSERT INTO games (id, path, created_at, updated_at, deleted_at,
                      is_deleted, storage_type, third_party, steam_app_id)
@@ -190,6 +212,28 @@ BEGIN
     v.steam_app_id::text
   FROM _v1_games v
   JOIN _map_games mg ON v.id = mg.old_id
+  ON CONFLICT DO NOTHING;
+
+  -- root_directories from v1 game paths
+  INSERT INTO root_directories (id, path, created_at, updated_at)
+  SELECT
+    gen_random_uuid()::text,
+    v.path,
+    to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+    to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+  FROM _v1_games v
+  ON CONFLICT DO NOTHING;
+
+  -- game_root_directory_maps (one entry per game, keyed by path)
+  INSERT INTO game_root_directory_maps (game_id, root_directory_id, created_at, updated_at)
+  SELECT
+    mg.new_id,
+    rd.id,
+    to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+    to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+  FROM _v1_games v
+  JOIN _map_games       mg ON v.id    = mg.old_id
+  JOIN root_directories rd ON rd.path  = v.path
   ON CONFLICT DO NOTHING;
 
   -- game_files (platform_id comes from the game's v1 platform_id)
