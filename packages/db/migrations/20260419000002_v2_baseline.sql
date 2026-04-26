@@ -147,13 +147,13 @@ create table if not exists game_metadata_artwork (
 -- Tag tables (genres are represented as tags in the 'genre' domain)
 -- ────────────────────────────────────────────────────────────────────────────
 
-create table if not exists similar_game (
+create table if not exists similar_games (
     game_id text not null references games (id) on delete cascade,
     similar_game_id text not null references games (id) on delete cascade,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     primary key (game_id, similar_game_id),
-    constraint similar_game_distinct_ids check (game_id != similar_game_id)
+    constraint similar_games_distinct_ids check (game_id != similar_game_id)
 );
 
 create table if not exists tag_domains (
@@ -750,4 +750,4 @@ create index if not exists idx_games_is_deleted on games (is_deleted);
 create index if not exists idx_game_metadata_igdb_id on game_metadata (igdb_id);
 create index if not exists idx_platform_metadata_igdb_id on platform_metadata (igdb_id);
 create index if not exists idx_games_steam_app_id on games (steam_app_id);
-create index if not exists idx_similar_game_game_id on similar_game (game_id);
+create index if not exists idx_similar_games_game_id on similar_games (game_id);
