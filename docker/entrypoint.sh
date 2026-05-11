@@ -31,18 +31,22 @@ echo "Retrom GID: $(id -g retrom)"
 
 echo -e $SEP
 
-chown retrom:retrom /app
-for i in "${app_dirs[@]}"; do
-    if [  -d "$i" ]; then
-        echo -e "Setting permissions for ${i}\n"
-        chmod "=rwx" "$i"
+if [ "${SKIP_CHOWN}" = "true" ]; then
+    echo -e "Skipping chown (SKIP_CHOWN=true) - ensure file permissions are managed externally\n"
+else
+    chown retrom:retrom /app
+    for i in "${app_dirs[@]}"; do
+        if [  -d "$i" ]; then
+            echo -e "Setting permissions for ${i}\n"
+            chmod "=rwx" "$i"
 
-        find "$i" \( ! -user retrom -or ! -group retrom \) -exec chown retrom:retrom {} +
-    fi
-done
+            find "$i" \( ! -user retrom -or ! -group retrom \) -exec chown retrom:retrom {} +
+        fi
+    done
 
-# psql db dir needs 700 or 750 permissions
-chmod 750 /app/data/db
+    # psql db dir needs 700 or 750 permissions
+    chmod 750 /app/data/db
+fi
 
 if [ "$(id -u)" = 0 ]; then
     exec runuser -u retrom "$@"
