@@ -6,14 +6,14 @@ import "google/protobuf/timestamp.proto";
 import "retrom/server/config.proto";
 
 message Game {
-  int32 id = 1;
+  string id = 1;
   string path = 3;
-  optional int32 platform_id = 4;
+  optional string platform_id = 4;
   google.protobuf.Timestamp created_at = 5;
   google.protobuf.Timestamp updated_at = 6;
   google.protobuf.Timestamp deleted_at = 7;
   bool is_deleted = 8;
-  optional int32 default_file_id = 9;
+  optional string default_file_id = 9;
   StorageType storage_type = 10;
   bool third_party = 11;
   optional int64 steam_app_id = 12;
@@ -21,12 +21,12 @@ message Game {
 
 message NewGame {
   string path = 1;
-  optional int32 platform_id = 2;
+  optional string platform_id = 2;
   optional google.protobuf.Timestamp created_at = 3;
   optional google.protobuf.Timestamp updated_at = 4;
   optional google.protobuf.Timestamp deleted_at = 5;
   bool is_deleted = 6;
-  optional int32 default_file_id = 7;
+  optional string default_file_id = 7;
   optional StorageType storage_type = 8;
   optional bool third_party = 9;
   optional int64 steam_app_id = 10;

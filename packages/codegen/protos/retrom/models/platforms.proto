@@ -5,7 +5,7 @@ package retrom;
 import "google/protobuf/timestamp.proto";
 
 message Platform {
-  int32 id = 1;
+  string id = 1;
   string path = 2;
   google.protobuf.Timestamp created_at = 3;
   google.protobuf.Timestamp updated_at = 4;
@@ -24,7 +24,7 @@ message NewPlatform {
 }
 
 message UpdatedPlatform {
-  int32 id = 1;
+  string id = 1;
   optional string path = 2;
   optional google.protobuf.Timestamp created_at = 3;
   optional google.protobuf.Timestamp updated_at = 4;
