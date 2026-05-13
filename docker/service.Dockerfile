@@ -9,6 +9,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN npm i -g corepack@latest
 RUN corepack enable
+RUN npm i -g serve
 RUN apt-get update && apt-get install -y \
   protobuf-compiler \
   ca-certificates \
