@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim AS common
+FROM node:24-bookworm-slim AS common
 
 FROM common AS project
 COPY . /app/
