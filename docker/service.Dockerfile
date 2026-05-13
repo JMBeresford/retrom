@@ -91,6 +91,10 @@ COPY --from=web-builder /web /app/web
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/start.sh /app/start.sh
 
+# Strip \r after modifying the file on Windows
+RUN sed -i 's/\r//' /entrypoint.sh
+RUN sed -i 's/\r//' /app/start.sh
+
 RUN mkdir -p /app/data/db && \
   mkdir /app/psql && \
   mkdir /app/config
