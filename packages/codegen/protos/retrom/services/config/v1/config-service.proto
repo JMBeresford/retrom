@@ -2,8 +2,7 @@ syntax = "proto3";
 
 package retrom.services.config.v1;
 
-import "retrom/server/config.proto";
-import "retrom/server/server-info.proto";
+import "retrom/services/config/v1/models.proto";
 
 // ConfigService manages server configuration and exposes server metadata.
 service ConfigService {
@@ -22,19 +21,19 @@ service ConfigService {
 message GetServerInfoRequest {}
 
 message GetServerInfoResponse {
-  retrom.ServerInfo server_info = 1;
+  ServerInfo server_info = 1;
 }
 
 message GetServerConfigRequest {}
 
 message GetServerConfigResponse {
-  retrom.ServerConfig config = 1;
+  ServerConfig config = 1;
 }
 
 message UpdateServerConfigRequest {
-  retrom.ServerConfig config = 1;
+  ServerConfig config = 1;
 }
 
 message UpdateServerConfigResponse {
-  retrom.ServerConfig config_updated = 1;
+  ServerConfig config_updated = 1;
 }

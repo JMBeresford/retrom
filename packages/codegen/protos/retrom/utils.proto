@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package retrom;
+package retrom.utils;
 
 message VersionAnnouncement {
   repeated string versions = 1;

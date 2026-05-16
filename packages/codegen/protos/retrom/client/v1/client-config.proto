@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package retrom;
+package retrom.client.v1;
 
-import "retrom/models/clients.proto";
+import "retrom/services/clients/v1/models.proto";
 
 message InterfaceConfig {
   enum GameListEntryImage {
@@ -38,7 +38,7 @@ message RetromClientConfig {
   }
 
   message Config {
-    Client client_info = 1;
+    retrom.services.clients.v1.Client client_info = 1;
     InterfaceConfig interface = 2;
     optional string installation_dir = 3;
   }

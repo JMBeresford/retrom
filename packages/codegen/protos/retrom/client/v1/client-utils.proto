@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package retrom.client.v1;
+
+import "retrom/services/emulators/v1/models.proto";
+import "retrom/services/library/v1/models.proto";
+
+message RetromHostInfo {
+  string host_name = 1;
+  string port = 2;
+  string host = 3;
+}
+
+enum PlayStatus {
+  PLAYING = 0;
+  NOT_PLAYING = 1;
+}
+
+message PlayGamePayload {
+  retrom.services.library.v1.Game game = 1;
+  retrom.services.emulators.v1.EmulatorProfile emulator_profile = 2;
+  retrom.services.emulators.v1.Emulator emulator = 3;
+  retrom.services.library.v1.GameFile file = 4;
+}
+
+message StopGamePayload {
+  retrom.services.library.v1.Game game = 1;
+}
+
+message GetGamePlayStatusPayload {
+  retrom.services.library.v1.Game game = 1;
+}
+
+message GamePlayStatusUpdate {
+  string game_id = 1;
+  PlayStatus play_status = 2;
+}

@@ -3,7 +3,7 @@ syntax = "proto3";
 package retrom.services.saves.v2;
 
 import "google/protobuf/timestamp.proto";
-import "retrom/files.proto";
+import "retrom/files/v1/files.proto";
 
 service EmulatorSavesService {
   rpc StatSaveFiles(StatSaveFilesRequest) returns (StatSaveFilesResponse);
@@ -24,7 +24,7 @@ message SaveFilesStat {
   int32 emulator_id = 1;
 
   // File stats relative to the emulator's saves root
-  repeated retrom.files.FileStat file_stats = 2;
+  repeated retrom.files.v1.FileStat file_stats = 2;
 
   // Backup stats for this emulator's saves
   repeated Backup backups = 3;
@@ -37,7 +37,7 @@ message SaveFiles {
   int32 emulator_id = 1;
 
   // Files relative to the emulator's saves root
-  repeated retrom.files.File files = 2;
+  repeated retrom.files.v1.File files = 2;
 
   string etag = 3;
 }
@@ -96,7 +96,7 @@ message SaveStatesStat {
   int32 emulator_id = 1;
 
   // File stats relative to the emulator's states root
-  repeated retrom.files.FileStat file_stats = 2;
+  repeated retrom.files.v1.FileStat file_stats = 2;
 
   // Backup stats for this emulator's states
   repeated Backup backups = 3;
@@ -109,7 +109,7 @@ message SaveStates {
   int32 emulator_id = 1;
 
   // Files relative to the emulator's states root
-  repeated retrom.files.File files = 2;
+  repeated retrom.files.v1.File files = 2;
 }
 
 message StatSaveStatesRequest {

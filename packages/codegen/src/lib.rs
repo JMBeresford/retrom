@@ -6,23 +6,46 @@ pub mod igdb {
 }
 
 pub mod retrom {
-    tonic::include_proto!("retrom");
-
-    pub mod files {
-        tonic::include_proto!("retrom.files");
-    }
 
     pub mod client {
+        pub mod v1 {
+            tonic::include_proto!("retrom.client.v1");
+        }
+
         pub mod installation {
-            tonic::include_proto!("retrom.client.installation");
+            pub mod v1 {
+                tonic::include_proto!("retrom.client.installation.v1");
+            }
         }
 
         pub mod saves {
-            tonic::include_proto!("retrom.client.saves");
+            pub mod v1 {
+                tonic::include_proto!("retrom.client.saves.v1");
+            }
+        }
+    }
+
+    pub mod files {
+        pub mod v1 {
+            tonic::include_proto!("retrom.files.v1");
+        }
+    }
+
+    pub mod providers {
+        pub mod igdb {
+            pub mod v1 {
+                tonic::include_proto!("retrom.providers.igdb.v1");
+            }
         }
     }
 
     pub mod services {
+        pub mod clients {
+            pub mod v1 {
+                tonic::include_proto!("retrom.services.clients.v1");
+            }
+        }
+
         pub mod config {
             pub mod v1 {
                 tonic::include_proto!("retrom.services.config.v1");
@@ -79,7 +102,7 @@ pub mod retrom {
 
 use std::path::{Component, Path, PathBuf};
 
-use crate::retrom::files::FileStat;
+use crate::retrom::files::v1::{FileStat, FilesystemNode, FilesystemNodeType};
 
 pub mod descriptors {
     pub mod retrom {
@@ -88,7 +111,7 @@ pub mod descriptors {
     }
 }
 
-impl TryFrom<PathBuf> for crate::retrom::files::FilesystemNode {
+impl TryFrom<PathBuf> for FilesystemNode {
     type Error = ();
 
     fn try_from(_path: PathBuf) -> Result<Self, Self::Error> {
@@ -96,8 +119,8 @@ impl TryFrom<PathBuf> for crate::retrom::files::FilesystemNode {
         let path = _path.to_str().ok_or(())?.into();
 
         if path == "/" {
-            return Ok(crate::retrom::files::FilesystemNode {
-                node_type: crate::retrom::files::FilesystemNodeType::Directory.into(),
+            return Ok(FilesystemNode {
+                node_type: FilesystemNodeType::Directory.into(),
                 path,
                 name: "/".into(),
             });
@@ -106,11 +129,11 @@ impl TryFrom<PathBuf> for crate::retrom::files::FilesystemNode {
         let name = _path.file_name().ok_or(())?.to_str().ok_or(())?.into();
 
         let node_type = match _path.is_dir() {
-            true => crate::retrom::files::FilesystemNodeType::Directory.into(),
-            false => crate::retrom::files::FilesystemNodeType::File.into(),
+            true => FilesystemNodeType::Directory.into(),
+            false => FilesystemNodeType::File.into(),
         };
 
-        Ok(crate::retrom::files::FilesystemNode {
+        Ok(FilesystemNode {
             node_type,
             path,
             name,
@@ -118,7 +141,7 @@ impl TryFrom<PathBuf> for crate::retrom::files::FilesystemNode {
     }
 }
 
-impl crate::retrom::files::FileStat {
+impl FileStat {
     pub fn relative_to<P: AsRef<Path>>(&self, path: P) -> Option<FileStat> {
         let base_path = path.as_ref();
         let file_path = PathBuf::from(&self.path);
@@ -141,7 +164,7 @@ impl crate::retrom::files::FileStat {
     }
 }
 
-impl TryFrom<PathBuf> for crate::retrom::files::FileStat {
+impl TryFrom<PathBuf> for FileStat {
     type Error = ();
 
     fn try_from(path_buf: PathBuf) -> Result<Self, Self::Error> {
@@ -150,9 +173,9 @@ impl TryFrom<PathBuf> for crate::retrom::files::FileStat {
         let path = path_buf.to_str().ok_or(())?.into();
 
         let node_type = match metadata.as_ref().map(|m| m.is_dir()) {
-            Some(true) => crate::retrom::files::FilesystemNodeType::Directory as i32,
-            Some(false) => crate::retrom::files::FilesystemNodeType::File as i32,
-            None => crate::retrom::files::FilesystemNodeType::Unknown as i32,
+            Some(true) => FilesystemNodeType::Directory as i32,
+            Some(false) => FilesystemNodeType::File as i32,
+            None => FilesystemNodeType::Unknown as i32,
         };
 
         let created_at = metadata
@@ -170,7 +193,7 @@ impl TryFrom<PathBuf> for crate::retrom::files::FileStat {
         hash_str.hash(&mut hasher);
         let etag = hasher.finish().to_string();
 
-        Ok(crate::retrom::files::FileStat {
+        Ok(FileStat {
             path,
             node_type,
             created_at,
