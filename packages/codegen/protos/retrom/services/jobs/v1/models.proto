@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package retrom.services.jobs.v1;
+
+import "google/protobuf/timestamp.proto";
+
+enum JobStatus {
+  JOB_STATUS_UNSPECIFIED = 0;
+  JOB_STATUS_PENDING = 1;
+  JOB_STATUS_RUNNING = 2;
+  JOB_STATUS_COMPLETE = 3;
+  JOB_STATUS_FAILED = 4;
+}
+
+// Live mutable state of a job; emitted by WatchJob and embedded in Job.
+message JobProgress {
+  string id = 1;
+  JobStatus status = 2;
+  // Completion ratio in the range [0.0, 1.0].
+  float percent_complete = 3;
+  string message = 4;
+}
+
+message Job {
+  string id = 1;
+  string name = 2;
+  JobProgress progress = 4;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+  // Populated when the job reaches a terminal state (complete or failed).
+  google.protobuf.Timestamp finished_at = 8;
+}

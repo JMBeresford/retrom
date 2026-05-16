@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package retrom;
+package retrom.services.config.v1;
 
 message ConnectionConfig {
   optional int32 port = 1;
@@ -104,4 +104,20 @@ message ServerConfig {
   optional SavesConfig saves = 5;
   optional TelemetryConfig telemetry = 6;
   optional MetadataConfig metadata = 7;
+}
+
+message ServerInfo {
+  Version version = 1;
+}
+
+message Version {
+  message Pre {
+    string name = 1;
+    int32 number = 2;
+  }
+
+  int32 major = 1;
+  int32 minor = 2;
+  int32 patch = 3;
+  optional Pre pre = 4;
 }
