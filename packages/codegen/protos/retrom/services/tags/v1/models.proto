@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package retrom.services.tags.v1;
+
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+
+message TagDomain {
+  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string name = 2;
+
+  // Well-known domains are static (seeded via DB migration, is_well_known = true)
+  // and cannot be deleted via the TagsService. Users can register custom domains via
+  // the UI using CreateTagDomains.
+  bool is_well_known = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Tag is a (domain, value) pair used to label games and platforms.
+// Uniqueness is enforced per (tag_domain_id, value) pair in the database.
+message Tag {
+  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  int32 tag_domain_id = 2;
+  string value = 3;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}

@@ -2,67 +2,178 @@ syntax = "proto3";
 
 package retrom.services.emulators.v1;
 
-import "google/api/field_behavior.proto";
-import "google/protobuf/timestamp.proto";
-// The v1 service reuses the legacy request/response message types while the
-// message definitions are still in the top-level retrom package.  They will
-// be migrated to this package in a later phase.
-import "retrom/services/emulator-service.proto";
+import "retrom/services/emulators/v1/models.proto";
 
 service EmulatorService {
-  rpc CreateEmulators(retrom.CreateEmulatorsRequest) returns (retrom.CreateEmulatorsResponse);
-  rpc GetEmulators(retrom.GetEmulatorsRequest) returns (retrom.GetEmulatorsResponse);
-  rpc UpdateEmulators(retrom.UpdateEmulatorsRequest) returns (retrom.UpdateEmulatorsResponse);
-  rpc DeleteEmulators(retrom.DeleteEmulatorsRequest) returns (retrom.DeleteEmulatorsResponse);
+  rpc CreateEmulators(CreateEmulatorsRequest) returns (CreateEmulatorsResponse);
+  rpc GetEmulators(GetEmulatorsRequest) returns (GetEmulatorsResponse);
+  rpc UpdateEmulators(UpdateEmulatorsRequest) returns (UpdateEmulatorsResponse);
+  rpc DeleteEmulators(DeleteEmulatorsRequest) returns (DeleteEmulatorsResponse);
 
-  rpc CreateEmulatorProfiles(retrom.CreateEmulatorProfilesRequest) returns (retrom.CreateEmulatorProfilesResponse);
-  rpc GetEmulatorProfiles(retrom.GetEmulatorProfilesRequest) returns (retrom.GetEmulatorProfilesResponse);
-  rpc UpdateEmulatorProfiles(retrom.UpdateEmulatorProfilesRequest) returns (retrom.UpdateEmulatorProfilesResponse);
-  rpc DeleteEmulatorProfiles(retrom.DeleteEmulatorProfilesRequest) returns (retrom.DeleteEmulatorProfilesResponse);
+  rpc CreateEmulatorProfiles(CreateEmulatorProfilesRequest) returns (CreateEmulatorProfilesResponse);
+  rpc GetEmulatorProfiles(GetEmulatorProfilesRequest) returns (GetEmulatorProfilesResponse);
+  rpc UpdateEmulatorProfiles(UpdateEmulatorProfilesRequest) returns (UpdateEmulatorProfilesResponse);
+  rpc DeleteEmulatorProfiles(DeleteEmulatorProfilesRequest) returns (DeleteEmulatorProfilesResponse);
 
-  rpc GetDefaultEmulatorProfiles(retrom.GetDefaultEmulatorProfilesRequest) returns (retrom.GetDefaultEmulatorProfilesResponse);
-  rpc UpdateDefaultEmulatorProfiles(retrom.UpdateDefaultEmulatorProfilesRequest) returns (retrom.UpdateDefaultEmulatorProfilesResponse);
-  rpc DeleteDefaultEmulatorProfiles(retrom.DeleteDefaultEmulatorProfilesRequest) returns (retrom.DeleteDefaultEmulatorProfilesResponse);
+  rpc GetDefaultEmulatorProfiles(GetDefaultEmulatorProfilesRequest) returns (GetDefaultEmulatorProfilesResponse);
+  rpc UpdateDefaultEmulatorProfiles(UpdateDefaultEmulatorProfilesRequest) returns (UpdateDefaultEmulatorProfilesResponse);
+  rpc DeleteDefaultEmulatorProfiles(DeleteDefaultEmulatorProfilesRequest) returns (DeleteDefaultEmulatorProfilesResponse);
 
-  rpc CreateLocalEmulatorConfigs(retrom.CreateLocalEmulatorConfigsRequest) returns (retrom.CreateLocalEmulatorConfigsResponse);
-  rpc GetLocalEmulatorConfigs(retrom.GetLocalEmulatorConfigsRequest) returns (retrom.GetLocalEmulatorConfigsResponse);
-  rpc UpdateLocalEmulatorConfigs(retrom.UpdateLocalEmulatorConfigsRequest) returns (retrom.UpdateLocalEmulatorConfigsResponse);
-  rpc DeleteLocalEmulatorConfigs(retrom.DeleteLocalEmulatorConfigsRequest) returns (retrom.DeleteLocalEmulatorConfigsResponse);
+  rpc CreateLocalEmulatorConfigs(CreateLocalEmulatorConfigsRequest) returns (CreateLocalEmulatorConfigsResponse);
+  rpc GetLocalEmulatorConfigs(GetLocalEmulatorConfigsRequest) returns (GetLocalEmulatorConfigsResponse);
+  rpc UpdateLocalEmulatorConfigs(UpdateLocalEmulatorConfigsRequest) returns (UpdateLocalEmulatorConfigsResponse);
+  rpc DeleteLocalEmulatorConfigs(DeleteLocalEmulatorConfigsRequest) returns (DeleteLocalEmulatorConfigsResponse);
 
-  rpc GetEmulatorPlatformMaps(GetEmulatorPlatformMapsRequest) returns (GetEmulatorPlatformMapsResponse);
-  rpc UpdateEmulatorPlatformMaps(UpdateEmulatorPlatformMapsRequest) returns (UpdateEmulatorPlatformMapsResponse);
-  rpc DeleteEmulatorPlatformMaps(DeleteEmulatorPlatformMapsRequest) returns (DeleteEmulatorPlatformMapsResponse);
+  rpc GetEmulatorPlatforms(GetEmulatorPlatformsRequest) returns (GetEmulatorPlatformsResponse);
+  rpc UpdateEmulatorPlatforms(UpdateEmulatorPlatformsRequest) returns (UpdateEmulatorPlatformsResponse);
+  rpc DeleteEmulatorPlatforms(DeleteEmulatorPlatformsRequest) returns (DeleteEmulatorPlatformsResponse);
 }
 
-message EmulatorPlatformMap {
-  int32 emulator_id = 1;
-  int32 platform_id = 2;
-  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+message CreateEmulatorsRequest {
+  repeated Emulator emulators = 1;
 }
 
-message GetEmulatorPlatformMapsRequest {
-  repeated int32 emulator_ids = 1;
-  repeated int32 platform_ids = 2;
+message CreateEmulatorsResponse {
+  repeated Emulator emulators_created = 1;
 }
 
-message GetEmulatorPlatformMapsResponse {
-  repeated EmulatorPlatformMap emulator_platform_maps = 1;
+message GetEmulatorsRequest {
+  repeated string ids = 1;
+  repeated string supported_platform_ids = 2;
 }
 
-message UpdateEmulatorPlatformMapsRequest {
-  repeated EmulatorPlatformMap emulator_platform_maps = 1;
+message GetEmulatorsResponse {
+  repeated Emulator emulators = 1;
 }
 
-message UpdateEmulatorPlatformMapsResponse {
-  repeated EmulatorPlatformMap emulator_platform_maps_updated = 1;
+message UpdateEmulatorsRequest {
+  repeated Emulator emulators = 1;
 }
 
-message DeleteEmulatorPlatformMapsRequest {
-  repeated int32 emulator_ids = 1;
-  repeated int32 platform_ids = 2;
+message UpdateEmulatorsResponse {
+  repeated Emulator emulators_updated = 1;
 }
 
-message DeleteEmulatorPlatformMapsResponse {
-  repeated EmulatorPlatformMap emulator_platform_maps_deleted = 1;
+message DeleteEmulatorsRequest {
+  repeated string ids = 1;
+}
+
+message DeleteEmulatorsResponse {
+  repeated Emulator emulators_deleted = 1;
+}
+
+message CreateEmulatorProfilesRequest {
+  repeated EmulatorProfile profiles = 1;
+}
+
+message CreateEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles_created = 1;
+}
+
+message GetEmulatorProfilesRequest {
+  repeated string ids = 1;
+  repeated string emulator_ids = 2;
+}
+
+message GetEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles = 1;
+}
+
+message UpdateEmulatorProfilesRequest {
+  repeated EmulatorProfile profiles = 1;
+}
+
+message UpdateEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles_updated = 1;
+}
+
+message DeleteEmulatorProfilesRequest {
+  repeated string ids = 1;
+}
+
+message DeleteEmulatorProfilesResponse {
+  repeated EmulatorProfile profiles_deleted = 1;
+}
+
+message GetDefaultEmulatorProfilesRequest {
+  repeated string platform_ids = 1;
+}
+
+message GetDefaultEmulatorProfilesResponse {
+  repeated DefaultEmulatorProfile default_profiles = 1;
+}
+
+message UpdateDefaultEmulatorProfilesRequest {
+  repeated DefaultEmulatorProfile default_profiles = 1;
+}
+
+message UpdateDefaultEmulatorProfilesResponse {
+  repeated DefaultEmulatorProfile default_profiles_updated = 1;
+}
+
+message DeleteDefaultEmulatorProfilesRequest {
+  repeated string platform_ids = 1;
+}
+
+message DeleteDefaultEmulatorProfilesResponse {
+  repeated DefaultEmulatorProfile default_profiles_deleted = 1;
+}
+
+message CreateLocalEmulatorConfigsRequest {
+  repeated LocalEmulatorConfig configs = 1;
+}
+
+message CreateLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs_created = 1;
+}
+
+message GetLocalEmulatorConfigsRequest {
+  repeated string emulator_ids = 1;
+  string client_id = 2;
+}
+
+message GetLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs = 1;
+}
+
+message UpdateLocalEmulatorConfigsRequest {
+  repeated LocalEmulatorConfig configs = 1;
+}
+
+message UpdateLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs_updated = 1;
+}
+
+message DeleteLocalEmulatorConfigsRequest {
+  repeated string ids = 1;
+}
+
+message DeleteLocalEmulatorConfigsResponse {
+  repeated LocalEmulatorConfig configs_deleted = 1;
+}
+
+message GetEmulatorPlatformsRequest {
+  repeated string emulator_ids = 1;
+  repeated string platform_ids = 2;
+}
+
+message GetEmulatorPlatformsResponse {
+  repeated EmulatorPlatform emulator_platform_maps = 1;
+}
+
+message UpdateEmulatorPlatformsRequest {
+  repeated EmulatorPlatform emulator_platform_maps = 1;
+}
+
+message UpdateEmulatorPlatformsResponse {
+  repeated EmulatorPlatform emulator_platform_maps_updated = 1;
+}
+
+message DeleteEmulatorPlatformsRequest {
+  repeated string emulator_ids = 1;
+  repeated string platform_ids = 2;
+}
+
+message DeleteEmulatorPlatformsResponse {
+  repeated EmulatorPlatform emulator_platform_maps_deleted = 1;
 }
