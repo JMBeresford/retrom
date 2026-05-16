@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package retrom.services.file_explorer.v1;
 
-import "retrom/files.proto";
+import "retrom/files/v1/files.proto";
 
 service FileExplorerService {
   rpc GetFilesystemNode(GetFilesystemNodeRequest) returns (GetFilesystemNodeResponse);
@@ -14,8 +14,8 @@ message GetFilesystemNodeRequest {
 }
 
 message GetFilesystemNodeResponse {
-  optional retrom.files.FilesystemNode node = 1;
-  repeated retrom.files.FilesystemNode children = 2;
+  optional retrom.files.v1.FilesystemNode node = 1;
+  repeated retrom.files.v1.FilesystemNode children = 2;
 }
 
 message GetStatRequest {
@@ -25,5 +25,5 @@ message GetStatRequest {
 }
 
 message GetStatResponse {
-  repeated retrom.files.FileStat stats = 1;
+  repeated retrom.files.v1.FileStat stats = 1;
 }

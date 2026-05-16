@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package retrom;
+package retrom.services.clients.v1;
 
-import 'retrom/models/clients.proto';
+import "retrom/services/clients/v1/models.proto";
 
 service ClientService {
   rpc CreateClient(CreateClientRequest) returns (CreateClientResponse);
@@ -12,7 +12,7 @@ service ClientService {
 }
 
 message CreateClientRequest {
-  NewClient client = 1;
+  Client client = 1;
 }
 
 message CreateClientResponse {
@@ -29,7 +29,7 @@ message GetClientsResponse {
 }
 
 message UpdateClientsRequest {
-  repeated UpdatedClient clients = 1;
+  repeated Client clients = 1;
 }
 
 message UpdateClientsResponse {

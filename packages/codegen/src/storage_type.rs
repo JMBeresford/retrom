@@ -5,6 +5,8 @@ use serde::{
 
 struct StringifiedStorageTypeVisitor;
 
+use crate::retrom::services::config::v1::StorageType;
+
 impl Visitor<'_> for StringifiedStorageTypeVisitor {
     type Value = Option<i32>;
 
@@ -17,8 +19,8 @@ impl Visitor<'_> for StringifiedStorageTypeVisitor {
         E: de::Error,
     {
         match v {
-            "MultiFileGame" => Ok(Some(crate::retrom::StorageType::MultiFileGame as i32)),
-            "SingleFileGame" => Ok(Some(crate::retrom::StorageType::SingleFileGame as i32)),
+            "MultiFileGame" => Ok(Some(StorageType::MultiFileGame as i32)),
+            "SingleFileGame" => Ok(Some(StorageType::SingleFileGame as i32)),
             _ => Err(de::Error::unknown_variant(
                 v,
                 &["MultiFileGame", "SingleFileGame"],
@@ -45,7 +47,7 @@ pub fn serialize<S>(value: &Option<i32>, serializer: S) -> Result<S::Ok, S::Erro
 where
     S: serde::Serializer,
 {
-    use crate::retrom::StorageType;
+    use crate::retrom::services::config::v1::StorageType;
 
     let value: Option<StorageType> = value.map(|v| StorageType::try_from(v).unwrap_or_default());
 

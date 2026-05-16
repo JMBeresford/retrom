@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package retrom.client.saves;
+package retrom.client.saves.v1;
 
 import "google/protobuf/timestamp.proto";
 
@@ -43,12 +43,12 @@ enum SyncBehavior {
 }
 
 message SyncEmulatorSavesPayload {
-  int32 emulator_id = 1;
+  string emulator_id = 1;
   optional SyncBehavior behavior = 2;
 }
 
 message SyncEmulatorSaveStatesPayload {
-  int32 emulator_id = 1;
+  string emulator_id = 1;
   optional SyncBehavior behavior = 2;
 }
 
@@ -59,12 +59,12 @@ message ConflictReport {
 
 message SyncEmulatorSavesResponse {
   SaveSyncStatus status = 1;
-  int32 emulator_id = 2;
+  string emulator_id = 2;
   optional ConflictReport conflict_report = 3;
 }
 
 message SyncEmulatorSaveStatesResponse {
   SaveSyncStatus status = 1;
-  int32 emulator_id = 2;
+  string emulator_id = 2;
   optional ConflictReport conflict_report = 3;
 }

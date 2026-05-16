@@ -2,44 +2,8 @@ syntax = "proto3";
 
 package retrom.services.library.v1;
 
-import "google/api/field_behavior.proto";
-import "google/protobuf/timestamp.proto";
-import "retrom/models/game-files.proto";
-import "retrom/models/games.proto";
-import "retrom/models/metadata.proto";
-import "retrom/models/platforms.proto";
-
-// Library is a first-class entity representing a game library.
-message Library {
-  // OUTPUT_ONLY — set by the server; omit on create/update.
-  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string name = 2;
-
-  // structure_definition is a parameterized path template that describes how the
-  // library's file tree maps to game entities.  Well-known tokens:
-  //   {library}  — the root directory for this library
-  //   {platform} — a platform sub-directory
-  //   {game}     — a game sub-directory
-  //
-  // Example: "{library}/{platform}/{game}" means each sub-directory of the root
-  // represents a platform, and each sub-directory of a platform represents a game.
-  //
-  // Arbitrary tokens (e.g. {region}) are also supported and will eventually be used
-  // to populate tag values for library items during library scans.
-  string structure_definition = 3;
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
-}
-
-// RootDirectory is a filesystem path that can be assigned to libraries, platforms,
-// or games via mapping tables, enabling flexible directory sharing across entities.
-message RootDirectory {
-  // OUTPUT_ONLY — set by the server; omit on create/update.
-  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string path = 2;
-  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-}
+import "retrom/services/library/v1/models.proto";
+import "retrom/services/metadata/v1/models.proto";
 
 service LibraryService {
   rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
@@ -94,9 +58,9 @@ message DeleteMissingEntriesRequest {
 }
 
 message DeleteMissingEntriesResponse {
-  repeated retrom.Platform platforms_deleted = 1;
-  repeated retrom.Game games_deleted = 2;
-  repeated retrom.GameFile game_files_deleted = 3;
+  repeated retrom.services.library.v1.Platform platforms_deleted = 1;
+  repeated retrom.services.library.v1.Game games_deleted = 2;
+  repeated retrom.services.library.v1.GameFile game_files_deleted = 3;
 }
 
 message GetLibrariesRequest {
@@ -162,8 +126,8 @@ message GetPlatformsRequest {
 }
 
 message GetPlatformsResponse {
-  repeated retrom.Platform platforms = 1;
-  repeated retrom.PlatformMetadata metadata = 2;
+  repeated retrom.services.library.v1.Platform platforms = 1;
+  repeated retrom.services.metadata.v1.PlatformMetadata metadata = 2;
 }
 
 message DeletePlatformsRequest {
@@ -173,15 +137,15 @@ message DeletePlatformsRequest {
 }
 
 message DeletePlatformsResponse {
-  repeated retrom.Platform platforms_deleted = 1;
+  repeated retrom.services.library.v1.Platform platforms_deleted = 1;
 }
 
 message UpdatePlatformsRequest {
-  repeated retrom.UpdatedPlatform platforms = 1;
+  repeated retrom.services.library.v1.Platform platforms = 1;
 }
 
 message UpdatePlatformsResponse {
-  repeated retrom.Platform platforms_updated = 1;
+  repeated retrom.services.library.v1.Platform platforms_updated = 1;
 }
 
 message GetGamesRequest {
@@ -193,9 +157,9 @@ message GetGamesRequest {
 }
 
 message GetGamesResponse {
-  repeated retrom.Game games = 1;
-  repeated retrom.GameMetadata metadata = 2;
-  repeated retrom.GameFile game_files = 3;
+  repeated retrom.services.library.v1.Game games = 1;
+  repeated retrom.services.metadata.v1.GameMetadata metadata = 2;
+  repeated retrom.services.library.v1.GameFile game_files = 3;
 }
 
 message DeleteGamesRequest {
@@ -205,15 +169,15 @@ message DeleteGamesRequest {
 }
 
 message DeleteGamesResponse {
-  repeated retrom.Game games_deleted = 1;
+  repeated retrom.services.library.v1.Game games_deleted = 1;
 }
 
 message UpdateGamesRequest {
-  repeated retrom.UpdatedGame games = 1;
+  repeated retrom.services.library.v1.Game games = 1;
 }
 
 message UpdateGamesResponse {
-  repeated retrom.Game games_updated = 1;
+  repeated retrom.services.library.v1.Game games_updated = 1;
 }
 
 message GetGameFilesRequest {
@@ -223,7 +187,7 @@ message GetGameFilesRequest {
 }
 
 message GetGameFilesResponse {
-  repeated retrom.GameFile game_files = 1;
+  repeated retrom.services.library.v1.GameFile game_files = 1;
 }
 
 message DeleteGameFilesRequest {
@@ -233,13 +197,13 @@ message DeleteGameFilesRequest {
 }
 
 message DeleteGameFilesResponse {
-  repeated retrom.GameFile game_files_deleted = 1;
+  repeated retrom.services.library.v1.GameFile game_files_deleted = 1;
 }
 
 message UpdateGameFilesRequest {
-  repeated retrom.UpdatedGameFile game_files = 1;
+  repeated retrom.services.library.v1.GameFile game_files = 1;
 }
 
 message UpdateGameFilesResponse {
-  repeated retrom.GameFile game_files_updated = 1;
+  repeated retrom.services.library.v1.GameFile game_files_updated = 1;
 }

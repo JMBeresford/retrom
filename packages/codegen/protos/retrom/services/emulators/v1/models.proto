@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package retrom.services.emulators.v1;
+
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+
+enum SaveStrategy {
+  SINGLE_FILE = 0;
+  FILE_SYSTEM_DIRECTORY = 1;
+  DISK_IMAGE = 2;
+}
+
+enum OperatingSystem {
+  WINDOWS = 0;
+  MACOS = 1;
+  LINUX_x86_64 = 2;
+  WASM = 3;
+}
+
+message Emulator {
+  string id = 1;
+  repeated string supported_platforms = 2 [deprecated = true];
+  string name = 3;
+  SaveStrategy save_strategy = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  bool built_in = 7;
+  optional string libretro_name = 8;
+  repeated OperatingSystem operating_systems = 9;
+}
+
+message EmulatorProfile {
+  string id = 1;
+  string emulator_id = 2;
+  string name = 3;
+  repeated string supported_extensions = 4;
+  repeated string custom_args = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+  bool built_in = 8;
+}
+
+message DefaultEmulatorProfile {
+  string platform_id = 1;
+  string emulator_profile_id = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string client_id = 5;
+}
+
+message LocalEmulatorConfig {
+  string id = 1;
+  string emulator_id = 2;
+  string client_id = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  string executable_path = 6;
+  optional string nickname = 7;
+  optional string save_data_path = 8;
+  optional string save_states_path = 9;
+  // FK to emulator_profiles.id; the default profile used when launching this emulator.
+  optional string default_profile_id = 10;
+  optional string bios_directory = 11;
+  optional string extra_files_directory = 12;
+}
+
+message EmulatorPlatform {
+  string emulator_id = 1;
+  string platform_id = 2;
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+}

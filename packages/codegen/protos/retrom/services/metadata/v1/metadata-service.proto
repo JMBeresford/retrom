@@ -4,26 +4,25 @@ package retrom.services.metadata.v1;
 
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
-// The v1 service reuses the legacy request/response message types while the
-// message definitions are still in the top-level retrom package.  They will
-// be migrated to this package in a later phase.
-import "retrom/services/metadata-service.proto";
+import "retrom/providers/igdb/v1/igdb.proto";
+import "retrom/services/library/v1/models.proto";
+import "retrom/services/metadata/v1/models.proto";
 
 service MetadataService {
-  rpc GetGameMetadata(retrom.GetGameMetadataRequest) returns (retrom.GetGameMetadataResponse);
-  rpc UpdateGameMetadata(retrom.UpdateGameMetadataRequest) returns (retrom.UpdateGameMetadataResponse);
+  rpc GetGameMetadata(GetGameMetadataRequest) returns (GetGameMetadataResponse);
+  rpc UpdateGameMetadata(UpdateGameMetadataRequest) returns (UpdateGameMetadataResponse);
 
-  rpc GetPlatformMetadata(retrom.GetPlatformMetadataRequest) returns (retrom.GetPlatformMetadataResponse);
-  rpc UpdatePlatformMetadata(retrom.UpdatePlatformMetadataRequest) returns (retrom.UpdatePlatformMetadataResponse);
+  rpc GetPlatformMetadata(GetPlatformMetadataRequest) returns (GetPlatformMetadataResponse);
+  rpc UpdatePlatformMetadata(UpdatePlatformMetadataRequest) returns (UpdatePlatformMetadataResponse);
 
-  rpc GetIgdbSearch(retrom.GetIgdbSearchRequest) returns (retrom.GetIgdbSearchResponse);
-  rpc GetIgdbGameSearchResults(retrom.GetIgdbGameSearchResultsRequest) returns (retrom.GetIgdbGameSearchResultsResponse);
-  rpc GetIgdbPlatformSearchResults(retrom.GetIgdbPlatformSearchResultsRequest) returns (retrom.GetIgdbPlatformSearchResultsResponse);
+  rpc GetIgdbSearch(GetIgdbSearchRequest) returns (GetIgdbSearchResponse);
+  rpc GetIgdbGameSearchResults(GetIgdbGameSearchResultsRequest) returns (GetIgdbGameSearchResultsResponse);
+  rpc GetIgdbPlatformSearchResults(GetIgdbPlatformSearchResultsRequest) returns (GetIgdbPlatformSearchResultsResponse);
 
-  rpc SyncSteamMetadata(retrom.SyncSteamMetadataRequest) returns (retrom.SyncSteamMetadataResponse);
+  rpc SyncSteamMetadata(SyncSteamMetadataRequest) returns (SyncSteamMetadataResponse);
 
-  rpc GetLocalMetadataStatus(retrom.GetLocalMetadataStatusRequest) returns (retrom.GetLocalMetadataStatusResponse);
-  rpc DeleteLocalMetadata(retrom.DeleteLocalMetadataRequest) returns (retrom.DeleteLocalMetadataResponse);
+  rpc GetLocalMetadataStatus(GetLocalMetadataStatusRequest) returns (GetLocalMetadataStatusResponse);
+  rpc DeleteLocalMetadata(DeleteLocalMetadataRequest) returns (DeleteLocalMetadataResponse);
 
   rpc GetMetadataProviders(GetMetadataProvidersRequest) returns (GetMetadataProvidersResponse);
 }
@@ -34,44 +33,116 @@ message GetMetadataProvidersResponse {
   repeated MetadataProvider providers = 1;
 }
 
-// MetadataProvider represents a registered metadata source (e.g. IGDB, Steam).
-// Well-known providers are seeded at startup.
-message MetadataProvider {
-  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string name = 2;
-  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+message GetGameMetadataRequest {
+  repeated string game_ids = 1;
 }
 
-// VideoMetadata is a single video URL associated with a game_metadata record.
-// Normalises the deprecated game_metadata.video_urls array column.
-message VideoMetadata {
-  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // References game_metadata.id.
-  int32 game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string url = 3;
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+message GetGameMetadataResponse {
+  message SimilarGames {
+    repeated retrom.services.library.v1.Game value = 1;
+  }
+
+  // paths to media assets, relative to the global metadata dir or served HTTP endpoints
+  message MediaPaths {
+    optional string cover_url = 1;
+    optional string background_url = 2;
+    optional string icon_url = 3;
+    repeated string video_urls = 4;
+    repeated string screenshot_urls = 5;
+    repeated string artwork_urls = 6;
+  }
+
+  repeated GameMetadata metadata = 1;
+  map<string, SimilarGames> similar_games = 2;
+  map<string, MediaPaths> media_paths = 3;
 }
 
-// ScreenshotMetadata is a single screenshot URL associated with a game_metadata record.
-// Normalises the deprecated game_metadata.screenshot_urls array column.
-message ScreenshotMetadata {
-  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // References game_metadata.id.
-  int32 game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string url = 3;
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+message GetPlatformMetadataRequest {
+  repeated string platform_ids = 1;
 }
 
-// ArtworkMetadata is a single artwork URL associated with a game_metadata record.
-// Normalises the deprecated game_metadata.artwork_urls array column.
-message ArtworkMetadata {
-  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // References game_metadata.id.
-  int32 game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string url = 3;
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+message GetPlatformMetadataResponse {
+  repeated PlatformMetadata metadata = 1;
 }
+
+message GetIgdbGameSearchResultsRequest {
+  retrom.providers.igdb.v1.IgdbGameSearchQuery query = 1;
+}
+
+message GetIgdbGameSearchResultsResponse {
+  repeated GameMetadata metadata = 1;
+}
+
+message UpdateGameMetadataRequest {
+  repeated GameMetadata metadata = 1;
+}
+
+message UpdateGameMetadataResponse {
+  repeated GameMetadata metadata_updated = 1;
+}
+
+message GetIgdbPlatformSearchResultsRequest {
+  retrom.providers.igdb.v1.IgdbPlatformSearchQuery query = 1;
+}
+
+message GetIgdbPlatformSearchResultsResponse {
+  repeated PlatformMetadata metadata = 1;
+}
+
+message UpdatePlatformMetadataRequest {
+  repeated PlatformMetadata metadata = 1;
+}
+
+message UpdatePlatformMetadataResponse {
+  repeated PlatformMetadata metadata_updated = 1;
+}
+
+// Arbitrary search query for IGDB
+message GetIgdbSearchRequest {
+  enum IgdbSearchType {
+    GAME = 0;
+    PLATFORM = 1;
+  }
+
+  IgdbSearchType search_type = 1;
+  optional retrom.providers.igdb.v1.IgdbSearch search = 2;
+  optional retrom.providers.igdb.v1.IgdbPagination pagination = 3;
+  optional retrom.providers.igdb.v1.IgdbFilters filters = 4;
+  optional retrom.providers.igdb.v1.IgdbFields fields = 5;
+}
+
+message IgdbSearchGameResponse {
+  repeated GameMetadata games = 1;
+}
+
+message IgdbSearchPlatformResponse {
+  repeated PlatformMetadata platforms = 1;
+}
+
+message GetIgdbSearchResponse {
+  oneof search_results {
+    IgdbSearchGameResponse game_matches = 1;
+    IgdbSearchPlatformResponse platform_matches = 2;
+  }
+}
+
+message SyncSteamMetadataRequest {
+  message Selector {
+    string game_id = 1;
+  }
+
+  repeated Selector selectors = 1;
+}
+
+message SyncSteamMetadataResponse {}
+
+message GetLocalMetadataStatusRequest {}
+
+message GetLocalMetadataStatusResponse {
+  int64 total_byte_size = 1;
+  int32 total_files = 2;
+}
+
+message DeleteLocalMetadataRequest {}
+
+message DeleteLocalMetadataResponse {}
