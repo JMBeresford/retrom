@@ -32,13 +32,13 @@
 - [x] 2.8 Tag Service — new service with tag domain management
 - [x] 2.9 Saves Service — move to per-service crate (no interface changes)
 - [x] 2.10 Deprecated services — `GameService`, `PlatformService`, `ServerService` forwarding stubs
-- [ ] 2.11 Acceptance criteria
+- [x] 2.11 Acceptance criteria
 
 ### Phase 3: Service Decomposition
 
 - [x] 3.1 Create per-service crates (`retrom-service-{library,metadata,emulators,clients,config,jobs,tags,files,saves}`)
 - [x] 3.2 Refactor `retrom-db` for sqlx + `AnyPool` support (replaces Diesel)
-- [ ] 3.3 Replace legacy migrations with DB-agnostic migrations; support existing-user data migration (after 3.2)
+- [x] 3.3 Replace legacy migrations with DB-agnostic migrations; support existing-user data migration (after 3.2)
 - [ ] 3.4 Migrate per-service crates to sqlx (after 3.3):
   - [ ] `retrom-service-library`
   - [ ] `retrom-service-metadata`
@@ -56,12 +56,12 @@
 
 ### Phase 4: Data Migration
 
-- [ ] 4.1 Seed metadata providers and tag domains
-- [ ] 4.2 Normalise `video_urls` / `screenshot_urls` / `artwork_urls` into relation tables
-- [ ] 4.3 Normalise `emulators.supported_platforms` into `emulator_platform_maps`
+- [x] 4.1 Seed metadata providers and tag domains
+- [x] 4.2 Normalise `video_urls` / `screenshot_urls` / `artwork_urls` into relation tables
+- [x] 4.3 Normalise `emulators.supported_platforms` into `emulator_platform_maps`
 - [ ] 4.4 Migrate library model from `ServerConfig.content_directories`
-- [ ] 4.5 Migrate game-platform relationships to `game_platform_maps`; drop `games.platform_id`
-- [ ] 4.6 Migrate genre tags to `tags` / `game_tag_maps`; drop `game_genres` / `game_genre_maps`
+- [x] 4.5 Migrate game-platform relationships to `game_platform_maps`; drop `games.platform_id`
+- [x] 4.6 Migrate genre tags to `tags` / `game_tag_maps`; drop `game_genres` / `game_genre_maps`
 - [ ] 4.7 Acceptance criteria
 
 ### Phase 5: Client Compatibility
@@ -1470,16 +1470,16 @@ both PostgreSQL and SQLite). It must:
 - Use **no** array columns (`integer[]`, `text[]`). The following v1 array columns are replaced
   by relational tables in the v2 schema:
 
-  | v1 column | v2 replacement |
-  |---|---|
-  | `emulators.supported_platforms integer[]` | `emulator_supported_platforms(emulator_id, platform_id)` |
-  | `emulators.operating_systems integer[]` | `emulator_operating_systems(emulator_id, os_id)` |
-  | `emulator_profiles.supported_extensions text[]` | `emulator_profile_extensions(profile_id, extension)` |
-  | `emulator_profiles.custom_args text[]` | `emulator_profiles.custom_args TEXT` — array elements joined into a single space-separated string; order is preserved |
-  | `game_metadata.links text[]` | `game_metadata_links(game_id, url)` |
-  | `game_metadata.video_urls text[]` | `game_metadata_videos(game_id, url)` |
-  | `game_metadata.screenshot_urls text[]` | `game_metadata_screenshots(game_id, url)` |
-  | `game_metadata.artwork_urls text[]` | `game_metadata_artwork(game_id, url)` |
+  | v1 column                                       | v2 replacement                                                                                                        |
+  | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+  | `emulators.supported_platforms integer[]`       | `emulator_supported_platforms(emulator_id, platform_id)`                                                              |
+  | `emulators.operating_systems integer[]`         | `emulator_operating_systems(emulator_id, os_id)`                                                                      |
+  | `emulator_profiles.supported_extensions text[]` | `emulator_profile_extensions(profile_id, extension)`                                                                  |
+  | `emulator_profiles.custom_args text[]`          | `emulator_profiles.custom_args TEXT` — array elements joined into a single space-separated string; order is preserved |
+  | `game_metadata.links text[]`                    | `game_metadata_links(game_id, url)`                                                                                   |
+  | `game_metadata.video_urls text[]`               | `game_metadata_videos(game_id, url)`                                                                                  |
+  | `game_metadata.screenshot_urls text[]`          | `game_metadata_screenshots(game_id, url)`                                                                             |
+  | `game_metadata.artwork_urls text[]`             | `game_metadata_artwork(game_id, url)`                                                                                 |
 
 - Use triggers for `created_at` and `updated_at` maintenance — SQLite and PostgreSQL both
   support `CREATE TRIGGER IF NOT EXISTS`. Use portable trigger syntax (no PL/pgSQL in trigger
@@ -1622,17 +1622,17 @@ contain Diesel-specific imports, derive macros, and query logic that was not yet
 
 **Migration status:**
 
-| Service Crate              | Migrate to sqlx | Use ConfigService via RPC |
-| -------------------------- | :-------------: | :-----------------------: |
-| `retrom-service-library`   |        ☐        |             ☐             |
-| `retrom-service-metadata`  |        ☐        |             ☐             |
-| `retrom-service-emulators` |        ☐        |             ☐             |
-| `retrom-service-clients`   |        ☐        |             ☐             |
-| `retrom-service-config`    |        ☐        |             ☐             |
-| `retrom-service-jobs`      |        ☐        |             ☐             |
-| `retrom-service-tags`      |        ☐        |             ☐             |
-| `retrom-service-files`     |        ☐        |             ☐             |
-| `retrom-service-saves`     |        ☐        |             ☐             |
+| Service Crate              | Migrate to sqlx |
+| -------------------------- | :-------------: |
+| `retrom-service-config`    |        x        |
+| `retrom-service-library`   |        ☐        |
+| `retrom-service-metadata`  |        ☐        |
+| `retrom-service-emulators` |        ☐        |
+| `retrom-service-clients`   |        ☐        |
+| `retrom-service-jobs`      |        ☐        |
+| `retrom-service-tags`      |        ☐        |
+| `retrom-service-files`     |        ☐        |
+| `retrom-service-saves`     |        ☐        |
 
 > **Suggested order:** Migrate `retrom-service-config` first (smallest surface area, no
 > external metadata provider dependencies), then proceed to `retrom-service-library`,
@@ -1686,6 +1686,20 @@ are updated in a single pass.
 
 > **Note:** `retrom-service-config` itself is exempt from this step — it _is_ the config
 > service and therefore owns the `ServerConfigManager` and config file access by design.
+
+**Migration status:**
+
+| Service Crate              | Use ConfigService via RPC |
+| -------------------------- | :-----------------------: |
+| `retrom-service-library`   |             ☐             |
+| `retrom-service-metadata`  |             ☐             |
+| `retrom-service-emulators` |             ☐             |
+| `retrom-service-clients`   |             ☐             |
+| `retrom-service-config`    |             ☐             |
+| `retrom-service-jobs`      |             ☐             |
+| `retrom-service-tags`      |             ☐             |
+| `retrom-service-files`     |             ☐             |
+| `retrom-service-saves`     |             ☐             |
 
 **Acceptance criteria:**
 
@@ -2034,8 +2048,8 @@ Phase 1 (Data Layer + Proto models)
 6. Phase 3.5 (per-service crate ConfigService RPC migrations — one crate at a time, can overlap with 3.4)
 7. Phase 3.6 (retrom-metadata crate extraction)
 8. Phase 3.1 + 3.7 (per-crate extraction + binary wiring)
-8. Phase 4 (data migration against staging, then production)
-9. Phase 5 (client updates — can overlap with 2–5)
+9. Phase 4 (data migration against staging, then production)
+10. Phase 5 (client updates — can overlap with 2–5)
 
 ---
 
