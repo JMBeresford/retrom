@@ -1,4 +1,12 @@
 import commitPartial from "./release-notes-template.js";
+import Handlebars from "handlebars";
+
+Handlebars.registerHelper("indent", (text) =>
+  text
+    .split("\n")
+    .map((line) => "\t" + line)
+    .join("\n"),
+);
 
 /**
  * @type {import('semantic-release').GlobalConfig}
