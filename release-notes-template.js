@@ -1,14 +1,5 @@
-import Handlebars from "handlebars";
-
-Handlebars.registerHelper("indent", (text) =>
-  text
-    .split("\n")
-    .map((line) => "\t" + line)
-    .join("\n"),
-);
-
 export default `
-* {{header}}
+#### {{header}}
 
 {{~!-- commit link --}}
 {{~#if @root.linkReferences}} ([{{hash}}](
@@ -64,6 +55,7 @@ export default `
 
 {{~#if body}}
 
-  {{indent body}}
+{{body}}
+
 {{/if}}
 `;
