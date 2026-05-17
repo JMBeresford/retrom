@@ -1,0 +1,53 @@
+.markdown {
+  h1 {
+    font-size: 2em;
+  }
+
+  h2 {
+    color: var(--color-accent-text);
+    font-weight: 900;
+    font-size: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  h3 {
+    font-weight: 800;
+    font-size: 1.125em;
+    margin-bottom: 0.25em;
+    text-decoration: underline;
+  }
+
+  h4 {
+    font-weight: 500;
+    font-size: 1em;
+    margin: 0.25em 0;
+  }
+
+  h5 {
+    font-size: 0.83em;
+  }
+
+  h6 {
+    font-size: 0.67em;
+  }
+
+  p {
+    position: relative;
+
+    &:before {
+      content: "";
+
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--color-accent-text);
+    }
+
+    padding: 0 0.5em;
+    color: var(--color-muted-foreground);
+    font-size: 0.95em;
+    margin-bottom: 0.5em;
+  }
+}

@@ -5,7 +5,7 @@ import {
 } from "@retrom/codegen/retrom/server/server-info_pb";
 import { Update } from "@tauri-apps/plugin-updater";
 import Markdown from "react-markdown";
-import classes from "./version-utils.module.scss";
+import "./version-utils.scss";
 import { create } from "@bufbuild/protobuf";
 import { cn } from "@retrom/ui/lib/utils";
 
@@ -83,7 +83,7 @@ export function Changelog(props: { update: Update }) {
                 />
               ),
             }}
-            className={classes.markdown}
+            className="markdown"
           >
             {body}
           </Markdown>
