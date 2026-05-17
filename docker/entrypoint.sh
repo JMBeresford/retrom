@@ -31,9 +31,7 @@ echo "Retrom GID: $(id -g retrom)"
 
 echo -e $SEP
 
-if [ "${SKIP_CHOWN}" = "true" ]; then
-    echo -e "Skipping chown (SKIP_CHOWN=true) - ensure file permissions are managed externally\n"
-else
+if [[ "${SKIP_RECURSIVE_CHOWN}" == "false" || "${SKIP_RECURSIVE_CHOWN}" == "0" || -z "${SKIP_RECURSIVE_CHOWN}" ]]; then
     chown retrom:retrom /app
     for i in "${app_dirs[@]}"; do
         if [  -d "$i" ]; then
@@ -43,10 +41,12 @@ else
             find "$i" \( ! -user retrom -or ! -group retrom \) -exec chown retrom:retrom {} +
         fi
     done
-
-    # psql db dir needs 700 or 750 permissions
-    chmod 750 /app/data/db
+else
+    echo -e "Skipping recursive chown (SKIP_RECURSIVE_CHOWN=${SKIP_RECURSIVE_CHOWN}) - ensure file permissions are managed externally\n"
 fi
+
+# psql db dir needs 700 or 750 permissions
+chmod 750 /app/data/db
 
 if [ "$(id -u)" = 0 ]; then
     exec runuser -u retrom "$@"
