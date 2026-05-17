@@ -1,3 +1,20 @@
+## [0.8.2](https://github.com/JMBeresford/retrom/compare/v0.8.1...v0.8.2) (2026-05-17)
+
+### Bug Fixes
+
+
+#### fix(client): update changelog rendering ([b78dd2f2](https://github.com/JMBeresford/retrom/commit/b78dd2f28ade8563e38843f20f2ccec7bae64465))
+#### fix(docker): remove legacy web server ([92f065b3](https://github.com/JMBeresford/retrom/commit/92f065b3544a63761c3d5c6159d16fe24ec93934))
+The Retrom API server has been serving the web client for a while now,
+however it seems the unused legacy web server was never removed. This fixes the
+docker image such that the legacy web server is now no longer started.
+
+
+#### fix(docker): startup failure due to node version mismatch ([c94dc86f](https://github.com/JMBeresford/retrom/commit/c94dc86f339653e7331c826a6f00d5f1dbe0ce09))
+Updates the node.js version used in the docker image to match
+what the Retrom expects. This should resolve the startup failures
+in the latest release.
+
 ## [0.8.1](https://github.com/JMBeresford/retrom/compare/v0.8.0...v0.8.1) (2026-04-05)
 
 ### Features
