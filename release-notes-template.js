@@ -2,7 +2,7 @@ export default `
 #### {{header}}
 
 {{~!-- commit link --}}
-{{~#if @root.linkReferences}} ([{{hash}}](
+{{~#if @root.linkReferences}} ([{{commit.short}}](
   {{~#if @root.repository}}
     {{~#if @root.host}}
       {{~@root.host}}/
@@ -15,7 +15,7 @@ export default `
     {{~@root.repoUrl}}
   {{~/if}}/
   {{~@root.commit}}/{{hash}}))
-{{~else if hash}} {{hash}}{{~/if}}
+{{~else if hash}} {{commit.short}}{{~/if}}
 
 {{~!-- commit references --}}
 {{~#if references~}}
