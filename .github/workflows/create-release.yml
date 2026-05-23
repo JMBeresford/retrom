@@ -5,6 +5,8 @@ on:
         type: boolean
         default: true
     secrets:
+      CACHIX_TOKEN:
+        required: true
       RW_DEPLOY_KEY:
         required: true
       RELEASE_GH_TOKEN:
@@ -39,8 +41,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: install nix
-        uses: DeterminateSystems/determinate-nix-action@v3.21.0
+      - uses: cachix/install-nix-action@v31.10.6
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Print nixpkgs version
+        run: nix-instantiate --eval -E '(import <nixpkgs> {}).lib.version'
+
+      - uses: cachix/cachix-action@v17
+        with:
+          name: retrom
+          authToken: "${{ secrets.CACHIX_TOKEN }}"
 
       - name: get pnpm store hash for nix pkg
         id: pnpm-store
@@ -76,12 +87,12 @@ jobs:
           persist-credentials: true
 
       - name: Setup Pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           run_install: false
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: "pnpm"
