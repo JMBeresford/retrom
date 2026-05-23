@@ -120,27 +120,27 @@ create table if not exists game_metadata (
 
 -- Relational replacements for the v1 array columns on game_metadata
 create table if not exists game_metadata_links (
-    game_id text not null references game_metadata (game_id) on delete cascade,
+    game_metadata_id text not null references game_metadata (id) on delete cascade,
     url text not null,
-    primary key (game_id, url)
+    primary key (game_metadata_id, url)
 );
 
 create table if not exists game_metadata_videos (
-    game_id text not null references game_metadata (game_id) on delete cascade,
+    game_metadata_id text not null references game_metadata (id) on delete cascade,
     url text not null,
-    primary key (game_id, url)
+    primary key (game_metadata_id, url)
 );
 
 create table if not exists game_metadata_screenshots (
-    game_id text not null references game_metadata (game_id) on delete cascade,
+    game_metadata_id text not null references game_metadata (id) on delete cascade,
     url text not null,
-    primary key (game_id, url)
+    primary key (game_metadata_id, url)
 );
 
 create table if not exists game_metadata_artwork (
-    game_id text not null references game_metadata (game_id) on delete cascade,
+    game_metadata_id text not null references game_metadata (id) on delete cascade,
     url text not null,
-    primary key (game_id, url)
+    primary key (game_metadata_id, url)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────

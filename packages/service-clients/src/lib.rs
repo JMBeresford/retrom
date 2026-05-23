@@ -1,20 +1,17 @@
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
-use retrom_codegen::retrom::{
+use retrom_codegen::retrom::services::clients::v1::{
     client_service_server::{ClientService, ClientServiceServer},
     Client, CreateClientRequest, CreateClientResponse, DeleteClientsRequest, DeleteClientsResponse,
     GetClientsRequest, GetClientsResponse, UpdateClientsRequest, UpdateClientsResponse,
 };
-use retrom_db::{schema, Pool};
-use std::sync::Arc;
+use retrom_db::DbPool;
 use tracing::instrument;
 
 pub struct ClientServiceHandlers {
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
 }
 
 impl ClientServiceHandlers {
-    pub fn new(db_pool: Arc<Pool>) -> Self {
+    pub fn new(db_pool: DbPool) -> Self {
         Self { db_pool }
     }
 }
@@ -28,11 +25,6 @@ impl ClientService for ClientServiceHandlers {
     ) -> Result<tonic::Response<CreateClientResponse>, tonic::Status> {
         let request = request.into_inner();
 
-        let mut conn = match self.db_pool.get().await {
-            Ok(conn) => conn,
-            Err(why) => return Err(tonic::Status::new(tonic::Code::Internal, why.to_string())),
-        };
-
         let new_client = match request.client {
             Some(client) => client,
             None => {
@@ -43,14 +35,20 @@ impl ClientService for ClientServiceHandlers {
             }
         };
 
-        let client: Client = match diesel::insert_into(schema::clients::table)
-            .values(new_client)
-            .get_result(&mut conn)
+        let mut builder = sqlx::QueryBuilder::new("insert into clients (id, name) values (");
+
+        builder.push_bind(uuid::Uuid::now_v7().to_string());
+        builder.push(", ");
+        builder.push_bind(new_client.name);
+        builder.push(") returning *");
+
+        let client: Client = builder
+            .build_query_as()
+            .fetch_one(&self.db_pool)
             .await
-        {
-            Ok(client) => client,
-            Err(why) => return Err(tonic::Status::new(tonic::Code::Internal, why.to_string())),
-        };
+            .map_err(|why| tonic::Status::new(tonic::Code::Internal, why.to_string()))?;
+
+        tracing::debug!("Created client: {:?}", client);
 
         Ok(tonic::Response::new(CreateClientResponse {
             client_created: Some(client),
@@ -64,30 +62,53 @@ impl ClientService for ClientServiceHandlers {
     ) -> Result<tonic::Response<GetClientsResponse>, tonic::Status> {
         let request = request.into_inner();
 
-        let mut conn = match self.db_pool.get().await {
-            Ok(conn) => conn,
-            Err(why) => return Err(tonic::Status::new(tonic::Code::Internal, why.to_string())),
-        };
-
         let ids = request.ids;
         let names = request.names;
 
-        let mut query = schema::clients::table
-            .into_boxed()
-            .select(Client::as_select());
+        let mut builder = sqlx::QueryBuilder::new("select * from clients");
 
         if !ids.is_empty() {
-            query = query.filter(schema::clients::id.eq_any(ids));
+            builder.push(" where id in (");
+
+            let mut separated = builder.separated(", ");
+
+            for id in ids.iter() {
+                separated.push_bind(id);
+            }
+
+            separated.push_unseparated(")");
         }
 
         if !names.is_empty() {
-            query = query.filter(schema::clients::name.eq_any(names));
+            if ids.is_empty() {
+                builder.push(" where ");
+            } else {
+                builder.push(" or ");
+            }
+
+            builder.push("name in (");
+
+            let mut separated = builder.separated(", ");
+
+            for name in names.iter() {
+                separated.push_bind(name);
+            }
+
+            separated.push_unseparated(")");
         }
 
-        let clients: Vec<Client> = match query.load(&mut conn).await {
-            Ok(clients) => clients,
-            Err(why) => return Err(tonic::Status::new(tonic::Code::Internal, why.to_string())),
-        };
+        let clients: Vec<Client> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(|why| {
+                tonic::Status::new(
+                    tonic::Code::Internal,
+                    format!("Failed to fetch clients: {}", why),
+                )
+            })?;
+
+        tracing::debug!("Fetched clients: {:?}", clients);
 
         Ok(tonic::Response::new(GetClientsResponse { clients }))
     }
@@ -99,39 +120,59 @@ impl ClientService for ClientServiceHandlers {
     ) -> Result<tonic::Response<UpdateClientsResponse>, tonic::Status> {
         let request = request.into_inner();
 
-        let mut conn = match self.db_pool.get().await {
-            Ok(conn) => conn,
-            Err(why) => return Err(tonic::Status::new(tonic::Code::Internal, why.to_string())),
-        };
-
         let to_update = request.clients;
-        let clients_updated = match conn
-            .transaction(|mut conn| {
-                async move {
-                    let mut updated = Vec::new();
 
-                    for client in to_update {
-                        let id = client.id;
+        let mut tx = self.db_pool.begin().await.map_err(|why| {
+            tonic::Status::new(
+                tonic::Code::Internal,
+                format!("Failed to begin transaction: {}", why),
+            )
+        })?;
 
-                        let updated_client = diesel::update(
-                            schema::clients::table.filter(schema::clients::id.eq(id)),
-                        )
-                        .set(client)
-                        .get_result(&mut conn)
-                        .await?;
+        let mut clients_updated = Vec::new();
 
-                        updated.push(updated_client);
-                    }
-
-                    Ok::<Vec<Client>, diesel::result::Error>(updated)
-                }
-                .scope_boxed()
-            })
+        for client in to_update {
+            let updated_client: Client = match sqlx::query_as(
+                r#"
+                update clients
+                set name = $1
+                where id = $2
+                returning *
+                "#,
+            )
+            .bind(client.name)
+            .bind(client.id)
+            .fetch_one(&mut *tx)
             .await
-        {
-            Ok(clients) => clients,
-            Err(why) => return Err(tonic::Status::new(tonic::Code::Internal, why.to_string())),
-        };
+            {
+                Ok(client) => client,
+                Err(why) => {
+                    tx.rollback().await.map_err(|rollback_why| {
+                        tonic::Status::new(
+                            tonic::Code::Internal,
+                            format!(
+                                "Failed to rollback transaction after error: {}, original error: {}",
+                                rollback_why, why
+                            ),
+                        )
+                    })?;
+
+                    return Err(tonic::Status::new(
+                        tonic::Code::Internal,
+                        format!("Failed to update client: {}", why),
+                    ));
+                }
+            };
+
+            clients_updated.push(updated_client);
+        }
+
+        tx.commit().await.map_err(|why| {
+            tonic::Status::new(
+                tonic::Code::Internal,
+                format!("Failed to commit transaction: {}", why),
+            )
+        })?;
 
         Ok(tonic::Response::new(UpdateClientsResponse {
             clients_updated,
@@ -144,28 +185,33 @@ impl ClientService for ClientServiceHandlers {
         request: tonic::Request<DeleteClientsRequest>,
     ) -> Result<tonic::Response<DeleteClientsResponse>, tonic::Status> {
         let request = request.into_inner();
-
-        let mut conn = match self.db_pool.get().await {
-            Ok(conn) => conn,
-            Err(why) => return Err(tonic::Status::new(tonic::Code::Internal, why.to_string())),
-        };
-
         let ids = request.ids;
 
-        let clients_deleted = match conn
-            .transaction(|mut conn| {
-                async move {
-                    diesel::delete(schema::clients::table.filter(schema::clients::id.eq_any(ids)))
-                        .get_results(&mut conn)
-                        .await
-                }
-                .scope_boxed()
-            })
+        if ids.is_empty() {
+            return Err(tonic::Status::new(
+                tonic::Code::InvalidArgument,
+                "At least one client ID is required".to_string(),
+            ));
+        }
+
+        let mut builder = sqlx::QueryBuilder::new("delete from clients where id in (");
+
+        let mut separated = builder.separated(", ");
+        for id in ids.iter() {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(") returning *");
+
+        let clients_deleted: Vec<Client> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
-        {
-            Ok(clients) => clients,
-            Err(why) => return Err(tonic::Status::new(tonic::Code::Internal, why.to_string())),
-        };
+            .map_err(|why| {
+                tonic::Status::new(
+                    tonic::Code::Internal,
+                    format!("Failed to delete clients: {}", why),
+                )
+            })?;
 
         Ok(tonic::Response::new(DeleteClientsResponse {
             clients_deleted,
@@ -174,7 +220,7 @@ impl ClientService for ClientServiceHandlers {
 }
 
 /// Build an [`axum::Router`] that serves the [`ClientService`] gRPC endpoints.
-pub fn clients_router(db_pool: Arc<Pool>) -> axum::Router {
+pub fn clients_router(db_pool: DbPool) -> axum::Router {
     let client_service = ClientServiceServer::new(ClientServiceHandlers::new(db_pool));
 
     let mut routes_builder = tonic::service::Routes::builder();

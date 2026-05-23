@@ -1,4 +1,10 @@
-pub type DbPool = sqlx::AnyPool;
+#[cfg(feature = "sqlite")]
+pub type RetromDB = sqlx::Sqlite;
+
+#[cfg(feature = "postgres")]
+pub type RetromDB = sqlx::Postgres;
+
+pub type DbPool = sqlx::Pool<RetromDB>;
 
 #[cfg(feature = "embedded")]
 pub mod embedded;
@@ -30,11 +36,21 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// - `postgres://` or `postgresql://` → PostgreSQL
 /// - `sqlite://` → SQLite
 pub async fn connect(url: &str) -> Result<DbPool> {
-    sqlx::any::install_default_drivers();
+    #[cfg(feature = "sqlite")]
+    {
+        sqlx::sqlite::SqlitePoolOptions::new()
+            .connect(url)
+            .await
+            .map_err(|e| Error::ConnectionError(e.to_string()))
+    }
 
-    sqlx::AnyPool::connect(url)
-        .await
-        .map_err(|e| Error::ConnectionError(e.to_string()))
+    #[cfg(feature = "postgres")]
+    {
+        sqlx::postgres::PgPoolOptions::new()
+            .connect(url)
+            .await
+            .map_err(|e| Error::ConnectionError(e.to_string()))
+    }
 }
 
 /// Ensure the `_sqlx_migrations` table is present and pre-populate it so the
@@ -236,7 +252,7 @@ mod tests {
         // max_connections(1) ensures all operations share the same underlying
         // SQLite connection, which is required for `sqlite::memory:` databases
         // (each connection would otherwise open an independent empty DB).
-        PoolOptions::<sqlx::Any>::new()
+        PoolOptions::<sqlx::Sqlite>::new()
             .max_connections(1)
             .connect(url)
             .await
