@@ -1,18 +1,7 @@
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-
-use diesel::sql_types::{self, SqlType};
-use diesel::{
-    deserialize::{FromSql, FromSqlRow},
-    expression::AsExpression,
-    pg::PgValue,
-    serialize::{Output, ToSql},
-};
 use prost_types::TimestampError;
-
-fn pg_epoch() -> SystemTime {
-    let thirty_years = Duration::from_secs(946_684_800);
-    UNIX_EPOCH + thirty_years
-}
+use sqlx::types::chrono::{NaiveDateTime, Utc};
+use sqlx::{encode::IsNull, types::chrono::DateTime, Database, Decode, Encode, Type};
+use std::time::{Duration, SystemTime};
 
 #[derive(
     Clone,
@@ -25,18 +14,89 @@ fn pg_epoch() -> SystemTime {
     ::prost::Message,
     ::serde::Serialize,
     ::serde::Deserialize,
-    SqlType,
-    AsExpression,
-    FromSqlRow,
 )]
-#[diesel(postgres_type(oid = 1114, array_oid = 1115))]
-#[diesel(sql_type = diesel::sql_types::Timestamp)]
-#[diesel(sql_type = diesel::sql_types::Timestamptz)]
 pub struct Timestamp {
     #[prost(int64, tag = "1")]
     pub seconds: i64,
     #[prost(int32, tag = "2")]
     pub nanos: i32,
+}
+
+impl<DB: Database> Type<DB> for Timestamp
+where
+    str: sqlx::Type<DB>,
+{
+    fn type_info() -> <DB as Database>::TypeInfo {
+        <&str as Type<DB>>::type_info()
+    }
+}
+
+impl<'r> Encode<'r, sqlx::Any> for Timestamp {
+    fn encode_by_ref(
+        &self,
+        buf: &mut <sqlx::Any as Database>::ArgumentBuffer<'r>,
+    ) -> Result<IsNull, Box<dyn std::error::Error + 'static + Send + Sync>> {
+        let datetime = match DateTime::from_timestamp(self.seconds, self.nanos as u32) {
+            Some(dt) => dt,
+            None => return Err(Box::new(TimestampError::InvalidDateTime)),
+        };
+
+        let value = datetime.to_rfc3339();
+
+        <String as Encode<'r, sqlx::Any>>::encode_by_ref(&value, buf)
+    }
+}
+
+impl<'r> Decode<'r, sqlx::Sqlite> for Timestamp
+where
+    &'r str: Decode<'r, sqlx::Sqlite>,
+{
+    fn decode(
+        value: <sqlx::Sqlite as Database>::ValueRef<'r>,
+    ) -> Result<Timestamp, Box<dyn std::error::Error + 'static + Send + Sync>> {
+        let value = <&str as Decode<'r, sqlx::Sqlite>>::decode(value)?;
+
+        let format_str = "%Y-%m-%d %H:%M:%S";
+
+        let datetime = match NaiveDateTime::parse_from_str(value, format_str) {
+            Ok(dt) => dt.and_utc(),
+            Err(err) => {
+                tracing::error!("Failed to parse timestamp from value: {value}, error: {err}");
+                return Err(err.into());
+            }
+        };
+
+        let seconds = datetime.timestamp();
+        let nanos = datetime.timestamp_subsec_nanos().try_into().unwrap_or(0);
+
+        Ok(Timestamp { seconds, nanos })
+    }
+}
+
+impl<'r> Decode<'r, sqlx::Postgres> for Timestamp
+where
+    &'r str: Decode<'r, sqlx::Postgres>,
+{
+    fn decode(
+        value: <sqlx::Postgres as Database>::ValueRef<'r>,
+    ) -> Result<Timestamp, Box<dyn std::error::Error + 'static + Send + Sync>> {
+        let value = <&str as Decode<'r, sqlx::Postgres>>::decode(value)?;
+
+        let format_str = "%Y-%m-%d %H:%M:%S%.6f%#z";
+
+        let datetime = match DateTime::parse_from_str(value, format_str) {
+            Ok(dt) => dt.with_timezone(&Utc),
+            Err(err) => {
+                tracing::error!("Failed to parse timestamp from value: {value}, error: {err}");
+                return Err(err.into());
+            }
+        };
+
+        let seconds = datetime.timestamp();
+        let nanos = datetime.timestamp_subsec_nanos().try_into().unwrap_or(0);
+
+        Ok(Timestamp { seconds, nanos })
+    }
 }
 
 impl Timestamp {
@@ -78,39 +138,5 @@ impl TryFrom<Timestamp> for SystemTime {
     fn try_from(value: Timestamp) -> Result<Self, Self::Error> {
         let prost_timestamp: prost_types::Timestamp = value.into();
         prost_timestamp.try_into()
-    }
-}
-
-impl ToSql<sql_types::Timestamp, diesel::pg::Pg> for Timestamp {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, diesel::pg::Pg>) -> diesel::serialize::Result {
-        let thirty_years_seconds = 946_684_800;
-        let micros = (self.seconds - thirty_years_seconds) * 1_000_000 + self.nanos as i64 / 1_000;
-
-        ToSql::<sql_types::BigInt, diesel::pg::Pg>::to_sql(&micros, &mut out.reborrow())
-    }
-}
-
-impl ToSql<sql_types::Timestamptz, diesel::pg::Pg> for Timestamp {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, diesel::pg::Pg>) -> diesel::serialize::Result {
-        ToSql::<sql_types::Timestamp, diesel::pg::Pg>::to_sql(self, out)
-    }
-}
-
-impl FromSql<sql_types::Timestamp, diesel::pg::Pg> for Timestamp {
-    fn from_sql(bytes: PgValue<'_>) -> diesel::deserialize::Result<Self> {
-        let micros = i64::from_sql(bytes)?;
-
-        let pg_timestamp = match micros < 0 {
-            true => pg_epoch() - Duration::from_micros(micros.unsigned_abs()),
-            false => pg_epoch() + Duration::from_micros(micros.unsigned_abs()),
-        };
-
-        Ok(pg_timestamp.into())
-    }
-}
-
-impl FromSql<sql_types::Timestamptz, diesel::pg::Pg> for Timestamp {
-    fn from_sql(bytes: PgValue<'_>) -> diesel::deserialize::Result<Self> {
-        FromSql::<sql_types::Timestamp, diesel::pg::Pg>::from_sql(bytes)
     }
 }

@@ -9,6 +9,7 @@ edition.workspace = true
 
 [dependencies]
 tonic = { workspace = true }
+tracing = { workspace = true }
 prost = { workspace = true }
 prost-types = { workspace = true }
 prost-wkt = { version = "0.7" }

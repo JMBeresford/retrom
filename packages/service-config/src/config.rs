@@ -1,6 +1,6 @@
 use crate::retrom_dirs::RetromDirs;
 use config::{Config, ConfigError, File};
-use retrom_codegen::retrom::{
+use retrom_codegen::retrom::services::config::v1::{
     metadata_config::OptimizationConfig, ContentDirectory, MetadataConfig, SavesConfig,
     ServerConfig, StorageType,
 };
