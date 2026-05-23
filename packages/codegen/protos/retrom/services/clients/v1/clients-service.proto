@@ -20,7 +20,7 @@ message CreateClientResponse {
 }
 
 message GetClientsRequest {
-  repeated int32 ids = 1;
+  repeated string ids = 1;
   repeated string names = 2;
 }
 
@@ -37,7 +37,7 @@ message UpdateClientsResponse {
 }
 
 message DeleteClientsRequest {
-  repeated int32 ids = 1;
+  repeated string ids = 1;
 }
 
 message DeleteClientsResponse {
