@@ -34,11 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not set"));
 
-    let row_derivations = ROW_DERIVES
-        .iter()
-        .copied()
-        .collect::<Vec<_>>()
-        .join(",");
+    let row_derivations = ROW_DERIVES.iter().copied().collect::<Vec<_>>().join(",");
 
     let insertable_derivations = INSERTABLE_DERIVES
         .iter()
@@ -46,11 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect::<Vec<_>>()
         .join(",");
 
-    let update_derivations = UPDATE_DERIVES
-        .iter()
-        .copied()
-        .collect::<Vec<_>>()
-        .join(",");
+    let update_derivations = UPDATE_DERIVES.iter().copied().collect::<Vec<_>>().join(",");
 
     let proto_paths: Vec<PathBuf> = WalkDir::new("./protos")
         .follow_links(true)
@@ -81,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Some("platform_id"),
             vec!["Platform, foreign_key = platform_id"],
         ),
-        ("Client", "clients", None, vec![]),
+        ("services.clients.v1.Client", "clients", None, vec![]),
         ("Emulator", "emulators", None, vec![]),
         (
             "EmulatorProfile",

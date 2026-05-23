@@ -18,4 +18,7 @@ tracing = { workspace = true }
 tokio = { workspace = true }
 
 [features]
+default = []
+sqlite = ["sqlx/sqlite"]
+postgres = ["sqlx/postgres"]
 embedded = ["dep:postgresql_embedded"]

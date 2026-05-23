@@ -2,14 +2,11 @@ pub mod config;
 pub mod retrom_dirs;
 
 use crate::config::ServerConfigManager;
-use retrom_codegen::retrom::{
-    services::config::v1::{
-        config_service_server::{ConfigService, ConfigServiceServer},
-        GetServerConfigRequest, GetServerConfigResponse, GetServerInfoRequest,
-        GetServerInfoResponse, UpdateServerConfigRequest, UpdateServerConfigResponse,
-    },
+use retrom_codegen::retrom::services::config::v1::{
+    config_service_server::{ConfigService, ConfigServiceServer},
     version::Pre,
-    ServerInfo, Version,
+    GetServerConfigRequest, GetServerConfigResponse, GetServerInfoRequest, GetServerInfoResponse,
+    ServerInfo, UpdateServerConfigRequest, UpdateServerConfigResponse, Version,
 };
 use std::sync::Arc;
 use tracing::instrument;
