@@ -30,17 +30,17 @@ permissions:
 jobs:
   nix-template-values:
     name: Get Nix Template Values
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       pnpm_deps_hash: ${{ steps.pnpm-store.outputs.pnpm_deps_hash }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: install nix
-        uses: DeterminateSystems/determinate-nix-action@v3.16.3
+        uses: DeterminateSystems/determinate-nix-action@v3.21.0
 
       - name: get pnpm store hash for nix pkg
         id: pnpm-store
@@ -66,10 +66,10 @@ jobs:
   release:
     name: Release
     needs: nix-template-values
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ssh-key: ${{ secrets.RW_DEPLOY_KEY }}
