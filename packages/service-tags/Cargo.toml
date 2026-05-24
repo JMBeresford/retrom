@@ -17,8 +17,6 @@ retrom-codegen = { workspace = true }
 retrom-db = { workspace = true }
 retrom-service-config = { workspace = true }
 retrom-telemetry = { workspace = true }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
 deadpool = { workspace = true }
 tonic = { workspace = true }
 tonic-web = { workspace = true }
@@ -26,3 +24,11 @@ axum = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 dotenvy = { workspace = true }
+sqlx = { workspace = true }
+tonic-reflection = { workspace = true }
+uuid = { workspace = true }
+
+[features]
+default = []
+sqlite = ["retrom-db/sqlite"]
+postgres = ["retrom-db/postgres"]
