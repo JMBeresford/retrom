@@ -51,7 +51,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "SELECT * FROM emulators WHERE id IN (",
+                "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
             for id in &emulator_ids {
@@ -157,7 +157,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "SELECT * FROM emulators WHERE id IN (",
+                "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
             for id in &emulator_ids {
@@ -200,7 +200,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "SELECT * FROM emulators WHERE id IN (",
+                "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
             for id in &emulator_ids {
@@ -279,7 +279,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "SELECT * FROM emulators WHERE id IN (",
+                "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
             for id in &emulator_ids {
@@ -385,7 +385,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "SELECT * FROM emulators WHERE id IN (",
+                "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
             for id in &emulator_ids {
@@ -428,7 +428,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "SELECT * FROM emulators WHERE id IN (",
+                "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
             for id in &emulator_ids {

@@ -48,25 +48,25 @@ impl GameSaveFileManager {
 
 pub trait SaveFileManager {
     async fn resolve_save_files(&self, include_backups: bool) -> Result<Vec<SaveFilesStat>>;
-    async fn reindex_backups(&self, emulator_id: Option<i32>) -> Result<()>;
-    fn get_saves_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
-    fn get_saves_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
+    async fn reindex_backups(&self, emulator_id: Option<&str>) -> Result<()>;
+    fn get_saves_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf>;
+    fn get_saves_backup_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf>;
 
     async fn backup_save_files(
         &self,
-        emulator_id: Option<i32>,
+        emulator_id: Option<&str>,
         dry_run: bool,
     ) -> Result<Vec<SaveFilesStat>>;
 
     async fn update_save_files(&self, save_files: SaveFiles, dry_run: bool) -> Result<()>;
 
-    async fn delete_save_files(&self, emulator_id: Option<i32>, dry_run: bool) -> Result<()>;
+    async fn delete_save_files(&self, emulator_id: Option<&str>, dry_run: bool) -> Result<()>;
 
     async fn restore_save_files_from_backup(
         &self,
         backup: BackupStats,
         reindex: bool,
-        emulator_id: Option<i32>,
+        emulator_id: Option<&str>,
         dry_run: bool,
     ) -> Result<()>;
 }
@@ -74,26 +74,24 @@ pub trait SaveFileManager {
 impl SaveFileManager for GameSaveFileManager {
     #[instrument(skip(self))]
     async fn resolve_save_files(&self, include_backups: bool) -> Result<Vec<SaveFilesStat>> {
-        let platform_ids: Vec<(String,)> = {
+        let platform_ids: Vec<String> = {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "SELECT platform_id FROM game_platform WHERE game_id = ",
+                "select platform_id from game_platform where game_id = ",
             );
             query.push_bind(&self.game.id);
             query
-                .build_query_as::<(String,)>()
+                .build_query_scalar::<String>()
                 .fetch_all(&self.db_pool)
-                .await
-                .map_err(|e| SaveFileManagerError::Sqlx(e))?
+                .await?
         };
-        let platform_ids: Vec<String> = platform_ids.into_iter().map(|(id,)| id).collect();
 
         let emulators: Vec<Emulator> = if platform_ids.is_empty() {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "SELECT DISTINCT e.* FROM emulators e \
-                 JOIN emulator_supported_platforms esp ON e.id = esp.emulator_id \
-                 WHERE esp.platform_id IN (",
+                "select distinct e.* from emulators e \
+                 join emulator_supported_platforms esp on e.id = esp.emulator_id \
+                 where esp.platform_id in (",
             );
             let mut separated = query.separated(", ");
             for id in &platform_ids {
@@ -103,8 +101,7 @@ impl SaveFileManager for GameSaveFileManager {
             query
                 .build_query_as()
                 .fetch_all(&self.db_pool)
-                .await
-                .map_err(|e| SaveFileManagerError::Sqlx(e))?
+                .await?
         };
 
         let saves_dir = RetromDirs::new().saves_dir();
@@ -114,7 +111,7 @@ impl SaveFileManager for GameSaveFileManager {
         let mut files = vec![];
 
         for emulator in &emulators {
-            let emulator_id = emulator.id.parse::<i32>().unwrap_or(0);
+            let emulator_id = &emulator.id;
             let save_dir = self.get_saves_dir(Some(emulator_id))?;
             let backup_dir = self.get_saves_backup_dir(Some(emulator_id))?;
 
@@ -202,8 +199,8 @@ impl SaveFileManager for GameSaveFileManager {
             files.push(SaveFilesStat {
                 file_stats,
                 backups,
-                emulator_id: Some(emulator_id),
-                game_id: self.game.id.parse::<i32>().unwrap_or(0),
+                emulator_id: Some(emulator_id.clone()),
+                game_id: self.game.id.clone(),
                 save_path,
                 created_at,
             });
@@ -215,14 +212,14 @@ impl SaveFileManager for GameSaveFileManager {
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    async fn reindex_backups(&self, emulator_id: Option<i32>) -> Result<()> {
+    async fn reindex_backups(&self, emulator_id: Option<&str>) -> Result<()> {
         let config = self.config.get_config().await;
         let max_backup_count = config.saves.map(|s| s.max_save_files_backups).unwrap_or(5) as usize;
 
         let mut current_save_files = self.resolve_save_files(true).await?;
 
         if let Some(emulator_id) = emulator_id {
-            current_save_files.retain(|sf| sf.emulator_id == Some(emulator_id));
+            current_save_files.retain(|sf| sf.emulator_id.as_deref() == Some(emulator_id));
         }
 
         for save_files in current_save_files.iter_mut() {
@@ -246,7 +243,7 @@ impl SaveFileManager for GameSaveFileManager {
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    fn get_saves_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+    fn get_saves_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf> {
         let saves_dir = RetromDirs::new().data_dir().join("saves");
 
         let emulator_id = match emulator_id {
@@ -258,13 +255,11 @@ impl SaveFileManager for GameSaveFileManager {
             }
         };
 
-        Ok(saves_dir
-            .join(emulator_id.to_string())
-            .join(self.game.id.to_string()))
+        Ok(saves_dir.join(emulator_id).join(&self.game.id))
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    fn get_saves_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+    fn get_saves_backup_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf> {
         let backup_dir = RetromDirs::new().saves_backups_dir();
 
         let emulator_id = match emulator_id {
@@ -276,26 +271,24 @@ impl SaveFileManager for GameSaveFileManager {
             }
         };
 
-        Ok(backup_dir
-            .join(emulator_id.to_string())
-            .join(self.game.id.to_string()))
+        Ok(backup_dir.join(emulator_id).join(&self.game.id))
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
     async fn backup_save_files(
         &self,
-        emulator_id: Option<i32>,
+        emulator_id: Option<&str>,
         dry_run: bool,
     ) -> Result<Vec<SaveFilesStat>> {
         let mut all_save_files = self.resolve_save_files(false).await?;
 
         if let Some(emulator_id) = emulator_id {
-            all_save_files.retain(|sf| sf.emulator_id == Some(emulator_id));
+            all_save_files.retain(|sf| sf.emulator_id.as_deref() == Some(emulator_id));
         }
 
         for save_files in all_save_files.iter_mut() {
             let save_path = PathBuf::from(&save_files.save_path);
-            let backups_dir = self.get_saves_backup_dir(save_files.emulator_id)?;
+            let backups_dir = self.get_saves_backup_dir(save_files.emulator_id.as_deref())?;
             let backup_dir =
                 backups_dir.join(chrono::Local::now().to_utc().format("%s.%f").to_string());
 
@@ -381,8 +374,8 @@ impl SaveFileManager for GameSaveFileManager {
 
     #[instrument(skip_all, fields(game_id = self.game.id))]
     async fn update_save_files(&self, save_files: SaveFiles, dry_run: bool) -> Result<()> {
-        let save_dir = self.get_saves_dir(save_files.emulator_id)?;
-        self.backup_save_files(save_files.emulator_id, dry_run)
+        let save_dir = self.get_saves_dir(save_files.emulator_id.as_deref())?;
+        self.backup_save_files(save_files.emulator_id.as_deref(), dry_run)
             .await?;
 
         if save_dir.exists() {
@@ -433,11 +426,11 @@ impl SaveFileManager for GameSaveFileManager {
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    async fn delete_save_files(&self, emulator_id: Option<i32>, dry_run: bool) -> Result<()> {
+    async fn delete_save_files(&self, emulator_id: Option<&str>, dry_run: bool) -> Result<()> {
         let mut all_save_files = self.resolve_save_files(false).await?;
 
         if let Some(emulator_id) = emulator_id {
-            all_save_files.retain(|sf| sf.emulator_id == Some(emulator_id));
+            all_save_files.retain(|sf| sf.emulator_id.as_deref() == Some(emulator_id));
         }
 
         for save_files in all_save_files.iter() {
@@ -477,7 +470,7 @@ impl SaveFileManager for GameSaveFileManager {
         &self,
         backup: BackupStats,
         reindex: bool,
-        emulator_id: Option<i32>,
+        emulator_id: Option<&str>,
         dry_run: bool,
     ) -> Result<()> {
         let saves_dir = self.get_saves_dir(emulator_id)?;

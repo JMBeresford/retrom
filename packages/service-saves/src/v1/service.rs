@@ -57,9 +57,9 @@ impl SavesService for SavesServiceHandlers {
 
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                    "SELECT * FROM games WHERE id = ",
+                    "select * from games where id = ",
                 );
-                query.push_bind(game_id.to_string());
+                query.push_bind(&game_id);
                 query
                     .build_query_as()
                     .fetch_one(&db_pool)
@@ -105,9 +105,9 @@ impl SavesService for SavesServiceHandlers {
 
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                    "SELECT * FROM games WHERE id = ",
+                    "select * from games where id = ",
                 );
-                query.push_bind(game_id.to_string());
+                query.push_bind(&game_id);
                 query
                     .build_query_as()
                     .fetch_one(&db_pool)
@@ -150,9 +150,9 @@ impl SavesService for SavesServiceHandlers {
 
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                    "SELECT * FROM games WHERE id = ",
+                    "select * from games where id = ",
                 );
-                query.push_bind(game_id.to_string());
+                query.push_bind(&game_id);
                 query
                     .build_query_as()
                     .fetch_one(&db_pool)
@@ -175,13 +175,13 @@ impl SavesService for SavesServiceHandlers {
                 }
 
                 let mut save = SaveFiles {
-                    game_id,
-                    emulator_id,
+                    game_id: game_id.clone(),
+                    emulator_id: emulator_id.clone(),
                     files: vec![],
                 };
 
                 let save_dir = save_file_manager
-                    .get_saves_dir(emulator_id)
+                    .get_saves_dir(emulator_id.as_deref())
                     .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
                 for file_stat in save_file_stat.file_stats.into_iter() {
@@ -232,9 +232,9 @@ impl SavesService for SavesServiceHandlers {
 
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                    "SELECT * FROM games WHERE id = ",
+                    "select * from games where id = ",
                 );
-                query.push_bind(game_id.to_string());
+                query.push_bind(&game_id);
                 query
                     .build_query_as()
                     .fetch_one(&db_pool)
@@ -252,7 +252,7 @@ impl SavesService for SavesServiceHandlers {
                 .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
             let states_dir = save_state_manager
-                .get_states_dir(emulator_id)
+                .get_states_dir(emulator_id.as_deref())
                 .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
             for save_states_stat in save_states {
@@ -261,8 +261,8 @@ impl SavesService for SavesServiceHandlers {
                 }
 
                 let mut states = SaveStates {
-                    game_id,
-                    emulator_id,
+                    game_id: game_id.clone(),
+                    emulator_id: emulator_id.clone(),
                     files: vec![],
                 };
 
@@ -321,9 +321,9 @@ impl SavesService for SavesServiceHandlers {
 
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                    "SELECT * FROM games WHERE id = ",
+                    "select * from games where id = ",
                 );
-                query.push_bind(game_id.to_string());
+                query.push_bind(&game_id);
                 query
                     .build_query_as()
                     .fetch_one(&db_pool)
@@ -375,9 +375,9 @@ impl SavesService for SavesServiceHandlers {
 
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                    "SELECT * FROM games WHERE id = ",
+                    "select * from games where id = ",
                 );
-                query.push_bind(game_id.to_string());
+                query.push_bind(&game_id);
                 query
                     .build_query_as()
                     .fetch_one(&db_pool)
@@ -419,9 +419,9 @@ impl SavesService for SavesServiceHandlers {
             let game_id = selector.game_id;
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                    "SELECT * FROM games WHERE id = ",
+                    "select * from games where id = ",
                 );
-                query.push_bind(game_id.to_string());
+                query.push_bind(&game_id);
                 query
                     .build_query_as()
                     .fetch_one(&self.db_pool)
@@ -435,7 +435,7 @@ impl SavesService for SavesServiceHandlers {
                 GameSaveFileManager::new(game, self.db_pool.clone(), self.config_manager.clone());
 
             save_file_manager
-                .delete_save_files(selector.emulator_id, dry_run)
+                .delete_save_files(selector.emulator_id.as_deref(), dry_run)
                 .await
                 .map_err(|e| tonic::Status::internal(e.to_string()))?;
         }
@@ -458,9 +458,9 @@ impl SavesService for SavesServiceHandlers {
             let game_id = selector.game_id;
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                    "SELECT * FROM games WHERE id = ",
+                    "select * from games where id = ",
                 );
-                query.push_bind(game_id.to_string());
+                query.push_bind(&game_id);
                 query
                     .build_query_as()
                     .fetch_one(&self.db_pool)
@@ -474,7 +474,7 @@ impl SavesService for SavesServiceHandlers {
                 GameSaveStateManager::new(game, self.db_pool.clone(), self.config_manager.clone());
 
             save_state_manager
-                .delete_save_states(selector.emulator_id, selector.files, dry_run)
+                .delete_save_states(selector.emulator_id.as_deref(), selector.files, dry_run)
                 .await
                 .map_err(|e| tonic::Status::internal(e.to_string()))?;
         }
@@ -508,9 +508,9 @@ impl SavesService for SavesServiceHandlers {
 
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                    "SELECT * FROM games WHERE id = ",
+                    "select * from games where id = ",
                 );
-                query.push_bind(game_id.to_string());
+                query.push_bind(&game_id);
                 query
                     .build_query_as()
                     .fetch_one(&self.db_pool)
@@ -524,7 +524,7 @@ impl SavesService for SavesServiceHandlers {
                 GameSaveFileManager::new(game, self.db_pool.clone(), self.config_manager.clone());
 
             save_file_manager
-                .restore_save_files_from_backup(backup, reindex, emulator_id, dry_run)
+                .restore_save_files_from_backup(backup, reindex, emulator_id.as_deref(), dry_run)
                 .await
                 .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
@@ -602,9 +602,9 @@ impl SavesService for SavesServiceHandlers {
 
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                    "SELECT * FROM games WHERE id = ",
+                    "select * from games where id = ",
                 );
-                query.push_bind(game_id.to_string());
+                query.push_bind(&game_id);
                 query
                     .build_query_as()
                     .fetch_one(&self.db_pool)
@@ -618,7 +618,7 @@ impl SavesService for SavesServiceHandlers {
                 GameSaveStateManager::new(game, self.db_pool.clone(), self.config_manager.clone());
 
             save_state_manager
-                .restore_save_states_from_backup(backup, reindex, emulator_id, dry_run)
+                .restore_save_states_from_backup(backup, reindex, emulator_id.as_deref(), dry_run)
                 .await
                 .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
