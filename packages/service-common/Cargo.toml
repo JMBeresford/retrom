@@ -15,6 +15,9 @@ reqwest = { workspace = true }
 tower = { workspace = true }
 retrom-codegen = { workspace = true }
 tokio = { workspace = true }
+tonic = { workspace = true }
+axum = { workspace = true }
+tonic-reflection = { workspace = true }
 chrono = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
