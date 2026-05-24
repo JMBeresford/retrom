@@ -79,6 +79,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         build = build.type_attribute(model_name, format!("#[derive({row_derivations})]"));
     }
 
+    // Skip Vec fields that have no direct DB column counterpart (stored in junction tables).
+    // sqlx::FromRow cannot decode Vec<T> from SQLite; these fields default to empty on fetch.
+    for field in [
+        "retrom.services.emulators.v1.Emulator.supported_platforms",
+        "retrom.services.emulators.v1.Emulator.operating_systems",
+        "retrom.services.emulators.v1.EmulatorProfile.supported_extensions",
+        "retrom.services.emulators.v1.EmulatorProfile.custom_args",
+    ] {
+        build = build.field_attribute(field, "#[sqlx(skip)]");
+    }
+
     build
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))
         .compile_protos(&proto_paths, &[PathBuf::from("./protos/")])?;

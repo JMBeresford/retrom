@@ -1,32 +1,32 @@
 use super::save_file_manager::{GameSaveFileManager, SaveFileManager};
 use super::save_state_manager::{GameSaveStateManager, SaveStateManager};
-use diesel::query_dsl::methods::FindDsl;
-use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::{
-    services::saves::v1::{
-        saves_service_server::SavesService, DeleteSaveFilesRequest, DeleteSaveFilesResponse,
-        DeleteSaveStatesRequest, DeleteSaveStatesResponse, GetSaveFilesRequest,
-        GetSaveFilesResponse, GetSaveStatesRequest, GetSaveStatesResponse,
-        RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
-        RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, SaveFiles,
-        SaveStates, StatSaveFilesRequest, StatSaveFilesResponse, StatSaveStatesRequest,
-        StatSaveStatesResponse, UpdateSaveFilesRequest, UpdateSaveFilesResponse,
-        UpdateSaveStatesRequest, UpdateSaveStatesResponse,
+    services::{
+        library::v1::Game,
+        saves::v1::{
+            saves_service_server::SavesService, DeleteSaveFilesRequest, DeleteSaveFilesResponse,
+            DeleteSaveStatesRequest, DeleteSaveStatesResponse, GetSaveFilesRequest,
+            GetSaveFilesResponse, GetSaveStatesRequest, GetSaveStatesResponse,
+            RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
+            RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, SaveFiles,
+            SaveStates, StatSaveFilesRequest, StatSaveFilesResponse, StatSaveStatesRequest,
+            StatSaveStatesResponse, UpdateSaveFilesRequest, UpdateSaveFilesResponse,
+            UpdateSaveStatesRequest, UpdateSaveStatesResponse,
+        },
     },
-    Game,
 };
-use retrom_db::Pool;
-use retrom_service_common::config::ServerConfigManager;
+use retrom_db::DbPool;
+use retrom_service_config::config::ServerConfigManager;
 use std::{path::PathBuf, sync::Arc};
 use tracing::instrument;
 
 pub struct SavesServiceHandlers {
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     config_manager: Arc<ServerConfigManager>,
 }
 
 impl SavesServiceHandlers {
-    pub fn new(db_pool: Arc<Pool>, config_manager: Arc<ServerConfigManager>) -> Self {
+    pub fn new(db_pool: DbPool, config_manager: Arc<ServerConfigManager>) -> Self {
         Self {
             db_pool,
             config_manager,
@@ -55,20 +55,19 @@ impl SavesService for SavesServiceHandlers {
             let db_pool = self.db_pool.clone();
             let game_id = selector.game_id;
 
-            let mut conn = db_pool
-                .get()
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let game = retrom_db::schema::games::table
-                .find(game_id)
-                .first::<Game>(&mut conn)
-                .await
-                .map_err(|e| {
-                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
-                })?;
-
-            drop(conn);
+            let game: Game = {
+                let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                    "SELECT * FROM games WHERE id = ",
+                );
+                query.push_bind(game_id.to_string());
+                query
+                    .build_query_as()
+                    .fetch_one(&db_pool)
+                    .await
+                    .map_err(|e| {
+                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                    })?
+            };
 
             let save_file_manager = GameSaveFileManager::new(game, db_pool, config);
 
@@ -104,20 +103,19 @@ impl SavesService for SavesServiceHandlers {
             let db_pool = self.db_pool.clone();
             let game_id = selector.game_id;
 
-            let mut conn = db_pool
-                .get()
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let game = retrom_db::schema::games::table
-                .find(game_id)
-                .first::<Game>(&mut conn)
-                .await
-                .map_err(|e| {
-                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
-                })?;
-
-            drop(conn);
+            let game: Game = {
+                let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                    "SELECT * FROM games WHERE id = ",
+                );
+                query.push_bind(game_id.to_string());
+                query
+                    .build_query_as()
+                    .fetch_one(&db_pool)
+                    .await
+                    .map_err(|e| {
+                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                    })?
+            };
 
             let save_state_manager = GameSaveStateManager::new(game, db_pool, config);
 
@@ -150,20 +148,19 @@ impl SavesService for SavesServiceHandlers {
             let game_id = selector.game_id;
             let emulator_id = selector.emulator_id;
 
-            let mut conn = db_pool
-                .get()
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let game = retrom_db::schema::games::table
-                .find(game_id)
-                .first::<Game>(&mut conn)
-                .await
-                .map_err(|e| {
-                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
-                })?;
-
-            drop(conn);
+            let game: Game = {
+                let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                    "SELECT * FROM games WHERE id = ",
+                );
+                query.push_bind(game_id.to_string());
+                query
+                    .build_query_as()
+                    .fetch_one(&db_pool)
+                    .await
+                    .map_err(|e| {
+                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                    })?
+            };
 
             let save_file_manager = GameSaveFileManager::new(game, db_pool, config);
 
@@ -204,7 +201,7 @@ impl SavesService for SavesServiceHandlers {
                         .await
                         .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-                    save.files.push(retrom_codegen::retrom::files::File {
+                    save.files.push(retrom_codegen::retrom::files::v1::File {
                         content,
                         stat: Some(file_stat),
                     })
@@ -233,20 +230,19 @@ impl SavesService for SavesServiceHandlers {
             let game_id = selector.game_id;
             let emulator_id = selector.emulator_id;
 
-            let mut conn = db_pool
-                .get()
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let game = retrom_db::schema::games::table
-                .find(game_id)
-                .first::<Game>(&mut conn)
-                .await
-                .map_err(|e| {
-                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
-                })?;
-
-            drop(conn);
+            let game: Game = {
+                let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                    "SELECT * FROM games WHERE id = ",
+                );
+                query.push_bind(game_id.to_string());
+                query
+                    .build_query_as()
+                    .fetch_one(&db_pool)
+                    .await
+                    .map_err(|e| {
+                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                    })?
+            };
 
             let save_state_manager = GameSaveStateManager::new(game, db_pool, config);
 
@@ -287,7 +283,7 @@ impl SavesService for SavesServiceHandlers {
                         .await
                         .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-                    states.files.push(retrom_codegen::retrom::files::File {
+                    states.files.push(retrom_codegen::retrom::files::v1::File {
                         content,
                         stat: Some(file_stat),
                     })
@@ -323,20 +319,19 @@ impl SavesService for SavesServiceHandlers {
                 }
             };
 
-            let mut conn = db_pool
-                .get()
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let game = retrom_db::schema::games::table
-                .find(game_id)
-                .first::<Game>(&mut conn)
-                .await
-                .map_err(|e| {
-                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
-                })?;
-
-            drop(conn);
+            let game: Game = {
+                let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                    "SELECT * FROM games WHERE id = ",
+                );
+                query.push_bind(game_id.to_string());
+                query
+                    .build_query_as()
+                    .fetch_one(&db_pool)
+                    .await
+                    .map_err(|e| {
+                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                    })?
+            };
 
             let save_file_manager = GameSaveFileManager::new(game, db_pool, config);
 
@@ -378,20 +373,19 @@ impl SavesService for SavesServiceHandlers {
                 }
             };
 
-            let mut conn = db_pool
-                .get()
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let game = retrom_db::schema::games::table
-                .find(game_id)
-                .first::<Game>(&mut conn)
-                .await
-                .map_err(|e| {
-                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
-                })?;
-
-            drop(conn);
+            let game: Game = {
+                let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                    "SELECT * FROM games WHERE id = ",
+                );
+                query.push_bind(game_id.to_string());
+                query
+                    .build_query_as()
+                    .fetch_one(&db_pool)
+                    .await
+                    .map_err(|e| {
+                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                    })?
+            };
 
             let save_state_manager = GameSaveStateManager::new(game, db_pool, config);
 
@@ -423,21 +417,19 @@ impl SavesService for SavesServiceHandlers {
         let res = DeleteSaveFilesResponse::default();
         for selector in selectors {
             let game_id = selector.game_id;
-            let pool = self.db_pool.clone();
-            let mut conn = pool
-                .get()
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let game = retrom_db::schema::games::table
-                .find(game_id)
-                .first::<Game>(&mut conn)
-                .await
-                .map_err(|e| {
-                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
-                })?;
-
-            drop(conn);
+            let game: Game = {
+                let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                    "SELECT * FROM games WHERE id = ",
+                );
+                query.push_bind(game_id.to_string());
+                query
+                    .build_query_as()
+                    .fetch_one(&self.db_pool)
+                    .await
+                    .map_err(|e| {
+                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                    })?
+            };
 
             let save_file_manager =
                 GameSaveFileManager::new(game, self.db_pool.clone(), self.config_manager.clone());
@@ -464,21 +456,19 @@ impl SavesService for SavesServiceHandlers {
         let res = DeleteSaveStatesResponse::default();
         for selector in selectors {
             let game_id = selector.game_id;
-            let pool = self.db_pool.clone();
-            let mut conn = pool
-                .get()
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let game = retrom_db::schema::games::table
-                .find(game_id)
-                .first::<Game>(&mut conn)
-                .await
-                .map_err(|e| {
-                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
-                })?;
-
-            drop(conn);
+            let game: Game = {
+                let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                    "SELECT * FROM games WHERE id = ",
+                );
+                query.push_bind(game_id.to_string());
+                query
+                    .build_query_as()
+                    .fetch_one(&self.db_pool)
+                    .await
+                    .map_err(|e| {
+                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                    })?
+            };
 
             let save_state_manager =
                 GameSaveStateManager::new(game, self.db_pool.clone(), self.config_manager.clone());
@@ -516,21 +506,19 @@ impl SavesService for SavesServiceHandlers {
                 None => return Err(tonic::Status::invalid_argument("Backup must be provided")),
             };
 
-            let pool = self.db_pool.clone();
-            let mut conn = pool
-                .get()
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let game = retrom_db::schema::games::table
-                .find(game_id)
-                .first::<Game>(&mut conn)
-                .await
-                .map_err(|e| {
-                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
-                })?;
-
-            drop(conn);
+            let game: Game = {
+                let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                    "SELECT * FROM games WHERE id = ",
+                );
+                query.push_bind(game_id.to_string());
+                query
+                    .build_query_as()
+                    .fetch_one(&self.db_pool)
+                    .await
+                    .map_err(|e| {
+                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                    })?
+            };
 
             let save_file_manager =
                 GameSaveFileManager::new(game, self.db_pool.clone(), self.config_manager.clone());
@@ -572,7 +560,7 @@ impl SavesService for SavesServiceHandlers {
                     .await
                     .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-                files.push(retrom_codegen::retrom::files::File {
+                files.push(retrom_codegen::retrom::files::v1::File {
                     content,
                     stat: Some(stat),
                 });
@@ -612,21 +600,19 @@ impl SavesService for SavesServiceHandlers {
                 None => return Err(tonic::Status::invalid_argument("Backup must be provided")),
             };
 
-            let pool = self.db_pool.clone();
-            let mut conn = pool
-                .get()
-                .await
-                .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-            let game = retrom_db::schema::games::table
-                .find(game_id)
-                .first::<Game>(&mut conn)
-                .await
-                .map_err(|e| {
-                    tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
-                })?;
-
-            drop(conn);
+            let game: Game = {
+                let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                    "SELECT * FROM games WHERE id = ",
+                );
+                query.push_bind(game_id.to_string());
+                query
+                    .build_query_as()
+                    .fetch_one(&self.db_pool)
+                    .await
+                    .map_err(|e| {
+                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                    })?
+            };
 
             let save_state_manager =
                 GameSaveStateManager::new(game, self.db_pool.clone(), self.config_manager.clone());
@@ -668,7 +654,7 @@ impl SavesService for SavesServiceHandlers {
                     .await
                     .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-                files.push(retrom_codegen::retrom::files::File {
+                files.push(retrom_codegen::retrom::files::v1::File {
                     content,
                     stat: Some(stat),
                 });

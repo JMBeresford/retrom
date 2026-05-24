@@ -1,14 +1,15 @@
 use chrono::DateTime;
-use diesel::{ExpressionMethods, PgArrayExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
 use futures::future::join_all;
 use retrom_codegen::retrom::{
-    files::FileStat,
-    services::saves::v1::{BackupStats, SaveFiles, SaveFilesStat},
-    Emulator, Game,
+    files::v1::FileStat,
+    services::{
+        emulators::v1::Emulator,
+        library::v1::Game,
+        saves::v1::{BackupStats, SaveFiles, SaveFilesStat},
+    },
 };
-use retrom_db::Pool;
-use retrom_service_common::{config::ServerConfigManager, retrom_dirs::RetromDirs};
+use retrom_db::DbPool;
+use retrom_service_config::{config::ServerConfigManager, retrom_dirs::RetromDirs};
 use std::{path::PathBuf, sync::Arc};
 use tracing::instrument;
 use walkdir::WalkDir;
@@ -21,7 +22,7 @@ pub enum SaveFileManagerError {
     Internal(String),
 
     #[error("DB Error: {0}")]
-    Diesel(#[from] diesel::result::Error),
+    Sqlx(#[from] sqlx::Error),
 
     #[error("IO Error: {0}")]
     Io(#[from] std::io::Error),
@@ -31,12 +32,12 @@ type Result<T> = std::result::Result<T, SaveFileManagerError>;
 
 pub struct GameSaveFileManager {
     game: Game,
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     config: Arc<ServerConfigManager>,
 }
 
 impl GameSaveFileManager {
-    pub fn new(game: Game, db_pool: Arc<Pool>, config: Arc<ServerConfigManager>) -> Self {
+    pub fn new(game: Game, db_pool: DbPool, config: Arc<ServerConfigManager>) -> Self {
         Self {
             game,
             db_pool,
@@ -73,23 +74,38 @@ pub trait SaveFileManager {
 impl SaveFileManager for GameSaveFileManager {
     #[instrument(skip(self))]
     async fn resolve_save_files(&self, include_backups: bool) -> Result<Vec<SaveFilesStat>> {
-        let mut conn = self.db_pool.get().await.map_err(|e| {
-            SaveFileManagerError::Internal(format!("Failed to get DB connection: {e:#?}"))
-        })?;
+        let platform_ids: Vec<(String,)> = {
+            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                "SELECT platform_id FROM game_platform WHERE game_id = ",
+            );
+            query.push_bind(&self.game.id);
+            query
+                .build_query_as::<(String,)>()
+                .fetch_all(&self.db_pool)
+                .await
+                .map_err(|e| SaveFileManagerError::Sqlx(e))?
+        };
+        let platform_ids: Vec<String> = platform_ids.into_iter().map(|(id,)| id).collect();
 
-        use retrom_db::schema::{emulators, platforms};
-
-        let platform_ids: Vec<i32> = platforms::table
-            .filter(platforms::id.eq(self.game.platform_id()))
-            .select(platforms::id)
-            .load(&mut conn)
-            .await?;
-
-        let emulators: Vec<Emulator> = emulators::table
-            .filter(emulators::supported_platforms.overlaps_with(platform_ids))
-            .select(Emulator::as_select())
-            .load(&mut conn)
-            .await?;
+        let emulators: Vec<Emulator> = if platform_ids.is_empty() {
+            vec![]
+        } else {
+            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                "SELECT DISTINCT e.* FROM emulators e \
+                 JOIN emulator_supported_platforms esp ON e.id = esp.emulator_id \
+                 WHERE esp.platform_id IN (",
+            );
+            let mut separated = query.separated(", ");
+            for id in &platform_ids {
+                separated.push_bind(id);
+            }
+            separated.push_unseparated(")");
+            query
+                .build_query_as()
+                .fetch_all(&self.db_pool)
+                .await
+                .map_err(|e| SaveFileManagerError::Sqlx(e))?
+        };
 
         let saves_dir = RetromDirs::new().saves_dir();
 
@@ -97,7 +113,8 @@ impl SaveFileManager for GameSaveFileManager {
 
         let mut files = vec![];
 
-        for emulator_id in emulators.iter().map(|e| e.id) {
+        for emulator in &emulators {
+            let emulator_id = emulator.id.parse::<i32>().unwrap_or(0);
             let save_dir = self.get_saves_dir(Some(emulator_id))?;
             let backup_dir = self.get_saves_backup_dir(Some(emulator_id))?;
 
@@ -186,7 +203,7 @@ impl SaveFileManager for GameSaveFileManager {
                 file_stats,
                 backups,
                 emulator_id: Some(emulator_id),
-                game_id: self.game.id,
+                game_id: self.game.id.parse::<i32>().unwrap_or(0),
                 save_path,
                 created_at,
             });

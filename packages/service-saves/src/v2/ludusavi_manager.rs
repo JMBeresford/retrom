@@ -10,8 +10,8 @@ use ludusavi::{
         ZipCompression, ZipConfig,
     },
 };
-use retrom_codegen::retrom::Emulator;
-use retrom_service_common::retrom_dirs::RetromDirs;
+use retrom_codegen::retrom::services::emulators::v1::Emulator;
+use retrom_service_config::retrom_dirs::RetromDirs;
 use std::{collections::BTreeMap, path::PathBuf};
 use tracing::instrument;
 
