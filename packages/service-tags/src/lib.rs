@@ -1,5 +1,3 @@
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::services::tags::v1::{
     tags_service_server::{TagsService, TagsServiceServer},
     AddGameTagsRequest, AddGameTagsResponse, AddPlatformTagsRequest, AddPlatformTagsResponse,
@@ -10,30 +8,38 @@ use retrom_codegen::retrom::services::tags::v1::{
     GetPlatformTagsRequest, GetPlatformTagsResponse, GetTagDomainsRequest, GetTagDomainsResponse,
     GetTagsRequest, GetTagsResponse, Tag, TagDomain,
 };
-use retrom_db::{schema, Pool};
-use std::sync::Arc;
+use retrom_db::{DbPool, RetromDB};
+use sqlx::Execute;
 use tracing::instrument;
+
+pub mod router;
 
 #[derive(Clone)]
 pub struct TagServiceHandlers {
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
 }
 
 impl TagServiceHandlers {
-    pub fn new(db_pool: Arc<Pool>) -> Self {
+    pub fn new(db_pool: DbPool) -> Self {
         Self { db_pool }
     }
 
-    async fn fetch_tags_by_ids(
-        conn: &mut retrom_db::DBConnection,
-        tag_ids: &[i32],
-    ) -> Result<Vec<Tag>, tonic::Status> {
-        schema::tags::table
-            .select(Tag::as_select())
-            .filter(schema::tags::id.eq_any(tag_ids))
-            .load(conn)
+    async fn fetch_tags_by_ids(&self, tag_ids: &[String]) -> Result<Vec<Tag>, tonic::Status> {
+        let mut builder = sqlx::QueryBuilder::new("select * from tags where id in (");
+
+        let mut separated = builder.separated(", ");
+        for id in tag_ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(")");
+
+        let tags: Vec<Tag> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+        Ok(tags)
     }
 }
 
@@ -45,23 +51,24 @@ impl TagsService for TagServiceHandlers {
         request: tonic::Request<GetTagDomainsRequest>,
     ) -> Result<tonic::Response<GetTagDomainsResponse>, tonic::Status> {
         let request = request.into_inner();
+        let ids = request.ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let mut builder = sqlx::QueryBuilder::new("select * from tag_domains");
 
-        let mut query = schema::tag_domains::table
-            .into_boxed()
-            .select(TagDomain::as_select());
+        if !ids.is_empty() {
+            builder.push(" where id in (");
 
-        if !request.ids.is_empty() {
-            query = query.filter(schema::tag_domains::id.eq_any(request.ids));
+            let mut separated = builder.separated(", ");
+            for id in ids.iter() {
+                separated.push_bind(id);
+            }
+
+            separated.push_unseparated(")");
         }
 
-        let tag_domains: Vec<TagDomain> = query
-            .load(&mut conn)
+        let tag_domains: Vec<TagDomain> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
@@ -74,23 +81,37 @@ impl TagsService for TagServiceHandlers {
         request: tonic::Request<CreateTagDomainsRequest>,
     ) -> Result<tonic::Response<CreateTagDomainsResponse>, tonic::Status> {
         let request = request.into_inner();
+        let to_create = request.tag_domains;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        if to_create.is_empty() {
+            return Err(tonic::Status::invalid_argument(
+                "At least one tag domain must be provided",
+            ));
+        }
 
-        let values: Vec<_> = request
-            .tag_domains
-            .iter()
-            .map(|d| schema::tag_domains::name.eq(&d.name))
-            .collect();
+        let mut builder =
+            sqlx::QueryBuilder::new("insert into tag_domains (id, name, is_well_known) values ");
 
-        let tag_domains_created: Vec<TagDomain> = diesel::insert_into(schema::tag_domains::table)
-            .values(&values)
-            .returning(TagDomain::as_select())
-            .get_results(&mut conn)
+        for (i, domain) in to_create.iter().enumerate() {
+            if i > 0 {
+                builder.push(", ");
+            }
+
+            builder.push("(");
+            let mut separated = builder.separated(", ");
+
+            separated.push_bind(uuid::Uuid::now_v7().to_string());
+            separated.push_bind(&domain.name);
+            separated.push_bind(false);
+
+            separated.push_unseparated(")");
+        }
+
+        builder.push(" returning *");
+
+        let tag_domains_created: Vec<TagDomain> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
@@ -105,34 +126,24 @@ impl TagsService for TagServiceHandlers {
         request: tonic::Request<DeleteTagDomainsRequest>,
     ) -> Result<tonic::Response<DeleteTagDomainsResponse>, tonic::Status> {
         let request = request.into_inner();
+        let ids = request.ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let mut builder = sqlx::QueryBuilder::new("delete from tag_domains");
 
-        // Reject deletion of well-known domains.
-        let well_known: Vec<TagDomain> = schema::tag_domains::table
-            .select(TagDomain::as_select())
-            .filter(schema::tag_domains::id.eq_any(&request.ids))
-            .filter(schema::tag_domains::is_well_known.eq(true))
-            .load(&mut conn)
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        builder.push(" where is_well_known = ");
+        builder.push_bind(false);
+        builder.push(" and id in (");
 
-        if !well_known.is_empty() {
-            let names: Vec<&str> = well_known.iter().map(|d| d.name.as_str()).collect();
-            return Err(tonic::Status::failed_precondition(format!(
-                "Cannot delete well-known tag domains: {}",
-                names.join(", ")
-            )));
+        let mut separated = builder.separated(", ");
+        for id in ids.iter() {
+            separated.push_bind(id);
         }
 
-        let tag_domains_deleted: Vec<TagDomain> = diesel::delete(schema::tag_domains::table)
-            .filter(schema::tag_domains::id.eq_any(request.ids))
-            .returning(TagDomain::as_select())
-            .get_results(&mut conn)
+        separated.push_unseparated(") returning *");
+
+        let tag_domains_deleted: Vec<TagDomain> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
@@ -147,25 +158,43 @@ impl TagsService for TagServiceHandlers {
         request: tonic::Request<GetTagsRequest>,
     ) -> Result<tonic::Response<GetTagsResponse>, tonic::Status> {
         let request = request.into_inner();
+        let ids = request.ids;
+        let tag_domain_ids = request.tag_domain_ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let mut builder = sqlx::QueryBuilder::new("select * from tags");
 
-        let mut query = schema::tags::table.into_boxed().select(Tag::as_select());
-
-        if !request.ids.is_empty() {
-            query = query.filter(schema::tags::id.eq_any(request.ids));
+        let mut conditions = Vec::new();
+        if !ids.is_empty() {
+            let mut condition = sqlx::QueryBuilder::<RetromDB>::new("id in (");
+            let mut separated = condition.separated(", ");
+            for id in ids.iter() {
+                separated.push_bind(id);
+            }
+            separated.push_unseparated(")");
+            conditions.push(condition.build().sql().to_string());
         }
 
-        if !request.tag_domain_ids.is_empty() {
-            query = query.filter(schema::tags::tag_domain_id.eq_any(request.tag_domain_ids));
+        if !tag_domain_ids.is_empty() {
+            let mut condition = sqlx::QueryBuilder::<RetromDB>::new("tag_domain_id in (");
+            let mut separated = condition.separated(", ");
+            for id in tag_domain_ids.iter() {
+                separated.push_bind(id);
+            }
+            separated.push_unseparated(")");
+            conditions.push(condition.build().sql().to_string());
         }
 
-        let tags: Vec<Tag> = query
-            .load(&mut conn)
+        if !conditions.is_empty() {
+            builder.push(" where ");
+            let mut separated = builder.separated(" and ");
+            for condition in conditions {
+                separated.push(condition);
+            }
+        }
+
+        let tags: Vec<Tag> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
@@ -178,34 +207,37 @@ impl TagsService for TagServiceHandlers {
         request: tonic::Request<CreateTagsRequest>,
     ) -> Result<tonic::Response<CreateTagsResponse>, tonic::Status> {
         let request = request.into_inner();
+        let to_create = request.tags;
 
-        if request.tags.iter().any(|t| t.tag_domain_id == 0) {
+        if to_create.is_empty() {
             return Err(tonic::Status::invalid_argument(
-                "Each tag must specify a non-zero tag_domain_id",
+                "At least one tag must be provided",
             ));
         }
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let mut builder =
+            sqlx::QueryBuilder::new("insert into tags (id, tag_domain_id, value) values ");
 
-        let values: Vec<_> = request
-            .tags
-            .iter()
-            .map(|t| {
-                (
-                    schema::tags::tag_domain_id.eq(t.tag_domain_id),
-                    schema::tags::value.eq(&t.value),
-                )
-            })
-            .collect();
+        for (i, tag) in to_create.iter().enumerate() {
+            if i > 0 {
+                builder.push(", ");
+            }
 
-        let tags_created: Vec<Tag> = diesel::insert_into(schema::tags::table)
-            .values(&values)
-            .returning(Tag::as_select())
-            .get_results(&mut conn)
+            builder.push("(");
+            let mut separated = builder.separated(", ");
+
+            separated.push_bind(uuid::Uuid::now_v7().to_string());
+            separated.push_bind(&tag.tag_domain_id);
+            separated.push_bind(&tag.value);
+
+            separated.push_unseparated(")");
+        }
+
+        builder.push(" returning *");
+
+        let tags_created: Vec<Tag> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
@@ -218,16 +250,25 @@ impl TagsService for TagServiceHandlers {
         request: tonic::Request<DeleteTagsRequest>,
     ) -> Result<tonic::Response<DeleteTagsResponse>, tonic::Status> {
         let request = request.into_inner();
+        let ids = request.ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        if ids.is_empty() {
+            return Err(tonic::Status::invalid_argument(
+                "At least one tag ID must be provided",
+            ));
+        }
 
-        let tags_deleted: Vec<Tag> = diesel::delete(schema::tags::table)
-            .filter(schema::tags::id.eq_any(request.ids))
-            .get_results(&mut conn)
+        let mut builder = sqlx::QueryBuilder::new("delete from tags where id in (");
+        let mut separated = builder.separated(", ");
+        for id in ids.iter() {
+            separated.push_bind(id);
+        }
+
+        separated.push_unseparated(") returning *");
+
+        let tags_deleted: Vec<Tag> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
@@ -241,17 +282,20 @@ impl TagsService for TagServiceHandlers {
     ) -> Result<tonic::Response<GetGameTagsResponse>, tonic::Status> {
         let game_id = request.into_inner().game_id;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let mut builder = sqlx::QueryBuilder::new(
+            r#"
+                select t.* from tags t 
+                inner join game_tag gt 
+                on t.id = gt.tag_id 
+                where gt.game_id = 
+            "#,
+        );
 
-        let tags: Vec<Tag> = schema::game_tag_maps::table
-            .inner_join(schema::tags::table)
-            .select(Tag::as_select())
-            .filter(schema::game_tag_maps::game_id.eq(game_id))
-            .load(&mut conn)
+        builder.push_bind(game_id);
+
+        let tags: Vec<Tag> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
@@ -265,33 +309,33 @@ impl TagsService for TagServiceHandlers {
     ) -> Result<tonic::Response<AddGameTagsResponse>, tonic::Status> {
         let request = request.into_inner();
         let game_id = request.game_id;
+        let tags = request.tag_ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
+        let mut builder = sqlx::QueryBuilder::new("insert into game_tag (game_id, tag_id) values ");
+
+        for (i, tag_id) in tags.iter().enumerate() {
+            if i > 0 {
+                builder.push(", ");
+            }
+
+            builder.push("(");
+            let mut separated = builder.separated(", ");
+
+            separated.push_bind(&game_id);
+            separated.push_bind(tag_id);
+
+            separated.push_unseparated(")");
+        }
+
+        builder.push(" on conflict do nothing returning tag_id");
+
+        let inserted_ids: Vec<String> = builder
+            .build_query_scalar()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let values: Vec<_> = request
-            .tag_ids
-            .iter()
-            .map(|&tag_id| {
-                (
-                    schema::game_tag_maps::game_id.eq(game_id),
-                    schema::game_tag_maps::tag_id.eq(tag_id),
-                )
-            })
-            .collect();
-
-        let inserted_ids: Vec<i32> = diesel::insert_into(schema::game_tag_maps::table)
-            .values(&values)
-            .on_conflict_do_nothing()
-            .returning(schema::game_tag_maps::tag_id)
-            .get_results(&mut conn)
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-        let tags_added = Self::fetch_tags_by_ids(&mut conn, &inserted_ids).await?;
+        let tags_added = self.fetch_tags_by_ids(&inserted_ids).await?;
 
         Ok(tonic::Response::new(AddGameTagsResponse { tags_added }))
     }
@@ -304,21 +348,24 @@ impl TagsService for TagServiceHandlers {
         let request = request.into_inner();
         let game_id = request.game_id;
 
-        let mut conn = self
-            .db_pool
-            .get()
+        let mut builder = sqlx::QueryBuilder::new("delete from game_tag where game_id = ");
+        builder.push_bind(game_id);
+        builder.push(" and tag_id in (");
+
+        let mut separated = builder.separated(", ");
+        for tag_id in request.tag_ids.iter() {
+            separated.push_bind(tag_id);
+        }
+
+        separated.push_unseparated(") returning tag_id");
+
+        let deleted_tag_ids: Vec<String> = builder
+            .build_query_scalar()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let deleted_tag_ids: Vec<i32> = diesel::delete(schema::game_tag_maps::table)
-            .filter(schema::game_tag_maps::game_id.eq(game_id))
-            .filter(schema::game_tag_maps::tag_id.eq_any(&request.tag_ids))
-            .returning(schema::game_tag_maps::tag_id)
-            .get_results(&mut conn)
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-        let tags_deleted = Self::fetch_tags_by_ids(&mut conn, &deleted_tag_ids).await?;
+        let tags_deleted = self.fetch_tags_by_ids(&deleted_tag_ids).await?;
 
         Ok(tonic::Response::new(DeleteGameTagsResponse {
             tags_deleted,
@@ -332,17 +379,20 @@ impl TagsService for TagServiceHandlers {
     ) -> Result<tonic::Response<GetPlatformTagsResponse>, tonic::Status> {
         let platform_id = request.into_inner().platform_id;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let mut builder = sqlx::QueryBuilder::new(
+            r#"
+                select t.* from tags t
+                inner join platform_tag pt
+                on t.id = pt.tag_id
+                where pt.platform_id =
+            "#,
+        );
 
-        let tags: Vec<Tag> = schema::platform_tag_maps::table
-            .inner_join(schema::tags::table)
-            .select(Tag::as_select())
-            .filter(schema::platform_tag_maps::platform_id.eq(platform_id))
-            .load(&mut conn)
+        builder.push_bind(platform_id);
+
+        let tags: Vec<Tag> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
@@ -356,33 +406,40 @@ impl TagsService for TagServiceHandlers {
     ) -> Result<tonic::Response<AddPlatformTagsResponse>, tonic::Status> {
         let request = request.into_inner();
         let platform_id = request.platform_id;
+        let tag_ids = request.tag_ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
+        if tag_ids.is_empty() {
+            return Err(tonic::Status::invalid_argument(
+                "At least one tag ID must be provided",
+            ));
+        }
+
+        let mut builder =
+            sqlx::QueryBuilder::new("insert into platform_tag (platform_id, tag_id) values ");
+
+        for (i, tag_id) in tag_ids.iter().enumerate() {
+            if i > 0 {
+                builder.push(", ");
+            }
+
+            builder.push("(");
+            let mut separated = builder.separated(", ");
+
+            separated.push_bind(&platform_id);
+            separated.push_bind(tag_id);
+
+            separated.push_unseparated(")");
+        }
+
+        builder.push(" on conflict do nothing returning tag_id");
+
+        let inserted_ids: Vec<String> = builder
+            .build_query_scalar()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let values: Vec<_> = request
-            .tag_ids
-            .iter()
-            .map(|&tag_id| {
-                (
-                    schema::platform_tag_maps::platform_id.eq(platform_id),
-                    schema::platform_tag_maps::tag_id.eq(tag_id),
-                )
-            })
-            .collect();
-
-        let inserted_ids: Vec<i32> = diesel::insert_into(schema::platform_tag_maps::table)
-            .values(&values)
-            .on_conflict_do_nothing()
-            .returning(schema::platform_tag_maps::tag_id)
-            .get_results(&mut conn)
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-        let tags_added = Self::fetch_tags_by_ids(&mut conn, &inserted_ids).await?;
+        let tags_added = self.fetch_tags_by_ids(&inserted_ids).await?;
 
         Ok(tonic::Response::new(AddPlatformTagsResponse { tags_added }))
     }
@@ -394,35 +451,36 @@ impl TagsService for TagServiceHandlers {
     ) -> Result<tonic::Response<DeletePlatformTagsResponse>, tonic::Status> {
         let request = request.into_inner();
         let platform_id = request.platform_id;
+        let tag_ids = request.tag_ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
+        if tag_ids.is_empty() {
+            return Err(tonic::Status::invalid_argument(
+                "At least one tag ID must be provided",
+            ));
+        }
+
+        let mut builder = sqlx::QueryBuilder::new("delete from platform_tag where platform_id = ");
+
+        builder.push_bind(platform_id);
+        builder.push(" and tag_id in (");
+
+        let mut separated = builder.separated(", ");
+        for tag_id in tag_ids.iter() {
+            separated.push_bind(tag_id);
+        }
+
+        separated.push_unseparated(") returning tag_id");
+
+        let deleted_tag_ids: Vec<String> = builder
+            .build_query_scalar()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        let deleted_tag_ids: Vec<i32> = diesel::delete(schema::platform_tag_maps::table)
-            .filter(schema::platform_tag_maps::platform_id.eq(platform_id))
-            .filter(schema::platform_tag_maps::tag_id.eq_any(&request.tag_ids))
-            .returning(schema::platform_tag_maps::tag_id)
-            .get_results(&mut conn)
-            .await
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
-
-        let tags_deleted = Self::fetch_tags_by_ids(&mut conn, &deleted_tag_ids).await?;
+        let tags_deleted = self.fetch_tags_by_ids(&deleted_tag_ids).await?;
 
         Ok(tonic::Response::new(DeletePlatformTagsResponse {
             tags_deleted,
         }))
     }
-}
-
-/// Build an [`axum::Router`] that serves the [`TagsService`] gRPC endpoints.
-pub fn tags_router(db_pool: Arc<Pool>) -> axum::Router {
-    let tag_service = TagsServiceServer::new(TagServiceHandlers::new(db_pool));
-
-    let mut routes_builder = tonic::service::Routes::builder();
-    routes_builder.add_service(tag_service);
-
-    routes_builder.routes().into_axum_router()
 }
