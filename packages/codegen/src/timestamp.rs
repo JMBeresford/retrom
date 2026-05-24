@@ -31,10 +31,13 @@ where
     }
 }
 
-impl<'r> Encode<'r, sqlx::Any> for Timestamp {
+impl<'r, DB: Database> Encode<'r, DB> for Timestamp
+where
+    String: Encode<'r, DB>,
+{
     fn encode_by_ref(
         &self,
-        buf: &mut <sqlx::Any as Database>::ArgumentBuffer<'r>,
+        buf: &mut <DB as Database>::ArgumentBuffer<'r>,
     ) -> Result<IsNull, Box<dyn std::error::Error + 'static + Send + Sync>> {
         let datetime = match DateTime::from_timestamp(self.seconds, self.nanos as u32) {
             Some(dt) => dt,
@@ -43,7 +46,7 @@ impl<'r> Encode<'r, sqlx::Any> for Timestamp {
 
         let value = datetime.to_rfc3339();
 
-        <String as Encode<'r, sqlx::Any>>::encode_by_ref(&value, buf)
+        <String as Encode<'r, DB>>::encode_by_ref(&value, buf)
     }
 }
 

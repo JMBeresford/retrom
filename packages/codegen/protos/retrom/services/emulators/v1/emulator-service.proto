@@ -97,6 +97,7 @@ message DeleteEmulatorProfilesResponse {
 
 message GetDefaultEmulatorProfilesRequest {
   repeated string platform_ids = 1;
+  string client_id = 2;
 }
 
 message GetDefaultEmulatorProfilesResponse {
