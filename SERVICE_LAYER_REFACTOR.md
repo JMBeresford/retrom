@@ -1630,7 +1630,7 @@ contain Diesel-specific imports, derive macros, and query logic that was not yet
 | `retrom-service-emulators` |        ☐        |
 | `retrom-service-clients`   |        ☐        |
 | `retrom-service-jobs`      |        ☐        |
-| `retrom-service-tags`      |        ☐        |
+| `retrom-service-tags`      |        x        |
 | `retrom-service-files`     |        ☐        |
 | `retrom-service-saves`     |        ☐        |
 
