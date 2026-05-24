@@ -9493,7 +9493,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-clients"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "axum",
  "deadpool",
@@ -9542,7 +9542,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-config"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "axum",
  "config",
@@ -9561,7 +9561,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-emulators"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "axum",
  "deadpool",
@@ -9580,7 +9580,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-files"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "axum",
  "dotenvy",
@@ -9596,7 +9596,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-jobs"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "axum",
  "futures",
@@ -9615,7 +9615,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-library"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "axum",
  "bigdecimal",
@@ -9643,7 +9643,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-metadata"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "axum",
  "chrono",
@@ -9667,7 +9667,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-saves"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "axum",
  "chrono",
@@ -9692,7 +9692,7 @@ dependencies = [
 
 [[package]]
 name = "retrom-service-tags"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "axum",
  "deadpool",
