@@ -9515,6 +9515,7 @@ dependencies = [
 name = "retrom-service-common"
 version = "0.8.4"
 dependencies = [
+ "axum",
  "bigdecimal",
  "chrono",
  "deunicode",
@@ -9532,6 +9533,8 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tokio-retry",
+ "tonic 0.14.5",
+ "tonic-reflection",
  "tower 0.5.3",
  "tracing",
  "url",
@@ -9693,17 +9696,18 @@ version = "0.8.4"
 dependencies = [
  "axum",
  "deadpool",
- "diesel",
- "diesel-async",
  "dotenvy",
  "retrom-codegen",
  "retrom-db",
  "retrom-service-config",
  "retrom-telemetry",
+ "sqlx",
  "tokio",
  "tonic 0.14.5",
+ "tonic-reflection",
  "tonic-web",
  "tracing",
+ "uuid",
 ]
 
 [[package]]
