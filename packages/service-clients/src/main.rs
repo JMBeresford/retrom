@@ -1,12 +1,12 @@
 use retrom_codegen::descriptors::retrom::FILE_DESCRIPTOR_SET;
-use retrom_service_clients::clients_router;
+use retrom_service_clients::router::clients_router;
 use retrom_service_config::config::ServerConfigManager;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit};
 
 const DEFAULT_PORT: u16 = 5107;
 
-#[cfg(feature = "sqlite")]
+#[cfg(not(feature = "postgres"))]
 const DEFAULT_DB_URL: &str = "sqlite::memory:";
 
 #[cfg(feature = "postgres")]

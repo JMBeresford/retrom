@@ -1,12 +1,11 @@
 use retrom_codegen::retrom::services::tags::v1::{
-    tags_service_server::{TagsService, TagsServiceServer},
-    AddGameTagsRequest, AddGameTagsResponse, AddPlatformTagsRequest, AddPlatformTagsResponse,
-    CreateTagDomainsRequest, CreateTagDomainsResponse, CreateTagsRequest, CreateTagsResponse,
-    DeleteGameTagsRequest, DeleteGameTagsResponse, DeletePlatformTagsRequest,
-    DeletePlatformTagsResponse, DeleteTagDomainsRequest, DeleteTagDomainsResponse,
-    DeleteTagsRequest, DeleteTagsResponse, GetGameTagsRequest, GetGameTagsResponse,
-    GetPlatformTagsRequest, GetPlatformTagsResponse, GetTagDomainsRequest, GetTagDomainsResponse,
-    GetTagsRequest, GetTagsResponse, Tag, TagDomain,
+    tags_service_server::TagsService, AddGameTagsRequest, AddGameTagsResponse,
+    AddPlatformTagsRequest, AddPlatformTagsResponse, CreateTagDomainsRequest,
+    CreateTagDomainsResponse, CreateTagsRequest, CreateTagsResponse, DeleteGameTagsRequest,
+    DeleteGameTagsResponse, DeletePlatformTagsRequest, DeletePlatformTagsResponse,
+    DeleteTagDomainsRequest, DeleteTagDomainsResponse, DeleteTagsRequest, DeleteTagsResponse,
+    GetGameTagsRequest, GetGameTagsResponse, GetPlatformTagsRequest, GetPlatformTagsResponse,
+    GetTagDomainsRequest, GetTagDomainsResponse, GetTagsRequest, GetTagsResponse, Tag, TagDomain,
 };
 use retrom_db::{DbPool, RetromDB};
 use sqlx::Execute;
