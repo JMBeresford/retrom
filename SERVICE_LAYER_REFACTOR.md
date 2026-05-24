@@ -1628,7 +1628,7 @@ contain Diesel-specific imports, derive macros, and query logic that was not yet
 | `retrom-service-library`   |        ☐        |
 | `retrom-service-metadata`  |        ☐        |
 | `retrom-service-emulators` |        ☐        |
-| `retrom-service-clients`   |        ☐        |
+| `retrom-service-clients`   |        x        |
 | `retrom-service-jobs`      |        ☐        |
 | `retrom-service-tags`      |        x        |
 | `retrom-service-files`     |        ☐        |

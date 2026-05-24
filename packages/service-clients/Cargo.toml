@@ -18,7 +18,6 @@ retrom-db = { workspace = true }
 retrom-service-config = { workspace = true }
 retrom-telemetry = { workspace = true }
 sqlx = { workspace = true }
-deadpool = { workspace = true }
 tonic = { workspace = true }
 tonic-reflection = { workspace = true }
 uuid = { workspace = true }
@@ -29,6 +28,6 @@ tracing = { workspace = true }
 dotenvy = { workspace = true }
 
 [features]
-default = ["sqlite"]
+default = []
 sqlite = ["retrom-db/sqlite"]
 postgres = ["retrom-db/postgres"]

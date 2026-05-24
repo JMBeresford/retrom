@@ -9496,7 +9496,6 @@ name = "retrom-service-clients"
 version = "0.8.4"
 dependencies = [
  "axum",
- "deadpool",
  "dotenvy",
  "retrom-codegen",
  "retrom-db",
