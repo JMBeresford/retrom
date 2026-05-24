@@ -210,7 +210,6 @@ on conflict do nothing;
 create table if not exists emulators (
     id text not null primary key,
     name text not null,
-    save_strategy integer not null,
     built_in integer not null default 0,
     libretro_name text,
     created_at text not null default current_timestamp,
@@ -254,7 +253,7 @@ create table if not exists default_emulator_profiles (
     client_id text not null references clients (id) on delete cascade,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
-    primary key (platform_id, client_id)
+    primary key (platform_id, emulator_profile_id, client_id)
 );
 
 create table if not exists local_emulator_configs (

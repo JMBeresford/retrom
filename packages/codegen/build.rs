@@ -2,31 +2,7 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 
 // Derives for structs representing existing rows read from the DB.
-// sqlx::FromRow enables row deserialization via AnyPool.
-// diesel::Queryable is kept for backward compatibility during the Diesel → sqlx
-// transition (step 3.3 removes it per service crate).
-// diesel::Selectable (needs table_name), diesel::Identifiable (needs table_name),
-// diesel::Insertable (needs table_name), diesel::AsChangeset (needs table_name),
-// and diesel::Associations (needs belongs_to attributes) are all omitted because
-// retrom_db::schema no longer exists after step 3.2.
-const ROW_DERIVES: [&str; 2] = ["sqlx::FromRow", "diesel::Queryable"];
-
-type ModelDefinitionParams = (
-    &'static str,
-    &'static str,
-    Option<&'static str>,
-    Vec<&'static str>,
-);
-
-// Derives for structs representing new rows to be inserted into the DB.
-// Insertable requires #[diesel(table_name)] which is no longer available;
-// kept empty until per-service crates are migrated in step 3.3.
-const INSERTABLE_DERIVES: [&str; 0] = [];
-
-// Derives for changesets / to-be-updated rows.
-// AsChangeset and Identifiable require #[diesel(table_name)]; omitted for the
-// same reason as above.
-const UPDATE_DERIVES: [&str; 0] = [];
+const ROW_DERIVES: [&str; 1] = ["sqlx::FromRow"];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "protobuf-src")]
@@ -34,15 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR not set"));
 
-    let row_derivations = ROW_DERIVES.iter().copied().collect::<Vec<_>>().join(",");
-
-    let insertable_derivations = INSERTABLE_DERIVES
-        .iter()
-        .copied()
-        .collect::<Vec<_>>()
-        .join(",");
-
-    let update_derivations = UPDATE_DERIVES.iter().copied().collect::<Vec<_>>().join(",");
+    let row_derivations = ROW_DERIVES.to_vec().join(",");
 
     let proto_paths: Vec<PathBuf> = WalkDir::new("./protos")
         .follow_links(true)
@@ -52,180 +20,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .filter(|path| path.extension() == Some("proto".as_ref()))
         .collect();
 
-    let queryable_models: [ModelDefinitionParams; 19] = [
-        ("Platform", "platforms", None, vec![]),
-        ("Game", "games", None, vec!["Platform"]),
-        (
-            "GameFile",
-            "game_files",
-            None,
-            vec!["Game, foreign_key = game_id"],
-        ),
-        (
-            "GameMetadata",
-            "game_metadata",
-            Some("game_id"),
-            vec!["Game, foreign_key = game_id"],
-        ),
-        (
-            "PlatformMetadata",
-            "platform_metadata",
-            Some("platform_id"),
-            vec!["Platform, foreign_key = platform_id"],
-        ),
-        ("services.clients.v1.Client", "clients", None, vec![]),
-        ("Emulator", "emulators", None, vec![]),
-        (
-            "EmulatorProfile",
-            "emulator_profiles",
-            None,
-            vec!["Emulator, foreign_key = emulator_id"],
-        ),
-        (
-            "DefaultEmulatorProfile",
-            "default_emulator_profiles",
-            Some("platform_id"),
-            vec![
-                "Platform, foreign_key = platform_id",
-                "Client, foreign_key = client_id",
-                "EmulatorProfile, foreign_key = emulator_profile_id",
-            ],
-        ),
-        ("GameGenre", "game_genres", None, vec![]),
-        (
-            "GameGenreMap",
-            "game_genre_maps",
-            Some("game_id, genre_id"),
-            vec![
-                "GameGenre, foreign_key = genre_id",
-                "Game, foreign_key = game_id",
-            ],
-        ),
-        (
-            "SimilarGameMap",
-            "similar_game_maps",
-            Some("game_id, similar_game_id"),
-            vec!["Game, foreign_key = game_id"],
-        ),
-        (
-            "LocalEmulatorConfig",
-            "local_emulator_configs",
-            None,
-            vec!["Emulator", "Client"],
-        ),
-        ("services.library.v1.Library", "libraries", None, vec![]),
-        (
-            "services.library.v1.RootDirectory",
-            "root_directories",
-            None,
-            vec![],
-        ),
-        (
-            "services.metadata.v1.MetadataProvider",
-            "metadata_providers",
-            None,
-            vec![],
-        ),
-        (
-            "services.emulators.v1.EmulatorPlatformMap",
-            "emulator_platform_maps",
-            Some("emulator_id, platform_id"),
-            vec![],
-        ),
-        ("services.tags.v1.TagDomain", "tag_domains", None, vec![]),
-        ("services.tags.v1.Tag", "tags", None, vec![]),
-    ];
-
-    let insertable_models: [ModelDefinitionParams; 11] = [
-        ("NewPlatform", "platforms", None, vec![]),
-        ("NewGame", "games", None, vec![]),
-        ("NewGameFile", "game_files", None, vec![]),
-        ("NewClient", "clients", None, vec![]),
-        ("NewEmulator", "emulators", None, vec![]),
-        ("NewEmulatorProfile", "emulator_profiles", None, vec![]),
-        (
-            "NewDefaultEmulatorProfile",
-            "default_emulator_profiles",
-            None,
-            vec![],
-        ),
-        ("NewGameGenre", "game_genres", None, vec![]),
-        (
-            "NewGameGenreMap",
-            "game_genre_maps",
-            Some("game_id, genre_id"),
-            vec![],
-        ),
-        (
-            "NewSimilarGameMap",
-            "similar_game_maps",
-            Some("game_id, similar_game_id"),
-            vec![],
-        ),
-        (
-            "NewLocalEmulatorConfig",
-            "local_emulator_configs",
-            None,
-            vec![],
-        ),
-    ];
-
-    let updatable_models: [ModelDefinitionParams; 15] = [
-        ("UpdatedPlatform", "platforms", None, vec![]),
-        ("UpdatedGame", "games", None, vec![]),
-        ("UpdatedGameFile", "game_files", None, vec![]),
-        (
-            "UpdatedGameMetadata",
-            "game_metadata",
-            Some("game_id"),
-            vec![],
-        ),
-        (
-            "UpdatedPlatformMetadata",
-            "platform_metadata",
-            Some("platform_id"),
-            vec![],
-        ),
-        ("UpdatedClient", "clients", None, vec![]),
-        ("UpdatedEmulator", "emulators", None, vec![]),
-        ("UpdatedEmulatorProfile", "emulator_profiles", None, vec![]),
-        (
-            "UpdatedDefaultEmulatorProfile",
-            "default_emulator_profiles",
-            Some("platform_id"),
-            vec![],
-        ),
-        ("UpdatedGameGenre", "game_genres", None, vec![]),
-        (
-            "UpdatedGameGenreMap",
-            "game_genre_maps",
-            Some("game_id, genre_id"),
-            vec![],
-        ),
-        (
-            "UpdatedSimilarGameMap",
-            "similar_game_maps",
-            Some("game_id, similar_game_id"),
-            vec![],
-        ),
-        (
-            "UpdatedLocalEmulatorConfig",
-            "local_emulator_configs",
-            None,
-            vec!["Emulator", "Client"],
-        ),
-        (
-            "NewGameMetadata",
-            "game_metadata",
-            Some("game_id"),
-            vec!["Game"],
-        ),
-        (
-            "NewPlatformMetadata",
-            "platform_metadata",
-            Some("platform_id"),
-            vec!["Platform"],
-        ),
+    let row_models = [
+        "retrom.services.clients.v1.Client",
+        "retrom.services.library.v1.Library",
+        "retrom.services.library.v1.RootDirectory",
+        "retrom.services.metadata.v1.MetadataProvider",
+        "retrom.services.emulators.v1.Emulator",
+        "retrom.services.emulators.v1.EmulatorPlatform",
+        "retrom.services.emulators.v1.EmulatorOperatingSystem",
+        "retrom.services.emulators.v1.EmulatorProfile",
+        "retrom.services.emulators.v1.EmulatorProfileExtension",
+        "retrom.services.emulators.v1.DefaultEmulatorProfile",
+        "retrom.services.emulators.v1.LocalEmulatorConfig",
+        "retrom.services.tags.v1.TagDomain",
+        "retrom.services.tags.v1.Tag",
     ];
 
     let mut build = tonic_prost_build::configure()
@@ -267,29 +75,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 alias = \"storage_type\", alias = \"storageType\")]",
         );
 
-    for (model_name, _table_name, _primary_key, _belongs_to) in queryable_models.into_iter() {
-        build = build.type_attribute(
-            format!("retrom.{model_name}"),
-            format!("#[derive({row_derivations})]"),
-        );
-    }
-
-    for (model_name, _table_name, _primary_key, _belongs_to) in insertable_models.into_iter() {
-        if !insertable_derivations.is_empty() {
-            build = build.type_attribute(
-                format!("retrom.{model_name}"),
-                format!("#[derive({insertable_derivations})]"),
-            );
-        }
-    }
-
-    for (model_name, _table_name, _primary_key, _belongs_to) in updatable_models.into_iter() {
-        if !update_derivations.is_empty() {
-            build = build.type_attribute(
-                format!("retrom.{model_name}"),
-                format!("#[derive({update_derivations})]"),
-            );
-        }
+    for model_name in row_models.into_iter() {
+        build = build.type_attribute(model_name, format!("#[derive({row_derivations})]"));
     }
 
     build
