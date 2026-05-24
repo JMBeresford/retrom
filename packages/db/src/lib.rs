@@ -1,4 +1,4 @@
-#[cfg(feature = "sqlite")]
+#[cfg(not(feature = "postgres"))]
 pub type RetromDB = sqlx::Sqlite;
 
 #[cfg(feature = "postgres")]
@@ -36,7 +36,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// - `postgres://` or `postgresql://` → PostgreSQL
 /// - `sqlite://` → SQLite
 pub async fn connect(url: &str) -> Result<DbPool> {
-    #[cfg(feature = "sqlite")]
+    #[cfg(not(feature = "postgres"))]
     {
         sqlx::sqlite::SqlitePoolOptions::new()
             .connect(url)

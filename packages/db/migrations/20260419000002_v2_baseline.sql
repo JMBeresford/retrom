@@ -159,7 +159,7 @@ create table if not exists similar_games (
 create table if not exists tag_domains (
     id text not null primary key,
     name text not null,
-    is_well_known integer not null default 0,
+    is_well_known integer not null default false,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     constraint tag_domains_name_unique unique (name)
@@ -167,10 +167,10 @@ create table if not exists tag_domains (
 
 -- Seed well-known tag domains with stable UUIDs
 insert into tag_domains (id, name, is_well_known) values
-('00000000-0000-0000-0000-000000000001', 'genre', 1),
-('00000000-0000-0000-0000-000000000002', 'favorites', 1),
-('00000000-0000-0000-0000-000000000003', 'franchise', 1),
-('00000000-0000-0000-0000-000000000004', 'region', 1)
+('00000000-0000-0000-0000-000000000001', 'genre', true),
+('00000000-0000-0000-0000-000000000002', 'favorites', true),
+('00000000-0000-0000-0000-000000000003', 'franchise', true),
+('00000000-0000-0000-0000-000000000004', 'region', true)
 on conflict do nothing;
 
 create table if not exists tags (
