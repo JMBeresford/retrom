@@ -42,11 +42,11 @@
 - [ ] 3.4 Migrate per-service crates to sqlx (after 3.3):
   - [ ] `retrom-service-library`
   - [ ] `retrom-service-metadata`
-  - [ ] `retrom-service-emulators`
-  - [ ] `retrom-service-clients`
+  - [x] `retrom-service-emulators`
+  - [x] `retrom-service-clients`
   - [ ] `retrom-service-config`
   - [ ] `retrom-service-jobs`
-  - [ ] `retrom-service-tags`
+  - [x] `retrom-service-tags`
   - [ ] `retrom-service-files`
   - [x] `retrom-service-saves`
 - [ ] 3.5 Migrate per-service crates to use `ConfigService` via RPC
@@ -1627,7 +1627,7 @@ contain Diesel-specific imports, derive macros, and query logic that was not yet
 | `retrom-service-config`    |        x        |
 | `retrom-service-library`   |        ☐        |
 | `retrom-service-metadata`  |        ☐        |
-| `retrom-service-emulators` |        ☐        |
+| `retrom-service-emulators` |        x        |
 | `retrom-service-clients`   |        x        |
 | `retrom-service-jobs`      |        ☐        |
 | `retrom-service-tags`      |        x        |
