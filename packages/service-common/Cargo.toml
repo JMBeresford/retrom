@@ -32,3 +32,4 @@ url = { workspace = true }
 sha2 = { workspace = true }
 sevenz-rust2 = { workspace = true }
 rayon = { workspace = true }
+tempfile = { workspace = true }

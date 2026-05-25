@@ -1,18 +1,11 @@
-use std::{str::FromStr, sync::Arc, time::Duration};
-
+use crate::metadata_providers::{steam::models, RetryAttempts};
 use chrono::DateTime;
-use retrom_codegen::{
-    retrom::services::metadata::v1::GameMetadata,
-    timestamp::Timestamp,
-};
+use retrom_codegen::{retrom::services::metadata::v1::GameMetadata, timestamp::Timestamp};
+use retrom_service_config::config::ServerConfigManager;
+use std::{str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::{mpsc, oneshot};
 use tower::{Service, ServiceExt};
 use tracing::{instrument, Instrument};
-
-use crate::{
-    config::ServerConfigManager,
-    metadata_providers::{steam::models, RetryAttempts},
-};
 
 type SteamSenderMsg = (
     reqwest::Request,

@@ -1,10 +1,10 @@
-use crate::retrom_dirs::RetromDirs;
 use bigdecimal::ToPrimitive;
 use caesium::{compress_in_memory, convert_in_memory, parameters::CSParameters};
 use index::{IndexEntry, IndexManager};
 use rayon::ThreadPool;
 use reqwest::StatusCode;
 use retrom_codegen::retrom::services::config::v1::metadata_config::ImageFormat;
+use retrom_service_config::{config::ServerConfigManager, retrom_dirs::RetromDirs};
 use std::{
     path::{Path, PathBuf},
     str::FromStr,
@@ -122,7 +122,7 @@ pub struct MediaCache {
     client: reqwest::Client,
     compression_threads: Arc<ThreadPool>,
     index_manager: IndexManager,
-    config_manager: Arc<crate::config::ServerConfigManager>,
+    config_manager: Arc<ServerConfigManager>,
 }
 
 struct RetryCondition {}
@@ -148,7 +148,7 @@ impl Condition<MediaCacheError> for RetryCondition {
 }
 
 impl MediaCache {
-    pub fn new(config_manager: Arc<crate::config::ServerConfigManager>) -> Self {
+    pub fn new(config_manager: Arc<ServerConfigManager>) -> Self {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
@@ -362,28 +362,27 @@ impl MediaCache {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use crate::retrom_dirs::RetromDirs;
     use cacheable_media::CacheableMetadata;
-    use retrom_codegen::retrom::{GameMetadata, PlatformMetadata};
+    use retrom_codegen::retrom::services::metadata::v1::{GameMetadata, PlatformMetadata};
+    use retrom_service_config::config::ServerConfigManager;
     use tempfile::TempDir;
 
     #[tokio::test]
     async fn test_media_cache_basic_functionality() {
         // Test that cache directories are created correctly using trait implementations
         let game_metadata = GameMetadata {
-            game_id: 42,
+            id: "1".to_string(),
+            game_id: "42".to_string(),
             name: Some("Test Game".to_string()),
             description: None,
             cover_url: None,
             background_url: None,
             icon_url: None,
+            logo_url: None,
             igdb_id: None,
             created_at: None,
             updated_at: None,
             links: vec![],
-            video_urls: vec![],
-            screenshot_urls: vec![],
-            artwork_urls: vec![],
             release_date: None,
             last_played: None,
             minutes_played: Some(0),
@@ -394,10 +393,12 @@ mod integration_tests {
         assert!(cache_dir.to_string_lossy().ends_with("media/games/42"));
 
         let platform_metadata = PlatformMetadata {
-            platform_id: 1,
+            id: "1".to_string(),
+            platform_id: "1".to_string(),
             name: Some("Test Platform".to_string()),
             description: None,
             background_url: None,
+            icon_url: None,
             logo_url: None,
             igdb_id: None,
             created_at: None,
@@ -470,19 +471,18 @@ mod integration_tests {
     async fn test_subdirectory_organization() {
         // Create test game metadata with artwork and screenshot URLs
         let game_metadata = GameMetadata {
-            game_id: 123,
+            id: "1".to_string(),
+            game_id: "123".to_string(),
             name: Some("Test Game".to_string()),
             description: None,
             cover_url: None,
             background_url: None,
             icon_url: None,
             igdb_id: None,
+            logo_url: None,
             created_at: None,
             updated_at: None,
             links: vec![],
-            video_urls: vec![],
-            screenshot_urls: vec!["https://example.com/screenshot1.png".to_string()],
-            artwork_urls: vec!["https://example.com/artwork1.jpg".to_string()],
             release_date: None,
             last_played: None,
             minutes_played: Some(0),
@@ -516,10 +516,10 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_index_integration_with_cache_operations() {
-        let cache = MediaCache::new(Arc::new(crate::config::ServerConfigManager::new().unwrap()));
+        let cache = MediaCache::new(Arc::new(ServerConfigManager::new().unwrap()));
 
         let game_metadata = GameMetadata {
-            game_id: 123,
+            game_id: "123".to_string(),
             ..Default::default()
         };
 
@@ -597,7 +597,7 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_cache_media_opts_absolute_path_validation() {
-        let cache = MediaCache::new(Arc::new(crate::config::ServerConfigManager::new().unwrap()));
+        let cache = MediaCache::new(Arc::new(ServerConfigManager::new().unwrap()));
         let cache_dir = RetromDirs::new().media_dir().join("games").join("test");
 
         // Test with absolute path should return error
@@ -616,7 +616,7 @@ mod integration_tests {
     #[tokio::test]
     async fn test_cache_file_overwrite_on_url_change() {
         let temp_dir = TempDir::new().unwrap();
-        let cache = MediaCache::new(Arc::new(crate::config::ServerConfigManager::new().unwrap()));
+        let cache = MediaCache::new(Arc::new(ServerConfigManager::new().unwrap()));
 
         // Create a test cache directory
         let cache_dir = temp_dir.path().join("cache");
