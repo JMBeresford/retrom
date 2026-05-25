@@ -39,22 +39,17 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         request: Request<StatSaveFilesRequest>,
     ) -> Result<Response<StatSaveFilesResponse>, Status> {
         let request = request.into_inner();
+        let selectors = request.save_files_selectors;
         let include_backups = request.config.map(|c| c.include_backups()).unwrap_or(false);
 
-        let emulator_ids = request
-            .save_files_selectors
-            .iter()
-            .map(|selector| selector.emulator_id)
-            .collect::<Vec<_>>();
-
-        let emulators: Vec<Emulator> = if emulator_ids.is_empty() {
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
                 "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
-            for id in &emulator_ids {
+            for id in selectors.iter().map(|s| &s.emulator_id) {
                 separated.push_bind(id.to_string());
             }
             separated.push_unseparated(")");
@@ -91,7 +86,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let save_files_stats: Vec<SaveFilesStat> = files
             .into_iter()
             .map(|(emulator_id, files)| {
-                let emulator_save_dir = saves_root.join(emulator_id.to_string());
+                let emulator_save_dir = saves_root.join(&emulator_id);
 
                 let file_stats = files
                     .into_keys()
@@ -145,22 +140,17 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         request: Request<BackupSaveFilesRequest>,
     ) -> Result<Response<BackupSaveFilesResponse>, Status> {
         let request = request.into_inner();
+        let selectors = request.save_files_selectors;
         let dry_run = request.config.map(|c| c.dry_run());
 
-        let emulator_ids = request
-            .save_files_selectors
-            .iter()
-            .map(|selector| selector.emulator_id)
-            .collect::<Vec<_>>();
-
-        let emulators: Vec<Emulator> = if emulator_ids.is_empty() {
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
                 "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
-            for id in &emulator_ids {
+            for id in selectors.iter().map(|s| &s.emulator_id) {
                 separated.push_bind(id.to_string());
             }
             separated.push_unseparated(")");
@@ -194,16 +184,14 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let selectors = request.save_files_selectors;
         let dry_run = request.config.and_then(|c| c.dry_run);
 
-        let emulator_ids: Vec<i32> = selectors.iter().map(|s| s.emulator_id).collect();
-
-        let emulators: Vec<Emulator> = if emulator_ids.is_empty() {
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
                 "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
-            for id in &emulator_ids {
+            for id in selectors.iter().map(|s| &s.emulator_id) {
                 separated.push_bind(id.to_string());
             }
             separated.push_unseparated(")");
@@ -220,7 +208,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
                 let backup_id = selector.backup.map(|b| b.backup_id);
                 let emulator = emulators
                     .iter()
-                    .find(|e| e.id == selector.emulator_id.to_string())?
+                    .find(|e| e.id == selector.emulator_id)?
                     .clone();
 
                 let dir = LudusaviManager::get_emulator_save_dir(&emulator);
@@ -267,22 +255,17 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         request: Request<StatSaveStatesRequest>,
     ) -> Result<Response<StatSaveStatesResponse>, Status> {
         let request = request.into_inner();
+        let selectors = request.save_states_selectors;
         let include_backups = request.config.map(|c| c.include_backups()).unwrap_or(false);
 
-        let emulator_ids = request
-            .save_states_selectors
-            .iter()
-            .map(|selector| selector.emulator_id)
-            .collect::<Vec<_>>();
-
-        let emulators: Vec<Emulator> = if emulator_ids.is_empty() {
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
                 "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
-            for id in &emulator_ids {
+            for id in selectors.iter().map(|s| &s.emulator_id) {
                 separated.push_bind(id.to_string());
             }
             separated.push_unseparated(")");
@@ -319,7 +302,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let save_states_stats: Vec<SaveStatesStat> = files
             .into_iter()
             .map(|(emulator_id, files)| {
-                let emulator_states_dir = save_states_root.join(emulator_id.to_string());
+                let emulator_states_dir = save_states_root.join(&emulator_id);
 
                 let file_stats = files
                     .into_keys()
@@ -373,22 +356,17 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         request: Request<BackupSaveStatesRequest>,
     ) -> Result<Response<BackupSaveStatesResponse>, Status> {
         let request = request.into_inner();
+        let selectors = request.save_states_selectors;
         let dry_run = request.config.map(|c| c.dry_run());
 
-        let emulator_ids = request
-            .save_states_selectors
-            .iter()
-            .map(|selector| selector.emulator_id)
-            .collect::<Vec<_>>();
-
-        let emulators: Vec<Emulator> = if emulator_ids.is_empty() {
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
                 "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
-            for id in &emulator_ids {
+            for id in selectors.iter().map(|s| &s.emulator_id) {
                 separated.push_bind(id.to_string());
             }
             separated.push_unseparated(")");
@@ -422,16 +400,14 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let selectors = request.save_states_selectors;
         let dry_run = request.config.and_then(|c| c.dry_run);
 
-        let emulator_ids: Vec<i32> = selectors.iter().map(|s| s.emulator_id).collect();
-
-        let emulators: Vec<Emulator> = if emulator_ids.is_empty() {
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
                 "select * from emulators where id in (",
             );
             let mut separated = query.separated(", ");
-            for id in &emulator_ids {
+            for id in selectors.iter().map(|s| &s.emulator_id) {
                 separated.push_bind(id.to_string());
             }
             separated.push_unseparated(")");
@@ -448,7 +424,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
                 let backup_id = selector.backup.map(|b| b.backup_id);
                 let emulator = emulators
                     .iter()
-                    .find(|e| e.id == selector.emulator_id.to_string())?
+                    .find(|e| e.id == selector.emulator_id)?
                     .clone();
 
                 let dir = LudusaviManager::get_emulator_save_states_dir(&emulator);
