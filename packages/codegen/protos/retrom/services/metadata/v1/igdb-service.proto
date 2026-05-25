@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package retrom.services.metadata.v1;
+
+import "retrom/providers/igdb/v1/igdb.proto";
+import "retrom/services/metadata/v1/models.proto";
+
+service IgdbService {
+  rpc GetIgdbSearch(GetIgdbSearchRequest) returns (GetIgdbSearchResponse);
+  rpc GetIgdbGameSearchResults(GetIgdbGameSearchResultsRequest) returns (GetIgdbGameSearchResultsResponse);
+  rpc GetIgdbPlatformSearchResults(GetIgdbPlatformSearchResultsRequest) returns (GetIgdbPlatformSearchResultsResponse);
+}
+
+//
+// Arbitrary search query for IGDB
+message GetIgdbSearchRequest {
+  enum IgdbSearchType {
+    GAME = 0;
+    PLATFORM = 1;
+  }
+
+  IgdbSearchType search_type = 1;
+  optional retrom.providers.igdb.v1.IgdbSearch search = 2;
+  optional retrom.providers.igdb.v1.IgdbPagination pagination = 3;
+  optional retrom.providers.igdb.v1.IgdbFilters filters = 4;
+  optional retrom.providers.igdb.v1.IgdbFields fields = 5;
+}
+
+message IgdbSearchGameResponse {
+  repeated GameMetadata games = 1;
+}
+
+message IgdbSearchPlatformResponse {
+  repeated PlatformMetadata platforms = 1;
+}
+
+message GetIgdbSearchResponse {
+  oneof search_results {
+    IgdbSearchGameResponse game_matches = 1;
+    IgdbSearchPlatformResponse platform_matches = 2;
+  }
+}
+
+message GetIgdbGameSearchResultsRequest {
+  retrom.providers.igdb.v1.IgdbGameSearchQuery query = 1;
+}
+
+message GetIgdbGameSearchResultsResponse {
+  repeated GameMetadata metadata = 1;
+}
+
+message GetIgdbPlatformSearchResultsRequest {
+  retrom.providers.igdb.v1.IgdbPlatformSearchQuery query = 1;
+}
+
+message GetIgdbPlatformSearchResultsResponse {
+  repeated PlatformMetadata metadata = 1;
+}
