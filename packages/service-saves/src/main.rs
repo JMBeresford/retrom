@@ -1,10 +1,14 @@
-use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use retrom_service_config::config::ServerConfigManager;
 use retrom_service_saves::saves_router;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit, sync::Arc};
 
 const DEFAULT_PORT: u16 = 5108;
+
+#[cfg(not(feature = "postgres"))]
+const DEFAULT_DB_URL: &str = "sqlite://retrom-dev.db";
+
+#[cfg(feature = "postgres")]
 const DEFAULT_DB_URL: &str = "postgres://postgres:postgres@localhost/retrom";
 
 #[tokio::main]
@@ -36,13 +40,17 @@ async fn main() {
         .and_then(|conn| conn.db_url)
         .unwrap_or_else(|| DEFAULT_DB_URL.to_string());
 
-    let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(&db_url);
+    let pool = retrom_db::connect(&db_url).await.unwrap_or_else(|err| {
+        eprintln!("Failed to connect to database: {err:#?}");
+        exit(1);
+    });
 
-    let pool = Arc::new(
-        deadpool::managed::Pool::builder(pool_config)
-            .build()
-            .expect("Could not create database pool"),
-    );
+    retrom_db::run_migrations(&pool, &db_url)
+        .await
+        .unwrap_or_else(|err| {
+            eprintln!("Failed to run database migrations: {err:#?}");
+            exit(1);
+        });
 
     let config_manager = Arc::new(config_manager);
     let addr: SocketAddr = format!("0.0.0.0:{DEFAULT_PORT}").parse().unwrap();

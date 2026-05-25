@@ -10,8 +10,8 @@ use ludusavi::{
         ZipCompression, ZipConfig,
     },
 };
-use retrom_codegen::retrom::Emulator;
-use retrom_service_common::retrom_dirs::RetromDirs;
+use retrom_codegen::retrom::services::emulators::v1::Emulator;
+use retrom_service_config::retrom_dirs::RetromDirs;
 use std::{collections::BTreeMap, path::PathBuf};
 use tracing::instrument;
 
@@ -99,13 +99,11 @@ impl LudusaviManager {
     }
 
     pub fn get_emulator_save_dir(emulator: &Emulator) -> PathBuf {
-        RetromDirs::new().saves_dir().join(emulator.id.to_string())
+        RetromDirs::new().saves_dir().join(&emulator.id)
     }
 
     pub fn get_emulator_save_states_dir(emulator: &Emulator) -> PathBuf {
-        RetromDirs::new()
-            .save_states_dir()
-            .join(emulator.id.to_string())
+        RetromDirs::new().save_states_dir().join(&emulator.id)
     }
 
     #[instrument(skip(self))]
@@ -158,19 +156,12 @@ impl LudusaviManager {
     }
 
     #[instrument(skip(self))]
-    pub fn list_files(&mut self) -> Result<Vec<(i32, BTreeMap<String, ApiFile>)>> {
+    pub fn list_files(&mut self) -> Result<Vec<(String, BTreeMap<String, ApiFile>)>> {
         let output = self.back_up(Some(true))?;
 
-        let with_parsed_id =
-            output
-                .games
-                .into_iter()
-                .filter_map(|(name, game)| match name.parse::<i32>() {
-                    Ok(id) => Some((id, game)),
-                    Err(_) => None,
-                });
-
-        let files = with_parsed_id
+        let files = output
+            .games
+            .into_iter()
             .filter_map(|(id, game)| match game {
                 ApiGame::Operative { files, .. } => Some((id, files)),
                 _ => None,

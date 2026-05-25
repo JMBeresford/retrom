@@ -2,15 +2,15 @@ use retrom_codegen::retrom::services::saves::{
     v1::saves_service_server::SavesServiceServer,
     v2::emulator_saves_service_server::EmulatorSavesServiceServer,
 };
-use retrom_db::Pool;
-use retrom_service_common::config::ServerConfigManager;
+use retrom_db::DbPool;
+use retrom_service_config::config::ServerConfigManager;
 use std::sync::Arc;
 
 pub mod v1;
 pub mod v2;
 
 /// Build an [`axum::Router`] that serves the saves gRPC endpoints.
-pub fn saves_router(db_pool: Arc<Pool>, config_manager: Arc<ServerConfigManager>) -> axum::Router {
+pub fn saves_router(db_pool: DbPool, config_manager: Arc<ServerConfigManager>) -> axum::Router {
     let saves_service_v1 = SavesServiceServer::new(v1::service::SavesServiceHandlers::new(
         db_pool.clone(),
         config_manager,

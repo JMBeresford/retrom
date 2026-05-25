@@ -3,7 +3,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum SavesServiceError {
     #[error("Database error: {0}")]
-    Database(#[from] diesel::result::Error),
+    Database(#[from] sqlx::Error),
     #[error("Ludusavi error: {0:?}")]
     Ludusavi(ludusavi::prelude::Error),
     #[error("Status error: {0}")]

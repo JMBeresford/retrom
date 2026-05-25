@@ -23,12 +23,12 @@ enum OperatingSystem {
 }
 
 message Emulator {
-  string id = 1;
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string name = 2;
-  google.protobuf.Timestamp created_at = 3;
-  google.protobuf.Timestamp updated_at = 4;
-  bool built_in = 5;
-  optional string libretro_name = 6;
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  bool built_in = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  optional string libretro_name = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 message EmulatorPlatform {
@@ -42,13 +42,13 @@ message EmulatorOperatingSystem {
 }
 
 message EmulatorProfile {
-  string id = 1;
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string emulator_id = 2;
   string name = 3;
   string custom_args = 4;
-  bool built_in = 5;
-  google.protobuf.Timestamp created_at = 6;
-  google.protobuf.Timestamp updated_at = 7;
+  bool built_in = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp created_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // Represents a file extension that is supported by an emulator profile.
@@ -62,16 +62,16 @@ message DefaultEmulatorProfile {
   string platform_id = 1;
   string client_id = 2;
   string emulator_profile_id = 3;
-  google.protobuf.Timestamp created_at = 4;
-  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 message LocalEmulatorConfig {
-  string id = 1;
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string emulator_id = 2;
   string client_id = 3;
-  google.protobuf.Timestamp created_at = 4;
-  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
   string executable_path = 6;
   optional string nickname = 7;
   optional string save_data_path = 8;

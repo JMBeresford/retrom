@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package retrom.services.saves.v2;
+
+import "google/protobuf/timestamp.proto";
+import "retrom/files/v1/files.proto";
+
+message Backup {
+  string backup_id = 1;
+  optional google.protobuf.Timestamp created_at = 2;
+}
+
+message SaveFilesStat {
+  string emulator_id = 1;
+
+  // File stats relative to the emulator's saves root
+  repeated retrom.files.v1.FileStat file_stats = 2;
+
+  // Backup stats for this emulator's saves
+  repeated Backup backups = 3;
+
+  // Directory where the save files are stored on disk
+  string save_directory = 4;
+}
+
+message SaveFiles {
+  string emulator_id = 1;
+
+  // Files relative to the emulator's saves root
+  repeated retrom.files.v1.File files = 2;
+
+  string etag = 3;
+}
