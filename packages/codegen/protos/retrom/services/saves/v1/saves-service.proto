@@ -34,37 +34,37 @@ message BackupStats {
 message SaveFilesStat {
   repeated retrom.files.v1.FileStat file_stats = 1;
   repeated BackupStats backups = 2;
-  int32 game_id = 3;
-  optional int32 emulator_id = 4;
+  string game_id = 3;
+  optional string emulator_id = 4;
   string save_path = 5;
   google.protobuf.Timestamp created_at = 6;
 }
 
 message SaveFiles {
   repeated retrom.files.v1.File files = 1;
-  int32 game_id = 2;
-  optional int32 emulator_id = 3;
+  string game_id = 2;
+  optional string emulator_id = 3;
 }
 
 message SaveStatesStat {
   repeated retrom.files.v1.FileStat file_stats = 1;
   repeated BackupStats backups = 2;
-  int32 game_id = 3;
-  optional int32 emulator_id = 4;
+  string game_id = 3;
+  optional string emulator_id = 4;
   string states_path = 5;
   google.protobuf.Timestamp created_at = 6;
 }
 
 message SaveStates {
   repeated retrom.files.v1.File files = 1;
-  int32 game_id = 2;
-  optional int32 emulator_id = 3;
+  string game_id = 2;
+  optional string emulator_id = 3;
 }
 
 message StatSaveFilesRequest {
   message Selector {
-    int32 game_id = 1;
-    optional int32 emulator_id = 2;
+    string game_id = 1;
+    optional string emulator_id = 2;
   }
 
   message Config {
@@ -81,8 +81,8 @@ message StatSaveFilesResponse {
 
 message StatSaveStatesRequest {
   message Selector {
-    int32 game_id = 1;
-    optional int32 emulator_id = 2;
+    string game_id = 1;
+    optional string emulator_id = 2;
   }
 
   message Config {
@@ -99,8 +99,8 @@ message StatSaveStatesResponse {
 
 message GetSaveFilesRequest {
   message Selector {
-    int32 game_id = 1;
-    optional int32 emulator_id = 2;
+    string game_id = 1;
+    optional string emulator_id = 2;
   }
 
   repeated Selector save_files_selectors = 1;
@@ -112,8 +112,8 @@ message GetSaveFilesResponse {
 
 message GetSaveStatesRequest {
   message Selector {
-    int32 game_id = 1;
-    optional int32 emulator_id = 2;
+    string game_id = 1;
+    optional string emulator_id = 2;
   }
 
   repeated Selector save_states_selectors = 1;
@@ -126,8 +126,8 @@ message GetSaveStatesResponse {
 message UpdateSaveFilesRequest {
   message Selector {
     repeated retrom.files.v1.File files = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
+    string game_id = 2;
+    optional string emulator_id = 3;
   }
 
   repeated Selector save_files_selectors = 1;
@@ -138,8 +138,8 @@ message UpdateSaveFilesResponse {}
 message UpdateSaveStatesRequest {
   message Selector {
     repeated retrom.files.v1.File files = 1;
-    int32 game_id = 2;
-    optional int32 emulator_id = 3;
+    string game_id = 2;
+    optional string emulator_id = 3;
   }
 
   repeated Selector save_states_selectors = 1;
@@ -149,8 +149,8 @@ message UpdateSaveStatesResponse {}
 
 message DeleteSaveFilesRequest {
   message Selector {
-    int32 game_id = 1;
-    optional int32 emulator_id = 2;
+    string game_id = 1;
+    optional string emulator_id = 2;
   }
 
   message Config {
@@ -166,8 +166,8 @@ message DeleteSaveFilesResponse {}
 
 message DeleteSaveStatesRequest {
   message Selector {
-    int32 game_id = 1;
-    optional int32 emulator_id = 2;
+    string game_id = 1;
+    optional string emulator_id = 2;
     repeated retrom.files.v1.FileStat files = 3;
   }
 
@@ -184,9 +184,9 @@ message DeleteSaveStatesResponse {}
 
 message RestoreSaveFilesFromBackupRequest {
   message Selector {
-    int32 game_id = 1;
+    string game_id = 1;
     BackupStats backup = 2;
-    optional int32 emulator_id = 3;
+    optional string emulator_id = 3;
   }
 
   message Config {
@@ -204,9 +204,9 @@ message RestoreSaveFilesFromBackupResponse {
 
 message RestoreSaveStatesFromBackupRequest {
   message Selector {
-    int32 game_id = 1;
+    string game_id = 1;
     BackupStats backup = 2;
-    optional int32 emulator_id = 3;
+    optional string emulator_id = 3;
   }
 
   message Config {

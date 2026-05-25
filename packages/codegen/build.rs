@@ -24,6 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "retrom.services.clients.v1.Client",
         "retrom.services.library.v1.Library",
         "retrom.services.library.v1.RootDirectory",
+        "retrom.services.library.v1.Game",
         "retrom.services.metadata.v1.MetadataProvider",
         "retrom.services.emulators.v1.Emulator",
         "retrom.services.emulators.v1.EmulatorPlatform",
