@@ -47,28 +47,42 @@ impl GameSaveFileManager {
 }
 
 pub trait SaveFileManager {
-    async fn resolve_save_files(&self, include_backups: bool) -> Result<Vec<SaveFilesStat>>;
-    async fn reindex_backups(&self, emulator_id: Option<&str>) -> Result<()>;
+    fn resolve_save_files(
+        &self,
+        include_backups: bool,
+    ) -> impl std::future::Future<Output = Result<Vec<SaveFilesStat>>>;
+    fn reindex_backups(
+        &self,
+        emulator_id: Option<&str>,
+    ) -> impl std::future::Future<Output = Result<()>>;
     fn get_saves_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf>;
     fn get_saves_backup_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf>;
 
-    async fn backup_save_files(
+    fn backup_save_files(
         &self,
         emulator_id: Option<&str>,
         dry_run: bool,
-    ) -> Result<Vec<SaveFilesStat>>;
+    ) -> impl std::future::Future<Output = Result<Vec<SaveFilesStat>>>;
 
-    async fn update_save_files(&self, save_files: SaveFiles, dry_run: bool) -> Result<()>;
+    fn update_save_files(
+        &self,
+        save_files: SaveFiles,
+        dry_run: bool,
+    ) -> impl std::future::Future<Output = Result<()>>;
 
-    async fn delete_save_files(&self, emulator_id: Option<&str>, dry_run: bool) -> Result<()>;
+    fn delete_save_files(
+        &self,
+        emulator_id: Option<&str>,
+        dry_run: bool,
+    ) -> impl std::future::Future<Output = Result<()>>;
 
-    async fn restore_save_files_from_backup(
+    fn restore_save_files_from_backup(
         &self,
         backup: BackupStats,
         reindex: bool,
         emulator_id: Option<&str>,
         dry_run: bool,
-    ) -> Result<()>;
+    ) -> impl std::future::Future<Output = Result<()>>;
 }
 
 impl SaveFileManager for GameSaveFileManager {
@@ -98,10 +112,7 @@ impl SaveFileManager for GameSaveFileManager {
                 separated.push_bind(id);
             }
             separated.push_unseparated(")");
-            query
-                .build_query_as()
-                .fetch_all(&self.db_pool)
-                .await?
+            query.build_query_as().fetch_all(&self.db_pool).await?
         };
 
         let saves_dir = RetromDirs::new().saves_dir();
