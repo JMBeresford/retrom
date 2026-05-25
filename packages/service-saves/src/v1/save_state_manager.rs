@@ -47,33 +47,43 @@ impl GameSaveStateManager {
 }
 
 pub trait SaveStateManager {
-    async fn resolve_save_states(&self, include_backups: bool) -> Result<Vec<SaveStatesStat>>;
-    async fn reindex_backups(&self, emulator_id: Option<&str>) -> Result<()>;
+    fn resolve_save_states(
+        &self,
+        include_backups: bool,
+    ) -> impl std::future::Future<Output = Result<Vec<SaveStatesStat>>>;
+    fn reindex_backups(
+        &self,
+        emulator_id: Option<&str>,
+    ) -> impl std::future::Future<Output = Result<()>>;
     fn get_states_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf>;
     fn get_states_backup_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf>;
 
-    async fn backup_save_states(
+    fn backup_save_states(
         &self,
         emulator_id: Option<&str>,
         dry_run: bool,
-    ) -> Result<Vec<SaveStatesStat>>;
+    ) -> impl std::future::Future<Output = Result<Vec<SaveStatesStat>>>;
 
-    async fn update_save_states(&self, save_states: SaveStates, dry_run: bool) -> Result<()>;
+    fn update_save_states(
+        &self,
+        save_states: SaveStates,
+        dry_run: bool,
+    ) -> impl std::future::Future<Output = Result<()>>;
 
-    async fn delete_save_states(
+    fn delete_save_states(
         &self,
         emulator_id: Option<&str>,
         files: Vec<FileStat>,
         dry_run: bool,
-    ) -> Result<()>;
+    ) -> impl std::future::Future<Output = Result<()>>;
 
-    async fn restore_save_states_from_backup(
+    fn restore_save_states_from_backup(
         &self,
         backup: BackupStats,
         reindex: bool,
         emulator_id: Option<&str>,
         dry_run: bool,
-    ) -> Result<()>;
+    ) -> impl std::future::Future<Output = Result<()>>;
 }
 
 impl SaveStateManager for GameSaveStateManager {
@@ -103,10 +113,7 @@ impl SaveStateManager for GameSaveStateManager {
                 separated.push_bind(id);
             }
             separated.push_unseparated(")");
-            query
-                .build_query_as()
-                .fetch_all(&self.db_pool)
-                .await?
+            query.build_query_as().fetch_all(&self.db_pool).await?
         };
 
         let all_states_dir = RetromDirs::new().data_dir().join("states");
@@ -262,9 +269,7 @@ impl SaveStateManager for GameSaveStateManager {
             }
         };
 
-        Ok(states_dir
-            .join(emulator_id)
-            .join(&self.game.id))
+        Ok(states_dir.join(emulator_id).join(&self.game.id))
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
@@ -280,9 +285,7 @@ impl SaveStateManager for GameSaveStateManager {
             }
         };
 
-        Ok(backup_dir
-            .join(emulator_id)
-            .join(&self.game.id))
+        Ok(backup_dir.join(emulator_id).join(&self.game.id))
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
