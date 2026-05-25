@@ -1,32 +1,32 @@
 use crate::v2::ludusavi_manager::{LudusaviManager, SaveKind};
-use diesel::{query_dsl::methods::FilterDsl, ExpressionMethods};
-use diesel_async::RunQueryDsl;
 use futures::future::join_all;
 use ludusavi::report::ApiGame;
 use retrom_codegen::retrom::{
-    files::FileStat,
-    services::saves::v2::{
-        emulator_saves_service_server::EmulatorSavesService, Backup, BackupSaveFilesRequest,
-        BackupSaveFilesResponse, BackupSaveStatesRequest, BackupSaveStatesResponse,
-        RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
-        RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, SaveFilesStat,
-        SaveStatesStat, StatSaveFilesRequest, StatSaveFilesResponse, StatSaveStatesRequest,
-        StatSaveStatesResponse,
+    files::v1::FileStat,
+    services::{
+        emulators::v1::Emulator,
+        saves::v2::{
+            emulator_saves_service_server::EmulatorSavesService, Backup, BackupSaveFilesRequest,
+            BackupSaveFilesResponse, BackupSaveStatesRequest, BackupSaveStatesResponse,
+            RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
+            RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, SaveFilesStat,
+            SaveStatesStat, StatSaveFilesRequest, StatSaveFilesResponse, StatSaveStatesRequest,
+            StatSaveStatesResponse,
+        },
     },
-    Emulator,
 };
-use retrom_db::Pool;
-use retrom_service_common::retrom_dirs::RetromDirs;
-use std::{path::PathBuf, sync::Arc, time::SystemTime};
+use retrom_db::DbPool;
+use retrom_service_config::retrom_dirs::RetromDirs;
+use std::{path::PathBuf, time::SystemTime};
 use tonic::{Request, Response, Status};
 use tracing::instrument;
 
 pub struct EmulatorSavesServiceHandlers {
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
 }
 
 impl EmulatorSavesServiceHandlers {
-    pub fn new(db_pool: Arc<Pool>) -> Self {
+    pub fn new(db_pool: DbPool) -> Self {
         Self { db_pool }
     }
 }
@@ -39,26 +39,23 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         request: Request<StatSaveFilesRequest>,
     ) -> Result<Response<StatSaveFilesResponse>, Status> {
         let request = request.into_inner();
+        let selectors = request.save_files_selectors;
         let include_backups = request.config.map(|c| c.include_backups()).unwrap_or(false);
 
-        let emulator_ids = request
-            .save_files_selectors
-            .iter()
-            .map(|selector| selector.emulator_id)
-            .collect::<Vec<_>>();
-
-        let emulators: Vec<Emulator> = {
-            use retrom_db::schema::emulators;
-
-            let mut conn = self
-                .db_pool
-                .get()
-                .await
-                .map_err(|e| Status::internal(format!("Failed to get DB connection: {}", e)))?;
-
-            emulators::table
-                .filter(emulators::id.eq_any(&emulator_ids))
-                .load(&mut conn)
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
+            vec![]
+        } else {
+            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                "select * from emulators where id in (",
+            );
+            let mut separated = query.separated(", ");
+            for id in selectors.iter().map(|s| &s.emulator_id) {
+                separated.push_bind(id.to_string());
+            }
+            separated.push_unseparated(")");
+            query
+                .build_query_as()
+                .fetch_all(&self.db_pool)
                 .await
                 .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
         };
@@ -89,7 +86,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let save_files_stats: Vec<SaveFilesStat> = files
             .into_iter()
             .map(|(emulator_id, files)| {
-                let emulator_save_dir = saves_root.join(emulator_id.to_string());
+                let emulator_save_dir = saves_root.join(&emulator_id);
 
                 let file_stats = files
                     .into_keys()
@@ -143,26 +140,23 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         request: Request<BackupSaveFilesRequest>,
     ) -> Result<Response<BackupSaveFilesResponse>, Status> {
         let request = request.into_inner();
+        let selectors = request.save_files_selectors;
         let dry_run = request.config.map(|c| c.dry_run());
 
-        let emulator_ids = request
-            .save_files_selectors
-            .iter()
-            .map(|selector| selector.emulator_id)
-            .collect::<Vec<_>>();
-
-        let emulators: Vec<Emulator> = {
-            use retrom_db::schema::emulators;
-
-            let mut conn = self
-                .db_pool
-                .get()
-                .await
-                .map_err(|e| Status::internal(format!("Failed to get DB connection: {}", e)))?;
-
-            emulators::table
-                .filter(emulators::id.eq_any(&emulator_ids))
-                .load(&mut conn)
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
+            vec![]
+        } else {
+            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                "select * from emulators where id in (",
+            );
+            let mut separated = query.separated(", ");
+            for id in selectors.iter().map(|s| &s.emulator_id) {
+                separated.push_bind(id.to_string());
+            }
+            separated.push_unseparated(")");
+            query
+                .build_query_as()
+                .fetch_all(&self.db_pool)
                 .await
                 .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
         };
@@ -190,20 +184,20 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let selectors = request.save_files_selectors;
         let dry_run = request.config.and_then(|c| c.dry_run);
 
-        let emulator_ids: Vec<i32> = selectors.iter().map(|s| s.emulator_id).collect();
-
-        let emulators: Vec<Emulator> = {
-            use retrom_db::schema::emulators;
-
-            let mut conn = self
-                .db_pool
-                .get()
-                .await
-                .map_err(|e| Status::internal(format!("Failed to get DB connection: {}", e)))?;
-
-            emulators::table
-                .filter(emulators::id.eq_any(&emulator_ids))
-                .load(&mut conn)
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
+            vec![]
+        } else {
+            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                "select * from emulators where id in (",
+            );
+            let mut separated = query.separated(", ");
+            for id in selectors.iter().map(|s| &s.emulator_id) {
+                separated.push_bind(id.to_string());
+            }
+            separated.push_unseparated(")");
+            query
+                .build_query_as()
+                .fetch_all(&self.db_pool)
                 .await
                 .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
         };
@@ -261,26 +255,23 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         request: Request<StatSaveStatesRequest>,
     ) -> Result<Response<StatSaveStatesResponse>, Status> {
         let request = request.into_inner();
+        let selectors = request.save_states_selectors;
         let include_backups = request.config.map(|c| c.include_backups()).unwrap_or(false);
 
-        let emulator_ids = request
-            .save_states_selectors
-            .iter()
-            .map(|selector| selector.emulator_id)
-            .collect::<Vec<_>>();
-
-        let emulators: Vec<Emulator> = {
-            use retrom_db::schema::emulators;
-
-            let mut conn = self
-                .db_pool
-                .get()
-                .await
-                .map_err(|e| Status::internal(format!("Failed to get DB connection: {}", e)))?;
-
-            emulators::table
-                .filter(emulators::id.eq_any(&emulator_ids))
-                .load(&mut conn)
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
+            vec![]
+        } else {
+            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                "select * from emulators where id in (",
+            );
+            let mut separated = query.separated(", ");
+            for id in selectors.iter().map(|s| &s.emulator_id) {
+                separated.push_bind(id.to_string());
+            }
+            separated.push_unseparated(")");
+            query
+                .build_query_as()
+                .fetch_all(&self.db_pool)
                 .await
                 .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
         };
@@ -311,7 +302,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let save_states_stats: Vec<SaveStatesStat> = files
             .into_iter()
             .map(|(emulator_id, files)| {
-                let emulator_states_dir = save_states_root.join(emulator_id.to_string());
+                let emulator_states_dir = save_states_root.join(&emulator_id);
 
                 let file_stats = files
                     .into_keys()
@@ -365,26 +356,23 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         request: Request<BackupSaveStatesRequest>,
     ) -> Result<Response<BackupSaveStatesResponse>, Status> {
         let request = request.into_inner();
+        let selectors = request.save_states_selectors;
         let dry_run = request.config.map(|c| c.dry_run());
 
-        let emulator_ids = request
-            .save_states_selectors
-            .iter()
-            .map(|selector| selector.emulator_id)
-            .collect::<Vec<_>>();
-
-        let emulators: Vec<Emulator> = {
-            use retrom_db::schema::emulators;
-
-            let mut conn = self
-                .db_pool
-                .get()
-                .await
-                .map_err(|e| Status::internal(format!("Failed to get DB connection: {}", e)))?;
-
-            emulators::table
-                .filter(emulators::id.eq_any(&emulator_ids))
-                .load(&mut conn)
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
+            vec![]
+        } else {
+            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                "select * from emulators where id in (",
+            );
+            let mut separated = query.separated(", ");
+            for id in selectors.iter().map(|s| &s.emulator_id) {
+                separated.push_bind(id.to_string());
+            }
+            separated.push_unseparated(")");
+            query
+                .build_query_as()
+                .fetch_all(&self.db_pool)
                 .await
                 .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
         };
@@ -412,20 +400,20 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let selectors = request.save_states_selectors;
         let dry_run = request.config.and_then(|c| c.dry_run);
 
-        let emulator_ids: Vec<i32> = selectors.iter().map(|s| s.emulator_id).collect();
-
-        let emulators: Vec<Emulator> = {
-            use retrom_db::schema::emulators;
-
-            let mut conn = self
-                .db_pool
-                .get()
-                .await
-                .map_err(|e| Status::internal(format!("Failed to get DB connection: {}", e)))?;
-
-            emulators::table
-                .filter(emulators::id.eq_any(&emulator_ids))
-                .load(&mut conn)
+        let emulators: Vec<Emulator> = if selectors.is_empty() {
+            vec![]
+        } else {
+            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                "select * from emulators where id in (",
+            );
+            let mut separated = query.separated(", ");
+            for id in selectors.iter().map(|s| &s.emulator_id) {
+                separated.push_bind(id.to_string());
+            }
+            separated.push_unseparated(")");
+            query
+                .build_query_as()
+                .fetch_all(&self.db_pool)
                 .await
                 .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
         };

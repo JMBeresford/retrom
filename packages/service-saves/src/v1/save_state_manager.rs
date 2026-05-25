@@ -1,14 +1,15 @@
 use chrono::DateTime;
-use diesel::{ExpressionMethods, PgArrayExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
 use futures::future::join_all;
 use retrom_codegen::retrom::{
-    files::FileStat,
-    services::saves::v1::{BackupStats, SaveStates, SaveStatesStat},
-    Emulator, Game,
+    files::v1::FileStat,
+    services::{
+        emulators::v1::Emulator,
+        library::v1::Game,
+        saves::v1::{BackupStats, SaveStates, SaveStatesStat},
+    },
 };
-use retrom_db::Pool;
-use retrom_service_common::{config::ServerConfigManager, retrom_dirs::RetromDirs};
+use retrom_db::DbPool;
+use retrom_service_config::{config::ServerConfigManager, retrom_dirs::RetromDirs};
 use std::{path::PathBuf, sync::Arc};
 use tracing::instrument;
 use walkdir::WalkDir;
@@ -21,7 +22,7 @@ pub enum SaveStateManagerError {
     Internal(String),
 
     #[error("DB Error: {0}")]
-    Diesel(#[from] diesel::result::Error),
+    Sqlx(#[from] sqlx::Error),
 
     #[error("IO Error: {0}")]
     Io(#[from] std::io::Error),
@@ -31,12 +32,12 @@ type Result<T> = std::result::Result<T, SaveStateManagerError>;
 
 pub struct GameSaveStateManager {
     game: Game,
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     config: Arc<ServerConfigManager>,
 }
 
 impl GameSaveStateManager {
-    pub fn new(game: Game, db_pool: Arc<Pool>, config: Arc<ServerConfigManager>) -> Self {
+    pub fn new(game: Game, db_pool: DbPool, config: Arc<ServerConfigManager>) -> Self {
         Self {
             game,
             db_pool,
@@ -47,13 +48,13 @@ impl GameSaveStateManager {
 
 pub trait SaveStateManager {
     async fn resolve_save_states(&self, include_backups: bool) -> Result<Vec<SaveStatesStat>>;
-    async fn reindex_backups(&self, emulator_id: Option<i32>) -> Result<()>;
-    fn get_states_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
-    fn get_states_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf>;
+    async fn reindex_backups(&self, emulator_id: Option<&str>) -> Result<()>;
+    fn get_states_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf>;
+    fn get_states_backup_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf>;
 
     async fn backup_save_states(
         &self,
-        emulator_id: Option<i32>,
+        emulator_id: Option<&str>,
         dry_run: bool,
     ) -> Result<Vec<SaveStatesStat>>;
 
@@ -61,7 +62,7 @@ pub trait SaveStateManager {
 
     async fn delete_save_states(
         &self,
-        emulator_id: Option<i32>,
+        emulator_id: Option<&str>,
         files: Vec<FileStat>,
         dry_run: bool,
     ) -> Result<()>;
@@ -70,7 +71,7 @@ pub trait SaveStateManager {
         &self,
         backup: BackupStats,
         reindex: bool,
-        emulator_id: Option<i32>,
+        emulator_id: Option<&str>,
         dry_run: bool,
     ) -> Result<()>;
 }
@@ -78,23 +79,35 @@ pub trait SaveStateManager {
 impl SaveStateManager for GameSaveStateManager {
     #[instrument(skip(self))]
     async fn resolve_save_states(&self, include_backups: bool) -> Result<Vec<SaveStatesStat>> {
-        let mut conn = self.db_pool.get().await.map_err(|e| {
-            SaveStateManagerError::Internal(format!("Failed to get DB connection: {e:#?}"))
-        })?;
+        let platform_ids: Vec<String> = {
+            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                "select platform_id from game_platform where game_id = ",
+            );
+            query.push_bind(&self.game.id);
+            query
+                .build_query_scalar::<String>()
+                .fetch_all(&self.db_pool)
+                .await?
+        };
 
-        use retrom_db::schema::{emulators, platforms};
-
-        let platform_ids: Vec<i32> = platforms::table
-            .filter(platforms::id.eq(self.game.platform_id()))
-            .select(platforms::id)
-            .load(&mut conn)
-            .await?;
-
-        let emulators: Vec<Emulator> = emulators::table
-            .filter(emulators::supported_platforms.overlaps_with(platform_ids))
-            .select(Emulator::as_select())
-            .load(&mut conn)
-            .await?;
+        let emulators: Vec<Emulator> = if platform_ids.is_empty() {
+            vec![]
+        } else {
+            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
+                "select distinct e.* from emulators e \
+                 join emulator_supported_platforms esp on e.id = esp.emulator_id \
+                 where esp.platform_id in (",
+            );
+            let mut separated = query.separated(", ");
+            for id in &platform_ids {
+                separated.push_bind(id);
+            }
+            separated.push_unseparated(")");
+            query
+                .build_query_as()
+                .fetch_all(&self.db_pool)
+                .await?
+        };
 
         let all_states_dir = RetromDirs::new().data_dir().join("states");
 
@@ -102,7 +115,8 @@ impl SaveStateManager for GameSaveStateManager {
 
         let mut files = vec![];
 
-        for emulator_id in emulators.iter().map(|e| e.id) {
+        for emulator in &emulators {
+            let emulator_id = &emulator.id;
             let states_dir = self.get_states_dir(Some(emulator_id))?;
             let backups_dir = self.get_states_backup_dir(Some(emulator_id))?;
 
@@ -191,8 +205,8 @@ impl SaveStateManager for GameSaveStateManager {
             files.push(SaveStatesStat {
                 file_stats,
                 backups,
-                emulator_id: Some(emulator_id),
-                game_id: self.game.id,
+                emulator_id: Some(emulator_id.clone()),
+                game_id: self.game.id.clone(),
                 states_path,
                 created_at,
             });
@@ -204,7 +218,7 @@ impl SaveStateManager for GameSaveStateManager {
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    async fn reindex_backups(&self, emulator_id: Option<i32>) -> Result<()> {
+    async fn reindex_backups(&self, emulator_id: Option<&str>) -> Result<()> {
         let config = self.config.get_config().await;
         let max_backup_count =
             config.saves.map(|s| s.max_save_states_backups).unwrap_or(5) as usize;
@@ -212,7 +226,7 @@ impl SaveStateManager for GameSaveStateManager {
         let mut current_save_states = self.resolve_save_states(true).await?;
 
         if let Some(emulator_id) = emulator_id {
-            current_save_states.retain(|sf| sf.emulator_id == Some(emulator_id));
+            current_save_states.retain(|sf| sf.emulator_id.as_deref() == Some(emulator_id));
         }
 
         for save_states in current_save_states.iter_mut() {
@@ -236,7 +250,7 @@ impl SaveStateManager for GameSaveStateManager {
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    fn get_states_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+    fn get_states_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf> {
         let states_dir = RetromDirs::new().data_dir().join("states");
 
         let emulator_id = match emulator_id {
@@ -249,12 +263,12 @@ impl SaveStateManager for GameSaveStateManager {
         };
 
         Ok(states_dir
-            .join(emulator_id.to_string())
-            .join(self.game.id.to_string()))
+            .join(emulator_id)
+            .join(&self.game.id))
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
-    fn get_states_backup_dir(&self, emulator_id: Option<i32>) -> Result<PathBuf> {
+    fn get_states_backup_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf> {
         let backup_dir = RetromDirs::new().data_dir().join("states_backups");
 
         let emulator_id = match emulator_id {
@@ -267,25 +281,25 @@ impl SaveStateManager for GameSaveStateManager {
         };
 
         Ok(backup_dir
-            .join(emulator_id.to_string())
-            .join(self.game.id.to_string()))
+            .join(emulator_id)
+            .join(&self.game.id))
     }
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
     async fn backup_save_states(
         &self,
-        emulator_id: Option<i32>,
+        emulator_id: Option<&str>,
         dry_run: bool,
     ) -> Result<Vec<SaveStatesStat>> {
         let mut all_save_states = self.resolve_save_states(false).await?;
 
         if let Some(emulator_id) = emulator_id {
-            all_save_states.retain(|sf| sf.emulator_id == Some(emulator_id));
+            all_save_states.retain(|sf| sf.emulator_id.as_deref() == Some(emulator_id));
         }
 
         for save_states in all_save_states.iter_mut() {
             let states_path = PathBuf::from(&save_states.states_path);
-            let backups_dir = self.get_states_backup_dir(save_states.emulator_id)?;
+            let backups_dir = self.get_states_backup_dir(save_states.emulator_id.as_deref())?;
             let backup_dir =
                 backups_dir.join(chrono::Local::now().to_utc().format("%s.%f").to_string());
 
@@ -371,8 +385,8 @@ impl SaveStateManager for GameSaveStateManager {
 
     #[instrument(skip_all, fields(game_id = self.game.id))]
     async fn update_save_states(&self, save_states: SaveStates, dry_run: bool) -> Result<()> {
-        let states_dir = self.get_states_dir(save_states.emulator_id)?;
-        self.backup_save_states(save_states.emulator_id, dry_run)
+        let states_dir = self.get_states_dir(save_states.emulator_id.as_deref())?;
+        self.backup_save_states(save_states.emulator_id.as_deref(), dry_run)
             .await?;
 
         tokio::fs::create_dir_all(&states_dir).await?;
@@ -426,14 +440,14 @@ impl SaveStateManager for GameSaveStateManager {
     #[instrument(skip(self), fields(game_id = self.game.id))]
     async fn delete_save_states(
         &self,
-        emulator_id: Option<i32>,
+        emulator_id: Option<&str>,
         files: Vec<FileStat>,
         dry_run: bool,
     ) -> Result<()> {
         let mut all_save_states = self.resolve_save_states(false).await?;
 
         if let Some(emulator_id) = emulator_id {
-            all_save_states.retain(|sf| sf.emulator_id == Some(emulator_id));
+            all_save_states.retain(|sf| sf.emulator_id.as_deref() == Some(emulator_id));
         }
 
         let files_specified = !files.is_empty();
@@ -508,7 +522,7 @@ impl SaveStateManager for GameSaveStateManager {
         &self,
         backup: BackupStats,
         reindex: bool,
-        emulator_id: Option<i32>,
+        emulator_id: Option<&str>,
         dry_run: bool,
     ) -> Result<()> {
         let states_dir = self.get_states_dir(emulator_id)?;
