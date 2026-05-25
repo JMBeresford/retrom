@@ -60,8 +60,8 @@ message EmulatorProfileExtension {
 
 message DefaultEmulatorProfile {
   string platform_id = 1;
-  string emulator_profile_id = 2;
-  string client_id = 3;
+  string client_id = 2;
+  string emulator_profile_id = 3;
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp updated_at = 5;
 }
@@ -76,7 +76,6 @@ message LocalEmulatorConfig {
   optional string nickname = 7;
   optional string save_data_path = 8;
   optional string save_states_path = 9;
-  optional string default_profile_id = 10;
   optional string bios_directory = 11;
   optional string extra_files_directory = 12;
 }
