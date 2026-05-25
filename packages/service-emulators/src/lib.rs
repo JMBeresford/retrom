@@ -1,35 +1,34 @@
-use diesel::{prelude::*, upsert::excluded};
-use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::services::emulators::v1::{
-    emulator_service_server::EmulatorService as EmulatorServiceV1,
-    DeleteEmulatorPlatformMapsRequest, DeleteEmulatorPlatformMapsResponse, EmulatorPlatformMap,
-    GetEmulatorPlatformMapsRequest, GetEmulatorPlatformMapsResponse,
-    UpdateEmulatorPlatformMapsRequest, UpdateEmulatorPlatformMapsResponse,
+    emulator_service_server::EmulatorService, CreateEmulatorProfilesRequest,
+    CreateEmulatorProfilesResponse, CreateEmulatorsRequest, CreateEmulatorsResponse,
+    CreateLocalEmulatorConfigsRequest, CreateLocalEmulatorConfigsResponse, DefaultEmulatorProfile,
+    DeleteDefaultEmulatorProfilesRequest, DeleteDefaultEmulatorProfilesResponse,
+    DeleteEmulatorPlatformsRequest, DeleteEmulatorPlatformsResponse, DeleteEmulatorProfilesRequest,
+    DeleteEmulatorProfilesResponse, DeleteEmulatorsRequest, DeleteEmulatorsResponse,
+    DeleteLocalEmulatorConfigsRequest, DeleteLocalEmulatorConfigsResponse, Emulator,
+    EmulatorProfile, GetDefaultEmulatorProfilesRequest, GetDefaultEmulatorProfilesResponse,
+    GetEmulatorPlatformsRequest, GetEmulatorPlatformsResponse, GetEmulatorProfilesRequest,
+    GetEmulatorProfilesResponse, GetEmulatorsRequest, GetEmulatorsResponse,
+    GetLocalEmulatorConfigsRequest, GetLocalEmulatorConfigsResponse,
+    UpdateDefaultEmulatorProfilesRequest, UpdateDefaultEmulatorProfilesResponse,
+    UpdateEmulatorPlatformsRequest, UpdateEmulatorPlatformsResponse, UpdateEmulatorProfilesRequest,
+    UpdateEmulatorProfilesResponse, UpdateEmulatorsRequest, UpdateEmulatorsResponse,
+    UpdateLocalEmulatorConfigsRequest, UpdateLocalEmulatorConfigsResponse,
 };
-use retrom_codegen::retrom::{
-    self, emulator_service_server::EmulatorService, CreateEmulatorsRequest,
-    CreateEmulatorsResponse, DefaultEmulatorProfile, DeleteEmulatorsRequest,
-    DeleteEmulatorsResponse, Emulator, GetEmulatorsRequest, GetEmulatorsResponse,
-    UpdateEmulatorsRequest, UpdateEmulatorsResponse,
-};
-use retrom_db::{schema, Pool};
-use std::{collections::HashMap, sync::Arc};
+use retrom_db::DbPool;
 use tonic::{Request, Response, Status};
 
-pub struct EmulatorServiceHandlers {
-    db_pool: Arc<Pool>,
-}
+pub mod router;
 
-impl Clone for EmulatorServiceHandlers {
-    fn clone(&self) -> Self {
-        Self {
-            db_pool: self.db_pool.clone(),
-        }
-    }
+#[cfg(test)]
+mod tests;
+
+pub struct EmulatorServiceHandlers {
+    db_pool: DbPool,
 }
 
 impl EmulatorServiceHandlers {
-    pub fn new(db_pool: Arc<Pool>) -> Self {
+    pub fn new(db_pool: DbPool) -> Self {
         Self { db_pool }
     }
 }
@@ -40,17 +39,29 @@ impl EmulatorService for EmulatorServiceHandlers {
         &self,
         request: Request<CreateEmulatorsRequest>,
     ) -> Result<Response<CreateEmulatorsResponse>, Status> {
-        let emulators = request.into_inner().emulators;
+        let request = request.into_inner();
+        let emulators = request.emulators;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+        if emulators.is_empty() {
+            return Err(Status::invalid_argument("emulators list cannot be empty"));
+        }
 
-        let emulators_created = diesel::insert_into(schema::emulators::table)
-            .values(&emulators)
-            .get_results(&mut conn)
+        let mut builder = sqlx::QueryBuilder::new("insert into emulators (id, name, built_in) ");
+
+        builder.push_values(emulators, |mut b, mut emulator| {
+            emulator.id = uuid::Uuid::now_v7().to_string();
+            emulator.built_in = false;
+
+            b.push_bind(emulator.id)
+                .push_bind(emulator.name)
+                .push_bind(emulator.built_in);
+        });
+
+        builder.push(" returning *");
+
+        let emulators_created: Vec<Emulator> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
@@ -62,36 +73,44 @@ impl EmulatorService for EmulatorServiceHandlers {
         request: Request<GetEmulatorsRequest>,
     ) -> Result<Response<GetEmulatorsResponse>, Status> {
         let request = request.into_inner();
-
         let ids = &request.ids;
         let supported_platform_ids = &request.supported_platform_ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut query = schema::emulators::table
-            .into_boxed()
-            .select(retrom::Emulator::as_select());
+        let mut builder = sqlx::QueryBuilder::new("select * from emulators");
 
         if !ids.is_empty() {
-            query = query.filter(schema::emulators::id.eq_any(ids));
+            builder.push(" where id in (");
+
+            let mut separated = builder.separated(", ");
+            for id in ids {
+                separated.push_bind(id);
+            }
+
+            separated.push_unseparated(")");
         }
 
         if !supported_platform_ids.is_empty() {
-            query = query.filter(
-                schema::emulators::supported_platforms.overlaps_with(supported_platform_ids),
-            );
-        };
+            builder.push(if ids.is_empty() { " where " } else { " and " });
 
-        match query.load::<Emulator>(&mut conn).await {
-            Ok(emulators) => Ok(Response::new(GetEmulatorsResponse { emulators })),
-            Err(why) => {
-                return Err(Status::internal(why.to_string()));
+            builder.push(
+                "id in (select emulator_id from emulator_supported_platforms where platform_id in (",
+            );
+
+            let mut separated = builder.separated(", ");
+            for platform_id in supported_platform_ids {
+                separated.push_bind(platform_id);
             }
+
+            separated.push_unseparated("))");
         }
+
+        let emulators: Vec<Emulator> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(GetEmulatorsResponse { emulators }))
     }
 
     async fn update_emulators(
@@ -100,24 +119,43 @@ impl EmulatorService for EmulatorServiceHandlers {
     ) -> Result<Response<UpdateEmulatorsResponse>, Status> {
         let emulators = request.into_inner().emulators;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+        if emulators.iter().any(|e| e.built_in) {
+            return Err(Status::invalid_argument("cannot update built-in emulators"));
+        }
 
         let mut emulators_updated = vec![];
 
-        for emulator in emulators {
-            let updated_emulator = diesel::update(schema::emulators::table)
-                .filter(schema::emulators::id.eq(emulator.id))
-                .set(&emulator)
-                .get_result::<Emulator>(&mut conn)
+        let mut tx = self
+            .db_pool
+            .begin()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        for emulator in &emulators {
+            let mut builder = sqlx::QueryBuilder::new("update emulators set ");
+
+            builder
+                .push("name = ")
+                .push_bind(&emulator.name)
+                .push(" where id = ")
+                .push_bind(&emulator.id)
+                .push(" and built_in = ")
+                .push_bind(false);
+
+            builder.push(" returning *");
+
+            let emulator_updated: Emulator = builder
+                .build_query_as()
+                .fetch_one(&mut *tx)
                 .await
                 .map_err(|why| Status::internal(why.to_string()))?;
 
-            emulators_updated.push(updated_emulator);
+            emulators_updated.push(emulator_updated);
         }
+
+        tx.commit()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
 
         Ok(Response::new(UpdateEmulatorsResponse { emulators_updated }))
     }
@@ -126,661 +164,626 @@ impl EmulatorService for EmulatorServiceHandlers {
         &self,
         request: Request<DeleteEmulatorsRequest>,
     ) -> Result<Response<DeleteEmulatorsResponse>, Status> {
-        let ids = request.into_inner().ids;
+        let request = request.into_inner();
+        let ids = request.ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+        if ids.is_empty() {
+            return Err(Status::invalid_argument("ids list cannot be empty"));
+        }
 
-        let emulators_deleted = diesel::delete(schema::emulators::table)
-            .filter(schema::emulators::id.eq_any(ids))
-            .get_results::<Emulator>(&mut conn)
+        let mut builder = sqlx::QueryBuilder::new("delete from emulators where id in (");
+        let mut separated = builder.separated(", ");
+        for id in ids {
+            separated.push_bind(id);
+        }
+
+        separated.push_unseparated(")");
+
+        builder
+            .push(" and built_in = ")
+            .push_bind(false)
+            .push(" returning *");
+
+        let emulators_deleted: Vec<Emulator> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
         Ok(Response::new(DeleteEmulatorsResponse { emulators_deleted }))
     }
 
+    async fn get_emulator_platforms(
+        &self,
+        request: Request<GetEmulatorPlatformsRequest>,
+    ) -> Result<Response<GetEmulatorPlatformsResponse>, Status> {
+        let request = request.into_inner();
+        let emulator_ids = request.emulator_ids;
+        let platform_ids = request.platform_ids;
+
+        let mut builder = sqlx::QueryBuilder::new("select * from emulator_supported_platforms");
+
+        if !emulator_ids.is_empty() {
+            builder.push(" where emulator_id in (");
+
+            let mut separated = builder.separated(", ");
+            for emulator_id in emulator_ids.iter() {
+                separated.push_bind(emulator_id);
+            }
+
+            separated.push_unseparated(")");
+        }
+
+        if !platform_ids.is_empty() {
+            builder.push(if emulator_ids.is_empty() {
+                " where "
+            } else {
+                " and "
+            });
+
+            builder.push("platform_id in (");
+
+            let mut separated = builder.separated(", ");
+            for platform_id in platform_ids {
+                separated.push_bind(platform_id);
+            }
+
+            separated.push_unseparated(")");
+        }
+
+        let emulator_platforms = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(GetEmulatorPlatformsResponse {
+            emulator_platforms,
+        }))
+    }
+
+    async fn update_emulator_platforms(
+        &self,
+        request: Request<UpdateEmulatorPlatformsRequest>,
+    ) -> Result<Response<UpdateEmulatorPlatformsResponse>, Status> {
+        let request = request.into_inner();
+        let emulator_id = request.emulator_id;
+        let platform_ids = request.platform_ids;
+
+        let mut tx = self
+            .db_pool
+            .begin()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let mut builder = sqlx::QueryBuilder::new("delete from emulator_supported_platforms");
+
+        builder
+            .push(" where emulator_id = ")
+            .push_bind(&emulator_id);
+
+        builder
+            .build()
+            .execute(&mut *tx)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let mut builder = sqlx::QueryBuilder::new("insert into emulator_supported_platforms ");
+
+        builder.push_values(platform_ids, |mut b, platform_id| {
+            b.push_bind(&emulator_id).push_bind(platform_id);
+        });
+
+        builder.push(" returning *");
+
+        let emulator_platforms = builder
+            .build_query_as()
+            .fetch_all(&mut *tx)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        tx.commit()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(UpdateEmulatorPlatformsResponse {
+            emulator_platforms,
+        }))
+    }
+
+    async fn delete_emulator_platforms(
+        &self,
+        request: Request<DeleteEmulatorPlatformsRequest>,
+    ) -> Result<Response<DeleteEmulatorPlatformsResponse>, Status> {
+        let request = request.into_inner();
+        let emulator_id = request.emulator_id;
+        let platform_ids = request.platform_ids;
+
+        if platform_ids.is_empty() {
+            return Err(Status::invalid_argument(
+                "platform_ids list cannot be empty",
+            ));
+        }
+
+        let mut builder = sqlx::QueryBuilder::new("delete from emulator_supported_platforms");
+
+        builder
+            .push(" where emulator_id = ")
+            .push_bind(&emulator_id)
+            .push(" and platform_id in (");
+
+        let mut separated = builder.separated(", ");
+        for platform_id in platform_ids {
+            separated.push_bind(platform_id);
+        }
+
+        separated.push_unseparated(")");
+
+        builder.push(" returning *");
+
+        let emulator_platforms_deleted = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(DeleteEmulatorPlatformsResponse {
+            emulator_platforms_deleted,
+        }))
+    }
+
     async fn create_emulator_profiles(
         &self,
-        request: Request<retrom::CreateEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::CreateEmulatorProfilesResponse>, Status> {
-        let profiles = request.into_inner().profiles;
+        request: Request<CreateEmulatorProfilesRequest>,
+    ) -> Result<Response<CreateEmulatorProfilesResponse>, Status> {
+        let request = request.into_inner();
+        let profiles = request.profiles;
 
-        let mut conn = self
-            .db_pool
-            .get()
+        let mut builder = sqlx::QueryBuilder::new(
+            "insert into emulator_profiles (id, emulator_id, name, custom_args, built_in) ",
+        );
+
+        builder.push_values(profiles, |mut b, mut profile| {
+            profile.id = uuid::Uuid::now_v7().to_string();
+            profile.built_in = false;
+
+            b.push_bind(profile.id)
+                .push_bind(profile.emulator_id)
+                .push_bind(profile.name)
+                .push_bind(profile.custom_args)
+                .push_bind(profile.built_in);
+        });
+
+        builder.push(" returning *");
+
+        let profiles_created: Vec<EmulatorProfile> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
-        let profiles_created = diesel::insert_into(schema::emulator_profiles::table)
-            .values(&profiles)
-            .get_results::<retrom::EmulatorProfile>(&mut conn)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(retrom::CreateEmulatorProfilesResponse {
+        Ok(Response::new(CreateEmulatorProfilesResponse {
             profiles_created,
         }))
     }
 
     async fn get_emulator_profiles(
         &self,
-        request: Request<retrom::GetEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::GetEmulatorProfilesResponse>, Status> {
+        request: Request<GetEmulatorProfilesRequest>,
+    ) -> Result<Response<GetEmulatorProfilesResponse>, Status> {
         let request = request.into_inner();
         let ids = request.ids;
         let emulator_ids = request.emulator_ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut query = schema::emulator_profiles::table
-            .into_boxed()
-            .select(retrom::EmulatorProfile::as_select());
+        let mut builder = sqlx::QueryBuilder::new("select * from emulator_profiles");
 
         if !ids.is_empty() {
-            query = query.filter(schema::emulator_profiles::id.eq_any(ids));
+            builder.push(" where id in (");
+
+            let mut separated = builder.separated(", ");
+            for id in ids.iter() {
+                separated.push_bind(id);
+            }
+
+            separated.push_unseparated(")");
         }
 
         if !emulator_ids.is_empty() {
-            query = query.filter(schema::emulator_profiles::emulator_id.eq_any(emulator_ids));
+            builder.push(if ids.is_empty() { " where " } else { " and " });
+
+            builder.push("emulator_id in (");
+
+            let mut separated = builder.separated(", ");
+            for emulator_id in emulator_ids {
+                separated.push_bind(emulator_id);
+            }
+
+            separated.push_unseparated(")");
         }
 
-        match query.load::<retrom::EmulatorProfile>(&mut conn).await {
-            Ok(profiles) => Ok(Response::new(retrom::GetEmulatorProfilesResponse {
-                profiles,
-            })),
-            Err(why) => {
-                return Err(Status::internal(why.to_string()));
-            }
-        }
+        let profiles: Vec<EmulatorProfile> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(GetEmulatorProfilesResponse { profiles }))
     }
 
     async fn update_emulator_profiles(
         &self,
-        request: Request<retrom::UpdateEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::UpdateEmulatorProfilesResponse>, Status> {
-        let emulator_profiles = request.into_inner().profiles;
+        request: Request<UpdateEmulatorProfilesRequest>,
+    ) -> Result<Response<UpdateEmulatorProfilesResponse>, Status> {
+        let request = request.into_inner();
+        let profiles = request.profiles;
 
-        let mut conn = self
+        let mut tx = self
             .db_pool
-            .get()
+            .begin()
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
         let mut profiles_updated = vec![];
 
-        for emulator in emulator_profiles {
-            let updated_emulator = diesel::update(schema::emulator_profiles::table)
-                .filter(schema::emulator_profiles::id.eq(emulator.id))
-                .set(&emulator)
-                .get_result::<retrom::EmulatorProfile>(&mut conn)
+        for profile in profiles {
+            let mut builder = sqlx::QueryBuilder::new("update emulator_profiles set ");
+
+            builder
+                .push("name = ")
+                .push_bind(&profile.name)
+                .push(", custom_args = ")
+                .push_bind(&profile.custom_args)
+                .push(" where id = ")
+                .push_bind(&profile.id)
+                .push(" and built_in = ")
+                .push_bind(false)
+                .push(" returning *");
+
+            let profile_updated: EmulatorProfile = builder
+                .build_query_as()
+                .fetch_one(&mut *tx)
                 .await
                 .map_err(|why| Status::internal(why.to_string()))?;
 
-            profiles_updated.push(updated_emulator);
+            profiles_updated.push(profile_updated);
         }
 
-        Ok(Response::new(retrom::UpdateEmulatorProfilesResponse {
+        tx.commit()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(UpdateEmulatorProfilesResponse {
             profiles_updated,
         }))
     }
 
     async fn delete_emulator_profiles(
         &self,
-        request: Request<retrom::DeleteEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::DeleteEmulatorProfilesResponse>, Status> {
-        let ids = request.into_inner().ids;
+        request: Request<DeleteEmulatorProfilesRequest>,
+    ) -> Result<Response<DeleteEmulatorProfilesResponse>, Status> {
+        let request = request.into_inner();
+        let ids = request.ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
+        if ids.is_empty() {
+            return Err(Status::invalid_argument("ids list cannot be empty"));
+        }
+
+        let mut builder = sqlx::QueryBuilder::new("delete from emulator_profiles where id in (");
+        let mut separated = builder.separated(", ");
+        for id in ids {
+            separated.push_bind(id);
+        }
+
+        separated.push_unseparated(")");
+
+        builder
+            .push(" and built_in = ")
+            .push_bind(false)
+            .push(" returning *");
+
+        let profiles_deleted: Vec<EmulatorProfile> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
-        let profiles_deleted = diesel::delete(schema::emulator_profiles::table)
-            .filter(schema::emulator_profiles::id.eq_any(ids))
-            .get_results::<retrom::EmulatorProfile>(&mut conn)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(retrom::DeleteEmulatorProfilesResponse {
+        Ok(Response::new(DeleteEmulatorProfilesResponse {
             profiles_deleted,
         }))
     }
 
     async fn get_default_emulator_profiles(
         &self,
-        request: Request<retrom::GetDefaultEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::GetDefaultEmulatorProfilesResponse>, Status> {
-        let client_id = match request.metadata().get("x-client-id") {
-            Some(client_id) => client_id
-                .to_str()
-                .map_err(|_| Status::invalid_argument("x-client-id header must be valid UTF-8"))?
-                .parse::<i32>()
-                .map_err(|_| {
-                    Status::invalid_argument("x-client-id header must be a valid integer")
-                })?,
-            None => return Err(Status::unauthenticated("Client ID not found")),
-        };
+        request: Request<GetDefaultEmulatorProfilesRequest>,
+    ) -> Result<Response<GetDefaultEmulatorProfilesResponse>, Status> {
+        let request = request.into_inner();
+        let platform_ids = request.platform_ids;
+        let client_id = request.client_id;
 
-        let platform_ids = request.into_inner().platform_ids;
-
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut default_profiles = schema::default_emulator_profiles::table
-            .select(DefaultEmulatorProfile::as_select())
-            .into_boxed();
-
-        if !platform_ids.is_empty() {
-            default_profiles = default_profiles
-                .filter(schema::default_emulator_profiles::platform_id.eq_any(platform_ids));
+        if platform_ids.is_empty() {
+            return Err(Status::invalid_argument(
+                "at least one platform_id must be provided",
+            ));
         }
 
-        let default_profiles = default_profiles
-            .filter(schema::default_emulator_profiles::client_id.eq(client_id))
-            .get_results::<retrom::DefaultEmulatorProfile>(&mut conn)
+        let mut builder = sqlx::QueryBuilder::new("select * from default_emulator_profiles");
+
+        builder.push(" where client_id = ").push_bind(client_id);
+
+        if !platform_ids.is_empty() {
+            builder.push(" and platform_id in (");
+            let mut separated = builder.separated(", ");
+
+            for platform_id in platform_ids {
+                separated.push_bind(platform_id);
+            }
+
+            separated.push_unseparated(")");
+        }
+
+        let default_profiles: Vec<DefaultEmulatorProfile> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
-        Ok(Response::new(retrom::GetDefaultEmulatorProfilesResponse {
+        Ok(Response::new(GetDefaultEmulatorProfilesResponse {
             default_profiles,
         }))
     }
 
     async fn update_default_emulator_profiles(
         &self,
-        request: Request<retrom::UpdateDefaultEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::UpdateDefaultEmulatorProfilesResponse>, Status> {
-        let default_profiles = request.into_inner().default_profiles;
+        request: Request<UpdateDefaultEmulatorProfilesRequest>,
+    ) -> Result<Response<UpdateDefaultEmulatorProfilesResponse>, Status> {
+        let request = request.into_inner();
+        let default_profiles = request.default_profiles;
 
-        let mut conn = self
+        let mut tx = self
             .db_pool
-            .get()
+            .begin()
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
-        let default_profiles_updated =
-            diesel::insert_into(schema::default_emulator_profiles::table)
-                .values(&default_profiles)
-                .on_conflict((
-                    schema::default_emulator_profiles::platform_id,
-                    schema::default_emulator_profiles::client_id,
-                ))
-                .do_update()
-                .set(
-                    schema::default_emulator_profiles::emulator_profile_id.eq(excluded(
-                        schema::default_emulator_profiles::emulator_profile_id,
-                    )),
-                )
-                .get_results(&mut conn)
+        let mut default_profiles_updated = vec![];
+
+        for default_profile in default_profiles {
+            let mut builder = sqlx::QueryBuilder::new("update default_emulator_profiles set ");
+
+            builder
+                .push("emulator_profile_id = ")
+                .push_bind(&default_profile.emulator_profile_id)
+                .push(" where platform_id = ")
+                .push_bind(&default_profile.platform_id)
+                .push(" and client_id = ")
+                .push_bind(&default_profile.client_id)
+                .push(" returning *");
+
+            let default_profile_updated: DefaultEmulatorProfile = builder
+                .build_query_as()
+                .fetch_one(&mut *tx)
                 .await
                 .map_err(|why| Status::internal(why.to_string()))?;
 
-        Ok(Response::new(
-            retrom::UpdateDefaultEmulatorProfilesResponse {
-                default_profiles_updated,
-            },
-        ))
+            default_profiles_updated.push(default_profile_updated);
+        }
+
+        tx.commit()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(UpdateDefaultEmulatorProfilesResponse {
+            default_profiles_updated,
+        }))
     }
 
     async fn delete_default_emulator_profiles(
         &self,
-        request: Request<retrom::DeleteDefaultEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::DeleteDefaultEmulatorProfilesResponse>, Status> {
-        let platform_ids = request.into_inner().platform_ids;
+        request: Request<DeleteDefaultEmulatorProfilesRequest>,
+    ) -> Result<Response<DeleteDefaultEmulatorProfilesResponse>, Status> {
+        let request = request.into_inner();
+        let platform_ids = request.platform_ids;
+        let client_id = request.client_id;
 
-        let mut conn = self
-            .db_pool
-            .get()
+        if platform_ids.is_empty() {
+            return Err(Status::invalid_argument(
+                "at least one platform_id must be provided",
+            ));
+        }
+
+        let mut builder = sqlx::QueryBuilder::new("delete from default_emulator_profiles where ");
+
+        builder.push("client_id = ").push_bind(client_id);
+        builder.push(" and platform_id in (");
+        let mut separated = builder.separated(", ");
+
+        for platform_id in platform_ids {
+            separated.push_bind(platform_id);
+        }
+
+        separated.push_unseparated(")");
+        builder.push(" returning *");
+
+        let default_profiles_deleted: Vec<DefaultEmulatorProfile> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
-        let default_profiles_deleted = diesel::delete(schema::default_emulator_profiles::table)
-            .filter(schema::default_emulator_profiles::platform_id.eq_any(platform_ids))
-            .get_results::<retrom::DefaultEmulatorProfile>(&mut conn)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(
-            retrom::DeleteDefaultEmulatorProfilesResponse {
-                default_profiles_deleted,
-            },
-        ))
+        Ok(Response::new(DeleteDefaultEmulatorProfilesResponse {
+            default_profiles_deleted,
+        }))
     }
 
     async fn create_local_emulator_configs(
         &self,
-        request: Request<retrom::CreateLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<retrom::CreateLocalEmulatorConfigsResponse>, Status> {
-        let configs = request.into_inner().configs;
+        request: Request<CreateLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<CreateLocalEmulatorConfigsResponse>, Status> {
+        let request = request.into_inner();
+        let configs = request.configs;
 
-        let mut conn = self
-            .db_pool
-            .get()
+        if configs.is_empty() {
+            return Err(Status::invalid_argument("configs list cannot be empty"));
+        }
+
+        let mut builder = sqlx::QueryBuilder::new("insert into local_emulator_configs");
+
+        builder.push(
+            r#"
+            (id,
+            emulator_id,
+            client_id,
+            executable_path,
+            nickname,
+            save_data_path,
+            save_states_path,
+            bios_directory,
+            extra_files_directory)
+        "#,
+        );
+
+        builder.push_values(configs, |mut b, mut config| {
+            config.id = uuid::Uuid::now_v7().to_string();
+
+            b.push_bind(config.id)
+                .push_bind(config.emulator_id)
+                .push_bind(config.client_id)
+                .push_bind(config.executable_path)
+                .push_bind(config.nickname)
+                .push_bind(config.save_data_path)
+                .push_bind(config.save_states_path)
+                .push_bind(config.bios_directory)
+                .push_bind(config.extra_files_directory);
+        });
+
+        builder.push(" returning *");
+
+        let configs_created = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
-        let configs_created = diesel::insert_into(schema::local_emulator_configs::table)
-            .values(&configs)
-            .get_results::<retrom::LocalEmulatorConfig>(&mut conn)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(retrom::CreateLocalEmulatorConfigsResponse {
+        Ok(Response::new(CreateLocalEmulatorConfigsResponse {
             configs_created,
         }))
     }
 
     async fn get_local_emulator_configs(
         &self,
-        request: Request<retrom::GetLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<retrom::GetLocalEmulatorConfigsResponse>, Status> {
+        request: Request<GetLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<GetLocalEmulatorConfigsResponse>, Status> {
         let request = request.into_inner();
         let emulator_ids = request.emulator_ids;
         let client_id = request.client_id;
 
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+        let mut builder = sqlx::QueryBuilder::new("select * from local_emulator_configs ");
 
-        let mut query = schema::local_emulator_configs::table
-            .into_boxed()
-            .select(retrom::LocalEmulatorConfig::as_select());
+        builder.push("where client_id = ").push_bind(client_id);
 
         if !emulator_ids.is_empty() {
-            query = query.filter(schema::local_emulator_configs::emulator_id.eq_any(emulator_ids));
+            builder.push(" and emulator_id in (");
+            let mut separated = builder.separated(", ");
+
+            for emulator_id in emulator_ids {
+                separated.push_bind(emulator_id);
+            }
+
+            separated.push_unseparated(")");
         }
 
-        query = query.filter(schema::local_emulator_configs::client_id.eq(client_id));
-
-        let local_emulator_configs = query
-            .get_results::<retrom::LocalEmulatorConfig>(&mut conn)
+        let configs = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
-        Ok(Response::new(retrom::GetLocalEmulatorConfigsResponse {
-            configs: local_emulator_configs,
-        }))
+        Ok(Response::new(GetLocalEmulatorConfigsResponse { configs }))
     }
 
     async fn update_local_emulator_configs(
         &self,
-        request: Request<retrom::UpdateLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<retrom::UpdateLocalEmulatorConfigsResponse>, Status> {
-        let configs = request.into_inner().configs;
+        request: Request<UpdateLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<UpdateLocalEmulatorConfigsResponse>, Status> {
+        let request = request.into_inner();
+        let configs = request.configs;
 
-        let mut conn = self
+        let mut tx = self
             .db_pool
-            .get()
+            .begin()
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
         let mut configs_updated = vec![];
 
         for config in configs {
-            let updated_config = diesel::update(schema::local_emulator_configs::table)
-                .filter(schema::local_emulator_configs::id.eq(config.id))
-                .set(&config)
-                .get_result::<retrom::LocalEmulatorConfig>(&mut conn)
+            let mut builder = sqlx::QueryBuilder::new("update local_emulator_configs set ");
+
+            builder
+                .push("executable_path = ")
+                .push_bind(&config.executable_path)
+                .push(", nickname = ")
+                .push_bind(&config.nickname)
+                .push(", save_data_path = ")
+                .push_bind(&config.save_data_path)
+                .push(", save_states_path = ")
+                .push_bind(&config.save_states_path)
+                .push(", bios_directory = ")
+                .push_bind(&config.bios_directory)
+                .push(", extra_files_directory = ")
+                .push_bind(&config.extra_files_directory)
+                .push(" where id = ")
+                .push_bind(&config.id)
+                .push(" returning *");
+
+            let config_updated = builder
+                .build_query_as()
+                .fetch_one(&mut *tx)
                 .await
                 .map_err(|why| Status::internal(why.to_string()))?;
 
-            configs_updated.push(updated_config);
+            configs_updated.push(config_updated);
         }
 
-        Ok(Response::new(retrom::UpdateLocalEmulatorConfigsResponse {
+        tx.commit()
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        Ok(Response::new(UpdateLocalEmulatorConfigsResponse {
             configs_updated,
         }))
     }
 
     async fn delete_local_emulator_configs(
         &self,
-        request: Request<retrom::DeleteLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<retrom::DeleteLocalEmulatorConfigsResponse>, Status> {
-        let ids = request.into_inner().ids;
+        request: Request<DeleteLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<DeleteLocalEmulatorConfigsResponse>, Status> {
+        let request = request.into_inner();
+        let ids = request.ids;
 
-        let mut conn = self
-            .db_pool
-            .get()
+        if ids.is_empty() {
+            return Err(Status::invalid_argument("ids list cannot be empty"));
+        }
+
+        let mut builder =
+            sqlx::QueryBuilder::new("delete from local_emulator_configs where id in (");
+
+        let mut separated = builder.separated(", ");
+        for id in ids {
+            separated.push_bind(id);
+        }
+
+        separated.push_unseparated(")");
+        builder.push(" returning *");
+
+        let configs_deleted = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
-        let configs_deleted = diesel::delete(schema::local_emulator_configs::table)
-            .filter(schema::local_emulator_configs::id.eq_any(ids))
-            .get_results::<retrom::LocalEmulatorConfig>(&mut conn)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(retrom::DeleteLocalEmulatorConfigsResponse {
+        Ok(Response::new(DeleteLocalEmulatorConfigsResponse {
             configs_deleted,
         }))
     }
-}
-
-#[tonic::async_trait]
-impl EmulatorServiceV1 for EmulatorServiceHandlers {
-    async fn create_emulators(
-        &self,
-        request: Request<retrom::CreateEmulatorsRequest>,
-    ) -> Result<Response<retrom::CreateEmulatorsResponse>, Status> {
-        <Self as EmulatorService>::create_emulators(self, request).await
-    }
-
-    async fn get_emulators(
-        &self,
-        request: Request<retrom::GetEmulatorsRequest>,
-    ) -> Result<Response<retrom::GetEmulatorsResponse>, Status> {
-        let request = request.into_inner();
-        let ids = &request.ids;
-        let supported_platform_ids = &request.supported_platform_ids;
-
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut emulator_query = schema::emulators::table
-            .into_boxed()
-            .select(retrom::Emulator::as_select());
-
-        if !ids.is_empty() {
-            emulator_query = emulator_query.filter(schema::emulators::id.eq_any(ids));
-        }
-
-        if !supported_platform_ids.is_empty() {
-            let emulator_ids_with_platform = schema::emulator_platform_maps::table
-                .filter(
-                    schema::emulator_platform_maps::platform_id
-                        .eq_any(supported_platform_ids.as_slice()),
-                )
-                .select(schema::emulator_platform_maps::emulator_id)
-                .load::<i32>(&mut conn)
-                .await
-                .map_err(|why| Status::internal(why.to_string()))?;
-
-            emulator_query =
-                emulator_query.filter(schema::emulators::id.eq_any(emulator_ids_with_platform));
-        }
-
-        let mut emulators = emulator_query
-            .load::<Emulator>(&mut conn)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let emulator_ids: Vec<i32> = emulators.iter().map(|e| e.id).collect();
-
-        let platform_maps = schema::emulator_platform_maps::table
-            .filter(schema::emulator_platform_maps::emulator_id.eq_any(&emulator_ids))
-            .load::<EmulatorPlatformMap>(&mut conn)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut maps_by_emulator: HashMap<i32, Vec<i32>> = HashMap::new();
-        for map in platform_maps {
-            maps_by_emulator
-                .entry(map.emulator_id)
-                .or_default()
-                .push(map.platform_id);
-        }
-
-        for emulator in &mut emulators {
-            emulator.supported_platforms =
-                maps_by_emulator.remove(&emulator.id).unwrap_or_default();
-        }
-
-        Ok(Response::new(retrom::GetEmulatorsResponse { emulators }))
-    }
-
-    async fn update_emulators(
-        &self,
-        request: Request<retrom::UpdateEmulatorsRequest>,
-    ) -> Result<Response<retrom::UpdateEmulatorsResponse>, Status> {
-        let emulators = request.into_inner().emulators;
-
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut emulators_updated = vec![];
-
-        for emulator in emulators {
-            let updated_emulator = diesel::update(schema::emulators::table)
-                .filter(schema::emulators::id.eq(emulator.id))
-                .set(&emulator)
-                .get_result::<Emulator>(&mut conn)
-                .await
-                .map_err(|why| Status::internal(why.to_string()))?;
-
-            emulators_updated.push(updated_emulator);
-        }
-
-        Ok(Response::new(retrom::UpdateEmulatorsResponse {
-            emulators_updated,
-        }))
-    }
-
-    async fn delete_emulators(
-        &self,
-        request: Request<retrom::DeleteEmulatorsRequest>,
-    ) -> Result<Response<retrom::DeleteEmulatorsResponse>, Status> {
-        <Self as EmulatorService>::delete_emulators(self, request).await
-    }
-
-    async fn create_emulator_profiles(
-        &self,
-        request: Request<retrom::CreateEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::CreateEmulatorProfilesResponse>, Status> {
-        <Self as EmulatorService>::create_emulator_profiles(self, request).await
-    }
-
-    async fn get_emulator_profiles(
-        &self,
-        request: Request<retrom::GetEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::GetEmulatorProfilesResponse>, Status> {
-        <Self as EmulatorService>::get_emulator_profiles(self, request).await
-    }
-
-    async fn update_emulator_profiles(
-        &self,
-        request: Request<retrom::UpdateEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::UpdateEmulatorProfilesResponse>, Status> {
-        <Self as EmulatorService>::update_emulator_profiles(self, request).await
-    }
-
-    async fn delete_emulator_profiles(
-        &self,
-        request: Request<retrom::DeleteEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::DeleteEmulatorProfilesResponse>, Status> {
-        <Self as EmulatorService>::delete_emulator_profiles(self, request).await
-    }
-
-    async fn get_default_emulator_profiles(
-        &self,
-        request: Request<retrom::GetDefaultEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::GetDefaultEmulatorProfilesResponse>, Status> {
-        <Self as EmulatorService>::get_default_emulator_profiles(self, request).await
-    }
-
-    async fn update_default_emulator_profiles(
-        &self,
-        request: Request<retrom::UpdateDefaultEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::UpdateDefaultEmulatorProfilesResponse>, Status> {
-        <Self as EmulatorService>::update_default_emulator_profiles(self, request).await
-    }
-
-    async fn delete_default_emulator_profiles(
-        &self,
-        request: Request<retrom::DeleteDefaultEmulatorProfilesRequest>,
-    ) -> Result<Response<retrom::DeleteDefaultEmulatorProfilesResponse>, Status> {
-        <Self as EmulatorService>::delete_default_emulator_profiles(self, request).await
-    }
-
-    async fn create_local_emulator_configs(
-        &self,
-        request: Request<retrom::CreateLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<retrom::CreateLocalEmulatorConfigsResponse>, Status> {
-        <Self as EmulatorService>::create_local_emulator_configs(self, request).await
-    }
-
-    async fn get_local_emulator_configs(
-        &self,
-        request: Request<retrom::GetLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<retrom::GetLocalEmulatorConfigsResponse>, Status> {
-        <Self as EmulatorService>::get_local_emulator_configs(self, request).await
-    }
-
-    async fn update_local_emulator_configs(
-        &self,
-        request: Request<retrom::UpdateLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<retrom::UpdateLocalEmulatorConfigsResponse>, Status> {
-        <Self as EmulatorService>::update_local_emulator_configs(self, request).await
-    }
-
-    async fn delete_local_emulator_configs(
-        &self,
-        request: Request<retrom::DeleteLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<retrom::DeleteLocalEmulatorConfigsResponse>, Status> {
-        <Self as EmulatorService>::delete_local_emulator_configs(self, request).await
-    }
-
-    async fn get_emulator_platform_maps(
-        &self,
-        request: Request<GetEmulatorPlatformMapsRequest>,
-    ) -> Result<Response<GetEmulatorPlatformMapsResponse>, Status> {
-        let request = request.into_inner();
-        let emulator_ids = request.emulator_ids;
-        let platform_ids = request.platform_ids;
-
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut query = schema::emulator_platform_maps::table
-            .into_boxed()
-            .select(EmulatorPlatformMap::as_select());
-
-        if !emulator_ids.is_empty() {
-            query = query.filter(schema::emulator_platform_maps::emulator_id.eq_any(&emulator_ids));
-        }
-
-        if !platform_ids.is_empty() {
-            query = query.filter(schema::emulator_platform_maps::platform_id.eq_any(&platform_ids));
-        }
-
-        let emulator_platform_maps = query
-            .load::<EmulatorPlatformMap>(&mut conn)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(GetEmulatorPlatformMapsResponse {
-            emulator_platform_maps,
-        }))
-    }
-
-    async fn update_emulator_platform_maps(
-        &self,
-        request: Request<UpdateEmulatorPlatformMapsRequest>,
-    ) -> Result<Response<UpdateEmulatorPlatformMapsResponse>, Status> {
-        let maps = request.into_inner().emulator_platform_maps;
-
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let emulator_platform_maps_updated =
-            diesel::insert_into(schema::emulator_platform_maps::table)
-                .values(&maps)
-                .on_conflict((
-                    schema::emulator_platform_maps::emulator_id,
-                    schema::emulator_platform_maps::platform_id,
-                ))
-                .do_update()
-                .set(schema::emulator_platform_maps::updated_at.eq(diesel::dsl::now))
-                .get_results::<EmulatorPlatformMap>(&mut conn)
-                .await
-                .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(UpdateEmulatorPlatformMapsResponse {
-            emulator_platform_maps_updated,
-        }))
-    }
-
-    async fn delete_emulator_platform_maps(
-        &self,
-        request: Request<DeleteEmulatorPlatformMapsRequest>,
-    ) -> Result<Response<DeleteEmulatorPlatformMapsResponse>, Status> {
-        let request = request.into_inner();
-        let emulator_ids = request.emulator_ids;
-        let platform_ids = request.platform_ids;
-
-        if emulator_ids.is_empty() && platform_ids.is_empty() {
-            return Err(Status::invalid_argument(
-                "at least one of emulator_ids or platform_ids must be provided",
-            ));
-        }
-
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut query = diesel::delete(schema::emulator_platform_maps::table).into_boxed();
-
-        if !emulator_ids.is_empty() {
-            query = query.filter(schema::emulator_platform_maps::emulator_id.eq_any(&emulator_ids));
-        }
-
-        if !platform_ids.is_empty() {
-            query = query.filter(schema::emulator_platform_maps::platform_id.eq_any(&platform_ids));
-        }
-
-        let emulator_platform_maps_deleted = query
-            .get_results::<EmulatorPlatformMap>(&mut conn)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(DeleteEmulatorPlatformMapsResponse {
-            emulator_platform_maps_deleted,
-        }))
-    }
-}
-
-/// Build an [`axum::Router`] that serves the emulator gRPC endpoints.
-pub fn emulators_router(db_pool: std::sync::Arc<retrom_db::Pool>) -> axum::Router {
-    use retrom_codegen::retrom::{
-        emulator_service_server::EmulatorServiceServer,
-        services::emulators::v1::emulator_service_server::EmulatorServiceServer as EmulatorServiceServerV1,
-    };
-
-    let handlers = EmulatorServiceHandlers::new(db_pool);
-    let emulator_service = EmulatorServiceServer::new(handlers.clone());
-    let emulator_service_v1 = EmulatorServiceServerV1::new(handlers);
-
-    let mut routes_builder = tonic::service::Routes::builder();
-    routes_builder
-        .add_service(emulator_service)
-        .add_service(emulator_service_v1);
-
-    routes_builder.routes().into_axum_router()
 }
