@@ -2,7 +2,7 @@ use std::{str::FromStr, sync::Arc, time::Duration};
 
 use chrono::DateTime;
 use retrom_codegen::{
-    retrom::{self},
+    retrom::services::metadata::v1::GameMetadata,
     timestamp::Timestamp,
 };
 use tokio::sync::{mpsc, oneshot};
@@ -82,43 +82,7 @@ impl SteamWebApiProvider {
         &self,
         app: models::Game,
         app_details: models::AppDetails,
-    ) -> retrom::NewGameMetadata {
-        let video_urls: Vec<String> = app_details
-            .movies
-            .map(|movies| {
-                movies
-                    .into_iter()
-                    .filter_map(|movie| {
-                        movie
-                            .webm
-                            .map(|quality| quality.max.clone())
-                            .or(movie.mp4.map(|quality| quality.max.clone()))
-                            .flatten()
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        let screenshot_urls: Vec<String> = app_details
-            .screenshots
-            .map(|screenshots| {
-                screenshots
-                    .into_iter()
-                    .map(|screenshot| screenshot.path_full)
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        let mut artwork_urls: Vec<String> = vec![];
-
-        if let Some(ref header_url) = app_details.header_image {
-            artwork_urls.push(header_url.clone());
-        }
-
-        if let Some(ref background_url) = app_details.background_raw {
-            artwork_urls.push(background_url.clone());
-        }
-
+    ) -> GameMetadata {
         let cover_url = app_details.steam_appid.map(|id| {
             format!("https://steamcdn-a.akamaihd.net/steam/apps/{id}/library_600x900_2x.jpg")
         });
@@ -152,7 +116,7 @@ impl SteamWebApiProvider {
             None
         };
 
-        retrom::NewGameMetadata {
+        GameMetadata {
             description: app_details.short_description,
             name: app_details.name,
             cover_url,
@@ -162,9 +126,6 @@ impl SteamWebApiProvider {
                 .map(|website| vec![website])
                 .unwrap_or_default(),
             icon_url,
-            artwork_urls,
-            screenshot_urls,
-            video_urls,
             last_played,
             minutes_played,
             ..Default::default()

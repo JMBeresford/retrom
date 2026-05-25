@@ -1,5 +1,8 @@
 use reqwest::StatusCode;
-use retrom_codegen::retrom::{Game, NewGameMetadata, NewPlatformMetadata, Platform};
+use retrom_codegen::retrom::services::{
+    library::v1::{Game, Platform},
+    metadata::v1::{GameMetadata, PlatformMetadata},
+};
 use std::time::Duration;
 use tower::{
     retry::{
@@ -21,12 +24,12 @@ pub trait GameMetadataProvider<Query> {
         &self,
         game: Game,
         query: Option<Query>,
-    ) -> impl std::future::Future<Output = Option<NewGameMetadata>>;
+    ) -> impl std::future::Future<Output = Option<GameMetadata>>;
 
     fn search_game_metadata(
         &self,
         query: Query,
-    ) -> impl std::future::Future<Output = Vec<NewGameMetadata>>;
+    ) -> impl std::future::Future<Output = Vec<GameMetadata>>;
 }
 
 pub trait PlatformMetadataProvider<Query> {
@@ -34,12 +37,12 @@ pub trait PlatformMetadataProvider<Query> {
         &self,
         platform: Platform,
         query: Option<Query>,
-    ) -> impl std::future::Future<Output = Option<NewPlatformMetadata>>;
+    ) -> impl std::future::Future<Output = Option<PlatformMetadata>>;
 
     fn search_platform_metadata(
         &self,
         query: Query,
-    ) -> impl std::future::Future<Output = Vec<NewPlatformMetadata>>;
+    ) -> impl std::future::Future<Output = Vec<PlatformMetadata>>;
 }
 
 #[derive(Clone)]

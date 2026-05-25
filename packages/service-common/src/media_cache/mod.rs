@@ -4,7 +4,7 @@ use caesium::{compress_in_memory, convert_in_memory, parameters::CSParameters};
 use index::{IndexEntry, IndexManager};
 use rayon::ThreadPool;
 use reqwest::StatusCode;
-use retrom_codegen::retrom::metadata_config::ImageFormat;
+use retrom_codegen::retrom::services::config::v1::metadata_config::ImageFormat;
 use std::{
     path::{Path, PathBuf},
     str::FromStr,

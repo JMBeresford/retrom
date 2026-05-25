@@ -1,6 +1,6 @@
 use super::{CacheMediaOpts, MediaCacheError, Result};
 use crate::retrom_dirs::RetromDirs;
-use retrom_codegen::retrom::{GameMetadata, PlatformMetadata};
+use retrom_codegen::retrom::services::metadata::v1::{GameMetadata, PlatformMetadata};
 use std::path::PathBuf;
 use tracing::{debug, warn};
 
@@ -79,48 +79,7 @@ impl CacheableMetadata for GameMetadata {
             });
         }
 
-        for artwork_url in &self.artwork_urls {
-            opts.push(CacheMediaOpts {
-                remote_url: artwork_url.clone(),
-                cache_dir: cache_dir.clone(),
-                semantic_name: None,
-                base_dir: Some(PathBuf::from("artwork")),
-            });
-        }
-
-        for screenshot_url in &self.screenshot_urls {
-            opts.push(CacheMediaOpts {
-                remote_url: screenshot_url.clone(),
-                cache_dir: cache_dir.clone(),
-                semantic_name: None,
-                base_dir: Some(PathBuf::from("screenshots")),
-            });
-        }
-
         opts
-    }
-}
-
-impl CacheableMetadata for retrom_codegen::retrom::UpdatedGameMetadata {
-    fn get_cache_dir(&self) -> Option<PathBuf> {
-        RetromDirs::new()
-            .media_dir()
-            .join("games")
-            .join(self.game_id.to_string())
-            .into()
-    }
-
-    fn get_cacheable_media_opts(&self) -> Vec<CacheMediaOpts> {
-        let game_metadata = GameMetadata {
-            cover_url: self.cover_url.clone(),
-            background_url: self.background_url.clone(),
-            icon_url: self.icon_url.clone(),
-            artwork_urls: self.artwork_urls.clone(),
-            screenshot_urls: self.screenshot_urls.clone(),
-            ..Default::default()
-        };
-
-        game_metadata.get_cacheable_media_opts()
     }
 }
 
@@ -163,70 +122,5 @@ impl CacheableMetadata for PlatformMetadata {
         }
 
         opts
-    }
-}
-
-impl CacheableMetadata for retrom_codegen::retrom::UpdatedPlatformMetadata {
-    fn get_cache_dir(&self) -> Option<PathBuf> {
-        RetromDirs::new()
-            .media_dir()
-            .join("platforms")
-            .join(self.platform_id.to_string())
-            .into()
-    }
-
-    fn get_cacheable_media_opts(&self) -> Vec<CacheMediaOpts> {
-        let platform_metadata = PlatformMetadata {
-            background_url: self.background_url.clone(),
-            logo_url: self.logo_url.clone(),
-            ..Default::default()
-        };
-
-        platform_metadata.get_cacheable_media_opts()
-    }
-}
-
-impl CacheableMetadata for retrom_codegen::retrom::NewGameMetadata {
-    fn get_cache_dir(&self) -> Option<PathBuf> {
-        RetromDirs::new()
-            .media_dir()
-            .join("games")
-            .join(self.game_id.unwrap_or(0).to_string())
-            .into()
-    }
-
-    fn get_cacheable_media_opts(&self) -> Vec<CacheMediaOpts> {
-        let game_metadata = GameMetadata {
-            game_id: self.game_id.unwrap_or(0),
-            cover_url: self.cover_url.clone(),
-            background_url: self.background_url.clone(),
-            icon_url: self.icon_url.clone(),
-            artwork_urls: self.artwork_urls.clone(),
-            screenshot_urls: self.screenshot_urls.clone(),
-            ..Default::default()
-        };
-
-        game_metadata.get_cacheable_media_opts()
-    }
-}
-
-impl CacheableMetadata for retrom_codegen::retrom::NewPlatformMetadata {
-    fn get_cache_dir(&self) -> Option<PathBuf> {
-        RetromDirs::new()
-            .media_dir()
-            .join("platforms")
-            .join(self.platform_id.unwrap_or(0).to_string())
-            .into()
-    }
-
-    fn get_cacheable_media_opts(&self) -> Vec<CacheMediaOpts> {
-        let platform_metadata = PlatformMetadata {
-            platform_id: self.platform_id.unwrap_or(0),
-            background_url: self.background_url.clone(),
-            logo_url: self.logo_url.clone(),
-            ..Default::default()
-        };
-
-        platform_metadata.get_cacheable_media_opts()
     }
 }

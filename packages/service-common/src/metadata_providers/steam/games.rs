@@ -5,9 +5,9 @@ use super::{models, provider::SteamWebApiProvider};
 impl GameMetadataProvider<models::Game> for SteamWebApiProvider {
     async fn get_game_metadata(
         &self,
-        game: retrom_codegen::retrom::Game,
+        game: retrom_codegen::retrom::services::library::v1::Game,
         query: Option<models::Game>,
-    ) -> Option<retrom_codegen::retrom::NewGameMetadata> {
+    ) -> Option<retrom_codegen::retrom::services::metadata::v1::GameMetadata> {
         let app = match query {
             Some(app) => app,
             None => return None,
@@ -26,7 +26,7 @@ impl GameMetadataProvider<models::Game> for SteamWebApiProvider {
         };
 
         let mut metadata = self.app_details_to_game_metadata(app, app_details);
-        metadata.game_id = Some(game.id);
+        metadata.game_id = game.id;
 
         Some(metadata)
     }
@@ -34,7 +34,7 @@ impl GameMetadataProvider<models::Game> for SteamWebApiProvider {
     async fn search_game_metadata(
         &self,
         _query: models::Game,
-    ) -> Vec<retrom_codegen::retrom::NewGameMetadata> {
+    ) -> Vec<retrom_codegen::retrom::services::metadata::v1::GameMetadata> {
         vec![]
     }
 }

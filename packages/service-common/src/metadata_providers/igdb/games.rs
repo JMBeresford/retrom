@@ -5,19 +5,22 @@ use deunicode::deunicode;
 use retrom_codegen::{
     igdb::{self},
     retrom::{
-        self,
-        get_igdb_search_request::IgdbSearchType,
-        igdb_fields::{IncludeFields, Selector},
-        igdb_filters::{FilterOperator, FilterValue},
-        GetIgdbSearchRequest, IgdbFields, IgdbFilters, IgdbGameSearchQuery, IgdbSearch,
-        NewGameMetadata,
+        providers::igdb::v1::{
+            igdb_fields::{IncludeFields, Selector},
+            igdb_filters::{FilterOperator, FilterValue},
+            IgdbFields, IgdbFilters, IgdbGameSearchQuery, IgdbSearch,
+        },
+        services::{
+            library::v1::Game,
+            metadata::v1::{get_igdb_search_request::IgdbSearchType, GameMetadata, GetIgdbSearchRequest},
+        },
     },
 };
 use std::{collections::HashMap, path::PathBuf, str::FromStr};
 use tracing::{debug, instrument, Level};
 
 impl IGDBProvider {
-    pub fn igdb_game_to_metadata(&self, igdb_match: igdb::Game) -> retrom::NewGameMetadata {
+    pub fn igdb_game_to_metadata(&self, igdb_match: igdb::Game) -> GameMetadata {
         let description = Some(igdb_match.summary);
         let name = Some(igdb_match.name);
         let igdb_id = match BigDecimal::from_u64(igdb_match.id) {
@@ -77,35 +80,7 @@ impl IGDBProvider {
 
         links.push(igdb_match.url);
 
-        let artwork_urls: Vec<String> = igdb_match
-            .artworks
-            .into_iter()
-            .map(|artwork| {
-                artwork
-                    .url
-                    .replace("t_thumb", "t_1080p_2x")
-                    .replace("//", "https://")
-            })
-            .collect();
-
-        let screenshot_urls: Vec<String> = igdb_match
-            .screenshots
-            .into_iter()
-            .map(|screenshot| {
-                screenshot
-                    .url
-                    .replace("//", "https://")
-                    .replace("t_thumb", "t_screenshot_huge_2x")
-            })
-            .collect();
-
-        let video_urls: Vec<String> = igdb_match
-            .videos
-            .into_iter()
-            .map(|video| format!("https://www.youtube.com/embed/{}", video.video_id))
-            .collect();
-
-        retrom::NewGameMetadata {
+        GameMetadata {
             igdb_id,
             name,
             description,
@@ -113,9 +88,6 @@ impl IGDBProvider {
             background_url,
             icon_url,
             links,
-            artwork_urls,
-            screenshot_urls,
-            video_urls,
             ..Default::default()
         }
     }
@@ -125,9 +97,9 @@ impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
     #[instrument(level = Level::DEBUG, skip_all, fields(name = game.path))]
     async fn get_game_metadata(
         &self,
-        game: retrom::Game,
+        game: Game,
         query: Option<IgdbGameSearchQuery>,
-    ) -> Option<NewGameMetadata> {
+    ) -> Option<GameMetadata> {
         let naive_name = game.path.split('/').next_back().unwrap_or(&game.path);
         let path = PathBuf::from_str(&game.path).unwrap();
         let mut name = path
@@ -196,7 +168,7 @@ impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
         let igdb_match = exact_match.or(first_match).map(|meta| meta.to_owned());
 
         if let Some(mut igdb_match) = igdb_match {
-            igdb_match.game_id = Some(game.id);
+            igdb_match.game_id = game.id;
             return Some(igdb_match);
         }
 
@@ -207,7 +179,7 @@ impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
     async fn search_game_metadata(
         &self,
         query: IgdbGameSearchQuery,
-    ) -> Vec<retrom::NewGameMetadata> {
+    ) -> Vec<GameMetadata> {
         let fields = IgdbFields {
             selector: Some(Selector::Include(IncludeFields {
                 value: self.game_fields.clone(),
