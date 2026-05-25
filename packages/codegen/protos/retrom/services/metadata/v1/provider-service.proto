@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package retrom.services.metadata.v1;
+
+import "retrom/services/metadata/v1/models.proto";
+
+service MetadataProviderService {
+  rpc GetMetadataProviders(GetMetadataProvidersRequest) returns (GetMetadataProvidersResponse);
+}
+
+message GetMetadataProvidersRequest {}
+
+message GetMetadataProvidersResponse {
+  repeated MetadataProvider providers = 1;
+}

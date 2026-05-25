@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package retrom.services.metadata.v1;
+
+service SteamService {
+  rpc SyncSteamMetadata(SyncSteamMetadataRequest) returns (SyncSteamMetadataResponse);
+}
+
+message SyncSteamMetadataRequest {
+  message Selector {
+    string game_id = 1;
+  }
+
+  repeated Selector selectors = 1;
+}
+
+message SyncSteamMetadataResponse {}
