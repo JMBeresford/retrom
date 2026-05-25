@@ -114,6 +114,7 @@ message UpdateDefaultEmulatorProfilesResponse {
 
 message DeleteDefaultEmulatorProfilesRequest {
   repeated string platform_ids = 1;
+  string client_id = 2;
 }
 
 message DeleteDefaultEmulatorProfilesResponse {
@@ -159,22 +160,23 @@ message GetEmulatorPlatformsRequest {
 }
 
 message GetEmulatorPlatformsResponse {
-  repeated EmulatorPlatform emulator_platform_maps = 1;
+  repeated EmulatorPlatform emulator_platforms = 1;
 }
 
 message UpdateEmulatorPlatformsRequest {
-  repeated EmulatorPlatform emulator_platform_maps = 1;
+  string emulator_id = 1;
+  repeated string platform_ids = 2;
 }
 
 message UpdateEmulatorPlatformsResponse {
-  repeated EmulatorPlatform emulator_platform_maps_updated = 1;
+  repeated EmulatorPlatform emulator_platforms = 1;
 }
 
 message DeleteEmulatorPlatformsRequest {
-  repeated string emulator_ids = 1;
+  string emulator_id = 1;
   repeated string platform_ids = 2;
 }
 
 message DeleteEmulatorPlatformsResponse {
-  repeated EmulatorPlatform emulator_platform_maps_deleted = 1;
+  repeated EmulatorPlatform emulator_platforms_deleted = 1;
 }

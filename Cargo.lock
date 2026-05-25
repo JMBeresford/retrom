@@ -9571,10 +9571,13 @@ dependencies = [
  "retrom-db",
  "retrom-service-config",
  "retrom-telemetry",
+ "sqlx",
  "tokio",
  "tonic 0.14.5",
+ "tonic-reflection",
  "tonic-web",
  "tracing",
+ "uuid",
 ]
 
 [[package]]
