@@ -1,5 +1,5 @@
 use super::provider::{IGDBProvider, IgdbSearchData};
-use crate::metadata_providers::{GameMetadataProvider, MetadataProvider};
+use crate::metadata_providers::{GameMetadataProvider, GameMetadataSearchResult, MetadataProvider};
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use deunicode::deunicode;
 use retrom_codegen::{
@@ -12,7 +12,10 @@ use retrom_codegen::{
         },
         services::{
             library::v1::Game,
-            metadata::v1::{get_igdb_search_request::IgdbSearchType, GameMetadata, GetIgdbSearchRequest},
+            metadata::v1::{
+                get_igdb_search_request::IgdbSearchType, ArtworkMetadata, GameMetadata,
+                GetIgdbSearchRequest, ScreenshotMetadata, VideoMetadata,
+            },
         },
     },
 };
@@ -93,13 +96,46 @@ impl IGDBProvider {
     }
 }
 
-impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
-    #[instrument(level = Level::DEBUG, skip_all, fields(name = game.path))]
+fn normalize_name(name: &str) -> String {
+    let mut name = name.to_string();
+
+    // normalize name, remove anything in braces and coallesce spaces
+    while let Some(begin) = name.find('(') {
+        let end = name.find(')').unwrap_or(name.len() - 1);
+
+        name.replace_range(begin..=end, "");
+    }
+
+    while let Some(begin) = name.find('[') {
+        let end = name.find(']').unwrap_or(name.len() - 1);
+
+        name.replace_range(begin..=end, "");
+    }
+
+    while let Some(begin) = name.find('{') {
+        let end = name.find('}').unwrap_or(name.len() - 1);
+
+        name.replace_range(begin..=end, "");
+    }
+
+    name.chars()
+        .map(|c| match c {
+            ':' | '-' | '_' | '.' => ' ',
+            _ => c,
+        })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<&str>>()
+        .join(" ")
+}
+
+impl GameMetadataProvider<IgdbGameSearchQuery, Vec<igdb::Game>> for IGDBProvider {
+    #[instrument(level = Level::DEBUG, skip(self))]
     async fn get_game_metadata(
         &self,
         game: Game,
         query: Option<IgdbGameSearchQuery>,
-    ) -> Option<GameMetadata> {
+    ) -> GameMetadataSearchResult {
         let naive_name = game.path.split('/').next_back().unwrap_or(&game.path);
         let path = PathBuf::from_str(&game.path).unwrap();
         let mut name = path
@@ -108,37 +144,9 @@ impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
             .unwrap_or(naive_name)
             .to_string();
 
-        // normalize name, remove anything in braces and coallesce spaces
-        while let Some(begin) = name.find('(') {
-            let end = name.find(')').unwrap_or(name.len() - 1);
+        name = normalize_name(&name);
 
-            name.replace_range(begin..=end, "");
-        }
-
-        while let Some(begin) = name.find('[') {
-            let end = name.find(']').unwrap_or(name.len() - 1);
-
-            name.replace_range(begin..=end, "");
-        }
-
-        while let Some(begin) = name.find('{') {
-            let end = name.find('}').unwrap_or(name.len() - 1);
-
-            name.replace_range(begin..=end, "");
-        }
-
-        name = name
-            .chars()
-            .map(|c| match c {
-                ':' | '-' | '_' | '.' => ' ',
-                _ => c,
-            })
-            .collect();
-
-        name = name.split_whitespace().collect::<Vec<&str>>().join(" ");
-        let name = name.as_str();
-
-        let search = deunicode(name);
+        let search = deunicode(&name);
         debug!("Matching game: {search}");
 
         let search_query = match query {
@@ -153,33 +161,73 @@ impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
         };
 
         let igdb_id = search_query.fields.as_ref().and_then(|fields| fields.id);
-
         let matches = self.search_game_metadata(search_query).await;
 
-        let exact_match = matches.iter().find(|meta| {
-            meta.igdb_id
-                .as_ref()
-                .is_some_and(|id| id.to_owned().to_u64() == igdb_id)
-                || meta.name == Some(name.to_string())
-        });
+        let exact_match = matches
+            .iter()
+            .find(|meta| Some(meta.id) == igdb_id || meta.name == name);
 
         let first_match = matches.first();
 
         let igdb_match = exact_match.or(first_match).map(|meta| meta.to_owned());
 
-        if let Some(mut igdb_match) = igdb_match {
-            igdb_match.game_id = game.id;
-            return Some(igdb_match);
+        if let Some(igdb_match) = igdb_match {
+            let artwork_urls: Vec<ArtworkMetadata> = igdb_match
+                .artworks
+                .iter()
+                .map(|artwork| {
+                    artwork
+                        .url
+                        .replace("t_thumb", "t_1080p_2x")
+                        .replace("//", "https://")
+                })
+                .map(|url| ArtworkMetadata {
+                    url,
+                    ..Default::default()
+                })
+                .collect();
+
+            let screenshot_urls: Vec<ScreenshotMetadata> = igdb_match
+                .screenshots
+                .iter()
+                .map(|screenshot| {
+                    screenshot
+                        .url
+                        .replace("//", "https://")
+                        .replace("t_thumb", "t_screenshot_huge_2x")
+                })
+                .map(|url| ScreenshotMetadata {
+                    url,
+                    ..Default::default()
+                })
+                .collect();
+
+            let video_urls: Vec<VideoMetadata> = igdb_match
+                .videos
+                .iter()
+                .map(|video| format!("https://www.youtube.com/embed/{}", video.video_id))
+                .map(|url| VideoMetadata {
+                    url,
+                    ..Default::default()
+                })
+                .collect();
+
+            let mut game_metadata = self.igdb_game_to_metadata(igdb_match);
+            game_metadata.game_id = game.id;
+
+            return (
+                Some(game_metadata),
+                Some(artwork_urls),
+                Some(screenshot_urls),
+                Some(video_urls),
+            );
         }
 
-        None
+        Default::default()
     }
 
     #[instrument(level = Level::DEBUG, skip(self))]
-    async fn search_game_metadata(
-        &self,
-        query: IgdbGameSearchQuery,
-    ) -> Vec<GameMetadata> {
+    async fn search_game_metadata(&self, query: IgdbGameSearchQuery) -> Vec<igdb::Game> {
         let fields = IgdbFields {
             selector: Some(Selector::Include(IncludeFields {
                 value: self.game_fields.clone(),
@@ -233,11 +281,7 @@ impl GameMetadataProvider<IgdbGameSearchQuery> for IGDBProvider {
         };
 
         match self.search_metadata(query).await {
-            Some(IgdbSearchData::Game(matches)) => matches
-                .games
-                .into_iter()
-                .map(|game| self.igdb_game_to_metadata(game))
-                .collect(),
+            Some(IgdbSearchData::Game(matches)) => matches.games,
             _ => {
                 vec![]
             }
