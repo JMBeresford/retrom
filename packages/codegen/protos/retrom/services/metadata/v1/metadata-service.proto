@@ -4,7 +4,6 @@ package retrom.services.metadata.v1;
 
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
-import "retrom/providers/igdb/v1/igdb.proto";
 import "retrom/services/library/v1/models.proto";
 import "retrom/services/metadata/v1/models.proto";
 
@@ -15,22 +14,8 @@ service MetadataService {
   rpc GetPlatformMetadata(GetPlatformMetadataRequest) returns (GetPlatformMetadataResponse);
   rpc UpdatePlatformMetadata(UpdatePlatformMetadataRequest) returns (UpdatePlatformMetadataResponse);
 
-  rpc GetIgdbSearch(GetIgdbSearchRequest) returns (GetIgdbSearchResponse);
-  rpc GetIgdbGameSearchResults(GetIgdbGameSearchResultsRequest) returns (GetIgdbGameSearchResultsResponse);
-  rpc GetIgdbPlatformSearchResults(GetIgdbPlatformSearchResultsRequest) returns (GetIgdbPlatformSearchResultsResponse);
-
-  rpc SyncSteamMetadata(SyncSteamMetadataRequest) returns (SyncSteamMetadataResponse);
-
   rpc GetLocalMetadataStatus(GetLocalMetadataStatusRequest) returns (GetLocalMetadataStatusResponse);
   rpc DeleteLocalMetadata(DeleteLocalMetadataRequest) returns (DeleteLocalMetadataResponse);
-
-  rpc GetMetadataProviders(GetMetadataProvidersRequest) returns (GetMetadataProvidersResponse);
-}
-
-message GetMetadataProvidersRequest {}
-
-message GetMetadataProvidersResponse {
-  repeated MetadataProvider providers = 1;
 }
 
 message GetGameMetadataRequest {
@@ -65,28 +50,12 @@ message GetPlatformMetadataResponse {
   repeated PlatformMetadata metadata = 1;
 }
 
-message GetIgdbGameSearchResultsRequest {
-  retrom.providers.igdb.v1.IgdbGameSearchQuery query = 1;
-}
-
-message GetIgdbGameSearchResultsResponse {
-  repeated GameMetadata metadata = 1;
-}
-
 message UpdateGameMetadataRequest {
   repeated GameMetadata metadata = 1;
 }
 
 message UpdateGameMetadataResponse {
   repeated GameMetadata metadata_updated = 1;
-}
-
-message GetIgdbPlatformSearchResultsRequest {
-  retrom.providers.igdb.v1.IgdbPlatformSearchQuery query = 1;
-}
-
-message GetIgdbPlatformSearchResultsResponse {
-  repeated PlatformMetadata metadata = 1;
 }
 
 message UpdatePlatformMetadataRequest {
@@ -96,45 +65,6 @@ message UpdatePlatformMetadataRequest {
 message UpdatePlatformMetadataResponse {
   repeated PlatformMetadata metadata_updated = 1;
 }
-
-// Arbitrary search query for IGDB
-message GetIgdbSearchRequest {
-  enum IgdbSearchType {
-    GAME = 0;
-    PLATFORM = 1;
-  }
-
-  IgdbSearchType search_type = 1;
-  optional retrom.providers.igdb.v1.IgdbSearch search = 2;
-  optional retrom.providers.igdb.v1.IgdbPagination pagination = 3;
-  optional retrom.providers.igdb.v1.IgdbFilters filters = 4;
-  optional retrom.providers.igdb.v1.IgdbFields fields = 5;
-}
-
-message IgdbSearchGameResponse {
-  repeated GameMetadata games = 1;
-}
-
-message IgdbSearchPlatformResponse {
-  repeated PlatformMetadata platforms = 1;
-}
-
-message GetIgdbSearchResponse {
-  oneof search_results {
-    IgdbSearchGameResponse game_matches = 1;
-    IgdbSearchPlatformResponse platform_matches = 2;
-  }
-}
-
-message SyncSteamMetadataRequest {
-  message Selector {
-    string game_id = 1;
-  }
-
-  repeated Selector selectors = 1;
-}
-
-message SyncSteamMetadataResponse {}
 
 message GetLocalMetadataStatusRequest {}
 
