@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package retrom.services.saves.v2;
 
-import "google/protobuf/timestamp.proto";
 import "retrom/files/v1/files.proto";
 import "retrom/services/saves/v2/models.proto";
 
