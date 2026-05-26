@@ -131,6 +131,7 @@ retrom-service-clients = { path = "./packages/service-clients" }
 retrom-service-saves = { path = "./packages/service-saves" }
 retrom-service-config = { path = "./packages/service-config" }
 retrom-service-files = { path = "./packages/service-files" }
+retrom-service-jobs = { path = "./packages/service-jobs" }
 retrom-service-tags = { path = "./packages/service-tags" }
 retrom-service-library = { path = "./packages/service-library" }
 retrom-service-metadata = { path = "./packages/service-metadata" }

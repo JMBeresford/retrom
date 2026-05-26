@@ -1,10 +1,15 @@
-use retrom_codegen::retrom::services::metadata::v1::metadata_provider_service_server::MetadataProviderService;
+use retrom_codegen::retrom::services::metadata::v1::{
+    metadata_provider_service_server::MetadataProviderService, GetMetadataProvidersRequest,
+    GetMetadataProvidersResponse,
+};
+use retrom_db::DbPool;
+use tonic::{Request, Response, Status};
 
 pub mod router;
 
 #[derive(Clone)]
 pub struct MetadataProviderServiceHandlers {
-    pub(crate) db_pool: Arc<Pool>,
+    pub(crate) db_pool: DbPool,
 }
 
 #[tonic::async_trait]
@@ -13,17 +18,18 @@ impl MetadataProviderService for MetadataProviderServiceHandlers {
         &self,
         _request: Request<GetMetadataProvidersRequest>,
     ) -> Result<Response<GetMetadataProvidersResponse>, Status> {
-        let mut conn = self
-            .db_pool
-            .get()
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-
-        let providers = schema::metadata_providers::table
-            .load::<MetadataProviderModel>(&mut conn)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-
-        Ok(Response::new(GetMetadataProvidersResponse { providers }))
+        unimplemented!();
+        // let mut conn = self
+        //     .db_pool
+        //     .get()
+        //     .await
+        //     .map_err(|e| Status::internal(e.to_string()))?;
+        //
+        // let providers = schema::metadata_providers::table
+        //     .load::<MetadataProviderModel>(&mut conn)
+        //     .await
+        //     .map_err(|e| Status::internal(e.to_string()))?;
+        //
+        // Ok(Response::new(GetMetadataProvidersResponse { providers }))
     }
 }
