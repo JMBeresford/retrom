@@ -1,6 +1,6 @@
 use retrom_codegen::descriptors::retrom::FILE_DESCRIPTOR_SET;
 use retrom_service_config::config::ServerConfigManager;
-use retrom_service_metadata::metadata_router;
+use retrom_service_metadata::router::metadata_router;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit};
 

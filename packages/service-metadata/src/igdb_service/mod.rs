@@ -8,6 +8,7 @@ use retrom_codegen::retrom::services::metadata::v1::{
 use retrom_db::DbPool;
 use retrom_service_common::metadata_providers::{
     igdb::provider::{IgdbSearchData, IGDBProvider},
+    GameMetadataProvider, PlatformMetadataProvider,
     MetadataProvider as MetadataProviderTrait,
 };
 use std::sync::Arc;
@@ -45,7 +46,7 @@ impl IgdbService for IgdbServiceHandlers {
         };
 
         let game_exists: bool = sqlx::query_scalar("select exists(select 1 from games where id = $1)")
-            .bind(&query.game_id)
+            .bind(query.game_id.to_string())
             .fetch_one(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
@@ -54,13 +55,15 @@ impl IgdbService for IgdbServiceHandlers {
             return Err(Status::not_found(format!("Game not found: {}", query.game_id)));
         }
 
+        let game_id = query.game_id.to_string();
         let igdb_client = self.igdb_client.clone();
         let search_results = igdb_client.search_game_metadata(query).await;
 
         let metadata = search_results
             .into_iter()
-            .map(|mut meta| {
-                meta.game_id = Some(query.game_id.clone());
+            .map(|game| {
+                let mut meta = igdb_client.igdb_game_to_metadata(game);
+                meta.game_id = game_id.clone();
                 meta
             })
             .collect();
@@ -83,7 +86,7 @@ impl IgdbService for IgdbServiceHandlers {
 
             let platform_exists: bool =
                 sqlx::query_scalar("select exists(select 1 from platforms where id = $1)")
-                    .bind(&query.platform_id)
+                    .bind(query.platform_id.to_string())
                     .fetch_one(&self.db_pool)
                     .await
                     .map_err(|why| Status::internal(why.to_string()))?;
@@ -95,6 +98,7 @@ impl IgdbService for IgdbServiceHandlers {
                 )));
             }
 
+            let platform_id = query.platform_id.to_string();
             let igdb_provider = self.igdb_client.clone();
 
             let metadata = igdb_provider
@@ -102,7 +106,7 @@ impl IgdbService for IgdbServiceHandlers {
                 .await
                 .into_iter()
                 .map(|mut meta| {
-                    meta.platform_id = Some(query.platform_id.clone());
+                    meta.platform_id = platform_id.clone();
                     meta
                 })
                 .collect();

@@ -232,7 +232,7 @@ impl MetadataService for MetadataServiceHandlers {
             .iter()
             .map(|row| row.id.clone())
             .collect::<Vec<_>>();
-        let links = self.fetch_game_metadata_links(&metadata_ids).await?;
+        let mut links = self.fetch_game_metadata_links(&metadata_ids).await?;
 
         let metadata = metadata_rows
             .into_iter()
