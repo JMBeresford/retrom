@@ -390,7 +390,9 @@ mod integration_tests {
 
         let cache_dir = game_metadata.get_cache_dir().unwrap();
         // Check that the cache dir has the correct structure (ends with correct path)
-        assert!(cache_dir.to_string_lossy().ends_with("media/games/42"));
+        assert!(cache_dir
+            .to_string_lossy()
+            .ends_with("media/game_metadata/1"));
 
         let platform_metadata = PlatformMetadata {
             id: "1".to_string(),
@@ -416,10 +418,13 @@ mod integration_tests {
     async fn test_url_to_public_path_conversion() {
         // Use the actual media directory from RetromDirs::new() (which uses the test env)
         let media_dir = RetromDirs::new().media_dir();
-        let test_path = media_dir.join("games").join("42").join("image.jpg");
+        let test_path = media_dir
+            .join("game_metadata")
+            .join("42")
+            .join("image.jpg");
         let public_url = get_public_url(&test_path).unwrap();
 
-        assert_eq!(public_url, "media/games/42/image.jpg");
+        assert_eq!(public_url, "media/game_metadata/42/image.jpg");
     }
 
     #[test]
@@ -495,13 +500,15 @@ mod integration_tests {
         let screenshot_cache_dir = cache_dir.join("screenshots");
 
         // Check paths are structured correctly
-        assert!(cache_dir.to_string_lossy().ends_with("media/games/123"));
+        assert!(cache_dir
+            .to_string_lossy()
+            .ends_with("media/game_metadata/1"));
         assert!(artwork_cache_dir
             .to_string_lossy()
-            .ends_with("media/games/123/artwork"));
+            .ends_with("media/game_metadata/1/artwork"));
         assert!(screenshot_cache_dir
             .to_string_lossy()
-            .ends_with("media/games/123/screenshots"));
+            .ends_with("media/game_metadata/1/screenshots"));
 
         // Verify URL conversion for subdirectories would work
         let test_artwork_path = artwork_cache_dir.join("test.jpg");
@@ -510,8 +517,11 @@ mod integration_tests {
         let artwork_url = get_public_url(&test_artwork_path).unwrap();
         let screenshot_url = get_public_url(&test_screenshot_path).unwrap();
 
-        assert_eq!(artwork_url, "media/games/123/artwork/test.jpg");
-        assert_eq!(screenshot_url, "media/games/123/screenshots/test.png");
+        assert_eq!(artwork_url, "media/game_metadata/1/artwork/test.jpg");
+        assert_eq!(
+            screenshot_url,
+            "media/game_metadata/1/screenshots/test.png"
+        );
     }
 
     #[tokio::test]
