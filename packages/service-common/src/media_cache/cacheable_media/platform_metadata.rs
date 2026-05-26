@@ -5,11 +5,16 @@ use std::path::PathBuf;
 
 impl CacheableMetadata for PlatformMetadata {
     fn get_cache_dir(&self) -> Option<PathBuf> {
-        RetromDirs::new()
-            .media_dir()
-            .join("platforms")
-            .join(&self.platform_id)
-            .into()
+        if self.platform_id.trim().is_empty() {
+            return None;
+        }
+
+        Some(
+            RetromDirs::new()
+                .media_dir()
+                .join("platforms")
+                .join(&self.platform_id),
+        )
     }
 
     fn get_cacheable_media_opts(&self) -> Vec<CacheMediaOpts> {
@@ -42,5 +47,20 @@ impl CacheableMetadata for PlatformMetadata {
         }
 
         opts
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn platform_cache_dir_is_none_for_empty_platform_id() {
+        let metadata = PlatformMetadata {
+            platform_id: "".to_string(),
+            ..Default::default()
+        };
+
+        assert!(metadata.get_cache_dir().is_none());
     }
 }

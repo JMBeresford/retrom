@@ -7,11 +7,16 @@ use std::path::PathBuf;
 
 impl CacheableMetadata for GameMetadata {
     fn get_cache_dir(&self) -> Option<PathBuf> {
-        RetromDirs::new()
-            .media_dir()
-            .join("game_metadata")
-            .join(&self.id)
-            .into()
+        if self.id.trim().is_empty() {
+            return None;
+        }
+
+        Some(
+            RetromDirs::new()
+                .media_dir()
+                .join("game_metadata")
+                .join(&self.id),
+        )
     }
 
     fn get_cacheable_media_opts(&self) -> Vec<CacheMediaOpts> {
@@ -58,11 +63,16 @@ impl CacheableMetadata for GameMetadata {
 
 impl CacheableMetadata for ArtworkMetadata {
     fn get_cache_dir(&self) -> Option<PathBuf> {
-        RetromDirs::new()
-            .media_dir()
-            .join("game_metadata")
-            .join(&self.game_metadata_id)
-            .into()
+        if self.game_metadata_id.trim().is_empty() {
+            return None;
+        }
+
+        Some(
+            RetromDirs::new()
+                .media_dir()
+                .join("game_metadata")
+                .join(&self.game_metadata_id),
+        )
     }
 
     fn get_cacheable_media_opts(&self) -> Vec<CacheMediaOpts> {
@@ -89,11 +99,16 @@ impl CacheableMetadata for ArtworkMetadata {
 
 impl CacheableMetadata for ScreenshotMetadata {
     fn get_cache_dir(&self) -> Option<PathBuf> {
-        RetromDirs::new()
-            .media_dir()
-            .join("game_metadata")
-            .join(&self.game_metadata_id)
-            .into()
+        if self.game_metadata_id.trim().is_empty() {
+            return None;
+        }
+
+        Some(
+            RetromDirs::new()
+                .media_dir()
+                .join("game_metadata")
+                .join(&self.game_metadata_id),
+        )
     }
 
     fn get_cacheable_media_opts(&self) -> Vec<CacheMediaOpts> {
@@ -120,11 +135,16 @@ impl CacheableMetadata for ScreenshotMetadata {
 
 impl CacheableMetadata for VideoMetadata {
     fn get_cache_dir(&self) -> Option<PathBuf> {
-        RetromDirs::new()
-            .media_dir()
-            .join("game_metadata")
-            .join(&self.game_metadata_id)
-            .into()
+        if self.game_metadata_id.trim().is_empty() {
+            return None;
+        }
+
+        Some(
+            RetromDirs::new()
+                .media_dir()
+                .join("game_metadata")
+                .join(&self.game_metadata_id),
+        )
     }
 
     fn get_cacheable_media_opts(&self) -> Vec<CacheMediaOpts> {
@@ -146,5 +166,50 @@ impl CacheableMetadata for VideoMetadata {
         });
 
         opts
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn game_metadata_cache_dir_is_none_for_empty_id() {
+        let metadata = GameMetadata {
+            id: "".to_string(),
+            ..Default::default()
+        };
+
+        assert!(metadata.get_cache_dir().is_none());
+    }
+
+    #[test]
+    fn artwork_cache_dir_is_none_for_empty_game_metadata_id() {
+        let metadata = ArtworkMetadata {
+            game_metadata_id: "".to_string(),
+            ..Default::default()
+        };
+
+        assert!(metadata.get_cache_dir().is_none());
+    }
+
+    #[test]
+    fn screenshot_cache_dir_is_none_for_empty_game_metadata_id() {
+        let metadata = ScreenshotMetadata {
+            game_metadata_id: "".to_string(),
+            ..Default::default()
+        };
+
+        assert!(metadata.get_cache_dir().is_none());
+    }
+
+    #[test]
+    fn video_cache_dir_is_none_for_empty_game_metadata_id() {
+        let metadata = VideoMetadata {
+            game_metadata_id: "".to_string(),
+            ..Default::default()
+        };
+
+        assert!(metadata.get_cache_dir().is_none());
     }
 }

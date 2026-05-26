@@ -519,6 +519,7 @@ mod integration_tests {
         let cache = MediaCache::new(Arc::new(ServerConfigManager::new().unwrap()));
 
         let game_metadata = GameMetadata {
+            id: "123".to_string(),
             game_id: "123".to_string(),
             ..Default::default()
         };
