@@ -1,10 +1,10 @@
-use crate::retrom_dirs::RetromDirs;
 use bigdecimal::ToPrimitive;
 use caesium::{compress_in_memory, convert_in_memory, parameters::CSParameters};
 use index::{IndexEntry, IndexManager};
 use rayon::ThreadPool;
 use reqwest::StatusCode;
-use retrom_codegen::retrom::metadata_config::ImageFormat;
+use retrom_codegen::retrom::services::config::v1::metadata_config::ImageFormat;
+use retrom_service_config::{config::ServerConfigManager, retrom_dirs::RetromDirs};
 use std::{
     path::{Path, PathBuf},
     str::FromStr,
@@ -122,7 +122,7 @@ pub struct MediaCache {
     client: reqwest::Client,
     compression_threads: Arc<ThreadPool>,
     index_manager: IndexManager,
-    config_manager: Arc<crate::config::ServerConfigManager>,
+    config_manager: Arc<ServerConfigManager>,
 }
 
 struct RetryCondition {}
@@ -148,7 +148,7 @@ impl Condition<MediaCacheError> for RetryCondition {
 }
 
 impl MediaCache {
-    pub fn new(config_manager: Arc<crate::config::ServerConfigManager>) -> Self {
+    pub fn new(config_manager: Arc<ServerConfigManager>) -> Self {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
@@ -362,28 +362,27 @@ impl MediaCache {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use crate::retrom_dirs::RetromDirs;
     use cacheable_media::CacheableMetadata;
-    use retrom_codegen::retrom::{GameMetadata, PlatformMetadata};
+    use retrom_codegen::retrom::services::metadata::v1::{GameMetadata, PlatformMetadata};
+    use retrom_service_config::config::ServerConfigManager;
     use tempfile::TempDir;
 
     #[tokio::test]
     async fn test_media_cache_basic_functionality() {
         // Test that cache directories are created correctly using trait implementations
         let game_metadata = GameMetadata {
-            game_id: 42,
+            id: "1".to_string(),
+            game_id: "42".to_string(),
             name: Some("Test Game".to_string()),
             description: None,
             cover_url: None,
             background_url: None,
             icon_url: None,
+            logo_url: None,
             igdb_id: None,
             created_at: None,
             updated_at: None,
             links: vec![],
-            video_urls: vec![],
-            screenshot_urls: vec![],
-            artwork_urls: vec![],
             release_date: None,
             last_played: None,
             minutes_played: Some(0),
@@ -391,13 +390,17 @@ mod integration_tests {
 
         let cache_dir = game_metadata.get_cache_dir().unwrap();
         // Check that the cache dir has the correct structure (ends with correct path)
-        assert!(cache_dir.to_string_lossy().ends_with("media/games/42"));
+        assert!(cache_dir
+            .to_string_lossy()
+            .ends_with("media/game_metadata/1"));
 
         let platform_metadata = PlatformMetadata {
-            platform_id: 1,
+            id: "1".to_string(),
+            platform_id: "1".to_string(),
             name: Some("Test Platform".to_string()),
             description: None,
             background_url: None,
+            icon_url: None,
             logo_url: None,
             igdb_id: None,
             created_at: None,
@@ -415,10 +418,13 @@ mod integration_tests {
     async fn test_url_to_public_path_conversion() {
         // Use the actual media directory from RetromDirs::new() (which uses the test env)
         let media_dir = RetromDirs::new().media_dir();
-        let test_path = media_dir.join("games").join("42").join("image.jpg");
+        let test_path = media_dir
+            .join("game_metadata")
+            .join("42")
+            .join("image.jpg");
         let public_url = get_public_url(&test_path).unwrap();
 
-        assert_eq!(public_url, "media/games/42/image.jpg");
+        assert_eq!(public_url, "media/game_metadata/42/image.jpg");
     }
 
     #[test]
@@ -470,19 +476,18 @@ mod integration_tests {
     async fn test_subdirectory_organization() {
         // Create test game metadata with artwork and screenshot URLs
         let game_metadata = GameMetadata {
-            game_id: 123,
+            id: "1".to_string(),
+            game_id: "123".to_string(),
             name: Some("Test Game".to_string()),
             description: None,
             cover_url: None,
             background_url: None,
             icon_url: None,
             igdb_id: None,
+            logo_url: None,
             created_at: None,
             updated_at: None,
             links: vec![],
-            video_urls: vec![],
-            screenshot_urls: vec!["https://example.com/screenshot1.png".to_string()],
-            artwork_urls: vec!["https://example.com/artwork1.jpg".to_string()],
             release_date: None,
             last_played: None,
             minutes_played: Some(0),
@@ -495,13 +500,15 @@ mod integration_tests {
         let screenshot_cache_dir = cache_dir.join("screenshots");
 
         // Check paths are structured correctly
-        assert!(cache_dir.to_string_lossy().ends_with("media/games/123"));
+        assert!(cache_dir
+            .to_string_lossy()
+            .ends_with("media/game_metadata/1"));
         assert!(artwork_cache_dir
             .to_string_lossy()
-            .ends_with("media/games/123/artwork"));
+            .ends_with("media/game_metadata/1/artwork"));
         assert!(screenshot_cache_dir
             .to_string_lossy()
-            .ends_with("media/games/123/screenshots"));
+            .ends_with("media/game_metadata/1/screenshots"));
 
         // Verify URL conversion for subdirectories would work
         let test_artwork_path = artwork_cache_dir.join("test.jpg");
@@ -510,16 +517,20 @@ mod integration_tests {
         let artwork_url = get_public_url(&test_artwork_path).unwrap();
         let screenshot_url = get_public_url(&test_screenshot_path).unwrap();
 
-        assert_eq!(artwork_url, "media/games/123/artwork/test.jpg");
-        assert_eq!(screenshot_url, "media/games/123/screenshots/test.png");
+        assert_eq!(artwork_url, "media/game_metadata/1/artwork/test.jpg");
+        assert_eq!(
+            screenshot_url,
+            "media/game_metadata/1/screenshots/test.png"
+        );
     }
 
     #[tokio::test]
     async fn test_index_integration_with_cache_operations() {
-        let cache = MediaCache::new(Arc::new(crate::config::ServerConfigManager::new().unwrap()));
+        let cache = MediaCache::new(Arc::new(ServerConfigManager::new().unwrap()));
 
         let game_metadata = GameMetadata {
-            game_id: 123,
+            id: "123".to_string(),
+            game_id: "123".to_string(),
             ..Default::default()
         };
 
@@ -597,7 +608,7 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_cache_media_opts_absolute_path_validation() {
-        let cache = MediaCache::new(Arc::new(crate::config::ServerConfigManager::new().unwrap()));
+        let cache = MediaCache::new(Arc::new(ServerConfigManager::new().unwrap()));
         let cache_dir = RetromDirs::new().media_dir().join("games").join("test");
 
         // Test with absolute path should return error
@@ -616,7 +627,7 @@ mod integration_tests {
     #[tokio::test]
     async fn test_cache_file_overwrite_on_url_change() {
         let temp_dir = TempDir::new().unwrap();
-        let cache = MediaCache::new(Arc::new(crate::config::ServerConfigManager::new().unwrap()));
+        let cache = MediaCache::new(Arc::new(ServerConfigManager::new().unwrap()));
 
         // Create a test cache directory
         let cache_dir = temp_dir.path().join("cache");

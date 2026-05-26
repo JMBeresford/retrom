@@ -1,18 +1,14 @@
-use std::{str::FromStr, sync::Arc, time::Duration};
-
+use crate::metadata_providers::{steam::models, RetryAttempts};
 use chrono::DateTime;
 use retrom_codegen::{
-    retrom::{self},
+    retrom::services::metadata::v1::{GameMetadata, ScreenshotMetadata, VideoMetadata},
     timestamp::Timestamp,
 };
+use retrom_service_config::config::ServerConfigManager;
+use std::{str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::{mpsc, oneshot};
 use tower::{Service, ServiceExt};
 use tracing::{instrument, Instrument};
-
-use crate::{
-    config::ServerConfigManager,
-    metadata_providers::{steam::models, RetryAttempts},
-};
 
 type SteamSenderMsg = (
     reqwest::Request,
@@ -80,50 +76,14 @@ impl SteamWebApiProvider {
 
     pub fn app_details_to_game_metadata(
         &self,
-        app: models::Game,
-        app_details: models::AppDetails,
-    ) -> retrom::NewGameMetadata {
-        let video_urls: Vec<String> = app_details
-            .movies
-            .map(|movies| {
-                movies
-                    .into_iter()
-                    .filter_map(|movie| {
-                        movie
-                            .webm
-                            .map(|quality| quality.max.clone())
-                            .or(movie.mp4.map(|quality| quality.max.clone()))
-                            .flatten()
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        let screenshot_urls: Vec<String> = app_details
-            .screenshots
-            .map(|screenshots| {
-                screenshots
-                    .into_iter()
-                    .map(|screenshot| screenshot.path_full)
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        let mut artwork_urls: Vec<String> = vec![];
-
-        if let Some(ref header_url) = app_details.header_image {
-            artwork_urls.push(header_url.clone());
-        }
-
-        if let Some(ref background_url) = app_details.background_raw {
-            artwork_urls.push(background_url.clone());
-        }
-
+        app: &models::Game,
+        app_details: &models::AppDetails,
+    ) -> GameMetadata {
         let cover_url = app_details.steam_appid.map(|id| {
             format!("https://steamcdn-a.akamaihd.net/steam/apps/{id}/library_600x900_2x.jpg")
         });
 
-        let icon_url = app.img_icon_url.map(|icon_id| {
+        let icon_url = app.img_icon_url.as_ref().map(|icon_id| {
             format!(
                 "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/{}/{}.jpg",
                 app.appid, icon_id
@@ -152,23 +112,76 @@ impl SteamWebApiProvider {
             None
         };
 
-        retrom::NewGameMetadata {
-            description: app_details.short_description,
-            name: app_details.name,
+        GameMetadata {
+            description: app_details.short_description.clone(),
+            name: app_details.name.clone(),
             cover_url,
             background_url,
             links: app_details
                 .website
-                .map(|website| vec![website])
+                .as_ref()
+                .map(|website| vec![website.to_owned()])
                 .unwrap_or_default(),
             icon_url,
-            artwork_urls,
-            screenshot_urls,
-            video_urls,
             last_played,
             minutes_played,
             ..Default::default()
         }
+    }
+
+    pub fn app_details_to_screenshot_metadata(
+        &self,
+        app_details: &models::AppDetails,
+    ) -> Vec<ScreenshotMetadata> {
+        let screenshot_urls: Vec<String> = app_details
+            .screenshots
+            .as_ref()
+            .map(|screenshots| {
+                screenshots
+                    .into_iter()
+                    .map(|screenshot| screenshot.path_full.clone())
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        screenshot_urls
+            .into_iter()
+            .map(|url| ScreenshotMetadata {
+                url,
+                ..Default::default()
+            })
+            .collect()
+    }
+
+    pub fn app_details_to_video_metadata(
+        &self,
+        app_details: &models::AppDetails,
+    ) -> Vec<VideoMetadata> {
+        let video_urls: Vec<String> = app_details
+            .movies
+            .as_ref()
+            .map(|movies| {
+                movies
+                    .into_iter()
+                    .filter_map(|movie| {
+                        movie
+                            .webm
+                            .as_ref()
+                            .map(|quality| quality.max.clone())
+                            .or(movie.mp4.as_ref().map(|quality| quality.max.clone()))
+                            .flatten()
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        video_urls
+            .into_iter()
+            .map(|url| VideoMetadata {
+                url,
+                ..Default::default()
+            })
+            .collect()
     }
 
     #[instrument(skip(self))]
