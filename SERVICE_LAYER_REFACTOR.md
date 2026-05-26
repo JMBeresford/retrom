@@ -41,7 +41,7 @@
 - [x] 3.3 Replace legacy migrations with DB-agnostic migrations; support existing-user data migration (after 3.2)
 - [ ] 3.4 Migrate per-service crates to sqlx (after 3.3):
   - [ ] `retrom-service-library`
-  - [ ] `retrom-service-metadata`
+  - [x] `retrom-service-metadata`
   - [x] `retrom-service-emulators`
   - [x] `retrom-service-clients`
   - [ ] `retrom-service-config`

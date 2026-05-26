@@ -11,10 +11,7 @@ pub fn igdb_router(db_pool: DbPool) -> axum::Router {
 
     let igdb_client = Arc::new(IGDBProvider::new(config_manager));
 
-    let svc = IgdbServiceServer::new(IgdbServiceHandlers {
-        db_pool,
-        igdb_client,
-    });
+    let svc = IgdbServiceServer::new(IgdbServiceHandlers::new(db_pool, igdb_client));
 
     let mut routes_builder = tonic::service::Routes::builder();
     routes_builder.add_service(svc);
