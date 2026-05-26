@@ -1,8 +1,18 @@
+use retrom_codegen::retrom::services::metadata::v1::{
+    metadata_service_server::MetadataService, GetGameMetadataRequest, GetGameMetadataResponse,
+};
+use retrom_db::DbPool;
+use retrom_service_common::media_cache::MediaCache;
+use retrom_service_config::config::ServerConfigManager;
+use retrom_service_jobs::job_manager::JobManager;
+use std::sync::Arc;
+use tonic::{Request, Response, Status};
+
 pub(crate) mod router;
 
 #[derive(Clone)]
 pub struct MetadataServiceHandlers {
-    pub db_pool: Arc<Pool>,
+    pub db_pool: DbPool,
     pub media_cache: Arc<MediaCache>,
     pub job_manager: Arc<JobManager>,
     pub config_manager: Arc<ServerConfigManager>,
@@ -10,7 +20,7 @@ pub struct MetadataServiceHandlers {
 
 impl MetadataServiceHandlers {
     pub fn new(
-        db_pool: Arc<Pool>,
+        db_pool: DbPool,
         media_cache: Arc<MediaCache>,
         job_manager: Arc<JobManager>,
         config_manager: Arc<ServerConfigManager>,
