@@ -5,11 +5,10 @@ use retrom_codegen::retrom::services::metadata::v1::{
     GetIgdbPlatformSearchResultsResponse, GetIgdbSearchRequest, GetIgdbSearchResponse,
     IgdbSearchGameResponse, IgdbSearchPlatformResponse,
 };
-use retrom_db::DbPool;
+use retrom_db::{DbPool, RetromDB};
 use retrom_service_common::metadata_providers::{
-    igdb::provider::{IgdbSearchData, IGDBProvider},
-    GameMetadataProvider, PlatformMetadataProvider,
-    MetadataProvider as MetadataProviderTrait,
+    igdb::provider::{IGDBProvider, IgdbSearchData},
+    GameMetadataProvider, MetadataProvider as MetadataProviderTrait, PlatformMetadataProvider,
 };
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
@@ -45,14 +44,21 @@ impl IgdbService for IgdbServiceHandlers {
             }
         };
 
-        let game_exists: bool = sqlx::query_scalar("select exists(select 1 from games where id = $1)")
-            .bind(query.game_id.to_string())
+        let mut builder =
+            sqlx::QueryBuilder::<RetromDB>::new("select exists(select 1 from games where id = ");
+        builder.push_bind(query.game_id.to_string()).push(")");
+
+        let game_exists: bool = builder
+            .build_query_scalar()
             .fetch_one(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
         if !game_exists {
-            return Err(Status::not_found(format!("Game not found: {}", query.game_id)));
+            return Err(Status::not_found(format!(
+                "Game not found: {}",
+                query.game_id
+            )));
         }
 
         let game_id = query.game_id.to_string();
@@ -84,12 +90,16 @@ impl IgdbService for IgdbServiceHandlers {
                 }
             };
 
-            let platform_exists: bool =
-                sqlx::query_scalar("select exists(select 1 from platforms where id = $1)")
-                    .bind(query.platform_id.to_string())
-                    .fetch_one(&self.db_pool)
-                    .await
-                    .map_err(|why| Status::internal(why.to_string()))?;
+            let mut builder = sqlx::QueryBuilder::<RetromDB>::new(
+                "select exists(select 1 from platforms where id = ",
+            );
+            builder.push_bind(query.platform_id.to_string()).push(")");
+
+            let platform_exists: bool = builder
+                .build_query_scalar()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
 
             if !platform_exists {
                 return Err(Status::not_found(format!(

@@ -5,11 +5,12 @@ use retrom_codegen::{
         library::v1::Game,
         metadata::v1::{
             get_game_metadata_response::{MediaPaths, SimilarGames},
-            metadata_service_server::MetadataService, DeleteLocalMetadataRequest,
-            DeleteLocalMetadataResponse, GameMetadata, GetGameMetadataRequest,
-            GetGameMetadataResponse, GetLocalMetadataStatusRequest, GetLocalMetadataStatusResponse,
-            GetPlatformMetadataRequest, GetPlatformMetadataResponse, PlatformMetadata,
-            UpdateGameMetadataRequest, UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
+            metadata_service_server::MetadataService,
+            DeleteLocalMetadataRequest, DeleteLocalMetadataResponse, GameMetadata,
+            GetGameMetadataRequest, GetGameMetadataResponse, GetLocalMetadataStatusRequest,
+            GetLocalMetadataStatusResponse, GetPlatformMetadataRequest,
+            GetPlatformMetadataResponse, PlatformMetadata, UpdateGameMetadataRequest,
+            UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
             UpdatePlatformMetadataResponse,
         },
     },
@@ -131,8 +132,9 @@ impl MetadataServiceHandlers {
             return Ok(HashMap::new());
         }
 
-        let mut builder =
-            QueryBuilder::<RetromDB>::new("select game_metadata_id, url from game_metadata_links where game_metadata_id in (");
+        let mut builder = QueryBuilder::<RetromDB>::new(
+            "select game_metadata_id, url from game_metadata_links where game_metadata_id in (",
+        );
         let mut separated = builder.separated(", ");
         for id in metadata_ids {
             separated.push_bind(id);
@@ -245,7 +247,7 @@ impl MetadataService for MetadataServiceHandlers {
 
         let mut similar_games = HashMap::new();
         for game_id in &game_ids {
-            let games: Vec<Game> = sqlx::query_as(
+            let mut builder = QueryBuilder::<RetromDB>::new(
                 r#"
                 select
                     g.id,
@@ -261,13 +263,16 @@ impl MetadataService for MetadataServiceHandlers {
                     g.steam_app_id
                 from games g
                 inner join similar_games sg on sg.similar_game_id = g.id
-                where sg.game_id = $1
+                where sg.game_id =
                 "#,
-            )
-            .bind(game_id)
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            );
+            builder.push_bind(game_id);
+
+            let games: Vec<Game> = builder
+                .build_query_as()
+                .fetch_all(&self.db_pool)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
 
             similar_games.insert(game_id.clone(), SimilarGames { value: games });
         }
@@ -457,12 +462,15 @@ impl MetadataService for MetadataServiceHandlers {
         let mut metadata_updated = vec![];
 
         for metadata_row in metadata_to_update {
-            let existing_id: Option<String> =
-                sqlx::query_scalar("select id from game_metadata where game_id = $1")
-                    .bind(&metadata_row.game_id)
-                    .fetch_optional(&mut *tx)
-                    .await
-                    .map_err(|e| Status::internal(e.to_string()))?;
+            let mut builder =
+                QueryBuilder::<RetromDB>::new("select id from game_metadata where game_id = ");
+            builder.push_bind(&metadata_row.game_id);
+
+            let existing_id: Option<String> = builder
+                .build_query_scalar()
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
 
             let row_id = existing_id.unwrap_or_else(|| {
                 if metadata_row.id.trim().is_empty() {
@@ -472,13 +480,30 @@ impl MetadataService for MetadataServiceHandlers {
                 }
             });
 
-            let updated_row: DbGameMetadata = sqlx::query_as(
+            let mut builder = QueryBuilder::<RetromDB>::new(
                 r#"
                 insert into game_metadata (
                     id, game_id, name, description, cover_url, background_url, icon_url, logo_url,
                     igdb_id, release_date, last_played, minutes_played
                 )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                values (
+                "#,
+            );
+            let mut separated = builder.separated(", ");
+            separated.push_bind(&row_id);
+            separated.push_bind(&metadata_row.game_id);
+            separated.push_bind(&metadata_row.name);
+            separated.push_bind(&metadata_row.description);
+            separated.push_bind(&metadata_row.cover_url);
+            separated.push_bind(&metadata_row.background_url);
+            separated.push_bind(&metadata_row.icon_url);
+            separated.push_bind(&metadata_row.logo_url);
+            separated.push_bind(metadata_row.igdb_id.map(|id| id.to_string()));
+            separated.push_bind(metadata_row.release_date);
+            separated.push_bind(metadata_row.last_played);
+            separated.push_bind(metadata_row.minutes_played);
+            separated.push_unseparated(
+                r#")
                 on conflict (id) do update set
                     game_id = excluded.game_id,
                     name = excluded.name,
@@ -496,38 +521,39 @@ impl MetadataService for MetadataServiceHandlers {
                     background_url, icon_url, logo_url, igdb_id, release_date, last_played,
                     minutes_played
                 "#,
-            )
-            .bind(&row_id)
-            .bind(&metadata_row.game_id)
-            .bind(&metadata_row.name)
-            .bind(&metadata_row.description)
-            .bind(&metadata_row.cover_url)
-            .bind(&metadata_row.background_url)
-            .bind(&metadata_row.icon_url)
-            .bind(&metadata_row.logo_url)
-            .bind(metadata_row.igdb_id.map(|id| id.to_string()))
-            .bind(&metadata_row.release_date)
-            .bind(&metadata_row.last_played)
-            .bind(metadata_row.minutes_played)
-            .fetch_one(&mut *tx)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            );
 
-            sqlx::query("delete from game_metadata_links where game_metadata_id = $1")
-                .bind(&row_id)
+            let updated_row: DbGameMetadata = builder
+                .build_query_as()
+                .fetch_one(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+
+            let mut builder = QueryBuilder::<RetromDB>::new(
+                "delete from game_metadata_links where game_metadata_id = ",
+            );
+            builder.push_bind(&row_id);
+
+            builder
+                .build()
                 .execute(&mut *tx)
                 .await
                 .map_err(|e| Status::internal(e.to_string()))?;
 
             for link in &metadata_row.links {
-                sqlx::query(
-                    "insert into game_metadata_links (game_metadata_id, url) values ($1, $2) on conflict do nothing",
-                )
-                .bind(&row_id)
-                .bind(link)
-                .execute(&mut *tx)
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+                let mut builder = QueryBuilder::<RetromDB>::new(
+                    "insert into game_metadata_links (game_metadata_id, url) values (",
+                );
+                let mut separated = builder.separated(", ");
+                separated.push_bind(&row_id);
+                separated.push_bind(link);
+                separated.push_unseparated(") on conflict do nothing");
+
+                builder
+                    .build()
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(|e| Status::internal(e.to_string()))?;
             }
 
             let mut updated = GameMetadata::from(updated_row);
@@ -616,12 +642,16 @@ impl MetadataService for MetadataServiceHandlers {
         let mut metadata_updated = vec![];
 
         for metadata_row in metadata_to_update {
-            let existing_id: Option<String> =
-                sqlx::query_scalar("select id from platform_metadata where platform_id = $1")
-                    .bind(&metadata_row.platform_id)
-                    .fetch_optional(&mut *tx)
-                    .await
-                    .map_err(|e| Status::internal(e.to_string()))?;
+            let mut builder = QueryBuilder::<RetromDB>::new(
+                "select id from platform_metadata where platform_id = ",
+            );
+            builder.push_bind(&metadata_row.platform_id);
+
+            let existing_id: Option<String> = builder
+                .build_query_scalar()
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
 
             let row_id = existing_id.unwrap_or_else(|| {
                 if metadata_row.id.trim().is_empty() {
@@ -631,12 +661,25 @@ impl MetadataService for MetadataServiceHandlers {
                 }
             });
 
-            let updated_row: DbPlatformMetadata = sqlx::query_as(
+            let mut builder = QueryBuilder::<RetromDB>::new(
                 r#"
                 insert into platform_metadata (
                     id, platform_id, name, description, background_url, icon_url, logo_url, igdb_id
                 )
-                values ($1, $2, $3, $4, $5, $6, $7, $8)
+                values (
+                "#,
+            );
+            let mut separated = builder.separated(", ");
+            separated.push_bind(&row_id);
+            separated.push_bind(&metadata_row.platform_id);
+            separated.push_bind(&metadata_row.name);
+            separated.push_bind(&metadata_row.description);
+            separated.push_bind(&metadata_row.background_url);
+            separated.push_bind(&metadata_row.icon_url);
+            separated.push_bind(&metadata_row.logo_url);
+            separated.push_bind(metadata_row.igdb_id.map(|id| id.to_string()));
+            separated.push_unseparated(
+                r#")
                 on conflict (id) do update set
                     platform_id = excluded.platform_id,
                     name = excluded.name,
@@ -649,18 +692,13 @@ impl MetadataService for MetadataServiceHandlers {
                 returning id, platform_id, created_at, updated_at, name, description,
                     background_url, icon_url, logo_url, igdb_id
                 "#,
-            )
-            .bind(&row_id)
-            .bind(&metadata_row.platform_id)
-            .bind(&metadata_row.name)
-            .bind(&metadata_row.description)
-            .bind(&metadata_row.background_url)
-            .bind(&metadata_row.icon_url)
-            .bind(&metadata_row.logo_url)
-            .bind(metadata_row.igdb_id.map(|id| id.to_string()))
-            .fetch_one(&mut *tx)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            );
+
+            let updated_row: DbPlatformMetadata = builder
+                .build_query_as()
+                .fetch_one(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
 
             metadata_updated.push(PlatformMetadata::from(updated_row));
         }

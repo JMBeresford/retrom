@@ -4,7 +4,7 @@ use retrom_codegen::{
     },
     timestamp::Timestamp,
 };
-use retrom_db::DbPool;
+use retrom_db::{DbPool, RetromDB};
 use retrom_service_common::metadata_providers::steam::provider::SteamWebApiProvider;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
@@ -32,7 +32,10 @@ impl SteamService for SteamServiceHandlers {
         request: Request<SyncSteamMetadataRequest>,
     ) -> Result<Response<SyncSteamMetadataResponse>, Status> {
         let selectors = request.into_inner().selectors;
-        let game_ids = selectors.iter().map(|s| s.game_id.clone()).collect::<Vec<_>>();
+        let game_ids = selectors
+            .iter()
+            .map(|s| s.game_id.clone())
+            .collect::<Vec<_>>();
 
         if game_ids.is_empty() {
             return Ok(Response::new(SyncSteamMetadataResponse {}));
@@ -79,7 +82,9 @@ impl SteamService for SteamServiceHandlers {
                 continue;
             };
 
-            let Some(steam_game) = steam_games.iter().find(|steam_game| steam_game.appid == app_id)
+            let Some(steam_game) = steam_games
+                .iter()
+                .find(|steam_game| steam_game.appid == app_id)
             else {
                 continue;
             };
@@ -99,21 +104,20 @@ impl SteamService for SteamServiceHandlers {
                 None
             };
 
-            sqlx::query(
-                r#"
-                update game_metadata
-                set last_played = $1,
-                    minutes_played = $2,
-                    updated_at = current_timestamp
-                where game_id = $3
-                "#,
-            )
-            .bind(last_played)
-            .bind(minutes_played)
-            .bind(&game.id)
-            .execute(&mut *tx)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            let mut builder =
+                sqlx::QueryBuilder::<RetromDB>::new("update game_metadata set last_played = ");
+            builder
+                .push_bind(last_played)
+                .push(", minutes_played = ")
+                .push_bind(minutes_played)
+                .push(", updated_at = current_timestamp where game_id = ")
+                .push_bind(&game.id);
+
+            builder
+                .build()
+                .execute(&mut *tx)
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
         }
 
         tx.commit()
