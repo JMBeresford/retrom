@@ -154,10 +154,11 @@ impl MetadataServiceHandlers {
     }
 }
 
-async fn spawn_cache_job<E, F>(job_manager: Arc<JobManager>, job_name: String, tasks: Vec<F>)
+async fn spawn_cache_job<T, E, F>(job_manager: Arc<JobManager>, job_name: String, tasks: Vec<F>)
 where
+    T: Send + 'static,
     E: Display + Send + 'static,
-    F: Future<Output = Result<(), E>> + Send + 'static,
+    F: Future<Output = Result<T, E>> + Send + 'static,
 {
     if tasks.is_empty() {
         return;

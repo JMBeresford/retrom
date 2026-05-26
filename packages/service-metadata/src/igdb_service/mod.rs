@@ -6,7 +6,10 @@ use retrom_codegen::retrom::services::metadata::v1::{
     IgdbSearchGameResponse, IgdbSearchPlatformResponse,
 };
 use retrom_db::DbPool;
-use retrom_service_common::metadata_providers::igdb::provider::{IgdbSearchData, IGDBProvider};
+use retrom_service_common::metadata_providers::{
+    igdb::provider::{IgdbSearchData, IGDBProvider},
+    MetadataProvider as MetadataProviderTrait,
+};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
