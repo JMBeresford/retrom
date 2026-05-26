@@ -7,15 +7,15 @@ use std::path::PathBuf;
 
 impl CacheableMetadata for GameMetadata {
     fn get_cache_dir(&self) -> Option<PathBuf> {
-        if self.id.trim().is_empty() {
+        if self.game_id.trim().is_empty() {
             return None;
         }
 
         Some(
             RetromDirs::new()
                 .media_dir()
-                .join("game_metadata")
-                .join(&self.id),
+                .join("games")
+                .join(&self.game_id),
         )
     }
 
@@ -174,9 +174,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn game_metadata_cache_dir_is_none_for_empty_id() {
+    fn game_metadata_cache_dir_is_none_for_empty_game_id() {
         let metadata = GameMetadata {
-            id: "".to_string(),
+            game_id: "".to_string(),
             ..Default::default()
         };
 
