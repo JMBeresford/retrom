@@ -1,5 +1,10 @@
 use reqwest::StatusCode;
-use retrom_codegen::retrom::{Game, NewGameMetadata, NewPlatformMetadata, Platform};
+use retrom_codegen::retrom::services::{
+    library::v1::{Game, Platform},
+    metadata::v1::{
+        ArtworkMetadata, GameMetadata, PlatformMetadata, ScreenshotMetadata, VideoMetadata,
+    },
+};
 use std::time::Duration;
 use tower::{
     retry::{
@@ -16,17 +21,22 @@ pub trait MetadataProvider<Query, Data> {
     fn search_metadata(&self, query: Query) -> impl std::future::Future<Output = Option<Data>>;
 }
 
-pub trait GameMetadataProvider<Query> {
+pub type GameMetadataSearchResult = (
+    Option<GameMetadata>,
+    Option<Vec<ArtworkMetadata>>,
+    Option<Vec<ScreenshotMetadata>>,
+    Option<Vec<VideoMetadata>>,
+);
+
+pub trait GameMetadataProvider<Query, SearchResult> {
     fn get_game_metadata(
         &self,
         game: Game,
         query: Option<Query>,
-    ) -> impl std::future::Future<Output = Option<NewGameMetadata>>;
+    ) -> impl std::future::Future<Output = GameMetadataSearchResult>;
 
-    fn search_game_metadata(
-        &self,
-        query: Query,
-    ) -> impl std::future::Future<Output = Vec<NewGameMetadata>>;
+    fn search_game_metadata(&self, query: Query)
+        -> impl std::future::Future<Output = SearchResult>;
 }
 
 pub trait PlatformMetadataProvider<Query> {
@@ -34,12 +44,12 @@ pub trait PlatformMetadataProvider<Query> {
         &self,
         platform: Platform,
         query: Option<Query>,
-    ) -> impl std::future::Future<Output = Option<NewPlatformMetadata>>;
+    ) -> impl std::future::Future<Output = Option<PlatformMetadata>>;
 
     fn search_platform_metadata(
         &self,
         query: Query,
-    ) -> impl std::future::Future<Output = Vec<NewPlatformMetadata>>;
+    ) -> impl std::future::Future<Output = Vec<PlatformMetadata>>;
 }
 
 #[derive(Clone)]

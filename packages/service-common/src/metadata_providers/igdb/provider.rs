@@ -1,17 +1,16 @@
-use crate::{
-    config::ServerConfigManager,
-    metadata_providers::{MetadataProvider, RetryAttempts},
-};
+use crate::metadata_providers::{MetadataProvider, RetryAttempts};
 use prost::Message;
 use retrom_codegen::{
     igdb,
     retrom::{
-        get_igdb_search_request::IgdbSearchType,
-        igdb_fields::Selector,
-        igdb_filters::{FilterOperator, FilterValue},
-        GetIgdbSearchRequest,
+        providers::igdb::v1::{
+            igdb_fields::Selector,
+            igdb_filters::{FilterOperator, FilterValue},
+        },
+        services::metadata::v1::{get_igdb_search_request::IgdbSearchType, GetIgdbSearchRequest},
     },
 };
+use retrom_service_config::config::ServerConfigManager;
 use std::{
     env,
     sync::Arc,

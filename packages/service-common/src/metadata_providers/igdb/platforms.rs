@@ -5,11 +5,15 @@ use deunicode::deunicode;
 use retrom_codegen::{
     igdb,
     retrom::{
-        self,
-        get_igdb_search_request::IgdbSearchType,
-        igdb_fields::{IncludeFields, Selector},
-        igdb_filters::{FilterOperator, FilterValue},
-        GetIgdbSearchRequest, IgdbFields, IgdbFilters, IgdbPlatformSearchQuery, IgdbSearch,
+        providers::igdb::v1::{
+            igdb_fields::{IncludeFields, Selector},
+            igdb_filters::{FilterOperator, FilterValue},
+            IgdbFields, IgdbFilters, IgdbPlatformSearchQuery, IgdbSearch,
+        },
+        services::{
+            library::v1::Platform,
+            metadata::v1::{get_igdb_search_request::IgdbSearchType, GetIgdbSearchRequest, PlatformMetadata},
+        },
     },
 };
 use std::{collections::HashMap, path::PathBuf, str::FromStr};
@@ -19,7 +23,7 @@ impl IGDBProvider {
     pub fn igdb_platform_to_metadata(
         &self,
         igdb_match: igdb::Platform,
-    ) -> retrom::NewPlatformMetadata {
+    ) -> PlatformMetadata {
         let description = Some(igdb_match.summary);
         let name = Some(igdb_match.name);
         let igdb_id = match BigDecimal::from_u64(igdb_match.id) {
@@ -31,7 +35,7 @@ impl IGDBProvider {
             .platform_logo
             .map(|logo| logo.url.to_string().replace("//", "https://"));
 
-        retrom::NewPlatformMetadata {
+        PlatformMetadata {
             igdb_id,
             name,
             description,
@@ -45,9 +49,9 @@ impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
     #[instrument(level = Level::DEBUG, skip_all, fields(name = platform.path))]
     async fn get_platform_metadata(
         &self,
-        platform: retrom::Platform,
+        platform: Platform,
         query: Option<IgdbPlatformSearchQuery>,
-    ) -> Option<retrom::NewPlatformMetadata> {
+    ) -> Option<PlatformMetadata> {
         let naive_name = platform
             .path
             .split('/')
@@ -120,7 +124,7 @@ impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
         let igdb_match = exact_match.or(first_match).map(|meta| meta.to_owned());
 
         if let Some(mut igdb_match) = igdb_match {
-            igdb_match.platform_id = Some(platform.id);
+            igdb_match.platform_id = platform.id;
             return Some(igdb_match);
         };
 
@@ -131,7 +135,7 @@ impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
     async fn search_platform_metadata(
         &self,
         query: IgdbPlatformSearchQuery,
-    ) -> Vec<retrom::NewPlatformMetadata> {
+    ) -> Vec<PlatformMetadata> {
         let fields = IgdbFields {
             selector: Some(Selector::Include(IncludeFields {
                 value: self.platform_fields.clone(),
