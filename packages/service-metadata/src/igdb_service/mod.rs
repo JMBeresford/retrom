@@ -1,9 +1,12 @@
 use retrom_codegen::retrom::services::metadata::v1::{
+    get_igdb_search_request::IgdbSearchType, get_igdb_search_response::SearchResults,
     igdb_service_server::IgdbService, GetIgdbGameSearchResultsRequest,
-    GetIgdbGameSearchResultsResponse,
+    GetIgdbGameSearchResultsResponse, GetIgdbPlatformSearchResultsRequest,
+    GetIgdbPlatformSearchResultsResponse, GetIgdbSearchRequest, GetIgdbSearchResponse,
+    IgdbSearchGameResponse, IgdbSearchPlatformResponse,
 };
 use retrom_db::DbPool;
-use retrom_service_common::metadata_providers::igdb::provider::IGDBProvider;
+use retrom_service_common::metadata_providers::igdb::provider::{IgdbSearchData, IGDBProvider};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
@@ -38,22 +41,15 @@ impl IgdbService for IgdbServiceHandlers {
             }
         };
 
-        let mut conn = self
-            .db_pool
-            .get()
+        let game_exists: bool = sqlx::query_scalar("select exists(select 1 from games where id = $1)")
+            .bind(&query.game_id)
+            .fetch_one(&self.db_pool)
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
-        let game = match schema::games::table
-            .find(query.game_id)
-            .first::<retrom::Game>(&mut conn)
-            .await
-        {
-            Ok(game) => game,
-            Err(why) => {
-                return Err(Status::internal(why.to_string()));
-            }
-        };
+        if !game_exists {
+            return Err(Status::not_found(format!("Game not found: {}", query.game_id)));
+        }
 
         let igdb_client = self.igdb_client.clone();
         let search_results = igdb_client.search_game_metadata(query).await;
@@ -61,7 +57,7 @@ impl IgdbService for IgdbServiceHandlers {
         let metadata = search_results
             .into_iter()
             .map(|mut meta| {
-                meta.game_id = Some(game.id);
+                meta.game_id = Some(query.game_id.clone());
                 meta
             })
             .collect();
@@ -82,22 +78,19 @@ impl IgdbService for IgdbServiceHandlers {
                 }
             };
 
-            let mut conn = self
-                .db_pool
-                .get()
-                .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+            let platform_exists: bool =
+                sqlx::query_scalar("select exists(select 1 from platforms where id = $1)")
+                    .bind(&query.platform_id)
+                    .fetch_one(&self.db_pool)
+                    .await
+                    .map_err(|why| Status::internal(why.to_string()))?;
 
-            let platform = match schema::platforms::table
-                .find(query.platform_id)
-                .first::<retrom::Platform>(&mut conn)
-                .await
-            {
-                Ok(platform) => platform,
-                Err(why) => {
-                    return Err(Status::internal(why.to_string()));
-                }
-            };
+            if !platform_exists {
+                return Err(Status::not_found(format!(
+                    "Platform not found: {}",
+                    query.platform_id
+                )));
+            }
 
             let igdb_provider = self.igdb_client.clone();
 
@@ -106,7 +99,7 @@ impl IgdbService for IgdbServiceHandlers {
                 .await
                 .into_iter()
                 .map(|mut meta| {
-                    meta.platform_id = Some(platform.id);
+                    meta.platform_id = Some(query.platform_id.clone());
                     meta
                 })
                 .collect();

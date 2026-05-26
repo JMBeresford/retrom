@@ -3,12 +3,13 @@ use retrom_codegen::retrom::services::metadata::v1::igdb_service_server::IgdbSer
 use retrom_db::DbPool;
 use retrom_service_common::metadata_providers::igdb::provider::IGDBProvider;
 use retrom_service_config::config::ServerConfigManager;
+use std::sync::Arc;
 
 pub fn igdb_router(db_pool: DbPool) -> axum::Router {
     let config_manager =
         Arc::new(ServerConfigManager::new().expect("Could not create config manager"));
 
-    let igdb_client = Arc::new(IgdbProvider::new(config_manager));
+    let igdb_client = Arc::new(IGDBProvider::new(config_manager));
 
     let svc = IgdbServiceServer::new(IgdbServiceHandlers {
         db_pool,

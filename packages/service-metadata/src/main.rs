@@ -1,15 +1,15 @@
-use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use retrom_service_common::{
-    media_cache::MediaCache,
-    metadata_providers::{igdb::provider::IGDBProvider, steam::provider::SteamWebApiProvider},
-};
+use retrom_codegen::descriptors::retrom::FILE_DESCRIPTOR_SET;
 use retrom_service_config::config::ServerConfigManager;
-use retrom_service_jobs::job_manager::JobManager;
 use retrom_service_metadata::metadata_router;
 use retrom_telemetry::init_tracing_subscriber;
-use std::{net::SocketAddr, process::exit, sync::Arc};
+use std::{net::SocketAddr, process::exit};
 
 const DEFAULT_PORT: u16 = 5110;
+
+#[cfg(not(feature = "postgres"))]
+const DEFAULT_DB_URL: &str = "sqlite://retrom-dev.db";
+
+#[cfg(feature = "postgres")]
 const DEFAULT_DB_URL: &str = "postgres://retrom@localhost/retrom";
 
 #[tokio::main]
@@ -37,31 +37,40 @@ async fn main() {
         .and_then(|conn| conn.db_url)
         .unwrap_or_else(|| DEFAULT_DB_URL.to_string());
 
-    let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(&db_url);
+    let pool = retrom_db::connect(&db_url).await.unwrap_or_else(|err| {
+        eprintln!("Failed to connect to database: {err:#?}");
+        exit(1);
+    });
 
-    let pool = Arc::new(
-        deadpool::managed::Pool::builder(pool_config)
-            .build()
-            .expect("Could not create database pool"),
-    );
-
-    let config_manager = Arc::new(config_manager);
-    let igdb_client = Arc::new(IGDBProvider::new(config_manager.clone()));
-    let steam_web_api_client = Arc::new(SteamWebApiProvider::new(config_manager.clone()));
-    let media_cache = Arc::new(MediaCache::new(config_manager.clone()));
-    let job_manager = Arc::new(JobManager::new());
+    retrom_db::run_migrations(&pool, &db_url)
+        .await
+        .unwrap_or_else(|err| {
+            eprintln!("Failed to run database migrations: {err:#?}");
+            exit(1);
+        });
 
     let addr: SocketAddr = format!("0.0.0.0:{DEFAULT_PORT}").parse().unwrap();
 
-    let router = metadata_router(
-        pool,
-        igdb_client,
-        steam_web_api_client,
-        media_cache,
-        job_manager,
-        config_manager,
-    )
-    .layer(tonic_web::GrpcWebLayer::new());
+    let reflection_service = tonic_reflection::server::Builder::configure()
+        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
+        .build_v1()
+        .unwrap();
+
+    let reflection_service_alpha = tonic_reflection::server::Builder::configure()
+        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
+        .build_v1alpha()
+        .unwrap();
+
+    let mut reflection_route_builder = tonic::service::Routes::builder();
+    reflection_route_builder
+        .add_service(reflection_service)
+        .add_service(reflection_service_alpha);
+
+    let reflection_router = reflection_route_builder.routes();
+
+    let router = metadata_router(pool)
+        .layer(tonic_web::GrpcWebLayer::new())
+        .merge(reflection_router.into_axum_router().reset_fallback());
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await

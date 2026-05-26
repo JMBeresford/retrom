@@ -19,11 +19,10 @@ retrom-service-common = { workspace = true }
 retrom-service-config = { workspace = true }
 retrom-service-jobs = { workspace = true }
 retrom-telemetry = { workspace = true }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
 deadpool = { workspace = true }
 tonic = { workspace = true }
 tonic-web = { workspace = true }
+tonic-reflection = { workspace = true }
 axum = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
@@ -31,3 +30,10 @@ futures = { workspace = true }
 walkdir = { workspace = true }
 chrono = { workspace = true }
 dotenvy = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+
+[features]
+default = []
+sqlite = ["retrom-db/sqlite"]
+postgres = ["retrom-db/postgres"]

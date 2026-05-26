@@ -1,12 +1,31 @@
-use retrom_codegen::retrom::services::metadata::v1::{
-    metadata_service_server::MetadataService, GetGameMetadataRequest, GetGameMetadataResponse,
+use futures::future::join_all;
+use retrom_codegen::{
+    retrom::services::{
+        jobs::v1::JobStatus,
+        library::v1::Game,
+        metadata::v1::{
+            get_game_metadata_response::{MediaPaths, SimilarGames},
+            metadata_service_server::MetadataService, DeleteLocalMetadataRequest,
+            DeleteLocalMetadataResponse, GameMetadata, GetGameMetadataRequest,
+            GetGameMetadataResponse, GetLocalMetadataStatusRequest, GetLocalMetadataStatusResponse,
+            GetPlatformMetadataRequest, GetPlatformMetadataResponse, PlatformMetadata,
+            UpdateGameMetadataRequest, UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
+            UpdatePlatformMetadataResponse,
+        },
+    },
+    timestamp::Timestamp,
 };
-use retrom_db::DbPool;
-use retrom_service_common::media_cache::MediaCache;
-use retrom_service_config::config::ServerConfigManager;
+use retrom_db::{DbPool, RetromDB};
+use retrom_service_common::media_cache::{
+    cacheable_media::CacheableMetadata, get_public_url, MediaCache,
+};
+use retrom_service_config::{config::ServerConfigManager, retrom_dirs::RetromDirs};
 use retrom_service_jobs::job_manager::JobManager;
-use std::sync::Arc;
+use sqlx::QueryBuilder;
+use std::{collections::HashMap, fmt::Display, future::Future, sync::Arc};
 use tonic::{Request, Response, Status};
+use tracing::{error, Instrument};
+use walkdir::WalkDir;
 
 pub(crate) mod router;
 
@@ -16,6 +35,77 @@ pub struct MetadataServiceHandlers {
     pub media_cache: Arc<MediaCache>,
     pub job_manager: Arc<JobManager>,
     pub config_manager: Arc<ServerConfigManager>,
+}
+
+#[derive(sqlx::FromRow)]
+struct DbGameMetadata {
+    id: String,
+    game_id: String,
+    created_at: Option<Timestamp>,
+    updated_at: Option<Timestamp>,
+    name: Option<String>,
+    description: Option<String>,
+    cover_url: Option<String>,
+    background_url: Option<String>,
+    icon_url: Option<String>,
+    logo_url: Option<String>,
+    igdb_id: Option<String>,
+    release_date: Option<Timestamp>,
+    last_played: Option<Timestamp>,
+    minutes_played: Option<i32>,
+}
+
+#[derive(sqlx::FromRow)]
+struct DbPlatformMetadata {
+    id: String,
+    platform_id: String,
+    created_at: Option<Timestamp>,
+    updated_at: Option<Timestamp>,
+    name: Option<String>,
+    description: Option<String>,
+    background_url: Option<String>,
+    icon_url: Option<String>,
+    logo_url: Option<String>,
+    igdb_id: Option<String>,
+}
+
+impl From<DbGameMetadata> for GameMetadata {
+    fn from(value: DbGameMetadata) -> Self {
+        Self {
+            id: value.id,
+            game_id: value.game_id,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+            name: value.name,
+            description: value.description,
+            cover_url: value.cover_url,
+            background_url: value.background_url,
+            icon_url: value.icon_url,
+            logo_url: value.logo_url,
+            igdb_id: value.igdb_id.and_then(|id| id.parse().ok()),
+            links: vec![],
+            release_date: value.release_date,
+            last_played: value.last_played,
+            minutes_played: value.minutes_played,
+        }
+    }
+}
+
+impl From<DbPlatformMetadata> for PlatformMetadata {
+    fn from(value: DbPlatformMetadata) -> Self {
+        Self {
+            id: value.id,
+            platform_id: value.platform_id,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+            name: value.name,
+            description: value.description,
+            background_url: value.background_url,
+            icon_url: value.icon_url,
+            logo_url: value.logo_url,
+            igdb_id: value.igdb_id.and_then(|id| id.parse().ok()),
+        }
+    }
 }
 
 impl MetadataServiceHandlers {
@@ -32,6 +122,82 @@ impl MetadataServiceHandlers {
             config_manager,
         }
     }
+
+    async fn fetch_game_metadata_links(
+        &self,
+        metadata_ids: &[String],
+    ) -> Result<HashMap<String, Vec<String>>, Status> {
+        if metadata_ids.is_empty() {
+            return Ok(HashMap::new());
+        }
+
+        let mut builder =
+            QueryBuilder::<RetromDB>::new("select game_metadata_id, url from game_metadata_links where game_metadata_id in (");
+        let mut separated = builder.separated(", ");
+        for id in metadata_ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(")");
+
+        let rows: Vec<(String, String)> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let mut links = HashMap::new();
+        for (metadata_id, url) in rows {
+            links.entry(metadata_id).or_insert_with(Vec::new).push(url);
+        }
+
+        Ok(links)
+    }
+}
+
+async fn spawn_cache_job<E, F>(job_manager: Arc<JobManager>, job_name: String, tasks: Vec<F>)
+where
+    E: Display + Send + 'static,
+    F: Future<Output = Result<(), E>> + Send + 'static,
+{
+    if tasks.is_empty() {
+        return;
+    }
+
+    let job = job_manager
+        .create_job(job_name.clone(), "Queued media cache job".to_string())
+        .await;
+    let job_id = job.id;
+
+    tokio::spawn(async move {
+        let _ = job_manager
+            .update_job(
+                &job_id,
+                Some(0.0),
+                Some(JobStatus::Running),
+                Some("Caching media files".to_string()),
+            )
+            .await;
+
+        let results = join_all(tasks).await;
+        let failed = results.iter().any(Result::is_err);
+        for result in results {
+            if let Err(err) = result {
+                tracing::warn!("Failed to cache media file: {}", err);
+            }
+        }
+
+        let _ = job_manager
+            .complete_job(
+                &job_id,
+                failed,
+                if failed {
+                    "Media cache job completed with errors".to_string()
+                } else {
+                    "Media cache job completed".to_string()
+                },
+            )
+            .await;
+    });
 }
 
 #[tonic::async_trait]
@@ -40,83 +206,70 @@ impl MetadataService for MetadataServiceHandlers {
         &self,
         request: Request<GetGameMetadataRequest>,
     ) -> Result<Response<GetGameMetadataResponse>, Status> {
-        let request = request.into_inner();
-        let game_ids = request.game_ids;
+        let game_ids = request.into_inner().game_ids;
 
-        let mut conn = match self.db_pool.get().await {
-            Ok(conn) => conn,
-            Err(why) => {
-                return Err(Status::internal(why.to_string()));
+        let mut metadata_builder = QueryBuilder::<RetromDB>::new(
+            "select id, game_id, created_at, updated_at, name, description, cover_url, background_url, icon_url, logo_url, igdb_id, release_date, last_played, minutes_played from game_metadata",
+        );
+
+        if !game_ids.is_empty() {
+            metadata_builder.push(" where game_id in (");
+            let mut separated = metadata_builder.separated(", ");
+            for id in &game_ids {
+                separated.push_bind(id);
             }
-        };
+            separated.push_unseparated(")");
+        }
 
-        let metadata = match retrom_db::schema::game_metadata::table
-            .filter(retrom_db::schema::game_metadata::game_id.eq_any(&game_ids))
-            .load::<retrom::GameMetadata>(&mut conn)
-            .instrument(tracing::info_span!("load_game_metadata"))
-            .await
-        {
-            Ok(rows) => rows,
-            Err(why) => {
-                return Err(Status::internal(why.to_string()));
-            }
-        };
-
-        let (games1, games2) = diesel::alias!(schema::games as games1, schema::games as games2);
-
-        let games: Vec<Game> = games1
-            .filter(games1.field(schema::games::id).eq_any(game_ids))
-            .load::<retrom::Game>(&mut conn)
-            .instrument(tracing::info_span!("load_games"))
+        let metadata_rows: Vec<DbGameMetadata> = metadata_builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let genre_maps: Vec<(GameGenreMap, GameGenre)> = GameGenreMap::belonging_to(&games)
-            .inner_join(schema::game_genres::table)
-            .select((GameGenreMap::as_select(), GameGenre::as_select()))
-            .load(&mut conn)
-            .instrument(tracing::info_span!("load_genre_maps"))
+        let metadata_ids = metadata_rows
+            .iter()
+            .map(|row| row.id.clone())
+            .collect::<Vec<_>>();
+        let links = self.fetch_game_metadata_links(&metadata_ids).await?;
+
+        let metadata = metadata_rows
+            .into_iter()
+            .map(|row| {
+                let mut metadata = GameMetadata::from(row);
+                metadata.links = links.remove(&metadata.id).unwrap_or_default();
+                metadata
+            })
+            .collect::<Vec<_>>();
+
+        let mut similar_games = HashMap::new();
+        for game_id in &game_ids {
+            let games: Vec<Game> = sqlx::query_as(
+                r#"
+                select
+                    g.id,
+                    g.path,
+                    null as platform_id,
+                    g.created_at,
+                    g.updated_at,
+                    g.deleted_at,
+                    g.is_deleted,
+                    null as default_file_id,
+                    g.storage_type,
+                    g.third_party,
+                    g.steam_app_id
+                from games g
+                inner join similar_games sg on sg.similar_game_id = g.id
+                where sg.game_id = $1
+                "#,
+            )
+            .bind(game_id)
+            .fetch_all(&self.db_pool)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let genres: HashMap<i32, GameGenres> = genre_maps
-            .grouped_by(&games)
-            .into_iter()
-            .zip(&games)
-            .map(|(maps, game)| {
-                let genres = maps
-                    .into_iter()
-                    .map(|map| map.1)
-                    .collect::<Vec<GameGenre>>();
-
-                (game.id, GameGenres { value: genres })
-            })
-            .collect();
-
-        let similar_maps_flat: Vec<(SimilarGameMap, Game)> =
-            SimilarGameMap::belonging_to(&games)
-                .inner_join(games2.on(
-                    schema::similar_game_maps::similar_game_id.eq(games2.field(schema::games::id)),
-                ))
-                .select((
-                    SimilarGameMap::as_select(),
-                    games2.fields(schema::games::all_columns),
-                ))
-                .load(&mut conn)
-                .instrument(tracing::info_span!("load_similar_game_maps"))
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?;
-
-        let similar_games: HashMap<i32, SimilarGames> = similar_maps_flat
-            .grouped_by(&games)
-            .into_iter()
-            .zip(games)
-            .map(|(maps, game)| {
-                let games: Vec<Game> = maps.into_iter().map(|map| map.1).collect();
-
-                (game.id, SimilarGames { value: games })
-            })
-            .collect();
+            similar_games.insert(game_id.clone(), SimilarGames { value: games });
+        }
 
         let config = self.config_manager.get_config().await;
         let store_metadata = config
@@ -124,7 +277,6 @@ impl MetadataService for MetadataServiceHandlers {
             .map(|m| m.store_metadata_locally)
             .unwrap_or(false);
 
-        // Build media paths for each game from the local cache
         let media_futures = if store_metadata {
             metadata
                 .iter()
@@ -147,10 +299,11 @@ impl MetadataService for MetadataServiceHandlers {
                             for media_opts in cache_opts.into_iter() {
                                 let cache_path = match media_opts.get_item_path().await {
                                     Ok(path) => path,
-                                    _ => {
+                                    Err(why) => {
                                         tracing::warn!(
-                                            "Failed to get cache path for media opts: {:?}",
-                                            media_opts
+                                            "Failed to get cache path for media opts: {:?}: {}",
+                                            media_opts,
+                                            why
                                         );
                                         continue;
                                     }
@@ -164,24 +317,16 @@ impl MetadataService for MetadataServiceHandlers {
                                     .unwrap_or(true);
 
                                 if needs_caching {
+                                    let meta_clone = meta_clone.clone();
                                     cache_tasks.push(async move {
-                                        if let Err(e) =
-                                            cache_clone.cache_media_file(&media_opts).await
-                                        {
+                                        cache_clone.cache_media_file(&media_opts).await.map_err(|e| {
                                             tracing::warn!(
                                                 "Failed to cache media for game {}: {}",
                                                 meta_clone.game_id,
                                                 e
                                             );
-
-                                            Err(Status::internal(e.to_string()))
-                                        } else {
-                                            tracing::debug!(
-                                                "Successfully cached media for game {}",
-                                                meta_clone.game_id
-                                            );
-                                            Ok(())
-                                        }
+                                            e
+                                        })
                                     });
 
                                     continue;
@@ -191,14 +336,12 @@ impl MetadataService for MetadataServiceHandlers {
                                     Ok(url) => url,
                                     Err(why) => {
                                         tracing::warn!(
-                                    "Failed to get public URL for cached media at path: {why:?}",
-                                );
-
+                                            "Failed to get public URL for cached media at path: {why:?}",
+                                        );
                                         continue;
                                     }
                                 };
 
-                                // Map based on file structure and naming using PathBuf methods
                                 match media_opts.semantic_name.as_deref() {
                                     Some("cover") => paths.cover_url = Some(public_url.clone()),
                                     Some("background") => {
@@ -213,17 +356,22 @@ impl MetadataService for MetadataServiceHandlers {
                                 });
 
                                 match base_dir.as_deref() {
-                                    Some("artwork") => {
-                                        paths.artwork_urls.push(public_url);
-                                    }
-                                    Some("screenshots") => {
-                                        paths.screenshot_urls.push(public_url);
-                                    }
+                                    Some("artwork") => paths.artwork_urls.push(public_url),
+                                    Some("screenshots") => paths.screenshot_urls.push(public_url),
+                                    Some("videos") => paths.video_urls.push(public_url),
                                     _ => {}
                                 };
                             }
 
-                            // Only include games that actually have cached media
+                            if !cache_tasks.is_empty() {
+                                spawn_cache_job(
+                                    self.job_manager.clone(),
+                                    format!("Cache Media Files For Game {}", meta.game_id),
+                                    cache_tasks,
+                                )
+                                .await;
+                            }
+
                             if paths.cover_url.is_some()
                                 || paths.background_url.is_some()
                                 || paths.icon_url.is_some()
@@ -231,27 +379,7 @@ impl MetadataService for MetadataServiceHandlers {
                                 || !paths.screenshot_urls.is_empty()
                                 || !paths.video_urls.is_empty()
                             {
-                                return Some((meta.game_id, paths));
-                            }
-
-                            let job_name =
-                                format!("Cache Media Files For Game {}", meta_clone.game_id);
-
-                            if !cache_tasks.is_empty() {
-                                let job_manager = self.job_manager.clone();
-                                match job_manager.spawn(&job_name, cache_tasks, None).await {
-                                    Ok(job_id) => {
-                                        tracing::debug!(
-                                            "Spawned background job to cache media for game {}: {}",
-                                            meta.game_id,
-                                            job_id
-                                        );
-                                    }
-                                    Err(JobError::JobAlreadyRunning(_)) => {}
-                                    Err(why) => {
-                                        tracing::error!("Failed to spawn cache job: {}", why);
-                                    }
-                                }
+                                return Some((meta.game_id.clone(), paths));
                             }
                         }
 
@@ -267,7 +395,7 @@ impl MetadataService for MetadataServiceHandlers {
             vec![]
         };
 
-        let media_paths: HashMap<i32, MediaPaths> = join_all(media_futures)
+        let media_paths: HashMap<String, MediaPaths> = join_all(media_futures)
             .await
             .into_iter()
             .flatten()
@@ -275,7 +403,6 @@ impl MetadataService for MetadataServiceHandlers {
 
         Ok(Response::new(GetGameMetadataResponse {
             metadata,
-            genres,
             similar_games,
             media_paths,
         }))
@@ -285,8 +412,7 @@ impl MetadataService for MetadataServiceHandlers {
         &self,
         request: Request<UpdateGameMetadataRequest>,
     ) -> Result<Response<UpdateGameMetadataResponse>, Status> {
-        let request = request.into_inner();
-        let metadata_to_update = request.metadata;
+        let metadata_to_update = request.into_inner().metadata;
         let config = self.config_manager.get_config().await;
         let store_metadata = config
             .metadata
@@ -294,60 +420,123 @@ impl MetadataService for MetadataServiceHandlers {
             .unwrap_or(false);
 
         join_all(metadata_to_update.iter().map(|metadata| async {
-            let job_manager = self.job_manager.clone();
-            let cache = self.media_cache.clone();
-
             if let Err(e) = metadata.clean_cache().await {
                 error!("Failed to clean cache for metadata: {}", e);
                 return;
             }
 
-            let opts = metadata.get_cacheable_media_opts();
-
-            let job_name = format!("Cache Media Files For Game {}", metadata.game_id);
-
             if store_metadata {
-                let tasks = opts
+                let tasks = metadata
+                    .get_cacheable_media_opts()
                     .into_iter()
-                    .map(|opt| {
-                        let cache_clone = cache.clone();
-                        async move { cache_clone.cache_media_file(&opt).await }
+                    .map({
+                        let cache = self.media_cache.clone();
+                        move |opt| {
+                            let cache = cache.clone();
+                            async move { cache.cache_media_file(&opt).await }
+                        }
                     })
                     .collect();
 
-                if let Err(why) = job_manager.spawn(&job_name, tasks, None).await {
-                    error!("Failed to spawn job for caching media: {}", why);
-                }
+                spawn_cache_job(
+                    self.job_manager.clone(),
+                    format!("Cache Media Files For Game {}", metadata.game_id),
+                    tasks,
+                )
+                .await;
             };
         }))
         .await;
 
-        let mut conn = match self.db_pool.get().await {
-            Ok(conn) => conn,
-            Err(why) => {
-                return Err(Status::internal(why.to_string()));
-            }
-        };
-
-        let mut metadata_updated: Vec<retrom::GameMetadata> = vec![];
+        let mut tx = self
+            .db_pool
+            .begin()
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+        let mut metadata_updated = vec![];
 
         for metadata_row in metadata_to_update {
-            let updated_row = match diesel::insert_into(retrom_db::schema::game_metadata::table)
-                .values(&metadata_row)
-                .on_conflict(retrom_db::schema::game_metadata::game_id)
-                .do_update()
-                .set(&metadata_row)
-                .get_result::<retrom::GameMetadata>(&mut conn)
-                .await
-            {
-                Ok(row) => row,
-                Err(why) => {
-                    return Err(Status::internal(why.to_string()));
-                }
-            };
+            let existing_id: Option<String> =
+                sqlx::query_scalar("select id from game_metadata where game_id = $1")
+                    .bind(&metadata_row.game_id)
+                    .fetch_optional(&mut *tx)
+                    .await
+                    .map_err(|e| Status::internal(e.to_string()))?;
 
-            metadata_updated.push(updated_row);
+            let row_id = existing_id.unwrap_or_else(|| {
+                if metadata_row.id.trim().is_empty() {
+                    uuid::Uuid::now_v7().to_string()
+                } else {
+                    metadata_row.id.clone()
+                }
+            });
+
+            let updated_row: DbGameMetadata = sqlx::query_as(
+                r#"
+                insert into game_metadata (
+                    id, game_id, name, description, cover_url, background_url, icon_url, logo_url,
+                    igdb_id, release_date, last_played, minutes_played
+                )
+                values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                on conflict (id) do update set
+                    game_id = excluded.game_id,
+                    name = excluded.name,
+                    description = excluded.description,
+                    cover_url = excluded.cover_url,
+                    background_url = excluded.background_url,
+                    icon_url = excluded.icon_url,
+                    logo_url = excluded.logo_url,
+                    igdb_id = excluded.igdb_id,
+                    release_date = excluded.release_date,
+                    last_played = excluded.last_played,
+                    minutes_played = excluded.minutes_played,
+                    updated_at = current_timestamp
+                returning id, game_id, created_at, updated_at, name, description, cover_url,
+                    background_url, icon_url, logo_url, igdb_id, release_date, last_played,
+                    minutes_played
+                "#,
+            )
+            .bind(&row_id)
+            .bind(&metadata_row.game_id)
+            .bind(&metadata_row.name)
+            .bind(&metadata_row.description)
+            .bind(&metadata_row.cover_url)
+            .bind(&metadata_row.background_url)
+            .bind(&metadata_row.icon_url)
+            .bind(&metadata_row.logo_url)
+            .bind(metadata_row.igdb_id.map(|id| id.to_string()))
+            .bind(&metadata_row.release_date)
+            .bind(&metadata_row.last_played)
+            .bind(metadata_row.minutes_played)
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+            sqlx::query("delete from game_metadata_links where game_metadata_id = $1")
+                .bind(&row_id)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+
+            for link in &metadata_row.links {
+                sqlx::query(
+                    "insert into game_metadata_links (game_metadata_id, url) values ($1, $2) on conflict do nothing",
+                )
+                .bind(&row_id)
+                .bind(link)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+            }
+
+            let mut updated = GameMetadata::from(updated_row);
+            updated.links = metadata_row.links;
+            metadata_updated.push(updated);
         }
+
+        tx.commit()
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(UpdateGameMetadataResponse {
             metadata_updated,
@@ -358,26 +547,29 @@ impl MetadataService for MetadataServiceHandlers {
         &self,
         request: Request<GetPlatformMetadataRequest>,
     ) -> Result<Response<GetPlatformMetadataResponse>, Status> {
-        let request = request.into_inner();
-        let platform_ids = request.platform_ids;
+        let platform_ids = request.into_inner().platform_ids;
 
-        let mut conn = match self.db_pool.get().await {
-            Ok(conn) => conn,
-            Err(why) => {
-                return Err(Status::internal(why.to_string()));
+        let mut builder = QueryBuilder::<RetromDB>::new(
+            "select id, platform_id, created_at, updated_at, name, description, background_url, icon_url, logo_url, igdb_id from platform_metadata",
+        );
+
+        if !platform_ids.is_empty() {
+            builder.push(" where platform_id in (");
+            let mut separated = builder.separated(", ");
+            for id in &platform_ids {
+                separated.push_bind(id);
             }
-        };
+            separated.push_unseparated(")");
+        }
 
-        let metadata = match retrom_db::schema::platform_metadata::table
-            .filter(retrom_db::schema::platform_metadata::platform_id.eq_any(platform_ids))
-            .load::<retrom::PlatformMetadata>(&mut conn)
+        let metadata = builder
+            .build_query_as::<DbPlatformMetadata>()
+            .fetch_all(&self.db_pool)
             .await
-        {
-            Ok(rows) => rows,
-            Err(why) => {
-                return Err(Status::internal(why.to_string()));
-            }
-        };
+            .map_err(|e| Status::internal(e.to_string()))?
+            .into_iter()
+            .map(PlatformMetadata::from)
+            .collect();
 
         Ok(Response::new(GetPlatformMetadataResponse { metadata }))
     }
@@ -386,71 +578,99 @@ impl MetadataService for MetadataServiceHandlers {
         &self,
         request: Request<UpdatePlatformMetadataRequest>,
     ) -> Result<Response<UpdatePlatformMetadataResponse>, Status> {
-        let request = request.into_inner();
-        let metadata_to_update = request.metadata;
+        let metadata_to_update = request.into_inner().metadata;
 
-        join_all(metadata_to_update.iter().map(|metadata| async move {
+        join_all(metadata_to_update.iter().map(|metadata| async {
             if let Err(e) = metadata.clean_cache().await {
                 error!("Failed to clean cache for platform metadata: {}", e);
                 return;
             }
 
-            let job_manager = self.job_manager.clone();
-            let cache = self.media_cache.clone();
-
-            let opts = metadata.get_cacheable_media_opts();
-
-            let job_name = format!("Cache Media Files For Platform {}", metadata.platform_id);
-
-            let tasks = opts
+            let tasks = metadata
+                .get_cacheable_media_opts()
                 .into_iter()
-                .map(|opt| {
-                    let cache_clone = cache.clone();
-                    async move { cache_clone.cache_media_file(&opt).await }
+                .map({
+                    let cache = self.media_cache.clone();
+                    move |opt| {
+                        let cache = cache.clone();
+                        async move { cache.cache_media_file(&opt).await }
+                    }
                 })
                 .collect();
 
-            if let Err(why) = job_manager.spawn(&job_name, tasks, None).await {
-                error!("Failed to spawn job for caching platform media: {}", why);
-            }
+            spawn_cache_job(
+                self.job_manager.clone(),
+                format!("Cache Media Files For Platform {}", metadata.platform_id),
+                tasks,
+            )
+            .await;
         }))
         .await;
 
-        let mut conn = match self.db_pool.get().await {
-            Ok(conn) => conn,
-            Err(why) => {
-                return Err(Status::internal(why.to_string()));
-            }
-        };
+        let mut tx = self
+            .db_pool
+            .begin()
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+        let mut metadata_updated = vec![];
 
-        conn.transaction(|mut conn| {
-            async move {
-                let mut metadata_updated: Vec<retrom::PlatformMetadata> = vec![];
+        for metadata_row in metadata_to_update {
+            let existing_id: Option<String> =
+                sqlx::query_scalar("select id from platform_metadata where platform_id = $1")
+                    .bind(&metadata_row.platform_id)
+                    .fetch_optional(&mut *tx)
+                    .await
+                    .map_err(|e| Status::internal(e.to_string()))?;
 
-                for metadata_row in metadata_to_update {
-                    let updated_row =
-                        diesel::insert_into(retrom_db::schema::platform_metadata::table)
-                            .values(&metadata_row)
-                            .on_conflict(retrom_db::schema::platform_metadata::platform_id)
-                            .do_update()
-                            .set(&metadata_row)
-                            .get_result::<retrom::PlatformMetadata>(&mut conn)
-                            .await?;
-
-                    metadata_updated.push(updated_row);
+            let row_id = existing_id.unwrap_or_else(|| {
+                if metadata_row.id.trim().is_empty() {
+                    uuid::Uuid::now_v7().to_string()
+                } else {
+                    metadata_row.id.clone()
                 }
+            });
 
-                diesel::result::QueryResult::Ok(Response::new(UpdatePlatformMetadataResponse {
-                    metadata_updated,
-                }))
-            }
-            .scope_boxed()
-        })
-        .await
-        .map_err(|why| {
-            error!("Failed to update platform metadata: {}", why);
-            Status::internal(why.to_string())
-        })
+            let updated_row: DbPlatformMetadata = sqlx::query_as(
+                r#"
+                insert into platform_metadata (
+                    id, platform_id, name, description, background_url, icon_url, logo_url, igdb_id
+                )
+                values ($1, $2, $3, $4, $5, $6, $7, $8)
+                on conflict (id) do update set
+                    platform_id = excluded.platform_id,
+                    name = excluded.name,
+                    description = excluded.description,
+                    background_url = excluded.background_url,
+                    icon_url = excluded.icon_url,
+                    logo_url = excluded.logo_url,
+                    igdb_id = excluded.igdb_id,
+                    updated_at = current_timestamp
+                returning id, platform_id, created_at, updated_at, name, description,
+                    background_url, icon_url, logo_url, igdb_id
+                "#,
+            )
+            .bind(&row_id)
+            .bind(&metadata_row.platform_id)
+            .bind(&metadata_row.name)
+            .bind(&metadata_row.description)
+            .bind(&metadata_row.background_url)
+            .bind(&metadata_row.icon_url)
+            .bind(&metadata_row.logo_url)
+            .bind(metadata_row.igdb_id.map(|id| id.to_string()))
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+            metadata_updated.push(PlatformMetadata::from(updated_row));
+        }
+
+        tx.commit()
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        Ok(Response::new(UpdatePlatformMetadataResponse {
+            metadata_updated,
+        }))
     }
 
     async fn get_local_metadata_status(
