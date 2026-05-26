@@ -1,18 +1,22 @@
 use retrom_codegen::retrom::services::metadata::v1::{
     igdb_service_server::IgdbService, GetIgdbGameSearchResultsRequest,
+    GetIgdbGameSearchResultsResponse,
 };
+use retrom_db::DbPool;
 use retrom_service_common::metadata_providers::igdb::provider::IGDBProvider;
+use std::sync::Arc;
+use tonic::{Request, Response, Status};
 
 pub(crate) mod router;
 
 #[derive(Clone)]
 pub struct IgdbServiceHandlers {
-    pub db_pool: Arc<Pool>,
+    pub db_pool: DbPool,
     pub igdb_client: Arc<IGDBProvider>,
 }
 
 impl IgdbServiceHandlers {
-    pub fn new(db_pool: Arc<Pool>, igdb_client: Arc<IGDBProvider>) -> Self {
+    pub fn new(db_pool: DbPool, igdb_client: Arc<IGDBProvider>) -> Self {
         Self {
             db_pool,
             igdb_client,

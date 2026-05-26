@@ -3,7 +3,7 @@ use retrom_codegen::retrom::services::metadata::v1::metadata_service_server::Met
 use retrom_db::DbPool;
 use retrom_service_common::media_cache::MediaCache;
 use retrom_service_config::config::ServerConfigManager;
-use retrom_service_library::job_manager::JobManager;
+use retrom_service_jobs::job_manager::JobManager;
 use std::sync::Arc;
 
 pub fn metadata_router(db_pool: DbPool) -> axum::Router {
