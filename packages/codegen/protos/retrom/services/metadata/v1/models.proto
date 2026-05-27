@@ -21,7 +21,7 @@ message GameMetadata {
   google.protobuf.Timestamp release_date = 13;
   google.protobuf.Timestamp last_played = 14;
   optional int32 minutes_played = 15;
-  optional string provider_id = 16;
+  string provider_id = 16;
 }
 
 message PlatformMetadata {
@@ -35,7 +35,7 @@ message PlatformMetadata {
   optional string icon_url = 8;
   optional string logo_url = 9;
   optional int64 igdb_id = 10;
-  optional string provider_id = 11;
+  string provider_id = 11;
 }
 
 message SimilarGame {
@@ -85,4 +85,12 @@ message ArtworkMetadata {
   string url = 3;
   google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// LinkMetadata is a single URL link associated with a game_metadata record.
+// Normalises the deprecated game_metadata.links array column.
+message LinkMetadata {
+  // References game_metadata.id.
+  string game_metadata_id = 1;
+  string url = 2;
 }

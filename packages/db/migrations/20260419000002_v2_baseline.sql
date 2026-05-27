@@ -99,7 +99,7 @@ create table if not exists platform_metadata (
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     icon_url text,
-    provider_id text references metadata_providers (id) on delete set null,
+    provider_id text not null references metadata_providers (id) on delete cascade,
     constraint platform_metadata_platform_provider_unique unique (platform_id, provider_id)
 );
 
@@ -118,7 +118,7 @@ create table if not exists game_metadata (
     last_played text,
     minutes_played integer,
     logo_url text,
-    provider_id text references metadata_providers (id) on delete set null,
+    provider_id text not null references metadata_providers (id) on delete cascade,
     constraint game_metadata_game_provider_unique unique (game_id, provider_id)
 );
 

@@ -9,8 +9,8 @@ use retrom_codegen::{
             DeleteLocalMetadataRequest, DeleteLocalMetadataResponse, GameMetadata,
             GetGameMetadataRequest, GetGameMetadataResponse, GetLocalMetadataStatusRequest,
             GetLocalMetadataStatusResponse, GetPlatformMetadataRequest,
-            GetPlatformMetadataResponse, PlatformMetadata, UpdateGameMetadataRequest,
-            UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
+            GetPlatformMetadataResponse, LinkMetadata, PlatformMetadata,
+            UpdateGameMetadataRequest, UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
             UpdatePlatformMetadataResponse,
         },
     },
@@ -69,15 +69,18 @@ impl MetadataServiceHandlers {
         }
         separated.push_unseparated(")");
 
-        let rows: Vec<(String, String)> = builder
+        let rows: Vec<LinkMetadata> = builder
             .build_query_as()
             .fetch_all(&self.db_pool)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         let mut links = HashMap::new();
-        for (metadata_id, url) in rows {
-            links.entry(metadata_id).or_insert_with(Vec::new).push(url);
+        for row in rows {
+            links
+                .entry(row.game_metadata_id)
+                .or_insert_with(Vec::new)
+                .push(row.url);
         }
 
         Ok(links)
@@ -407,6 +410,12 @@ impl MetadataService for MetadataServiceHandlers {
         let mut metadata_updated = vec![];
 
         for metadata_row in metadata_to_update {
+            if metadata_row.provider_id.is_empty() {
+                return Err(Status::invalid_argument(
+                    "provider_id is required for game metadata",
+                ));
+            }
+
             let row_id = if metadata_row.id.trim().is_empty() {
                 uuid::Uuid::now_v7().to_string()
             } else {
@@ -571,6 +580,12 @@ impl MetadataService for MetadataServiceHandlers {
         let mut metadata_updated = vec![];
 
         for metadata_row in metadata_to_update {
+            if metadata_row.provider_id.is_empty() {
+                return Err(Status::invalid_argument(
+                    "provider_id is required for platform metadata",
+                ));
+            }
+
             let row_id = if metadata_row.id.trim().is_empty() {
                 uuid::Uuid::now_v7().to_string()
             } else {

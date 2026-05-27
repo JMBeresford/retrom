@@ -28,6 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "retrom.services.metadata.v1.GameMetadata",
         "retrom.services.metadata.v1.PlatformMetadata",
         "retrom.services.metadata.v1.MetadataProvider",
+        "retrom.services.metadata.v1.LinkMetadata",
         "retrom.services.emulators.v1.Emulator",
         "retrom.services.emulators.v1.EmulatorPlatform",
         "retrom.services.emulators.v1.EmulatorOperatingSystem",
