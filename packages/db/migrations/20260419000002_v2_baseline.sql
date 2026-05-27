@@ -95,10 +95,12 @@ create table if not exists platform_metadata (
     description text,
     background_url text,
     logo_url text,
-    igdb_id text,
+    igdb_id integer,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
-    icon_url text
+    icon_url text,
+    provider_id text references metadata_providers (id) on delete set null,
+    constraint platform_metadata_platform_provider_unique unique (platform_id, provider_id)
 );
 
 create table if not exists game_metadata (
@@ -109,13 +111,15 @@ create table if not exists game_metadata (
     cover_url text,
     background_url text,
     icon_url text,
-    igdb_id text,
+    igdb_id integer,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     release_date text,
     last_played text,
     minutes_played integer,
-    logo_url text
+    logo_url text,
+    provider_id text references metadata_providers (id) on delete set null,
+    constraint game_metadata_game_provider_unique unique (game_id, provider_id)
 );
 
 -- Relational replacements for the v1 array columns on game_metadata

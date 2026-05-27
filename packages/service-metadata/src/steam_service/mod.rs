@@ -67,6 +67,11 @@ impl SteamService for SteamServiceHandlers {
             .response
             .games;
 
+        let steam_games_map: std::collections::HashMap<u32, _> = steam_games
+            .iter()
+            .map(|g| (g.appid, g))
+            .collect();
+
         let mut tx = self
             .db_pool
             .begin()
@@ -82,10 +87,7 @@ impl SteamService for SteamServiceHandlers {
                 continue;
             };
 
-            let Some(steam_game) = steam_games
-                .iter()
-                .find(|steam_game| steam_game.appid == app_id)
-            else {
+            let Some(steam_game) = steam_games_map.get(&app_id) else {
                 continue;
             };
 

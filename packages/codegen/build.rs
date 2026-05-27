@@ -83,6 +83,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     build
+        .field_attribute(
+            "retrom.services.metadata.v1.GameMetadata.links",
+            "#[sqlx(skip)]",
+        )
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))
         .compile_protos(&proto_paths, &[PathBuf::from("./protos/")])?;
 

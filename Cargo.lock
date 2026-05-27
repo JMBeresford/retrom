@@ -9650,7 +9650,6 @@ version = "0.8.2"
 dependencies = [
  "axum",
  "chrono",
- "deadpool",
  "dotenvy",
  "futures",
  "retrom-codegen",

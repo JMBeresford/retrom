@@ -21,6 +21,7 @@ message GameMetadata {
   google.protobuf.Timestamp release_date = 13;
   google.protobuf.Timestamp last_played = 14;
   optional int32 minutes_played = 15;
+  optional string provider_id = 16;
 }
 
 message PlatformMetadata {
@@ -34,6 +35,7 @@ message PlatformMetadata {
   optional string icon_url = 8;
   optional string logo_url = 9;
   optional int64 igdb_id = 10;
+  optional string provider_id = 11;
 }
 
 message SimilarGame {

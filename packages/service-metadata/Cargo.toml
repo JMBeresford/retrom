@@ -19,7 +19,6 @@ retrom-service-common = { workspace = true }
 retrom-service-config = { workspace = true }
 retrom-service-jobs = { workspace = true }
 retrom-telemetry = { workspace = true }
-deadpool = { workspace = true }
 tonic = { workspace = true }
 tonic-web = { workspace = true }
 tonic-reflection = { workspace = true }
