@@ -74,15 +74,6 @@ impl IGDBProvider {
                 .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")),
         };
 
-        let mut links: Vec<String> = igdb_match
-            .websites
-            .into_iter()
-            .filter(|website| website.trusted)
-            .map(|website| website.url)
-            .collect();
-
-        links.push(igdb_match.url);
-
         GameMetadata {
             igdb_id,
             name,
@@ -90,7 +81,6 @@ impl IGDBProvider {
             cover_url,
             background_url,
             icon_url,
-            links,
             ..Default::default()
         }
     }

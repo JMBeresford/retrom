@@ -117,11 +117,6 @@ impl SteamWebApiProvider {
             name: app_details.name.clone(),
             cover_url,
             background_url,
-            links: app_details
-                .website
-                .as_ref()
-                .map(|website| vec![website.to_owned()])
-                .unwrap_or_default(),
             icon_url,
             last_played,
             minutes_played,

@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "retrom.services.metadata.v1.GameMetadata",
         "retrom.services.metadata.v1.PlatformMetadata",
         "retrom.services.metadata.v1.MetadataProvider",
-        "retrom.services.metadata.v1.LinkMetadata",
+        "retrom.services.metadata.v1.GameMetadataLink",
         "retrom.services.emulators.v1.Emulator",
         "retrom.services.emulators.v1.EmulatorPlatform",
         "retrom.services.emulators.v1.EmulatorOperatingSystem",
@@ -84,10 +84,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     build
-        .field_attribute(
-            "retrom.services.metadata.v1.GameMetadata.links",
-            "#[sqlx(skip)]",
-        )
         .file_descriptor_set_path(out_dir.join("retrom_descriptor.bin"))
         .compile_protos(&proto_paths, &[PathBuf::from("./protos/")])?;
 

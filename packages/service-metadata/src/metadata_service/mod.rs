@@ -9,7 +9,7 @@ use retrom_codegen::{
             DeleteLocalMetadataRequest, DeleteLocalMetadataResponse, GameMetadata,
             GetGameMetadataRequest, GetGameMetadataResponse, GetLocalMetadataStatusRequest,
             GetLocalMetadataStatusResponse, GetPlatformMetadataRequest,
-            GetPlatformMetadataResponse, LinkMetadata, PlatformMetadata,
+            GetPlatformMetadataResponse, PlatformMetadata,
             UpdateGameMetadataRequest, UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
             UpdatePlatformMetadataResponse,
         },
@@ -52,39 +52,6 @@ impl MetadataServiceHandlers {
         }
     }
 
-    async fn fetch_game_metadata_links(
-        &self,
-        metadata_ids: &[String],
-    ) -> Result<HashMap<String, Vec<String>>, Status> {
-        if metadata_ids.is_empty() {
-            return Ok(HashMap::new());
-        }
-
-        let mut builder = QueryBuilder::<RetromDB>::new(
-            "select game_metadata_id, url from game_metadata_links where game_metadata_id in (",
-        );
-        let mut separated = builder.separated(", ");
-        for id in metadata_ids {
-            separated.push_bind(id);
-        }
-        separated.push_unseparated(")");
-
-        let rows: Vec<LinkMetadata> = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-
-        let mut links = HashMap::new();
-        for row in rows {
-            links
-                .entry(row.game_metadata_id)
-                .or_insert_with(Vec::new)
-                .push(row.url);
-        }
-
-        Ok(links)
-    }
 }
 
 async fn spawn_cache_job<T, E, F>(job_manager: Arc<JobManager>, job_name: String, tasks: Vec<F>)
@@ -161,19 +128,7 @@ impl MetadataService for MetadataServiceHandlers {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let metadata_ids = metadata_rows
-            .iter()
-            .map(|row| row.id.clone())
-            .collect::<Vec<_>>();
-        let mut links = self.fetch_game_metadata_links(&metadata_ids).await?;
-
-        let metadata = metadata_rows
-            .into_iter()
-            .map(|mut row| {
-                row.links = links.remove(&row.id).unwrap_or_default();
-                row
-            })
-            .collect::<Vec<_>>();
+        let metadata = metadata_rows;
 
         let mut similar_games: HashMap<String, SimilarGames> = HashMap::new();
         if !game_ids.is_empty() {
@@ -469,36 +424,6 @@ impl MetadataService for MetadataServiceHandlers {
                 .await
                 .map_err(|e| Status::internal(e.to_string()))?;
 
-            let returned_id = updated_row.id.clone();
-
-            let mut del_builder = QueryBuilder::<RetromDB>::new(
-                "delete from game_metadata_links where game_metadata_id = ",
-            );
-            del_builder.push_bind(&returned_id);
-
-            del_builder
-                .build()
-                .execute(&mut *tx)
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?;
-
-            for link in &metadata_row.links {
-                let mut ins_builder = QueryBuilder::<RetromDB>::new(
-                    "insert into game_metadata_links (game_metadata_id, url) values (",
-                );
-                let mut separated = ins_builder.separated(", ");
-                separated.push_bind(&returned_id);
-                separated.push_bind(link);
-                separated.push_unseparated(") on conflict do nothing");
-
-                ins_builder
-                    .build()
-                    .execute(&mut *tx)
-                    .await
-                    .map_err(|e| Status::internal(e.to_string()))?;
-            }
-
-            updated_row.links = metadata_row.links;
             metadata_updated.push(updated_row);
         }
 
