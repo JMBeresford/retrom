@@ -90,7 +90,6 @@ create table if not exists platform_metadata (
     description text,
     background_url text,
     logo_url text,
-    igdb_id integer,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     icon_url text,
@@ -106,7 +105,6 @@ create table if not exists game_metadata (
     cover_url text,
     background_url text,
     icon_url text,
-    igdb_id integer,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     release_date text,
@@ -158,7 +156,7 @@ create table if not exists similar_games (
 create table if not exists tag_domains (
     id text not null primary key,
     name text not null,
-    is_well_known integer not null default false,
+    is_well_known boolean not null default false,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     constraint tag_domains_name_unique unique (name)
@@ -348,48 +346,48 @@ create table if not exists emulator_platform (
 -- ────────────────────────────────────────────────────────────────────────────
 
 insert into emulators (id, name, libretro_name, built_in) values
-('00000000-0000-0000-0001-000000000001', 'mGBA', 'mgba', false),
-('00000000-0000-0000-0001-000000000002', 'Atari 5200', 'a5200', false),
-('00000000-0000-0000-0001-000000000003', 'Beetle VB', 'beetle_vb', false),
-('00000000-0000-0000-0001-000000000004', 'MelonDS', 'melonds', false),
-('00000000-0000-0000-0001-000000000005', 'DeSmuME', 'desmume', false),
-('00000000-0000-0000-0001-000000000006', 'DeSmeME 2015', 'desmume2015', false),
-('00000000-0000-0000-0001-000000000007', 'FinalBurn Neo', 'fbneo', false),
-('00000000-0000-0000-0001-000000000008', 'FinalBurn Alpha 2012 - CPS1', 'fbalpha2012_cps1', false),
-('00000000-0000-0000-0001-000000000009', 'FinalBurn Alpha 2012 - CPS2', 'fbalpha2012_cps2', false),
-('00000000-0000-0000-0001-00000000000a', 'FCEUmm', 'fceumm', false),
-('00000000-0000-0000-0001-00000000000b', 'Nestopia', 'nestopia', false),
-('00000000-0000-0000-0001-00000000000c', 'Gambatte', 'gambatte', false),
-('00000000-0000-0000-0001-00000000000d', 'Gearcoleco', 'gearcoleco', false),
-('00000000-0000-0000-0001-00000000000e', 'SMSPlus', 'smsplus', false),
-('00000000-0000-0000-0001-00000000000f', 'Genesis Plus GX', 'genesis_plus_gx', false),
-('00000000-0000-0000-0001-000000000010', 'PicoDrive', 'picodrive', false),
-('00000000-0000-0000-0001-000000000011', 'Handy', 'handy', false),
-('00000000-0000-0000-0001-000000000012', 'MAME 2003-Plus', 'mame2003_plus', false),
-('00000000-0000-0000-0001-000000000013', 'MAME 2003', 'mame2003', false),
-('00000000-0000-0000-0001-000000000014', 'Mednafen - Neo Geo Pocket', 'mednafen_ngp', false),
-('00000000-0000-0000-0001-000000000015', 'Mednafen - PC Engine', 'mednafen_pce', false),
-('00000000-0000-0000-0001-000000000016', 'Mednafen - PCFX', 'mednafen_pcfx', false),
-('00000000-0000-0000-0001-000000000017', 'PCSX ReARMed', 'pcsx_rearmed', false),
-('00000000-0000-0000-0001-000000000018', 'Mednafen - Playstation', 'mednafen_psx_hw', false),
-('00000000-0000-0000-0001-000000000019', 'Mednafen - WonderSwan', 'mednafen_wswan', false),
-('00000000-0000-0000-0001-00000000001a', 'Mupen64Plus Next', 'mupen64plus_next', false),
-('00000000-0000-0000-0001-00000000001b', 'ParaLLEl N64', 'parallel_n64', false),
-('00000000-0000-0000-0001-00000000001c', 'opera', 'opera', false),
-('00000000-0000-0000-0001-00000000001d', 'PPSSPP', 'ppsspp', false),
-('00000000-0000-0000-0001-00000000001e', 'ProSystem', 'prosystem', false),
-('00000000-0000-0000-0001-00000000001f', 'Snes9x', 'snes9x', false),
-('00000000-0000-0000-0001-000000000020', 'Stella2014', 'stella2014', false),
-('00000000-0000-0000-0001-000000000021', 'Virtual Jaguar', 'virtualjaguar', false),
-('00000000-0000-0000-0001-000000000022', 'Yabause', 'yabause', false),
-('00000000-0000-0000-0001-000000000023', 'PUAE', 'puae', false),
-('00000000-0000-0000-0001-000000000024', 'Vice x64sc', 'vice_x64sc', false),
-('00000000-0000-0000-0001-000000000025', 'Vice x128', 'vice_x128', false),
-('00000000-0000-0000-0001-000000000026', 'Vice xPET', 'vice_xpet', false),
-('00000000-0000-0000-0001-000000000027', 'Vice xPlus4', 'vice_xplus4', false),
-('00000000-0000-0000-0001-000000000028', 'Vice xVIC', 'vice_xvic', false),
-('00000000-0000-0000-0001-000000000029', 'SAME CDI', 'same_cdi', false),
-('00000000-0000-0000-0001-00000000002a', 'DOSBox Pure', 'dosbox_pure', false)
+('00000000-0000-0000-0001-000000000001', 'mGBA', 'mgba', true),
+('00000000-0000-0000-0001-000000000002', 'Atari 5200', 'a5200', true),
+('00000000-0000-0000-0001-000000000003', 'Beetle VB', 'beetle_vb', true),
+('00000000-0000-0000-0001-000000000004', 'MelonDS', 'melonds', true),
+('00000000-0000-0000-0001-000000000005', 'DeSmuME', 'desmume', true),
+('00000000-0000-0000-0001-000000000006', 'DeSmeME 2015', 'desmume2015', true),
+('00000000-0000-0000-0001-000000000007', 'FinalBurn Neo', 'fbneo', true),
+('00000000-0000-0000-0001-000000000008', 'FinalBurn Alpha 2012 - CPS1', 'fbalpha2012_cps1', true),
+('00000000-0000-0000-0001-000000000009', 'FinalBurn Alpha 2012 - CPS2', 'fbalpha2012_cps2', true),
+('00000000-0000-0000-0001-00000000000a', 'FCEUmm', 'fceumm', true),
+('00000000-0000-0000-0001-00000000000b', 'Nestopia', 'nestopia', true),
+('00000000-0000-0000-0001-00000000000c', 'Gambatte', 'gambatte', true),
+('00000000-0000-0000-0001-00000000000d', 'Gearcoleco', 'gearcoleco', true),
+('00000000-0000-0000-0001-00000000000e', 'SMSPlus', 'smsplus', true),
+('00000000-0000-0000-0001-00000000000f', 'Genesis Plus GX', 'genesis_plus_gx', true),
+('00000000-0000-0000-0001-000000000010', 'PicoDrive', 'picodrive', true),
+('00000000-0000-0000-0001-000000000011', 'Handy', 'handy', true),
+('00000000-0000-0000-0001-000000000012', 'MAME 2003-Plus', 'mame2003_plus', true),
+('00000000-0000-0000-0001-000000000013', 'MAME 2003', 'mame2003', true),
+('00000000-0000-0000-0001-000000000014', 'Mednafen - Neo Geo Pocket', 'mednafen_ngp', true),
+('00000000-0000-0000-0001-000000000015', 'Mednafen - PC Engine', 'mednafen_pce', true),
+('00000000-0000-0000-0001-000000000016', 'Mednafen - PCFX', 'mednafen_pcfx', true),
+('00000000-0000-0000-0001-000000000017', 'PCSX ReARMed', 'pcsx_rearmed', true),
+('00000000-0000-0000-0001-000000000018', 'Mednafen - Playstation', 'mednafen_psx_hw', true),
+('00000000-0000-0000-0001-000000000019', 'Mednafen - WonderSwan', 'mednafen_wswan', true),
+('00000000-0000-0000-0001-00000000001a', 'Mupen64Plus Next', 'mupen64plus_next', true),
+('00000000-0000-0000-0001-00000000001b', 'ParaLLEl N64', 'parallel_n64', true),
+('00000000-0000-0000-0001-00000000001c', 'opera', 'opera', true),
+('00000000-0000-0000-0001-00000000001d', 'PPSSPP', 'ppsspp', true),
+('00000000-0000-0000-0001-00000000001e', 'ProSystem', 'prosystem', true),
+('00000000-0000-0000-0001-00000000001f', 'Snes9x', 'snes9x', true),
+('00000000-0000-0000-0001-000000000020', 'Stella2014', 'stella2014', true),
+('00000000-0000-0000-0001-000000000021', 'Virtual Jaguar', 'virtualjaguar', true),
+('00000000-0000-0000-0001-000000000022', 'Yabause', 'yabause', true),
+('00000000-0000-0000-0001-000000000023', 'PUAE', 'puae', true),
+('00000000-0000-0000-0001-000000000024', 'Vice x64sc', 'vice_x64sc', true),
+('00000000-0000-0000-0001-000000000025', 'Vice x128', 'vice_x128', true),
+('00000000-0000-0000-0001-000000000026', 'Vice xPET', 'vice_xpet', true),
+('00000000-0000-0000-0001-000000000027', 'Vice xPlus4', 'vice_xplus4', true),
+('00000000-0000-0000-0001-000000000028', 'Vice xVIC', 'vice_xvic', true),
+('00000000-0000-0000-0001-000000000029', 'SAME CDI', 'same_cdi', true),
+('00000000-0000-0000-0001-00000000002a', 'DOSBox Pure', 'dosbox_pure', true)
 on conflict do nothing;
 
 insert into emulator_operating_systems (emulator_id, os_id) values
@@ -442,294 +440,294 @@ insert into emulator_profiles (id, emulator_id, name, built_in, custom_args) val
     '00000000-0000-0000-0002-000000000001',
     '00000000-0000-0000-0001-000000000001',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000002',
     '00000000-0000-0000-0001-000000000002',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000003',
     '00000000-0000-0000-0001-000000000003',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000004',
     '00000000-0000-0000-0001-000000000004',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000005',
     '00000000-0000-0000-0001-000000000005',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000006',
     '00000000-0000-0000-0001-000000000006',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000007',
     '00000000-0000-0000-0001-000000000007',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000008',
     '00000000-0000-0000-0001-000000000008',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000009',
     '00000000-0000-0000-0001-000000000009',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000000a',
     '00000000-0000-0000-0001-00000000000a',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000000b',
     '00000000-0000-0000-0001-00000000000b',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000000c',
     '00000000-0000-0000-0001-00000000000c',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000000d',
     '00000000-0000-0000-0001-00000000000d',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000000e',
     '00000000-0000-0000-0001-00000000000e',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000000f',
     '00000000-0000-0000-0001-00000000000f',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000010',
     '00000000-0000-0000-0001-000000000010',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000011',
     '00000000-0000-0000-0001-000000000011',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000012',
     '00000000-0000-0000-0001-000000000012',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000013',
     '00000000-0000-0000-0001-000000000013',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000014',
     '00000000-0000-0000-0001-000000000014',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000015',
     '00000000-0000-0000-0001-000000000015',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000016',
     '00000000-0000-0000-0001-000000000016',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000017',
     '00000000-0000-0000-0001-000000000017',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000018',
     '00000000-0000-0000-0001-000000000018',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000019',
     '00000000-0000-0000-0001-000000000019',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000001a',
     '00000000-0000-0000-0001-00000000001a',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000001b',
     '00000000-0000-0000-0001-00000000001b',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000001c',
     '00000000-0000-0000-0001-00000000001c',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000001d',
     '00000000-0000-0000-0001-00000000001d',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000001e',
     '00000000-0000-0000-0001-00000000001e',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000001f',
     '00000000-0000-0000-0001-00000000001f',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000020',
     '00000000-0000-0000-0001-000000000020',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000021',
     '00000000-0000-0000-0001-000000000021',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000022',
     '00000000-0000-0000-0001-000000000022',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000023',
     '00000000-0000-0000-0001-000000000023',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000024',
     '00000000-0000-0000-0001-000000000024',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000025',
     '00000000-0000-0000-0001-000000000025',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000026',
     '00000000-0000-0000-0001-000000000026',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000027',
     '00000000-0000-0000-0001-000000000027',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000028',
     '00000000-0000-0000-0001-000000000028',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-000000000029',
     '00000000-0000-0000-0001-000000000029',
     'Default',
-    false,
+    true,
     '{file}'
 ),
 (
     '00000000-0000-0000-0002-00000000002a',
     '00000000-0000-0000-0001-00000000002a',
     'Default',
-    false,
+    true,
     '{file}'
 )
 on conflict do nothing;
@@ -754,7 +752,5 @@ create index if not exists idx_game_files_is_deleted on game_files (is_deleted);
 create index if not exists idx_game_files_game_id_is_deleted on game_files (game_id, is_deleted);
 create index if not exists idx_default_game_files_game_id on default_game_files (game_id);
 create index if not exists idx_games_is_deleted on games (is_deleted);
-create index if not exists idx_game_metadata_igdb_id on game_metadata (igdb_id);
-create index if not exists idx_platform_metadata_igdb_id on platform_metadata (igdb_id);
 create index if not exists idx_games_steam_app_id on games (steam_app_id);
 create index if not exists idx_similar_games_game_id on similar_games (game_id);

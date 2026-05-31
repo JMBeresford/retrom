@@ -10,7 +10,7 @@ const DEFAULT_PORT: u16 = 5110;
 const DEFAULT_DB_URL: &str = "sqlite://retrom-dev.db";
 
 #[cfg(feature = "postgres")]
-const DEFAULT_DB_URL: &str = "postgres://retrom@localhost/retrom";
+const DEFAULT_DB_URL: &str = "postgres://postgres:password@localhost/retrom-dev";
 
 #[tokio::main]
 async fn main() {
