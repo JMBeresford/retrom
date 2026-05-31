@@ -24,6 +24,8 @@ use tracing::error;
 use walkdir::WalkDir;
 
 pub(crate) mod router;
+#[cfg(test)]
+mod tests;
 
 #[derive(Clone)]
 pub struct MetadataServiceHandlers {
@@ -601,6 +603,11 @@ impl MetadataService for MetadataServiceHandlers {
         request: Request<UpdatePlatformMetadataRequest>,
     ) -> Result<Response<UpdatePlatformMetadataResponse>, Status> {
         let metadata_to_update = request.into_inner().metadata;
+        let config = self.config_manager.get_config().await;
+        let store_metadata = config
+            .metadata
+            .map(|m| m.store_metadata_locally)
+            .unwrap_or(false);
 
         join_all(metadata_to_update.iter().map(|metadata| async {
             if let Err(e) = metadata.clean_cache().await {
@@ -608,24 +615,26 @@ impl MetadataService for MetadataServiceHandlers {
                 return;
             }
 
-            let tasks = metadata
-                .get_cacheable_media_opts()
-                .into_iter()
-                .map({
-                    let cache = self.media_cache.clone();
-                    move |opt| {
-                        let cache = cache.clone();
-                        async move { cache.cache_media_file(&opt).await }
-                    }
-                })
-                .collect();
+            if store_metadata {
+                let tasks = metadata
+                    .get_cacheable_media_opts()
+                    .into_iter()
+                    .map({
+                        let cache = self.media_cache.clone();
+                        move |opt| {
+                            let cache = cache.clone();
+                            async move { cache.cache_media_file(&opt).await }
+                        }
+                    })
+                    .collect();
 
-            spawn_cache_job(
-                self.job_manager.clone(),
-                format!("Cache Media Files For Platform {}", metadata.platform_id),
-                tasks,
-            )
-            .await;
+                spawn_cache_job(
+                    self.job_manager.clone(),
+                    format!("Cache Media Files For Platform {}", metadata.platform_id),
+                    tasks,
+                )
+                .await;
+            }
         }))
         .await;
 
