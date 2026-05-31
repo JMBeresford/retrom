@@ -112,7 +112,7 @@ impl SteamService for SteamServiceHandlers {
                 .push_bind(last_played)
                 .push(", minutes_played = ")
                 .push_bind(minutes_played)
-                .push(", updated_at = current_timestamp where game_id = ")
+                .push(" where game_id = ")
                 .push_bind(&game.id);
 
             builder
