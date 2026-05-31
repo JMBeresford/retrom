@@ -5,26 +5,21 @@ impl GameMetadataProvider<models::Game, ()> for SteamWebApiProvider {
     async fn get_game_metadata(
         &self,
         game: retrom_codegen::retrom::services::library::v1::Game,
-        query: Option<models::Game>,
+        query: models::Game,
     ) -> GameMetadataSearchResult {
-        let app = match query {
-            Some(app) => app,
-            None => return (None, None, None, None),
-        };
-
-        let app_details = match self.get_app_details(app.appid).await {
+        let app_details = match self.get_app_details(query.appid).await {
             Ok(details) => details,
             Err(e) => {
                 tracing::warn!(
                     "Failed to get app details for app {:?}: Status {:?}",
-                    app.appid,
+                    query.appid,
                     e
                 );
                 return (None, None, None, None);
             }
         };
 
-        let mut metadata = self.app_details_to_game_metadata(&app, &app_details);
+        let mut metadata = self.app_details_to_game_metadata(&query, &app_details);
         metadata.game_id = game.id;
 
         let screenshot_metadata = self.app_details_to_screenshot_metadata(&app_details);

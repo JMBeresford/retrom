@@ -1,29 +1,27 @@
 use super::provider::{IGDBProvider, IgdbSearchData};
 use crate::metadata_providers::{MetadataProvider, PlatformMetadataProvider};
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
-use deunicode::deunicode;
 use retrom_codegen::{
     igdb,
     retrom::{
         providers::igdb::v1::{
             igdb_fields::{IncludeFields, Selector},
             igdb_filters::{FilterOperator, FilterValue},
-            IgdbFields, IgdbFilters, IgdbPlatformSearchQuery, IgdbSearch,
+            IgdbFields, IgdbFilters, IgdbPlatformSearchQuery,
         },
         services::{
             library::v1::Platform,
-            metadata::v1::{get_igdb_search_request::IgdbSearchType, GetIgdbSearchRequest, PlatformMetadata},
+            metadata::v1::{
+                get_igdb_search_request::IgdbSearchType, GetIgdbSearchRequest, PlatformMetadata,
+            },
         },
     },
 };
-use std::{collections::HashMap, path::PathBuf, str::FromStr};
-use tracing::{debug, instrument, Level};
+use std::collections::HashMap;
+use tracing::{instrument, Level};
 
 impl IGDBProvider {
-    pub fn igdb_platform_to_metadata(
-        &self,
-        igdb_match: igdb::Platform,
-    ) -> PlatformMetadata {
+    pub fn igdb_platform_to_metadata(&self, igdb_match: igdb::Platform) -> PlatformMetadata {
         let description = Some(igdb_match.summary);
         let name = Some(igdb_match.name);
         let igdb_id = match BigDecimal::from_u64(igdb_match.id) {
@@ -46,77 +44,23 @@ impl IGDBProvider {
 }
 
 impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
-    #[instrument(level = Level::DEBUG, skip_all, fields(name = platform.path))]
+    #[instrument(level = Level::DEBUG, skip(self))]
     async fn get_platform_metadata(
         &self,
         platform: Platform,
-        query: Option<IgdbPlatformSearchQuery>,
+        query: IgdbPlatformSearchQuery,
     ) -> Option<PlatformMetadata> {
-        let naive_name = platform
-            .path
-            .split('/')
-            .next_back()
-            .unwrap_or(&platform.path);
+        let igdb_id = query.fields.as_ref().and_then(|fields| fields.id);
+        let name = query.fields.as_ref().and_then(|fields| fields.name.clone());
 
-        let path = PathBuf::from_str(&platform.path).unwrap();
-        let mut name = path
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .unwrap_or(naive_name)
-            .to_string();
-
-        // normalize name, remove anything in braces and coallesce spaces
-        while let Some(begin) = name.find('(') {
-            let end = name.find(')').unwrap_or(name.len() - 1);
-
-            name.replace_range(begin..=end, "");
-        }
-
-        while let Some(begin) = name.find('[') {
-            let end = name.find(']').unwrap_or(name.len() - 1);
-
-            name.replace_range(begin..=end, "");
-        }
-
-        while let Some(begin) = name.find('{') {
-            let end = name.find('}').unwrap_or(name.len() - 1);
-
-            name.replace_range(begin..=end, "");
-        }
-
-        name = name
-            .chars()
-            .map(|c| match c {
-                ':' | '-' | '_' | '.' => ' ',
-                _ => c,
-            })
-            .collect();
-
-        name = name.split_whitespace().collect::<Vec<&str>>().join(" ");
-        let name = name.as_str();
-
-        let search = deunicode(name);
-        debug!("Searching for platform: {}", search);
-
-        let search_query = match query {
-            Some(mut query) => {
-                query.search = Some(IgdbSearch { value: search });
-                query
-            }
-            None => IgdbPlatformSearchQuery {
-                search: Some(IgdbSearch { value: search }),
-                ..Default::default()
-            },
-        };
-
-        let igdb_id = search_query.fields.as_ref().and_then(|fields| fields.id);
-
-        let matches = self.search_platform_metadata(search_query).await;
+        let matches = self.search_platform_metadata(query).await;
 
         let exact_match = matches.iter().find(|meta| {
             meta.igdb_id
                 .is_some_and(|id| id.to_owned().to_u64() == igdb_id)
-                || meta.name == Some(name.to_string())
+                || name
+                    .as_ref()
+                    .is_some_and(|name| meta.name.as_ref() == Some(name))
         });
 
         let first_match = matches.first();

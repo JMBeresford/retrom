@@ -1,7 +1,7 @@
 use crate::metadata_providers::{steam::models, RetryAttempts};
 use chrono::DateTime;
 use retrom_codegen::{
-    retrom::services::metadata::v1::{GameMetadata, ScreenshotMetadata, VideoMetadata},
+    retrom::services::metadata::v1::{GameMetadata, GameMetadataScreenshot, GameMetadataVideo},
     timestamp::Timestamp,
 };
 use retrom_service_config::config::ServerConfigManager;
@@ -127,7 +127,7 @@ impl SteamWebApiProvider {
     pub fn app_details_to_screenshot_metadata(
         &self,
         app_details: &models::AppDetails,
-    ) -> Vec<ScreenshotMetadata> {
+    ) -> Vec<GameMetadataScreenshot> {
         let screenshot_urls: Vec<String> = app_details
             .screenshots
             .as_ref()
@@ -141,7 +141,7 @@ impl SteamWebApiProvider {
 
         screenshot_urls
             .into_iter()
-            .map(|url| ScreenshotMetadata {
+            .map(|url| GameMetadataScreenshot {
                 url,
                 ..Default::default()
             })
@@ -151,7 +151,7 @@ impl SteamWebApiProvider {
     pub fn app_details_to_video_metadata(
         &self,
         app_details: &models::AppDetails,
-    ) -> Vec<VideoMetadata> {
+    ) -> Vec<GameMetadataVideo> {
         let video_urls: Vec<String> = app_details
             .movies
             .as_ref()
@@ -172,7 +172,7 @@ impl SteamWebApiProvider {
 
         video_urls
             .into_iter()
-            .map(|url| VideoMetadata {
+            .map(|url| GameMetadataVideo {
                 url,
                 ..Default::default()
             })

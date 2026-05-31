@@ -372,6 +372,7 @@ mod integration_tests {
         // Test that cache directories are created correctly using trait implementations
         let game_metadata = GameMetadata {
             id: "1".to_string(),
+            provider_id: "foo".to_string(),
             game_id: "42".to_string(),
             name: Some("Test Game".to_string()),
             description: None,
@@ -382,7 +383,6 @@ mod integration_tests {
             igdb_id: None,
             created_at: None,
             updated_at: None,
-            links: vec![],
             release_date: None,
             last_played: None,
             minutes_played: Some(0),
@@ -396,6 +396,7 @@ mod integration_tests {
 
         let platform_metadata = PlatformMetadata {
             id: "1".to_string(),
+            provider_id: "foo".to_string(),
             platform_id: "1".to_string(),
             name: Some("Test Platform".to_string()),
             description: None,
@@ -418,10 +419,7 @@ mod integration_tests {
     async fn test_url_to_public_path_conversion() {
         // Use the actual media directory from RetromDirs::new() (which uses the test env)
         let media_dir = RetromDirs::new().media_dir();
-        let test_path = media_dir
-            .join("game_metadata")
-            .join("42")
-            .join("image.jpg");
+        let test_path = media_dir.join("game_metadata").join("42").join("image.jpg");
         let public_url = get_public_url(&test_path).unwrap();
 
         assert_eq!(public_url, "media/game_metadata/42/image.jpg");
@@ -477,6 +475,7 @@ mod integration_tests {
         // Create test game metadata with artwork and screenshot URLs
         let game_metadata = GameMetadata {
             id: "1".to_string(),
+            provider_id: "foo".to_string(),
             game_id: "123".to_string(),
             name: Some("Test Game".to_string()),
             description: None,
@@ -487,7 +486,6 @@ mod integration_tests {
             logo_url: None,
             created_at: None,
             updated_at: None,
-            links: vec![],
             release_date: None,
             last_played: None,
             minutes_played: Some(0),
@@ -518,10 +516,7 @@ mod integration_tests {
         let screenshot_url = get_public_url(&test_screenshot_path).unwrap();
 
         assert_eq!(artwork_url, "media/game_metadata/1/artwork/test.jpg");
-        assert_eq!(
-            screenshot_url,
-            "media/game_metadata/1/screenshots/test.png"
-        );
+        assert_eq!(screenshot_url, "media/game_metadata/1/screenshots/test.png");
     }
 
     #[tokio::test]

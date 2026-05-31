@@ -40,26 +40,21 @@ create table if not exists root_directories (
 
 create table if not exists platforms (
     id text not null primary key,
-    path text not null,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     deleted_at text,
     is_deleted integer not null default 0,
-    third_party integer not null default 0,
-    constraint platforms_path_unique unique (path)
+    third_party integer not null default 0
 );
 
 create table if not exists games (
     id text not null primary key,
-    path text not null,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     deleted_at text,
     is_deleted integer not null default 0,
-    storage_type integer not null default 1,
     third_party integer not null default 0,
-    steam_app_id text,
-    constraint games_path_unique unique (path)
+    steam_app_id text
 );
 
 create table if not exists game_files (
@@ -737,6 +732,16 @@ insert into emulator_profiles (id, emulator_id, name, built_in, custom_args) val
     false,
     '{file}'
 )
+on conflict do nothing;
+
+--  ────────────────────────────────────────────────────────────────────────────
+--  Seed initial metadata providers (stable UUIDs so game_metadata can reference them)
+--  ────────────────────────────────────────────────────────────────────────────
+
+insert into metadata_providers (id, name) values
+('00000000-0000-0000-0000-000000000001', 'manual'),
+('00000000-0000-0000-0000-000000000002', 'igdb'),
+('00000000-0000-0000-0000-000000000003', 'steam')
 on conflict do nothing;
 
 -- ────────────────────────────────────────────────────────────────────────────

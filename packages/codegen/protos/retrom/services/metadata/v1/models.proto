@@ -48,46 +48,40 @@ message SimilarGame {
 // Well-known providers are seeded at startup.
 message MetadataProvider {
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The name of the provider (e.g. "IGDB", "Steam").
   string name = 2;
   google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
-// VideoMetadata is a single video URL associated with a game_metadata record.
-// Normalises the deprecated game_metadata.video_urls array column.
-message VideoMetadata {
-  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+// GameMetadataVideo is a single video URL associated with a game_metadata record.
+message GameMetadataVideo {
   // References game_metadata.id.
-  string game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string url = 3;
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string game_metadata_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The URL of the video (e.g. YouTube, Twitch).
+  string url = 2;
 }
 
-// ScreenshotMetadata is a single screenshot URL associated with a game_metadata record.
-// Normalises the deprecated game_metadata.screenshot_urls array column.
-message ScreenshotMetadata {
-  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+// GameMetadataScreenshot is a single screenshot URL associated with a game_metadata record.
+message GameMetadataScreenshot {
   // References game_metadata.id.
-  string game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string url = 3;
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string game_metadata_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The URL of the screenshot.
+  string url = 2;
 }
 
-// ArtworkMetadata is a single artwork URL associated with a game_metadata record.
-// Normalises the deprecated game_metadata.artwork_urls array column.
-message ArtworkMetadata {
-  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+// GameMetadataArtwork is a single artwork URL associated with a game_metadata record.
+message GameMetadataArtwork {
   // References game_metadata.id.
-  string game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string url = 3;
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string game_metadata_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The URL of the artwork.
+  string url = 2;
 }
 
+// GameMetadataLink is a single link URL associated with a game_metadata record (e.g. official website, store page).
 message GameMetadataLink {
   // References game_metadata.id.
   string game_metadata_id = 1;
+  // The URL of the link.
   string url = 2;
 }

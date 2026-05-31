@@ -59,14 +59,19 @@ where
     ) -> Result<Timestamp, Box<dyn std::error::Error + 'static + Send + Sync>> {
         let value = <&str as Decode<'r, sqlx::Sqlite>>::decode(value)?;
 
+        // Fallback format string for SQLite, which may not include timezone information
+        // Default `current_timestamp` format in SQLite is "YYYY-MM-DD HH:MM:SS"
         let format_str = "%Y-%m-%d %H:%M:%S";
 
-        let datetime = match NaiveDateTime::parse_from_str(value, format_str) {
-            Ok(dt) => dt.and_utc(),
-            Err(err) => {
-                tracing::error!("Failed to parse timestamp from value: {value}, error: {err}");
-                return Err(err.into());
-            }
+        let datetime = match DateTime::parse_from_rfc3339(value) {
+            Ok(dt) => dt.to_utc(),
+            _ => match NaiveDateTime::parse_from_str(value, format_str) {
+                Ok(dt) => dt.and_utc(),
+                Err(err) => {
+                    tracing::error!("Failed to parse timestamp from value: {value}, error: {err}");
+                    return Err(err.into());
+                }
+            },
         };
 
         let seconds = datetime.timestamp();

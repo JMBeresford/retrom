@@ -160,9 +160,9 @@ BEGIN
   -- ──────────────────────────────────────────────────────────────────────────
 
   -- platforms
-  INSERT INTO platforms (id, path, created_at, updated_at, deleted_at, is_deleted, third_party)
+  INSERT INTO platforms (id, created_at, updated_at, deleted_at, is_deleted, third_party)
   SELECT
-    m.new_id, v.path,
+    m.new_id,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     CASE WHEN v.deleted_at IS NOT NULL
@@ -197,10 +197,10 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- games
-  INSERT INTO games (id, path, created_at, updated_at, deleted_at,
+  INSERT INTO games (id, created_at, updated_at, deleted_at,
                      is_deleted, storage_type, third_party, steam_app_id)
   SELECT
-    mg.new_id, v.path,
+    mg.new_id,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     CASE WHEN v.deleted_at IS NOT NULL

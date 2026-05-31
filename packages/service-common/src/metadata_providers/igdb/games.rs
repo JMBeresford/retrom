@@ -1,26 +1,25 @@
 use super::provider::{IGDBProvider, IgdbSearchData};
 use crate::metadata_providers::{GameMetadataProvider, GameMetadataSearchResult, MetadataProvider};
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
-use deunicode::deunicode;
 use retrom_codegen::{
     igdb::{self},
     retrom::{
         providers::igdb::v1::{
             igdb_fields::{IncludeFields, Selector},
             igdb_filters::{FilterOperator, FilterValue},
-            IgdbFields, IgdbFilters, IgdbGameSearchQuery, IgdbSearch,
+            IgdbFields, IgdbFilters, IgdbGameSearchQuery,
         },
         services::{
             library::v1::Game,
             metadata::v1::{
-                get_igdb_search_request::IgdbSearchType, ArtworkMetadata, GameMetadata,
-                GetIgdbSearchRequest, ScreenshotMetadata, VideoMetadata,
+                get_igdb_search_request::IgdbSearchType, GameMetadata, GameMetadataArtwork,
+                GameMetadataScreenshot, GameMetadataVideo, GetIgdbSearchRequest,
             },
         },
     },
 };
-use std::{collections::HashMap, path::PathBuf, str::FromStr};
-use tracing::{debug, instrument, Level};
+use std::collections::HashMap;
+use tracing::{instrument, Level};
 
 impl IGDBProvider {
     pub fn igdb_game_to_metadata(&self, igdb_match: igdb::Game) -> GameMetadata {
@@ -124,45 +123,26 @@ impl GameMetadataProvider<IgdbGameSearchQuery, Vec<igdb::Game>> for IGDBProvider
     async fn get_game_metadata(
         &self,
         game: Game,
-        query: Option<IgdbGameSearchQuery>,
+        query: IgdbGameSearchQuery,
     ) -> GameMetadataSearchResult {
-        let naive_name = game.path.split('/').next_back().unwrap_or(&game.path);
-        let path = PathBuf::from_str(&game.path).unwrap();
-        let mut name = path
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .unwrap_or(naive_name)
-            .to_string();
+        let igdb_id = query.fields.as_ref().and_then(|fields| fields.id);
+        let title = query
+            .fields
+            .as_ref()
+            .and_then(|fields| fields.title.clone());
 
-        name = normalize_name(&name);
+        let matches = self.search_game_metadata(query).await;
 
-        let search = deunicode(&name);
-        debug!("Matching game: {search}");
-
-        let search_query = match query {
-            Some(mut query) => {
-                query.search = Some(IgdbSearch { value: search });
-                query
-            }
-            None => IgdbGameSearchQuery {
-                search: Some(IgdbSearch { value: search }),
-                ..Default::default()
-            },
-        };
-
-        let igdb_id = search_query.fields.as_ref().and_then(|fields| fields.id);
-        let matches = self.search_game_metadata(search_query).await;
-
-        let exact_match = matches
-            .iter()
-            .find(|meta| Some(meta.id) == igdb_id || meta.name == name);
+        let exact_match = matches.iter().find(|meta| {
+            Some(meta.id) == igdb_id || title.as_ref().is_some_and(|title| title == &meta.name)
+        });
 
         let first_match = matches.first();
 
         let igdb_match = exact_match.or(first_match).map(|meta| meta.to_owned());
 
         if let Some(igdb_match) = igdb_match {
-            let artwork_urls: Vec<ArtworkMetadata> = igdb_match
+            let artwork_urls: Vec<GameMetadataArtwork> = igdb_match
                 .artworks
                 .iter()
                 .map(|artwork| {
@@ -171,13 +151,13 @@ impl GameMetadataProvider<IgdbGameSearchQuery, Vec<igdb::Game>> for IGDBProvider
                         .replace("t_thumb", "t_1080p_2x")
                         .replace("//", "https://")
                 })
-                .map(|url| ArtworkMetadata {
+                .map(|url| GameMetadataArtwork {
                     url,
                     ..Default::default()
                 })
                 .collect();
 
-            let screenshot_urls: Vec<ScreenshotMetadata> = igdb_match
+            let screenshot_urls: Vec<GameMetadataScreenshot> = igdb_match
                 .screenshots
                 .iter()
                 .map(|screenshot| {
@@ -186,17 +166,17 @@ impl GameMetadataProvider<IgdbGameSearchQuery, Vec<igdb::Game>> for IGDBProvider
                         .replace("//", "https://")
                         .replace("t_thumb", "t_screenshot_huge_2x")
                 })
-                .map(|url| ScreenshotMetadata {
+                .map(|url| GameMetadataScreenshot {
                     url,
                     ..Default::default()
                 })
                 .collect();
 
-            let video_urls: Vec<VideoMetadata> = igdb_match
+            let video_urls: Vec<GameMetadataVideo> = igdb_match
                 .videos
                 .iter()
                 .map(|video| format!("https://www.youtube.com/embed/{}", video.video_id))
-                .map(|url| VideoMetadata {
+                .map(|url| GameMetadataVideo {
                     url,
                     ..Default::default()
                 })

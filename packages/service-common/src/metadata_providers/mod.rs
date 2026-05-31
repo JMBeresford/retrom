@@ -2,7 +2,8 @@ use reqwest::StatusCode;
 use retrom_codegen::retrom::services::{
     library::v1::{Game, Platform},
     metadata::v1::{
-        ArtworkMetadata, GameMetadata, PlatformMetadata, ScreenshotMetadata, VideoMetadata,
+        GameMetadata, GameMetadataArtwork, GameMetadataScreenshot, GameMetadataVideo,
+        PlatformMetadata,
     },
 };
 use std::time::Duration;
@@ -23,16 +24,16 @@ pub trait MetadataProvider<Query, Data> {
 
 pub type GameMetadataSearchResult = (
     Option<GameMetadata>,
-    Option<Vec<ArtworkMetadata>>,
-    Option<Vec<ScreenshotMetadata>>,
-    Option<Vec<VideoMetadata>>,
+    Option<Vec<GameMetadataArtwork>>,
+    Option<Vec<GameMetadataScreenshot>>,
+    Option<Vec<GameMetadataVideo>>,
 );
 
 pub trait GameMetadataProvider<Query, SearchResult> {
     fn get_game_metadata(
         &self,
         game: Game,
-        query: Option<Query>,
+        query: Query,
     ) -> impl std::future::Future<Output = GameMetadataSearchResult>;
 
     fn search_game_metadata(&self, query: Query)
@@ -43,7 +44,7 @@ pub trait PlatformMetadataProvider<Query> {
     fn get_platform_metadata(
         &self,
         platform: Platform,
-        query: Option<Query>,
+        query: Query,
     ) -> impl std::future::Future<Output = Option<PlatformMetadata>>;
 
     fn search_platform_metadata(
