@@ -15,6 +15,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASS:-password}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_DB: ${DB_NAME:-retrom-dev}
+    volumes:
+      - ./psql:/var/lib/postgresql
 
   adminer:
     image: adminer
