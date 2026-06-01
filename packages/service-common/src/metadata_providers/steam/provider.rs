@@ -1,7 +1,7 @@
 use crate::metadata_providers::{steam::models, RetryAttempts};
 use chrono::DateTime;
 use retrom_codegen::{
-    retrom::services::metadata::v1::{GameMetadata, ScreenshotMetadata, VideoMetadata},
+    retrom::services::metadata::v1::{GameMetadata, GameMetadataScreenshot, GameMetadataVideo},
     timestamp::Timestamp,
 };
 use retrom_service_config::config::ServerConfigManager;
@@ -9,6 +9,8 @@ use std::{str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::{mpsc, oneshot};
 use tower::{Service, ServiceExt};
 use tracing::{instrument, Instrument};
+
+pub const STEAM_PROVIDER_ID: &str = "00000000-0000-0000-0000-000000000003";
 
 type SteamSenderMsg = (
     reqwest::Request,
@@ -117,11 +119,6 @@ impl SteamWebApiProvider {
             name: app_details.name.clone(),
             cover_url,
             background_url,
-            links: app_details
-                .website
-                .as_ref()
-                .map(|website| vec![website.to_owned()])
-                .unwrap_or_default(),
             icon_url,
             last_played,
             minutes_played,
@@ -132,13 +129,13 @@ impl SteamWebApiProvider {
     pub fn app_details_to_screenshot_metadata(
         &self,
         app_details: &models::AppDetails,
-    ) -> Vec<ScreenshotMetadata> {
+    ) -> Vec<GameMetadataScreenshot> {
         let screenshot_urls: Vec<String> = app_details
             .screenshots
             .as_ref()
             .map(|screenshots| {
                 screenshots
-                    .into_iter()
+                    .iter()
                     .map(|screenshot| screenshot.path_full.clone())
                     .collect()
             })
@@ -146,7 +143,7 @@ impl SteamWebApiProvider {
 
         screenshot_urls
             .into_iter()
-            .map(|url| ScreenshotMetadata {
+            .map(|url| GameMetadataScreenshot {
                 url,
                 ..Default::default()
             })
@@ -156,13 +153,13 @@ impl SteamWebApiProvider {
     pub fn app_details_to_video_metadata(
         &self,
         app_details: &models::AppDetails,
-    ) -> Vec<VideoMetadata> {
+    ) -> Vec<GameMetadataVideo> {
         let video_urls: Vec<String> = app_details
             .movies
             .as_ref()
             .map(|movies| {
                 movies
-                    .into_iter()
+                    .iter()
                     .filter_map(|movie| {
                         movie
                             .webm
@@ -177,7 +174,7 @@ impl SteamWebApiProvider {
 
         video_urls
             .into_iter()
-            .map(|url| VideoMetadata {
+            .map(|url| GameMetadataVideo {
                 url,
                 ..Default::default()
             })

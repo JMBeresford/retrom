@@ -1,122 +1,77 @@
 use super::provider::{IGDBProvider, IgdbSearchData};
-use crate::metadata_providers::{MetadataProvider, PlatformMetadataProvider};
+use crate::metadata_providers::{
+    igdb::provider::IGDB_PROVIDER_ID, MetadataProvider, MetadataProviderError,
+    PlatformMetadataProvider, Result,
+};
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
-use deunicode::deunicode;
 use retrom_codegen::{
     igdb,
     retrom::{
         providers::igdb::v1::{
             igdb_fields::{IncludeFields, Selector},
             igdb_filters::{FilterOperator, FilterValue},
-            IgdbFields, IgdbFilters, IgdbPlatformSearchQuery, IgdbSearch,
+            IgdbFields, IgdbFilters, IgdbPlatformSearchQuery,
         },
         services::{
             library::v1::Platform,
-            metadata::v1::{get_igdb_search_request::IgdbSearchType, GetIgdbSearchRequest, PlatformMetadata},
+            metadata::v1::{
+                get_igdb_search_request::IgdbSearchType, GetIgdbSearchRequest, PlatformMetadata,
+            },
         },
     },
 };
-use std::{collections::HashMap, path::PathBuf, str::FromStr};
-use tracing::{debug, instrument, Level};
+use std::collections::HashMap;
+use tracing::{instrument, Level};
 
 impl IGDBProvider {
     pub fn igdb_platform_to_metadata(
         &self,
         igdb_match: igdb::Platform,
-    ) -> PlatformMetadata {
+    ) -> Result<PlatformMetadata> {
         let description = Some(igdb_match.summary);
         let name = Some(igdb_match.name);
-        let igdb_id = match BigDecimal::from_u64(igdb_match.id) {
-            Some(id) => id.to_i64(),
-            None => None,
+        let igdb_id = match BigDecimal::from_u64(igdb_match.id).and_then(|id| id.to_i64()) {
+            Some(id) => id.to_string(),
+            None => {
+                return Err(MetadataProviderError::Other(format!(
+                    "Failed to convert IGDB platform ID {} to string",
+                    igdb_match.id
+                )))
+            }
         };
 
         let logo_url = igdb_match
             .platform_logo
             .map(|logo| logo.url.to_string().replace("//", "https://"));
 
-        PlatformMetadata {
-            igdb_id,
+        Ok(PlatformMetadata {
+            provider_id: IGDB_PROVIDER_ID.to_string(),
+            provider_platform_id: igdb_id,
             name,
             description,
             logo_url,
             ..Default::default()
-        }
+        })
     }
 }
 
 impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
-    #[instrument(level = Level::DEBUG, skip_all, fields(name = platform.path))]
+    #[instrument(level = Level::DEBUG, skip(self))]
     async fn get_platform_metadata(
         &self,
         platform: Platform,
-        query: Option<IgdbPlatformSearchQuery>,
+        query: IgdbPlatformSearchQuery,
     ) -> Option<PlatformMetadata> {
-        let naive_name = platform
-            .path
-            .split('/')
-            .next_back()
-            .unwrap_or(&platform.path);
+        let igdb_id = query.fields.as_ref().and_then(|fields| fields.id);
+        let name = query.fields.as_ref().and_then(|fields| fields.name.clone());
 
-        let path = PathBuf::from_str(&platform.path).unwrap();
-        let mut name = path
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .unwrap_or(naive_name)
-            .to_string();
-
-        // normalize name, remove anything in braces and coallesce spaces
-        while let Some(begin) = name.find('(') {
-            let end = name.find(')').unwrap_or(name.len() - 1);
-
-            name.replace_range(begin..=end, "");
-        }
-
-        while let Some(begin) = name.find('[') {
-            let end = name.find(']').unwrap_or(name.len() - 1);
-
-            name.replace_range(begin..=end, "");
-        }
-
-        while let Some(begin) = name.find('{') {
-            let end = name.find('}').unwrap_or(name.len() - 1);
-
-            name.replace_range(begin..=end, "");
-        }
-
-        name = name
-            .chars()
-            .map(|c| match c {
-                ':' | '-' | '_' | '.' => ' ',
-                _ => c,
-            })
-            .collect();
-
-        name = name.split_whitespace().collect::<Vec<&str>>().join(" ");
-        let name = name.as_str();
-
-        let search = deunicode(name);
-        debug!("Searching for platform: {}", search);
-
-        let search_query = match query {
-            Some(mut query) => {
-                query.search = Some(IgdbSearch { value: search });
-                query
-            }
-            None => IgdbPlatformSearchQuery {
-                search: Some(IgdbSearch { value: search }),
-                ..Default::default()
-            },
-        };
-
-        let igdb_id = search_query.fields.as_ref().and_then(|fields| fields.id);
-
-        let matches = self.search_platform_metadata(search_query).await;
+        let matches = self.search_platform_metadata(query).await;
 
         let exact_match = matches.iter().find(|meta| {
-            meta.igdb_id
-                .is_some_and(|id| id.to_owned().to_u64() == igdb_id)
-                || meta.name == Some(name.to_string())
+            igdb_id.is_some_and(|id| id.to_string() == meta.provider_platform_id)
+                || name
+                    .as_ref()
+                    .is_some_and(|name| meta.name.as_ref() == Some(name))
         });
 
         let first_match = matches.first();
@@ -181,7 +136,7 @@ impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
             Some(IgdbSearchData::Platform(matches)) => matches
                 .platforms
                 .into_iter()
-                .map(|platform| self.igdb_platform_to_metadata(platform))
+                .filter_map(|platform| self.igdb_platform_to_metadata(platform).ok())
                 .collect(),
             _ => {
                 vec![]

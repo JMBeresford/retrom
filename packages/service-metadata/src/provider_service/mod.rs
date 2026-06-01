@@ -1,6 +1,6 @@
 use retrom_codegen::retrom::services::metadata::v1::{
     metadata_provider_service_server::MetadataProviderService, GetMetadataProvidersRequest,
-    GetMetadataProvidersResponse,
+    GetMetadataProvidersResponse, MetadataProvider,
 };
 use retrom_db::DbPool;
 use tonic::{Request, Response, Status};
@@ -18,18 +18,11 @@ impl MetadataProviderService for MetadataProviderServiceHandlers {
         &self,
         _request: Request<GetMetadataProvidersRequest>,
     ) -> Result<Response<GetMetadataProvidersResponse>, Status> {
-        unimplemented!();
-        // let mut conn = self
-        //     .db_pool
-        //     .get()
-        //     .await
-        //     .map_err(|e| Status::internal(e.to_string()))?;
-        //
-        // let providers = schema::metadata_providers::table
-        //     .load::<MetadataProviderModel>(&mut conn)
-        //     .await
-        //     .map_err(|e| Status::internal(e.to_string()))?;
-        //
-        // Ok(Response::new(GetMetadataProvidersResponse { providers }))
+        let providers: Vec<MetadataProvider> = sqlx::query_as("select * from metadata_providers")
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        Ok(Response::new(GetMetadataProvidersResponse { providers }))
     }
 }

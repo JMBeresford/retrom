@@ -9650,9 +9650,6 @@ version = "0.8.2"
 dependencies = [
  "axum",
  "chrono",
- "deadpool",
- "diesel",
- "diesel-async",
  "dotenvy",
  "futures",
  "retrom-codegen",
@@ -9661,10 +9658,13 @@ dependencies = [
  "retrom-service-config",
  "retrom-service-jobs",
  "retrom-telemetry",
+ "sqlx",
  "tokio",
  "tonic 0.14.5",
+ "tonic-reflection",
  "tonic-web",
  "tracing",
+ "uuid",
  "walkdir",
 ]
 

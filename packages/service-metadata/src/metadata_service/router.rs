@@ -13,12 +13,12 @@ pub fn metadata_router(db_pool: DbPool) -> axum::Router {
     let media_cache = Arc::new(MediaCache::new(config_manager.clone()));
     let job_manager = Arc::new(JobManager::new());
 
-    let svc = MetadataServiceServer::new(MetadataServiceHandlers {
+    let svc = MetadataServiceServer::new(MetadataServiceHandlers::new(
         db_pool,
         media_cache,
         job_manager,
         config_manager,
-    });
+    ));
 
     let mut routes_builder = tonic::service::Routes::builder();
     routes_builder.add_service(svc);

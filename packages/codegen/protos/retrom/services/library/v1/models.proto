@@ -40,26 +40,21 @@ message RootDirectory {
 
 message Platform {
   string id = 1;
-  string path = 2;
-  google.protobuf.Timestamp created_at = 3;
-  google.protobuf.Timestamp updated_at = 4;
-  google.protobuf.Timestamp deleted_at = 5;
-  bool is_deleted = 6;
-  bool third_party = 7;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+  google.protobuf.Timestamp deleted_at = 4;
+  bool is_deleted = 5;
+  bool third_party = 6;
 }
 
 message Game {
   string id = 1;
-  string path = 3 [deprecated = true];
-  optional string platform_id = 4 [deprecated = true];
-  google.protobuf.Timestamp created_at = 5;
-  google.protobuf.Timestamp updated_at = 6;
-  google.protobuf.Timestamp deleted_at = 7;
-  bool is_deleted = 8;
-  optional string default_file_id = 9 [deprecated = true];
-  retrom.services.config.v1.StorageType storage_type = 10 [deprecated = true];
-  bool third_party = 11;
-  optional string steam_app_id = 12;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+  google.protobuf.Timestamp deleted_at = 4;
+  bool is_deleted = 5;
+  bool third_party = 6;
+  optional string steam_app_id = 7;
 }
 
 message GameFile {

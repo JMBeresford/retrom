@@ -20,6 +20,7 @@ use tokio::sync::{mpsc, oneshot, RwLock};
 use tower::{Service, ServiceExt};
 use tracing::{debug, error, instrument, Instrument, Level};
 
+pub const IGDB_PROVIDER_ID: &str = "00000000-0000-0000-0000-000000000002";
 const IGDB_CONCURRENT_REQUESTS_LIMIT: usize = 8;
 
 pub enum IgdbSearchData {

@@ -160,9 +160,9 @@ BEGIN
   -- ──────────────────────────────────────────────────────────────────────────
 
   -- platforms
-  INSERT INTO platforms (id, path, created_at, updated_at, deleted_at, is_deleted, third_party)
+  INSERT INTO platforms (id, created_at, updated_at, deleted_at, is_deleted, third_party)
   SELECT
-    m.new_id, v.path,
+    m.new_id,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     CASE WHEN v.deleted_at IS NOT NULL
@@ -181,7 +181,7 @@ BEGIN
     v.path,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_platforms v
+  FROM _v1_platforms v WHERE v.third_party = false
   ON CONFLICT DO NOTHING;
 
   -- platform_root_directory (one entry per platform, keyed by path)
@@ -197,17 +197,16 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- games
-  INSERT INTO games (id, path, created_at, updated_at, deleted_at,
-                     is_deleted, storage_type, third_party, steam_app_id)
+  INSERT INTO games (id, created_at, updated_at, deleted_at,
+                     is_deleted, third_party, steam_app_id)
   SELECT
-    mg.new_id, v.path,
+    mg.new_id,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     CASE WHEN v.deleted_at IS NOT NULL
          THEN to_char(v.deleted_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
          ELSE NULL END,
     CASE WHEN v.is_deleted  THEN 1 ELSE 0 END,
-    v.storage_type,
     CASE WHEN v.third_party THEN 1 ELSE 0 END,
     v.steam_app_id::text
   FROM _v1_games v
@@ -221,7 +220,7 @@ BEGIN
     v.path,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_games v
+  FROM _v1_games v WHERE v.third_party = false
   ON CONFLICT DO NOTHING;
 
   -- game_root_directory (one entry per game, keyed by path)
@@ -271,24 +270,30 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- platform_metadata
-  INSERT INTO platform_metadata (platform_id, name, description, background_url, logo_url,
-                                  igdb_id, created_at, updated_at)
+  INSERT INTO platform_metadata (id, platform_id, name, description, background_url, logo_url,
+                                  created_at, updated_at, provider_id, provider_platform_id)
   SELECT
-    mp.new_id, v.name, v.description, v.background_url, v.logo_url,
-    v.igdb_id::text,
+    gen_random_uuid()::text, mp.new_id, v.name, v.description, v.background_url, v.logo_url,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-    to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+    to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+    CASE WHEN p.path = '__RETROM_RESERVED__/Steam' THEN '00000000-0000-0000-0000-000000000001'  -- static ID for 'steam' metadata
+         WHEN v.igdb_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000002'  -- static ID for 'igdb' metadata
+         ELSE '00000000-0000-0000-0000-000000000001' END,  -- default to 'manual' metadata
+    CASE WHEN v.igdb_id IS NOT NULL THEN v.igdb_id::text
+         ELSE mp.old_id::text END
   FROM _v1_platform_metadata v
   JOIN _map_platforms mp ON v.platform_id = mp.old_id
+  JOIN _v1_platforms p ON v.platform_id = p.id
   ON CONFLICT DO NOTHING;
 
   -- game_metadata
-  INSERT INTO game_metadata (game_id, name, description, cover_url, background_url,
-                              icon_url, igdb_id, created_at, updated_at,
-                              release_date, last_played, minutes_played)
+  INSERT INTO game_metadata (id, game_id, name, description, cover_url, background_url,
+                              icon_url, created_at, updated_at,
+                              release_date, last_played, minutes_played, provider_id, 
+                              provider_game_id)
   SELECT
-    mg.new_id, v.name, v.description, v.cover_url, v.background_url,
-    v.icon_url, v.igdb_id::text,
+    gen_random_uuid()::text, mg.new_id, v.name, v.description, v.cover_url, v.background_url,
+    v.icon_url,
     to_char(v.created_at  AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at  AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     CASE WHEN v.release_date IS NOT NULL
@@ -297,40 +302,51 @@ BEGIN
     CASE WHEN v.last_played IS NOT NULL
          THEN to_char(v.last_played  AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
          ELSE NULL END,
-    v.minutes_played
+    v.minutes_played,
+    CASE WHEN v.igdb_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000002'  -- static ID for 'igdb' metadata
+          WHEN g.steam_app_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000003'  -- static ID for 'steam' metadata
+          ELSE '00000000-0000-0000-0000-000000000001' END,  -- static ID for 'manual' metadata
+    CASE WHEN v.igdb_id IS NOT NULL THEN v.igdb_id::text 
+         WHEN g.steam_app_id IS NOT NULL THEN g.steam_app_id::text
+         ELSE mg.old_id::text END
   FROM _v1_game_metadata v
   JOIN _map_games mg ON v.game_id = mg.old_id
+  JOIN _v1_games g ON v.game_id = g.id
   ON CONFLICT DO NOTHING;
 
   -- game_metadata_links (from v1 links text[])
-  INSERT INTO game_metadata_links (game_id, url)
-  SELECT mg.new_id, unnest(v.links)
+  INSERT INTO game_metadata_links (game_metadata_id, url)
+  SELECT gm.id, unnest(v.links)
   FROM _v1_game_metadata v
   JOIN _map_games mg ON v.game_id = mg.old_id
+  JOIN game_metadata gm ON gm.game_id = mg.new_id
   WHERE array_length(v.links, 1) > 0
   ON CONFLICT DO NOTHING;
 
   -- game_metadata_videos (from v1 video_urls text[])
-  INSERT INTO game_metadata_videos (game_id, url)
-  SELECT mg.new_id, unnest(v.video_urls)
+  INSERT INTO game_metadata_videos (game_metadata_id, url)
+  SELECT gm.id, unnest(v.video_urls)
   FROM _v1_game_metadata v
   JOIN _map_games mg ON v.game_id = mg.old_id
+  JOIN game_metadata gm ON gm.game_id = mg.new_id
   WHERE array_length(v.video_urls, 1) > 0
   ON CONFLICT DO NOTHING;
 
   -- game_metadata_screenshots (from v1 screenshot_urls text[])
-  INSERT INTO game_metadata_screenshots (game_id, url)
-  SELECT mg.new_id, unnest(v.screenshot_urls)
+  INSERT INTO game_metadata_screenshots (game_metadata_id, url)
+  SELECT gm.id, unnest(v.screenshot_urls)
   FROM _v1_game_metadata v
   JOIN _map_games mg ON v.game_id = mg.old_id
+  JOIN game_metadata gm ON gm.game_id = mg.new_id
   WHERE array_length(v.screenshot_urls, 1) > 0
   ON CONFLICT DO NOTHING;
 
   -- game_metadata_artwork (from v1 artwork_urls text[])
-  INSERT INTO game_metadata_artwork (game_id, url)
-  SELECT mg.new_id, unnest(v.artwork_urls)
+  INSERT INTO game_metadata_artwork (game_metadata_id, url)
+  SELECT gm.id, unnest(v.artwork_urls)
   FROM _v1_game_metadata v
   JOIN _map_games mg ON v.game_id = mg.old_id
+  JOIN game_metadata gm ON gm.game_id = mg.new_id
   WHERE array_length(v.artwork_urls, 1) > 0
   ON CONFLICT DO NOTHING;
 
@@ -390,9 +406,9 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- emulators (built-ins already seeded by v2_baseline – skip via DO NOTHING)
-  INSERT INTO emulators (id, name, save_strategy, built_in, libretro_name, created_at, updated_at)
-  SELECT m.new_id, v.name, v.save_strategy,
-         CASE WHEN v.built_in THEN 1 ELSE 0 END,
+  INSERT INTO emulators (id, name, built_in, libretro_name, created_at, updated_at)
+  SELECT m.new_id, v.name,
+         CASE WHEN v.built_in THEN True ELSE False END,
          v.libretro_name,
          to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
          to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
@@ -400,8 +416,8 @@ BEGIN
   JOIN _map_emulators m ON v.id = m.old_id
   ON CONFLICT DO NOTHING;
 
-  -- emulator_supported_platforms (from v1 integer array)
-  INSERT INTO emulator_supported_platforms (emulator_id, platform_id)
+  -- emulator_platforms (from v1 integer array)
+  INSERT INTO emulator_platforms (emulator_id, platform_id)
   SELECT DISTINCT me.new_id, mp.new_id
   FROM _v1_emulators e
   JOIN _map_emulators me ON e.id = me.old_id
@@ -434,7 +450,7 @@ BEGIN
   SELECT
     mep.new_id, me.new_id, ep.name,
     array_to_string(ep.custom_args, ' '),
-    CASE WHEN ep.built_in THEN 1 ELSE 0 END,
+    CASE WHEN ep.built_in THEN True ELSE False END,
     to_char(ep.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(ep.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
   FROM _v1_emulator_profiles ep
@@ -482,28 +498,28 @@ BEGIN
   -- Drop _v1_* shadow tables (reverse FK order)
   -- ──────────────────────────────────────────────────────────────────────────
 
-  DROP TABLE IF EXISTS _v1_local_emulator_configs;
-  DROP TABLE IF EXISTS _v1_default_emulator_profiles;
-  DROP TABLE IF EXISTS _v1_emulator_profiles;
-  DROP TABLE IF EXISTS _v1_emulators;
-  DROP TABLE IF EXISTS _v1_clients;
-  DROP TABLE IF EXISTS _v1_similar_game_maps;
-  DROP TABLE IF EXISTS _v1_game_genre_maps;
-  DROP TABLE IF EXISTS _v1_game_genres;
-  DROP TABLE IF EXISTS _v1_game_metadata;
-  DROP TABLE IF EXISTS _v1_platform_metadata;
-  ALTER TABLE _v1_games DROP COLUMN default_file_id;
-  DROP TABLE IF EXISTS _v1_game_files;
-  DROP TABLE IF EXISTS _v1_games;
-  DROP TABLE IF EXISTS _v1_platforms;
+  -- DROP TABLE IF EXISTS _v1_local_emulator_configs;
+  -- DROP TABLE IF EXISTS _v1_default_emulator_profiles;
+  -- DROP TABLE IF EXISTS _v1_emulator_profiles;
+  -- DROP TABLE IF EXISTS _v1_emulators;
+  -- DROP TABLE IF EXISTS _v1_clients;
+  -- DROP TABLE IF EXISTS _v1_similar_game_maps;
+  -- DROP TABLE IF EXISTS _v1_game_genre_maps;
+  -- DROP TABLE IF EXISTS _v1_game_genres;
+  -- DROP TABLE IF EXISTS _v1_game_metadata;
+  -- DROP TABLE IF EXISTS _v1_platform_metadata;
+  -- ALTER TABLE _v1_games DROP COLUMN default_file_id;
+  -- DROP TABLE IF EXISTS _v1_game_files;
+  -- DROP TABLE IF EXISTS _v1_games;
+  -- DROP TABLE IF EXISTS _v1_platforms;
 
   -- Drop temp mapping tables
-  DROP TABLE IF EXISTS _map_local_emulator_configs;
-  DROP TABLE IF EXISTS _map_emulator_profiles;
-  DROP TABLE IF EXISTS _map_emulators;
-  DROP TABLE IF EXISTS _map_clients;
-  DROP TABLE IF EXISTS _map_game_files;
-  DROP TABLE IF EXISTS _map_games;
-  DROP TABLE IF EXISTS _map_platforms;
+  -- DROP TABLE IF EXISTS _map_local_emulator_configs;
+  -- DROP TABLE IF EXISTS _map_emulator_profiles;
+  -- DROP TABLE IF EXISTS _map_emulators;
+  -- DROP TABLE IF EXISTS _map_clients;
+  -- DROP TABLE IF EXISTS _map_game_files;
+  -- DROP TABLE IF EXISTS _map_games;
+  -- DROP TABLE IF EXISTS _map_platforms;
 
 END $$;
