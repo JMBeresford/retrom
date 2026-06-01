@@ -10,6 +10,8 @@ use tokio::sync::{mpsc, oneshot};
 use tower::{Service, ServiceExt};
 use tracing::{instrument, Instrument};
 
+pub const STEAM_PROVIDER_ID: &str = "00000000-0000-0000-0000-000000000003";
+
 type SteamSenderMsg = (
     reqwest::Request,
     oneshot::Sender<Result<reqwest::Response, reqwest::StatusCode>>,

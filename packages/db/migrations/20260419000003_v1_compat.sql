@@ -271,20 +271,26 @@ BEGIN
 
   -- platform_metadata
   INSERT INTO platform_metadata (id, platform_id, name, description, background_url, logo_url,
-                                  created_at, updated_at, provider_id)
+                                  created_at, updated_at, provider_id, proviver_platform_id)
   SELECT
     gen_random_uuid()::text, mp.new_id, v.name, v.description, v.background_url, v.logo_url,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-    '00000000-0000-0000-0000-000000000001'  -- static ID for 'manual' metadata
+    CASE WHEN p.path = '__RETROM_RESERVED__/Steam' THEN '00000000-0000-0000-0000-000000000001'  -- static ID for 'steam' metadata
+         WHEN p.igdb_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000002'  -- static ID for 'igdb' metadata
+         ELSE '00000000-0000-0000-0000-000000000001' END,  -- default to 'manual' metadata
+    CASE WHEN p.igdb_id IS NOT NULL THEN p.igdb_id::text
+         ELSE mp.old_id END
   FROM _v1_platform_metadata v
   JOIN _map_platforms mp ON v.platform_id = mp.old_id
+  JOIN _v1_platforms p ON v.platform_id = p.id
   ON CONFLICT DO NOTHING;
 
   -- game_metadata
   INSERT INTO game_metadata (id, game_id, name, description, cover_url, background_url,
                               icon_url, created_at, updated_at,
-                              release_date, last_played, minutes_played, provider_id)
+                              release_date, last_played, minutes_played, provider_id, 
+                              provider_game_id)
   SELECT
     gen_random_uuid()::text, mg.new_id, v.name, v.description, v.cover_url, v.background_url,
     v.icon_url,
@@ -297,9 +303,15 @@ BEGIN
          THEN to_char(v.last_played  AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
          ELSE NULL END,
     v.minutes_played,
-    '00000000-0000-0000-0000-000000000001'  -- static ID for 'manual' metadata
+    CASE WHEN v.igdb_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000002',  -- static ID for 'igdb' metadata
+          WHEN g.steam_app_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000003',  -- static ID for 'steam' metadata
+          ELSE '00000000-0000-0000-0000-000000000001' END,  -- static ID for 'manual' metadata
+    CASE WHEN v.igdb_id IS NOT NULL THEN v.igdb_id::text 
+         WHEN g.steam_app_id IS NOT NULL THEN g.steam_app_id::text
+         ELSE mg.old_id END
   FROM _v1_game_metadata v
   JOIN _map_games mg ON v.game_id = mg.old_id
+  JOIN _v1_games g ON v.game_id = g.id
   ON CONFLICT DO NOTHING;
 
   -- game_metadata_links (from v1 links text[])
@@ -486,28 +498,28 @@ BEGIN
   -- Drop _v1_* shadow tables (reverse FK order)
   -- ──────────────────────────────────────────────────────────────────────────
 
-  DROP TABLE IF EXISTS _v1_local_emulator_configs;
-  DROP TABLE IF EXISTS _v1_default_emulator_profiles;
-  DROP TABLE IF EXISTS _v1_emulator_profiles;
-  DROP TABLE IF EXISTS _v1_emulators;
-  DROP TABLE IF EXISTS _v1_clients;
-  DROP TABLE IF EXISTS _v1_similar_game_maps;
-  DROP TABLE IF EXISTS _v1_game_genre_maps;
-  DROP TABLE IF EXISTS _v1_game_genres;
-  DROP TABLE IF EXISTS _v1_game_metadata;
-  DROP TABLE IF EXISTS _v1_platform_metadata;
-  ALTER TABLE _v1_games DROP COLUMN default_file_id;
-  DROP TABLE IF EXISTS _v1_game_files;
-  DROP TABLE IF EXISTS _v1_games;
-  DROP TABLE IF EXISTS _v1_platforms;
+  -- DROP TABLE IF EXISTS _v1_local_emulator_configs;
+  -- DROP TABLE IF EXISTS _v1_default_emulator_profiles;
+  -- DROP TABLE IF EXISTS _v1_emulator_profiles;
+  -- DROP TABLE IF EXISTS _v1_emulators;
+  -- DROP TABLE IF EXISTS _v1_clients;
+  -- DROP TABLE IF EXISTS _v1_similar_game_maps;
+  -- DROP TABLE IF EXISTS _v1_game_genre_maps;
+  -- DROP TABLE IF EXISTS _v1_game_genres;
+  -- DROP TABLE IF EXISTS _v1_game_metadata;
+  -- DROP TABLE IF EXISTS _v1_platform_metadata;
+  -- ALTER TABLE _v1_games DROP COLUMN default_file_id;
+  -- DROP TABLE IF EXISTS _v1_game_files;
+  -- DROP TABLE IF EXISTS _v1_games;
+  -- DROP TABLE IF EXISTS _v1_platforms;
 
   -- Drop temp mapping tables
-  DROP TABLE IF EXISTS _map_local_emulator_configs;
-  DROP TABLE IF EXISTS _map_emulator_profiles;
-  DROP TABLE IF EXISTS _map_emulators;
-  DROP TABLE IF EXISTS _map_clients;
-  DROP TABLE IF EXISTS _map_game_files;
-  DROP TABLE IF EXISTS _map_games;
-  DROP TABLE IF EXISTS _map_platforms;
+  -- DROP TABLE IF EXISTS _map_local_emulator_configs;
+  -- DROP TABLE IF EXISTS _map_emulator_profiles;
+  -- DROP TABLE IF EXISTS _map_emulators;
+  -- DROP TABLE IF EXISTS _map_clients;
+  -- DROP TABLE IF EXISTS _map_game_files;
+  -- DROP TABLE IF EXISTS _map_games;
+  -- DROP TABLE IF EXISTS _map_platforms;
 
 END $$;

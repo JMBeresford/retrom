@@ -304,6 +304,15 @@ impl MetadataService for MetadataServiceHandlers {
         //     vec![]
         // };
 
+        if metadata.is_empty() {
+            return Ok(Response::new(GetGameMetadataResponse {
+                metadata,
+                similar_games,
+                media_paths: HashMap::new(),
+                links: HashMap::new(),
+            }));
+        }
+
         let mut builder = sqlx::QueryBuilder::new(
             r#"
             select * from game_metadata_artwork

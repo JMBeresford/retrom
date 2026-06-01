@@ -5,7 +5,9 @@ use retrom_codegen::{
     timestamp::Timestamp,
 };
 use retrom_db::{DbPool, RetromDB};
-use retrom_service_common::metadata_providers::steam::provider::SteamWebApiProvider;
+use retrom_service_common::metadata_providers::steam::provider::{
+    SteamWebApiProvider, STEAM_PROVIDER_ID,
+};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 use tracing::Level;
@@ -67,10 +69,8 @@ impl SteamService for SteamServiceHandlers {
             .response
             .games;
 
-        let steam_games_map: std::collections::HashMap<u32, _> = steam_games
-            .iter()
-            .map(|g| (g.appid, g))
-            .collect();
+        let steam_games_map: std::collections::HashMap<u32, _> =
+            steam_games.iter().map(|g| (g.appid, g)).collect();
 
         let mut tx = self
             .db_pool
@@ -112,8 +112,12 @@ impl SteamService for SteamServiceHandlers {
                 .push_bind(last_played)
                 .push(", minutes_played = ")
                 .push_bind(minutes_played)
-                .push(" where game_id = ")
-                .push_bind(&game.id);
+                .push("where game_id = ")
+                .push_bind(game.id)
+                .push(" and provider_game_id = ")
+                .push_bind(app_id.to_string())
+                .push(" and provider_id = ")
+                .push_bind(STEAM_PROVIDER_ID.to_string());
 
             builder
                 .build()
