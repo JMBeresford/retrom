@@ -44,10 +44,10 @@
   - [x] `retrom-service-metadata`
   - [x] `retrom-service-emulators`
   - [x] `retrom-service-clients`
-  - [ ] `retrom-service-config`
-  - [ ] `retrom-service-jobs`
+  - [x] `retrom-service-config`
+  - [x] `retrom-service-jobs`
   - [x] `retrom-service-tags`
-  - [ ] `retrom-service-files`
+  - [x] `retrom-service-files`
   - [x] `retrom-service-saves`
 - [ ] 3.5 Migrate per-service crates to use `ConfigService` via RPC
 - [ ] 3.6 Create `retrom-metadata` crate (provider traits, IGDB, Steam, registry)
@@ -1626,12 +1626,12 @@ contain Diesel-specific imports, derive macros, and query logic that was not yet
 | -------------------------- | :-------------: |
 | `retrom-service-config`    |        x        |
 | `retrom-service-library`   |        ☐        |
-| `retrom-service-metadata`  |        ☐        |
+| `retrom-service-metadata`  |        x        |
 | `retrom-service-emulators` |        x        |
 | `retrom-service-clients`   |        x        |
-| `retrom-service-jobs`      |        ☐        |
+| `retrom-service-jobs`      |        x        |
 | `retrom-service-tags`      |        x        |
-| `retrom-service-files`     |        ☐        |
+| `retrom-service-files`     |        x        |
 | `retrom-service-saves`     |        x        |
 
 > **Suggested order:** Migrate `retrom-service-config` first (smallest surface area, no

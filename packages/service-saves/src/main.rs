@@ -1,5 +1,5 @@
 use retrom_service_config::config::ServerConfigManager;
-use retrom_service_saves::saves_router;
+use retrom_service_saves::router::saves_router;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit, sync::Arc};
 
