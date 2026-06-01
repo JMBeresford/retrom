@@ -1,6 +1,6 @@
 use crate::media_cache::{cacheable_media::CacheableMetadata, CacheMediaOpts};
 use retrom_codegen::retrom::services::metadata::v1::{
-    ArtworkMetadata, GameMetadata, ScreenshotMetadata, VideoMetadata,
+    GameMetadata, GameMetadataArtwork, GameMetadataScreenshot, GameMetadataVideo,
 };
 use retrom_service_config::retrom_dirs::RetromDirs;
 use std::path::PathBuf;
@@ -61,7 +61,7 @@ impl CacheableMetadata for GameMetadata {
     }
 }
 
-impl CacheableMetadata for ArtworkMetadata {
+impl CacheableMetadata for GameMetadataArtwork {
     fn get_cache_dir(&self) -> Option<PathBuf> {
         if self.game_metadata_id.trim().is_empty() {
             return None;
@@ -97,7 +97,7 @@ impl CacheableMetadata for ArtworkMetadata {
     }
 }
 
-impl CacheableMetadata for ScreenshotMetadata {
+impl CacheableMetadata for GameMetadataScreenshot {
     fn get_cache_dir(&self) -> Option<PathBuf> {
         if self.game_metadata_id.trim().is_empty() {
             return None;
@@ -133,7 +133,7 @@ impl CacheableMetadata for ScreenshotMetadata {
     }
 }
 
-impl CacheableMetadata for VideoMetadata {
+impl CacheableMetadata for GameMetadataVideo {
     fn get_cache_dir(&self) -> Option<PathBuf> {
         if self.game_metadata_id.trim().is_empty() {
             return None;
@@ -185,7 +185,7 @@ mod tests {
 
     #[test]
     fn artwork_cache_dir_is_none_for_empty_game_metadata_id() {
-        let metadata = ArtworkMetadata {
+        let metadata = GameMetadataArtwork {
             game_metadata_id: "".to_string(),
             ..Default::default()
         };
@@ -195,7 +195,7 @@ mod tests {
 
     #[test]
     fn screenshot_cache_dir_is_none_for_empty_game_metadata_id() {
-        let metadata = ScreenshotMetadata {
+        let metadata = GameMetadataScreenshot {
             game_metadata_id: "".to_string(),
             ..Default::default()
         };
@@ -205,7 +205,7 @@ mod tests {
 
     #[test]
     fn video_cache_dir_is_none_for_empty_game_metadata_id() {
-        let metadata = VideoMetadata {
+        let metadata = GameMetadataVideo {
             game_metadata_id: "".to_string(),
             ..Default::default()
         };

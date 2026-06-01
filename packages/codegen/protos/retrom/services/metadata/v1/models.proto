@@ -8,16 +8,18 @@ import "google/protobuf/timestamp.proto";
 message GameMetadata {
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string game_id = 2;
-  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  optional string name = 5;
-  optional string description = 6;
-  optional string cover_url = 7;
-  optional string background_url = 8;
-  optional string icon_url = 9;
-  optional string logo_url = 10;
-  optional int64 igdb_id = 11;
-  repeated string links = 12;
+  // The ID of the metadata provider that this metadata was sourced from (e.g. IGDB, Steam).
+  string provider_id = 3;
+  // The ID of the game in the provider's database (e.g. IGDB game ID, Steam app ID).
+  string provider_game_id = 4;
+  google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  optional string name = 7;
+  optional string description = 8;
+  optional string cover_url = 9;
+  optional string background_url = 10;
+  optional string icon_url = 11;
+  optional string logo_url = 12;
   google.protobuf.Timestamp release_date = 13;
   google.protobuf.Timestamp last_played = 14;
   optional int32 minutes_played = 15;
@@ -26,14 +28,17 @@ message GameMetadata {
 message PlatformMetadata {
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string platform_id = 2;
-  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  optional string name = 5;
-  optional string description = 6;
-  optional string background_url = 7;
-  optional string icon_url = 8;
-  optional string logo_url = 9;
-  optional int64 igdb_id = 10;
+  // The ID of the metadata provider that this metadata was sourced from (e.g. IGDB, Steam).
+  string provider_id = 3;
+  // The ID of the platform in the provider's database (e.g. IGDB platform ID).
+  string provider_platform_id = 4;
+  google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  optional string name = 7;
+  optional string description = 8;
+  optional string background_url = 9;
+  optional string icon_url = 10;
+  optional string logo_url = 11;
 }
 
 message SimilarGame {
@@ -47,40 +52,40 @@ message SimilarGame {
 // Well-known providers are seeded at startup.
 message MetadataProvider {
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The name of the provider (e.g. "IGDB", "Steam").
   string name = 2;
   google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
-// VideoMetadata is a single video URL associated with a game_metadata record.
-// Normalises the deprecated game_metadata.video_urls array column.
-message VideoMetadata {
-  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+// GameMetadataVideo is a single video URL associated with a game_metadata record.
+message GameMetadataVideo {
   // References game_metadata.id.
-  string game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string url = 3;
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string game_metadata_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The URL of the video (e.g. YouTube, Twitch).
+  string url = 2;
 }
 
-// ScreenshotMetadata is a single screenshot URL associated with a game_metadata record.
-// Normalises the deprecated game_metadata.screenshot_urls array column.
-message ScreenshotMetadata {
-  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+// GameMetadataScreenshot is a single screenshot URL associated with a game_metadata record.
+message GameMetadataScreenshot {
   // References game_metadata.id.
-  string game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string url = 3;
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string game_metadata_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The URL of the screenshot.
+  string url = 2;
 }
 
-// ArtworkMetadata is a single artwork URL associated with a game_metadata record.
-// Normalises the deprecated game_metadata.artwork_urls array column.
-message ArtworkMetadata {
-  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+// GameMetadataArtwork is a single artwork URL associated with a game_metadata record.
+message GameMetadataArtwork {
   // References game_metadata.id.
-  string game_metadata_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  string url = 3;
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string game_metadata_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The URL of the artwork.
+  string url = 2;
+}
+
+// GameMetadataLink is a single link URL associated with a game_metadata record (e.g. official website, store page).
+message GameMetadataLink {
+  // References game_metadata.id.
+  string game_metadata_id = 1;
+  // The URL of the link.
+  string url = 2;
 }

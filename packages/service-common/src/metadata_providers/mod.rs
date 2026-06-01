@@ -2,7 +2,8 @@ use reqwest::StatusCode;
 use retrom_codegen::retrom::services::{
     library::v1::{Game, Platform},
     metadata::v1::{
-        ArtworkMetadata, GameMetadata, PlatformMetadata, ScreenshotMetadata, VideoMetadata,
+        GameMetadata, GameMetadataArtwork, GameMetadataScreenshot, GameMetadataVideo,
+        PlatformMetadata,
     },
 };
 use std::time::Duration;
@@ -17,22 +18,32 @@ use tower::{
 pub mod igdb;
 pub mod steam;
 
+#[derive(Debug, thiserror::Error)]
+pub enum MetadataProviderError {
+    #[error("HTTP error: {0}")]
+    HttpError(#[from] reqwest::Error),
+    #[error("MetadataProviderError: {0}")]
+    Other(String),
+}
+
+pub type Result<T> = std::result::Result<T, MetadataProviderError>;
+
 pub trait MetadataProvider<Query, Data> {
     fn search_metadata(&self, query: Query) -> impl std::future::Future<Output = Option<Data>>;
 }
 
 pub type GameMetadataSearchResult = (
     Option<GameMetadata>,
-    Option<Vec<ArtworkMetadata>>,
-    Option<Vec<ScreenshotMetadata>>,
-    Option<Vec<VideoMetadata>>,
+    Option<Vec<GameMetadataArtwork>>,
+    Option<Vec<GameMetadataScreenshot>>,
+    Option<Vec<GameMetadataVideo>>,
 );
 
 pub trait GameMetadataProvider<Query, SearchResult> {
     fn get_game_metadata(
         &self,
         game: Game,
-        query: Option<Query>,
+        query: Query,
     ) -> impl std::future::Future<Output = GameMetadataSearchResult>;
 
     fn search_game_metadata(&self, query: Query)
@@ -43,7 +54,7 @@ pub trait PlatformMetadataProvider<Query> {
     fn get_platform_metadata(
         &self,
         platform: Platform,
-        query: Option<Query>,
+        query: Query,
     ) -> impl std::future::Future<Output = Option<PlatformMetadata>>;
 
     fn search_platform_metadata(
@@ -82,7 +93,7 @@ impl Policy<reqwest::Request, reqwest::Response, reqwest::Error> for RetryAttemp
     fn retry(
         &mut self,
         _req: &mut reqwest::Request,
-        result: &mut Result<reqwest::Response, reqwest::Error>,
+        result: &mut std::result::Result<reqwest::Response, reqwest::Error>,
     ) -> Option<Self::Future> {
         let result = result.as_ref();
         match result.is_ok_and(|res| res.status() != StatusCode::TOO_MANY_REQUESTS) {
