@@ -216,7 +216,7 @@ create table if not exists emulators (
 );
 
 -- Relational replacement for emulators.supported_platforms integer[]
-create table if not exists emulator_supported_platforms (
+create table if not exists emulator_platforms (
     emulator_id text not null references emulators (id) on delete cascade,
     platform_id text not null references platforms (id) on delete cascade,
     primary key (emulator_id, platform_id)
@@ -328,14 +328,6 @@ create table if not exists game_tag (
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     primary key (game_id, tag_id)
-);
-
-create table if not exists emulator_platform (
-    emulator_id text not null references emulators (id) on delete cascade,
-    platform_id text not null references platforms (id) on delete cascade,
-    created_at text not null default current_timestamp,
-    updated_at text not null default current_timestamp,
-    primary key (emulator_id, platform_id)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────

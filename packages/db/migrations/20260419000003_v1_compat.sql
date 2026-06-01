@@ -181,7 +181,7 @@ BEGIN
     v.path,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_platforms v
+  FROM _v1_platforms v WHERE v.third_party = false
   ON CONFLICT DO NOTHING;
 
   -- platform_root_directory (one entry per platform, keyed by path)
@@ -220,7 +220,7 @@ BEGIN
     v.path,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-  FROM _v1_games v
+  FROM _v1_games v WHERE v.third_party = false
   ON CONFLICT DO NOTHING;
 
   -- game_root_directory (one entry per game, keyed by path)
@@ -271,16 +271,16 @@ BEGIN
 
   -- platform_metadata
   INSERT INTO platform_metadata (id, platform_id, name, description, background_url, logo_url,
-                                  created_at, updated_at, provider_id, proviver_platform_id)
+                                  created_at, updated_at, provider_id, provider_platform_id)
   SELECT
     gen_random_uuid()::text, mp.new_id, v.name, v.description, v.background_url, v.logo_url,
     to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
     CASE WHEN p.path = '__RETROM_RESERVED__/Steam' THEN '00000000-0000-0000-0000-000000000001'  -- static ID for 'steam' metadata
-         WHEN p.igdb_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000002'  -- static ID for 'igdb' metadata
+         WHEN v.igdb_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000002'  -- static ID for 'igdb' metadata
          ELSE '00000000-0000-0000-0000-000000000001' END,  -- default to 'manual' metadata
-    CASE WHEN p.igdb_id IS NOT NULL THEN p.igdb_id::text
-         ELSE mp.old_id END
+    CASE WHEN v.igdb_id IS NOT NULL THEN v.igdb_id::text
+         ELSE mp.old_id::text END
   FROM _v1_platform_metadata v
   JOIN _map_platforms mp ON v.platform_id = mp.old_id
   JOIN _v1_platforms p ON v.platform_id = p.id
@@ -303,12 +303,12 @@ BEGIN
          THEN to_char(v.last_played  AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
          ELSE NULL END,
     v.minutes_played,
-    CASE WHEN v.igdb_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000002',  -- static ID for 'igdb' metadata
-          WHEN g.steam_app_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000003',  -- static ID for 'steam' metadata
+    CASE WHEN v.igdb_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000002'  -- static ID for 'igdb' metadata
+          WHEN g.steam_app_id IS NOT NULL THEN '00000000-0000-0000-0000-000000000003'  -- static ID for 'steam' metadata
           ELSE '00000000-0000-0000-0000-000000000001' END,  -- static ID for 'manual' metadata
     CASE WHEN v.igdb_id IS NOT NULL THEN v.igdb_id::text 
          WHEN g.steam_app_id IS NOT NULL THEN g.steam_app_id::text
-         ELSE mg.old_id END
+         ELSE mg.old_id::text END
   FROM _v1_game_metadata v
   JOIN _map_games mg ON v.game_id = mg.old_id
   JOIN _v1_games g ON v.game_id = g.id
@@ -416,8 +416,8 @@ BEGIN
   JOIN _map_emulators m ON v.id = m.old_id
   ON CONFLICT DO NOTHING;
 
-  -- emulator_supported_platforms (from v1 integer array)
-  INSERT INTO emulator_supported_platforms (emulator_id, platform_id)
+  -- emulator_platforms (from v1 integer array)
+  INSERT INTO emulator_platforms (emulator_id, platform_id)
   SELECT DISTINCT me.new_id, mp.new_id
   FROM _v1_emulators e
   JOIN _map_emulators me ON e.id = me.old_id
