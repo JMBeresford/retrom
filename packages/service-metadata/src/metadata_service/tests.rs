@@ -32,10 +32,6 @@ async fn test_service(
     run_migrations(&pool, url)
         .await
         .expect("could not run migrations");
-    sqlx::query("alter table platform_metadata add column igdb_id integer")
-        .execute(&pool)
-        .await
-        .expect("could not add igdb_id column for test schema");
 
     let config_manager =
         Arc::new(ServerConfigManager::new().expect("could not create config manager"));
