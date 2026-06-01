@@ -21,10 +21,12 @@ service LibraryService {
   rpc DeleteRootDirectories(DeleteRootDirectoriesRequest) returns (DeleteRootDirectoriesResponse);
 
   rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse);
+  rpc CreatePlatforms(CreatePlatformsRequest) returns (CreatePlatformsResponse);
   rpc DeletePlatforms(DeletePlatformsRequest) returns (DeletePlatformsResponse);
   rpc UpdatePlatforms(UpdatePlatformsRequest) returns (UpdatePlatformsResponse);
 
   rpc GetGames(GetGamesRequest) returns (GetGamesResponse);
+  rpc CreateGames(CreateGamesRequest) returns (CreateGamesResponse);
   rpc DeleteGames(DeleteGamesRequest) returns (DeleteGamesResponse);
   rpc UpdateGames(UpdateGamesRequest) returns (UpdateGamesResponse);
   rpc GetGameFiles(GetGameFilesRequest) returns (GetGameFilesResponse);
@@ -130,6 +132,14 @@ message GetPlatformsResponse {
   repeated retrom.services.metadata.v1.PlatformMetadata metadata = 2;
 }
 
+message CreatePlatformsRequest {
+  repeated retrom.services.library.v1.Platform platforms = 1;
+}
+
+message CreatePlatformsResponse {
+  repeated retrom.services.library.v1.Platform platforms_created = 1;
+}
+
 message DeletePlatformsRequest {
   repeated int32 ids = 1;
   bool delete_from_disk = 2;
@@ -160,6 +170,14 @@ message GetGamesResponse {
   repeated retrom.services.library.v1.Game games = 1;
   repeated retrom.services.metadata.v1.GameMetadata metadata = 2;
   repeated retrom.services.library.v1.GameFile game_files = 3;
+}
+
+message CreateGamesRequest {
+  repeated retrom.services.library.v1.Game games = 1;
+}
+
+message CreateGamesResponse {
+  repeated retrom.services.library.v1.Game games_created = 1;
 }
 
 message DeleteGamesRequest {

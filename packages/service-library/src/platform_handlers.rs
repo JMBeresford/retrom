@@ -1,64 +1,71 @@
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
-use futures::future::join_all;
-use retrom_codegen::retrom::{
-    self, DeletePlatformsRequest, DeletePlatformsResponse, GameFile, GameMetadata,
-    GetPlatformsRequest, GetPlatformsResponse, PlatformMetadata, UpdatePlatformsRequest,
-    UpdatePlatformsResponse,
+use retrom_codegen::retrom::services::{
+    library::v1::{
+        CreatePlatformsRequest, CreatePlatformsResponse, DeletePlatformsRequest,
+        DeletePlatformsResponse, GetPlatformsRequest, GetPlatformsResponse, Platform,
+        UpdatePlatformsRequest, UpdatePlatformsResponse,
+    },
+    metadata::v1::PlatformMetadata,
 };
-use retrom_db::{schema, Pool};
-use retrom_service_common::media_cache::cacheable_media::CacheableMetadata;
-use std::{path::PathBuf, sync::Arc};
-use tonic::{Code, Status};
+use retrom_db::{DbPool, RetromDB};
+use sqlx::QueryBuilder;
+use tonic::Status;
 
 pub async fn get_platforms(
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     request: GetPlatformsRequest,
 ) -> Result<GetPlatformsResponse, Status> {
-    let ids = &request.ids;
-    let with_metadata = request.with_metadata();
-    let with_deleted = request.include_deleted();
+    let ids: Vec<String> = request.ids.into_iter().map(|id| id.to_string()).collect();
+    let with_metadata = request.with_metadata.unwrap_or(false);
+    let include_deleted = request.include_deleted.unwrap_or(false);
 
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
-
-    let mut query = schema::platforms::table
-        .into_boxed()
-        .select(retrom::Platform::as_select());
+    let mut platforms_builder = QueryBuilder::<RetromDB>::new("select * from platforms");
+    let mut has_condition = false;
 
     if !ids.is_empty() {
-        query = query.filter(schema::platforms::id.eq_any(ids));
-    }
-
-    if !with_deleted {
-        query = query.filter(schema::platforms::is_deleted.eq(false));
-    }
-
-    let platforms: Vec<retrom::Platform> = match query.load(&mut conn).await {
-        Ok(rows) => rows,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
-
-    let metadata = match with_metadata {
-        true => {
-            let mut query = schema::platform_metadata::table
-                .into_boxed()
-                .select(retrom::PlatformMetadata::as_select());
-
-            if !ids.is_empty() {
-                query = query.filter(schema::platform_metadata::platform_id.eq_any(ids));
-            }
-
-            let metadata: Vec<retrom::PlatformMetadata> = match query.load(&mut conn).await {
-                Ok(rows) => rows,
-                Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-            };
-
-            metadata
+        platforms_builder.push(" where id in (");
+        let mut separated = platforms_builder.separated(", ");
+        for id in &ids {
+            separated.push_bind(id);
         }
-        false => vec![],
+        separated.push_unseparated(")");
+        has_condition = true;
+    }
+
+    if !include_deleted {
+        if has_condition {
+            platforms_builder.push(" and is_deleted = ");
+        } else {
+            platforms_builder.push(" where is_deleted = ");
+        }
+        platforms_builder.push_bind(false);
+    }
+
+    let platforms: Vec<Platform> = platforms_builder
+        .build_query_as()
+        .fetch_all(&db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    let metadata = if with_metadata {
+        let mut metadata_builder = QueryBuilder::<RetromDB>::new("select * from platform_metadata");
+
+        if !ids.is_empty() {
+            metadata_builder.push(" where platform_id in (");
+            let mut separated = metadata_builder.separated(", ");
+            for id in &ids {
+                separated.push_bind(id);
+            }
+            separated.push_unseparated(")");
+        }
+
+        let metadata: Vec<PlatformMetadata> = metadata_builder
+            .build_query_as()
+            .fetch_all(&db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+        metadata
+    } else {
+        vec![]
     };
 
     Ok(GetPlatformsResponse {
@@ -67,249 +74,106 @@ pub async fn get_platforms(
     })
 }
 
+pub async fn create_platforms(
+    db_pool: DbPool,
+    request: CreatePlatformsRequest,
+) -> Result<CreatePlatformsResponse, Status> {
+    if request.platforms.is_empty() {
+        return Err(Status::invalid_argument(
+            "At least one platform must be provided",
+        ));
+    }
+
+    let mut builder = QueryBuilder::<RetromDB>::new(
+        "insert into platforms (id, is_deleted, third_party) values ",
+    );
+
+    for (i, platform) in request.platforms.iter().enumerate() {
+        if i > 0 {
+            builder.push(", ");
+        }
+
+        builder.push("(");
+        let mut separated = builder.separated(", ");
+        let id = if platform.id.is_empty() {
+            uuid::Uuid::now_v7().to_string()
+        } else {
+            platform.id.clone()
+        };
+        separated.push_bind(id);
+        separated.push_bind(platform.is_deleted);
+        separated.push_bind(platform.third_party);
+        separated.push_unseparated(")");
+    }
+
+    builder.push(" returning *");
+
+    let platforms_created: Vec<Platform> = builder
+        .build_query_as()
+        .fetch_all(&db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    Ok(CreatePlatformsResponse { platforms_created })
+}
+
 pub async fn update_platforms(
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     request: UpdatePlatformsRequest,
 ) -> Result<UpdatePlatformsResponse, Status> {
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
+    let mut platforms_updated = Vec::with_capacity(request.platforms.len());
 
-    let to_update = request.platforms;
-    let mut platforms_updated = Vec::new();
+    for platform in request.platforms {
+        let updated: Platform = sqlx::query_as(
+            "update platforms set deleted_at = $1, is_deleted = $2, third_party = $3 where id = $4 returning *",
+        )
+        .bind(platform.deleted_at)
+        .bind(platform.is_deleted)
+        .bind(platform.third_party)
+        .bind(platform.id)
+        .fetch_one(&db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
-    for platform in to_update {
-        let id = platform.id;
-
-        if let Some(updated_path) = &platform.path {
-            let current_platform = schema::platforms::table
-                .find(id)
-                .get_result::<retrom::Platform>(&mut conn)
-                .await;
-
-            if let Ok(current_platform) = current_platform {
-                let old_path = PathBuf::from(&current_platform.path);
-                let mut new_path = PathBuf::from(updated_path);
-                let sanitized_fname = new_path
-                    .file_name()
-                    .and_then(|f| f.to_str())
-                    .map(sanitize_filename::sanitize);
-
-                if let Some(sanitized_fname) = sanitized_fname {
-                    new_path.set_file_name(sanitized_fname);
-                }
-
-                let is_rename = old_path != new_path;
-                let can_rename = old_path.exists() && !new_path.exists();
-                let safe_paths = old_path.parent() == new_path.parent();
-
-                if is_rename && can_rename && safe_paths {
-                    if let Err(why) = tokio::fs::rename(&old_path, &new_path).await {
-                        tracing::error!("Failed to rename platform directory: {}", why);
-
-                        continue;
-                    }
-
-                    let games = schema::games::table
-                        .filter(schema::games::platform_id.eq(id))
-                        .get_results::<retrom::Game>(&mut conn)
-                        .await
-                        .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-                    for game in games {
-                        let old_game_path = PathBuf::from(game.path);
-                        let new_game_path = new_path.join(old_game_path.file_name().unwrap());
-
-                        if !new_game_path.exists() {
-                            tracing::error!(
-                                "File does not exist, did platform rename fail? - {:?}",
-                                new_game_path
-                            );
-                        }
-
-                        let game_path = new_game_path
-                            .canonicalize()
-                            .ok()
-                            .and_then(|p| p.to_str().map(|p| p.to_string()))
-                            .unwrap();
-
-                        diesel::update(schema::games::table.filter(schema::games::id.eq(game.id)))
-                            .set(schema::games::path.eq(game_path))
-                            .execute(&mut conn)
-                            .await
-                            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-                        let game_files = schema::game_files::table
-                            .filter(schema::game_files::game_id.eq(game.id))
-                            .load::<GameFile>(&mut conn)
-                            .await
-                            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-                        for game_file in game_files {
-                            let old_game_path = old_game_path.clone();
-                            let old_file_path = PathBuf::from(game_file.path);
-                            let new_file_path = new_game_path
-                                .join(old_file_path.strip_prefix(old_game_path).unwrap());
-
-                            if !new_file_path.exists() {
-                                tracing::error!(
-                                    "File does not exist, did game rename fail? - {:?}",
-                                    new_file_path
-                                );
-                            }
-
-                            let file_path = new_file_path
-                                .canonicalize()
-                                .ok()
-                                .and_then(|p| p.to_str().map(|p| p.to_string()))
-                                .unwrap();
-
-                            diesel::update(
-                                schema::game_files::table
-                                    .filter(schema::game_files::id.eq(game_file.id)),
-                            )
-                            .set(schema::game_files::path.eq(file_path))
-                            .execute(&mut conn)
-                            .await
-                            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-                        }
-                    }
-                } else {
-                    tracing::info!("Skipping platform dir rename for platform {}", id);
-
-                    continue;
-                }
-            }
-
-            let updated_platform =
-                diesel::update(schema::platforms::table.filter(schema::platforms::id.eq(id)))
-                    .set(platform)
-                    .get_result(&mut conn)
-                    .await
-                    .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-            platforms_updated.push(updated_platform);
-        }
+        platforms_updated.push(updated);
     }
 
     Ok(UpdatePlatformsResponse { platforms_updated })
 }
 
 pub async fn delete_platforms(
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     request: DeletePlatformsRequest,
 ) -> Result<DeletePlatformsResponse, Status> {
-    let delete_from_disk = request.delete_from_disk;
-    let blacklist_entries = request.blacklist_entries;
+    let ids: Vec<String> = request.ids.into_iter().map(|id| id.to_string()).collect();
 
-    {
-        let mut conn = match db_pool.get().await {
-            Ok(conn) => conn,
-            Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-        };
-
-        let platforms: Vec<retrom::Platform> = schema::platforms::table
-            .filter(schema::platforms::id.eq_any(&request.ids))
-            .load(&mut conn)
-            .await
-            .unwrap_or_default();
-
-        let games: Vec<retrom::Game> = retrom::Game::belonging_to(&platforms)
-            .load(&mut conn)
-            .await
-            .unwrap_or_default();
-
-        let platform_metadata: Vec<retrom::PlatformMetadata> =
-            PlatformMetadata::belonging_to(&platforms)
-                .load(&mut conn)
-                .await
-                .unwrap_or_default();
-
-        let game_metadata: Vec<GameMetadata> = GameMetadata::belonging_to(&games)
-            .load(&mut conn)
-            .await
-            .unwrap_or_default();
-
-        drop(conn);
-
-        join_all(platform_metadata.iter().map(|m| m.clean_cache())).await;
-        join_all(game_metadata.iter().map(|m| m.clean_cache())).await;
+    if ids.is_empty() {
+        return Ok(DeletePlatformsResponse {
+            platforms_deleted: vec![],
+        });
     }
 
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
+    let mut builder = if request.blacklist_entries {
+        QueryBuilder::<RetromDB>::new(
+            "update platforms set is_deleted = 1, deleted_at = current_timestamp where third_party = 0 and id in (",
+        )
+    } else {
+        QueryBuilder::<RetromDB>::new(
+            "delete from platforms where third_party = 0 and id in (",
+        )
     };
 
-    let platforms_deleted: Vec<retrom::Platform> = match blacklist_entries {
-        true => {
-            let games_deleted = diesel::update(
-                schema::games::table.filter(schema::games::platform_id.eq_any(&request.ids)),
-            )
-            .set((
-                schema::games::is_deleted.eq(true),
-                schema::games::deleted_at.eq(diesel::dsl::now),
-            ))
-            .get_results::<retrom::Game>(&mut conn)
-            .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-            diesel::update(
-                schema::game_files::table
-                    .filter(schema::game_files::game_id.eq_any(games_deleted.iter().map(|g| g.id))),
-            )
-            .set((
-                schema::game_files::is_deleted.eq(true),
-                schema::game_files::deleted_at.eq(diesel::dsl::now),
-            ))
-            .execute(&mut conn)
-            .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-            diesel::update(
-                schema::platforms::table
-                    .filter(schema::platforms::id.eq_any(&request.ids))
-                    .filter(schema::platforms::third_party.eq(false)),
-            )
-            .set((
-                schema::platforms::is_deleted.eq(true),
-                schema::platforms::deleted_at.eq(diesel::dsl::now),
-            ))
-            .get_results(&mut conn)
-            .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?
-        }
-        false => {
-            diesel::delete(
-                schema::games::table.filter(schema::games::platform_id.eq_any(&request.ids)),
-            )
-            .execute(&mut conn)
-            .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-            diesel::delete(
-                schema::platforms::table
-                    .filter(schema::platforms::id.eq_any(&request.ids))
-                    .filter(schema::platforms::third_party.eq(false)),
-            )
-            .get_results(&mut conn)
-            .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?
-        }
-    };
-
-    if delete_from_disk {
-        for platform in &platforms_deleted {
-            let platform_path = PathBuf::from(&platform.path);
-
-            if platform_path.exists() {
-                if let Err(why) = tokio::fs::remove_dir_all(&platform_path).await {
-                    tracing::error!("Failed to delete platform directory: {}", why);
-                }
-            }
-        }
+    let mut separated = builder.separated(", ");
+    for id in &ids {
+        separated.push_bind(id);
     }
+    separated.push_unseparated(") returning *");
+
+    let platforms_deleted: Vec<Platform> = builder
+        .build_query_as()
+        .fetch_all(&db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(DeletePlatformsResponse { platforms_deleted })
 }

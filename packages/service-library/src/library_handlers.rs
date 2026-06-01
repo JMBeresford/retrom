@@ -1,105 +1,91 @@
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
 use retrom_codegen::retrom::services::library::v1::{
     CreateLibrariesRequest, CreateLibrariesResponse, GetLibrariesRequest, GetLibrariesResponse,
     Library, UpdateLibrariesRequest, UpdateLibrariesResponse,
 };
-use retrom_db::{schema, Pool};
-use std::sync::Arc;
-use tonic::{Code, Status};
+use retrom_db::{DbPool, RetromDB};
+use sqlx::QueryBuilder;
+use tonic::Status;
 
 pub async fn get_libraries(
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     request: GetLibrariesRequest,
 ) -> Result<GetLibrariesResponse, Status> {
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
-
-    let mut query = schema::libraries::table
-        .into_boxed()
-        .select(Library::as_select());
+    let mut builder = QueryBuilder::<RetromDB>::new("select * from libraries");
 
     if !request.ids.is_empty() {
-        query = query.filter(schema::libraries::id.eq_any(&request.ids));
+        builder.push(" where id in (");
+        let mut separated = builder.separated(", ");
+        for id in &request.ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(")");
     }
 
-    let libraries: Vec<Library> = match query.load(&mut conn).await {
-        Ok(rows) => rows,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
+    let libraries: Vec<Library> = builder
+        .build_query_as()
+        .fetch_all(&db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(GetLibrariesResponse { libraries })
 }
 
 pub async fn create_libraries(
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     request: CreateLibrariesRequest,
 ) -> Result<CreateLibrariesResponse, Status> {
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
+    if request.libraries.is_empty() {
+        return Err(Status::invalid_argument(
+            "At least one library must be provided",
+        ));
+    }
 
-    let values: Vec<_> = request
-        .libraries
-        .iter()
-        .map(|lib| {
-            (
-                schema::libraries::name.eq(lib.name.clone()),
-                schema::libraries::structure_definition.eq(lib.structure_definition.clone()),
-            )
-        })
-        .collect();
+    let mut builder = QueryBuilder::<RetromDB>::new(
+        "insert into libraries (name, structure_definition) values ",
+    );
 
-    let libraries_created: Vec<Library> = diesel::insert_into(schema::libraries::table)
-        .values(values)
-        .returning(Library::as_returning())
-        .get_results(&mut conn)
+    for (i, library) in request.libraries.iter().enumerate() {
+        if i > 0 {
+            builder.push(", ");
+        }
+
+        builder.push("(");
+        let mut separated = builder.separated(", ");
+        separated.push_bind(&library.name);
+        separated.push_bind(&library.structure_definition);
+        separated.push_unseparated(")");
+    }
+
+    builder.push(" returning *");
+
+    let libraries_created: Vec<Library> = builder
+        .build_query_as()
+        .fetch_all(&db_pool)
         .await
-        .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(CreateLibrariesResponse { libraries_created })
 }
 
 pub async fn update_libraries(
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     request: UpdateLibrariesRequest,
 ) -> Result<UpdateLibrariesResponse, Status> {
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
+    let mut libraries_updated = Vec::with_capacity(request.libraries.len());
 
-    let libraries = request.libraries;
-
-    let libraries_updated = conn
-        .transaction(|conn| {
-            async move {
-                let mut updated = Vec::with_capacity(libraries.len());
-
-                for lib in libraries {
-                    let row: Library = diesel::update(
-                        schema::libraries::table.filter(schema::libraries::id.eq(lib.id)),
-                    )
-                    .set((
-                        schema::libraries::name.eq(&lib.name),
-                        schema::libraries::structure_definition.eq(&lib.structure_definition),
-                    ))
-                    .returning(Library::as_returning())
-                    .get_result(conn)
-                    .await?;
-
-                    updated.push(row);
-                }
-
-                Ok::<_, diesel::result::Error>(updated)
-            }
-            .scope_boxed()
-        })
+    for library in request.libraries {
+        let updated: Library = sqlx::query_as(
+            "update libraries set name = $1, structure_definition = $2 where id = $3 returning *",
+        )
+        .bind(library.name)
+        .bind(library.structure_definition)
+        .bind(library.id)
+        .fetch_one(&db_pool)
         .await
-        .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+        libraries_updated.push(updated);
+    }
 
     Ok(UpdateLibrariesResponse { libraries_updated })
 }
