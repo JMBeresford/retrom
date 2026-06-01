@@ -11,8 +11,8 @@ use retrom_codegen::retrom::services::library::v1::{
     GetRootDirectoriesRequest, GetRootDirectoriesResponse, UpdateGameFilesRequest,
     UpdateGameFilesResponse, UpdateGamesRequest, UpdateGamesResponse, UpdateLibrariesRequest,
     UpdateLibrariesResponse, UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse,
-    UpdateLibraryRequest, UpdateLibraryResponse, UpdatePlatformsRequest,
-    UpdatePlatformsResponse, UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
+    UpdateLibraryRequest, UpdateLibraryResponse, UpdatePlatformsRequest, UpdatePlatformsResponse,
+    UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
 };
 use retrom_db::DbPool;
 use tonic::{Request, Response, Status};

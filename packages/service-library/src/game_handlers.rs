@@ -1,18 +1,18 @@
-use retrom_codegen::retrom::services::{
-    library::v1::{
-        CreateGamesRequest, CreateGamesResponse, DeleteGameFilesRequest, DeleteGameFilesResponse,
-        DeleteGamesRequest, DeleteGamesResponse, Game, GameFile, GetGameFilesRequest,
-        GetGameFilesResponse, GetGamesRequest, GetGamesResponse, UpdateGameFilesRequest,
-        UpdateGameFilesResponse, UpdateGamesRequest, UpdateGamesResponse,
-    },
-    metadata::v1::GameMetadata,
+use retrom_codegen::retrom::services::library::v1::{
+    CreateGamesRequest, CreateGamesResponse, DeleteGameFilesRequest, DeleteGameFilesResponse,
+    DeleteGamesRequest, DeleteGamesResponse, Game, GameFile, GetGameFilesRequest,
+    GetGameFilesResponse, GetGamesRequest, GetGamesResponse, UpdateGameFilesRequest,
+    UpdateGameFilesResponse, UpdateGamesRequest, UpdateGamesResponse,
 };
 use retrom_db::{DbPool, RetromDB};
 use sqlx::QueryBuilder;
 use std::path::PathBuf;
 use tonic::Status;
 
-pub async fn get_games(db_pool: DbPool, request: GetGamesRequest) -> Result<GetGamesResponse, Status> {
+pub async fn get_games(
+    db_pool: DbPool,
+    request: GetGamesRequest,
+) -> Result<GetGamesResponse, Status> {
     let include_deleted = request.include_deleted.unwrap_or(false);
     let with_metadata = request.with_metadata.unwrap_or(false);
     let with_files = request.with_files.unwrap_or(false);
@@ -70,7 +70,8 @@ pub async fn get_games(db_pool: DbPool, request: GetGamesRequest) -> Result<GetG
     let game_ids: Vec<String> = games.iter().map(|g| g.id.clone()).collect();
 
     let metadata = if with_metadata && !game_ids.is_empty() {
-        let mut builder = QueryBuilder::<RetromDB>::new("select * from game_metadata where game_id in (");
+        let mut builder =
+            QueryBuilder::<RetromDB>::new("select * from game_metadata where game_id in (");
         let mut separated = builder.separated(", ");
         for id in &game_ids {
             separated.push_bind(id);
@@ -87,7 +88,8 @@ pub async fn get_games(db_pool: DbPool, request: GetGamesRequest) -> Result<GetG
     };
 
     let game_files = if with_files && !game_ids.is_empty() {
-        let mut builder = QueryBuilder::<RetromDB>::new("select * from game_files where game_id in (");
+        let mut builder =
+            QueryBuilder::<RetromDB>::new("select * from game_files where game_id in (");
         let mut separated = builder.separated(", ");
         for id in &game_ids {
             separated.push_bind(id);
@@ -120,11 +122,14 @@ pub async fn create_games(
     request: CreateGamesRequest,
 ) -> Result<CreateGamesResponse, Status> {
     if request.games.is_empty() {
-        return Err(Status::invalid_argument("At least one game must be provided"));
+        return Err(Status::invalid_argument(
+            "At least one game must be provided",
+        ));
     }
 
-    let mut builder =
-        QueryBuilder::<RetromDB>::new("insert into games (id, is_deleted, third_party, steam_app_id) values ");
+    let mut builder = QueryBuilder::<RetromDB>::new(
+        "insert into games (id, is_deleted, third_party, steam_app_id) values ",
+    );
 
     for (i, game) in request.games.iter().enumerate() {
         if i > 0 {
@@ -239,7 +244,11 @@ pub async fn get_game_files(
 ) -> Result<GetGameFilesResponse, Status> {
     let include_deleted = request.include_deleted.unwrap_or(false);
     let ids: Vec<String> = request.ids.into_iter().map(|id| id.to_string()).collect();
-    let game_ids: Vec<String> = request.game_ids.into_iter().map(|id| id.to_string()).collect();
+    let game_ids: Vec<String> = request
+        .game_ids
+        .into_iter()
+        .map(|id| id.to_string())
+        .collect();
 
     let mut builder = QueryBuilder::<RetromDB>::new("select * from game_files");
     let mut has_condition = false;

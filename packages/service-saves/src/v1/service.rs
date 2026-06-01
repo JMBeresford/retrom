@@ -1,18 +1,16 @@
 use super::save_file_manager::{GameSaveFileManager, SaveFileManager};
 use super::save_state_manager::{GameSaveStateManager, SaveStateManager};
-use retrom_codegen::retrom::{
-    services::{
-        library::v1::Game,
-        saves::v1::{
-            saves_service_server::SavesService, DeleteSaveFilesRequest, DeleteSaveFilesResponse,
-            DeleteSaveStatesRequest, DeleteSaveStatesResponse, GetSaveFilesRequest,
-            GetSaveFilesResponse, GetSaveStatesRequest, GetSaveStatesResponse,
-            RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
-            RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, SaveFiles,
-            SaveStates, StatSaveFilesRequest, StatSaveFilesResponse, StatSaveStatesRequest,
-            StatSaveStatesResponse, UpdateSaveFilesRequest, UpdateSaveFilesResponse,
-            UpdateSaveStatesRequest, UpdateSaveStatesResponse,
-        },
+use retrom_codegen::retrom::services::{
+    library::v1::Game,
+    saves::v1::{
+        saves_service_server::SavesService, DeleteSaveFilesRequest, DeleteSaveFilesResponse,
+        DeleteSaveStatesRequest, DeleteSaveStatesResponse, GetSaveFilesRequest,
+        GetSaveFilesResponse, GetSaveStatesRequest, GetSaveStatesResponse,
+        RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
+        RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, SaveFiles,
+        SaveStates, StatSaveFilesRequest, StatSaveFilesResponse, StatSaveStatesRequest,
+        StatSaveStatesResponse, UpdateSaveFilesRequest, UpdateSaveFilesResponse,
+        UpdateSaveStatesRequest, UpdateSaveStatesResponse,
     },
 };
 use retrom_db::DbPool;
@@ -65,7 +63,9 @@ impl SavesService for SavesServiceHandlers {
                     .fetch_one(&db_pool)
                     .await
                     .map_err(|e| {
-                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                        tonic::Status::not_found(format!(
+                            "Game with ID {game_id} not found: {e:#?}"
+                        ))
                     })?
             };
 
@@ -113,7 +113,9 @@ impl SavesService for SavesServiceHandlers {
                     .fetch_one(&db_pool)
                     .await
                     .map_err(|e| {
-                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                        tonic::Status::not_found(format!(
+                            "Game with ID {game_id} not found: {e:#?}"
+                        ))
                     })?
             };
 
@@ -158,7 +160,9 @@ impl SavesService for SavesServiceHandlers {
                     .fetch_one(&db_pool)
                     .await
                     .map_err(|e| {
-                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                        tonic::Status::not_found(format!(
+                            "Game with ID {game_id} not found: {e:#?}"
+                        ))
                     })?
             };
 
@@ -240,7 +244,9 @@ impl SavesService for SavesServiceHandlers {
                     .fetch_one(&db_pool)
                     .await
                     .map_err(|e| {
-                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                        tonic::Status::not_found(format!(
+                            "Game with ID {game_id} not found: {e:#?}"
+                        ))
                     })?
             };
 
@@ -329,7 +335,9 @@ impl SavesService for SavesServiceHandlers {
                     .fetch_one(&db_pool)
                     .await
                     .map_err(|e| {
-                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                        tonic::Status::not_found(format!(
+                            "Game with ID {game_id} not found: {e:#?}"
+                        ))
                     })?
             };
 
@@ -383,7 +391,9 @@ impl SavesService for SavesServiceHandlers {
                     .fetch_one(&db_pool)
                     .await
                     .map_err(|e| {
-                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                        tonic::Status::not_found(format!(
+                            "Game with ID {game_id} not found: {e:#?}"
+                        ))
                     })?
             };
 
@@ -427,7 +437,9 @@ impl SavesService for SavesServiceHandlers {
                     .fetch_one(&self.db_pool)
                     .await
                     .map_err(|e| {
-                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                        tonic::Status::not_found(format!(
+                            "Game with ID {game_id} not found: {e:#?}"
+                        ))
                     })?
             };
 
@@ -466,7 +478,9 @@ impl SavesService for SavesServiceHandlers {
                     .fetch_one(&self.db_pool)
                     .await
                     .map_err(|e| {
-                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                        tonic::Status::not_found(format!(
+                            "Game with ID {game_id} not found: {e:#?}"
+                        ))
                     })?
             };
 
@@ -516,7 +530,9 @@ impl SavesService for SavesServiceHandlers {
                     .fetch_one(&self.db_pool)
                     .await
                     .map_err(|e| {
-                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                        tonic::Status::not_found(format!(
+                            "Game with ID {game_id} not found: {e:#?}"
+                        ))
                     })?
             };
 
@@ -610,7 +626,9 @@ impl SavesService for SavesServiceHandlers {
                     .fetch_one(&self.db_pool)
                     .await
                     .map_err(|e| {
-                        tonic::Status::not_found(format!("Game with ID {game_id} not found: {e:#?}"))
+                        tonic::Status::not_found(format!(
+                            "Game with ID {game_id} not found: {e:#?}"
+                        ))
                     })?
             };
 

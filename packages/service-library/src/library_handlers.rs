@@ -40,9 +40,8 @@ pub async fn create_libraries(
         ));
     }
 
-    let mut builder = QueryBuilder::<RetromDB>::new(
-        "insert into libraries (name, structure_definition) values ",
-    );
+    let mut builder =
+        QueryBuilder::<RetromDB>::new("insert into libraries (name, structure_definition) values ");
 
     for (i, library) in request.libraries.iter().enumerate() {
         if i > 0 {

@@ -158,9 +158,7 @@ pub async fn delete_platforms(
             "update platforms set is_deleted = 1, deleted_at = current_timestamp where third_party = 0 and id in (",
         )
     } else {
-        QueryBuilder::<RetromDB>::new(
-            "delete from platforms where third_party = 0 and id in (",
-        )
+        QueryBuilder::<RetromDB>::new("delete from platforms where third_party = 0 and id in (")
     };
 
     let mut separated = builder.separated(", ");

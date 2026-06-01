@@ -5,11 +5,6 @@ use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit};
 
 const DEFAULT_PORT: u16 = 5109;
-
-#[cfg(not(feature = "postgres"))]
-const DEFAULT_DB_URL: &str = "sqlite://retrom-dev.db";
-
-#[cfg(feature = "postgres")]
 const DEFAULT_DB_URL: &str = "postgres://retrom@localhost/retrom";
 
 #[tokio::main]
