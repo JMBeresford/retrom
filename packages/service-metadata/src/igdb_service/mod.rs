@@ -67,10 +67,11 @@ impl IgdbService for IgdbServiceHandlers {
 
         let metadata = search_results
             .into_iter()
-            .map(|game| {
-                let mut meta = igdb_client.igdb_game_to_metadata(game);
-                meta.game_id = game_id.clone();
-                meta
+            .filter_map(|game| {
+                let mut meta = igdb_client.igdb_game_to_metadata(game).ok()?;
+                meta.provider_game_id = game_id.clone();
+
+                Some(meta)
             })
             .collect();
 
@@ -144,7 +145,7 @@ impl IgdbService for IgdbServiceHandlers {
                 let games = matches
                     .games
                     .into_iter()
-                    .map(|game| igdb_provider.igdb_game_to_metadata(game))
+                    .filter_map(|game| igdb_provider.igdb_game_to_metadata(game).ok())
                     .collect();
 
                 SearchResults::GameMatches(IgdbSearchGameResponse { games })
@@ -153,7 +154,7 @@ impl IgdbService for IgdbServiceHandlers {
                 let platforms = matches
                     .platforms
                     .into_iter()
-                    .map(|platform| igdb_provider.igdb_platform_to_metadata(platform))
+                    .filter_map(|platform| igdb_provider.igdb_platform_to_metadata(platform).ok())
                     .collect();
 
                 SearchResults::PlatformMatches(IgdbSearchPlatformResponse { platforms })

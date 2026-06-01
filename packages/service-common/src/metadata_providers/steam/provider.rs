@@ -133,7 +133,7 @@ impl SteamWebApiProvider {
             .as_ref()
             .map(|screenshots| {
                 screenshots
-                    .into_iter()
+                    .iter()
                     .map(|screenshot| screenshot.path_full.clone())
                     .collect()
             })
@@ -157,7 +157,7 @@ impl SteamWebApiProvider {
             .as_ref()
             .map(|movies| {
                 movies
-                    .into_iter()
+                    .iter()
                     .filter_map(|movie| {
                         movie
                             .webm

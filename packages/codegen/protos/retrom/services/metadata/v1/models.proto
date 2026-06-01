@@ -8,33 +8,37 @@ import "google/protobuf/timestamp.proto";
 message GameMetadata {
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string game_id = 2;
-  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  optional string name = 5;
-  optional string description = 6;
-  optional string cover_url = 7;
-  optional string background_url = 8;
-  optional string icon_url = 9;
-  optional string logo_url = 10;
-  optional int64 igdb_id = 11;
+  // The ID of the metadata provider that this metadata was sourced from (e.g. IGDB, Steam).
+  string provider_id = 3;
+  // The ID of the game in the provider's database (e.g. IGDB game ID, Steam app ID).
+  string provider_game_id = 4;
+  google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  optional string name = 7;
+  optional string description = 8;
+  optional string cover_url = 9;
+  optional string background_url = 10;
+  optional string icon_url = 11;
+  optional string logo_url = 12;
   google.protobuf.Timestamp release_date = 13;
   google.protobuf.Timestamp last_played = 14;
   optional int32 minutes_played = 15;
-  string provider_id = 16;
 }
 
 message PlatformMetadata {
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string platform_id = 2;
-  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  optional string name = 5;
-  optional string description = 6;
-  optional string background_url = 7;
-  optional string icon_url = 8;
-  optional string logo_url = 9;
-  optional int64 igdb_id = 10;
-  string provider_id = 11;
+  // The ID of the metadata provider that this metadata was sourced from (e.g. IGDB, Steam).
+  string provider_id = 3;
+  // The ID of the platform in the provider's database (e.g. IGDB platform ID).
+  string provider_platform_id = 4;
+  google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  optional string name = 7;
+  optional string description = 8;
+  optional string background_url = 9;
+  optional string icon_url = 10;
+  optional string logo_url = 11;
 }
 
 message SimilarGame {

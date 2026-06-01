@@ -1,6 +1,8 @@
 use super::provider::{IGDBProvider, IgdbSearchData};
-use crate::metadata_providers::{GameMetadataProvider, GameMetadataSearchResult, MetadataProvider};
-use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
+use crate::metadata_providers::{
+    igdb::provider::IGDB_PROVIDER_ID, GameMetadataProvider, GameMetadataSearchResult,
+    MetadataProvider, Result,
+};
 use retrom_codegen::{
     igdb::{self},
     retrom::{
@@ -22,13 +24,10 @@ use std::collections::HashMap;
 use tracing::{instrument, Level};
 
 impl IGDBProvider {
-    pub fn igdb_game_to_metadata(&self, igdb_match: igdb::Game) -> GameMetadata {
+    pub fn igdb_game_to_metadata(&self, igdb_match: igdb::Game) -> Result<GameMetadata> {
         let description = Some(igdb_match.summary);
         let name = Some(igdb_match.name);
-        let igdb_id = match BigDecimal::from_u64(igdb_match.id) {
-            Some(id) => id.to_i64(),
-            None => None,
-        };
+        let igdb_id = igdb_match.id.to_string();
 
         let cover_url = igdb_match.cover.map(|cover| {
             cover
@@ -73,15 +72,16 @@ impl IGDBProvider {
                 .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")),
         };
 
-        GameMetadata {
-            igdb_id,
+        Ok(GameMetadata {
+            provider_id: IGDB_PROVIDER_ID.to_string(),
+            provider_game_id: igdb_id,
             name,
             description,
             cover_url,
             background_url,
             icon_url,
             ..Default::default()
-        }
+        })
     }
 }
 
@@ -182,7 +182,14 @@ impl GameMetadataProvider<IgdbGameSearchQuery, Vec<igdb::Game>> for IGDBProvider
                 })
                 .collect();
 
-            let mut game_metadata = self.igdb_game_to_metadata(igdb_match);
+            let mut game_metadata = match self.igdb_game_to_metadata(igdb_match) {
+                Ok(metadata) => metadata,
+                Err(err) => {
+                    tracing::error!("Failed to convert IGDB game to metadata: {:?}", err);
+                    return Default::default();
+                }
+            };
+
             game_metadata.game_id = game.id;
 
             return (

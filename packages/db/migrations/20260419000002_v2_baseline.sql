@@ -86,6 +86,8 @@ create table if not exists default_game_files (
 create table if not exists platform_metadata (
     id text not null primary key,
     platform_id text not null references platforms (id) on delete cascade,
+    provider_id text not null references metadata_providers (id) on delete cascade,
+    provider_platform_id text not null,
     name text,
     description text,
     background_url text,
@@ -93,13 +95,14 @@ create table if not exists platform_metadata (
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     icon_url text,
-    provider_id text not null references metadata_providers (id) on delete cascade,
     constraint platform_metadata_platform_provider_unique unique (platform_id, provider_id)
 );
 
 create table if not exists game_metadata (
     id text not null primary key,
     game_id text not null references games (id) on delete cascade,
+    provider_id text not null references metadata_providers (id) on delete cascade,
+    provider_game_id text not null,
     name text,
     description text,
     cover_url text,
@@ -111,7 +114,6 @@ create table if not exists game_metadata (
     last_played text,
     minutes_played integer,
     logo_url text,
-    provider_id text not null references metadata_providers (id) on delete cascade,
     constraint game_metadata_game_provider_unique unique (game_id, provider_id)
 );
 

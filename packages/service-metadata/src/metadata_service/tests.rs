@@ -19,7 +19,9 @@ fn config_lock() -> &'static Mutex<()> {
     CONFIG_LOCK.get_or_init(|| Mutex::new(()))
 }
 
-async fn test_service(store_metadata_locally: bool) -> (MetadataServiceHandlers, Arc<JobManager>, DbPool) {
+async fn test_service(
+    store_metadata_locally: bool,
+) -> (MetadataServiceHandlers, Arc<JobManager>, DbPool) {
     let url = "sqlite::memory:";
     let pool = SqlitePoolOptions::new()
         .max_connections(1)
@@ -35,7 +37,8 @@ async fn test_service(store_metadata_locally: bool) -> (MetadataServiceHandlers,
         .await
         .expect("could not add igdb_id column for test schema");
 
-    let config_manager = Arc::new(ServerConfigManager::new().expect("could not create config manager"));
+    let config_manager =
+        Arc::new(ServerConfigManager::new().expect("could not create config manager"));
     let mut config = config_manager.get_config().await;
     config
         .metadata
@@ -86,12 +89,12 @@ async fn update_platform_metadata_skips_cache_jobs_when_disabled() {
                 id: String::new(),
                 platform_id: platform_id.to_string(),
                 provider_id: provider_id.to_string(),
+                provider_platform_id: "123".to_string(),
                 name: Some("Platform".to_string()),
                 description: None,
                 background_url: Some("https://example.com/background.jpg".to_string()),
                 icon_url: None,
                 logo_url: None,
-                igdb_id: None,
                 created_at: None,
                 updated_at: None,
             }],
@@ -116,12 +119,12 @@ async fn update_platform_metadata_enqueues_cache_jobs_when_enabled() {
                 id: String::new(),
                 platform_id: platform_id.to_string(),
                 provider_id: provider_id.to_string(),
+                provider_platform_id: "123".to_string(),
                 name: Some("Platform".to_string()),
                 description: None,
                 background_url: Some("https://example.com/background.jpg".to_string()),
                 icon_url: None,
                 logo_url: None,
-                igdb_id: None,
                 created_at: None,
                 updated_at: None,
             }],

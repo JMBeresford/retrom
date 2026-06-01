@@ -18,6 +18,16 @@ use tower::{
 pub mod igdb;
 pub mod steam;
 
+#[derive(Debug, thiserror::Error)]
+pub enum MetadataProviderError {
+    #[error("HTTP error: {0}")]
+    HttpError(#[from] reqwest::Error),
+    #[error("MetadataProviderError: {0}")]
+    Other(String),
+}
+
+pub type Result<T> = std::result::Result<T, MetadataProviderError>;
+
 pub trait MetadataProvider<Query, Data> {
     fn search_metadata(&self, query: Query) -> impl std::future::Future<Output = Option<Data>>;
 }
@@ -83,7 +93,7 @@ impl Policy<reqwest::Request, reqwest::Response, reqwest::Error> for RetryAttemp
     fn retry(
         &mut self,
         _req: &mut reqwest::Request,
-        result: &mut Result<reqwest::Response, reqwest::Error>,
+        result: &mut std::result::Result<reqwest::Response, reqwest::Error>,
     ) -> Option<Self::Future> {
         let result = result.as_ref();
         match result.is_ok_and(|res| res.status() != StatusCode::TOO_MANY_REQUESTS) {

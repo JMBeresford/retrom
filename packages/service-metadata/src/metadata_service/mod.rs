@@ -179,11 +179,11 @@ impl MetadataService for MetadataServiceHandlers {
             }
         }
 
-        let config = self.config_manager.get_config().await;
-        let store_metadata = config
-            .metadata
-            .map(|m| m.store_metadata_locally)
-            .unwrap_or(false);
+        // let config = self.config_manager.get_config().await;
+        // let store_metadata = config
+        //     .metadata
+        //     .map(|m| m.store_metadata_locally)
+        //     .unwrap_or(false);
 
         // TODO: Move caching jobs to `update_game_metadata`.
         // let media_futures = if store_metadata {
@@ -517,7 +517,7 @@ impl MetadataService for MetadataServiceHandlers {
                 r#"
                 insert into game_metadata (
                     id, game_id, provider_id, name, description, cover_url, background_url,
-                    icon_url, logo_url, igdb_id, release_date, last_played, minutes_played
+                    icon_url, logo_url, provider_game_id, release_date, last_played, minutes_played
                 )
                 values (
                 "#,
@@ -532,7 +532,7 @@ impl MetadataService for MetadataServiceHandlers {
             separated.push_bind(&metadata_row.background_url);
             separated.push_bind(&metadata_row.icon_url);
             separated.push_bind(&metadata_row.logo_url);
-            separated.push_bind(metadata_row.igdb_id);
+            separated.push_bind(metadata_row.provider_game_id);
             separated.push_bind(metadata_row.release_date);
             separated.push_bind(metadata_row.last_played);
             separated.push_bind(metadata_row.minutes_played);
@@ -545,7 +545,7 @@ impl MetadataService for MetadataServiceHandlers {
                     background_url = excluded.background_url,
                     icon_url = excluded.icon_url,
                     logo_url = excluded.logo_url,
-                    igdb_id = excluded.igdb_id,
+                    provider_game_id = excluded.provider_game_id,
                     release_date = excluded.release_date,
                     last_played = excluded.last_played,
                     minutes_played = excluded.minutes_played,
@@ -662,7 +662,7 @@ impl MetadataService for MetadataServiceHandlers {
                 r#"
                 insert into platform_metadata (
                     id, platform_id, provider_id, name, description, background_url, icon_url,
-                    logo_url, igdb_id
+                    logo_url, provider_platform_id
                 )
                 values (
                 "#,
@@ -676,7 +676,7 @@ impl MetadataService for MetadataServiceHandlers {
             separated.push_bind(&metadata_row.background_url);
             separated.push_bind(&metadata_row.icon_url);
             separated.push_bind(&metadata_row.logo_url);
-            separated.push_bind(metadata_row.igdb_id);
+            separated.push_bind(metadata_row.provider_platform_id);
             separated.push_unseparated(
                 r#")
                 on conflict (platform_id, provider_id) do update set
@@ -685,7 +685,7 @@ impl MetadataService for MetadataServiceHandlers {
                     background_url = excluded.background_url,
                     icon_url = excluded.icon_url,
                     logo_url = excluded.logo_url,
-                    igdb_id = excluded.igdb_id,
+                    provider_platform_id = excluded.provider_platform_id,
                     updated_at = current_timestamp
                 returning *
                 "#,

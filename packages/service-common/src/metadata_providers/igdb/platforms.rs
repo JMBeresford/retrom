@@ -1,5 +1,8 @@
 use super::provider::{IGDBProvider, IgdbSearchData};
-use crate::metadata_providers::{MetadataProvider, PlatformMetadataProvider};
+use crate::metadata_providers::{
+    igdb::provider::IGDB_PROVIDER_ID, MetadataProvider, MetadataProviderError,
+    PlatformMetadataProvider, Result,
+};
 use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use retrom_codegen::{
     igdb,
@@ -21,25 +24,34 @@ use std::collections::HashMap;
 use tracing::{instrument, Level};
 
 impl IGDBProvider {
-    pub fn igdb_platform_to_metadata(&self, igdb_match: igdb::Platform) -> PlatformMetadata {
+    pub fn igdb_platform_to_metadata(
+        &self,
+        igdb_match: igdb::Platform,
+    ) -> Result<PlatformMetadata> {
         let description = Some(igdb_match.summary);
         let name = Some(igdb_match.name);
-        let igdb_id = match BigDecimal::from_u64(igdb_match.id) {
-            Some(id) => id.to_i64(),
-            None => None,
+        let igdb_id = match BigDecimal::from_u64(igdb_match.id).and_then(|id| id.to_i64()) {
+            Some(id) => id.to_string(),
+            None => {
+                return Err(MetadataProviderError::Other(format!(
+                    "Failed to convert IGDB platform ID {} to string",
+                    igdb_match.id
+                )))
+            }
         };
 
         let logo_url = igdb_match
             .platform_logo
             .map(|logo| logo.url.to_string().replace("//", "https://"));
 
-        PlatformMetadata {
-            igdb_id,
+        Ok(PlatformMetadata {
+            provider_id: IGDB_PROVIDER_ID.to_string(),
+            provider_platform_id: igdb_id,
             name,
             description,
             logo_url,
             ..Default::default()
-        }
+        })
     }
 }
 
@@ -56,8 +68,7 @@ impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
         let matches = self.search_platform_metadata(query).await;
 
         let exact_match = matches.iter().find(|meta| {
-            meta.igdb_id
-                .is_some_and(|id| id.to_owned().to_u64() == igdb_id)
+            igdb_id.is_some_and(|id| id.to_string() == meta.provider_platform_id)
                 || name
                     .as_ref()
                     .is_some_and(|name| meta.name.as_ref() == Some(name))
@@ -125,7 +136,7 @@ impl PlatformMetadataProvider<IgdbPlatformSearchQuery> for IGDBProvider {
             Some(IgdbSearchData::Platform(matches)) => matches
                 .platforms
                 .into_iter()
-                .map(|platform| self.igdb_platform_to_metadata(platform))
+                .filter_map(|platform| self.igdb_platform_to_metadata(platform).ok())
                 .collect(),
             _ => {
                 vec![]
