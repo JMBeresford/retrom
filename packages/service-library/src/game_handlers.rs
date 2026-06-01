@@ -67,14 +67,12 @@ pub async fn get_games(
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    let game_ids: Vec<String> = games.iter().map(|g| g.id.clone()).collect();
-
-    let metadata = if with_metadata && !game_ids.is_empty() {
+    let metadata = if with_metadata && !games.is_empty() {
         let mut builder =
             QueryBuilder::<RetromDB>::new("select * from game_metadata where game_id in (");
         let mut separated = builder.separated(", ");
-        for id in &game_ids {
-            separated.push_bind(id);
+        for game in &games {
+            separated.push_bind(&game.id);
         }
         separated.push_unseparated(")");
 
@@ -87,12 +85,12 @@ pub async fn get_games(
         vec![]
     };
 
-    let game_files = if with_files && !game_ids.is_empty() {
+    let game_files = if with_files && !games.is_empty() {
         let mut builder =
             QueryBuilder::<RetromDB>::new("select * from game_files where game_id in (");
         let mut separated = builder.separated(", ");
-        for id in &game_ids {
-            separated.push_bind(id);
+        for game in &games {
+            separated.push_bind(&game.id);
         }
         separated.push_unseparated(")");
 
@@ -131,24 +129,17 @@ pub async fn create_games(
         "insert into games (id, is_deleted, third_party, steam_app_id) values ",
     );
 
-    for (i, game) in request.games.iter().enumerate() {
-        if i > 0 {
-            builder.push(", ");
-        }
-
-        builder.push("(");
-        let mut separated = builder.separated(", ");
+    builder.push_values(request.games.iter(), |mut row, game| {
         let id = if game.id.is_empty() {
             uuid::Uuid::now_v7().to_string()
         } else {
             game.id.clone()
         };
-        separated.push_bind(id);
-        separated.push_bind(game.is_deleted);
-        separated.push_bind(game.third_party);
-        separated.push_bind(&game.steam_app_id);
-        separated.push_unseparated(")");
-    }
+        row.push_bind(id);
+        row.push_bind(game.is_deleted);
+        row.push_bind(game.third_party);
+        row.push_bind(&game.steam_app_id);
+    });
 
     builder.push(" returning *");
 
