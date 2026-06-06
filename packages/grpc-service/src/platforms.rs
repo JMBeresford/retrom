@@ -7,18 +7,25 @@ use retrom_codegen::retrom::{
     PlatformMetadata, UpdatePlatformsRequest, UpdatePlatformsResponse,
 };
 use retrom_db::{schema, Pool};
+use retrom_service_common::config::ServerConfigManager;
 use retrom_service_common::media_cache::cacheable_media::CacheableMetadata;
 use std::{path::PathBuf, sync::Arc};
 use tonic::{Code, Request, Response, Status};
 
+const STEAM_PLATFORM_PATH: &str = "__RETROM_RESERVED__/Steam";
+
 #[derive(Clone)]
 pub struct PlatformServiceHandlers {
     pub db_pool: Arc<Pool>,
+    pub config_manager: Arc<ServerConfigManager>,
 }
 
 impl PlatformServiceHandlers {
-    pub fn new(db_pool: Arc<Pool>) -> Self {
-        Self { db_pool }
+    pub fn new(db_pool: Arc<Pool>, config_manager: Arc<ServerConfigManager>) -> Self {
+        Self {
+            db_pool,
+            config_manager,
+        }
     }
 }
 
@@ -50,6 +57,19 @@ impl PlatformService for PlatformServiceHandlers {
             query = query.filter(schema::platforms::is_deleted.eq(false));
         }
 
+        let steam_configured = self
+            .config_manager
+            .get_config()
+            .await
+            .steam
+            .is_some_and(|steam| {
+                !steam.api_key.trim().is_empty() && !steam.user_id.trim().is_empty()
+            });
+
+        if !steam_configured {
+            query = query.filter(schema::platforms::path.ne(STEAM_PLATFORM_PATH));
+        }
+
         let platforms: Vec<retrom::Platform> = match query.load(&mut conn).await {
             Ok(rows) => rows,
             Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
@@ -57,20 +77,21 @@ impl PlatformService for PlatformServiceHandlers {
 
         let metadata = match with_metadata {
             true => {
-                let mut query = schema::platform_metadata::table
-                    .into_boxed()
-                    .select(retrom::PlatformMetadata::as_select());
+                let platform_ids: Vec<_> = platforms.iter().map(|platform| platform.id).collect();
 
-                if !ids.is_empty() {
-                    query = query.filter(schema::platform_metadata::platform_id.eq_any(ids));
+                if platform_ids.is_empty() {
+                    vec![]
+                } else {
+                    let query = schema::platform_metadata::table
+                        .into_boxed()
+                        .filter(schema::platform_metadata::platform_id.eq_any(platform_ids))
+                        .select(retrom::PlatformMetadata::as_select());
+
+                    match query.load(&mut conn).await {
+                        Ok(rows) => rows,
+                        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
+                    }
                 }
-
-                let metadata: Vec<retrom::PlatformMetadata> = match query.load(&mut conn).await {
-                    Ok(rows) => rows,
-                    Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-                };
-
-                metadata
             }
             false => vec![],
         };

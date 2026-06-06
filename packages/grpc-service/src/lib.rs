@@ -131,8 +131,10 @@ pub fn grpc_service(db_url: &str, config_manager: Arc<ServerConfigManager>) -> R
     ));
 
     let game_service = GameServiceServer::new(GameServiceHandlers::new(shared_pool.clone()));
-    let platform_service =
-        PlatformServiceServer::new(PlatformServiceHandlers::new(shared_pool.clone()));
+    let platform_service = PlatformServiceServer::new(PlatformServiceHandlers::new(
+        shared_pool.clone(),
+        config_manager.clone(),
+    ));
 
     let client_service =
         ClientServiceServer::new(clients::ClientServiceHandlers::new(shared_pool.clone()));

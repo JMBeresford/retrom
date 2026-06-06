@@ -41,6 +41,12 @@ export function ConnectionConfig() {
     useDisableStandaloneMode();
 
   const pending = enableStatus === "pending" || disableStatus === "pending";
+  const pendingStandaloneAction =
+    enableStatus === "pending"
+      ? "enable"
+      : disableStatus === "pending"
+        ? "disable"
+        : undefined;
 
   const toggleStandaloneMode = useCallback(async () => {
     if (serverConfig?.standalone) {
@@ -122,6 +128,7 @@ export function ConnectionConfig() {
         <div className="flex items-top gap-2">
           <Checkbox
             id="install-in-standalone"
+            disabled={pending}
             checked={!!serverConfig?.installGamesInStandalone}
             onCheckedChange={(value) => toggleInstallInStandalone(!!value)}
           />
@@ -140,6 +147,14 @@ export function ConnectionConfig() {
             </p>
           </div>
         </div>
+
+        {pendingStandaloneAction ? (
+          <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+            {pendingStandaloneAction === "enable"
+              ? "Preparing standalone mode. First-time setup can take a minute while Retrom starts the local server and prepares EmulatorJS."
+              : "Disabling standalone mode. Please wait while Retrom disconnects from the local server."}
+          </div>
+        ) : null}
 
         <Separator />
 
