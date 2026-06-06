@@ -56,9 +56,10 @@ fn validate_unique_emulator_names(
 
         let normalized = normalize_name(trimmed);
 
-        if seen.iter().any(|(seen_id, seen_name)| {
-            seen_name == &normalized && seen_id != id
-        }) {
+        if seen
+            .iter()
+            .any(|(seen_id, seen_name)| seen_name == &normalized && seen_id != id)
+        {
             return Err(Status::invalid_argument(format!(
                 "An emulator named \"{}\" already exists.",
                 trimmed
@@ -283,7 +284,10 @@ impl EmulatorService for EmulatorServiceHandlers {
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
-        let emulator_ids = profiles.iter().map(|profile| profile.emulator_id).collect::<Vec<_>>();
+        let emulator_ids = profiles
+            .iter()
+            .map(|profile| profile.emulator_id)
+            .collect::<Vec<_>>();
 
         let existing_profiles = schema::emulator_profiles::table
             .filter(schema::emulator_profiles::emulator_id.eq_any(&emulator_ids))
@@ -367,8 +371,12 @@ impl EmulatorService for EmulatorServiceHandlers {
 
         let current_profiles = schema::emulator_profiles::table
             .filter(
-                schema::emulator_profiles::id
-                    .eq_any(emulator_profiles.iter().map(|profile| profile.id).collect::<Vec<_>>()),
+                schema::emulator_profiles::id.eq_any(
+                    emulator_profiles
+                        .iter()
+                        .map(|profile| profile.id)
+                        .collect::<Vec<_>>(),
+                ),
             )
             .select(retrom::EmulatorProfile::as_select())
             .load(&mut conn)
