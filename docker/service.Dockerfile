@@ -58,6 +58,7 @@ ENV PUID=1000
 ENV PGID=1000
 ENV UMASK=002
 ENV TZ=Etc/UTC
+ENV SKIP_RECURSIVE_CHOWN=false
 
 # Service env
 ENV UPTRACE_DSN=https://KgFBXOxX2RFeJurwr7R-4w@api.uptrace.dev?grpc=4317
