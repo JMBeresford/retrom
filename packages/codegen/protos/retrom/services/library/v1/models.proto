@@ -9,7 +9,7 @@ import "retrom/services/config/v1/models.proto";
 // Library is a first-class entity representing a game library.
 message Library {
   // OUTPUT_ONLY — set by the server; omit on create/update.
-  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string name = 2;
 
   // structure_definition is a parameterized path template that describes how the
@@ -32,7 +32,7 @@ message Library {
 // or games via mapping tables, enabling flexible directory sharing across entities.
 message RootDirectory {
   // OUTPUT_ONLY — set by the server; omit on create/update.
-  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   string path = 2;
   google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
