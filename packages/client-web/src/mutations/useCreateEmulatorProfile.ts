@@ -3,6 +3,7 @@ import { CreateEmulatorProfilesRequestSchema } from "@retrom/codegen/retrom/serv
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageInitShape } from "@bufbuild/protobuf";
+import { ConnectError } from "@connectrpc/connect";
 
 export function useCreateEmulatorProfiles() {
   const queryClient = useQueryClient();
@@ -18,7 +19,10 @@ export function useCreateEmulatorProfiles() {
       console.error(error);
       toast({
         title: "Failed to create emulator profiles",
-        description: "Check the console for more information.",
+        description:
+          error instanceof ConnectError
+            ? error.message
+            : "Check the console for more information.",
         variant: "destructive",
       });
     },

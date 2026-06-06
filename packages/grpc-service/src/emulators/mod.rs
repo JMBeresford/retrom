@@ -20,6 +20,109 @@ impl EmulatorServiceHandlers {
     }
 }
 
+fn normalize_name(name: &str) -> String {
+    name.trim().to_lowercase()
+}
+
+fn profile_conflict_message(
+    profile_name: &str,
+    emulator_id: i32,
+    emulators: &[Emulator],
+) -> String {
+    match emulators.iter().find(|emulator| emulator.id == emulator_id) {
+        Some(emulator) => format!(
+            "A profile named \"{}\" already exists for {}.",
+            profile_name.trim(),
+            emulator.name
+        ),
+        None => format!(
+            "A profile named \"{}\" already exists for that emulator.",
+            profile_name.trim()
+        ),
+    }
+}
+
+fn validate_unique_emulator_names(
+    emulators_to_validate: &[(Option<i32>, String)],
+    existing_emulators: &[Emulator],
+) -> Result<(), Status> {
+    let mut seen = vec![];
+
+    for (id, name) in emulators_to_validate {
+        let trimmed = name.trim();
+        if trimmed.is_empty() {
+            return Err(Status::invalid_argument("Emulator names cannot be empty."));
+        }
+
+        let normalized = normalize_name(trimmed);
+
+        if seen.iter().any(|(seen_id, seen_name)| {
+            seen_name == &normalized && seen_id != id
+        }) {
+            return Err(Status::invalid_argument(format!(
+                "An emulator named \"{}\" already exists.",
+                trimmed
+            )));
+        }
+
+        if let Some(conflict) = existing_emulators.iter().find(|emulator| {
+            normalize_name(&emulator.name) == normalized && Some(emulator.id) != *id
+        }) {
+            return Err(Status::invalid_argument(format!(
+                "An emulator named \"{}\" already exists.",
+                conflict.name
+            )));
+        }
+
+        seen.push((*id, normalized));
+    }
+
+    Ok(())
+}
+
+fn validate_unique_profile_names(
+    profiles_to_validate: &[(Option<i32>, i32, String)],
+    existing_profiles: &[retrom::EmulatorProfile],
+    emulators: &[Emulator],
+) -> Result<(), Status> {
+    let mut seen = vec![];
+
+    for (id, emulator_id, name) in profiles_to_validate {
+        let trimmed = name.trim();
+        if trimmed.is_empty() {
+            return Err(Status::invalid_argument("Profile names cannot be empty."));
+        }
+
+        let normalized = normalize_name(trimmed);
+
+        if seen.iter().any(|(seen_id, seen_emulator_id, seen_name)| {
+            seen_emulator_id == emulator_id && seen_name == &normalized && seen_id != id
+        }) {
+            return Err(Status::invalid_argument(profile_conflict_message(
+                trimmed,
+                *emulator_id,
+                emulators,
+            )));
+        }
+
+        if existing_profiles.iter().any(|profile| {
+            profile.emulator_id == *emulator_id
+                && normalize_name(&profile.name) == normalized
+                && Some(profile.id) != *id
+        }) {
+            return Err(Status::invalid_argument(profile_conflict_message(
+                trimmed,
+                *emulator_id,
+                emulators,
+            )));
+        }
+
+        seen.push((*id, *emulator_id, normalized));
+    }
+
+    Ok(())
+}
+
 #[tonic::async_trait]
 impl EmulatorService for EmulatorServiceHandlers {
     async fn create_emulators(
@@ -33,6 +136,19 @@ impl EmulatorService for EmulatorServiceHandlers {
             .get()
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
+
+        let existing_emulators = schema::emulators::table
+            .select(Emulator::as_select())
+            .load(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let emulators_to_validate = emulators
+            .iter()
+            .map(|emulator| (None, emulator.name.clone()))
+            .collect::<Vec<_>>();
+
+        validate_unique_emulator_names(&emulators_to_validate, &existing_emulators)?;
 
         let emulators_created = diesel::insert_into(schema::emulators::table)
             .values(&emulators)
@@ -92,6 +208,32 @@ impl EmulatorService for EmulatorServiceHandlers {
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
+        let existing_emulators = schema::emulators::table
+            .select(Emulator::as_select())
+            .load(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let emulators_to_validate = emulators
+            .iter()
+            .map(|emulator| {
+                let current_emulator = existing_emulators
+                    .iter()
+                    .find(|current| current.id == emulator.id)
+                    .ok_or_else(|| Status::not_found("Emulator not found"))?;
+
+                Ok((
+                    Some(emulator.id),
+                    emulator
+                        .name
+                        .clone()
+                        .unwrap_or_else(|| current_emulator.name.clone()),
+                ))
+            })
+            .collect::<Result<Vec<_>, Status>>()?;
+
+        validate_unique_emulator_names(&emulators_to_validate, &existing_emulators)?;
+
         let mut emulators_updated = vec![];
 
         for emulator in emulators {
@@ -140,6 +282,29 @@ impl EmulatorService for EmulatorServiceHandlers {
             .get()
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
+
+        let emulator_ids = profiles.iter().map(|profile| profile.emulator_id).collect::<Vec<_>>();
+
+        let existing_profiles = schema::emulator_profiles::table
+            .filter(schema::emulator_profiles::emulator_id.eq_any(&emulator_ids))
+            .select(retrom::EmulatorProfile::as_select())
+            .load(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let emulators = schema::emulators::table
+            .filter(schema::emulators::id.eq_any(&emulator_ids))
+            .select(Emulator::as_select())
+            .load(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let profiles_to_validate = profiles
+            .iter()
+            .map(|profile| (None, profile.emulator_id, profile.name.clone()))
+            .collect::<Vec<_>>();
+
+        validate_unique_profile_names(&profiles_to_validate, &existing_profiles, &emulators)?;
 
         let profiles_created = diesel::insert_into(schema::emulator_profiles::table)
             .values(&profiles)
@@ -199,6 +364,56 @@ impl EmulatorService for EmulatorServiceHandlers {
             .get()
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
+
+        let current_profiles = schema::emulator_profiles::table
+            .filter(
+                schema::emulator_profiles::id
+                    .eq_any(emulator_profiles.iter().map(|profile| profile.id).collect::<Vec<_>>()),
+            )
+            .select(retrom::EmulatorProfile::as_select())
+            .load(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let profiles_to_validate = emulator_profiles
+            .iter()
+            .map(|profile| {
+                let current_profile = current_profiles
+                    .iter()
+                    .find(|current| current.id == profile.id)
+                    .ok_or_else(|| Status::not_found("Emulator profile not found"))?;
+
+                Ok((
+                    Some(profile.id),
+                    profile.emulator_id.unwrap_or(current_profile.emulator_id),
+                    profile
+                        .name
+                        .clone()
+                        .unwrap_or_else(|| current_profile.name.clone()),
+                ))
+            })
+            .collect::<Result<Vec<_>, Status>>()?;
+
+        let emulator_ids = profiles_to_validate
+            .iter()
+            .map(|(_, emulator_id, _)| *emulator_id)
+            .collect::<Vec<_>>();
+
+        let existing_profiles = schema::emulator_profiles::table
+            .filter(schema::emulator_profiles::emulator_id.eq_any(&emulator_ids))
+            .select(retrom::EmulatorProfile::as_select())
+            .load(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        let emulators = schema::emulators::table
+            .filter(schema::emulators::id.eq_any(&emulator_ids))
+            .select(Emulator::as_select())
+            .load(&mut conn)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
+        validate_unique_profile_names(&profiles_to_validate, &existing_profiles, &emulators)?;
 
         let mut profiles_updated = vec![];
 

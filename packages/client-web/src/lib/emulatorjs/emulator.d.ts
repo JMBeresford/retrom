@@ -21,6 +21,7 @@ export declare class EmulatorJS {
   controlMenu: Element;
   settings: Record<string, string>;
   isFastForward: boolean;
+  isSlowMotion: boolean;
   paused: boolean;
   coreName: Core;
   saveFileExt: string | false;

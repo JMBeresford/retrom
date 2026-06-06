@@ -13,23 +13,21 @@ export const emulationOptions: OverlayMenuItem = {
 type EmulationOptions = {
   ["ff-ratio"]: string;
   fastForward: "enabled" | "disabled";
+  ["sm-ratio"]: string;
+  slowMotion: "enabled" | "disabled";
 };
 
 export function EmulationOptions() {
   const emulatorJS = useEmulatorJS();
   const [volume, setVolume] = useState(Math.floor(emulatorJS.volume * 100));
   const [fastForward, _setFastForward] = useState(emulatorJS.isFastForward);
+  const [slowMotion, _setSlowMotion] = useState(emulatorJS.isSlowMotion);
   const [ffRatio, _setFFRatio] = useState(
     emulatorJS.settings["ff-ratio"] ?? "3.0",
   );
-
-  /**
-   * Muted state is derived from volume in EJS internals,
-   * setting volume to 0 will mute the emulator.
-   *
-   * This means we need to duplicate that logic
-   * here to trigger re-renders correctly
-   */
+  const [smRatio, _setSMRatio] = useState(
+    emulatorJS.settings["sm-ratio"] ?? "3.0",
+  );
   const setEmulatorVolume = useCallback(
     (value: number) => {
       emulatorJS.setVolume(value / 100);
@@ -41,7 +39,6 @@ export function EmulationOptions() {
   const setSetting = useCallback(
     <K extends keyof EmulationOptions>(key: K, value: EmulationOptions[K]) => {
       emulatorJS.changeSettingOption(key, value);
-      // emulatorJS.menuOptionChanged(key, value);
     },
     [emulatorJS],
   );
@@ -59,10 +56,31 @@ export function EmulationOptions() {
     [setSetting],
   );
 
+  const setSMRatio = useCallback(
+    (value: string | number) => {
+      const ratio = Number(value);
+      if (isNaN(ratio) || ratio <= 1) {
+        return;
+      }
+
+      setSetting("sm-ratio", String(ratio));
+      _setSMRatio(String(ratio));
+    },
+    [setSetting],
+  );
+
   const setFastForward = useCallback(
     (value: boolean) => {
       setSetting("fastForward", value ? "enabled" : "disabled");
       _setFastForward(value);
+    },
+    [setSetting],
+  );
+
+  const setSlowMotion = useCallback(
+    (value: boolean) => {
+      setSetting("slowMotion", value ? "enabled" : "disabled");
+      _setSlowMotion(value);
     },
     [setSetting],
   );
@@ -124,6 +142,33 @@ export function EmulationOptions() {
         }}
       >
         Increases emulation speed
+      </ConfigCheckbox>
+
+      <ConfigInput
+        className="w-full"
+        type="number"
+        value={smRatio}
+        onChange={(e) => {
+          if (typeof e === "number" || typeof e === "string") {
+            setSMRatio(e);
+          }
+        }}
+        min={1.5}
+        max={10}
+        step={0.25}
+        bigStep={1}
+        label="Slow Motion Ratio"
+      />
+
+      <ConfigCheckbox
+        id="emulation-options-slow_motion"
+        label="Slow Motion"
+        checked={slowMotion}
+        onCheckedChange={(v) => {
+          setSlowMotion(!!v);
+        }}
+      >
+        Decreases emulation speed
       </ConfigCheckbox>
     </>
   );

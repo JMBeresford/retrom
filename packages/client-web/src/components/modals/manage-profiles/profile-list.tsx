@@ -51,7 +51,7 @@ export function ProfileList(props: Props) {
             </Button>
           </DialogTrigger>
 
-          <EditProfileDialog emulator={emulator} />
+          <EditProfileDialog emulator={emulator} siblingProfiles={profiles} />
         </Dialog>
 
         <Table className="w-full">
@@ -99,6 +99,7 @@ export function ProfileList(props: Props) {
                       <EditProfileDialog
                         emulator={emulator}
                         existingProfile={profile}
+                        siblingProfiles={profiles}
                       />
                     </Dialog>
                     <Dialog>
