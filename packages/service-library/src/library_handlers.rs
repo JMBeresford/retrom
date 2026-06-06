@@ -40,20 +40,15 @@ pub async fn create_libraries(
         ));
     }
 
-    let mut builder =
-        QueryBuilder::<RetromDB>::new("insert into libraries (name, structure_definition) values ");
+    let mut builder = QueryBuilder::<RetromDB>::new(
+        "insert into libraries (id, name, structure_definition) values ",
+    );
 
-    for (i, library) in request.libraries.iter().enumerate() {
-        if i > 0 {
-            builder.push(", ");
-        }
-
-        builder.push("(");
-        let mut separated = builder.separated(", ");
-        separated.push_bind(&library.name);
-        separated.push_bind(&library.structure_definition);
-        separated.push_unseparated(")");
-    }
+    builder.push_values(request.libraries.iter(), |mut row, library| {
+        row.push_bind(uuid::Uuid::now_v7().to_string());
+        row.push_bind(&library.name);
+        row.push_bind(&library.structure_definition);
+    });
 
     builder.push(" returning *");
 
@@ -73,15 +68,19 @@ pub async fn update_libraries(
     let mut libraries_updated = Vec::with_capacity(request.libraries.len());
 
     for library in request.libraries {
-        let updated: Library = sqlx::query_as(
-            "update libraries set name = $1, structure_definition = $2 where id = $3 returning *",
-        )
-        .bind(library.name)
-        .bind(library.structure_definition)
-        .bind(library.id)
-        .fetch_one(&db_pool)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        let mut builder = QueryBuilder::<RetromDB>::new("update libraries set name = ");
+        builder.push_bind(library.name);
+        builder.push(", structure_definition = ");
+        builder.push_bind(library.structure_definition);
+        builder.push(" where id = ");
+        builder.push_bind(library.id);
+        builder.push(" returning *");
+
+        let updated: Library = builder
+            .build_query_as()
+            .fetch_one(&db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         libraries_updated.push(updated);
     }

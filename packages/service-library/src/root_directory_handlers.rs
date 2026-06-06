@@ -13,10 +13,10 @@ pub async fn get_root_directories(
 ) -> Result<GetRootDirectoriesResponse, Status> {
     let mut builder = QueryBuilder::<RetromDB>::new("select * from root_directories");
 
-    if !request.ids.is_empty() {
+    if !request.root_directory_ids.is_empty() {
         builder.push(" where id in (");
         let mut separated = builder.separated(", ");
-        for id in &request.ids {
+        for id in &request.root_directory_ids {
             separated.push_bind(id);
         }
         separated.push_unseparated(")");
@@ -41,18 +41,13 @@ pub async fn create_root_directories(
         ));
     }
 
-    let mut builder = QueryBuilder::<RetromDB>::new("insert into root_directories (path) values ");
+    let mut builder =
+        QueryBuilder::<RetromDB>::new("insert into root_directories (id, path) values ");
 
-    for (i, directory) in request.root_directories.iter().enumerate() {
-        if i > 0 {
-            builder.push(", ");
-        }
-
-        builder.push("(");
-        let mut separated = builder.separated(", ");
-        separated.push_bind(&directory.path);
-        separated.push_unseparated(")");
-    }
+    builder.push_values(request.root_directories.iter(), |mut row, directory| {
+        row.push_bind(uuid::Uuid::now_v7().to_string());
+        row.push_bind(&directory.path);
+    });
 
     builder.push(" returning *");
 
@@ -74,13 +69,17 @@ pub async fn update_root_directories(
     let mut root_directories_updated = Vec::with_capacity(request.root_directories.len());
 
     for directory in request.root_directories {
-        let updated: RootDirectory =
-            sqlx::query_as("update root_directories set path = $1 where id = $2 returning *")
-                .bind(directory.path)
-                .bind(directory.id)
-                .fetch_one(&db_pool)
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+        let mut builder = QueryBuilder::<RetromDB>::new("update root_directories set path = ");
+        builder.push_bind(directory.path);
+        builder.push(" where id = ");
+        builder.push_bind(directory.id);
+        builder.push(" returning *");
+
+        let updated: RootDirectory = builder
+            .build_query_as()
+            .fetch_one(&db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         root_directories_updated.push(updated);
     }

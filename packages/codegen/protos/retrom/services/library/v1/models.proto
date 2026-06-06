@@ -38,33 +38,38 @@ message RootDirectory {
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
+// Platform is a console/system that games can target.
 message Platform {
-  string id = 1;
-  google.protobuf.Timestamp created_at = 2;
-  google.protobuf.Timestamp updated_at = 3;
+  // OUTPUT_ONLY — set by the server; omit on create/update.
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp created_at = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
   google.protobuf.Timestamp deleted_at = 4;
   bool is_deleted = 5;
   bool third_party = 6;
 }
 
+// Game is a title tracked in the library.
 message Game {
   string id = 1;
-  google.protobuf.Timestamp created_at = 2;
-  google.protobuf.Timestamp updated_at = 3;
+  google.protobuf.Timestamp created_at = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
   google.protobuf.Timestamp deleted_at = 4;
   bool is_deleted = 5;
   bool third_party = 6;
   optional string steam_app_id = 7;
 }
 
+// GameFile is a filesystem entry associated with a game and platform.
 message GameFile {
-  string id = 1;
+  // OUTPUT_ONLY — set by the server; omit on create/update.
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   int64 byte_size = 2;
   string path = 3;
   string game_id = 4;
   string platform_id = 5;
-  google.protobuf.Timestamp created_at = 6;
-  google.protobuf.Timestamp updated_at = 7;
+  google.protobuf.Timestamp created_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
   optional google.protobuf.Timestamp deleted_at = 8;
   bool is_deleted = 9;
 }

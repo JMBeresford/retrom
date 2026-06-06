@@ -2,164 +2,219 @@ syntax = "proto3";
 
 package retrom.services.library.v1;
 
+import "google/api/field_behavior.proto";
 import "retrom/services/library/v1/models.proto";
 import "retrom/services/metadata/v1/models.proto";
 
+// LibraryService provides CRUD and maintenance operations for library entities.
 service LibraryService {
+  // Starts a full library update scan.
   rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
+  // Starts metadata refresh jobs.
   rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
+  // Deletes the configured library.
   rpc DeleteLibrary(DeleteLibraryRequest) returns (DeleteLibraryResponse);
+  // Deletes entries that no longer exist on disk.
   rpc DeleteMissingEntries(DeleteMissingEntriesRequest) returns (DeleteMissingEntriesResponse);
 
+  // Lists libraries by ID when provided.
   rpc GetLibraries(GetLibrariesRequest) returns (GetLibrariesResponse);
+  // Creates one or more libraries.
   rpc CreateLibraries(CreateLibrariesRequest) returns (CreateLibrariesResponse);
+  // Updates one or more libraries.
   rpc UpdateLibraries(UpdateLibrariesRequest) returns (UpdateLibrariesResponse);
 
+  // Lists root directories.
   rpc GetRootDirectories(GetRootDirectoriesRequest) returns (GetRootDirectoriesResponse);
+  // Creates one or more root directories.
   rpc CreateRootDirectories(CreateRootDirectoriesRequest) returns (CreateRootDirectoriesResponse);
+  // Updates one or more root directories.
   rpc UpdateRootDirectories(UpdateRootDirectoriesRequest) returns (UpdateRootDirectoriesResponse);
+  // Deletes one or more root directories.
   rpc DeleteRootDirectories(DeleteRootDirectoriesRequest) returns (DeleteRootDirectoriesResponse);
 
+  // Lists platforms by filters.
   rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse);
+  // Creates one or more platforms.
   rpc CreatePlatforms(CreatePlatformsRequest) returns (CreatePlatformsResponse);
+  // Deletes one or more platforms.
   rpc DeletePlatforms(DeletePlatformsRequest) returns (DeletePlatformsResponse);
+  // Updates one or more platforms.
   rpc UpdatePlatforms(UpdatePlatformsRequest) returns (UpdatePlatformsResponse);
 
+  // Lists games by filters.
   rpc GetGames(GetGamesRequest) returns (GetGamesResponse);
+  // Creates one or more games.
   rpc CreateGames(CreateGamesRequest) returns (CreateGamesResponse);
+  // Deletes one or more games.
   rpc DeleteGames(DeleteGamesRequest) returns (DeleteGamesResponse);
+  // Updates one or more games.
   rpc UpdateGames(UpdateGamesRequest) returns (UpdateGamesResponse);
+  // Lists game files by filters.
   rpc GetGameFiles(GetGameFilesRequest) returns (GetGameFilesResponse);
+  // Deletes one or more game files.
   rpc DeleteGameFiles(DeleteGameFilesRequest) returns (DeleteGameFilesResponse);
+  // Updates one or more game files.
   rpc UpdateGameFiles(UpdateGameFilesRequest) returns (UpdateGameFilesResponse);
 }
 
+// Empty request for starting a library update.
 message UpdateLibraryRequest {}
 
 message UpdateLibraryResponse {
+  // IDs of background jobs started by the update.
   repeated string job_ids = 1;
 }
 
 message UpdateLibraryMetadataRequest {
+  // When true, allows metadata to be overwritten.
   optional bool overwrite = 1;
 }
 
 message UpdateLibraryMetadataResponse {
+  // Job IDs returned for each metadata provider.
   string platform_metadata_job_id = 1;
   string game_metadata_job_id = 2;
   string extra_metadata_job_id = 3;
   optional string steam_metadata_job_id = 4;
 }
 
+// Empty request for deleting a library.
 message DeleteLibraryRequest {}
 
+// Empty response for delete library.
 message DeleteLibraryResponse {}
 
 message DeleteMissingEntriesRequest {
+  // When true, only reports what would be deleted.
   bool dry_run = 1;
 }
 
 message DeleteMissingEntriesResponse {
+  // Entities removed by cleanup.
   repeated retrom.services.library.v1.Platform platforms_deleted = 1;
   repeated retrom.services.library.v1.Game games_deleted = 2;
   repeated retrom.services.library.v1.GameFile game_files_deleted = 3;
 }
 
+// Request to fetch libraries by ID.
 message GetLibrariesRequest {
   repeated string ids = 1;
 }
 
+// Response containing matching libraries.
 message GetLibrariesResponse {
   repeated Library libraries = 1;
 }
 
+// Request to create libraries.
 message CreateLibrariesRequest {
-  repeated Library libraries = 1;
+  repeated Library libraries = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
+// Response containing created libraries.
 message CreateLibrariesResponse {
   repeated Library libraries_created = 1;
 }
 
+// Request to update libraries.
 message UpdateLibrariesRequest {
-  repeated Library libraries = 1;
+  repeated Library libraries = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
+// Response containing updated libraries.
 message UpdateLibrariesResponse {
   repeated Library libraries_updated = 1;
 }
 
+// Request to fetch root directories.
 message GetRootDirectoriesRequest {
   repeated string root_directory_ids = 1;
   repeated string platform_ids = 2;
   repeated string game_ids = 3;
 }
 
+// Response containing matching root directories.
 message GetRootDirectoriesResponse {
   repeated RootDirectory root_directories = 1;
 }
 
+// Request to create root directories.
 message CreateRootDirectoriesRequest {
-  repeated RootDirectory root_directories = 1;
+  repeated RootDirectory root_directories = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
+// Response containing created root directories.
 message CreateRootDirectoriesResponse {
   repeated RootDirectory root_directories_created = 1;
 }
 
+// Request to update root directories.
 message UpdateRootDirectoriesRequest {
-  repeated RootDirectory root_directories = 1;
+  repeated RootDirectory root_directories = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
+// Response containing updated root directories.
 message UpdateRootDirectoriesResponse {
   repeated RootDirectory root_directories_updated = 1;
 }
 
+// Request to delete root directories.
 message DeleteRootDirectoriesRequest {
-  repeated string ids = 1;
+  repeated string ids = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
+// Response containing deleted root directories.
 message DeleteRootDirectoriesResponse {
   repeated RootDirectory root_directories_deleted = 1;
 }
 
+// Request to fetch platforms.
 message GetPlatformsRequest {
   repeated string ids = 1;
   optional bool with_metadata = 2;
   optional bool include_deleted = 3;
 }
 
+// Response containing platforms and optional metadata.
 message GetPlatformsResponse {
   repeated retrom.services.library.v1.Platform platforms = 1;
   repeated retrom.services.metadata.v1.PlatformMetadata metadata = 2;
 }
 
+// Request to create platforms.
 message CreatePlatformsRequest {
-  repeated retrom.services.library.v1.Platform platforms = 1;
+  repeated retrom.services.library.v1.Platform platforms = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
+// Response containing created platforms.
 message CreatePlatformsResponse {
   repeated retrom.services.library.v1.Platform platforms_created = 1;
 }
 
+// Request to delete platforms.
 message DeletePlatformsRequest {
-  repeated string ids = 1;
+  repeated string ids = 1 [(google.api.field_behavior) = REQUIRED];
   bool delete_from_disk = 2;
   bool blacklist_entries = 3;
 }
 
+// Response containing deleted platforms.
 message DeletePlatformsResponse {
   repeated retrom.services.library.v1.Platform platforms_deleted = 1;
 }
 
+// Request to update platforms.
 message UpdatePlatformsRequest {
-  repeated retrom.services.library.v1.Platform platforms = 1;
+  repeated retrom.services.library.v1.Platform platforms = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
+// Response containing updated platforms.
 message UpdatePlatformsResponse {
   repeated retrom.services.library.v1.Platform platforms_updated = 1;
 }
 
+// Request to fetch games.
 message GetGamesRequest {
   repeated string platform_ids = 1;
   repeated string ids = 2;
@@ -168,62 +223,75 @@ message GetGamesRequest {
   optional bool include_deleted = 5;
 }
 
+// Response containing games, metadata, and game files.
 message GetGamesResponse {
   repeated retrom.services.library.v1.Game games = 1;
   repeated retrom.services.metadata.v1.GameMetadata metadata = 2;
   repeated retrom.services.library.v1.GameFile game_files = 3;
 }
 
+// Request to create games.
 message CreateGamesRequest {
-  repeated retrom.services.library.v1.Game games = 1;
+  repeated retrom.services.library.v1.Game games = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
+// Response containing created games.
 message CreateGamesResponse {
   repeated retrom.services.library.v1.Game games_created = 1;
 }
 
+// Request to delete games.
 message DeleteGamesRequest {
-  repeated string ids = 1;
+  repeated string ids = 1 [(google.api.field_behavior) = REQUIRED];
   bool delete_from_disk = 2;
   bool blacklist_entries = 3;
 }
 
+// Response containing deleted games.
 message DeleteGamesResponse {
   repeated retrom.services.library.v1.Game games_deleted = 1;
 }
 
+// Request to update games.
 message UpdateGamesRequest {
-  repeated retrom.services.library.v1.Game games = 1;
+  repeated retrom.services.library.v1.Game games = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
+// Response containing updated games.
 message UpdateGamesResponse {
   repeated retrom.services.library.v1.Game games_updated = 1;
 }
 
+// Request to fetch game files.
 message GetGameFilesRequest {
   repeated string ids = 1;
   optional bool include_deleted = 2;
   repeated string game_ids = 3;
 }
 
+// Response containing matching game files.
 message GetGameFilesResponse {
   repeated retrom.services.library.v1.GameFile game_files = 1;
 }
 
+// Request to delete game files.
 message DeleteGameFilesRequest {
-  repeated string ids = 1;
+  repeated string ids = 1 [(google.api.field_behavior) = REQUIRED];
   bool delete_from_disk = 2;
   bool blacklist_entries = 3;
 }
 
+// Response containing deleted game files.
 message DeleteGameFilesResponse {
   repeated retrom.services.library.v1.GameFile game_files_deleted = 1;
 }
 
+// Request to update game files.
 message UpdateGameFilesRequest {
-  repeated retrom.services.library.v1.GameFile game_files = 1;
+  repeated retrom.services.library.v1.GameFile game_files = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
+// Response containing updated game files.
 message UpdateGameFilesResponse {
   repeated retrom.services.library.v1.GameFile game_files_updated = 1;
 }

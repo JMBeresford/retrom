@@ -14,7 +14,7 @@ pub async fn get_platforms(
     db_pool: DbPool,
     request: GetPlatformsRequest,
 ) -> Result<GetPlatformsResponse, Status> {
-    let ids: Vec<String> = request.ids.into_iter().map(|id| id.to_string()).collect();
+    let ids = request.ids;
     let with_metadata = request.with_metadata.unwrap_or(false);
     let include_deleted = request.include_deleted.unwrap_or(false);
 
@@ -88,23 +88,11 @@ pub async fn create_platforms(
         "insert into platforms (id, is_deleted, third_party) values ",
     );
 
-    for (i, platform) in request.platforms.iter().enumerate() {
-        if i > 0 {
-            builder.push(", ");
-        }
-
-        builder.push("(");
-        let mut separated = builder.separated(", ");
-        let id = if platform.id.is_empty() {
-            uuid::Uuid::now_v7().to_string()
-        } else {
-            platform.id.clone()
-        };
-        separated.push_bind(id);
-        separated.push_bind(platform.is_deleted);
-        separated.push_bind(platform.third_party);
-        separated.push_unseparated(")");
-    }
+    builder.push_values(request.platforms.iter(), |mut row, platform| {
+        row.push_bind(uuid::Uuid::now_v7().to_string());
+        row.push_bind(platform.is_deleted);
+        row.push_bind(platform.third_party);
+    });
 
     builder.push(" returning *");
 
@@ -124,16 +112,21 @@ pub async fn update_platforms(
     let mut platforms_updated = Vec::with_capacity(request.platforms.len());
 
     for platform in request.platforms {
-        let updated: Platform = sqlx::query_as(
-            "update platforms set deleted_at = $1, is_deleted = $2, third_party = $3 where id = $4 returning *",
-        )
-        .bind(platform.deleted_at)
-        .bind(platform.is_deleted)
-        .bind(platform.third_party)
-        .bind(platform.id)
-        .fetch_one(&db_pool)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        let mut builder = QueryBuilder::<RetromDB>::new("update platforms set deleted_at = ");
+        builder.push_bind(platform.deleted_at);
+        builder.push(", is_deleted = ");
+        builder.push_bind(platform.is_deleted);
+        builder.push(", third_party = ");
+        builder.push_bind(platform.third_party);
+        builder.push(" where id = ");
+        builder.push_bind(platform.id);
+        builder.push(" returning *");
+
+        let updated: Platform = builder
+            .build_query_as()
+            .fetch_one(&db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         platforms_updated.push(updated);
     }
@@ -145,7 +138,7 @@ pub async fn delete_platforms(
     db_pool: DbPool,
     request: DeletePlatformsRequest,
 ) -> Result<DeletePlatformsResponse, Status> {
-    let ids: Vec<String> = request.ids.into_iter().map(|id| id.to_string()).collect();
+    let ids = request.ids;
 
     if ids.is_empty() {
         return Ok(DeletePlatformsResponse {
@@ -154,11 +147,18 @@ pub async fn delete_platforms(
     }
 
     let mut builder = if request.blacklist_entries {
-        QueryBuilder::<RetromDB>::new(
-            "update platforms set is_deleted = 1, deleted_at = current_timestamp where third_party = 0 and id in (",
-        )
+        let mut builder = QueryBuilder::<RetromDB>::new("update platforms set is_deleted = ");
+        builder.push_bind(true);
+        builder.push(", deleted_at = current_timestamp where third_party = ");
+        builder.push_bind(false);
+        builder.push(" and id in (");
+        builder
     } else {
-        QueryBuilder::<RetromDB>::new("delete from platforms where third_party = 0 and id in (")
+        let mut builder =
+            QueryBuilder::<RetromDB>::new("delete from platforms where third_party = ");
+        builder.push_bind(false);
+        builder.push(" and id in (");
+        builder
     };
 
     let mut separated = builder.separated(", ");

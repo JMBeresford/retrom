@@ -16,13 +16,8 @@ pub async fn get_games(
     let include_deleted = request.include_deleted.unwrap_or(false);
     let with_metadata = request.with_metadata.unwrap_or(false);
     let with_files = request.with_files.unwrap_or(false);
-
-    let ids: Vec<String> = request.ids.into_iter().map(|id| id.to_string()).collect();
-    let platform_ids: Vec<String> = request
-        .platform_ids
-        .into_iter()
-        .map(|id| id.to_string())
-        .collect();
+    let ids = request.ids;
+    let platform_ids = request.platform_ids;
 
     let mut games_builder = QueryBuilder::<RetromDB>::new("select * from games");
     let mut has_condition = false;
@@ -39,9 +34,9 @@ pub async fn get_games(
 
     if !platform_ids.is_empty() {
         let clause = if has_condition {
-            " and id in (select game_id from game_platform_maps where platform_id in ("
+            " and id in (select game_id from game_platforms where platform_id in ("
         } else {
-            " where id in (select game_id from game_platform_maps where platform_id in ("
+            " where id in (select game_id from game_platforms where platform_id in ("
         };
         games_builder.push(clause);
         let mut separated = games_builder.separated(", ");
@@ -156,23 +151,38 @@ pub async fn update_games(
     db_pool: DbPool,
     request: UpdateGamesRequest,
 ) -> Result<UpdateGamesResponse, Status> {
-    let mut games_updated = Vec::with_capacity(request.games.len());
-
-    for game in request.games {
-        let updated: Game = sqlx::query_as(
-            "update games set deleted_at = $1, is_deleted = $2, third_party = $3, steam_app_id = $4 where id = $5 returning *",
-        )
-        .bind(game.deleted_at)
-        .bind(game.is_deleted)
-        .bind(game.third_party)
-        .bind(game.steam_app_id)
-        .bind(game.id)
-        .fetch_one(&db_pool)
+    let mut tx = db_pool
+        .begin()
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
+    let mut games_updated = Vec::with_capacity(request.games.len());
+
+    for game in request.games {
+        let mut builder = QueryBuilder::<RetromDB>::new("update games set deleted_at = ");
+        builder.push_bind(game.deleted_at);
+        builder.push(", is_deleted = ");
+        builder.push_bind(game.is_deleted);
+        builder.push(", third_party = ");
+        builder.push_bind(game.third_party);
+        builder.push(", steam_app_id = ");
+        builder.push_bind(game.steam_app_id);
+        builder.push(" where id = ");
+        builder.push_bind(game.id);
+        builder.push(" returning *");
+
+        let updated: Game = builder
+            .build_query_as()
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
         games_updated.push(updated);
     }
+
+    tx.commit()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(UpdateGamesResponse { games_updated })
 }
@@ -181,7 +191,7 @@ pub async fn delete_games(
     db_pool: DbPool,
     request: DeleteGamesRequest,
 ) -> Result<DeleteGamesResponse, Status> {
-    let ids: Vec<String> = request.ids.into_iter().map(|id| id.to_string()).collect();
+    let ids = request.ids;
 
     if ids.is_empty() {
         return Ok(DeleteGamesResponse {
@@ -189,10 +199,29 @@ pub async fn delete_games(
         });
     }
 
+    let game_files_to_delete: Vec<GameFile> = if request.delete_from_disk {
+        let mut files_for_delete_builder =
+            QueryBuilder::<RetromDB>::new("select * from game_files where game_id in (");
+        let mut separated = files_for_delete_builder.separated(", ");
+        for id in &ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(")");
+
+        files_for_delete_builder
+            .build_query_as()
+            .fetch_all(&db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?
+    } else {
+        vec![]
+    };
+
     if request.blacklist_entries {
-        let mut files_builder = QueryBuilder::<RetromDB>::new(
-            "update game_files set is_deleted = 1, deleted_at = current_timestamp where game_id in (",
-        );
+        let mut files_builder =
+            QueryBuilder::<RetromDB>::new("update game_files set is_deleted = ");
+        files_builder.push_bind(true);
+        files_builder.push(", deleted_at = current_timestamp where game_id in (");
         let mut separated = files_builder.separated(", ");
         for id in &ids {
             separated.push_bind(id);
@@ -207,9 +236,10 @@ pub async fn delete_games(
     }
 
     let mut builder = if request.blacklist_entries {
-        QueryBuilder::<RetromDB>::new(
-            "update games set is_deleted = 1, deleted_at = current_timestamp where id in (",
-        )
+        let mut builder = QueryBuilder::<RetromDB>::new("update games set is_deleted = ");
+        builder.push_bind(true);
+        builder.push(", deleted_at = current_timestamp where id in (");
+        builder
     } else {
         QueryBuilder::<RetromDB>::new("delete from games where id in (")
     };
@@ -226,6 +256,29 @@ pub async fn delete_games(
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
+    if request.delete_from_disk {
+        for game_file in &game_files_to_delete {
+            let file_path = PathBuf::from(&game_file.path);
+            if !file_path.exists() {
+                continue;
+            }
+
+            let result = if file_path.is_dir() {
+                tokio::fs::remove_dir_all(&file_path).await
+            } else {
+                tokio::fs::remove_file(&file_path).await
+            };
+
+            if let Err(why) = result {
+                tracing::error!(
+                    "Failed to remove game file {} from disk: {}",
+                    game_file.id,
+                    why
+                );
+            }
+        }
+    }
+
     Ok(DeleteGamesResponse { games_deleted })
 }
 
@@ -234,12 +287,8 @@ pub async fn get_game_files(
     request: GetGameFilesRequest,
 ) -> Result<GetGameFilesResponse, Status> {
     let include_deleted = request.include_deleted.unwrap_or(false);
-    let ids: Vec<String> = request.ids.into_iter().map(|id| id.to_string()).collect();
-    let game_ids: Vec<String> = request
-        .game_ids
-        .into_iter()
-        .map(|id| id.to_string())
-        .collect();
+    let ids = request.ids;
+    let game_ids = request.game_ids;
 
     let mut builder = QueryBuilder::<RetromDB>::new("select * from game_files");
     let mut has_condition = false;
@@ -293,19 +342,27 @@ pub async fn update_game_files(
     let mut game_files_updated = Vec::with_capacity(request.game_files.len());
 
     for game_file in request.game_files {
-        let updated: GameFile = sqlx::query_as(
-            "update game_files set byte_size = $1, path = $2, game_id = $3, platform_id = $4, deleted_at = $5, is_deleted = $6 where id = $7 returning *",
-        )
-        .bind(game_file.byte_size)
-        .bind(game_file.path)
-        .bind(game_file.game_id)
-        .bind(game_file.platform_id)
-        .bind(game_file.deleted_at)
-        .bind(game_file.is_deleted)
-        .bind(game_file.id)
-        .fetch_one(&db_pool)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        let mut builder = QueryBuilder::<RetromDB>::new("update game_files set byte_size = ");
+        builder.push_bind(game_file.byte_size);
+        builder.push(", path = ");
+        builder.push_bind(game_file.path);
+        builder.push(", game_id = ");
+        builder.push_bind(game_file.game_id);
+        builder.push(", platform_id = ");
+        builder.push_bind(game_file.platform_id);
+        builder.push(", deleted_at = ");
+        builder.push_bind(game_file.deleted_at);
+        builder.push(", is_deleted = ");
+        builder.push_bind(game_file.is_deleted);
+        builder.push(" where id = ");
+        builder.push_bind(game_file.id);
+        builder.push(" returning *");
+
+        let updated: GameFile = builder
+            .build_query_as()
+            .fetch_one(&db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         game_files_updated.push(updated);
     }
@@ -317,7 +374,7 @@ pub async fn delete_game_files(
     db_pool: DbPool,
     request: DeleteGameFilesRequest,
 ) -> Result<DeleteGameFilesResponse, Status> {
-    let ids: Vec<String> = request.ids.into_iter().map(|id| id.to_string()).collect();
+    let ids = request.ids;
 
     if ids.is_empty() {
         return Ok(DeleteGameFilesResponse {
@@ -326,9 +383,10 @@ pub async fn delete_game_files(
     }
 
     let mut builder = if request.blacklist_entries {
-        QueryBuilder::<RetromDB>::new(
-            "update game_files set is_deleted = 1, deleted_at = current_timestamp where id in (",
-        )
+        let mut builder = QueryBuilder::<RetromDB>::new("update game_files set is_deleted = ");
+        builder.push_bind(true);
+        builder.push(", deleted_at = current_timestamp where id in (");
+        builder
     } else {
         QueryBuilder::<RetromDB>::new("delete from game_files where id in (")
     };
