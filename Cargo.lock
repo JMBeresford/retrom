@@ -9629,6 +9629,7 @@ dependencies = [
  "retrom-db",
  "retrom-service-common",
  "retrom-service-config",
+ "retrom-service-jobs",
  "retrom-telemetry",
  "sanitize-filename",
  "sqlx",

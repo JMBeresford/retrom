@@ -15,22 +15,29 @@ use retrom_codegen::retrom::services::library::v1::{
     UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
 };
 use retrom_db::DbPool;
+use retrom_service_jobs::job_manager::JobManager;
+use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
 pub mod game_handlers;
 pub mod library_handlers;
 pub mod platform_handlers;
 pub mod root_directory_handlers;
-pub mod update_handlers;
+pub mod scan;
+pub mod scan_handlers;
 
 #[derive(Clone)]
 pub struct LibraryServiceHandlers {
     pub db_pool: DbPool,
+    pub job_manager: Arc<JobManager>,
 }
 
 impl LibraryServiceHandlers {
-    pub fn new(db_pool: DbPool) -> Self {
-        Self { db_pool }
+    pub fn new(db_pool: DbPool, job_manager: Arc<JobManager>) -> Self {
+        Self {
+            db_pool,
+            job_manager,
+        }
     }
 }
 
@@ -38,11 +45,11 @@ impl LibraryServiceHandlers {
 impl LibraryService for LibraryServiceHandlers {
     async fn scan_library(
         &self,
-        _request: Request<ScanLibraryRequest>,
+        request: Request<ScanLibraryRequest>,
     ) -> Result<Response<ScanLibraryResponse>, Status> {
-        Err(Status::unimplemented(
-            "ScanLibrary is not implemented in sqlx migration groundwork",
-        ))
+        scan_handlers::scan_library(self, request.into_inner())
+            .await
+            .map(Response::new)
     }
 
     async fn update_library_metadata(
@@ -237,7 +244,8 @@ impl LibraryService for LibraryServiceHandlers {
 
 /// Build an [`axum::Router`] that serves the library gRPC endpoints.
 pub fn library_router(db_pool: DbPool) -> axum::Router {
-    let lib_handlers = LibraryServiceHandlers::new(db_pool);
+    let job_manager = Arc::new(JobManager::new());
+    let lib_handlers = LibraryServiceHandlers::new(db_pool, job_manager);
     let library_service = LibraryServiceServer::new(lib_handlers);
 
     let mut routes_builder = tonic::service::Routes::builder();
