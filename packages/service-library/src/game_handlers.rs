@@ -199,6 +199,11 @@ pub async fn delete_games(
         });
     }
 
+    let mut tx = db_pool
+        .begin()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
     let game_files_to_delete: Vec<GameFile> = if request.delete_from_disk {
         let mut files_for_delete_builder =
             QueryBuilder::<RetromDB>::new("select * from game_files where game_id in (");
@@ -210,7 +215,7 @@ pub async fn delete_games(
 
         files_for_delete_builder
             .build_query_as()
-            .fetch_all(&db_pool)
+            .fetch_all(&mut *tx)
             .await
             .map_err(|e| Status::internal(e.to_string()))?
     } else {
@@ -230,7 +235,7 @@ pub async fn delete_games(
 
         files_builder
             .build()
-            .execute(&db_pool)
+            .execute(&mut *tx)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
     }
@@ -252,7 +257,7 @@ pub async fn delete_games(
 
     let games_deleted: Vec<Game> = builder
         .build_query_as()
-        .fetch_all(&db_pool)
+        .fetch_all(&mut *tx)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -270,14 +275,17 @@ pub async fn delete_games(
             };
 
             if let Err(why) = result {
-                tracing::error!(
+                return Err(Status::internal(format!(
                     "Failed to remove game file {} from disk: {}",
-                    game_file.id,
-                    why
-                );
+                    game_file.id, why
+                )));
             }
         }
     }
+
+    tx.commit()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(DeleteGamesResponse { games_deleted })
 }
@@ -339,6 +347,11 @@ pub async fn update_game_files(
     db_pool: DbPool,
     request: UpdateGameFilesRequest,
 ) -> Result<UpdateGameFilesResponse, Status> {
+    let mut tx = db_pool
+        .begin()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
     let mut game_files_updated = Vec::with_capacity(request.game_files.len());
 
     for game_file in request.game_files {
@@ -360,12 +373,16 @@ pub async fn update_game_files(
 
         let updated: GameFile = builder
             .build_query_as()
-            .fetch_one(&db_pool)
+            .fetch_one(&mut *tx)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         game_files_updated.push(updated);
     }
+
+    tx.commit()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(UpdateGameFilesResponse { game_files_updated })
 }
