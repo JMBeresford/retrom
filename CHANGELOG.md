@@ -1,3 +1,16 @@
+## [0.8.3](https://github.com/JMBeresford/retrom/compare/v0.8.2...v0.8.3) (2026-06-07)
+
+### Features
+
+
+#### feat(docker): SKIP_RECURSIVE_CHOWN env var to bypass recursive chown on startup (#528) ([d9957838](https://github.com/JMBeresford/retrom/commit/d9957838978427c50b31780822dc4c37d5002c3c)), closes [#522](https://github.com/JMBeresford/retrom/issues/522)
+### Bug Fixes
+
+
+#### fix: hide unconfigured Steam platform (#541) ([743ddafe](https://github.com/JMBeresford/retrom/commit/743ddafecf465b8648ce3fbd5339aca067daaa56)), closes [#438](https://github.com/JMBeresford/retrom/issues/438) [#334](https://github.com/JMBeresford/retrom/issues/334)
+hide the reserved Steam platform until Steam credentials are actually
+configured
+
 ## [0.8.2](https://github.com/JMBeresford/retrom/compare/v0.8.1...v0.8.2) (2026-05-23)
 
 ### Bug Fixes
