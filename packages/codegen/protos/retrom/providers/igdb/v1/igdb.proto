@@ -62,7 +62,7 @@ message IgdbGameSearchQuery {
   }
 
   // the retrom game id we are searching for
-  int32 game_id = 1;
+  string game_id = 1;
 
   IgdbSearch search = 2;
   optional Fields fields = 3;
@@ -76,7 +76,7 @@ message IgdbPlatformSearchQuery {
   }
 
   // the retrom platform id we are searching for
-  int32 platform_id = 1;
+  string platform_id = 1;
 
   IgdbSearch search = 2;
   optional Fields fields = 3;
