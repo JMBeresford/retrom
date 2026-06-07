@@ -1,18 +1,21 @@
-use retrom_codegen::retrom::services::library::v1::{
-    library_service_server::LibraryService, library_service_server::LibraryServiceServer,
-    CreateGamesRequest, CreateGamesResponse, CreateLibrariesRequest, CreateLibrariesResponse,
-    CreatePlatformsRequest, CreatePlatformsResponse, CreateRootDirectoriesRequest,
-    CreateRootDirectoriesResponse, DeleteGameFilesRequest, DeleteGameFilesResponse,
-    DeleteGamesRequest, DeleteGamesResponse, DeleteLibraryRequest, DeleteLibraryResponse,
-    DeleteMissingEntriesRequest, DeleteMissingEntriesResponse, DeletePlatformsRequest,
-    DeletePlatformsResponse, DeleteRootDirectoriesRequest, DeleteRootDirectoriesResponse,
-    GetGameFilesRequest, GetGameFilesResponse, GetGamesRequest, GetGamesResponse,
-    GetLibrariesRequest, GetLibrariesResponse, GetPlatformsRequest, GetPlatformsResponse,
-    GetRootDirectoriesRequest, GetRootDirectoriesResponse, ScanLibraryRequest, ScanLibraryResponse,
-    UpdateGameFilesRequest, UpdateGameFilesResponse, UpdateGamesRequest, UpdateGamesResponse,
-    UpdateLibrariesRequest, UpdateLibrariesResponse, UpdateLibraryMetadataRequest,
-    UpdateLibraryMetadataResponse, UpdatePlatformsRequest, UpdatePlatformsResponse,
-    UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
+use retrom_codegen::retrom::services::{
+    library::v1::{
+        library_service_server::LibraryService, library_service_server::LibraryServiceServer,
+        CreateGamesRequest, CreateGamesResponse, CreateLibrariesRequest, CreateLibrariesResponse,
+        CreatePlatformsRequest, CreatePlatformsResponse, CreateRootDirectoriesRequest,
+        CreateRootDirectoriesResponse, DeleteGameFilesRequest, DeleteGameFilesResponse,
+        DeleteGamesRequest, DeleteGamesResponse, DeleteLibraryRequest, DeleteLibraryResponse,
+        DeleteMissingEntriesRequest, DeleteMissingEntriesResponse, DeletePlatformsRequest,
+        DeletePlatformsResponse, DeleteRootDirectoriesRequest, DeleteRootDirectoriesResponse,
+        GetGameFilesRequest, GetGameFilesResponse, GetGamesRequest, GetGamesResponse,
+        GetLibrariesRequest, GetLibrariesResponse, GetPlatformsRequest, GetPlatformsResponse,
+        GetRootDirectoriesRequest, GetRootDirectoriesResponse, ScanLibraryRequest,
+        ScanLibraryResponse, UpdateGameFilesRequest, UpdateGameFilesResponse, UpdateGamesRequest,
+        UpdateGamesResponse, UpdateLibrariesRequest, UpdateLibrariesResponse,
+        UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdatePlatformsRequest,
+        UpdatePlatformsResponse, UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
+    },
+    metadata::v1::igdb_service_client::IgdbServiceClient,
 };
 use retrom_db::DbPool;
 use retrom_service_jobs::job_manager::JobManager;
@@ -21,6 +24,7 @@ use tonic::{Request, Response, Status};
 
 pub mod game_handlers;
 pub mod library_handlers;
+pub mod metadata_handlers;
 pub mod platform_handlers;
 pub mod root_directory_handlers;
 pub mod scan;
@@ -30,13 +34,28 @@ pub mod scan_handlers;
 pub struct LibraryServiceHandlers {
     pub db_pool: DbPool,
     pub job_manager: Arc<JobManager>,
+    igdb_svc_client: IgdbServiceClient<tonic::transport::Channel>,
 }
 
 impl LibraryServiceHandlers {
     pub fn new(db_pool: DbPool, job_manager: Arc<JobManager>) -> Self {
+        let igdb_svc_port = std::env::var("RETROM_METADATA_SERVICE_PORT")
+            .ok()
+            .and_then(|p| p.parse::<i32>().ok())
+            .unwrap_or(5110);
+
+        let igdb_svc_host = format!("http://[::1]:{igdb_svc_port}");
+
+        let igdb_svc_transport = tonic::transport::Channel::from_shared(igdb_svc_host)
+            .expect("Failed to create IgdbServiceClient with host {igdb_svc_host}")
+            .connect_lazy();
+
+        let igdb_svc_client = IgdbServiceClient::new(igdb_svc_transport);
+
         Self {
             db_pool,
             job_manager,
+            igdb_svc_client,
         }
     }
 }
