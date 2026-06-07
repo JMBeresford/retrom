@@ -15,7 +15,9 @@ use retrom_codegen::retrom::services::{
         UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdatePlatformsRequest,
         UpdatePlatformsResponse, UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
     },
-    metadata::v1::igdb_service_client::IgdbServiceClient,
+    metadata::v1::{
+        igdb_service_client::IgdbServiceClient, steam_service_client::SteamServiceClient,
+    },
 };
 use retrom_db::DbPool;
 use retrom_service_jobs::job_manager::JobManager;
@@ -35,27 +37,30 @@ pub struct LibraryServiceHandlers {
     pub db_pool: DbPool,
     pub job_manager: Arc<JobManager>,
     igdb_svc_client: IgdbServiceClient<tonic::transport::Channel>,
+    steam_svc_client: SteamServiceClient<tonic::transport::Channel>,
 }
 
 impl LibraryServiceHandlers {
     pub fn new(db_pool: DbPool, job_manager: Arc<JobManager>) -> Self {
-        let igdb_svc_port = std::env::var("RETROM_METADATA_SERVICE_PORT")
+        let metadata_svc_port = std::env::var("RETROM_METADATA_SERVICE_PORT")
             .ok()
             .and_then(|p| p.parse::<i32>().ok())
             .unwrap_or(5110);
 
-        let igdb_svc_host = format!("http://[::1]:{igdb_svc_port}");
+        let metadata_svc_host = format!("http://[::1]:{metadata_svc_port}");
 
-        let igdb_svc_transport = tonic::transport::Channel::from_shared(igdb_svc_host)
+        let metadata_svc_transport = tonic::transport::Channel::from_shared(metadata_svc_host)
             .expect("Failed to create IgdbServiceClient with host {igdb_svc_host}")
             .connect_lazy();
 
-        let igdb_svc_client = IgdbServiceClient::new(igdb_svc_transport);
+        let igdb_svc_client = IgdbServiceClient::new(metadata_svc_transport.clone());
+        let steam_svc_client = SteamServiceClient::new(metadata_svc_transport);
 
         Self {
             db_pool,
             job_manager,
             igdb_svc_client,
+            steam_svc_client,
         }
     }
 }
