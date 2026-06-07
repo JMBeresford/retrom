@@ -9,7 +9,7 @@ import "retrom/services/metadata/v1/models.proto";
 // LibraryService provides CRUD and maintenance operations for library entities.
 service LibraryService {
   // Starts a full library update scan.
-  rpc UpdateLibrary(UpdateLibraryRequest) returns (UpdateLibraryResponse);
+  rpc ScanLibrary(ScanLibraryRequest) returns (ScanLibraryResponse);
   // Starts metadata refresh jobs.
   rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
   // Deletes the configured library.
@@ -58,12 +58,12 @@ service LibraryService {
   rpc UpdateGameFiles(UpdateGameFilesRequest) returns (UpdateGameFilesResponse);
 }
 
-// UpdateLibraryRequest starts a full library scan/update.
-message UpdateLibraryRequest {}
+// ScanLibraryRequest starts a full library scan/update.
+message ScanLibraryRequest {}
 
-// UpdateLibraryResponse contains job IDs started by UpdateLibrary.
-message UpdateLibraryResponse {
-  // Job IDs started by the update operation.
+// ScanLibraryResponse contains job IDs started by ScanLibrary.
+message ScanLibraryResponse {
+  // Job IDs started by the scan operation.
   repeated string job_ids = 1;
 }
 

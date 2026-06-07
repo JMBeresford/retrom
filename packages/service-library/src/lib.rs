@@ -8,10 +8,10 @@ use retrom_codegen::retrom::services::library::v1::{
     DeletePlatformsResponse, DeleteRootDirectoriesRequest, DeleteRootDirectoriesResponse,
     GetGameFilesRequest, GetGameFilesResponse, GetGamesRequest, GetGamesResponse,
     GetLibrariesRequest, GetLibrariesResponse, GetPlatformsRequest, GetPlatformsResponse,
-    GetRootDirectoriesRequest, GetRootDirectoriesResponse, UpdateGameFilesRequest,
-    UpdateGameFilesResponse, UpdateGamesRequest, UpdateGamesResponse, UpdateLibrariesRequest,
-    UpdateLibrariesResponse, UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse,
-    UpdateLibraryRequest, UpdateLibraryResponse, UpdatePlatformsRequest, UpdatePlatformsResponse,
+    GetRootDirectoriesRequest, GetRootDirectoriesResponse, ScanLibraryRequest, ScanLibraryResponse,
+    UpdateGameFilesRequest, UpdateGameFilesResponse, UpdateGamesRequest, UpdateGamesResponse,
+    UpdateLibrariesRequest, UpdateLibrariesResponse, UpdateLibraryMetadataRequest,
+    UpdateLibraryMetadataResponse, UpdatePlatformsRequest, UpdatePlatformsResponse,
     UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
 };
 use retrom_db::DbPool;
@@ -21,6 +21,7 @@ pub mod game_handlers;
 pub mod library_handlers;
 pub mod platform_handlers;
 pub mod root_directory_handlers;
+pub mod update_handlers;
 
 #[derive(Clone)]
 pub struct LibraryServiceHandlers {
@@ -35,12 +36,12 @@ impl LibraryServiceHandlers {
 
 #[tonic::async_trait]
 impl LibraryService for LibraryServiceHandlers {
-    async fn update_library(
+    async fn scan_library(
         &self,
-        _request: Request<UpdateLibraryRequest>,
-    ) -> Result<Response<UpdateLibraryResponse>, Status> {
+        _request: Request<ScanLibraryRequest>,
+    ) -> Result<Response<ScanLibraryResponse>, Status> {
         Err(Status::unimplemented(
-            "UpdateLibrary is not implemented in sqlx migration groundwork",
+            "ScanLibrary is not implemented in sqlx migration groundwork",
         ))
     }
 
