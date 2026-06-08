@@ -29,11 +29,10 @@ import { useCreateEmulators } from "@/mutations/useCreateEmulators";
 import { saveStrategyDisplayMap } from "./utils";
 
 export function CreateEmulator(props: {
-  existingNames: string[];
   platforms: PlatformWithMetadata[];
   onSuccess: (emu: Emulator) => void;
 }) {
-  const { existingNames, onSuccess } = props;
+  const { onSuccess } = props;
   const form = useForm<EmulatorSchema>({
     mode: "onSubmit",
     reValidateMode: "onChange",
@@ -51,19 +50,6 @@ export function CreateEmulator(props: {
 
   const handleSubmit = useCallback(
     async (values: EmulatorSchema) => {
-      const normalizedName = values.name.trim().toLowerCase();
-      const duplicate = existingNames.some(
-        (name) => name.trim().toLowerCase() === normalizedName,
-      );
-
-      if (duplicate) {
-        form.setError("name", {
-          message: "An emulator with this name already exists",
-        });
-
-        return;
-      }
-
       try {
         const { emulatorsCreated } = await createEmulators({
           emulators: [values],
@@ -81,7 +67,7 @@ export function CreateEmulator(props: {
         console.error(error);
       }
     },
-    [createEmulators, existingNames, form, onSuccess],
+    [form, onSuccess, createEmulators],
   );
 
   return (
@@ -97,14 +83,7 @@ export function CreateEmulator(props: {
             <FormItem className="w-full">
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  onChange={(event) => {
-                    form.clearErrors("name");
-                    field.onChange(event);
-                  }}
-                  placeholder="Enter emulator name"
-                />
+                <Input {...field} placeholder="Enter emulator name" />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -3,7 +3,6 @@ import { CreateEmulatorsRequestSchema } from "@retrom/codegen/retrom/services/em
 import { useRetromClient } from "@/providers/retrom-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageInitShape } from "@bufbuild/protobuf";
-import { ConnectError } from "@connectrpc/connect";
 
 export function useCreateEmulators() {
   const queryClient = useQueryClient();
@@ -19,10 +18,7 @@ export function useCreateEmulators() {
       console.error(error);
       toast({
         title: "Failed to create emulators",
-        description:
-          error instanceof ConnectError
-            ? error.message
-            : "Check the console for more information.",
+        description: "Check the console for more information.",
         variant: "destructive",
       });
     },

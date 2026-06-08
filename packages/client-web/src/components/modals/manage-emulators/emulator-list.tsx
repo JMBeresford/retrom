@@ -56,12 +56,14 @@ import {
   AccordionTrigger,
 } from "@retrom/ui/components/accordion";
 import { useModalAction } from "@/providers/modal-action";
+import { useToast } from "@retrom/ui/hooks/use-toast";
 import { changesetSchema, ChangesetSchema, PlatformWithMetadata } from ".";
 import {
   operatingSystemDisplayMap,
   PlatformsDropdown,
   saveStrategyDisplayMap,
 } from "./utils";
+import { ConnectError } from "@connectrpc/connect";
 
 export function EmulatorList(props: {
   platforms: PlatformWithMetadata[];
@@ -69,6 +71,7 @@ export function EmulatorList(props: {
 }) {
   const { platforms, emulators } = props;
   const { openModal: confirm } = useModalAction("confirmModal");
+  const { toast } = useToast();
 
   const { mutateAsync: updateEmulators, isPending } = useUpdateEmulators();
   const { mutateAsync: deleteEmulators, isPending: deletionPending } =
@@ -89,32 +92,6 @@ export function EmulatorList(props: {
   const handleSubmit = useCallback(
     async (values: ChangesetSchema) => {
       try {
-        form.clearErrors();
-
-        const normalizedNames = new Map<string, string[]>();
-        Object.entries(values.emulators).forEach(([id, emulator]) => {
-          const normalizedName = emulator.name.trim().toLowerCase();
-          const entries = normalizedNames.get(normalizedName) ?? [];
-          entries.push(id);
-          normalizedNames.set(normalizedName, entries);
-        });
-
-        const duplicateIds = [...normalizedNames.values()].filter(
-          (entries) => entries.length > 1,
-        );
-
-        if (duplicateIds.length > 0) {
-          duplicateIds.forEach((entries) => {
-            entries.forEach((id) => {
-              form.setError(`emulators.${id}.name`, {
-                message: "Emulator names must be unique",
-              });
-            });
-          });
-
-          return;
-        }
-
         const { emulatorsUpdated: emulators } = await updateEmulators({
           emulators: Object.values(values.emulators),
         });
@@ -127,9 +104,17 @@ export function EmulatorList(props: {
         });
       } catch (e) {
         console.error(e);
+        const description =
+          e instanceof ConnectError ? e.message : "An error occurred";
+
+        toast({
+          title: "Failed to update emulators",
+          description,
+          variant: "destructive",
+        });
       }
     },
-    [updateEmulators, form],
+    [updateEmulators, form, toast],
   );
 
   const pending = isPending || deletionPending;
@@ -138,9 +123,6 @@ export function EmulatorList(props: {
   return (
     <>
       <CreateEmulator
-        existingNames={Object.values(changeset).map(
-          (emulator) => emulator.name,
-        )}
         platforms={platforms}
         onSuccess={(emulator) => {
           form.register(`emulators.${emulator.id}`, {
@@ -211,12 +193,6 @@ export function EmulatorList(props: {
                                   <FormControl>
                                     <Input
                                       {...field}
-                                      onChange={(event) => {
-                                        form.clearErrors(
-                                          `emulators.${emulator.id}.name`,
-                                        );
-                                        field.onChange(event);
-                                      }}
                                       placeholder="Enter emulator name"
                                     />
                                   </FormControl>

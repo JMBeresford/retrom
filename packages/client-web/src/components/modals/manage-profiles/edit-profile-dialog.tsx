@@ -42,7 +42,6 @@ import {
 type Props = {
   emulator: Emulator;
   existingProfile?: EmulatorProfile;
-  siblingProfiles: EmulatorProfile[];
 };
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -68,7 +67,7 @@ const formSchema = z.object({
 >;
 
 export function EditProfileDialog(props: Props) {
-  const { emulator, existingProfile, siblingProfiles } = props;
+  const { emulator, existingProfile } = props;
   const { setOpen } = useDialogOpen();
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -92,21 +91,6 @@ export function EditProfileDialog(props: Props) {
 
   const handleSubmit = useCallback(
     (values: FormSchema) => {
-      const normalizedName = values.name.trim().toLowerCase();
-      const duplicate = siblingProfiles.some(
-        (profile) =>
-          profile.id !== existingProfile?.id &&
-          profile.name.trim().toLowerCase() === normalizedName,
-      );
-
-      if (duplicate) {
-        form.setError("name", {
-          message: "A profile with this name already exists for this emulator",
-        });
-
-        return;
-      }
-
       if (existingProfile) {
         const profile = {
           ...existingProfile,
@@ -134,15 +118,7 @@ export function EditProfileDialog(props: Props) {
 
       setOpen(false);
     },
-    [
-      createProfiles,
-      emulator,
-      existingProfile,
-      form,
-      setOpen,
-      siblingProfiles,
-      updateProfiles,
-    ],
+    [emulator, createProfiles, updateProfiles, existingProfile, setOpen, form],
   );
 
   return (
@@ -167,14 +143,7 @@ export function EditProfileDialog(props: Props) {
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    onChange={(event) => {
-                      form.clearErrors("name");
-                      field.onChange(event);
-                    }}
-                    placeholder="Enter profile name"
-                  />
+                  <Input {...field} placeholder="Enter profile name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
