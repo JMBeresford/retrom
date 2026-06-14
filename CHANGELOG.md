@@ -1,3 +1,13 @@
+## [0.8.4](https://github.com/JMBeresford/retrom/compare/v0.8.3...v0.8.4) (2026-06-14)
+
+### Features
+
+
+#### feat: add slow motion controls to the EmulatorJS overlay (#542) ([5f1cb872](https://github.com/JMBeresford/retrom/commit/5f1cb872e7976b83aff0e8c6896d739a7006bd9b)), closes [#318](https://github.com/JMBeresford/retrom/issues/318)
+This PR adds the slow motion controls that EmulatorJS already supports
+to the in-game overlay, so those settings are available from Retrom as
+well.
+
 ## [0.8.3](https://github.com/JMBeresford/retrom/compare/v0.8.2...v0.8.3) (2026-06-07)
 
 ### Features
