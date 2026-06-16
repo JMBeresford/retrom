@@ -1,8 +1,5 @@
-use retrom_codegen::{
-    retrom::services::metadata::v1::{
-        steam_service_server::SteamService, SyncSteamMetadataRequest, SyncSteamMetadataResponse,
-    },
-    timestamp::Timestamp,
+use retrom_codegen::retrom::services::metadata::v1::{
+    steam_service_server::SteamService, SyncSteamMetadataRequest, SyncSteamMetadataResponse,
 };
 use retrom_db::{DbPool, RetromDB};
 use retrom_service_common::metadata_providers::steam::provider::{
@@ -10,9 +7,11 @@ use retrom_service_common::metadata_providers::steam::provider::{
 };
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
-use tracing::Level;
 
-pub mod router;
+#[cfg(feature = "client")]
+pub mod client;
+
+pub(crate) mod router;
 
 #[derive(Clone)]
 pub struct SteamServiceHandlers {
@@ -28,7 +27,7 @@ struct SteamGameRow {
 
 #[tonic::async_trait]
 impl SteamService for SteamServiceHandlers {
-    #[tracing::instrument(level = Level::DEBUG, skip_all)]
+    #[tracing::instrument(skip(self))]
     async fn sync_steam_metadata(
         &self,
         request: Request<SyncSteamMetadataRequest>,
@@ -91,33 +90,62 @@ impl SteamService for SteamServiceHandlers {
                 continue;
             };
 
-            let last_played = if steam_game.rtime_last_played > 0 {
-                Some(Timestamp {
-                    seconds: steam_game.rtime_last_played,
-                    nanos: 0,
-                })
-            } else {
-                None
+            let app_details = match self.steam_provider.get_app_details(app_id).await {
+                Ok(details) => details,
+                Err(status) => {
+                    tracing::warn!(
+                        "Failed to fetch Steam app details for app {}: {:?}",
+                        app_id,
+                        status
+                    );
+                    continue;
+                }
             };
 
-            let minutes_played = if steam_game.playtime_forever > 0 {
-                Some(steam_game.playtime_forever)
-            } else {
-                None
-            };
+            let mut metadata = self
+                .steam_provider
+                .app_details_to_game_metadata(steam_game, &app_details);
 
-            let mut builder =
-                sqlx::QueryBuilder::<RetromDB>::new("update game_metadata set last_played = ");
-            builder
-                .push_bind(last_played)
-                .push(", minutes_played = ")
-                .push_bind(minutes_played)
-                .push("where game_id = ")
-                .push_bind(game.id)
-                .push(" and provider_game_id = ")
-                .push_bind(app_id.to_string())
-                .push(" and provider_id = ")
-                .push_bind(STEAM_PROVIDER_ID.to_string());
+            metadata.game_id = game.id.clone();
+            metadata.provider_id = STEAM_PROVIDER_ID.to_string();
+            metadata.provider_game_id = app_id.to_string();
+
+            let row_id = uuid::Uuid::now_v7().to_string();
+
+            let mut builder = sqlx::QueryBuilder::<RetromDB>::new(
+                r#"
+                insert into game_metadata (
+                    id, game_id, provider_id, provider_game_id, name, description, cover_url,
+                    background_url, icon_url, last_played, minutes_played
+                )
+                values (
+                "#,
+            );
+            let mut separated = builder.separated(", ");
+            separated.push_bind(row_id);
+            separated.push_bind(&metadata.game_id);
+            separated.push_bind(&metadata.provider_id);
+            separated.push_bind(&metadata.provider_game_id);
+            separated.push_bind(&metadata.name);
+            separated.push_bind(&metadata.description);
+            separated.push_bind(&metadata.cover_url);
+            separated.push_bind(&metadata.background_url);
+            separated.push_bind(&metadata.icon_url);
+            separated.push_bind(metadata.last_played);
+            separated.push_bind(metadata.minutes_played);
+            separated.push_unseparated(
+                r#")
+                on conflict (game_id, provider_id) do update set
+                    provider_game_id = excluded.provider_game_id,
+                    name = excluded.name,
+                    description = excluded.description,
+                    cover_url = excluded.cover_url,
+                    background_url = excluded.background_url,
+                    icon_url = excluded.icon_url,
+                    last_played = excluded.last_played,
+                    minutes_played = excluded.minutes_played
+                "#,
+            );
 
             builder
                 .build()

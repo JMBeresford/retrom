@@ -3,7 +3,7 @@ modules:
   - path: protos
 lint:
   use:
-    - MINIMAL
+    - COMMENTS
   ignore:
     - protos/igdbapi.proto
 breaking:

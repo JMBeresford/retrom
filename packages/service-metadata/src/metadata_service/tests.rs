@@ -2,7 +2,8 @@ use super::MetadataServiceHandlers;
 use retrom_codegen::retrom::services::{
     config::v1::MetadataConfig,
     metadata::v1::{
-        metadata_service_server::MetadataService, PlatformMetadata, UpdatePlatformMetadataRequest,
+        metadata_service_server::MetadataService, PlatformMetadata, PlatformMetadataView,
+        UpdatePlatformMetadataRequest,
     },
 };
 use retrom_db::{run_migrations, DbPool};
@@ -81,19 +82,22 @@ async fn update_platform_metadata_skips_cache_jobs_when_disabled() {
 
     service
         .update_platform_metadata(Request::new(UpdatePlatformMetadataRequest {
-            metadata: vec![PlatformMetadata {
-                id: String::new(),
-                platform_id: platform_id.to_string(),
-                provider_id: provider_id.to_string(),
-                provider_platform_id: "123".to_string(),
-                name: Some("Platform".to_string()),
-                description: None,
-                background_url: Some("https://example.com/background.jpg".to_string()),
-                icon_url: None,
-                logo_url: None,
-                created_at: None,
-                updated_at: None,
-            }],
+            metadata: Some(PlatformMetadataView {
+                metadata: Some(PlatformMetadata {
+                    id: String::new(),
+                    platform_id: platform_id.to_string(),
+                    provider_id: provider_id.to_string(),
+                    provider_platform_id: "123".to_string(),
+                    name: Some("Platform".to_string()),
+                    description: None,
+                    background_url: Some("https://example.com/background.jpg".to_string()),
+                    icon_url: None,
+                    logo_url: None,
+                    created_at: None,
+                    updated_at: None,
+                }),
+            }),
+            update_mask: None,
         }))
         .await
         .expect("update_platform_metadata should succeed");
@@ -111,19 +115,22 @@ async fn update_platform_metadata_enqueues_cache_jobs_when_enabled() {
 
     service
         .update_platform_metadata(Request::new(UpdatePlatformMetadataRequest {
-            metadata: vec![PlatformMetadata {
-                id: String::new(),
-                platform_id: platform_id.to_string(),
-                provider_id: provider_id.to_string(),
-                provider_platform_id: "123".to_string(),
-                name: Some("Platform".to_string()),
-                description: None,
-                background_url: Some("https://example.com/background.jpg".to_string()),
-                icon_url: None,
-                logo_url: None,
-                created_at: None,
-                updated_at: None,
-            }],
+            metadata: Some(PlatformMetadataView {
+                metadata: Some(PlatformMetadata {
+                    id: String::new(),
+                    platform_id: platform_id.to_string(),
+                    provider_id: provider_id.to_string(),
+                    provider_platform_id: "123".to_string(),
+                    name: Some("Platform".to_string()),
+                    description: None,
+                    background_url: Some("https://example.com/background.jpg".to_string()),
+                    icon_url: None,
+                    logo_url: None,
+                    created_at: None,
+                    updated_at: None,
+                }),
+            }),
+            update_mask: None,
         }))
         .await
         .expect("update_platform_metadata should succeed");

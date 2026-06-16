@@ -50,6 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .extern_path(".google.protobuf.Timestamp", "crate::timestamp::Timestamp")
         .extern_path(".google.protobuf.Duration", "::prost_wkt_types::Duration")
         .extern_path(".google.protobuf.Value", "::prost_wkt_types::Value")
+        .extern_path(".google.protobuf.FieldMask", "::prost_wkt_types::FieldMask")
         .message_attribute(
             ".retrom",
             "#[serde(rename_all(serialize = \"camelCase\", deserialize = \"camelCase\"))]",

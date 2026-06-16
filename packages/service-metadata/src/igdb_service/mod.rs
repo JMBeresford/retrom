@@ -1,175 +1,241 @@
 use retrom_codegen::retrom::services::metadata::v1::{
-    get_igdb_search_request::IgdbSearchType, get_igdb_search_response::SearchResults,
-    igdb_service_server::IgdbService, GetIgdbGameSearchResultsRequest,
-    GetIgdbGameSearchResultsResponse, GetIgdbPlatformSearchResultsRequest,
-    GetIgdbPlatformSearchResultsResponse, GetIgdbSearchRequest, GetIgdbSearchResponse,
-    IgdbSearchGameResponse, IgdbSearchPlatformResponse,
+    igdb_service_server::IgdbService, GetIgdbGameMetadataRequest, GetIgdbGameMetadataResponse,
+    GetIgdbPlatformMetadataRequest, GetIgdbPlatformMetadataResponse, ListIgdbGameMetadataRequest,
+    ListIgdbGameMetadataResponse, ListIgdbPlatformMetadataRequest,
+    ListIgdbPlatformMetadataResponse, SearchIgdbGamesRequest, SearchIgdbGamesResponse,
+    SearchIgdbPlatformsRequest, SearchIgdbPlatformsResponse,
 };
-use retrom_db::{DbPool, RetromDB};
+use retrom_db::DbPool;
 use retrom_service_common::metadata_providers::{
-    igdb::provider::{IGDBProvider, IgdbSearchData},
-    GameMetadataProvider, MetadataProvider as MetadataProviderTrait, PlatformMetadataProvider,
+    igdb::provider::{
+        IGDBProvider, IgdbSearchData, IgdbSearchQuery, IgdbSearchType, IGDB_PROVIDER_ID,
+    },
+    GameMetadataProvider, GameMetadataSearchParams, PlatformMetadataProvider,
+    PlatformMetadataSearchParams,
 };
+use sqlx::QueryBuilder;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
+use tracing::instrument;
+
+#[cfg(feature = "client")]
+pub mod client;
 
 pub(crate) mod router;
 
 #[derive(Clone)]
 pub struct IgdbServiceHandlers {
-    pub db_pool: DbPool,
     pub igdb_client: Arc<IGDBProvider>,
+    db_pool: DbPool,
 }
 
 impl IgdbServiceHandlers {
-    pub fn new(db_pool: DbPool, igdb_client: Arc<IGDBProvider>) -> Self {
+    pub fn new(igdb_client: Arc<IGDBProvider>, db_pool: DbPool) -> Self {
         Self {
-            db_pool,
             igdb_client,
+            db_pool,
         }
     }
 }
 
 #[tonic::async_trait]
 impl IgdbService for IgdbServiceHandlers {
-    async fn get_igdb_game_search_results(
+    #[instrument(skip(self))]
+    async fn search_igdb_games(
         &self,
-        request: Request<GetIgdbGameSearchResultsRequest>,
-    ) -> Result<Response<GetIgdbGameSearchResultsResponse>, Status> {
-        let request = request.into_inner();
-        let query = match request.query {
-            Some(query) => query,
-            None => {
-                return Err(Status::invalid_argument("Query is required"));
-            }
+        request: Request<SearchIgdbGamesRequest>,
+    ) -> Result<Response<SearchIgdbGamesResponse>, Status> {
+        let search = request
+            .into_inner()
+            .search
+            .ok_or_else(|| Status::invalid_argument("Search request is required"))?;
+
+        let query = IgdbSearchQuery {
+            search_type: IgdbSearchType::Game,
+            request: search,
         };
 
-        let mut builder =
-            sqlx::QueryBuilder::<RetromDB>::new("select exists(select 1 from games where id = ");
-        builder.push_bind(query.game_id.to_string()).push(")");
+        let result = match self.igdb_client.search_metadata(query).await {
+            Some(IgdbSearchData::Game(result)) => Some(result),
+            _ => None,
+        };
 
-        let game_exists: bool = builder
-            .build_query_scalar()
-            .fetch_one(&self.db_pool)
+        Ok(Response::new(SearchIgdbGamesResponse { result }))
+    }
+
+    #[instrument(skip(self))]
+    async fn search_igdb_platforms(
+        &self,
+        request: Request<SearchIgdbPlatformsRequest>,
+    ) -> Result<Response<SearchIgdbPlatformsResponse>, Status> {
+        let search = request
+            .into_inner()
+            .search
+            .ok_or_else(|| Status::invalid_argument("Search request is required"))?;
+
+        let query = IgdbSearchQuery {
+            search_type: IgdbSearchType::Platform,
+            request: search,
+        };
+
+        let result = match self.igdb_client.search_metadata(query).await {
+            Some(IgdbSearchData::Platform(result)) => Some(result),
+            _ => None,
+        };
+
+        Ok(Response::new(SearchIgdbPlatformsResponse { result }))
+    }
+
+    #[instrument(skip(self))]
+    async fn get_igdb_game_metadata(
+        &self,
+        request: Request<GetIgdbGameMetadataRequest>,
+    ) -> Result<Response<GetIgdbGameMetadataResponse>, Status> {
+        let request = request.into_inner();
+        let game_id = request.game_id;
+        let provider_platform_id = request.igdb_platform_id;
+
+        let name: Option<String> =
+            QueryBuilder::new("select name from game_metadata where game_id = ")
+                .push_bind(&game_id)
+                .push("order by provider_id desc")
+                .build_query_scalar()
+                .fetch_optional(&self.db_pool)
+                .await
+                .map_err(|e| Status::internal(format!("Database error: {}", e)))?;
+
+        let provider_game_id: Option<String> =
+            QueryBuilder::new("select provider_game_id from game_metadata where game_id = ")
+                .push_bind(&game_id)
+                .push(" and provider_id = ")
+                .push_bind(IGDB_PROVIDER_ID)
+                .build_query_scalar()
+                .fetch_optional(&self.db_pool)
+                .await
+                .map_err(|e| Status::internal(format!("Database error: {}", e)))?;
+
+        let params = GameMetadataSearchParams {
+            game_id: game_id.clone(),
+            name,
+            provider_game_id: provider_game_id.and_then(|id| id.parse::<u64>().ok()),
+            provider_platform_id,
+        };
+
+        let result = self
+            .igdb_client
+            .get_game_metadata(params)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?;
 
-        if !game_exists {
-            return Err(Status::not_found(format!(
-                "Game not found: {}",
-                query.game_id
-            )));
-        }
+        let game_metadata = self.igdb_client.to_game_metadata(&game_id, result).into();
 
-        let game_id = query.game_id.to_string();
-        let igdb_client = self.igdb_client.clone();
-        let search_results = igdb_client.search_game_metadata(query).await;
+        Ok(Response::new(GetIgdbGameMetadataResponse { game_metadata }))
+    }
 
-        let metadata = search_results
+    #[instrument(skip(self))]
+    async fn list_igdb_game_metadata(
+        &self,
+        request: Request<ListIgdbGameMetadataRequest>,
+    ) -> Result<Response<ListIgdbGameMetadataResponse>, Status> {
+        let request = request.into_inner();
+        let game_id = request.game_id;
+        let search = request
+            .search
+            .ok_or_else(|| Status::invalid_argument("Search request is required"))?;
+
+        let all_matches = self
+            .igdb_client
+            .search_game_metadata(search)
+            .await
+            .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?;
+
+        let game_metadata = all_matches
             .into_iter()
-            .filter_map(|game| {
-                let mut meta = igdb_client.igdb_game_to_metadata(game).ok()?;
-                meta.provider_game_id = game_id.clone();
+            .map(|igdb_match| self.igdb_client.to_game_metadata(&game_id, igdb_match))
+            .collect();
 
-                Some(meta)
+        Ok(Response::new(ListIgdbGameMetadataResponse {
+            game_metadata,
+        }))
+    }
+
+    #[instrument(skip(self))]
+    async fn get_igdb_platform_metadata(
+        &self,
+        request: Request<GetIgdbPlatformMetadataRequest>,
+    ) -> Result<Response<GetIgdbPlatformMetadataResponse>, Status> {
+        let request = request.into_inner();
+        let platform_id = request.platform_id;
+
+        let provider_platform_id: Option<String> = QueryBuilder::new(
+            "select provider_platform_id from platform_metadata where platform_id = ",
+        )
+        .push_bind(&platform_id)
+        .push(" and provider_id = ")
+        .push_bind(IGDB_PROVIDER_ID)
+        .build_query_scalar()
+        .fetch_optional(&self.db_pool)
+        .await
+        .map_err(|e| Status::internal(format!("Database error: {}", e)))?;
+
+        let name: Option<String> =
+            QueryBuilder::new("select name from platform_metadata where platform_id = ")
+                .push_bind(&platform_id)
+                .push("order by provider_id desc")
+                .build_query_scalar()
+                .fetch_optional(&self.db_pool)
+                .await
+                .map_err(|e| Status::internal(format!("Database error: {}", e)))?;
+
+        let params = PlatformMetadataSearchParams {
+            platform_id: platform_id.clone(),
+            provider_platform_id: provider_platform_id.and_then(|id| id.parse::<u64>().ok()),
+            name,
+        };
+
+        let platform_metadata = self
+            .igdb_client
+            .get_platform_metadata(params)
+            .await
+            .map(|platform| {
+                self.igdb_client
+                    .to_platform_metadata(&platform_id, platform)
+            })
+            .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?
+            .into();
+
+        Ok(Response::new(GetIgdbPlatformMetadataResponse {
+            platform_metadata,
+        }))
+    }
+
+    #[instrument(skip(self))]
+    async fn list_igdb_platform_metadata(
+        &self,
+        request: Request<ListIgdbPlatformMetadataRequest>,
+    ) -> Result<Response<ListIgdbPlatformMetadataResponse>, Status> {
+        let request = request.into_inner();
+        let platform_id = request.platform_id;
+        let search = request
+            .search
+            .ok_or_else(|| Status::invalid_argument("Search request is required"))?;
+
+        let all_matches = self
+            .igdb_client
+            .search_platform_metadata(search)
+            .await
+            .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?;
+
+        let platform_metadata = all_matches
+            .into_iter()
+            .map(|igdb_match| {
+                self.igdb_client
+                    .to_platform_metadata(&platform_id, igdb_match)
             })
             .collect();
 
-        Ok(Response::new(GetIgdbGameSearchResultsResponse { metadata }))
-    }
-
-    async fn get_igdb_platform_search_results(
-        &self,
-        request: Request<GetIgdbPlatformSearchResultsRequest>,
-    ) -> Result<Response<GetIgdbPlatformSearchResultsResponse>, Status> {
-        {
-            let request = request.into_inner();
-            let query = match request.query {
-                Some(query) => query,
-                None => {
-                    return Err(Status::invalid_argument("Query is required"));
-                }
-            };
-
-            let mut builder = sqlx::QueryBuilder::<RetromDB>::new(
-                "select exists(select 1 from platforms where id = ",
-            );
-            builder.push_bind(query.platform_id.to_string()).push(")");
-
-            let platform_exists: bool = builder
-                .build_query_scalar()
-                .fetch_one(&self.db_pool)
-                .await
-                .map_err(|why| Status::internal(why.to_string()))?;
-
-            if !platform_exists {
-                return Err(Status::not_found(format!(
-                    "Platform not found: {}",
-                    query.platform_id
-                )));
-            }
-
-            let platform_id = query.platform_id.to_string();
-            let igdb_provider = self.igdb_client.clone();
-
-            let metadata = igdb_provider
-                .search_platform_metadata(query)
-                .await
-                .into_iter()
-                .map(|mut meta| {
-                    meta.platform_id = platform_id.clone();
-                    meta
-                })
-                .collect();
-
-            Ok(Response::new(GetIgdbPlatformSearchResultsResponse {
-                metadata,
-            }))
-        }
-    }
-
-    async fn get_igdb_search(
-        &self,
-        request: Request<GetIgdbSearchRequest>,
-    ) -> Result<Response<GetIgdbSearchResponse>, Status> {
-        let request = request.into_inner();
-        let search_type = IgdbSearchType::try_from(request.search_type)
-            .map_err(|_| Status::invalid_argument("Invalid search type provided"))?;
-
-        let igdb_provider = self.igdb_client.clone();
-
-        let data = igdb_provider.search_metadata(request).await;
-
-        let search_results = match data {
-            Some(IgdbSearchData::Game(matches)) => {
-                let games = matches
-                    .games
-                    .into_iter()
-                    .filter_map(|game| igdb_provider.igdb_game_to_metadata(game).ok())
-                    .collect();
-
-                SearchResults::GameMatches(IgdbSearchGameResponse { games })
-            }
-            Some(IgdbSearchData::Platform(matches)) => {
-                let platforms = matches
-                    .platforms
-                    .into_iter()
-                    .filter_map(|platform| igdb_provider.igdb_platform_to_metadata(platform).ok())
-                    .collect();
-
-                SearchResults::PlatformMatches(IgdbSearchPlatformResponse { platforms })
-            }
-            None => match search_type {
-                IgdbSearchType::Game => {
-                    SearchResults::GameMatches(IgdbSearchGameResponse { games: vec![] })
-                }
-                IgdbSearchType::Platform => {
-                    SearchResults::PlatformMatches(IgdbSearchPlatformResponse { platforms: vec![] })
-                }
-            },
-        }
-        .into();
-
-        Ok(Response::new(GetIgdbSearchResponse { search_results }))
+        Ok(Response::new(ListIgdbPlatformMetadataResponse {
+            platform_metadata,
+        }))
     }
 }

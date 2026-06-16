@@ -33,6 +33,7 @@ sqlx = { workspace = true }
 uuid = { workspace = true }
 
 [features]
-default = []
+default = ["client"]
 sqlite = ["retrom-db/sqlite"]
 postgres = ["retrom-db/postgres"]
+client = []

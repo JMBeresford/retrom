@@ -1,88 +1,265 @@
-use super::provider::{IGDBProvider, IgdbSearchData};
+use super::provider::{IGDBProvider, IgdbSearchData, IgdbSearchQuery, IgdbSearchType};
 use crate::metadata_providers::{
-    igdb::provider::IGDB_PROVIDER_ID, GameMetadataProvider, GameMetadataSearchResult,
-    MetadataProvider, Result,
+    igdb::provider::IGDB_PROVIDER_ID, GameMetadataProvider, GameMetadataSearchParams,
+    MetadataProviderError, Result,
 };
+use prost::Message;
 use retrom_codegen::{
     igdb::{self},
     retrom::{
         providers::igdb::v1::{
             igdb_fields::{IncludeFields, Selector},
             igdb_filters::{FilterOperator, FilterValue},
-            IgdbFields, IgdbFilters, IgdbGameSearchQuery,
+            IgdbFields, IgdbFilters, IgdbSearch,
         },
-        services::{
-            library::v1::Game,
-            metadata::v1::{
-                get_igdb_search_request::IgdbSearchType, GameMetadata, GameMetadataArtwork,
-                GameMetadataScreenshot, GameMetadataVideo, GetIgdbSearchRequest,
-            },
+        services::metadata::v1::{
+            GameMetadata, GameMetadataArtwork, GameMetadataLink, GameMetadataScreenshot,
+            GameMetadataVideo, GameMetadataView, IgdbSearchRequest,
         },
     },
 };
-use std::collections::HashMap;
 use tracing::{instrument, Level};
 
-impl IGDBProvider {
-    pub fn igdb_game_to_metadata(&self, igdb_match: igdb::Game) -> Result<GameMetadata> {
-        let description = Some(igdb_match.summary);
-        let name = Some(igdb_match.name);
-        let igdb_id = igdb_match.id.to_string();
+impl GameMetadataProvider for IGDBProvider {
+    type ProviderGameId = u64;
+    type SearchQuery = IgdbSearchRequest;
+    type GameModel = igdb::Game;
 
-        let cover_url = igdb_match.cover.map(|cover| {
-            cover
-                .url
-                .to_string()
-                .replace("t_thumb", "t_cover_big_2x")
-                .replace("//", "https://")
-        });
+    #[instrument(level = Level::DEBUG, skip(self))]
+    async fn get_game_metadata(
+        &self,
+        params: GameMetadataSearchParams<Self::ProviderGameId>,
+    ) -> Result<igdb::Game> {
+        let igdb_id = params.provider_game_id;
+        let name = params.name;
 
-        let background_url = igdb_match
-            .artworks
-            .iter()
-            .find(|artwork| artwork.width > artwork.height)
-            .map(|artwork| {
-                artwork
-                    .url
-                    .to_string()
-                    .replace("//", "https://")
-                    .replace("t_thumb", "t_1080p_2x")
-            })
-            .or(igdb_match.artworks.first().map(|artwork| {
-                artwork
-                    .url
-                    .to_string()
-                    .replace("//", "https://")
-                    .replace("t_thumb", "t_1080p_2x")
-            }));
+        let mut filter_list = IgdbFilters::default();
 
-        let icon_url = igdb_match
-            .artworks
-            .iter()
-            .find(|artwork| artwork.width == artwork.height)
-            .map(|artwork| artwork.url.to_string().replace("//", "https://"))
-            .or(cover_url
-                .as_ref()
-                .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")));
+        if let Some(igdb_id) = igdb_id {
+            filter_list.filters.insert(
+                "id".to_string(),
+                FilterValue {
+                    value: igdb_id.to_string(),
+                    operator: Some(FilterOperator::Equal as i32),
+                },
+            );
+        }
 
-        let icon_url = match icon_url {
-            Some(icon_url) => Some(icon_url),
-            None => cover_url
-                .as_ref()
-                .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")),
+        if let Some(ref name) = &name {
+            filter_list.filters.insert(
+                "name".to_string(),
+                FilterValue {
+                    value: name.clone(),
+                    operator: Some(FilterOperator::Equal as i32),
+                },
+            );
+        }
+
+        if let Some(igdb_platform_id) = params.provider_platform_id {
+            filter_list.filters.insert(
+                "platforms".to_string(),
+                FilterValue {
+                    value: igdb_platform_id.to_string(),
+                    operator: Some(FilterOperator::Any as i32),
+                },
+            );
+        }
+
+        let query = IgdbSearchRequest {
+            search: Some(IgdbSearch {
+                value: normalize_name(name.as_ref().unwrap_or(&"".to_string())),
+            }),
+            filters: Some(filter_list),
+            ..Default::default()
         };
 
-        Ok(GameMetadata {
-            provider_id: IGDB_PROVIDER_ID.to_string(),
-            provider_game_id: igdb_id,
-            name,
-            description,
-            cover_url,
-            background_url,
-            icon_url,
+        let mut matches = self.search_game_metadata(query).await?.into_iter();
+        let first_match = matches.next();
+        let exact_match =
+            matches.find(|meta| Some(meta.id) == igdb_id || name.as_ref() == Some(&meta.name));
+
+        exact_match
+            .or(first_match)
+            .ok_or(MetadataProviderError::NoMatchesFound)
+    }
+
+    #[instrument(level = Level::DEBUG, skip(self))]
+    async fn search_game_metadata(
+        &self,
+        mut query: Self::SearchQuery,
+    ) -> Result<Vec<Self::GameModel>> {
+        let included_fields = IgdbFields {
+            selector: Some(Selector::Include(IncludeFields {
+                value: self.game_fields.clone(),
+            })),
+        };
+
+        match query.fields {
+            Some(IgdbFields {
+                selector: Some(Selector::Exclude(_)),
+            }) => {}
+            Some(ref mut fields) => {
+                if let Err(why) = fields.merge(included_fields.encode_to_vec().as_slice()) {
+                    tracing::warn!(
+                        "Failed to merge included fields into search query: {:?}",
+                        why
+                    );
+                }
+            }
+            None => {
+                query.fields = Some(included_fields);
+            }
+        };
+
+        let query = IgdbSearchQuery {
+            search_type: IgdbSearchType::Game,
+            request: query,
+        };
+
+        match self.search_metadata(query).await {
+            Some(IgdbSearchData::Game(matches)) => Ok(matches.games),
+            _ => Err(MetadataProviderError::NoMatchesFound),
+        }
+    }
+
+    #[instrument(level = Level::DEBUG, skip(self))]
+    fn to_game_metadata(
+        &self,
+        game_id: &str,
+        native_metadata: Self::GameModel,
+    ) -> GameMetadataView {
+        let mut metadata = igdb_game_to_metadata(&native_metadata);
+        metadata.id = game_id.to_string();
+        metadata.provider_game_id = native_metadata.id.to_string();
+        metadata.provider_id = IGDB_PROVIDER_ID.to_string();
+
+        GameMetadataView {
+            metadata: Some(metadata),
+            artworks: igdb_game_artwork(&native_metadata),
+            screenshots: igdb_game_screenshots(&native_metadata),
+            videos: igdb_game_videos(&native_metadata),
+            links: igdb_game_links(&native_metadata),
+            similar_game_ids: vec![],
+        }
+    }
+}
+
+fn igdb_game_to_metadata(igdb_match: &igdb::Game) -> GameMetadata {
+    let description = Some(igdb_match.summary.clone());
+    let name = Some(igdb_match.name.clone());
+    let igdb_id = igdb_match.id.to_string();
+
+    let cover_url = igdb_match.cover.as_ref().map(|cover| {
+        cover
+            .url
+            .to_string()
+            .replace("t_thumb", "t_cover_big_2x")
+            .replace("//", "https://")
+    });
+
+    let background_url = igdb_match
+        .artworks
+        .iter()
+        .find(|artwork| artwork.width > artwork.height)
+        .map(|artwork| {
+            artwork
+                .url
+                .to_string()
+                .replace("//", "https://")
+                .replace("t_thumb", "t_1080p_2x")
+        })
+        .or(igdb_match.artworks.first().map(|artwork| {
+            artwork
+                .url
+                .to_string()
+                .replace("//", "https://")
+                .replace("t_thumb", "t_1080p_2x")
+        }));
+
+    let icon_url = igdb_match
+        .artworks
+        .iter()
+        .find(|artwork| artwork.width == artwork.height)
+        .map(|artwork| artwork.url.to_string().replace("//", "https://"))
+        .or(cover_url
+            .as_ref()
+            .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")));
+
+    let icon_url = match icon_url {
+        Some(icon_url) => Some(icon_url),
+        None => cover_url
+            .as_ref()
+            .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")),
+    };
+
+    GameMetadata {
+        provider_id: IGDB_PROVIDER_ID.to_string(),
+        provider_game_id: igdb_id,
+        name,
+        description,
+        cover_url,
+        background_url,
+        icon_url,
+        ..Default::default()
+    }
+}
+
+fn igdb_game_artwork(igdb_match: &igdb::Game) -> Vec<GameMetadataArtwork> {
+    igdb_match
+        .artworks
+        .iter()
+        .map(|artwork| {
+            artwork
+                .url
+                .replace("t_thumb", "t_1080p_2x")
+                .replace("//", "https://")
+        })
+        .map(|url| GameMetadataArtwork {
+            url,
             ..Default::default()
         })
-    }
+        .collect()
+}
+
+fn igdb_game_screenshots(igdb_match: &igdb::Game) -> Vec<GameMetadataScreenshot> {
+    igdb_match
+        .screenshots
+        .iter()
+        .map(|screenshot| {
+            screenshot
+                .url
+                .replace("//", "https://")
+                .replace("t_thumb", "t_screenshot_huge_2x")
+        })
+        .map(|url| GameMetadataScreenshot {
+            url,
+            ..Default::default()
+        })
+        .collect()
+}
+
+fn igdb_game_videos(igdb_match: &igdb::Game) -> Vec<GameMetadataVideo> {
+    igdb_match
+        .videos
+        .iter()
+        .map(|video| format!("https://www.youtube.com/embed/{}", video.video_id))
+        .map(|url| GameMetadataVideo {
+            url,
+            ..Default::default()
+        })
+        .collect()
+}
+
+fn igdb_game_links(igdb_match: &igdb::Game) -> Vec<GameMetadataLink> {
+    igdb_match
+        .websites
+        .iter()
+        .filter(|w| w.trusted)
+        .map(|website| GameMetadataLink {
+            url: website.url.clone(),
+            ..Default::default()
+        })
+        .collect()
 }
 
 fn normalize_name(name: &str) -> String {
@@ -116,152 +293,4 @@ fn normalize_name(name: &str) -> String {
         .split_whitespace()
         .collect::<Vec<&str>>()
         .join(" ")
-}
-
-impl GameMetadataProvider<IgdbGameSearchQuery, Vec<igdb::Game>> for IGDBProvider {
-    #[instrument(level = Level::DEBUG, skip(self))]
-    async fn get_game_metadata(
-        &self,
-        game: Game,
-        query: IgdbGameSearchQuery,
-    ) -> GameMetadataSearchResult {
-        let igdb_id = query.fields.as_ref().and_then(|fields| fields.id);
-        let title = query
-            .fields
-            .as_ref()
-            .and_then(|fields| fields.title.clone());
-
-        let matches = self.search_game_metadata(query).await;
-
-        let exact_match = matches.iter().find(|meta| {
-            Some(meta.id) == igdb_id || title.as_ref().is_some_and(|title| title == &meta.name)
-        });
-
-        let first_match = matches.first();
-
-        let igdb_match = exact_match.or(first_match).map(|meta| meta.to_owned());
-
-        if let Some(igdb_match) = igdb_match {
-            let artwork_urls: Vec<GameMetadataArtwork> = igdb_match
-                .artworks
-                .iter()
-                .map(|artwork| {
-                    artwork
-                        .url
-                        .replace("t_thumb", "t_1080p_2x")
-                        .replace("//", "https://")
-                })
-                .map(|url| GameMetadataArtwork {
-                    url,
-                    ..Default::default()
-                })
-                .collect();
-
-            let screenshot_urls: Vec<GameMetadataScreenshot> = igdb_match
-                .screenshots
-                .iter()
-                .map(|screenshot| {
-                    screenshot
-                        .url
-                        .replace("//", "https://")
-                        .replace("t_thumb", "t_screenshot_huge_2x")
-                })
-                .map(|url| GameMetadataScreenshot {
-                    url,
-                    ..Default::default()
-                })
-                .collect();
-
-            let video_urls: Vec<GameMetadataVideo> = igdb_match
-                .videos
-                .iter()
-                .map(|video| format!("https://www.youtube.com/embed/{}", video.video_id))
-                .map(|url| GameMetadataVideo {
-                    url,
-                    ..Default::default()
-                })
-                .collect();
-
-            let mut game_metadata = match self.igdb_game_to_metadata(igdb_match) {
-                Ok(metadata) => metadata,
-                Err(err) => {
-                    tracing::error!("Failed to convert IGDB game to metadata: {:?}", err);
-                    return Default::default();
-                }
-            };
-
-            game_metadata.game_id = game.id;
-
-            return (
-                Some(game_metadata),
-                Some(artwork_urls),
-                Some(screenshot_urls),
-                Some(video_urls),
-            );
-        }
-
-        Default::default()
-    }
-
-    #[instrument(level = Level::DEBUG, skip(self))]
-    async fn search_game_metadata(&self, query: IgdbGameSearchQuery) -> Vec<igdb::Game> {
-        let fields = IgdbFields {
-            selector: Some(Selector::Include(IncludeFields {
-                value: self.game_fields.clone(),
-            })),
-        }
-        .into();
-
-        let mut filters = HashMap::<String, FilterValue>::new();
-
-        let filter_fields = query.fields.as_ref();
-        let platform_igdb_id = filter_fields.and_then(|fields| fields.platform);
-        let igdb_id = filter_fields.and_then(|fields| fields.id);
-        let title = filter_fields.and_then(|fields| fields.title.as_ref().cloned());
-
-        if let Some(platform) = platform_igdb_id {
-            filters.insert(
-                "release_dates.platform".to_string(),
-                FilterValue {
-                    operator: Some(FilterOperator::Equal.into()),
-                    value: platform.to_string(),
-                },
-            );
-        }
-
-        if let Some(id) = igdb_id {
-            filters.insert(
-                "id".to_string(),
-                FilterValue {
-                    operator: Some(FilterOperator::Equal.into()),
-                    value: id.to_string(),
-                },
-            );
-        }
-
-        if let Some(title) = title.clone() {
-            filters.insert(
-                "name".to_string(),
-                FilterValue {
-                    operator: Some(FilterOperator::Equal.into()),
-                    value: title,
-                },
-            );
-        }
-
-        let query = GetIgdbSearchRequest {
-            fields,
-            search: query.search,
-            pagination: None,
-            search_type: IgdbSearchType::Game.into(),
-            filters: IgdbFilters { filters }.into(),
-        };
-
-        match self.search_metadata(query).await {
-            Some(IgdbSearchData::Game(matches)) => matches.games,
-            _ => {
-                vec![]
-            }
-        }
-    }
 }

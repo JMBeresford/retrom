@@ -4,6 +4,12 @@ pub type RetromDB = sqlx::Sqlite;
 #[cfg(feature = "postgres")]
 pub type RetromDB = sqlx::Postgres;
 
+#[cfg(not(feature = "postgres"))]
+pub const DEFAULT_DB_URL: &str = "sqlite::memory:";
+
+#[cfg(feature = "postgres")]
+pub const DEFAULT_DB_URL: &str = "postgres://postgres:password@localhost/retrom-dev";
+
 pub type DbPool = sqlx::Pool<RetromDB>;
 
 #[cfg(feature = "embedded")]

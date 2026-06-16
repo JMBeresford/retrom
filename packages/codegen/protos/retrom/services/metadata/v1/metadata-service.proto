@@ -3,84 +3,169 @@ syntax = "proto3";
 package retrom.services.metadata.v1;
 
 import "google/api/field_behavior.proto";
+import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "retrom/services/library/v1/models.proto";
 import "retrom/services/metadata/v1/models.proto";
+import "retrom/services/metadata/v1/views.proto";
 
+// MetadataService defines the RPC service for managing game and platform metadata in Retrom.
 service MetadataService {
+  // Get metadata for a singular game by its unique identifier
   rpc GetGameMetadata(GetGameMetadataRequest) returns (GetGameMetadataResponse);
+  // Update metadata for a singular game by its unique identifier.
   rpc UpdateGameMetadata(UpdateGameMetadataRequest) returns (UpdateGameMetadataResponse);
+  // Get metadata for multiple games by their unique identifiers.
+  rpc BulkGetGameMetadata(BulkGetGameMetadataRequest) returns (BulkGetGameMetadataResponse);
 
+  // Get metadata for a singular platform by its unique identifier
   rpc GetPlatformMetadata(GetPlatformMetadataRequest) returns (GetPlatformMetadataResponse);
+  // Update metadata for a singular platform by its unique identifier.
   rpc UpdatePlatformMetadata(UpdatePlatformMetadataRequest) returns (UpdatePlatformMetadataResponse);
+  // Get metadata for multiple platforms by their unique identifiers.
+  rpc BulkGetPlatformMetadata(BulkGetPlatformMetadataRequest) returns (BulkGetPlatformMetadataResponse);
 
+  // Get the status of local metadata stored on disk, including total byte size and number of files.
   rpc GetLocalMetadataStatus(GetLocalMetadataStatusRequest) returns (GetLocalMetadataStatusResponse);
+  // Delete all local metadata stored on disk, including media assets and metadata JSON files.
   rpc DeleteLocalMetadata(DeleteLocalMetadataRequest) returns (DeleteLocalMetadataResponse);
+
+  // Search for a match for the given game in across all configured metadata providers (e.g. IGDB, Steam) and
+  // and store the resulting metadata in the DB.
+  rpc DownloadGameMetadata(DownloadGameMetadataRequest) returns (DownloadGameMetadataResponse);
+
+  // Search for a match for the given platform in across all configured metadata providers (e.g. IGDB, Steam) and
+  // and store the resulting metadata in the DB.
+  rpc DownloadPlatformMetadata(DownloadPlatformMetadataRequest) returns (DownloadPlatformMetadataResponse);
 }
 
+// Request message for GetGameMetadata.
 message GetGameMetadataRequest {
-  repeated string game_ids = 1;
+  // The unique identifier of the game to retrieve metadata for.
+  string game_id = 1;
+  // An optional provider ID to specify which metadata provider to retrieve metadata from (e.g. IGDB, Steam).
+  // If provider_id is not provided, metadata from all providers will be returned.
+  optional string provider_id = 2;
 }
 
+// Response message for GetGameMetadata.
 message GetGameMetadataResponse {
-  message SimilarGames {
-    repeated retrom.services.library.v1.Game value = 1;
-  }
-
-  // paths to media assets, relative to the global metadata dir or served HTTP endpoints
-  message MediaPaths {
-    optional string cover_url = 1;
-    optional string background_url = 2;
-    optional string icon_url = 3;
-    repeated string video_urls = 4;
-    repeated string screenshot_urls = 5;
-    repeated string artwork_urls = 6;
-  }
-
-  message Links {
-    repeated string urls = 1;
-  }
-
-  repeated GameMetadata metadata = 1;
-
-  // TODO: Create separate RPCs for related entities like similar games, media paths, and links
-  // instead of nesting them in the response message.
-  map<string, SimilarGames> similar_games = 2;
-  map<string, MediaPaths> media_paths = 3;
-  map<string, Links> links = 4;
+  // A list of GameMetadataView objects containing the metadata for the requested game, each
+  // sourced from a different metadata provider (e.g. IGDB, Steam). If provider_id was specified
+  // in the request, this list will contain at most one GameMetadataView object.
+  repeated GameMetadataView metadata = 1;
 }
 
-message GetPlatformMetadataRequest {
-  repeated string platform_ids = 1;
-}
-
-message GetPlatformMetadataResponse {
-  repeated PlatformMetadata metadata = 1;
-}
-
+// Request message for UpdateGameMetadata.
 message UpdateGameMetadataRequest {
-  repeated GameMetadata metadata = 1;
+  // The updated GameMetadataView object containing the new metadata values for the game,
+  // as well as the unique identifier of the game to update.
+  GameMetadataView metadata = 1;
+  // A field mask specifying which fields in the GameMetadataView should be updated. If update_mask is not provided,
+  // all fields in the GameMetadataView will be updated.
+  google.protobuf.FieldMask update_mask = 2;
 }
 
+// Response message for UpdateGameMetadata.
 message UpdateGameMetadataResponse {
-  repeated GameMetadata metadata_updated = 1;
+  // The updated GameMetadataView object after applying the updates, including any fields that
+  // were not updated but are still relevant to return in the response (e.g. related artworks, videos, tags).
+  GameMetadataView metadata_updated = 1;
 }
 
+// Request message for BulkGetGameMetadata.
+message BulkGetGameMetadataRequest {
+  // A list of GetGameMetadataRequest objects, each containing the unique identifier of a game to retrieve metadata for
+  // and an optional provider ID to specify which metadata provider to retrieve metadata from (e.g. IGDB, Steam).
+  repeated GetGameMetadataRequest requests = 1;
+}
+
+// Response message for BulkGetGameMetadata.
+message BulkGetGameMetadataResponse {
+  // A list of GameMetadataView objects containing the metadata for each requested game, sourced from the specified
+  // metadata provider if provider_id was specified in the request, or from all providers if provider_id was not specified.
+  repeated GameMetadataView metadata = 1;
+}
+
+// Request message for GetPlatformMetadata.
+message GetPlatformMetadataRequest {
+  // The unique identifier of the platform to retrieve metadata for.
+  string platform_id = 1;
+
+  // An optional provider ID to specify which metadata provider the returned metadata was sourced from (e.g. IGDB, Steam).
+  optional string provider_id = 2;
+}
+
+// Response message for GetPlatformMetadata.
+message GetPlatformMetadataResponse {
+  // A list of PlatformMetadataView objects containing the metadata for the requested platform, each
+  // sourced from a different metadata provider (e.g. IGDB, Steam). If provider_id was specified
+  // in the request, this list will contain at most one PlatformMetadataView object.
+  repeated PlatformMetadataView metadata = 1;
+}
+
+// Request message for UpdatePlatformMetadata.
 message UpdatePlatformMetadataRequest {
-  repeated PlatformMetadata metadata = 1;
+  // The updated PlatformMetadataView object containing the new metadata values for the platform,
+  // as well as the unique identifier of the platform to update.
+  PlatformMetadataView metadata = 1;
+  // A field mask specifying which fields in the PlatformMetadataView should be updated. If update_mask is not provided,
+  // all fields in the PlatformMetadataView will be updated.
+  google.protobuf.FieldMask update_mask = 2;
 }
 
+// Response message for UpdatePlatformMetadata.
 message UpdatePlatformMetadataResponse {
-  repeated PlatformMetadata metadata_updated = 1;
+  // The updated PlatformMetadataView object after applying the updates, including any fields that
+  // were not updated but are still relevant to return in the response (e.g. related tags).
+  PlatformMetadataView metadata_updated = 1;
 }
 
+// Request message for BulkGetPlatformMetadata.
+message BulkGetPlatformMetadataRequest {
+  // A list of GetPlatformMetadataRequest objects, each containing the unique identifier of a platform to retrieve metadata for
+  // and an optional provider ID to specify which metadata provider to retrieve metadata from (e.g. IGDB, Steam).
+  repeated GetPlatformMetadataRequest requests = 1;
+}
+
+// Response message for BulkGetPlatformMetadata.
+message BulkGetPlatformMetadataResponse {
+  // A list of PlatformMetadataView objects containing the metadata for each requested platform, sourced from the specified
+  // metadata provider if provider_id was specified in the request, or from all providers if provider_id was not specified.
+  repeated PlatformMetadataView metadata = 1;
+}
+
+// Request message for GetLocalMetadataStatus.
 message GetLocalMetadataStatusRequest {}
 
+// Response message for GetLocalMetadataStatus.
 message GetLocalMetadataStatusResponse {
+  // The total byte size of all local metadata stored on disk, including media assets and metadata JSON files.
   int64 total_byte_size = 1;
+  // The total number of local metadata files stored on disk, including media assets and metadata JSON files.
   int32 total_files = 2;
 }
 
+// Request message for DeleteLocalMetadata.
 message DeleteLocalMetadataRequest {}
 
+// Response message for DeleteLocalMetadata.
 message DeleteLocalMetadataResponse {}
+
+// Request message for DownloadGameMetadata.
+message DownloadGameMetadataRequest {
+  // The unique identifier of the game to download metadata for.
+  string game_id = 1;
+}
+
+// Response message for DownloadGameMetadata.
+message DownloadGameMetadataResponse {}
+
+// Request message for DownloadPlatformMetadata.
+message DownloadPlatformMetadataRequest {
+  // The unique identifier of the platform to download metadata for.
+  string platform_id = 1;
+}
+
+// Response message for DownloadPlatformMetadata.
+message DownloadPlatformMetadataResponse {}

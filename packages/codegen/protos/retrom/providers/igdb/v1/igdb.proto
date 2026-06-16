@@ -52,33 +52,3 @@ message IgdbFields {
     ExcludeFields exclude = 2;
   }
 }
-
-message IgdbGameSearchQuery {
-  message Fields {
-    optional uint64 id = 1;
-    optional string title = 2;
-    // IGDB id of the platform this game is for
-    optional uint64 platform = 3;
-  }
-
-  // the retrom game id we are searching for
-  string game_id = 1;
-
-  IgdbSearch search = 2;
-  optional Fields fields = 3;
-  optional IgdbPagination pagination = 4;
-}
-
-message IgdbPlatformSearchQuery {
-  message Fields {
-    optional uint64 id = 1;
-    optional string name = 2;
-  }
-
-  // the retrom platform id we are searching for
-  string platform_id = 1;
-
-  IgdbSearch search = 2;
-  optional Fields fields = 3;
-  optional IgdbPagination pagination = 4;
-}
