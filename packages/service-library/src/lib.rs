@@ -1,6 +1,8 @@
+use futures::future::join_all;
 use retrom_codegen::retrom::services::{
+    jobs::v1::JobStatus,
     library::v1::{
-        library_service_server::LibraryService, library_service_server::LibraryServiceServer,
+        library_service_server::{LibraryService, LibraryServiceServer},
         CreateGamesRequest, CreateGamesResponse, CreateLibrariesRequest, CreateLibrariesResponse,
         CreatePlatformsRequest, CreatePlatformsResponse, CreateRootDirectoriesRequest,
         CreateRootDirectoriesResponse, DeleteGameFilesRequest, DeleteGameFilesResponse,
@@ -16,17 +18,25 @@ use retrom_codegen::retrom::services::{
         UpdatePlatformsResponse, UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
     },
     metadata::v1::{
-        igdb_service_client::IgdbServiceClient, steam_service_client::SteamServiceClient,
+        igdb_service_client::IgdbServiceClient, metadata_service_client::MetadataServiceClient,
+        steam_service_client::SteamServiceClient, DownloadGameMetadataRequest,
+        DownloadPlatformMetadataRequest, GetIgdbGameMetadataRequest,
+        GetIgdbPlatformMetadataRequest, UpdateGameMetadataRequest, UpdatePlatformMetadataRequest,
     },
 };
 use retrom_db::DbPool;
+use retrom_service_common::grpc_clients::{
+    igdb_svc::get_igdb_svc_client, metadata_svc::get_metadata_svc_client,
+    steam_svc::get_steam_svc_client,
+};
 use retrom_service_jobs::job_manager::JobManager;
+use sqlx::QueryBuilder;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
+use tracing::Instrument;
 
 pub mod game_handlers;
 pub mod library_handlers;
-pub mod metadata_handlers;
 pub mod platform_handlers;
 pub mod root_directory_handlers;
 pub mod scan;
@@ -36,31 +46,19 @@ pub mod scan_handlers;
 pub struct LibraryServiceHandlers {
     pub db_pool: DbPool,
     pub job_manager: Arc<JobManager>,
+    metadata_svc_client: MetadataServiceClient<tonic::transport::Channel>,
     igdb_svc_client: IgdbServiceClient<tonic::transport::Channel>,
     steam_svc_client: SteamServiceClient<tonic::transport::Channel>,
 }
 
 impl LibraryServiceHandlers {
     pub fn new(db_pool: DbPool, job_manager: Arc<JobManager>) -> Self {
-        let metadata_svc_port = std::env::var("RETROM_METADATA_SERVICE_PORT")
-            .ok()
-            .and_then(|p| p.parse::<i32>().ok())
-            .unwrap_or(5110);
-
-        let metadata_svc_host = format!("http://[::1]:{metadata_svc_port}");
-
-        let metadata_svc_transport = tonic::transport::Channel::from_shared(metadata_svc_host)
-            .expect("Failed to create IgdbServiceClient with host {igdb_svc_host}")
-            .connect_lazy();
-
-        let igdb_svc_client = IgdbServiceClient::new(metadata_svc_transport.clone());
-        let steam_svc_client = SteamServiceClient::new(metadata_svc_transport);
-
         Self {
             db_pool,
             job_manager,
-            igdb_svc_client,
-            steam_svc_client,
+            metadata_svc_client: get_metadata_svc_client(),
+            igdb_svc_client: get_igdb_svc_client(),
+            steam_svc_client: get_steam_svc_client(),
         }
     }
 }
@@ -78,11 +76,230 @@ impl LibraryService for LibraryServiceHandlers {
 
     async fn update_library_metadata(
         &self,
-        _request: Request<UpdateLibraryMetadataRequest>,
+        request: Request<UpdateLibraryMetadataRequest>,
     ) -> Result<Response<UpdateLibraryMetadataResponse>, Status> {
-        Err(Status::unimplemented(
-            "UpdateLibraryMetadata is not implemented in sqlx migration groundwork",
-        ))
+        let request = request.into_inner();
+        let overwrite = request.overwrite();
+
+        let platform_metadata_job = self
+            .job_manager
+            .create_job(
+                "Updating Platform Metadata".to_string(),
+                "Discovering and updating metadata for all platforms".to_string(),
+            )
+            .await;
+
+        let game_metadata_job = self
+            .job_manager
+            .create_job(
+                "Updating Game Metadata".to_string(),
+                "Discovering and updating metadata for all games".to_string(),
+            )
+            .await;
+
+        let extra_metadata_job = self
+            .job_manager
+            .create_job(
+                "Updating Extra Metadata".to_string(),
+                "Discovering and updating extra metadata for all library entries".to_string(),
+            )
+            .await;
+
+        let db_pool = self.db_pool.clone();
+        let platform_metadata_job_id = platform_metadata_job.id.clone();
+        let game_metadata_job_id = game_metadata_job.id.clone();
+        let extra_metadata_job_id = extra_metadata_job.id.clone();
+        let job_manager = self.job_manager.clone();
+
+        tokio::spawn(
+            async move {
+                job_manager
+                    .update_job(
+                        &platform_metadata_job_id,
+                        Some(0.0),
+                        Some(JobStatus::Running),
+                        None,
+                    )
+                    .await;
+
+                let all_platform_ids: Vec<String> =
+                    match QueryBuilder::new("select id from platforms")
+                        .build_query_scalar()
+                        .fetch_all(&db_pool)
+                        .await
+                    {
+                        Ok(platform_ids) => platform_ids,
+                        Err(why) => {
+                            tracing::error!("Failed to fetch platform ids: {why:#?}");
+                            vec![]
+                        }
+                    };
+
+                let mut tasks = tokio::task::JoinSet::new();
+                all_platform_ids.into_iter().for_each(|platform_id| {
+                    let mut metadata_svc = self.metadata_svc_client.clone();
+
+                    tasks.spawn(
+                        async move {
+                            metadata_svc
+                                .download_platform_metadata(DownloadPlatformMetadataRequest {
+                                    platform_id,
+                                })
+                                .await
+                                .map_err(|why| Status::internal(why.to_string()))?;
+
+                            Ok::<(), Status>(())
+                        }
+                        .in_current_span(),
+                    );
+                });
+
+                let total_tasks = tasks.len();
+                let mut completed_tasks = 0;
+                while let Some(join_result) = tasks.join_next().await {
+                    let percent_complete = (completed_tasks as f32 / total_tasks as f32) * 100.0;
+                    if let Err(why) = join_result {
+                        tracing::error!(
+                            "A task in the update library metadata job panicked: {why:#?}"
+                        );
+                    }
+
+                    self.job_manager
+                        .update_job(
+                            &platform_metadata_job_id,
+                            Some(percent_complete),
+                            if join_result.is_err() {
+                                Some(JobStatus::Failed)
+                            } else {
+                                None
+                            },
+                            None,
+                        )
+                        .await;
+                }
+
+                self.job_manager
+                    .update_job(
+                        &platform_metadata_job_id,
+                        Some(100.0),
+                        Some(JobStatus::Complete),
+                        None,
+                    )
+                    .await;
+
+                Ok(())
+            }
+            .instrument(tracing::info_span!("update_platform_metadata_job")),
+        );
+
+        let db_pool = self.db_pool.clone();
+        let job_manager = self.job_manager.clone();
+        let platform_metadata_job_id = platform_metadata_job.id.clone();
+        tokio::spawn(
+            async move {
+                let sub = job_manager.subscribe(platform_metadata_job_id);
+
+                while let Ok(update) = sub.recv().await {
+                    match update.status() {
+                        JobStatus::Complete => break,
+                        _ => {}
+                    }
+                }
+
+                job_manager
+                    .update_job(
+                        &game_metadata_job_id,
+                        Some(0.0),
+                        Some(JobStatus::Running),
+                        None,
+                    )
+                    .await;
+
+                let all_game_ids: Vec<String> = match QueryBuilder::new("select id from games")
+                    .build_query_scalar()
+                    .fetch_all(&db_pool)
+                    .await
+                {
+                    Ok(game_ids) => game_ids,
+                    Err(why) => {
+                        tracing::error!("Failed to fetch game ids: {why:#?}");
+                        vec![]
+                    }
+                };
+
+                let mut tasks = tokio::task::JoinSet::new();
+                all_game_ids.into_iter().for_each(|game_id| {
+                    let mut metadata_svc = self.metadata_svc_client.clone();
+
+                    tasks.spawn(
+                        async move {
+                            metadata_svc
+                                .download_game_metadata(DownloadGameMetadataRequest { game_id })
+                                .await
+                                .map_err(|why| Status::internal(why.to_string()))?;
+
+                            Ok::<(), Status>(())
+                        }
+                        .in_current_span(),
+                    );
+                });
+
+                let total_tasks = tasks.len();
+                let mut completed_tasks = 0;
+                while let Some(join_result) = tasks.join_next().await {
+                    let percent_complete = (completed_tasks as f32 / total_tasks as f32) * 100.0;
+                    if let Err(why) = join_result {
+                        tracing::error!(
+                            "A task in the update library metadata job panicked: {why:#?}"
+                        );
+                    }
+
+                    job_manager
+                        .update_job(
+                            &game_metadata_job_id,
+                            Some(percent_complete),
+                            if join_result.is_err() {
+                                Some(JobStatus::Failed)
+                            } else {
+                                None
+                            },
+                            None,
+                        )
+                        .await;
+                }
+
+                job_manager
+                    .update_job(
+                        &game_metadata_job_id,
+                        Some(100.0),
+                        Some(JobStatus::Complete),
+                        None,
+                    )
+                    .await;
+
+                Ok(())
+            }
+            .instrument(tracing::info_span!("update_game_metadata_job")),
+        );
+
+        let job_manager = self.job_manager.clone();
+        tokio::spawn(async move {
+            // TODO: Implement extra metadata updating logic here.
+            job_manager
+                .update_job(
+                    &extra_metadata_job_id,
+                    Some(100.0),
+                    Some(JobStatus::Complete),
+                    None,
+                )
+                .await;
+        });
+
+        Ok(Response::new(UpdateLibraryMetadataResponse {
+            platform_metadata_job_id,
+            game_metadata_job_id,
+            extra_metadata_job_id,
+        }))
     }
 
     async fn delete_library(
