@@ -81,8 +81,6 @@ message UpdateLibraryMetadataResponse {
   string game_metadata_job_id = 2;
   // Job ID for any additional metadata refresh operation.
   string extra_metadata_job_id = 3;
-  // Job ID for Steam metadata refresh when available.
-  optional string steam_metadata_job_id = 4;
 }
 
 // DeleteLibraryRequest deletes the configured library.

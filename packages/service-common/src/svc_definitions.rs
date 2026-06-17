@@ -1,1 +1,9 @@
-pub const CLIENT_SVC_PORT: u16 = 5107;
+pub const CONFIG_SVC_PORT: u16 = 5103;
+pub const CLIENT_SVC_PORT: u16 = 5104;
+pub const JOB_SVC_PORT: u16 = 5105;
+pub const SAVE_SVC_PORT: u16 = 5106;
+pub const TAG_SVC_PORT: u16 = 5107;
+pub const FILE_SVC_PORT: u16 = 5108;
+pub const LIBRARY_SVC_PORT: u16 = 5109;
+pub const METADATA_SVC_PORT: u16 = 5110;
+pub const EMULATOR_SVC_PORT: u16 = 5111;

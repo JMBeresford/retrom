@@ -7,8 +7,7 @@ use retrom_codegen::retrom::services::{
     },
 };
 use retrom_db::{run_migrations, DbPool};
-use retrom_service_common::media_cache::MediaCache;
-use retrom_service_config::config::ServerConfigManager;
+use retrom_service_common::{config::ServerConfigManager, media_cache::MediaCache};
 use retrom_service_jobs::job_manager::JobManager;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::{sync::Arc, sync::OnceLock};

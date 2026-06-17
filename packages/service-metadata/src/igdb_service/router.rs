@@ -1,8 +1,9 @@
 use crate::igdb_service::IgdbServiceHandlers;
 use retrom_codegen::retrom::services::metadata::v1::igdb_service_server::IgdbServiceServer;
 use retrom_db::DbPool;
-use retrom_service_common::metadata_providers::igdb::provider::IGDBProvider;
-use retrom_service_config::config::ServerConfigManager;
+use retrom_service_common::{
+    config::ServerConfigManager, metadata_providers::igdb::provider::IGDBProvider,
+};
 use std::sync::Arc;
 
 pub fn igdb_router(db_pool: DbPool) -> axum::Router {

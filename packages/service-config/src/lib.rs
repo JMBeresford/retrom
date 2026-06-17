@@ -1,15 +1,13 @@
-pub mod config;
-pub mod retrom_dirs;
-pub mod router;
-
-use crate::config::ServerConfigManager;
 use retrom_codegen::retrom::services::config::v1::{
     config_service_server::ConfigService, version::Pre, GetServerConfigRequest,
     GetServerConfigResponse, GetServerInfoRequest, GetServerInfoResponse, ServerInfo,
     UpdateServerConfigRequest, UpdateServerConfigResponse, Version,
 };
+use retrom_service_common::config::ServerConfigManager;
 use std::sync::Arc;
 use tracing::instrument;
+
+pub mod router;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 

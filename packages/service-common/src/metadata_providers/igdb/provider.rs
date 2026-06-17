@@ -1,4 +1,4 @@
-use crate::metadata_providers::RetryAttempts;
+use crate::{config::ServerConfigManager, metadata_providers::RetryAttempts};
 use prost::Message;
 use retrom_codegen::{
     igdb,
@@ -10,7 +10,6 @@ use retrom_codegen::{
         services::metadata::v1::IgdbSearchRequest,
     },
 };
-use retrom_service_config::config::ServerConfigManager;
 use std::{
     env,
     sync::Arc,

@@ -1,8 +1,7 @@
 use crate::metadata_service::MetadataServiceHandlers;
 use retrom_codegen::retrom::services::metadata::v1::metadata_service_server::MetadataServiceServer;
 use retrom_db::DbPool;
-use retrom_service_common::media_cache::MediaCache;
-use retrom_service_config::config::ServerConfigManager;
+use retrom_service_common::{config::ServerConfigManager, media_cache::MediaCache};
 use retrom_service_jobs::job_manager::JobManager;
 use std::sync::Arc;
 

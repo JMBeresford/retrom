@@ -1,11 +1,10 @@
 use retrom_codegen::descriptors::retrom::FILE_DESCRIPTOR_SET;
+use retrom_db::DEFAULT_DB_URL;
+use retrom_service_common::reflection::reflection_router;
 use retrom_service_config::config::ServerConfigManager;
 use retrom_service_library::library_router;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit};
-
-const DEFAULT_PORT: u16 = 5109;
-const DEFAULT_DB_URL: &str = "postgres://retrom@localhost/retrom";
 
 #[tokio::main]
 async fn main() {
@@ -37,39 +36,22 @@ async fn main() {
         .unwrap_or_else(|| DEFAULT_DB_URL.to_string());
 
     let pool = retrom_db::connect(&db_url).await.unwrap_or_else(|err| {
-        eprintln!("Failed to connect to database: {err:#?}");
+        tracing::error!("Failed to connect to database: {err:#?}");
         exit(1);
     });
 
     retrom_db::run_migrations(&pool, &db_url)
         .await
         .unwrap_or_else(|err| {
-            eprintln!("Failed to run database migrations: {err:#?}");
+            tracing::error!("Failed to run database migrations: {err:#?}");
             exit(1);
         });
 
-    let addr: SocketAddr = format!("0.0.0.0:{DEFAULT_PORT}").parse().unwrap();
-
-    let reflection_service = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
-        .build_v1()
-        .unwrap();
-
-    let reflection_service_alpha = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
-        .build_v1alpha()
-        .unwrap();
-
-    let mut reflection_route_builder = tonic::service::Routes::builder();
-    reflection_route_builder
-        .add_service(reflection_service)
-        .add_service(reflection_service_alpha);
-
-    let reflection_router = reflection_route_builder.routes();
+    let addr: SocketAddr = format!("0.0.0.0:{LIBRARY_SVC_PORT}").parse().unwrap();
 
     let router = library_router(pool)
         .layer(tonic_web::GrpcWebLayer::new())
-        .merge(reflection_router.into_axum_router().reset_fallback());
+        .merge(reflection_router());
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await

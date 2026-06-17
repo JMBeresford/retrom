@@ -1,6 +1,3 @@
-use crate::{
-    igdb_service::client::get_igdb_svc_client, steam_service::client::get_steam_svc_client,
-};
 use futures::future::join_all;
 use retrom_codegen::retrom::{
     providers::igdb::v1::{
@@ -29,10 +26,12 @@ use retrom_codegen::retrom::{
 };
 use retrom_db::{DbPool, RetromDB};
 use retrom_service_common::{
+    config::ServerConfigManager,
+    grpc_clients::{igdb_svc::get_igdb_svc_client, steam_svc::get_steam_svc_client},
     media_cache::{cacheable_media::CacheableMetadata, MediaCache},
     metadata_providers::igdb::provider::IGDB_PROVIDER_ID,
+    retrom_dirs::RetromDirs,
 };
-use retrom_service_config::{config::ServerConfigManager, retrom_dirs::RetromDirs};
 use retrom_service_jobs::job_manager::JobManager;
 use sqlx::QueryBuilder;
 use std::{
@@ -44,9 +43,6 @@ use std::{
 use tonic::{Request, Response, Status};
 use tracing::{error, Instrument};
 use walkdir::WalkDir;
-
-#[cfg(feature = "client")]
-pub mod client;
 
 mod game_metadata;
 mod platform_metadata;

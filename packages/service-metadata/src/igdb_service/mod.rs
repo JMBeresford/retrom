@@ -18,9 +18,6 @@ use std::sync::Arc;
 use tonic::{Request, Response, Status};
 use tracing::instrument;
 
-#[cfg(feature = "client")]
-pub mod client;
-
 pub(crate) mod router;
 
 #[derive(Clone)]

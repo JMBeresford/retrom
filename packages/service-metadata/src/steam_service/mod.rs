@@ -8,9 +8,6 @@ use retrom_service_common::metadata_providers::steam::provider::{
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
-#[cfg(feature = "client")]
-pub mod client;
-
 pub(crate) mod router;
 
 #[derive(Clone)]

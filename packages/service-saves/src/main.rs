@@ -1,15 +1,8 @@
-use retrom_service_config::config::ServerConfigManager;
+use retrom_db::DEFAULT_DB_URL;
+use retrom_service_common::{config::ServerConfigManager, svc_definitions::SAVE_SVC_PORT};
 use retrom_service_saves::router::saves_router;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit, sync::Arc};
-
-const DEFAULT_PORT: u16 = 5108;
-
-#[cfg(not(feature = "postgres"))]
-const DEFAULT_DB_URL: &str = "sqlite://retrom-dev.db";
-
-#[cfg(feature = "postgres")]
-const DEFAULT_DB_URL: &str = "postgres://postgres:postgres@localhost/retrom";
 
 #[tokio::main]
 async fn main() {
@@ -41,19 +34,19 @@ async fn main() {
         .unwrap_or_else(|| DEFAULT_DB_URL.to_string());
 
     let pool = retrom_db::connect(&db_url).await.unwrap_or_else(|err| {
-        eprintln!("Failed to connect to database: {err:#?}");
+        tracing::error!("Failed to connect to database: {err:#?}");
         exit(1);
     });
 
     retrom_db::run_migrations(&pool, &db_url)
         .await
         .unwrap_or_else(|err| {
-            eprintln!("Failed to run database migrations: {err:#?}");
+            tracing::error!("Failed to run database migrations: {err:#?}");
             exit(1);
         });
 
     let config_manager = Arc::new(config_manager);
-    let addr: SocketAddr = format!("0.0.0.0:{DEFAULT_PORT}").parse().unwrap();
+    let addr: SocketAddr = format!("0.0.0.0:{SAVE_SVC_PORT}").parse().unwrap();
 
     let router = saves_router(pool, config_manager).layer(tonic_web::GrpcWebLayer::new());
 

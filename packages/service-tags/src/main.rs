@@ -1,16 +1,10 @@
-use retrom_codegen::descriptors::retrom::FILE_DESCRIPTOR_SET;
-use retrom_service_config::config::ServerConfigManager;
+use retrom_db::DEFAULT_DB_URL;
+use retrom_service_common::{
+    config::ServerConfigManager, reflection::reflection_router, svc_definitions::TAG_SVC_PORT,
+};
 use retrom_service_tags::router::tags_router;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit};
-
-const DEFAULT_PORT: u16 = 5108;
-
-#[cfg(not(feature = "postgres"))]
-const DEFAULT_DB_URL: &str = "sqlite://retrom-dev.db";
-
-#[cfg(feature = "postgres")]
-const DEFAULT_DB_URL: &str = "postgres://postgres:password@localhost/retrom-dev";
 
 #[tokio::main]
 async fn main() {
@@ -53,28 +47,11 @@ async fn main() {
             exit(1);
         });
 
-    let addr: SocketAddr = format!("0.0.0.0:{DEFAULT_PORT}").parse().unwrap();
-
-    let reflection_service = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
-        .build_v1()
-        .unwrap();
-
-    let reflection_service_alpha = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
-        .build_v1alpha()
-        .unwrap();
-
-    let mut reflection_route_builder = tonic::service::Routes::builder();
-    reflection_route_builder
-        .add_service(reflection_service)
-        .add_service(reflection_service_alpha);
-
-    let reflection_router = reflection_route_builder.routes();
+    let addr: SocketAddr = format!("0.0.0.0:{TAG_SVC_PORT}").parse().unwrap();
 
     let router = tags_router(pool)
         .layer(tonic_web::GrpcWebLayer::new())
-        .merge(reflection_router.into_axum_router().reset_fallback());
+        .merge(reflection_router());
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await

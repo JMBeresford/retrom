@@ -14,7 +14,7 @@ use retrom_codegen::retrom::services::{
     },
 };
 use retrom_db::DbPool;
-use retrom_service_config::config::ServerConfigManager;
+use retrom_service_common::config::ServerConfigManager;
 use std::{path::PathBuf, sync::Arc};
 use tracing::instrument;
 
