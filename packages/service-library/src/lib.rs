@@ -1,34 +1,28 @@
-use futures::future::join_all;
 use retrom_codegen::retrom::services::{
     jobs::v1::JobStatus,
     library::v1::{
-        library_service_server::{LibraryService, LibraryServiceServer},
-        CreateGamesRequest, CreateGamesResponse, CreateLibrariesRequest, CreateLibrariesResponse,
-        CreatePlatformsRequest, CreatePlatformsResponse, CreateRootDirectoriesRequest,
-        CreateRootDirectoriesResponse, DeleteGameFilesRequest, DeleteGameFilesResponse,
-        DeleteGamesRequest, DeleteGamesResponse, DeleteLibraryRequest, DeleteLibraryResponse,
-        DeleteMissingEntriesRequest, DeleteMissingEntriesResponse, DeletePlatformsRequest,
-        DeletePlatformsResponse, DeleteRootDirectoriesRequest, DeleteRootDirectoriesResponse,
-        GetGameFilesRequest, GetGameFilesResponse, GetGamesRequest, GetGamesResponse,
-        GetLibrariesRequest, GetLibrariesResponse, GetPlatformsRequest, GetPlatformsResponse,
-        GetRootDirectoriesRequest, GetRootDirectoriesResponse, ScanLibraryRequest,
-        ScanLibraryResponse, UpdateGameFilesRequest, UpdateGameFilesResponse, UpdateGamesRequest,
-        UpdateGamesResponse, UpdateLibrariesRequest, UpdateLibrariesResponse,
-        UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdatePlatformsRequest,
-        UpdatePlatformsResponse, UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
+        library_service_server::LibraryService, CreateGamesRequest, CreateGamesResponse,
+        CreateLibrariesRequest, CreateLibrariesResponse, CreatePlatformsRequest,
+        CreatePlatformsResponse, CreateRootDirectoriesRequest, CreateRootDirectoriesResponse,
+        DeleteGameFilesRequest, DeleteGameFilesResponse, DeleteGamesRequest, DeleteGamesResponse,
+        DeleteLibraryRequest, DeleteLibraryResponse, DeleteMissingEntriesRequest,
+        DeleteMissingEntriesResponse, DeletePlatformsRequest, DeletePlatformsResponse,
+        DeleteRootDirectoriesRequest, DeleteRootDirectoriesResponse, GetGameFilesRequest,
+        GetGameFilesResponse, GetGamesRequest, GetGamesResponse, GetLibrariesRequest,
+        GetLibrariesResponse, GetPlatformsRequest, GetPlatformsResponse, GetRootDirectoriesRequest,
+        GetRootDirectoriesResponse, ScanLibraryRequest, ScanLibraryResponse,
+        UpdateGameFilesRequest, UpdateGameFilesResponse, UpdateGamesRequest, UpdateGamesResponse,
+        UpdateLibrariesRequest, UpdateLibrariesResponse, UpdateLibraryMetadataRequest,
+        UpdateLibraryMetadataResponse, UpdatePlatformsRequest, UpdatePlatformsResponse,
+        UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
     },
     metadata::v1::{
-        igdb_service_client::IgdbServiceClient, metadata_service_client::MetadataServiceClient,
-        steam_service_client::SteamServiceClient, DownloadGameMetadataRequest,
-        DownloadPlatformMetadataRequest, GetIgdbGameMetadataRequest,
-        GetIgdbPlatformMetadataRequest, UpdateGameMetadataRequest, UpdatePlatformMetadataRequest,
+        metadata_service_client::MetadataServiceClient, DownloadGameMetadataRequest,
+        DownloadPlatformMetadataRequest,
     },
 };
 use retrom_db::DbPool;
-use retrom_service_common::grpc_clients::{
-    igdb_svc::get_igdb_svc_client, metadata_svc::get_metadata_svc_client,
-    steam_svc::get_steam_svc_client,
-};
+use retrom_service_common::grpc_clients::metadata_svc::get_metadata_svc_client;
 use retrom_service_jobs::job_manager::JobManager;
 use sqlx::QueryBuilder;
 use std::sync::Arc;
@@ -39,6 +33,7 @@ pub mod game_handlers;
 pub mod library_handlers;
 pub mod platform_handlers;
 pub mod root_directory_handlers;
+pub mod router;
 pub mod scan;
 pub mod scan_handlers;
 
@@ -47,8 +42,6 @@ pub struct LibraryServiceHandlers {
     pub db_pool: DbPool,
     pub job_manager: Arc<JobManager>,
     metadata_svc_client: MetadataServiceClient<tonic::transport::Channel>,
-    igdb_svc_client: IgdbServiceClient<tonic::transport::Channel>,
-    steam_svc_client: SteamServiceClient<tonic::transport::Channel>,
 }
 
 impl LibraryServiceHandlers {
@@ -57,14 +50,13 @@ impl LibraryServiceHandlers {
             db_pool,
             job_manager,
             metadata_svc_client: get_metadata_svc_client(),
-            igdb_svc_client: get_igdb_svc_client(),
-            steam_svc_client: get_steam_svc_client(),
         }
     }
 }
 
 #[tonic::async_trait]
 impl LibraryService for LibraryServiceHandlers {
+    #[tracing::instrument(skip(self))]
     async fn scan_library(
         &self,
         request: Request<ScanLibraryRequest>,
@@ -74,12 +66,13 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn update_library_metadata(
         &self,
         request: Request<UpdateLibraryMetadataRequest>,
     ) -> Result<Response<UpdateLibraryMetadataResponse>, Status> {
         let request = request.into_inner();
-        let overwrite = request.overwrite();
+        let _overwrite = request.overwrite();
 
         let platform_metadata_job = self
             .job_manager
@@ -107,8 +100,8 @@ impl LibraryService for LibraryServiceHandlers {
 
         let db_pool = self.db_pool.clone();
         let platform_metadata_job_id = platform_metadata_job.id.clone();
-        let game_metadata_job_id = game_metadata_job.id.clone();
         let extra_metadata_job_id = extra_metadata_job.id.clone();
+        let metadata_svc = self.metadata_svc_client.clone();
         let job_manager = self.job_manager.clone();
 
         tokio::spawn(
@@ -120,7 +113,8 @@ impl LibraryService for LibraryServiceHandlers {
                         Some(JobStatus::Running),
                         None,
                     )
-                    .await;
+                    .await
+                    .map_err(|why| Status::internal(why.to_string()))?;
 
                 let all_platform_ids: Vec<String> =
                     match QueryBuilder::new("select id from platforms")
@@ -137,8 +131,7 @@ impl LibraryService for LibraryServiceHandlers {
 
                 let mut tasks = tokio::task::JoinSet::new();
                 all_platform_ids.into_iter().for_each(|platform_id| {
-                    let mut metadata_svc = self.metadata_svc_client.clone();
-
+                    let mut metadata_svc = metadata_svc.clone();
                     tasks.spawn(
                         async move {
                             metadata_svc
@@ -158,13 +151,21 @@ impl LibraryService for LibraryServiceHandlers {
                 let mut completed_tasks = 0;
                 while let Some(join_result) = tasks.join_next().await {
                     let percent_complete = (completed_tasks as f32 / total_tasks as f32) * 100.0;
-                    if let Err(why) = join_result {
-                        tracing::error!(
-                            "A task in the update library metadata job panicked: {why:#?}"
-                        );
-                    }
+                    match &join_result {
+                        Err(why) => {
+                            tracing::error!(
+                                "A task in the update library metadata job panicked: {why:#?}"
+                            );
+                        }
+                        Ok(Err(why)) => {
+                            tracing::error!(
+                                "A task in the update library metadata job failed: {why:#?}"
+                            );
+                        }
+                        _ => {}
+                    };
 
-                    self.job_manager
+                    job_manager
                         .update_job(
                             &platform_metadata_job_id,
                             Some(percent_complete),
@@ -175,19 +176,23 @@ impl LibraryService for LibraryServiceHandlers {
                             },
                             None,
                         )
-                        .await;
+                        .await
+                        .map_err(|why| Status::internal(why.to_string()))?;
+
+                    completed_tasks += 1;
                 }
 
-                self.job_manager
+                job_manager
                     .update_job(
                         &platform_metadata_job_id,
                         Some(100.0),
                         Some(JobStatus::Complete),
                         None,
                     )
-                    .await;
+                    .await
+                    .map_err(|why| Status::internal(why.to_string()))?;
 
-                Ok(())
+                Ok::<_, Status>(())
             }
             .instrument(tracing::info_span!("update_platform_metadata_job")),
         );
@@ -195,14 +200,16 @@ impl LibraryService for LibraryServiceHandlers {
         let db_pool = self.db_pool.clone();
         let job_manager = self.job_manager.clone();
         let platform_metadata_job_id = platform_metadata_job.id.clone();
+        let game_metadata_job_id = game_metadata_job.id.clone();
+        let metadata_svc = self.metadata_svc_client.clone();
+
         tokio::spawn(
             async move {
-                let sub = job_manager.subscribe(platform_metadata_job_id);
+                let mut sub = job_manager.subscribe(platform_metadata_job_id);
 
                 while let Ok(update) = sub.recv().await {
-                    match update.status() {
-                        JobStatus::Complete => break,
-                        _ => {}
+                    if update.status() == JobStatus::Complete {
+                        break;
                     }
                 }
 
@@ -213,7 +220,8 @@ impl LibraryService for LibraryServiceHandlers {
                         Some(JobStatus::Running),
                         None,
                     )
-                    .await;
+                    .await
+                    .map_err(|why| Status::internal(why.to_string()))?;
 
                 let all_game_ids: Vec<String> = match QueryBuilder::new("select id from games")
                     .build_query_scalar()
@@ -229,7 +237,7 @@ impl LibraryService for LibraryServiceHandlers {
 
                 let mut tasks = tokio::task::JoinSet::new();
                 all_game_ids.into_iter().for_each(|game_id| {
-                    let mut metadata_svc = self.metadata_svc_client.clone();
+                    let mut metadata_svc = metadata_svc.clone();
 
                     tasks.spawn(
                         async move {
@@ -248,11 +256,19 @@ impl LibraryService for LibraryServiceHandlers {
                 let mut completed_tasks = 0;
                 while let Some(join_result) = tasks.join_next().await {
                     let percent_complete = (completed_tasks as f32 / total_tasks as f32) * 100.0;
-                    if let Err(why) = join_result {
-                        tracing::error!(
-                            "A task in the update library metadata job panicked: {why:#?}"
-                        );
-                    }
+                    match &join_result {
+                        Err(why) => {
+                            tracing::error!(
+                                "A task in the update library metadata job panicked: {why:#?}"
+                            );
+                        }
+                        Ok(Err(why)) => {
+                            tracing::error!(
+                                "A task in the update library metadata job failed: {why:#?}"
+                            );
+                        }
+                        _ => {}
+                    };
 
                     job_manager
                         .update_job(
@@ -265,7 +281,10 @@ impl LibraryService for LibraryServiceHandlers {
                             },
                             None,
                         )
-                        .await;
+                        .await
+                        .map_err(|why| Status::internal(why.to_string()))?;
+
+                    completed_tasks += 1;
                 }
 
                 job_manager
@@ -275,33 +294,41 @@ impl LibraryService for LibraryServiceHandlers {
                         Some(JobStatus::Complete),
                         None,
                     )
-                    .await;
+                    .await
+                    .map_err(|why| Status::internal(why.to_string()))?;
 
-                Ok(())
+                Ok::<_, Status>(())
             }
             .instrument(tracing::info_span!("update_game_metadata_job")),
         );
 
         let job_manager = self.job_manager.clone();
-        tokio::spawn(async move {
-            // TODO: Implement extra metadata updating logic here.
-            job_manager
-                .update_job(
-                    &extra_metadata_job_id,
-                    Some(100.0),
-                    Some(JobStatus::Complete),
-                    None,
-                )
-                .await;
-        });
+        tokio::spawn(
+            async move {
+                // TODO: Implement extra metadata updating logic here.
+                job_manager
+                    .update_job(
+                        &extra_metadata_job_id,
+                        Some(100.0),
+                        Some(JobStatus::Complete),
+                        None,
+                    )
+                    .await
+                    .map_err(|why| Status::internal(why.to_string()))?;
+
+                Ok::<(), Status>(())
+            }
+            .instrument(tracing::info_span!("update_extra_metadata_job")),
+        );
 
         Ok(Response::new(UpdateLibraryMetadataResponse {
-            platform_metadata_job_id,
-            game_metadata_job_id,
-            extra_metadata_job_id,
+            platform_metadata_job_id: platform_metadata_job.id,
+            game_metadata_job_id: game_metadata_job.id,
+            extra_metadata_job_id: extra_metadata_job.id,
         }))
     }
 
+    #[tracing::instrument(skip(self))]
     async fn delete_library(
         &self,
         _request: Request<DeleteLibraryRequest>,
@@ -311,6 +338,7 @@ impl LibraryService for LibraryServiceHandlers {
         ))
     }
 
+    #[tracing::instrument(skip(self))]
     async fn delete_missing_entries(
         &self,
         _request: Request<DeleteMissingEntriesRequest>,
@@ -320,6 +348,7 @@ impl LibraryService for LibraryServiceHandlers {
         ))
     }
 
+    #[tracing::instrument(skip(self))]
     async fn get_libraries(
         &self,
         request: Request<GetLibrariesRequest>,
@@ -329,6 +358,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn create_libraries(
         &self,
         request: Request<CreateLibrariesRequest>,
@@ -338,6 +368,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn update_libraries(
         &self,
         request: Request<UpdateLibrariesRequest>,
@@ -347,6 +378,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn get_root_directories(
         &self,
         request: Request<GetRootDirectoriesRequest>,
@@ -356,6 +388,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn create_root_directories(
         &self,
         request: Request<CreateRootDirectoriesRequest>,
@@ -365,6 +398,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn update_root_directories(
         &self,
         request: Request<UpdateRootDirectoriesRequest>,
@@ -374,6 +408,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn delete_root_directories(
         &self,
         request: Request<DeleteRootDirectoriesRequest>,
@@ -383,6 +418,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn get_platforms(
         &self,
         request: Request<GetPlatformsRequest>,
@@ -392,6 +428,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn create_platforms(
         &self,
         request: Request<CreatePlatformsRequest>,
@@ -401,6 +438,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn delete_platforms(
         &self,
         request: Request<DeletePlatformsRequest>,
@@ -410,6 +448,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn update_platforms(
         &self,
         request: Request<UpdatePlatformsRequest>,
@@ -419,6 +458,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn get_games(
         &self,
         request: Request<GetGamesRequest>,
@@ -428,6 +468,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn create_games(
         &self,
         request: Request<CreateGamesRequest>,
@@ -437,6 +478,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn delete_games(
         &self,
         request: Request<DeleteGamesRequest>,
@@ -446,6 +488,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn update_games(
         &self,
         request: Request<UpdateGamesRequest>,
@@ -455,6 +498,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn get_game_files(
         &self,
         request: Request<GetGameFilesRequest>,
@@ -464,6 +508,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn delete_game_files(
         &self,
         request: Request<DeleteGameFilesRequest>,
@@ -473,6 +518,7 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn update_game_files(
         &self,
         request: Request<UpdateGameFilesRequest>,
@@ -481,16 +527,4 @@ impl LibraryService for LibraryServiceHandlers {
             .await
             .map(Response::new)
     }
-}
-
-/// Build an [`axum::Router`] that serves the library gRPC endpoints.
-pub fn library_router(db_pool: DbPool) -> axum::Router {
-    let job_manager = Arc::new(JobManager::new());
-    let lib_handlers = LibraryServiceHandlers::new(db_pool, job_manager);
-    let library_service = LibraryServiceServer::new(lib_handlers);
-
-    let mut routes_builder = tonic::service::Routes::builder();
-    routes_builder.add_service(library_service);
-
-    routes_builder.routes().into_axum_router()
 }

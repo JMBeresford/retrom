@@ -6,6 +6,7 @@ syntax = "proto3";
 package retrom.services.metadata.v1;
 
 import "retrom/services/metadata/v1/models.proto";
+import "retrom/services/tags/v1/views.proto";
 
 // A comprehensive view of game metadata.
 message GameMetadataView {
@@ -19,12 +20,14 @@ message GameMetadataView {
   repeated GameMetadataVideo videos = 4;
   // A list of links associated with this game.
   repeated GameMetadataLink links = 5;
-  // A list of similar game IDs associated with this game.
-  repeated string similar_game_ids = 7;
+  // A list of tags associated with this game.
+  repeated retrom.services.tags.v1.TagView tags = 6;
 }
 
 // A comprehensive view of platform metadata.
 message PlatformMetadataView {
   // The core platform metadata fields for this platform.
   PlatformMetadata metadata = 1;
+  // A list of tags associated with this platform.
+  repeated retrom.services.tags.v1.TagView tags = 2;
 }

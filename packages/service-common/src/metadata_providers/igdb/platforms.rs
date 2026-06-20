@@ -1,7 +1,7 @@
 use super::provider::{IGDBProvider, IgdbSearchData, IgdbSearchQuery, IgdbSearchType};
 use crate::metadata_providers::{
     igdb::provider::IGDB_PROVIDER_ID, MetadataProviderError, PlatformMetadataProvider,
-    PlatformMetadataSearchParams, Result, ToPlatformMetadata, ToTags,
+    PlatformMetadataSearchParams, Result, ToPlatformMetadata,
 };
 use prost::Message;
 use retrom_codegen::{
@@ -29,37 +29,8 @@ impl ToPlatformMetadata for igdb::Platform {
 
         PlatformMetadataView {
             metadata: Some(metadata),
+            tags: igdb_platform_tags(self),
         }
-    }
-}
-
-impl ToTags for igdb::Platform {
-    fn to_tags(&self) -> Vec<TagView> {
-        let mut tags = vec![TagView {
-            domain: Some(TagDomain {
-                name: "generation".to_string(),
-                ..Default::default()
-            }),
-            tag: Some(Tag {
-                value: self.generation.to_string(),
-                ..Default::default()
-            }),
-        }];
-
-        if let Some(family) = &self.platform_family {
-            tags.push(TagView {
-                domain: Some(TagDomain {
-                    name: "family".to_string(),
-                    ..Default::default()
-                }),
-                tag: Some(Tag {
-                    value: family.name.to_string(),
-                    ..Default::default()
-                }),
-            });
-        };
-
-        tags.into_iter().collect()
     }
 }
 
@@ -176,4 +147,32 @@ fn igdb_platform_to_metadata(igdb_match: &igdb::Platform) -> PlatformMetadata {
         logo_url,
         ..Default::default()
     }
+}
+
+fn igdb_platform_tags(igdb_match: &igdb::Platform) -> Vec<TagView> {
+    let mut tags = vec![TagView {
+        domain: Some(TagDomain {
+            name: "generation".to_string(),
+            ..Default::default()
+        }),
+        tag: Some(Tag {
+            value: igdb_match.generation.to_string(),
+            ..Default::default()
+        }),
+    }];
+
+    if let Some(family) = &igdb_match.platform_family {
+        tags.push(TagView {
+            domain: Some(TagDomain {
+                name: "family".to_string(),
+                ..Default::default()
+            }),
+            tag: Some(Tag {
+                value: family.name.to_string(),
+                ..Default::default()
+            }),
+        });
+    };
+
+    tags.into_iter().collect()
 }

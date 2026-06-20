@@ -1,5 +1,12 @@
-use retrom_codegen::retrom::services::metadata::v1::{
-    GameMetadata, GameMetadataArtwork, GameMetadataScreenshot, GameMetadataVideo,
+use retrom_codegen::retrom::services::{
+    metadata::v1::{
+        GameMetadata, GameMetadataArtwork, GameMetadataLink, GameMetadataScreenshot,
+        GameMetadataVideo,
+    },
+    tags::v1::{
+        tags_service_client::TagsServiceClient, CreateTagDomainsRequest, CreateTagsRequest, Tag,
+        TagDomain, TagView,
+    },
 };
 use retrom_db::RetromDB;
 use sqlx::{Executor, QueryBuilder};
@@ -126,6 +133,28 @@ pub async fn upsert_game_videos(
     builder.push_values(&videos, |mut b, video| {
         b.push_bind(&metadata.id);
         b.push_bind(&video.url);
+    });
+
+    builder.push(" on conflict (game_metadata_id, url) do nothing returning *");
+
+    builder
+        .build_query_as()
+        .fetch_all(conn)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))
+}
+
+pub async fn upsert_game_links(
+    conn: impl Executor<'_, Database = RetromDB>,
+    metadata: &GameMetadata,
+    links: Vec<GameMetadataLink>,
+) -> Result<Vec<GameMetadataLink>, Status> {
+    let mut builder =
+        QueryBuilder::new("insert into game_metadata_links (game_metadata_id, url) values ");
+
+    builder.push_values(&links, |mut b, link| {
+        b.push_bind(&metadata.id);
+        b.push_bind(&link.url);
     });
 
     builder.push(" on conflict (game_metadata_id, url) do nothing returning *");

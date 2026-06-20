@@ -95,6 +95,7 @@ async fn update_platform_metadata_skips_cache_jobs_when_disabled() {
                     created_at: None,
                     updated_at: None,
                 }),
+                tags: vec![],
             }),
             update_mask: None,
         }))
@@ -128,6 +129,7 @@ async fn update_platform_metadata_enqueues_cache_jobs_when_enabled() {
                     created_at: None,
                     updated_at: None,
                 }),
+                tags: vec![],
             }),
             update_mask: None,
         }))

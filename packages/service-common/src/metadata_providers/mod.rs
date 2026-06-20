@@ -1,8 +1,5 @@
 use reqwest::StatusCode;
-use retrom_codegen::retrom::services::{
-    metadata::v1::{GameMetadataView, PlatformMetadataView},
-    tags::v1::TagView,
-};
+use retrom_codegen::retrom::services::metadata::v1::{GameMetadataView, PlatformMetadataView};
 use std::time::Duration;
 use tower::{
     retry::{
@@ -61,12 +58,6 @@ pub trait ToPlatformMetadata {
     fn to_platform_metadata(&self, platform_id: &str) -> PlatformMetadataView;
 }
 
-/// A trait for converting a provider's native model to tags that can be used by the rest of the
-/// application.
-pub trait ToTags {
-    fn to_tags(&self) -> Vec<TagView>;
-}
-
 /// A trait for game metadata providers. This is used to abstract over different
 /// metadata providers, such as IGDB, Steam, etc.
 pub trait GameMetadataProvider {
@@ -78,7 +69,7 @@ pub trait GameMetadataProvider {
     /// The type of the game model that the provider uses to represent games. This type
     /// should encapsulate all the information that the provider returns for a game, including
     /// metadata, artwork, screenshots, videos, etc.
-    type GameModel: ToGameMetadata + ToTags;
+    type GameModel: ToGameMetadata;
 
     /// The type of the search query used for searching game metadata.
     type SearchQuery;
@@ -126,7 +117,7 @@ pub trait PlatformMetadataProvider {
     /// The type of the platform model that the provider uses to represent platforms. This type
     /// should encapsulate all the information that the provider returns for a platform, including
     /// metadata, logo, etc.
-    type PlatformModel: ToPlatformMetadata + ToTags;
+    type PlatformModel: ToPlatformMetadata;
 
     /// The type of the search query used for searching platform metadata.
     type SearchQuery;

@@ -86,7 +86,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
     for model_name in row_models.into_iter() {
-        build = build.type_attribute(model_name, format!("#[derive({row_derivations})]"));
+        build = build.type_attribute(
+            model_name,
+            format!("#[derive({row_derivations})]\n#[sqlx(default)]"),
+        );
     }
 
     build

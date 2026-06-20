@@ -1,7 +1,7 @@
 use super::{models, provider::SteamWebApiProvider};
 use crate::metadata_providers::{
     steam::provider::STEAM_PROVIDER_ID, GameMetadataProvider, GameMetadataSearchParams,
-    MetadataProviderError, Result, ToGameMetadata, ToTags,
+    MetadataProviderError, Result, ToGameMetadata,
 };
 use chrono::DateTime;
 use retrom_codegen::{
@@ -34,14 +34,8 @@ impl ToGameMetadata for SteamGameMetadata {
             artworks: vec![],
             videos: app_details_to_video_metadata(app_details),
             links: vec![],
-            similar_game_ids: vec![],
+            tags: vec![],
         }
-    }
-}
-
-impl ToTags for SteamGameMetadata {
-    fn to_tags(&self) -> Vec<retrom_codegen::retrom::services::tags::v1::TagView> {
-        vec![]
     }
 }
 

@@ -1,7 +1,7 @@
 use super::provider::{IGDBProvider, IgdbSearchData, IgdbSearchQuery, IgdbSearchType};
 use crate::metadata_providers::{
     igdb::provider::IGDB_PROVIDER_ID, GameMetadataProvider, GameMetadataSearchParams,
-    MetadataProviderError, Result, ToGameMetadata, ToTags,
+    MetadataProviderError, Result, ToGameMetadata,
 };
 use prost::Message;
 use retrom_codegen::{
@@ -36,36 +36,8 @@ impl ToGameMetadata for igdb::Game {
             screenshots: igdb_game_screenshots(self),
             videos: igdb_game_videos(self),
             links: igdb_game_links(self),
-            similar_game_ids: vec![],
+            tags: igdb_game_tags(self),
         }
-    }
-}
-
-impl ToTags for igdb::Game {
-    fn to_tags(&self) -> Vec<TagView> {
-        let genres = self.genres.iter().map(|genre| TagView {
-            domain: Some(TagDomain {
-                name: "genre".to_string(),
-                ..Default::default()
-            }),
-            tag: Some(Tag {
-                value: genre.name.clone(),
-                ..Default::default()
-            }),
-        });
-
-        let franchises = self.franchises.iter().map(|franchise| TagView {
-            domain: Some(TagDomain {
-                name: "franchise".to_string(),
-                ..Default::default()
-            }),
-            tag: Some(Tag {
-                value: franchise.name.clone(),
-                ..Default::default()
-            }),
-        });
-
-        genres.chain(franchises).collect()
     }
 }
 
@@ -294,6 +266,32 @@ fn igdb_game_links(igdb_match: &igdb::Game) -> Vec<GameMetadataLink> {
         });
 
     urls.into_iter().chain(websites).collect()
+}
+
+fn igdb_game_tags(igdb_match: &igdb::Game) -> Vec<TagView> {
+    let genres = igdb_match.genres.iter().map(|genre| TagView {
+        domain: Some(TagDomain {
+            name: "genre".to_string(),
+            ..Default::default()
+        }),
+        tag: Some(Tag {
+            value: genre.name.clone(),
+            ..Default::default()
+        }),
+    });
+
+    let franchises = igdb_match.franchises.iter().map(|franchise| TagView {
+        domain: Some(TagDomain {
+            name: "franchise".to_string(),
+            ..Default::default()
+        }),
+        tag: Some(Tag {
+            value: franchise.name.clone(),
+            ..Default::default()
+        }),
+    });
+
+    genres.chain(franchises).collect()
 }
 
 fn normalize_name(name: &str) -> String {

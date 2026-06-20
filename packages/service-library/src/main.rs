@@ -1,8 +1,8 @@
-use retrom_codegen::descriptors::retrom::FILE_DESCRIPTOR_SET;
 use retrom_db::DEFAULT_DB_URL;
-use retrom_service_common::reflection::reflection_router;
-use retrom_service_config::config::ServerConfigManager;
-use retrom_service_library::library_router;
+use retrom_service_common::{
+    config::ServerConfigManager, reflection::reflection_router, svc_definitions::LIBRARY_SVC_PORT,
+};
+use retrom_service_library::router::library_router;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit};
 

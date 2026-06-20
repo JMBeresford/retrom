@@ -3,122 +3,215 @@ syntax = "proto3";
 package retrom.services.tags.v1;
 
 import "retrom/services/tags/v1/models.proto";
+import "retrom/services/tags/v1/views.proto";
 
+// TagsService defines the gRPC service for managing tags and tag domains.
 service TagsService {
+  // GetTagDomains retrieves tag domains based on provided IDs.
   rpc GetTagDomains(GetTagDomainsRequest) returns (GetTagDomainsResponse);
+  // CreateTagDomains creates new tag domains based on provided data.
   rpc CreateTagDomains(CreateTagDomainsRequest) returns (CreateTagDomainsResponse);
+  // DeleteTagDomains deletes tag domains based on provided IDs.
   rpc DeleteTagDomains(DeleteTagDomainsRequest) returns (DeleteTagDomainsResponse);
 
+  // GetTags retrieves tags based on provided IDs and tag domain IDs.
   rpc GetTags(GetTagsRequest) returns (GetTagsResponse);
+  // CreateTags creates new tags based on provided data.
   rpc CreateTags(CreateTagsRequest) returns (CreateTagsResponse);
+  // DeleteTags deletes tags based on provided IDs.
   rpc DeleteTags(DeleteTagsRequest) returns (DeleteTagsResponse);
 
+  // GetGameTags retrieves [TagView][retrom.services.tags.v1.TagView] objects for tags
+  // associated with the specified game.
   rpc GetGameTags(GetGameTagsRequest) returns (GetGameTagsResponse);
+  // AddGameTags associates existing tags with a game based on provided game ID and tag IDs.
   rpc AddGameTags(AddGameTagsRequest) returns (AddGameTagsResponse);
+  // DeleteGameTags disassociates tags from a game based on provided game ID and tag IDs.
   rpc DeleteGameTags(DeleteGameTagsRequest) returns (DeleteGameTagsResponse);
 
+  // GetPlatformTags retrieves [TagView][retrom.services.tags.v1.TagView] objects for tags
+  // associated with the specified platform.
   rpc GetPlatformTags(GetPlatformTagsRequest) returns (GetPlatformTagsResponse);
+  // AddPlatformTags associates existing tags with a platform based on provided platform ID and tag IDs.
   rpc AddPlatformTags(AddPlatformTagsRequest) returns (AddPlatformTagsResponse);
+  // DeletePlatformTags disassociates tags from a platform based on provided platform ID and tag IDs.
   rpc DeletePlatformTags(DeletePlatformTagsRequest) returns (DeletePlatformTagsResponse);
 }
 
+// GetTagDomainsRequest is the request message for the
+// [GetTagDomains][retrom.services.tags.v1.TagsService.GetTagDomains] RPC method.
 message GetTagDomainsRequest {
+  // The IDs of the tag domains to retrieve. If empty, all tag domains will be retrieved.
   repeated string ids = 1;
 }
 
+// GetTagDomainsResponse is the response message for the
+// [GetTagDomains][retrom.services.tags.v1.TagsService.GetTagDomains] RPC method.
 message GetTagDomainsResponse {
+  // The retrieved tag domains.
   repeated TagDomain tag_domains = 1;
 }
 
+// CreateTagDomainsRequest is the request message for the
+// [CreateTagDomains][retrom.services.tags.v1.TagsService.CreateTagDomains] RPC method.
 message CreateTagDomainsRequest {
+  // The tag domains to create.
   repeated TagDomain tag_domains = 1;
 }
 
+// CreateTagDomainsResponse is the response message for the
+// [CreateTagDomains][retrom.services.tags.v1.TagsService.CreateTagDomains] RPC method.
 message CreateTagDomainsResponse {
+  // The created tag domains.
   repeated TagDomain tag_domains_created = 1;
 }
 
+// DeleteTagDomainsRequest is the request message for the
+// [DeleteTagDomains][retrom.services.tags.v1.TagsService.DeleteTagDomains] RPC method.
 message DeleteTagDomainsRequest {
+  // The IDs of the tag domains to delete.
   repeated string ids = 1;
 }
 
+// DeleteTagDomainsResponse is the response message for the
+// [DeleteTagDomains][retrom.services.tags.v1.TagsService.DeleteTagDomains] RPC method.
 message DeleteTagDomainsResponse {
+  // The deleted tag domains.
   repeated TagDomain tag_domains_deleted = 1;
 }
 
+// GetTagsRequest is the request message for the
+// [GetTags][retrom.services.tags.v1.TagsService.GetTags] RPC method.
 message GetTagsRequest {
+  // The IDs of the tags to retrieve. If empty, all tags will be retrieved.
   repeated string ids = 1;
+  // The IDs of the tag domains to filter tags by. If empty, tags from all domains will be retrieved.
   repeated string tag_domain_ids = 2;
 }
 
+// GetTagsResponse is the response message for the
+// [GetTags][retrom.services.tags.v1.TagsService.GetTags] RPC method.
 message GetTagsResponse {
+  // The retrieved tags.
   repeated Tag tags = 1;
 }
 
+// CreateTagsRequest is the request message for the
+// [CreateTags][retrom.services.tags.v1.TagsService.CreateTags] RPC method.
 message CreateTagsRequest {
+  // The tags to create.
   repeated Tag tags = 1;
 }
 
+// CreateTagsResponse is the response message for the
+// [CreateTags][retrom.services.tags.v1.TagsService.CreateTags] RPC method.
 message CreateTagsResponse {
+  // The created tags.
   repeated Tag tags_created = 1;
 }
 
+// DeleteTagsRequest is the request message for the
+// [DeleteTags][retrom.services.tags.v1.TagsService.DeleteTags] RPC method.
 message DeleteTagsRequest {
+  // The IDs of the tags to delete.
   repeated string ids = 1;
 }
 
+// DeleteTagsResponse is the response message for the
+// [DeleteTags][retrom.services.tags.v1.TagsService.DeleteTags] RPC method.
 message DeleteTagsResponse {
+  // The deleted tags.
   repeated Tag tags_deleted = 1;
 }
 
+// GetGameTagsRequest is the request message for the
+// [GetGameTags][retrom.services.tags.v1.TagsService.GetGameTags] RPC method.
 message GetGameTagsRequest {
+  // The ID of the game to retrieve tags for.
   string game_id = 1;
 }
 
+// GetGameTagsResponse is the response message for the
+// [GetGameTags][retrom.services.tags.v1.TagsService.GetGameTags] RPC method.
 message GetGameTagsResponse {
-  repeated Tag tags = 1;
+  // The tags associated with the game.
+  repeated TagView tags = 1;
 }
 
+// AddGameTagsRequest is the request message for the
+// [AddGameTags][retrom.services.tags.v1.TagsService.AddGameTags] RPC method.
 message AddGameTagsRequest {
+  // The ID of the game to associate tags with.
   string game_id = 1;
-  repeated string tag_ids = 2;
+  // The tags to associate with the game. If a tag does not exist, it will be created.
+  repeated TagView tags = 2;
 }
 
+// AddGameTagsResponse is the response message for the
+// [AddGameTags][retrom.services.tags.v1.TagsService.AddGameTags] RPC method.
 message AddGameTagsResponse {
-  repeated Tag tags_added = 1;
+  // The tags that were associated with the game.
+  repeated TagView tags_added = 1;
 }
 
+// DeleteGameTagsRequest is the request message for the
+// [DeleteGameTags][retrom.services.tags.v1.TagsService.DeleteGameTags] RPC method.
 message DeleteGameTagsRequest {
+  // The ID of the game to disassociate tags from.
   string game_id = 1;
+  // The IDs of the tags to disassociate from the game.
   repeated string tag_ids = 2;
 }
 
+// DeleteGameTagsResponse is the response message for the
+// [DeleteGameTags][retrom.services.tags.v1.TagsService.DeleteGameTags] RPC method.
 message DeleteGameTagsResponse {
+  // The tags that were disassociated from the game.
   repeated Tag tags_deleted = 1;
 }
 
+// GetPlatformTagsRequest is the request message for the
+// [GetPlatformTags][retrom.services.tags.v1.TagsService.GetPlatformTags] RPC method.
 message GetPlatformTagsRequest {
+  // The ID of the platform to retrieve tags for.
   string platform_id = 1;
 }
 
+// GetPlatformTagsResponse is the response message for the
+// [GetPlatformTags][retrom.services.tags.v1.TagsService.GetPlatformTags] RPC method.
 message GetPlatformTagsResponse {
-  repeated Tag tags = 1;
+  // The tags associated with the platform.
+  repeated TagView tags = 1;
 }
 
+// AddPlatformTagsRequest is the request message for the
+// [AddPlatformTags][retrom.services.tags.v1.TagsService.AddPlatformTags] RPC method.
 message AddPlatformTagsRequest {
+  // The ID of the platform to associate tags with.
   string platform_id = 1;
-  repeated string tag_ids = 2;
+  // The tags to associate with the platform. If a tag does not exist, it will be created.
+  repeated TagView tags = 2;
 }
 
+// AddPlatformTagsResponse is the response message for the
+// [AddPlatformTags][retrom.services.tags.v1.TagsService.AddPlatformTags] RPC method.
 message AddPlatformTagsResponse {
-  repeated Tag tags_added = 1;
+  // The tags that were associated with the platform.
+  repeated TagView tags_added = 1;
 }
 
+// DeletePlatformTagsRequest is the request message for the
+// [DeletePlatformTags][retrom.services.tags.v1.TagsService.DeletePlatformTags] RPC method.
 message DeletePlatformTagsRequest {
+  // The ID of the platform to disassociate tags from.
   string platform_id = 1;
+  // The IDs of the tags to disassociate from the platform.
   repeated string tag_ids = 2;
 }
 
+// DeletePlatformTagsResponse is the response message for the
+// [DeletePlatformTags][retrom.services.tags.v1.TagsService.DeletePlatformTags] RPC method.
 message DeletePlatformTagsResponse {
+  // The tags that were disassociated from the platform.
   repeated Tag tags_deleted = 1;
 }
