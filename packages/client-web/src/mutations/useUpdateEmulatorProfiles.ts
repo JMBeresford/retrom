@@ -5,7 +5,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageInitShape } from "@bufbuild/protobuf";
 import { ConnectError } from "@connectrpc/connect";
 
-export function useUpdateEmulatorProfiles() {
+export function useUpdateEmulatorProfiles(options?: {
+  showErrorToast?: boolean;
+}) {
   const queryClient = useQueryClient();
   const retromClient = useRetromClient();
   const { toast } = useToast();
@@ -17,6 +19,11 @@ export function useUpdateEmulatorProfiles() {
     mutationKey: ["update-emulator-profiles", queryClient],
     onError: (error) => {
       console.error(error);
+
+      if (options?.showErrorToast === false) {
+        return;
+      }
+
       toast({
         title: "Failed to update emulator profiles",
         description:

@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageInitShape } from "@bufbuild/protobuf";
 import { ConnectError } from "@connectrpc/connect";
 
-export function useCreateEmulators() {
+export function useCreateEmulators(options?: { showErrorToast?: boolean }) {
   const queryClient = useQueryClient();
   const retromClient = useRetromClient();
   const { toast } = useToast();
@@ -17,6 +17,11 @@ export function useCreateEmulators() {
     mutationKey: ["create-emulators", queryClient],
     onError: (error) => {
       console.error(error);
+
+      if (options?.showErrorToast === false) {
+        return;
+      }
+
       toast({
         title: "Failed to create emulators",
         description:

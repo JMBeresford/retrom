@@ -25,15 +25,16 @@ import {
   Emulator,
   SaveStrategy,
 } from "@retrom/codegen/retrom/models/emulators_pb";
+import { Code, ConnectError } from "@connectrpc/connect";
 import { useCreateEmulators } from "@/mutations/useCreateEmulators";
 import { saveStrategyDisplayMap } from "./utils";
+import { toast } from "@retrom/ui/hooks/use-toast";
 
 export function CreateEmulator(props: {
-  existingNames: string[];
   platforms: PlatformWithMetadata[];
   onSuccess: (emu: Emulator) => void;
 }) {
-  const { existingNames, onSuccess } = props;
+  const { onSuccess } = props;
   const form = useForm<EmulatorSchema>({
     mode: "onSubmit",
     reValidateMode: "onChange",
@@ -47,23 +48,10 @@ export function CreateEmulator(props: {
   });
 
   const { mutateAsync: createEmulators, isPending: creationPending } =
-    useCreateEmulators();
+    useCreateEmulators({ showErrorToast: false });
 
   const handleSubmit = useCallback(
     async (values: EmulatorSchema) => {
-      const normalizedName = values.name.trim().toLowerCase();
-      const duplicate = existingNames.some(
-        (name) => name.trim().toLowerCase() === normalizedName,
-      );
-
-      if (duplicate) {
-        form.setError("name", {
-          message: "An emulator with this name already exists",
-        });
-
-        return;
-      }
-
       try {
         const { emulatorsCreated } = await createEmulators({
           emulators: [values],
@@ -79,9 +67,29 @@ export function CreateEmulator(props: {
         onSuccess(emulatorsCreated[0]);
       } catch (error) {
         console.error(error);
+
+        if (
+          error instanceof ConnectError &&
+          error.code === Code.InvalidArgument
+        ) {
+          form.setError("name", {
+            message: error.message,
+          });
+
+          return;
+        }
+
+        toast({
+          title: "Failed to create emulators",
+          description:
+            error instanceof ConnectError
+              ? error.message
+              : "Check the console for more information.",
+          variant: "destructive",
+        });
       }
     },
-    [createEmulators, existingNames, form, onSuccess],
+    [createEmulators, form, onSuccess],
   );
 
   return (

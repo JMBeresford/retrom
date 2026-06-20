@@ -7,6 +7,7 @@ import {
   TrashIcon,
   X,
 } from "lucide-react";
+import { Code, ConnectError } from "@connectrpc/connect";
 import { getFileStub } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import {
@@ -62,6 +63,7 @@ import {
   PlatformsDropdown,
   saveStrategyDisplayMap,
 } from "./utils";
+import { toast } from "@retrom/ui/hooks/use-toast";
 
 export function EmulatorList(props: {
   platforms: PlatformWithMetadata[];
@@ -70,7 +72,9 @@ export function EmulatorList(props: {
   const { platforms, emulators } = props;
   const { openModal: confirm } = useModalAction("confirmModal");
 
-  const { mutateAsync: updateEmulators, isPending } = useUpdateEmulators();
+  const { mutateAsync: updateEmulators, isPending } = useUpdateEmulators({
+    showErrorToast: false,
+  });
   const { mutateAsync: deleteEmulators, isPending: deletionPending } =
     useDeleteEmulators();
 
@@ -91,30 +95,6 @@ export function EmulatorList(props: {
       try {
         form.clearErrors();
 
-        const normalizedNames = new Map<string, string[]>();
-        Object.entries(values.emulators).forEach(([id, emulator]) => {
-          const normalizedName = emulator.name.trim().toLowerCase();
-          const entries = normalizedNames.get(normalizedName) ?? [];
-          entries.push(id);
-          normalizedNames.set(normalizedName, entries);
-        });
-
-        const duplicateIds = [...normalizedNames.values()].filter(
-          (entries) => entries.length > 1,
-        );
-
-        if (duplicateIds.length > 0) {
-          duplicateIds.forEach((entries) => {
-            entries.forEach((id) => {
-              form.setError(`emulators.${id}.name`, {
-                message: "Emulator names must be unique",
-              });
-            });
-          });
-
-          return;
-        }
-
         const { emulatorsUpdated: emulators } = await updateEmulators({
           emulators: Object.values(values.emulators),
         });
@@ -127,6 +107,34 @@ export function EmulatorList(props: {
         });
       } catch (e) {
         console.error(e);
+
+        if (e instanceof ConnectError && e.code === Code.InvalidArgument) {
+          const conflictName = e.message.match(
+            /^An emulator named "(.+)" already exists\.$/,
+          )?.[1];
+
+          Object.entries(values.emulators).forEach(([id, emulator]) => {
+            if (
+              conflictName === undefined ||
+              emulator.name.trim() === conflictName
+            ) {
+              form.setError(`emulators.${id}.name`, {
+                message: e.message,
+              });
+            }
+          });
+
+          return;
+        }
+
+        toast({
+          title: "Failed to update emulators",
+          description:
+            e instanceof ConnectError
+              ? e.message
+              : "Check the console for more information.",
+          variant: "destructive",
+        });
       }
     },
     [updateEmulators, form],
@@ -138,9 +146,6 @@ export function EmulatorList(props: {
   return (
     <>
       <CreateEmulator
-        existingNames={Object.values(changeset).map(
-          (emulator) => emulator.name,
-        )}
         platforms={platforms}
         onSuccess={(emulator) => {
           form.register(`emulators.${emulator.id}`, {

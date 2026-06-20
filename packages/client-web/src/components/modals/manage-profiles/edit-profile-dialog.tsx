@@ -32,17 +32,18 @@ import { useCreateEmulatorProfiles } from "@/mutations/useCreateEmulatorProfile"
 import { useUpdateEmulatorProfiles } from "@/mutations/useUpdateEmulatorProfiles";
 import { LoaderCircleIcon } from "lucide-react";
 import { MessageInitShape } from "@bufbuild/protobuf";
+import { Code, ConnectError } from "@connectrpc/connect";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
 } from "@retrom/ui/components/input-group";
+import { toast } from "@retrom/ui/hooks/use-toast";
 
 type Props = {
   emulator: Emulator;
   existingProfile?: EmulatorProfile;
-  siblingProfiles: EmulatorProfile[];
 };
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -68,7 +69,7 @@ const formSchema = z.object({
 >;
 
 export function EditProfileDialog(props: Props) {
-  const { emulator, existingProfile, siblingProfiles } = props;
+  const { emulator, existingProfile } = props;
   const { setOpen } = useDialogOpen();
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -81,68 +82,71 @@ export function EditProfileDialog(props: Props) {
     },
   });
 
-  const { mutate: createProfiles, status: creationStatus } =
-    useCreateEmulatorProfiles();
-  const { mutate: updateProfiles, status: updateStatus } =
-    useUpdateEmulatorProfiles();
+  const { mutateAsync: createProfiles, status: creationStatus } =
+    useCreateEmulatorProfiles({ showErrorToast: false });
+  const { mutateAsync: updateProfiles, status: updateStatus } =
+    useUpdateEmulatorProfiles({ showErrorToast: false });
 
   const pending = creationStatus === "pending" || updateStatus === "pending";
   const { isDirty } = form.formState;
   const canSubmit = isDirty && !pending;
 
   const handleSubmit = useCallback(
-    (values: FormSchema) => {
-      const normalizedName = values.name.trim().toLowerCase();
-      const duplicate = siblingProfiles.some(
-        (profile) =>
-          profile.id !== existingProfile?.id &&
-          profile.name.trim().toLowerCase() === normalizedName,
-      );
+    async (values: FormSchema) => {
+      try {
+        if (existingProfile) {
+          const profile = {
+            ...existingProfile,
+            ...values,
+            $typeName: undefined,
+          };
 
-      if (duplicate) {
-        form.setError("name", {
-          message: "A profile with this name already exists for this emulator",
+          await updateProfiles({
+            profiles: [profile],
+          });
+
+          form.reset(profile);
+        } else {
+          const profile = {
+            ...values,
+            emulatorId: emulator.id,
+          };
+
+          await createProfiles({
+            profiles: [profile],
+          });
+
+          form.reset();
+        }
+
+        setOpen(false);
+      } catch (error) {
+        console.error(error);
+
+        if (
+          error instanceof ConnectError &&
+          error.code === Code.InvalidArgument
+        ) {
+          form.setError("name", {
+            message: error.message,
+          });
+
+          return;
+        }
+
+        toast({
+          title: existingProfile
+            ? "Failed to update emulator profiles"
+            : "Failed to create emulator profiles",
+          description:
+            error instanceof ConnectError
+              ? error.message
+              : "Check the console for more information.",
+          variant: "destructive",
         });
-
-        return;
       }
-
-      if (existingProfile) {
-        const profile = {
-          ...existingProfile,
-          ...values,
-          $typeName: undefined,
-        };
-
-        updateProfiles({
-          profiles: [profile],
-        });
-
-        form.reset(profile);
-      } else {
-        const profile = {
-          ...values,
-          emulatorId: emulator.id,
-        };
-
-        createProfiles({
-          profiles: [profile],
-        });
-
-        form.reset();
-      }
-
-      setOpen(false);
     },
-    [
-      createProfiles,
-      emulator,
-      existingProfile,
-      form,
-      setOpen,
-      siblingProfiles,
-      updateProfiles,
-    ],
+    [createProfiles, emulator, existingProfile, form, setOpen, updateProfiles],
   );
 
   return (
