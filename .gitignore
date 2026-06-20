@@ -1,6 +1,7 @@
 /target
 mock_content*
 mock.db
+**/retrom-dev.db
 .env
 config_dev
 config.dev.*

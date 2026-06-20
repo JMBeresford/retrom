@@ -522,4 +522,6 @@ BEGIN
   -- DROP TABLE IF EXISTS _map_games;
   -- DROP TABLE IF EXISTS _map_platforms;
 
+DROP TABLE __diesel_schema_migrations;
+
 END $$;
