@@ -1,4 +1,4 @@
-use futures::future::join_all;
+use futures::{future::join_all, FutureExt, TryFutureExt};
 use retrom_codegen::retrom::{
     providers::igdb::v1::{
         igdb_filters::{FilterOperator, FilterValue},
@@ -8,18 +8,18 @@ use retrom_codegen::retrom::{
         jobs::v1::JobStatus,
         metadata::v1::{
             igdb_service_client::IgdbServiceClient, metadata_service_server::MetadataService,
-            steam_service_client::SteamServiceClient, sync_steam_metadata_request,
-            BulkGetGameMetadataRequest, BulkGetGameMetadataResponse,
-            BulkGetPlatformMetadataRequest, BulkGetPlatformMetadataResponse,
-            DeleteLocalMetadataRequest, DeleteLocalMetadataResponse, DownloadGameMetadataRequest,
-            DownloadGameMetadataResponse, DownloadPlatformMetadataRequest,
-            DownloadPlatformMetadataResponse, GameMetadata, GameMetadataArtwork, GameMetadataLink,
-            GameMetadataScreenshot, GameMetadataVideo, GameMetadataView, GetGameMetadataRequest,
-            GetGameMetadataResponse, GetIgdbGameMetadataRequest, GetIgdbPlatformMetadataRequest,
+            steam_service_client::SteamServiceClient, BulkGetGameMetadataRequest,
+            BulkGetGameMetadataResponse, BulkGetPlatformMetadataRequest,
+            BulkGetPlatformMetadataResponse, DeleteLocalMetadataRequest,
+            DeleteLocalMetadataResponse, DownloadGameMetadataRequest, DownloadGameMetadataResponse,
+            DownloadPlatformMetadataRequest, DownloadPlatformMetadataResponse, GameMetadata,
+            GameMetadataArtwork, GameMetadataLink, GameMetadataScreenshot, GameMetadataVideo,
+            GameMetadataView, GetGameMetadataRequest, GetGameMetadataResponse,
+            GetIgdbGameMetadataRequest, GetIgdbPlatformMetadataRequest,
             GetLocalMetadataStatusRequest, GetLocalMetadataStatusResponse,
-            GetPlatformMetadataRequest, GetPlatformMetadataResponse, IgdbSearchRequest,
-            PlatformMetadata, PlatformMetadataView, SyncSteamMetadataRequest,
-            UpdateGameMetadataRequest, UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
+            GetPlatformMetadataRequest, GetPlatformMetadataResponse, GetSteamGameMetadataRequest,
+            IgdbSearchRequest, PlatformMetadata, PlatformMetadataView, UpdateGameMetadataRequest,
+            UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
             UpdatePlatformMetadataResponse,
         },
     },
@@ -696,54 +696,73 @@ impl MetadataService for MetadataServiceHandlers {
         let request = request.into_inner();
         let game_id = request.game_id;
 
-        let igdb_id: Option<String> =
-            QueryBuilder::new("select provider_game_id from game_metadata where game_id = ")
-                .push_bind(&game_id)
-                .push(" and provider_id = ")
-                .push_bind(IGDB_PROVIDER_ID)
-                .build_query_scalar()
-                .fetch_optional(&self.db_pool)
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+        let igdb_job = {
+            let igdb_id: Option<String> =
+                QueryBuilder::new("select provider_game_id from game_metadata where game_id = ")
+                    .push_bind(&game_id)
+                    .push(" and provider_id = ")
+                    .push_bind(IGDB_PROVIDER_ID)
+                    .build_query_scalar()
+                    .fetch_optional(&self.db_pool)
+                    .await
+                    .map_err(|e| Status::internal(e.to_string()))?;
 
-        let mut igdb = self.igdb_svc_client.clone();
+            let mut igdb = self.igdb_svc_client.clone();
 
-        let igdb_search = igdb_id.map(|id| IgdbSearchRequest {
-            filters: Some(IgdbFilters {
-                filters: HashMap::from([(
-                    "id".to_string(),
-                    FilterValue {
-                        value: id,
-                        operator: Some(FilterOperator::Equal as i32),
-                    },
-                )]),
-            }),
-            ..Default::default()
-        });
-
-        let igdb_metadata_view = igdb
-            .get_igdb_game_metadata(GetIgdbGameMetadataRequest {
-                game_id: game_id.clone(),
-                search: igdb_search,
+            let igdb_search = igdb_id.map(|id| IgdbSearchRequest {
+                filters: Some(IgdbFilters {
+                    filters: HashMap::from([(
+                        "id".to_string(),
+                        FilterValue {
+                            value: id,
+                            operator: Some(FilterOperator::Equal as i32),
+                        },
+                    )]),
+                }),
                 ..Default::default()
-            })
-            .await?
-            .into_inner()
-            .game_metadata;
+            });
 
-        self.update_game_metadata(Request::new(UpdateGameMetadataRequest {
-            metadata: igdb_metadata_view,
-            update_mask: None,
-        }))
-        .await?;
+            let igdb_metadata_view = igdb
+                .get_igdb_game_metadata(GetIgdbGameMetadataRequest {
+                    game_id: game_id.clone(),
+                    search: igdb_search,
+                    ..Default::default()
+                })
+                .await?
+                .into_inner()
+                .game_metadata;
 
-        let mut steam = self.steam_svc_client.clone();
+            self.update_game_metadata(Request::new(UpdateGameMetadataRequest {
+                metadata: igdb_metadata_view,
+                update_mask: None,
+            }))
+            .map_ok(|_| ())
+            .boxed()
+        };
 
-        steam
-            .sync_steam_metadata(SyncSteamMetadataRequest {
-                selectors: vec![sync_steam_metadata_request::Selector { game_id }],
-            })
-            .await?;
+        let steam_job = {
+            let mut steam = self.steam_svc_client.clone();
+
+            let steam_metadata_view = steam
+                .get_steam_game_metadata(Request::new(GetSteamGameMetadataRequest {
+                    game_id: game_id.clone(),
+                }))
+                .await?
+                .into_inner()
+                .metadata;
+
+            self.update_game_metadata(Request::new(UpdateGameMetadataRequest {
+                metadata: steam_metadata_view,
+                update_mask: None,
+            }))
+            .map_ok(|_| ())
+            .boxed()
+        };
+
+        join_all(vec![igdb_job, steam_job])
+            .await
+            .into_iter()
+            .try_for_each(|res| res.map_err(|e| Status::internal(e.to_string())))?;
 
         Ok(Response::new(DownloadGameMetadataResponse {}))
     }

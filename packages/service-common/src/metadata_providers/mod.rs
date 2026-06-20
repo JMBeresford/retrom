@@ -1,5 +1,8 @@
 use reqwest::StatusCode;
-use retrom_codegen::retrom::services::metadata::v1::{GameMetadataView, PlatformMetadataView};
+use retrom_codegen::retrom::services::{
+    metadata::v1::{GameMetadataView, PlatformMetadataView},
+    tags::v1::TagView,
+};
 use std::time::Duration;
 use tower::{
     retry::{
@@ -46,6 +49,24 @@ pub struct GameMetadataSearchParams<Id> {
     pub provider_platform_id: Option<Id>,
 }
 
+/// A trait for converting a provider's native game model into a format that can be used by the rest
+/// of the application.
+pub trait ToGameMetadata {
+    fn to_game_metadata(&self, game_id: &str) -> GameMetadataView;
+}
+
+/// A trait for converting a provider's native platform model into a format that can be used by the
+/// rest of the application.
+pub trait ToPlatformMetadata {
+    fn to_platform_metadata(&self, platform_id: &str) -> PlatformMetadataView;
+}
+
+/// A trait for converting a provider's native model to tags that can be used by the rest of the
+/// application.
+pub trait ToTags {
+    fn to_tags(&self) -> Vec<TagView>;
+}
+
 /// A trait for game metadata providers. This is used to abstract over different
 /// metadata providers, such as IGDB, Steam, etc.
 pub trait GameMetadataProvider {
@@ -57,7 +78,7 @@ pub trait GameMetadataProvider {
     /// The type of the game model that the provider uses to represent games. This type
     /// should encapsulate all the information that the provider returns for a game, including
     /// metadata, artwork, screenshots, videos, etc.
-    type GameModel;
+    type GameModel: ToGameMetadata + ToTags;
 
     /// The type of the search query used for searching game metadata.
     type SearchQuery;
@@ -83,11 +104,6 @@ pub trait GameMetadataProvider {
         &self,
         query: Self::SearchQuery,
     ) -> impl std::future::Future<Output = Result<Vec<Self::GameModel>>>;
-
-    /// Convert a search result from the provider's native format into a [GameMetadataView]
-    /// that can be used by the rest of the application.
-    fn to_game_metadata(&self, game_id: &str, native_metadata: Self::GameModel)
-        -> GameMetadataView;
 }
 
 #[derive(Debug)]
@@ -106,10 +122,12 @@ pub trait PlatformMetadataProvider {
     /// The value type that the provider uses to identify platforms. For example, IGDB uses an
     /// integer ID, while other providers might use a string slug.
     type ProviderPlatformId;
+
     /// The type of the platform model that the provider uses to represent platforms. This type
     /// should encapsulate all the information that the provider returns for a platform, including
     /// metadata, logo, etc.
-    type PlatformModel;
+    type PlatformModel: ToPlatformMetadata + ToTags;
+
     /// The type of the search query used for searching platform metadata.
     type SearchQuery;
 
@@ -136,14 +154,6 @@ pub trait PlatformMetadataProvider {
         &self,
         query: Self::SearchQuery,
     ) -> impl std::future::Future<Output = Result<Vec<Self::PlatformModel>>>;
-
-    /// Convert a search result from the provider's native format into a [PlatformMetadataView]
-    /// that can be used by the rest of the application.
-    fn to_platform_metadata(
-        &self,
-        platform_id: &str,
-        native_metadata: Self::PlatformModel,
-    ) -> PlatformMetadataView;
 }
 
 #[derive(Clone)]

@@ -48,20 +48,14 @@ pub enum IgdbSearchData {
 pub fn default_game_fields() -> Vec<String> {
     [
         "name",
-        "cover.url",
-        "artworks.url",
-        "artworks.height",
-        "artworks.width",
-        "screenshots.url",
+        "cover",
+        "artworks",
+        "screenshots",
         "summary",
-        "websites.url",
-        "websites.trusted",
-        "videos.name",
-        "videos.video_id",
-        "genres.name",
-        "genres.slug",
-        "franchises.name",
-        "franchises.slug",
+        "websites",
+        "videos",
+        "genres",
+        "franchises",
         "similar_games",
     ]
     .into_iter()
@@ -76,11 +70,10 @@ pub fn default_platform_fields() -> Vec<String> {
     [
         "name",
         "summary",
-        "platform_logo.url",
-        "websites.url",
-        "websites.trusted",
-        "platform_family.name",
-        "platform_family.slug",
+        "platform_logo",
+        "websites",
+        "platform_family",
+        "generation",
     ]
     .into_iter()
     .map(String::from)

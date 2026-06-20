@@ -11,7 +11,7 @@ use retrom_service_common::metadata_providers::{
         IGDBProvider, IgdbSearchData, IgdbSearchQuery, IgdbSearchType, IGDB_PROVIDER_ID,
     },
     GameMetadataProvider, GameMetadataSearchParams, PlatformMetadataProvider,
-    PlatformMetadataSearchParams,
+    PlatformMetadataSearchParams, ToGameMetadata, ToPlatformMetadata,
 };
 use sqlx::QueryBuilder;
 use std::sync::Arc;
@@ -124,7 +124,7 @@ impl IgdbService for IgdbServiceHandlers {
             .await
             .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?;
 
-        let game_metadata = self.igdb_client.to_game_metadata(&game_id, result).into();
+        let game_metadata = result.to_game_metadata(&game_id).into();
 
         Ok(Response::new(GetIgdbGameMetadataResponse { game_metadata }))
     }
@@ -148,7 +148,7 @@ impl IgdbService for IgdbServiceHandlers {
 
         let game_metadata = all_matches
             .into_iter()
-            .map(|igdb_match| self.igdb_client.to_game_metadata(&game_id, igdb_match))
+            .map(|igdb_match| igdb_match.to_game_metadata(&game_id))
             .collect();
 
         Ok(Response::new(ListIgdbGameMetadataResponse {
@@ -194,10 +194,7 @@ impl IgdbService for IgdbServiceHandlers {
             .igdb_client
             .get_platform_metadata(params)
             .await
-            .map(|platform| {
-                self.igdb_client
-                    .to_platform_metadata(&platform_id, platform)
-            })
+            .map(|platform| platform.to_platform_metadata(&platform_id))
             .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?
             .into();
 
@@ -225,10 +222,7 @@ impl IgdbService for IgdbServiceHandlers {
 
         let platform_metadata = all_matches
             .into_iter()
-            .map(|igdb_match| {
-                self.igdb_client
-                    .to_platform_metadata(&platform_id, igdb_match)
-            })
+            .map(|igdb_match| igdb_match.to_platform_metadata(&platform_id))
             .collect();
 
         Ok(Response::new(ListIgdbPlatformMetadataResponse {

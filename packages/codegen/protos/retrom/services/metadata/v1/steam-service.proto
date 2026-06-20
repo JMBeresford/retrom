@@ -2,16 +2,25 @@ syntax = "proto3";
 
 package retrom.services.metadata.v1;
 
+import "retrom/services/metadata/v1/views.proto";
+
+// SteamService defines the RPC service for interacting with Steam to retrieve game metadata.
 service SteamService {
-  rpc SyncSteamMetadata(SyncSteamMetadataRequest) returns (SyncSteamMetadataResponse);
+  // Search Steam for a game and return a Retrom [GameMetadata][retrom.services.metadata.v1.GameMetadata]
+  // object containing the relevant metadata for that game derived from the best matching Steam game result.
+  rpc GetSteamGameMetadata(GetSteamGameMetadataRequest) returns (GetSteamGameMetadataResponse);
 }
 
-message SyncSteamMetadataRequest {
-  message Selector {
-    string game_id = 1;
-  }
-
-  repeated Selector selectors = 1;
+// GetSteamGameMetadataRequest is the request message for the
+// [GetSteamGameMetadata][SteamService.GetSteamGameMetadata] RPC method.
+message GetSteamGameMetadataRequest {
+  // The Retrom game ID for the game to retrieve metadata for.
+  string game_id = 1;
 }
 
-message SyncSteamMetadataResponse {}
+// GetSteamGameMetadataResponse is the response message for the
+// [GetSteamGameMetadata][SteamService.GetSteamGameMetadata] RPC method.
+message GetSteamGameMetadataResponse {
+  // The game metadata retrieved from Steam for the requested game.
+  GameMetadataView metadata = 1;
+}

@@ -1,7 +1,7 @@
 use super::provider::{IGDBProvider, IgdbSearchData, IgdbSearchQuery, IgdbSearchType};
 use crate::metadata_providers::{
     igdb::provider::IGDB_PROVIDER_ID, MetadataProviderError, PlatformMetadataProvider,
-    PlatformMetadataSearchParams, Result,
+    PlatformMetadataSearchParams, Result, ToPlatformMetadata, ToTags,
 };
 use prost::Message;
 use retrom_codegen::{
@@ -12,10 +12,56 @@ use retrom_codegen::{
             igdb_filters::{FilterOperator, FilterValue},
             IgdbFields, IgdbFilters, IgdbSearch,
         },
-        services::metadata::v1::{IgdbSearchRequest, PlatformMetadata, PlatformMetadataView},
+        services::{
+            metadata::v1::{IgdbSearchRequest, PlatformMetadata, PlatformMetadataView},
+            tags::v1::{Tag, TagDomain, TagView},
+        },
     },
 };
 use tracing::{instrument, Level};
+
+impl ToPlatformMetadata for igdb::Platform {
+    fn to_platform_metadata(&self, platform_id: &str) -> PlatformMetadataView {
+        let mut metadata = igdb_platform_to_metadata(self);
+        metadata.platform_id = platform_id.to_string();
+        metadata.provider_platform_id = self.id.to_string();
+        metadata.provider_id = IGDB_PROVIDER_ID.to_string();
+
+        PlatformMetadataView {
+            metadata: Some(metadata),
+        }
+    }
+}
+
+impl ToTags for igdb::Platform {
+    fn to_tags(&self) -> Vec<TagView> {
+        let mut tags = vec![TagView {
+            domain: Some(TagDomain {
+                name: "generation".to_string(),
+                ..Default::default()
+            }),
+            tag: Some(Tag {
+                value: self.generation.to_string(),
+                ..Default::default()
+            }),
+        }];
+
+        if let Some(family) = &self.platform_family {
+            tags.push(TagView {
+                domain: Some(TagDomain {
+                    name: "family".to_string(),
+                    ..Default::default()
+                }),
+                tag: Some(Tag {
+                    value: family.name.to_string(),
+                    ..Default::default()
+                }),
+            });
+        };
+
+        tags.into_iter().collect()
+    }
+}
 
 impl PlatformMetadataProvider for IGDBProvider {
     type ProviderPlatformId = u64;
@@ -108,22 +154,6 @@ impl PlatformMetadataProvider for IGDBProvider {
         match self.search_metadata(query).await {
             Some(IgdbSearchData::Platform(matches)) => Ok(matches.platforms),
             _ => Err(MetadataProviderError::NoMatchesFound),
-        }
-    }
-
-    #[instrument(level = Level::DEBUG, skip_all)]
-    fn to_platform_metadata(
-        &self,
-        platform_id: &str,
-        native_metadata: Self::PlatformModel,
-    ) -> PlatformMetadataView {
-        let mut metadata = igdb_platform_to_metadata(&native_metadata);
-        metadata.id = platform_id.to_string();
-        metadata.provider_platform_id = native_metadata.id.to_string();
-        metadata.provider_id = IGDB_PROVIDER_ID.to_string();
-
-        PlatformMetadataView {
-            metadata: Some(metadata),
         }
     }
 }

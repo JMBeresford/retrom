@@ -1,7 +1,7 @@
 use super::provider::{IGDBProvider, IgdbSearchData, IgdbSearchQuery, IgdbSearchType};
 use crate::metadata_providers::{
     igdb::provider::IGDB_PROVIDER_ID, GameMetadataProvider, GameMetadataSearchParams,
-    MetadataProviderError, Result,
+    MetadataProviderError, Result, ToGameMetadata, ToTags,
 };
 use prost::Message;
 use retrom_codegen::{
@@ -12,13 +12,62 @@ use retrom_codegen::{
             igdb_filters::{FilterOperator, FilterValue},
             IgdbFields, IgdbFilters, IgdbSearch,
         },
-        services::metadata::v1::{
-            GameMetadata, GameMetadataArtwork, GameMetadataLink, GameMetadataScreenshot,
-            GameMetadataVideo, GameMetadataView, IgdbSearchRequest,
+        services::{
+            metadata::v1::{
+                GameMetadata, GameMetadataArtwork, GameMetadataLink, GameMetadataScreenshot,
+                GameMetadataVideo, GameMetadataView, IgdbSearchRequest,
+            },
+            tags::v1::{Tag, TagDomain, TagView},
         },
     },
 };
 use tracing::{instrument, Level};
+
+impl ToGameMetadata for igdb::Game {
+    fn to_game_metadata(&self, game_id: &str) -> GameMetadataView {
+        let mut metadata = igdb_game_to_metadata(self);
+        metadata.game_id = game_id.to_string();
+        metadata.provider_game_id = self.id.to_string();
+        metadata.provider_id = IGDB_PROVIDER_ID.to_string();
+
+        GameMetadataView {
+            metadata: Some(metadata),
+            artworks: igdb_game_artwork(self),
+            screenshots: igdb_game_screenshots(self),
+            videos: igdb_game_videos(self),
+            links: igdb_game_links(self),
+            similar_game_ids: vec![],
+        }
+    }
+}
+
+impl ToTags for igdb::Game {
+    fn to_tags(&self) -> Vec<TagView> {
+        let genres = self.genres.iter().map(|genre| TagView {
+            domain: Some(TagDomain {
+                name: "genre".to_string(),
+                ..Default::default()
+            }),
+            tag: Some(Tag {
+                value: genre.name.clone(),
+                ..Default::default()
+            }),
+        });
+
+        let franchises = self.franchises.iter().map(|franchise| TagView {
+            domain: Some(TagDomain {
+                name: "franchise".to_string(),
+                ..Default::default()
+            }),
+            tag: Some(Tag {
+                value: franchise.name.clone(),
+                ..Default::default()
+            }),
+        });
+
+        genres.chain(franchises).collect()
+    }
+}
 
 impl GameMetadataProvider for IGDBProvider {
     type ProviderGameId = u64;
@@ -119,27 +168,6 @@ impl GameMetadataProvider for IGDBProvider {
         match self.search_metadata(query).await {
             Some(IgdbSearchData::Game(matches)) => Ok(matches.games),
             _ => Err(MetadataProviderError::NoMatchesFound),
-        }
-    }
-
-    #[instrument(level = Level::DEBUG, skip(self))]
-    fn to_game_metadata(
-        &self,
-        game_id: &str,
-        native_metadata: Self::GameModel,
-    ) -> GameMetadataView {
-        let mut metadata = igdb_game_to_metadata(&native_metadata);
-        metadata.id = game_id.to_string();
-        metadata.provider_game_id = native_metadata.id.to_string();
-        metadata.provider_id = IGDB_PROVIDER_ID.to_string();
-
-        GameMetadataView {
-            metadata: Some(metadata),
-            artworks: igdb_game_artwork(&native_metadata),
-            screenshots: igdb_game_screenshots(&native_metadata),
-            videos: igdb_game_videos(&native_metadata),
-            links: igdb_game_links(&native_metadata),
-            similar_game_ids: vec![],
         }
     }
 }
@@ -251,15 +279,21 @@ fn igdb_game_videos(igdb_match: &igdb::Game) -> Vec<GameMetadataVideo> {
 }
 
 fn igdb_game_links(igdb_match: &igdb::Game) -> Vec<GameMetadataLink> {
-    igdb_match
+    let urls = vec![GameMetadataLink {
+        url: igdb_match.url.clone(),
+        ..Default::default()
+    }];
+
+    let websites = igdb_match
         .websites
         .iter()
         .filter(|w| w.trusted)
         .map(|website| GameMetadataLink {
             url: website.url.clone(),
             ..Default::default()
-        })
-        .collect()
+        });
+
+    urls.into_iter().chain(websites).collect()
 }
 
 fn normalize_name(name: &str) -> String {
