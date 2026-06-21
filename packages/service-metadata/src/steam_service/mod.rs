@@ -32,7 +32,7 @@ impl SteamService for SteamServiceHandlers {
             QueryBuilder::new("select steam_app_id from games where id = ")
                 .push_bind(&game_id)
                 .build_query_scalar()
-                .fetch_optional(&self.db_pool)
+                .fetch_one(&self.db_pool)
                 .await
                 .map_err(|why| Status::internal(why.to_string()))?;
 

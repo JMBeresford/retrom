@@ -305,6 +305,10 @@ impl TagsService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
+        if tags.is_empty() {
+            return Ok(tonic::Response::new(GetGameTagsResponse { tags: vec![] }));
+        }
+
         let mut builder = sqlx::QueryBuilder::new("select * from tag_domains where id in (");
         let mut separated = builder.separated(", ");
         for tag in tags.iter() {
@@ -435,17 +439,23 @@ impl TagsService for TagServiceHandlers {
     ) -> Result<tonic::Response<DeleteGameTagsResponse>, tonic::Status> {
         let request = request.into_inner();
         let game_id = request.game_id;
+        let tag_ids = request.tag_ids;
 
-        let mut builder = sqlx::QueryBuilder::new("delete from game_tag where game_id = ");
+        let mut builder = sqlx::QueryBuilder::new("delete from game_tags where game_id = ");
         builder.push_bind(game_id);
-        builder.push(" and tag_id in (");
 
-        let mut separated = builder.separated(", ");
-        for tag_id in request.tag_ids.iter() {
-            separated.push_bind(tag_id);
+        if !tag_ids.is_empty() {
+            builder.push(" and tag_id in (");
+
+            let mut separated = builder.separated(", ");
+            for tag_id in request.tag_ids.iter() {
+                separated.push_bind(tag_id);
+            }
+
+            separated.push_unseparated(")");
         }
 
-        separated.push_unseparated(") returning tag_id");
+        builder.push(" returning tag_id");
 
         let deleted_tag_ids: Vec<String> = builder
             .build_query_scalar()
@@ -485,6 +495,12 @@ impl TagsService for TagServiceHandlers {
             .fetch_all(&self.db_pool)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+        if tags.is_empty() {
+            return Ok(tonic::Response::new(GetPlatformTagsResponse {
+                tags: vec![],
+            }));
+        }
 
         let mut builder = sqlx::QueryBuilder::new("select * from tag_domains where id in (");
         let mut separated = builder.separated(", ");
