@@ -1,10 +1,17 @@
-use retrom_codegen::retrom::services::library::v1::{
-    CreateLibrariesRequest, CreateLibrariesResponse, DeleteLibraryRequest, DeleteLibraryResponse,
-    DeleteMissingEntriesRequest, DeleteMissingEntriesResponse, Game, GameFile, GetLibrariesRequest,
-    GetLibrariesResponse, Library, Platform, UpdateLibrariesRequest, UpdateLibrariesResponse,
+use futures::future::join_all;
+use retrom_codegen::retrom::services::{
+    library::v1::{
+        CreateLibrariesRequest, CreateLibrariesResponse, DeleteLibraryRequest,
+        DeleteLibraryResponse, DeleteMissingEntriesRequest, DeleteMissingEntriesResponse, Game,
+        GameFile, GetLibrariesRequest, GetLibrariesResponse, Library, Platform,
+        UpdateLibrariesRequest, UpdateLibrariesResponse,
+    },
+    metadata::v1::{GameMetadata, PlatformMetadata},
 };
 use retrom_db::{DbPool, RetromDB};
+use retrom_service_common::media_cache::cacheable_media::CacheableMetadata;
 use sqlx::QueryBuilder;
+use std::{collections::HashSet, path::PathBuf};
 use tonic::Status;
 
 pub async fn get_libraries(
@@ -90,27 +97,41 @@ pub async fn update_libraries(
 
 pub async fn delete_library(
     db_pool: DbPool,
-    _request: DeleteLibraryRequest,
+    _: DeleteLibraryRequest,
 ) -> Result<DeleteLibraryResponse, Status> {
     let mut tx = db_pool
         .begin()
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
+    let platform_metadata: Vec<PlatformMetadata> =
+        QueryBuilder::new("select * from platform_metadata")
+            .build_query_as()
+            .fetch_all(&mut *tx)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+    let game_metadata: Vec<GameMetadata> = QueryBuilder::new("select * from game_metadata")
+        .build_query_as()
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    // Clean caches for all metadata entries before deleting the entities.
+    join_all(platform_metadata.iter().map(|m| m.clean_cache())).await;
+    join_all(game_metadata.iter().map(|m| m.clean_cache())).await;
+
     // Delete all non-third-party platforms; cascades to game_platforms and game_files.
-    sqlx::query("delete from platforms where third_party = false")
+    sqlx::query("delete from platforms")
         .execute(&mut *tx)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
     // Delete orphaned games (no remaining platform associations).
-    sqlx::query(
-        "delete from games where not exists \
-        (select 1 from game_platforms where game_id = games.id)",
-    )
-    .execute(&mut *tx)
-    .await
-    .map_err(|e| Status::internal(e.to_string()))?;
+    sqlx::query("delete from games")
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     tx.commit()
         .await
@@ -123,8 +144,6 @@ pub async fn delete_missing_entries(
     db_pool: DbPool,
     request: DeleteMissingEntriesRequest,
 ) -> Result<DeleteMissingEntriesResponse, Status> {
-    use std::{collections::HashSet, path::PathBuf};
-
     // Fetch game files and perform filesystem checks outside the transaction
     // so we don't hold DB resources during potentially slow I/O.
     let all_game_files: Vec<GameFile> =

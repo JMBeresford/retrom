@@ -229,23 +229,29 @@ message AddLibraryRootDirectoryResponse {
 message AddPlatformRootDirectoryRequest {
   // Platform ID to add the root directory to.
   string platform_id = 1 [(google.api.field_behavior) = REQUIRED];
-  // Root directory ID to add to the platform.
-  string root_directory_id = 2 [(google.api.field_behavior) = REQUIRED];
+  // Absolute path of the root directory to add to the platform.
+  string path = 2 [(google.api.field_behavior) = REQUIRED];
 }
 
 // Response after adding a root directory to a platform.
-message AddPlatformRootDirectoryResponse {}
+message AddPlatformRootDirectoryResponse {
+  // Root directory added to the platform.
+  RootDirectory root_directory = 1;
+}
 
 // Request to add a root directory to a game.
 message AddGameRootDirectoryRequest {
   // Game ID to add the root directory to.
   string game_id = 1 [(google.api.field_behavior) = REQUIRED];
-  // Root directory ID to add to the game.
-  string root_directory_id = 2 [(google.api.field_behavior) = REQUIRED];
+  // Absolute path of the root directory to add to the game.
+  string path = 2 [(google.api.field_behavior) = REQUIRED];
 }
 
 // Response after adding a root directory to a game.
-message AddGameRootDirectoryResponse {}
+message AddGameRootDirectoryResponse {
+  // Root directory added to the game.
+  RootDirectory root_directory = 1;
+}
 
 // Request to fetch platforms.
 message GetPlatformsRequest {
