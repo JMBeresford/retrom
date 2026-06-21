@@ -145,3 +145,36 @@ jobs:
 
       - name: Run Clippy
         run: pnpm nx run-many -t cargo:lint
+
+  buf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: check NX cloud access
+        id: nx-check
+        continue-on-error: true
+        run: pnpm nx noop
+
+      - name: disable NX cloud
+        if: steps.nx-check.outcome != 'success'
+        run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+
+      - name: Run Buf Lint
+        run: pnpm nx run-many -t buf:lint
