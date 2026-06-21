@@ -15,6 +15,9 @@ pub enum ParserError {
 
     #[error("Invalid structure definition: {0}")]
     InvalidDefinition(String),
+
+    #[error("Parser error: {0}")]
+    Other(String),
 }
 
 type Result<T> = std::result::Result<T, ParserError>;

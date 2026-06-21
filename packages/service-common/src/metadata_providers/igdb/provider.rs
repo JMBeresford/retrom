@@ -446,6 +446,7 @@ fn render_filter_operation(igdb_filter: (String, FilterValue)) -> String {
     let operator = filter.operator();
 
     match operator {
+        FilterOperator::Unspecified => "".to_string(),
         FilterOperator::Equal => format!("{field} = {value}"),
         FilterOperator::NotEqual => format!("{field} != {value}"),
         FilterOperator::LessThan => format!("{field} < {value}"),

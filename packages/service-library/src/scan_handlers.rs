@@ -13,7 +13,7 @@ use tracing::{error, warn};
 
 pub async fn scan_library(
     state: &LibraryServiceHandlers,
-    _request: ScanLibraryRequest,
+    _: ScanLibraryRequest,
 ) -> Result<ScanLibraryResponse, Status> {
     let db_pool = state.db_pool.clone();
 

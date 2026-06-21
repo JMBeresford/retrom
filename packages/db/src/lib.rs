@@ -20,13 +20,6 @@ pub enum Error {
     #[error("Error connecting to database: {0}")]
     ConnectionError(String),
 
-    #[cfg(feature = "embedded")]
-    #[error("Embedded DB error")]
-    EmbeddedError(#[from] postgresql_embedded::Error),
-
-    #[error("Could not create embedded database")]
-    NotExists,
-
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 }

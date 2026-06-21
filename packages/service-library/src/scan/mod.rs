@@ -11,6 +11,7 @@ pub mod parser;
 
 use parser::{ParserError, StructureParser};
 use retrom_db::DbPool;
+use retrom_service_common::metadata_providers::MANUAL_PROVIDER_ID;
 use sqlx::QueryBuilder;
 use std::path::{Path, PathBuf};
 use tracing::warn;
@@ -126,10 +127,15 @@ async fn upsert_platform(db_pool: &DbPool, library_id: &str, path: &str) -> Resu
     let root_directory_id = upsert_root_directory(db_pool, path).await?;
 
     let mut select_builder = QueryBuilder::new(
-        "select p.id from platforms p \
-         join platform_root_directories prd on prd.platform_id = p.id \
-         join root_directories rd on rd.id = prd.root_directory_id \
-         where rd.path = ",
+        r#"
+            select
+                p.id from platforms p
+            join platform_root_directories prd
+                on prd.platform_id = p.id
+            join root_directories rd
+                on rd.id = prd.root_directory_id
+            where rd.path = 
+        "#,
     );
 
     select_builder.push_bind(path);
@@ -168,6 +174,37 @@ async fn upsert_platform(db_pool: &DbPool, library_id: &str, path: &str) -> Resu
             id
         }
     };
+
+    let name = match PathBuf::from(path)
+        .file_name()
+        .and_then(|name| name.to_str())
+    {
+        Some(name) => name.to_string(),
+        None => {
+            return Err(ScanError::Parser(ParserError::Other(
+                "Could not extract platform name from path".to_string(),
+            )))
+        }
+    };
+
+    let mut builder = QueryBuilder::new(
+        r#"
+            insert into platform_metadata
+                (id, platform_id, provider_id, provider_platform_id, name)
+            values (
+        "#,
+    );
+
+    let mut separated = builder.separated(", ");
+    separated
+        .push_bind(uuid::Uuid::now_v7().to_string())
+        .push_bind(&platform_id)
+        .push_bind(MANUAL_PROVIDER_ID)
+        .push_bind(&platform_id)
+        .push_bind(name)
+        .push_unseparated(") on conflict do nothing");
+
+    builder.build().execute(&mut *tx).await?;
 
     let mut link_builder =
         QueryBuilder::new("insert into platform_libraries (platform_id, library_id) values (");
@@ -229,6 +266,37 @@ async fn upsert_game(db_pool: &DbPool, platform_id: &str, path: &str) -> Result<
             id
         }
     };
+
+    let name = match PathBuf::from(path)
+        .file_name()
+        .and_then(|name| name.to_str())
+    {
+        Some(name) => name.to_string(),
+        None => {
+            return Err(ScanError::Parser(ParserError::Other(
+                "Could not extract game name from path".to_string(),
+            )))
+        }
+    };
+
+    let mut builder = QueryBuilder::new(
+        r#"
+            insert into game_metadata
+                (id, game_id, provider_id, provider_game_id, name)
+            values (
+        "#,
+    );
+
+    let mut separated = builder.separated(", ");
+    separated
+        .push_bind(uuid::Uuid::now_v7().to_string())
+        .push_bind(&game_id)
+        .push_bind(MANUAL_PROVIDER_ID)
+        .push_bind(&game_id)
+        .push_bind(name)
+        .push_unseparated(") on conflict do nothing");
+
+    builder.build().execute(&mut *tx).await?;
 
     let mut link_builder =
         QueryBuilder::new("insert into game_platforms (game_id, platform_id) values (");

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use retrom_codegen::retrom::services::tags::v1::{
     tags_service_server::TagsService, AddGameTagsRequest, AddGameTagsResponse,
     AddPlatformTagsRequest, AddPlatformTagsResponse, CreateTagDomainsRequest,
@@ -12,6 +10,7 @@ use retrom_codegen::retrom::services::tags::v1::{
 };
 use retrom_db::{DbPool, RetromDB};
 use sqlx::Execute;
+use std::collections::HashMap;
 use tracing::instrument;
 
 pub mod router;
@@ -448,7 +447,7 @@ impl TagsService for TagServiceHandlers {
             builder.push(" and tag_id in (");
 
             let mut separated = builder.separated(", ");
-            for tag_id in request.tag_ids.iter() {
+            for tag_id in tag_ids.iter() {
                 separated.push_bind(tag_id);
             }
 

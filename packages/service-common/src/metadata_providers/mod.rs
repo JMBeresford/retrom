@@ -12,6 +12,8 @@ use tower::{
 pub mod igdb;
 pub mod steam;
 
+pub const MANUAL_PROVIDER_ID: &str = "00000000-0000-0000-0000-000000000001";
+
 #[derive(Debug, thiserror::Error)]
 pub enum MetadataProviderError {
     #[error("HTTP error: {0}")]
