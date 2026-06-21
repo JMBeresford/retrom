@@ -37,6 +37,9 @@ service MetadataService {
   // Search for a match for the given platform in across all configured metadata providers (e.g. IGDB, Steam) and
   // and store the resulting metadata in the DB.
   rpc DownloadPlatformMetadata(DownloadPlatformMetadataRequest) returns (DownloadPlatformMetadataResponse);
+
+  // Get a list of similar games for a given game, based on metadata attributes such as genres, tags, etc.
+  rpc GetSimilarGames(GetSimilarGamesRequest) returns (GetSimilarGamesResponse);
 }
 
 // Request message for GetGameMetadata.
@@ -169,3 +172,25 @@ message DownloadPlatformMetadataRequest {
 
 // Response message for DownloadPlatformMetadata.
 message DownloadPlatformMetadataResponse {}
+
+// Request message for GetSimilarGames.
+message GetSimilarGamesRequest {
+  // The unique identifier of the game to find similar games for.
+  string game_id = 1;
+  // An optional limit on the number of similar games to return. If limit is not provided, a default value of 10 will be used.
+  optional int32 limit = 2;
+  // An optional offset for pagination of similar games results. If offset is not provided, it will default to 0.
+  optional int32 offset = 3;
+}
+
+// Response message for GetSimilarGames.
+message GetSimilarGamesResponse {
+  // A list of unique identifiers for games that are similar to the requested game.
+  repeated string similar_game_ids = 1;
+  // The total number of similar games available for the requested game, regardless of pagination limits.
+  uint32 total_similar_games = 2;
+  // The limit that was applied to the number of similar games returned in this response.
+  optional int32 limit = 3;
+  // The offset that was applied for pagination of similar games results in this response.
+  optional int32 offset = 4;
+}

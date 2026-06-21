@@ -17,8 +17,9 @@ use retrom_codegen::retrom::{
             GameMetadataView, GetGameMetadataRequest, GetGameMetadataResponse,
             GetIgdbGameMetadataRequest, GetIgdbPlatformMetadataRequest,
             GetLocalMetadataStatusRequest, GetLocalMetadataStatusResponse,
-            GetPlatformMetadataRequest, GetPlatformMetadataResponse, GetSteamGameMetadataRequest,
-            IgdbSearchRequest, PlatformMetadata, PlatformMetadataView, UpdateGameMetadataRequest,
+            GetPlatformMetadataRequest, GetPlatformMetadataResponse, GetSimilarGamesRequest,
+            GetSimilarGamesResponse, GetSteamGameMetadataRequest, IgdbSearchRequest,
+            PlatformMetadata, PlatformMetadataView, UpdateGameMetadataRequest,
             UpdateGameMetadataResponse, UpdatePlatformMetadataRequest,
             UpdatePlatformMetadataResponse,
         },
@@ -882,5 +883,69 @@ impl MetadataService for MetadataServiceHandlers {
         .await?;
 
         Ok(Response::new(DownloadPlatformMetadataResponse {}))
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn get_similar_games(
+        &self,
+        request: Request<GetSimilarGamesRequest>,
+    ) -> Result<Response<GetSimilarGamesResponse>, Status> {
+        let request = request.into_inner();
+        let game_id = request.game_id;
+        let limit = request.limit;
+        let offset = request.offset;
+
+        let mut builder = QueryBuilder::new(
+            "select game_id, similar_game_id from similar_games where game_id = ",
+        );
+
+        builder.push_bind(&game_id);
+        builder.push(" or similar_game_id = ");
+        builder.push_bind(&game_id);
+
+        if let Some(limit) = limit {
+            builder.push(" limit ");
+            builder.push_bind(limit as i64);
+        }
+
+        if let Some(offset) = offset {
+            if limit.is_none() {
+                return Err(Status::invalid_argument(
+                    "offset cannot be used without limit".to_string(),
+                ));
+            }
+
+            builder.push(" offset ");
+            builder.push_bind(offset as i64);
+        }
+
+        let similar_game_rows: Vec<(String, String)> = builder
+            .build_query_as()
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let similar_game_ids: HashSet<String> = similar_game_rows
+            .into_iter()
+            .flat_map(|(game_id, similar_game_id)| vec![game_id, similar_game_id])
+            .filter(|id| id != &game_id)
+            .collect();
+
+        let total_similar_games: u32 =
+            QueryBuilder::new("select count(*) from similar_games where game_id = ")
+                .push_bind(&game_id)
+                .push(" or similar_game_id = ")
+                .push_bind(&game_id)
+                .build_query_scalar()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+
+        Ok(Response::new(GetSimilarGamesResponse {
+            similar_game_ids: similar_game_ids.into_iter().collect(),
+            limit,
+            offset,
+            total_similar_games,
+        }))
     }
 }
