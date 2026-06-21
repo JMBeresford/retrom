@@ -6,6 +6,7 @@ lint:
     - COMMENTS
   ignore:
     - protos/igdbapi.proto
+    - protos/retrom/services/saves/v1/saves-service.proto
 breaking:
   use:
     - FILE

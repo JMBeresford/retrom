@@ -5,29 +5,52 @@ package retrom.services.saves.v2;
 import "google/protobuf/timestamp.proto";
 import "retrom/files/v1/files.proto";
 
+// Backup represents a backup of save files for an emulator.
 message Backup {
+  // Unique identifier for the backup.
   string backup_id = 1;
+  // Timestamp when the backup was created.
   optional google.protobuf.Timestamp created_at = 2;
 }
 
+// SaveFilesStat represents the statistics of save files for a specific emulator.
 message SaveFilesStat {
+  // Unique identifier for the emulator.
   string emulator_id = 1;
-
   // File stats relative to the emulator's saves root
   repeated retrom.files.v1.FileStat file_stats = 2;
-
   // Backup stats for this emulator's saves
   repeated Backup backups = 3;
-
   // Directory where the save files are stored on disk
   string save_directory = 4;
 }
 
+// SaveFiles represents the save files for a specific emulator.
 message SaveFiles {
+  // The unique identifier of the emulator for which the save files are provided.
   string emulator_id = 1;
-
   // Files relative to the emulator's saves root
   repeated retrom.files.v1.File files = 2;
-
+  // The etag of the save files, which is a unique identifier that changes whenever the save files are updated.
   string etag = 3;
+}
+
+// SaveStatesStat represents the statistics of save states for a specific emulator.
+message SaveStatesStat {
+  // The unique identifier of the emulator for which the save states statistics are provided.
+  string emulator_id = 1;
+  // File stats relative to the emulator's states root
+  repeated retrom.files.v1.FileStat file_stats = 2;
+  // Backup stats for this emulator's states
+  repeated Backup backups = 3;
+  // Directory where the save states are stored on disk
+  string save_states_directory = 4;
+}
+
+// SaveStates represents the save states for a specific emulator.
+message SaveStates {
+  // The unique identifier of the emulator for which the save states are provided.
+  string emulator_id = 1;
+  // Files relative to the emulator's states root
+  repeated retrom.files.v1.File files = 2;
 }

@@ -4,9 +4,14 @@ package retrom.services.clients.v1;
 
 import "google/protobuf/timestamp.proto";
 
+// Client represents a client in Retrom, which is an application that interacts with the Retrom service.
 message Client {
+  // The unique identifier of the client.
   string id = 1;
+  // The name of the client, e.g. "My Gaming PC" or "My Steamdeck".
   string name = 2;
+  // The timestamp when the client was created.
   google.protobuf.Timestamp created_at = 3;
+  // The timestamp when the client was last updated.
   google.protobuf.Timestamp updated_at = 4;
 }

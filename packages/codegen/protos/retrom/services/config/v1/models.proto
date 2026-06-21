@@ -2,15 +2,24 @@ syntax = "proto3";
 
 package retrom.services.config.v1;
 
+// ConnectionConfig defines the configuration for the server's network connections.
 message ConnectionConfig {
+  // The port on which the server will listen for incoming connections.
   optional int32 port = 1;
+  // An optional external database URL for the server to connect to, if applicable.
+  // When not provided, the server will use a default local database instance.
   optional string db_url = 2;
 }
 
+// IgnorePatterns defines a list of glob patterns to be used for ignoring files or directories during content scanning.
 message IgnorePatterns {
+  // A list of glob patterns to be applied for ignoring files or directories during content scanning.
   repeated string patterns = 1;
 }
 
+// StorageType defines the structure of the content within a content directory, which can be either a
+// standard library directory with single-file games, a standard library directory with multi-file games,
+// or a custom user-defined structure composed of named macros.
 enum StorageType {
   // Standard library directory with single-file games
   // e.g. /contentDir/platformX/game.rom
@@ -26,98 +35,143 @@ enum StorageType {
   //
   // example user definition: "/some/path/{platform}/{game}/{region}/{file}"
   CUSTOM = 2;
+
+  option deprecated = true;
 }
 
+// CustomLibraryDefinition defines a user-provided string that specifies the structure of a content
+// directory using named macros.
 message CustomLibraryDefinition {
+  // The definition string provided by the user that specifies the structure of a content directory.
   string definition = 1;
 }
 
+// ContentDirectory represents a directory containing game content that the server will scan and manage.
 message ContentDirectory {
+  // The absolute path to the content directory, e.g. "C:/Games" or "/home/user/Games".
   string path = 1;
+  // The structure of the content within the directory.
   optional StorageType storage_type = 2;
+  // An optional list of glob patterns to be applied for ignoring files or directories during content scanning.
   optional IgnorePatterns ignore_patterns = 3;
+  // An optional user-provided string that specifies the structure of a content directory using named macros.
   optional CustomLibraryDefinition custom_library_definition = 4;
+
+  option deprecated = true;
 }
 
+// IGDBConfig represents the configuration required to connect to the IGDB API.
 message IGDBConfig {
+  // The client ID for authenticating with the IGDB API.
   string client_id = 1;
+  // The client secret for authenticating with the IGDB API.
   string client_secret = 2;
 }
 
+// SteamConfig represents the configuration required to connect to the Steam API.
 message SteamConfig {
+  // The API key for authenticating with the Steam API.
   string api_key = 1;
+  // The user ID for the Steam account to access, e.g. "76561198000000000".
   string user_id = 2;
 }
 
+// SavesConfig represents the configuration for managing game save files and states.
 message SavesConfig {
+  // The maximum number of backup files to keep for game save files. When the number of backups
+  // exceeds this limit, the oldest backup will be deleted.
   int32 max_save_files_backups = 1;
+  // The maximum number of backup files to keep for game save states. When the number of backups
+  // exceeds this limit, the oldest backup will be deleted.
   int32 max_save_states_backups = 2;
 }
 
+// MetadataConfig represents the configuration for managing game metadata.
 message MetadataConfig {
+  // ImageFormat represents the preferred image format for storing metadata images.
   enum ImageFormat {
-    UNSPECIFIED = 0;
-    JPEG = 1;
-    PNG = 2;
-    WEBP = 3;
+    // Unspecified image format, which will default to JPEG.
+    IMAGE_FORMAT_UNSPECIFIED = 0;
+    // JPEG image format.
+    IMAGE_FORMAT_JPEG = 1;
+    // PNG image format.
+    IMAGE_FORMAT_PNG = 2;
+    // WebP image format.
+    IMAGE_FORMAT_WEBP = 3;
   }
 
+  // OptimizationConfig represents the configuration for optimizing stored metadata images.
   message OptimizationConfig {
     // JPEG quality for stored images (0-100)
     uint32 jpeg_quality = 1;
-
     // Perform lossless optimization on stored JPEG images
     bool jpeg_optimization = 2;
-
     // WebP quality for stored images (0-100)
     uint32 webp_quality = 3;
-
     // Perform lossless encoding for stored WebP images
     bool webp_lossless = 4;
-
     // PNG quality for stored images (0-100)
     uint32 png_quality = 5;
-
     // Lossless compression level on stored PNG images (0-6)
     uint32 png_optimization_level = 6;
-
     // Perform lossless optimization on stored PNG images
     bool png_optimization = 7;
-
     // Preferred image format for storing metadata images
     optional ImageFormat preferred_image_format = 8;
   }
 
+  // Whether to store metadata images locally on the server.
   bool store_metadata_locally = 1;
+  // The configuration for optimizing stored metadata images.
   OptimizationConfig optimization = 2;
 }
 
+// ServerConfig represents the overall configuration for the server.
 message ServerConfig {
+  // TelemetryConfig represents the configuration for telemetry and analytics collection.
   message TelemetryConfig {
+    // Whether to enable telemetry and analytics collection on the server.
     bool enabled = 1;
   }
 
+  // The configuration for the server's network connections.
   ConnectionConfig connection = 1;
+  // A list of directories containing game content that the server will scan and manage.
   repeated ContentDirectory content_directories = 2;
+  // The configuration required to connect to the IGDB API.
   optional IGDBConfig igdb = 3;
+  // The configuration required to connect to the Steam API.
   optional SteamConfig steam = 4;
+  // The configuration for managing game save files and states.
   optional SavesConfig saves = 5;
+  // The configuration for telemetry and analytics collection.
   optional TelemetryConfig telemetry = 6;
+  // The configuration for managing game metadata.
   optional MetadataConfig metadata = 7;
 }
 
+// ServerInfo represents basic information about the server.
 message ServerInfo {
+  // The version of the server.
   Version version = 1;
 }
 
+// Version represents the version of the server.
 message Version {
+  // Pre represents the pre-release version of the server, which includes a name and an optional number.
   message Pre {
+    // The name of the pre-release version, e.g. "alpha", "beta", "rc".
     string name = 1;
+    // An optional number for the pre-release version, e.g. "1" for "alpha-1" or "2" for "beta-2".
     int32 number = 2;
   }
 
+  // The major version number of the server, which is incremented for breaking changes.
   int32 major = 1;
+  // The minor version number of the server, which is incremented for new features and non-breaking changes.
   int32 minor = 2;
+  // The patch version number of the server, which is incremented for bug fixes and other minor changes.
   int32 patch = 3;
+  // The pre-release version of the server, if applicable.
   optional Pre pre = 4;
 }

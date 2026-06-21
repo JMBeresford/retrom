@@ -5,8 +5,11 @@ package retrom.services.tags.v1;
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
 
+// TagDomain is a namespace for tags.
 message TagDomain {
+  // Unique identifier for the tag domain.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Name of the tag domain, e.g. "Genre" or "Franchise".
   string name = 2;
 
   // Well-known domains are static (seeded via DB migration, is_well_known = true)
@@ -15,12 +18,16 @@ message TagDomain {
   bool is_well_known = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
-// Tag is a (domain, value) pair used to label games and platforms.
-// Uniqueness is enforced per (tag_domain_id, value) pair in the database.
+// Tag is a value in a tag domain. For example, if the tag domain is "Genre", a tag could be "Action" or "RPG".
 message Tag {
+  // Unique identifier for the tag.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The ID of the tag domain that this tag belongs to.
   string tag_domain_id = 2;
+  // The value of the tag, e.g. "Action" or "RPG".
   string value = 3;
+  // Timestamp when the tag was created.
   google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when the tag was last updated.
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }

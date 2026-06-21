@@ -4,48 +4,79 @@ package retrom.client.installation.v1;
 
 import "google/protobuf/timestamp.proto";
 
+// InstallationStatus represents the current status of a game's installation.
 enum InstallationStatus {
+  // Unspecified status. Generally this should be considered as UNINSTALLED.
   INSTALLATION_STATUS_UNSPECIFIED = 0;
+  // The game is fully installed and ready to play.
   INSTALLATION_STATUS_INSTALLED = 1;
+  // The game is currently being installed.
   INSTALLATION_STATUS_INSTALLING = 2;
+  // The installation of the game is currently paused.
   INSTALLATION_STATUS_PAUSED = 3;
+  // The game is not installed.
   INSTALLATION_STATUS_NOT_INSTALLED = 4;
+  // The game is installed but an update is available.
   INSTALLATION_STATUS_OUT_OF_DATE = 5;
+  // The installation of the game failed.
   INSTALLATION_STATUS_FAILED = 6;
+  // The installation of the game was aborted by the user.
   INSTALLATION_STATUS_ABORTED = 7;
 }
 
+// InstallationMetrics represents the current metrics of an ongoing installation, such as download speed and progress.
 message InstallationMetrics {
+  // The current download speed in bytes per second.
   double bytes_per_second = 1;
+  // The total number of bytes transferred so far.
   uint64 bytes_transferred = 2;
+  // The total number of bytes to be transferred for the installation.
   uint64 total_bytes = 3;
+  // The percentage of the installation that is complete, represented as an integer between 0 and 100.
   uint32 percent_complete = 4;
+  // The timestamp of the last update to the installation metrics.
   google.protobuf.Timestamp updated_at = 5;
 }
 
+// InstallationProgressUpdate represents an update on the progress of a game's installation,
+// including its current status and metrics.
 message InstallationProgressUpdate {
+  // The unique identifier of the game whose installation progress is being updated.
   string game_id = 1;
+  // The current status of the game's installation.
   InstallationStatus status = 2;
+  // The current metrics of the game's installation, such as download speed and progress.
   InstallationMetrics metrics = 3;
 }
 
+// InstallGamePayload represents the payload for a request to install a game.
 message InstallGamePayload {
+  // The unique identifier of the game to be installed.
   string game_id = 1;
 }
 
+// UninstallGamePayload represents the payload for a request to uninstall a game.
 message UninstallGamePayload {
+  // The unique identifier of the game to be uninstalled.
   string game_id = 1;
 }
 
+// GetInstallationStatusPayload represents the payload for a request to get the installation status of a game.
 message GetInstallationStatusPayload {
+  // The unique identifier of the game whose installation status is being requested.
   string game_id = 1;
 }
 
+// GetInstallationStatusResponse represents the response to a request for the installation status of a game.
 message GetInstallationStatusResponse {
+  // The unique identifier of the game whose installation status is being returned.
   string game_id = 1;
+  // The current status of the game's installation.
   InstallationStatus status = 2;
 }
 
+// InstallationIndex represents the current installation status of all games, indexed by their unique identifiers.
 message InstallationIndex {
-  map<string, InstallationStatus> installations = 1; // game_id -> status
+  // A mapping of game IDs to their current installation status.
+  map<string, InstallationStatus> installations = 1;
 }

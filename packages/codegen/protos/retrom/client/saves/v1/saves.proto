@@ -4,6 +4,7 @@ package retrom.client.saves.v1;
 
 import "google/protobuf/timestamp.proto";
 
+// SaveSyncStatus represents the synchronization status of save files between the local client and the cloud.
 enum SaveSyncStatus {
   // Either there is no upstream save, or the sync status is unknown.
   SAVE_SYNC_STATUS_UNSPECIFIED = 0;
@@ -30,6 +31,7 @@ enum SaveSyncStatus {
   SAVE_SYNC_STATUS_UNTRACKED = 6;
 }
 
+// SyncBehavior represents the behavior to use when syncing saves between the local client and the cloud.
 enum SyncBehavior {
   // Default behavior, which infers the correct action based on
   // the current sync status and will not force any overwrites.
@@ -42,29 +44,46 @@ enum SyncBehavior {
   SYNC_BEHAVIOR_FORCE_LOCAL = 2;
 }
 
+// SyncEmulatorSavesPayload represents the payload for a request to sync save files for a specific emulator.
 message SyncEmulatorSavesPayload {
+  // The unique identifier of the emulator for which the save files are being synced.
   string emulator_id = 1;
+  // The behavior to use when syncing the save files. If not specified, the default behavior will be used.
   optional SyncBehavior behavior = 2;
 }
 
+// SyncEmulatorSaveStatesPayload represents the payload for a request to sync save states for a specific emulator.
 message SyncEmulatorSaveStatesPayload {
+  // The unique identifier of the emulator for which the save states are being synced.
   string emulator_id = 1;
+  // The behavior to use when syncing the save states. If not specified, the default behavior will be used.
   optional SyncBehavior behavior = 2;
 }
 
+// ConflictReport represents a report of a conflict between local and cloud saves.
 message ConflictReport {
+  // The timestamp of the last modification of the local save.
   google.protobuf.Timestamp local_last_modified = 1;
+  // The timestamp of the last modification of the cloud save.
   google.protobuf.Timestamp cloud_last_modified = 2;
 }
 
+// SyncEmulatorSavesResponse represents the response to a request to sync save files for a specific emulator.
 message SyncEmulatorSavesResponse {
+  // The synchronization status of the save files after the sync operation.
   SaveSyncStatus status = 1;
+  // The unique identifier of the emulator for which the save files were synced.
   string emulator_id = 2;
+  // An optional report of any conflicts that occurred during the sync operation.
   optional ConflictReport conflict_report = 3;
 }
 
+// SyncEmulatorSaveStatesResponse represents the response to a request to sync save states for a specific emulator.
 message SyncEmulatorSaveStatesResponse {
+  // The synchronization status of the save states after the sync operation.
   SaveSyncStatus status = 1;
+  // The unique identifier of the emulator for which the save states were synced.
   string emulator_id = 2;
+  // An optional report of any conflicts that occurred during the sync operation.
   optional ConflictReport conflict_report = 3;
 }
