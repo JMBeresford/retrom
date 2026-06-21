@@ -1,12 +1,5 @@
-use retrom_codegen::retrom::services::{
-    metadata::v1::{
-        GameMetadata, GameMetadataArtwork, GameMetadataLink, GameMetadataScreenshot,
-        GameMetadataVideo,
-    },
-    tags::v1::{
-        tags_service_client::TagsServiceClient, CreateTagDomainsRequest, CreateTagsRequest, Tag,
-        TagDomain, TagView,
-    },
+use retrom_codegen::retrom::services::metadata::v1::{
+    GameMetadata, GameMetadataArtwork, GameMetadataLink, GameMetadataScreenshot, GameMetadataVideo,
 };
 use retrom_db::RetromDB;
 use sqlx::{Executor, QueryBuilder};

@@ -26,12 +26,20 @@ service LibraryService {
 
   // Lists root directories.
   rpc GetRootDirectories(GetRootDirectoriesRequest) returns (GetRootDirectoriesResponse);
+  // Creates a root directory.
+  rpc CreateRootDirectory(CreateRootDirectoryRequest) returns (CreateRootDirectoryResponse);
   // Creates one or more root directories.
   rpc CreateRootDirectories(CreateRootDirectoriesRequest) returns (CreateRootDirectoriesResponse);
   // Updates one or more root directories.
   rpc UpdateRootDirectories(UpdateRootDirectoriesRequest) returns (UpdateRootDirectoriesResponse);
   // Deletes one or more root directories.
   rpc DeleteRootDirectories(DeleteRootDirectoriesRequest) returns (DeleteRootDirectoriesResponse);
+  // Adds a root directory to the specified library.
+  rpc AddLibraryRootDirectory(AddLibraryRootDirectoryRequest) returns (AddLibraryRootDirectoryResponse);
+  // Adds a root directory to the specified platform.
+  rpc AddPlatformRootDirectory(AddPlatformRootDirectoryRequest) returns (AddPlatformRootDirectoryResponse);
+  // Adds a root directory to the specified game.
+  rpc AddGameRootDirectory(AddGameRootDirectoryRequest) returns (AddGameRootDirectoryResponse);
 
   // Lists platforms by filters.
   rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse);
@@ -75,12 +83,8 @@ message UpdateLibraryMetadataRequest {
 
 // UpdateLibraryMetadataResponse contains metadata refresh job IDs.
 message UpdateLibraryMetadataResponse {
-  // Job ID for the platform metadata refresh operation.
-  string platform_metadata_job_id = 1;
-  // Job ID for the game metadata refresh operation.
-  string game_metadata_job_id = 2;
-  // Job ID for any additional metadata refresh operation.
-  string extra_metadata_job_id = 3;
+  // Job IDs started by the scan operation.
+  repeated string job_ids = 1;
 }
 
 // DeleteLibraryRequest deletes the configured library.
@@ -145,16 +149,30 @@ message UpdateLibrariesResponse {
 message GetRootDirectoriesRequest {
   // Optional root directory IDs to filter by.
   repeated string root_directory_ids = 1;
+  // Optional library IDs to filter root-directory mappings by.
+  repeated string library_ids = 2;
   // Optional platform IDs to filter root-directory mappings by.
-  repeated string platform_ids = 2;
+  repeated string platform_ids = 3;
   // Optional game IDs to filter root-directory mappings by.
-  repeated string game_ids = 3;
+  repeated string game_ids = 4;
 }
 
 // Response containing matching root directories.
 message GetRootDirectoriesResponse {
   // Root directories matching the requested filters.
   repeated RootDirectory root_directories = 1;
+}
+
+// Request to create a root directory.
+message CreateRootDirectoryRequest {
+  // Absolute path of the root directory to create.
+  string path = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Response containing created root directory.
+message CreateRootDirectoryResponse {
+  // Root directory created by the operation.
+  RootDirectory root_directory = 1;
 }
 
 // Request to create root directories.
@@ -193,22 +211,54 @@ message DeleteRootDirectoriesResponse {
   repeated RootDirectory root_directories_deleted = 1;
 }
 
+// Request to add a root directory to a library.
+message AddLibraryRootDirectoryRequest {
+  // Library ID to add the root directory to.
+  string library_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // Absolute path of the root directory to add to the library.
+  string path = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Response after adding a root directory to a library.
+message AddLibraryRootDirectoryResponse {
+  // Root directory added to the library.
+  RootDirectory root_directory = 1;
+}
+
+// Request to add a root directory to a platform.
+message AddPlatformRootDirectoryRequest {
+  // Platform ID to add the root directory to.
+  string platform_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // Root directory ID to add to the platform.
+  string root_directory_id = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Response after adding a root directory to a platform.
+message AddPlatformRootDirectoryResponse {}
+
+// Request to add a root directory to a game.
+message AddGameRootDirectoryRequest {
+  // Game ID to add the root directory to.
+  string game_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // Root directory ID to add to the game.
+  string root_directory_id = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Response after adding a root directory to a game.
+message AddGameRootDirectoryResponse {}
+
 // Request to fetch platforms.
 message GetPlatformsRequest {
   // Optional platform IDs to filter by.
   repeated string ids = 1;
-  // When true, include metadata records in the response.
-  optional bool with_metadata = 2;
   // When true, include soft-deleted platforms.
-  optional bool include_deleted = 3;
+  optional bool include_deleted = 2;
 }
 
 // Response containing platforms and optional metadata.
 message GetPlatformsResponse {
   // Platforms matching the requested filters.
   repeated retrom.services.library.v1.Platform platforms = 1;
-  // Metadata records for returned platforms.
-  repeated retrom.services.metadata.v1.PlatformMetadata metadata = 2;
 }
 
 // Request to create platforms.
@@ -257,22 +307,14 @@ message GetGamesRequest {
   repeated string platform_ids = 1;
   // Optional game IDs to filter by.
   repeated string ids = 2;
-  // When true, include metadata records in the response.
-  optional bool with_metadata = 3;
-  // When true, include associated game files in the response.
-  optional bool with_files = 4;
   // When true, include soft-deleted games.
-  optional bool include_deleted = 5;
+  optional bool include_deleted = 3;
 }
 
 // Response containing games, metadata, and game files.
 message GetGamesResponse {
   // Games matching the requested filters.
   repeated retrom.services.library.v1.Game games = 1;
-  // Metadata records for returned games.
-  repeated retrom.services.metadata.v1.GameMetadata metadata = 2;
-  // Game files associated with returned games.
-  repeated retrom.services.library.v1.GameFile game_files = 3;
 }
 
 // Request to create games.

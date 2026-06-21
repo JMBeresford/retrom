@@ -289,7 +289,7 @@ impl TagsService for TagServiceHandlers {
         let mut builder = sqlx::QueryBuilder::new(
             r#"
                 select
-                    t.*,
+                    t.*
                 from tags t
                 join game_tags gt
                     on t.id = gt.tag_id
@@ -346,6 +346,12 @@ impl TagsService for TagServiceHandlers {
         let request = request.into_inner();
         let game_id = request.game_id;
         let tags = request.tags;
+
+        if tags.is_empty() {
+            return Err(tonic::Status::invalid_argument(
+                "At least one tag must be provided",
+            ));
+        }
 
         let domains = self
             .create_tag_domains(tonic::Request::new(CreateTagDomainsRequest {
@@ -466,7 +472,7 @@ impl TagsService for TagServiceHandlers {
                 select
                     t.*
                 from tags t
-                join platform_tag pt
+                join platform_tags pt
                     on t.id = pt.tag_id
                 where pt.platform_id =
             "#,
@@ -522,7 +528,7 @@ impl TagsService for TagServiceHandlers {
 
         if tags.is_empty() {
             return Err(tonic::Status::invalid_argument(
-                "At least one tag ID must be provided",
+                "At least one tag must be provided",
             ));
         }
 
@@ -558,7 +564,7 @@ impl TagsService for TagServiceHandlers {
             .tags_created;
 
         let mut builder =
-            sqlx::QueryBuilder::new("insert into platform_tag (platform_id, tag_id) values ");
+            sqlx::QueryBuilder::new("insert into platform_tags (platform_id, tag_id) values ");
 
         for (i, tag) in tags.iter().enumerate() {
             if i > 0 {
@@ -616,7 +622,7 @@ impl TagsService for TagServiceHandlers {
             ));
         }
 
-        let mut builder = sqlx::QueryBuilder::new("delete from platform_tag where platform_id = ");
+        let mut builder = sqlx::QueryBuilder::new("delete from platform_tags where platform_id = ");
 
         builder.push_bind(platform_id);
         builder.push(" and tag_id in (");

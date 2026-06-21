@@ -125,12 +125,7 @@ pub async fn create_games(
     );
 
     builder.push_values(request.games.iter(), |mut row, game| {
-        let id = if game.id.is_empty() {
-            uuid::Uuid::now_v7().to_string()
-        } else {
-            game.id.clone()
-        };
-        row.push_bind(id);
+        row.push_bind(uuid::Uuid::now_v7().to_string());
         row.push_bind(game.is_deleted);
         row.push_bind(game.third_party);
         row.push_bind(&game.steam_app_id);

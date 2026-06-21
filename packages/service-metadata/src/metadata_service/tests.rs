@@ -29,7 +29,7 @@ async fn test_service(
         .await
         .expect("could not open sqlite pool");
 
-    run_migrations(&pool, url)
+    run_migrations(&pool)
         .await
         .expect("could not run migrations");
 

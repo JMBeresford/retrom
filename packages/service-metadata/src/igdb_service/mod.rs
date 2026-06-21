@@ -95,7 +95,7 @@ impl IgdbService for IgdbServiceHandlers {
         let name: Option<String> =
             QueryBuilder::new("select name from game_metadata where game_id = ")
                 .push_bind(&game_id)
-                .push("order by provider_id desc")
+                .push(" order by provider_id desc")
                 .build_query_scalar()
                 .fetch_optional(&self.db_pool)
                 .await
@@ -178,7 +178,7 @@ impl IgdbService for IgdbServiceHandlers {
         let name: Option<String> =
             QueryBuilder::new("select name from platform_metadata where platform_id = ")
                 .push_bind(&platform_id)
-                .push("order by provider_id desc")
+                .push(" order by provider_id desc")
                 .build_query_scalar()
                 .fetch_optional(&self.db_pool)
                 .await

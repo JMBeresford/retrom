@@ -1,4 +1,3 @@
-use retrom_codegen::descriptors::retrom::FILE_DESCRIPTOR_SET;
 use retrom_db::DEFAULT_DB_URL;
 use retrom_service_common::{
     config::ServerConfigManager, reflection::reflection_router, svc_definitions::METADATA_SVC_PORT,
@@ -37,7 +36,7 @@ async fn main() {
         exit(1);
     });
 
-    retrom_db::run_migrations(&pool, &db_url)
+    retrom_db::run_migrations(&pool)
         .await
         .unwrap_or_else(|err| {
             tracing::error!("Failed to run database migrations: {err:#?}");

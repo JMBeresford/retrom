@@ -67,7 +67,7 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
 
             let platform_id = upsert_platform(db_pool, &target.library_id, &platform_path).await?;
 
-            let game_entries: Vec<PathBuf> = WalkDir::new(&root)
+            let game_entries: Vec<PathBuf> = WalkDir::new(&platform_dir)
                 .min_depth(game_depth_from_platform)
                 .max_depth(game_depth_from_platform)
                 .into_iter()

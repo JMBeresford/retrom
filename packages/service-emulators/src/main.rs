@@ -35,7 +35,7 @@ async fn main() {
         exit(1);
     });
 
-    retrom_db::run_migrations(&pool, &db_url)
+    retrom_db::run_migrations(&pool)
         .await
         .unwrap_or_else(|err| {
             eprintln!("Failed to run database migrations: {err:#?}");
