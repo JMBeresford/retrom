@@ -104,10 +104,13 @@ pub async fn delete_library(
         .map_err(|e| Status::internal(e.to_string()))?;
 
     // Delete orphaned games (no remaining platform associations).
-    sqlx::query("delete from games where id not in (select game_id from game_platforms)")
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+    sqlx::query(
+        "delete from games where not exists \
+        (select 1 from game_platforms where game_id = games.id)",
+    )
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| Status::internal(e.to_string()))?;
 
     tx.commit()
         .await
@@ -122,15 +125,11 @@ pub async fn delete_missing_entries(
 ) -> Result<DeleteMissingEntriesResponse, Status> {
     use std::{collections::HashSet, path::PathBuf};
 
-    let mut tx = db_pool
-        .begin()
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
-
-    // Find game files that no longer exist on disk.
+    // Fetch game files and perform filesystem checks outside the transaction
+    // so we don't hold DB resources during potentially slow I/O.
     let all_game_files: Vec<GameFile> =
         sqlx::query_as("select * from game_files where is_deleted = false")
-            .fetch_all(&mut *tx)
+            .fetch_all(&db_pool)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -147,6 +146,11 @@ pub async fn delete_missing_entries(
         }
     }
 
+    let mut tx = db_pool
+        .begin()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
     let all_games: Vec<Game> = sqlx::query_as("select * from games where is_deleted = false")
         .fetch_all(&mut *tx)
         .await
@@ -154,7 +158,7 @@ pub async fn delete_missing_entries(
 
     let mut games_to_delete: Vec<Game> = Vec::new();
     for game in all_games {
-        // Count existing game files for this game excluding those being deleted.
+        // Count existing non-deleted game files for this game.
         let total_files: i64 = {
             let mut b = QueryBuilder::<RetromDB>::new(
                 "select count(*) from game_files where is_deleted = false and game_id = ",
@@ -176,7 +180,7 @@ pub async fn delete_missing_entries(
         }
     }
 
-    // Build a set of game IDs being deleted for platform orphan check.
+    // Build a set of game IDs being deleted for the platform orphan check.
     let deleted_game_ids: HashSet<&String> = games_to_delete.iter().map(|g| &g.id).collect();
 
     let all_platforms: Vec<Platform> =

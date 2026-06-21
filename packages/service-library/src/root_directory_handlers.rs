@@ -214,11 +214,7 @@ pub async fn add_platform_root_directory(
     separated.push_bind(request.platform_id);
     separated.push_bind(request.root_directory_id);
 
-    builder.push(
-        ") on conflict do update set \
-        platform_id = excluded.platform_id, \
-        root_directory_id = excluded.root_directory_id",
-    );
+    builder.push(") on conflict do nothing");
 
     builder
         .build()
@@ -241,11 +237,7 @@ pub async fn add_game_root_directory(
     separated.push_bind(request.game_id);
     separated.push_bind(request.root_directory_id);
 
-    builder.push(
-        ") on conflict do update set \
-        game_id = excluded.game_id, \
-        root_directory_id = excluded.root_directory_id",
-    );
+    builder.push(") on conflict do nothing");
 
     builder
         .build()
