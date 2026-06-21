@@ -1,10 +1,7 @@
-use retrom_codegen::retrom::services::{
-    library::v1::{
-        CreatePlatformsRequest, CreatePlatformsResponse, DeletePlatformsRequest,
-        DeletePlatformsResponse, GetPlatformsRequest, GetPlatformsResponse, Platform,
-        UpdatePlatformsRequest, UpdatePlatformsResponse,
-    },
-    metadata::v1::PlatformMetadata,
+use retrom_codegen::retrom::services::library::v1::{
+    CreatePlatformsRequest, CreatePlatformsResponse, DeletePlatformsRequest,
+    DeletePlatformsResponse, GetPlatformsRequest, GetPlatformsResponse, Platform,
+    UpdatePlatformsRequest, UpdatePlatformsResponse,
 };
 use retrom_db::{DbPool, RetromDB};
 use sqlx::QueryBuilder;
@@ -15,7 +12,6 @@ pub async fn get_platforms(
     request: GetPlatformsRequest,
 ) -> Result<GetPlatformsResponse, Status> {
     let ids = request.ids;
-    let with_metadata = request.with_metadata.unwrap_or(false);
     let include_deleted = request.include_deleted.unwrap_or(false);
 
     let mut platforms_builder = QueryBuilder::<RetromDB>::new("select * from platforms");
@@ -46,32 +42,7 @@ pub async fn get_platforms(
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    let metadata = if with_metadata {
-        let mut metadata_builder = QueryBuilder::<RetromDB>::new("select * from platform_metadata");
-
-        if !ids.is_empty() {
-            metadata_builder.push(" where platform_id in (");
-            let mut separated = metadata_builder.separated(", ");
-            for id in &ids {
-                separated.push_bind(id);
-            }
-            separated.push_unseparated(")");
-        }
-
-        let metadata: Vec<PlatformMetadata> = metadata_builder
-            .build_query_as()
-            .fetch_all(&db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-        metadata
-    } else {
-        vec![]
-    };
-
-    Ok(GetPlatformsResponse {
-        platforms,
-        metadata,
-    })
+    Ok(GetPlatformsResponse { platforms })
 }
 
 pub async fn create_platforms(

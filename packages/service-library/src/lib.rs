@@ -77,21 +77,21 @@ impl LibraryService for LibraryServiceHandlers {
     #[tracing::instrument(skip(self))]
     async fn delete_library(
         &self,
-        _request: Request<DeleteLibraryRequest>,
+        request: Request<DeleteLibraryRequest>,
     ) -> Result<Response<DeleteLibraryResponse>, Status> {
-        Err(Status::unimplemented(
-            "DeleteLibrary is not implemented in sqlx migration groundwork",
-        ))
+        library_handlers::delete_library(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
     async fn delete_missing_entries(
         &self,
-        _request: Request<DeleteMissingEntriesRequest>,
+        request: Request<DeleteMissingEntriesRequest>,
     ) -> Result<Response<DeleteMissingEntriesResponse>, Status> {
-        Err(Status::unimplemented(
-            "DeleteMissingEntries is not implemented in sqlx migration groundwork",
-        ))
+        library_handlers::delete_missing_entries(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
@@ -193,17 +193,27 @@ impl LibraryService for LibraryServiceHandlers {
     #[tracing::instrument(skip(self))]
     async fn add_platform_root_directory(
         &self,
-        _request: Request<AddPlatformRootDirectoryRequest>,
+        request: Request<AddPlatformRootDirectoryRequest>,
     ) -> Result<Response<AddPlatformRootDirectoryResponse>, Status> {
-        unimplemented!()
+        root_directory_handlers::add_platform_root_directory(
+            &self.db_pool.clone(),
+            request.into_inner(),
+        )
+        .await
+        .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
     async fn add_game_root_directory(
         &self,
-        _request: Request<AddGameRootDirectoryRequest>,
+        request: Request<AddGameRootDirectoryRequest>,
     ) -> Result<Response<AddGameRootDirectoryResponse>, Status> {
-        unimplemented!()
+        root_directory_handlers::add_game_root_directory(
+            &self.db_pool.clone(),
+            request.into_inner(),
+        )
+        .await
+        .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]

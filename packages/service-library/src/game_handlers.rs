@@ -14,8 +14,6 @@ pub async fn get_games(
     request: GetGamesRequest,
 ) -> Result<GetGamesResponse, Status> {
     let include_deleted = request.include_deleted.unwrap_or(false);
-    let with_metadata = request.with_metadata.unwrap_or(false);
-    let with_files = request.with_files.unwrap_or(false);
     let ids = request.ids;
     let platform_ids = request.platform_ids;
 
@@ -62,52 +60,7 @@ pub async fn get_games(
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    let metadata = if with_metadata && !games.is_empty() {
-        let mut builder =
-            QueryBuilder::<RetromDB>::new("select * from game_metadata where game_id in (");
-        let mut separated = builder.separated(", ");
-        for game in &games {
-            separated.push_bind(&game.id);
-        }
-        separated.push_unseparated(")");
-
-        builder
-            .build_query_as()
-            .fetch_all(&db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-    } else {
-        vec![]
-    };
-
-    let game_files = if with_files && !games.is_empty() {
-        let mut builder =
-            QueryBuilder::<RetromDB>::new("select * from game_files where game_id in (");
-        let mut separated = builder.separated(", ");
-        for game in &games {
-            separated.push_bind(&game.id);
-        }
-        separated.push_unseparated(")");
-
-        if !include_deleted {
-            builder.push(" and is_deleted = ");
-            builder.push_bind(false);
-        }
-
-        builder
-            .build_query_as()
-            .fetch_all(&db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-    } else {
-        vec![]
-    };
-
-    Ok(GetGamesResponse {
-        games,
-        metadata,
-        game_files,
-    })
+    Ok(GetGamesResponse { games })
 }
 
 pub async fn create_games(

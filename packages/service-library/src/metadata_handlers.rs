@@ -373,8 +373,10 @@ pub async fn update_library_metadata(
     );
 
     Ok(UpdateLibraryMetadataResponse {
-        platform_metadata_job_id: platform_metadata_job.id,
-        game_metadata_job_id: game_metadata_job.id,
-        extra_metadata_job_id: extra_metadata_job.id,
+        job_ids: vec![
+            platform_metadata_job.id,
+            game_metadata_job.id,
+            extra_metadata_job.id,
+        ],
     })
 }

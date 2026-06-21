@@ -1,6 +1,7 @@
 use retrom_codegen::retrom::services::library::v1::{
-    CreateLibrariesRequest, CreateLibrariesResponse, GetLibrariesRequest, GetLibrariesResponse,
-    Library, UpdateLibrariesRequest, UpdateLibrariesResponse,
+    CreateLibrariesRequest, CreateLibrariesResponse, DeleteLibraryRequest, DeleteLibraryResponse,
+    DeleteMissingEntriesRequest, DeleteMissingEntriesResponse, Game, GameFile, GetLibrariesRequest,
+    GetLibrariesResponse, Library, Platform, UpdateLibrariesRequest, UpdateLibrariesResponse,
 };
 use retrom_db::{DbPool, RetromDB};
 use sqlx::QueryBuilder;
@@ -85,4 +86,180 @@ pub async fn update_libraries(
     }
 
     Ok(UpdateLibrariesResponse { libraries_updated })
+}
+
+pub async fn delete_library(
+    db_pool: DbPool,
+    _request: DeleteLibraryRequest,
+) -> Result<DeleteLibraryResponse, Status> {
+    let mut tx = db_pool
+        .begin()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    // Delete all non-third-party platforms; cascades to game_platforms and game_files.
+    sqlx::query("delete from platforms where third_party = false")
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    // Delete orphaned games (no remaining platform associations).
+    sqlx::query("delete from games where id not in (select game_id from game_platforms)")
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    tx.commit()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    Ok(DeleteLibraryResponse {})
+}
+
+pub async fn delete_missing_entries(
+    db_pool: DbPool,
+    request: DeleteMissingEntriesRequest,
+) -> Result<DeleteMissingEntriesResponse, Status> {
+    use std::{collections::HashSet, path::PathBuf};
+
+    let mut tx = db_pool
+        .begin()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    // Find game files that no longer exist on disk.
+    let all_game_files: Vec<GameFile> =
+        sqlx::query_as("select * from game_files where is_deleted = false")
+            .fetch_all(&mut *tx)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+    let mut game_files_to_delete: Vec<GameFile> = Vec::new();
+    for game_file in all_game_files {
+        let path = PathBuf::from(&game_file.path);
+        match path.try_exists() {
+            Ok(true) => continue,
+            Ok(false) => game_files_to_delete.push(game_file),
+            Err(why) => {
+                tracing::warn!("Failed to check game file path: {}", why);
+                continue;
+            }
+        }
+    }
+
+    let all_games: Vec<Game> = sqlx::query_as("select * from games where is_deleted = false")
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    let mut games_to_delete: Vec<Game> = Vec::new();
+    for game in all_games {
+        // Count existing game files for this game excluding those being deleted.
+        let total_files: i64 = {
+            let mut b = QueryBuilder::<RetromDB>::new(
+                "select count(*) from game_files where is_deleted = false and game_id = ",
+            );
+            b.push_bind(&game.id);
+            b.build_query_scalar()
+                .fetch_one(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+        };
+
+        let being_deleted = game_files_to_delete
+            .iter()
+            .filter(|f| f.game_id == game.id)
+            .count() as i64;
+
+        if total_files - being_deleted <= 0 {
+            games_to_delete.push(game);
+        }
+    }
+
+    // Build a set of game IDs being deleted for platform orphan check.
+    let deleted_game_ids: HashSet<&String> = games_to_delete.iter().map(|g| &g.id).collect();
+
+    let all_platforms: Vec<Platform> =
+        sqlx::query_as("select * from platforms where is_deleted = false")
+            .fetch_all(&mut *tx)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+    let mut platforms_to_delete: Vec<Platform> = Vec::new();
+    for platform in all_platforms {
+        // Fetch all game IDs mapped to this platform.
+        let mapped_game_ids: Vec<String> = {
+            let mut b = QueryBuilder::<RetromDB>::new(
+                "select game_id from game_platforms where platform_id = ",
+            );
+            b.push_bind(&platform.id);
+            b.build_query_scalar()
+                .fetch_all(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+        };
+
+        // Platform is orphaned if it has no games, or every mapped game is being deleted.
+        let has_surviving_game = mapped_game_ids
+            .iter()
+            .any(|gid| !deleted_game_ids.contains(gid));
+
+        if !has_surviving_game {
+            platforms_to_delete.push(platform);
+        }
+    }
+
+    if !request.dry_run {
+        if !game_files_to_delete.is_empty() {
+            let mut builder = QueryBuilder::<RetromDB>::new("delete from game_files where id in (");
+            let mut separated = builder.separated(", ");
+            for f in &game_files_to_delete {
+                separated.push_bind(&f.id);
+            }
+            separated.push_unseparated(")");
+            builder
+                .build()
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+        }
+
+        if !games_to_delete.is_empty() {
+            let mut builder = QueryBuilder::<RetromDB>::new("delete from games where id in (");
+            let mut separated = builder.separated(", ");
+            for game in &games_to_delete {
+                separated.push_bind(&game.id);
+            }
+            separated.push_unseparated(")");
+            builder
+                .build()
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+        }
+
+        if !platforms_to_delete.is_empty() {
+            let mut builder = QueryBuilder::<RetromDB>::new("delete from platforms where id in (");
+            let mut separated = builder.separated(", ");
+            for platform in &platforms_to_delete {
+                separated.push_bind(&platform.id);
+            }
+            separated.push_unseparated(")");
+            builder
+                .build()
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+        }
+    }
+
+    tx.commit()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    Ok(DeleteMissingEntriesResponse {
+        platforms_deleted: platforms_to_delete,
+        games_deleted: games_to_delete,
+        game_files_deleted: game_files_to_delete,
+    })
 }

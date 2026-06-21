@@ -1,11 +1,12 @@
 use std::{path::PathBuf, str::FromStr};
 
 use retrom_codegen::retrom::services::library::v1::{
-    AddLibraryRootDirectoryRequest, AddLibraryRootDirectoryResponse, CreateRootDirectoriesRequest,
-    CreateRootDirectoriesResponse, CreateRootDirectoryRequest, CreateRootDirectoryResponse,
-    DeleteRootDirectoriesRequest, DeleteRootDirectoriesResponse, GetRootDirectoriesRequest,
-    GetRootDirectoriesResponse, RootDirectory, UpdateRootDirectoriesRequest,
-    UpdateRootDirectoriesResponse,
+    AddGameRootDirectoryRequest, AddGameRootDirectoryResponse, AddLibraryRootDirectoryRequest,
+    AddLibraryRootDirectoryResponse, AddPlatformRootDirectoryRequest,
+    AddPlatformRootDirectoryResponse, CreateRootDirectoriesRequest, CreateRootDirectoriesResponse,
+    CreateRootDirectoryRequest, CreateRootDirectoryResponse, DeleteRootDirectoriesRequest,
+    DeleteRootDirectoriesResponse, GetRootDirectoriesRequest, GetRootDirectoriesResponse,
+    RootDirectory, UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
 };
 use retrom_db::{DbPool, RetromDB};
 use sqlx::{Executor, QueryBuilder};
@@ -199,4 +200,58 @@ pub async fn add_library_root_directory(
     Ok(AddLibraryRootDirectoryResponse {
         root_directory: Some(root_directory),
     })
+}
+
+pub async fn add_platform_root_directory(
+    conn: impl Executor<'_, Database = RetromDB>,
+    request: AddPlatformRootDirectoryRequest,
+) -> Result<AddPlatformRootDirectoryResponse, Status> {
+    let mut builder = QueryBuilder::new(
+        "insert into platform_root_directories (platform_id, root_directory_id) values (",
+    );
+
+    let mut separated = builder.separated(", ");
+    separated.push_bind(request.platform_id);
+    separated.push_bind(request.root_directory_id);
+
+    builder.push(
+        ") on conflict do update set \
+        platform_id = excluded.platform_id, \
+        root_directory_id = excluded.root_directory_id",
+    );
+
+    builder
+        .build()
+        .execute(conn)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    Ok(AddPlatformRootDirectoryResponse {})
+}
+
+pub async fn add_game_root_directory(
+    conn: impl Executor<'_, Database = RetromDB>,
+    request: AddGameRootDirectoryRequest,
+) -> Result<AddGameRootDirectoryResponse, Status> {
+    let mut builder = QueryBuilder::new(
+        "insert into game_root_directories (game_id, root_directory_id) values (",
+    );
+
+    let mut separated = builder.separated(", ");
+    separated.push_bind(request.game_id);
+    separated.push_bind(request.root_directory_id);
+
+    builder.push(
+        ") on conflict do update set \
+        game_id = excluded.game_id, \
+        root_directory_id = excluded.root_directory_id",
+    );
+
+    builder
+        .build()
+        .execute(conn)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    Ok(AddGameRootDirectoryResponse {})
 }
