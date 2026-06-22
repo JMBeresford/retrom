@@ -2,13 +2,20 @@ syntax = "proto3";
 
 package retrom.utils;
 
+// VersionAnnouncement represents a single announcement relating to specified versions of Retrom.
 message VersionAnnouncement {
+  // The versions that this announcement applies to.
   repeated string versions = 1;
+  // The level of the announcement, e.g. "info", "warning", "error".
   string level = 2;
+  // The message of the announcement.
   string message = 3;
+  // An optional URL for more information about the announcement.
   optional string url = 4;
 }
 
+// A collection of version announcements.
 message VersionAnnouncementsPayload {
+  // The announcements to be included in the payload.
   repeated VersionAnnouncement announcements = 1;
 }

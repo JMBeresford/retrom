@@ -5,77 +5,127 @@ package retrom.services.emulators.v1;
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
 
+// SaveStrategy represents the strategy used to save game data in an emulator profile.
 enum SaveStrategy {
+  // Unspecified save strategy. This should generally be considered as SINGLE_FILE.
   SINGLE_FILE = 0;
+  // Save data is stored in a single file, such as a .sav file.
   FILE_SYSTEM_DIRECTORY = 1;
+  // Save data is stored in a disk image, such as a .iso or .bin file.
   DISK_IMAGE = 2;
 
   option deprecated = true;
 }
 
+// OperatingSystem represents the operating system on which an emulator can run.
 enum OperatingSystem {
+  // Windows operating system.
   WINDOWS = 0;
+  // macOS operating system.
   MACOS = 1;
+  // Linux operating system for x86_64 architecture.
   LINUX_x86_64 = 2;
+  // Linux operating system for WebAssembly (WASM) architecture.
   WASM = 3;
 
   option deprecated = true;
 }
 
+// Emulator represents an emulator that can be used to run games on different platforms and operating systems.
 message Emulator {
+  // The unique identifier of the emulator.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The name of the emulator, e.g. "RetroArch" or "Dolphin".
   string name = 2;
+  // The timestamp when the emulator was created.
   google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the emulator was last updated.
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Indicates whether the emulator is built-in to the system or provided by the user.
   bool built_in = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The name of the emulator in the libretro ecosystem, if applicable.
   optional string libretro_name = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
+// EmulatorPlatform represents the relationship between an emulator and a platform that it supports.
 message EmulatorPlatform {
+  // The unique identifier of the emulator.
   string emulator_id = 1;
+  // The unique identifier of the platform that the emulator supports.
   string platform_id = 2;
 }
 
+// EmulatorOperatingSystem represents the relationship between an emulator and an operating system that it supports.
 message EmulatorOperatingSystem {
+  // The unique identifier of the emulator.
   string emulator_id = 1;
+  // The unique identifier of the operating system that the emulator supports.
   string os_id = 2;
 }
 
+// EmulatorProfile represents a specific configuration of an emulator for a given platform and operating system.
 message EmulatorProfile {
+  // The unique identifier of the emulator profile.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The unique identifier of the emulator that this profile belongs to.
   string emulator_id = 2;
+  // The name of the emulator profile, e.g. "Default" or "High Performance".
   string name = 3;
+  // Custom arguments to be passed to the emulator when launching a game with this profile.
   string custom_args = 4;
+  // Indicates whether the emulator profile is built-in to the system or provided by the user.
   bool built_in = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the emulator profile was created.
   google.protobuf.Timestamp created_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the emulator profile was last updated.
   google.protobuf.Timestamp updated_at = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // Represents a file extension that is supported by an emulator profile.
 // For example, a profile for a SNES emulator might support the .sfc file extension.
 message EmulatorProfileExtension {
+  // The unique identifier of the emulator profile.
   string profile_id = 1;
-  string extention = 2;
+  // The file extension supported by the emulator profile.
+  string extension = 2;
 }
 
+// Represents a default emulator profile for a given platform and client.
 message DefaultEmulatorProfile {
+  // The unique identifier of the platform.
   string platform_id = 1;
+  // The unique identifier of the client.
   string client_id = 2;
+  // The unique identifier of the emulator profile.
   string emulator_profile_id = 3;
+  // The timestamp when the default emulator profile was created.
   google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the default emulator profile was last updated.
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
+// Represents the configuration of a local emulator installation on a client machine.
 message LocalEmulatorConfig {
+  // The unique identifier of the local emulator configuration.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The unique identifier of the emulator.
   string emulator_id = 2;
+  // The unique identifier of the client.
   string client_id = 3;
+  // The timestamp when the local emulator configuration was created.
   google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the local emulator configuration was last updated.
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The path to the emulator executable on the client machine.
   string executable_path = 6;
+  // An optional nickname for the local emulator configuration.
   optional string nickname = 7;
+  // The path to the directory where save data is stored on the client machine.
   optional string save_data_path = 8;
+  // The path to the directory where save states are stored on the client machine.
   optional string save_states_path = 9;
+  // The path to the directory where BIOS files are stored on the client machine.
   optional string bios_directory = 11;
+  // The path to the directory where extra files are stored on the client machine.
   optional string extra_files_directory = 12;
 }

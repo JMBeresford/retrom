@@ -4,52 +4,90 @@ package retrom.client.v1;
 
 import "retrom/services/clients/v1/models.proto";
 
+// InterfaceConfig defines the configuration for the Retrom client interface.
 message InterfaceConfig {
+  // GameListEntryImage specifies the type of image to be used for game list entries in the client interface.
   enum GameListEntryImage {
-    COVER = 0;
-    BACKGROUND = 1;
+    // The type of image to be used for game list entries is unspecified.
+    GAME_LIST_ENTRY_IMAGE_UNSPECIFIED = 0;
+    // The type of image to be used for game list entries is the cover image.
+    GAME_LIST_ENTRY_IMAGE_COVER = 1;
+    // The type of image to be used for game list entries is the background image.
+    GAME_LIST_ENTRY_IMAGE_BACKGROUND = 2;
   }
 
+  // GridListConfig defines the configuration for the grid list layout in the client interface.
   message GridListConfig {
+    // The number of columns to be displayed in the grid list layout.
     int32 columns = 1;
+    // The gap between entries in the grid list layout.
     int32 gap = 2;
+    // The type of image to be used for game list entries in the grid list layout.
     GameListEntryImage image_type = 3;
   }
 
+  // FullscreenConfig defines the configuration for fullscreen mode in the client interface.
   message FullscreenConfig {
+    // The configuration for the grid list layout in fullscreen mode.
     GridListConfig grid_list = 1;
+    // Whether to use windowed fullscreen mode instead of exclusive fullscreen mode.
     optional bool windowed_fullscreen_mode = 2;
   }
 
+  // Whether the client interface should start in fullscreen mode by default.
   bool fullscreen_by_default = 1;
+  // The configuration for fullscreen mode in the client interface.
   FullscreenConfig fullscreen_config = 2;
 }
 
+// RetromClientConfig defines the configuration for the Retrom client application.
 message RetromClientConfig {
+  // TelemetryConfig defines the configuration for telemetry data collection in the Retrom client application.
   message TelemetryConfig {
+    // Whether telemetry data collection is enabled in the Retrom client application.
     bool enabled = 1;
   }
 
+  // Server defines the configuration for the Retrom server that the client connects to.
   message Server {
+    // The hostname or IP address of the Retrom server.
     string hostname = 1;
+    // The port number on which the Retrom server is listening for connections.
     optional int32 port = 2;
+    // Whether this Retrom client is running in standalone mode, which means it is not
+    // connected to any remote server and is managing its own local server instance.
     optional bool standalone = 3;
+    // Whether games should be installed in standalone mode. If true, the client will
+    // continue to install games even when running in standalone mode. This is useful
+    // when a library is located on a network share and having the games local to the
+    // client is preferred.
     optional bool install_games_in_standalone = 4;
   }
 
+  // Config defines the configuration for the Retrom client application itself.
   message Config {
+    // The client information.
     retrom.services.clients.v1.Client client_info = 1;
+    // The interface configuration for the Retrom client application.
     InterfaceConfig interface = 2;
+    // The installation directory that Retrom will install games to.
     optional string installation_dir = 3;
   }
 
+  // FlowCompletions defines the completion status of various setup flows in the Retrom client application.
   message FlowCompletions {
+    // Whether the initial setup flow has been completed in the Retrom client application.
     bool setup_complete = 1;
+    // Whether the telemetry setup flow has been completed in the Retrom client application.
     bool telemetry_enabled = 2;
   }
 
+  // The configuration for the Retrom server that the client connects to.
   Server server = 1;
+  // The configuration for the Retrom client application itself.
   Config config = 2;
+  // The completion status of various setup flows in the Retrom client application.
   FlowCompletions flow_completions = 3;
+  // The configuration for telemetry data collection in the Retrom client application.
   optional TelemetryConfig telemetry = 4;
 }

@@ -1,466 +1,395 @@
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
-use futures::future::join_all;
-use retrom_codegen::retrom::{
-    self, DeleteGamesRequest, DeleteGamesResponse, Game, GameFile, GameMetadata, GetGamesRequest,
-    GetGamesResponse, StorageType, UpdateGamesRequest, UpdateGamesResponse,
+use retrom_codegen::retrom::services::library::v1::{
+    CreateGamesRequest, CreateGamesResponse, DeleteGameFilesRequest, DeleteGameFilesResponse,
+    DeleteGamesRequest, DeleteGamesResponse, Game, GameFile, GetGameFilesRequest,
+    GetGameFilesResponse, GetGamesRequest, GetGamesResponse, UpdateGameFilesRequest,
+    UpdateGameFilesResponse, UpdateGamesRequest, UpdateGamesResponse,
 };
-use retrom_codegen::retrom::{
-    DeleteGameFilesRequest, DeleteGameFilesResponse, GetGameFilesRequest, GetGameFilesResponse,
-    UpdateGameFilesRequest, UpdateGameFilesResponse,
-};
-use retrom_db::{schema, Pool};
-use retrom_service_common::media_cache::cacheable_media::CacheableMetadata;
-use std::{path::PathBuf, sync::Arc};
-use tonic::{Code, Status};
+use retrom_db::{DbPool, RetromDB};
+use sqlx::QueryBuilder;
+use std::path::PathBuf;
+use tonic::Status;
 
 pub async fn get_games(
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     request: GetGamesRequest,
 ) -> Result<GetGamesResponse, Status> {
-    let include_deleted = request.include_deleted();
+    let include_deleted = request.include_deleted.unwrap_or(false);
+    let ids = request.ids;
+    let platform_ids = request.platform_ids;
 
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
+    let mut games_builder = QueryBuilder::<RetromDB>::new("select * from games");
+    let mut has_condition = false;
 
-    let mut query = schema::games::table
-        .into_boxed()
-        .select(retrom::Game::as_select());
+    if !ids.is_empty() {
+        games_builder.push(" where id in (");
+        let mut separated = games_builder.separated(", ");
+        for id in &ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(")");
+        has_condition = true;
+    }
 
-    if !request.ids.is_empty() {
-        query = query.filter(schema::games::id.eq_any(&request.ids));
+    if !platform_ids.is_empty() {
+        let clause = if has_condition {
+            " and id in (select game_id from game_platforms where platform_id in ("
+        } else {
+            " where id in (select game_id from game_platforms where platform_id in ("
+        };
+        games_builder.push(clause);
+        let mut separated = games_builder.separated(", ");
+        for id in &platform_ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated("))");
+        has_condition = true;
     }
 
     if !include_deleted {
-        query = query.filter(schema::games::is_deleted.eq(false));
-    }
-
-    if !request.platform_ids.is_empty() {
-        query = query.filter(schema::games::platform_id.eq_any(&request.platform_ids));
-    }
-
-    let games_data: Vec<retrom::Game> = match query.load(&mut conn).await {
-        Ok(rows) => rows,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
-
-    let mut metadata_data: Vec<retrom::GameMetadata> = vec![];
-    let mut game_files_data: Vec<retrom::GameFile> = vec![];
-
-    let game_ids: Vec<i32> = games_data.iter().map(|game| game.id).collect();
-
-    if request.with_metadata() {
-        let metadata_rows = schema::game_metadata::table
-            .filter(schema::game_metadata::game_id.eq_any(&game_ids))
-            .load::<retrom::GameMetadata>(&mut conn)
-            .await;
-
-        match metadata_rows {
-            Ok(rows) => metadata_data.extend(rows),
-            Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-        };
-    }
-
-    if request.with_files() {
-        let mut query = schema::game_files::table
-            .into_boxed()
-            .filter(schema::game_files::game_id.eq_any(&game_ids));
-
-        if !include_deleted {
-            query = query.filter(schema::game_files::is_deleted.eq(false));
+        if has_condition {
+            games_builder.push(" and is_deleted = ");
+        } else {
+            games_builder.push(" where is_deleted = ");
         }
-
-        let game_files_rows = query.load::<retrom::GameFile>(&mut conn).await;
-
-        match game_files_rows {
-            Ok(rows) => game_files_data.extend(rows),
-            Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-        };
+        games_builder.push_bind(false);
     }
 
-    Ok(GetGamesResponse {
-        games: games_data,
-        metadata: metadata_data,
-        game_files: game_files_data,
-    })
+    let games: Vec<Game> = games_builder
+        .build_query_as()
+        .fetch_all(&db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    Ok(GetGamesResponse { games })
+}
+
+pub async fn create_games(
+    db_pool: DbPool,
+    request: CreateGamesRequest,
+) -> Result<CreateGamesResponse, Status> {
+    if request.games.is_empty() {
+        return Err(Status::invalid_argument(
+            "At least one game must be provided",
+        ));
+    }
+
+    let mut builder = QueryBuilder::<RetromDB>::new(
+        "insert into games (id, is_deleted, third_party, steam_app_id) values ",
+    );
+
+    builder.push_values(request.games.iter(), |mut row, game| {
+        row.push_bind(uuid::Uuid::now_v7().to_string());
+        row.push_bind(game.is_deleted);
+        row.push_bind(game.third_party);
+        row.push_bind(&game.steam_app_id);
+    });
+
+    builder.push(" returning *");
+
+    let games_created: Vec<Game> = builder
+        .build_query_as()
+        .fetch_all(&db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    Ok(CreateGamesResponse { games_created })
+}
+
+pub async fn update_games(
+    db_pool: DbPool,
+    request: UpdateGamesRequest,
+) -> Result<UpdateGamesResponse, Status> {
+    let mut tx = db_pool
+        .begin()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    let mut games_updated = Vec::with_capacity(request.games.len());
+
+    for game in request.games {
+        let mut builder = QueryBuilder::<RetromDB>::new("update games set deleted_at = ");
+        builder.push_bind(game.deleted_at);
+        builder.push(", is_deleted = ");
+        builder.push_bind(game.is_deleted);
+        builder.push(", third_party = ");
+        builder.push_bind(game.third_party);
+        builder.push(", steam_app_id = ");
+        builder.push_bind(game.steam_app_id);
+        builder.push(" where id = ");
+        builder.push_bind(game.id);
+        builder.push(" returning *");
+
+        let updated: Game = builder
+            .build_query_as()
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        games_updated.push(updated);
+    }
+
+    tx.commit()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    Ok(UpdateGamesResponse { games_updated })
 }
 
 pub async fn delete_games(
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     request: DeleteGamesRequest,
 ) -> Result<DeleteGamesResponse, Status> {
-    let delete_from_disk = request.delete_from_disk;
-    let blacklist_entries = request.blacklist_entries;
+    let ids = request.ids;
 
-    {
-        let mut conn = match db_pool.get().await {
-            Ok(conn) => conn,
-            Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-        };
-
-        let metadata: Vec<GameMetadata> = schema::game_metadata::table
-            .filter(schema::game_metadata::game_id.eq_any(&request.ids))
-            .load(&mut conn)
-            .await
-            .unwrap_or_default();
-
-        drop(conn);
-
-        join_all(metadata.iter().map(|m| m.clean_cache())).await;
+    if ids.is_empty() {
+        return Ok(DeleteGamesResponse {
+            games_deleted: vec![],
+        });
     }
 
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
+    let mut tx = db_pool
+        .begin()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
-    let games_deleted: Vec<Game> = match blacklist_entries {
-        true => {
-            diesel::update(
-                schema::game_files::table.filter(schema::game_files::game_id.eq_any(&request.ids)),
-            )
-            .set((
-                schema::game_files::is_deleted.eq(true),
-                schema::game_files::deleted_at.eq(diesel::dsl::now),
-            ))
-            .execute(&mut conn)
+    let game_files_to_delete: Vec<GameFile> = if request.delete_from_disk {
+        let mut files_for_delete_builder =
+            QueryBuilder::<RetromDB>::new("select * from game_files where game_id in (");
+        let mut separated = files_for_delete_builder.separated(", ");
+        for id in &ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(")");
+
+        files_for_delete_builder
+            .build_query_as()
+            .fetch_all(&mut *tx)
             .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-            diesel::update(schema::games::table.filter(schema::games::id.eq_any(&request.ids)))
-                .set((
-                    schema::games::is_deleted.eq(true),
-                    schema::games::deleted_at.eq(diesel::dsl::now),
-                ))
-                .get_results(&mut conn)
-                .await
-                .map_err(|why| Status::new(Code::Internal, why.to_string()))?
-        }
-        false => {
-            diesel::delete(schema::games::table.filter(schema::games::id.eq_any(&request.ids)))
-                .get_results(&mut conn)
-                .await
-                .map_err(|why| Status::new(Code::Internal, why.to_string()))?
-        }
+            .map_err(|e| Status::internal(e.to_string()))?
+    } else {
+        vec![]
     };
 
-    if delete_from_disk {
-        let delete_tasks: Vec<_> = games_deleted
-            .iter()
-            .map(|game| {
-                let path = PathBuf::from(&game.path);
-                let game_id = game.id;
+    if request.blacklist_entries {
+        let mut files_builder =
+            QueryBuilder::<RetromDB>::new("update game_files set is_deleted = ");
+        files_builder.push_bind(true);
+        files_builder.push(", deleted_at = current_timestamp where game_id in (");
+        let mut separated = files_builder.separated(", ");
+        for id in &ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(")");
 
-                async move {
-                    if path.exists() {
-                        let result = if path.is_dir() {
-                            tokio::fs::remove_dir_all(&path).await
-                        } else {
-                            tokio::fs::remove_file(&path).await
-                        };
-
-                        if let Err(why) = result {
-                            tracing::error!("Failed to delete game {} from disk: {}", game_id, why);
-                        }
-                    }
-                }
-            })
-            .collect();
-
-        futures::future::join_all(delete_tasks).await;
+        files_builder
+            .build()
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
     }
+
+    let mut builder = if request.blacklist_entries {
+        let mut builder = QueryBuilder::<RetromDB>::new("update games set is_deleted = ");
+        builder.push_bind(true);
+        builder.push(", deleted_at = current_timestamp where id in (");
+        builder
+    } else {
+        QueryBuilder::<RetromDB>::new("delete from games where id in (")
+    };
+
+    let mut separated = builder.separated(", ");
+    for id in &ids {
+        separated.push_bind(id);
+    }
+    separated.push_unseparated(") returning *");
+
+    let games_deleted: Vec<Game> = builder
+        .build_query_as()
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    if request.delete_from_disk {
+        for game_file in &game_files_to_delete {
+            let file_path = PathBuf::from(&game_file.path);
+            if !file_path.exists() {
+                continue;
+            }
+
+            let result = if file_path.is_dir() {
+                tokio::fs::remove_dir_all(&file_path).await
+            } else {
+                tokio::fs::remove_file(&file_path).await
+            };
+
+            if let Err(why) = result {
+                return Err(Status::internal(format!(
+                    "Failed to remove game file {} from disk: {}",
+                    game_file.id, why
+                )));
+            }
+        }
+    }
+
+    tx.commit()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(DeleteGamesResponse { games_deleted })
 }
 
-pub async fn update_games(
-    db_pool: Arc<Pool>,
-    request: UpdateGamesRequest,
-) -> Result<UpdateGamesResponse, Status> {
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
-
-    let to_update = request.games;
-    let mut games_updated = Vec::new();
-
-    for mut game in to_update {
-        let id = game.id;
-
-        if let Some(ref updated_path) = game.path {
-            let current_game: Result<Game, _> =
-                schema::games::table.find(id).first(&mut conn).await;
-
-            if let Ok(current_game) = current_game {
-                let old_game_path = PathBuf::from(&current_game.path);
-                let mut new_game_path = PathBuf::from(updated_path);
-                let sanitized_fname = new_game_path
-                    .file_name()
-                    .and_then(|os_str| os_str.to_str())
-                    .map(sanitize_filename::sanitize);
-
-                if let Some(sanitized_fname) = sanitized_fname {
-                    new_game_path.set_file_name(&sanitized_fname);
-                    game.path = Some(new_game_path.to_str().unwrap().to_string());
-                }
-
-                let is_rename = old_game_path.file_name() != new_game_path.file_name();
-                let can_rename = old_game_path.exists() && !new_game_path.exists();
-                let paths_safe = old_game_path.parent() == new_game_path.parent();
-
-                if is_rename && can_rename && paths_safe {
-                    if let Err(why) = tokio::fs::rename(&old_game_path, &new_game_path).await {
-                        tracing::error!("Failed to rename file: {}", why);
-
-                        continue;
-                    }
-
-                    let game_files = schema::game_files::table
-                        .filter(schema::game_files::game_id.eq(id))
-                        .load::<GameFile>(&mut conn)
-                        .await
-                        .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-                    let storage_type = StorageType::try_from(current_game.storage_type).ok();
-
-                    for game_file in game_files {
-                        let old_file_path = PathBuf::from(game_file.path);
-                        let new_file_path = match storage_type {
-                            Some(StorageType::SingleFileGame) => new_game_path.clone(),
-                            Some(StorageType::MultiFileGame) => new_game_path
-                                .join(old_file_path.strip_prefix(&old_game_path).unwrap()),
-                            _ => {
-                                tracing::error!("Invalid Storage type found for game {}", game.id);
-
-                                break;
-                            }
-                        };
-
-                        if !new_file_path.exists() {
-                            tracing::error!(
-                                "File does not exist, did game rename fail? - {:?}",
-                                new_file_path
-                            );
-                        }
-
-                        let path = new_file_path
-                            .canonicalize()
-                            .ok()
-                            .and_then(|p| p.to_str().map(|p| p.to_string()))
-                            .unwrap();
-
-                        diesel::update(
-                            schema::game_files::table
-                                .filter(schema::game_files::id.eq(game_file.id)),
-                        )
-                        .set(schema::game_files::path.eq(path))
-                        .execute(&mut conn)
-                        .await
-                        .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-                    }
-                } else {
-                    tracing::info!("Skipping game dir rename for game {}", game.id);
-
-                    continue;
-                }
-            }
-        }
-
-        let updated_game = diesel::update(schema::games::table.filter(schema::games::id.eq(id)))
-            .set(game)
-            .get_result(&mut conn)
-            .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-        games_updated.push(updated_game);
-    }
-
-    Ok(retrom::UpdateGamesResponse { games_updated })
-}
-
 pub async fn get_game_files(
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     request: GetGameFilesRequest,
 ) -> Result<GetGameFilesResponse, Status> {
-    let include_deleted = request.include_deleted();
+    let include_deleted = request.include_deleted.unwrap_or(false);
+    let ids = request.ids;
+    let game_ids = request.game_ids;
 
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
+    let mut builder = QueryBuilder::<RetromDB>::new("select * from game_files");
+    let mut has_condition = false;
 
-    let mut query = schema::game_files::table
-        .into_boxed()
-        .select(retrom::GameFile::as_select());
-
-    if !request.ids.is_empty() {
-        query = query.filter(schema::game_files::id.eq_any(&request.ids));
+    if !ids.is_empty() {
+        builder.push(" where id in (");
+        let mut separated = builder.separated(", ");
+        for id in &ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(")");
+        has_condition = true;
     }
 
-    if !request.game_ids.is_empty() {
-        query = query.filter(schema::game_files::game_id.eq_any(&request.game_ids));
+    if !game_ids.is_empty() {
+        if has_condition {
+            builder.push(" and game_id in (");
+        } else {
+            builder.push(" where game_id in (");
+        }
+        let mut separated = builder.separated(", ");
+        for id in &game_ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(")");
+        has_condition = true;
     }
 
     if !include_deleted {
-        query = query.filter(schema::game_files::is_deleted.eq(false));
+        if has_condition {
+            builder.push(" and is_deleted = ");
+        } else {
+            builder.push(" where is_deleted = ");
+        }
+        builder.push_bind(false);
     }
 
-    let game_files_data: Vec<retrom::GameFile> = match query.load(&mut conn).await {
-        Ok(rows) => rows,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
-
-    Ok(retrom::GetGameFilesResponse {
-        game_files: game_files_data,
-    })
-}
-
-pub async fn delete_game_files(
-    db_pool: Arc<Pool>,
-    request: DeleteGameFilesRequest,
-) -> Result<DeleteGameFilesResponse, Status> {
-    let delete_from_disk = request.delete_from_disk;
-    let blacklist_entries = request.blacklist_entries;
-
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
-
-    let game_files_deleted: Vec<GameFile> = match blacklist_entries {
-        true => diesel::update(schema::game_files::table)
-            .filter(schema::game_files::id.eq_any(&request.ids))
-            .set((
-                schema::game_files::is_deleted.eq(true),
-                schema::game_files::deleted_at.eq(diesel::dsl::now),
-            ))
-            .get_results(&mut conn)
-            .await
-            .map_err(|why| Status::new(Code::Internal, why.to_string()))?,
-        false => diesel::delete(
-            schema::game_files::table.filter(schema::game_files::id.eq_any(&request.ids)),
-        )
-        .get_results(&mut conn)
+    let game_files: Vec<GameFile> = builder
+        .build_query_as()
+        .fetch_all(&db_pool)
         .await
-        .map_err(|why| Status::new(Code::Internal, why.to_string()))?,
-    };
+        .map_err(|e| Status::internal(e.to_string()))?;
 
-    if delete_from_disk {
-        let delete_tasks: Vec<_> = game_files_deleted
-            .iter()
-            .map(|game_file| {
-                let path = PathBuf::from(&game_file.path);
-                let file_id = game_file.id;
-
-                async move {
-                    if path.exists() {
-                        let result = if path.is_dir() {
-                            tokio::fs::remove_dir_all(&path).await
-                        } else {
-                            tokio::fs::remove_file(&path).await
-                        };
-
-                        if let Err(why) = result {
-                            let error_msg = if path.is_dir() {
-                                format!(
-                                    "Failed to delete game sub-directory {} from disk: {}",
-                                    file_id, why
-                                )
-                            } else {
-                                format!("Failed to delete game file {} from disk: {}", file_id, why)
-                            };
-                            tracing::error!("{}", error_msg);
-                        }
-                    }
-                }
-            })
-            .collect();
-
-        futures::future::join_all(delete_tasks).await;
-    }
-
-    Ok(retrom::DeleteGameFilesResponse { game_files_deleted })
+    Ok(GetGameFilesResponse { game_files })
 }
 
 pub async fn update_game_files(
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     request: UpdateGameFilesRequest,
 ) -> Result<UpdateGameFilesResponse, Status> {
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => return Err(Status::new(Code::Internal, why.to_string())),
-    };
+    let mut tx = db_pool
+        .begin()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
-    let to_update = request.game_files;
-    let mut game_files_updated = Vec::new();
+    let mut game_files_updated = Vec::with_capacity(request.game_files.len());
 
-    for mut game_file in to_update {
-        let id = game_file.id;
+    for game_file in request.game_files {
+        let mut builder = QueryBuilder::<RetromDB>::new("update game_files set byte_size = ");
+        builder.push_bind(game_file.byte_size);
+        builder.push(", path = ");
+        builder.push_bind(game_file.path);
+        builder.push(", game_id = ");
+        builder.push_bind(game_file.game_id);
+        builder.push(", platform_id = ");
+        builder.push_bind(game_file.platform_id);
+        builder.push(", deleted_at = ");
+        builder.push_bind(game_file.deleted_at);
+        builder.push(", is_deleted = ");
+        builder.push_bind(game_file.is_deleted);
+        builder.push(" where id = ");
+        builder.push_bind(game_file.id);
+        builder.push(" returning *");
 
-        if let Some(ref updated_path) = game_file.path {
-            let current_file: Result<GameFile, _> =
-                schema::game_files::table.find(id).first(&mut conn).await;
-
-            let mut new_file_path = PathBuf::from(updated_path);
-            let sanitized_fname = new_file_path
-                .file_name()
-                .and_then(|os_str| os_str.to_str())
-                .map(sanitize_filename::sanitize);
-
-            if let Some(sanitized_fname) = sanitized_fname {
-                new_file_path.set_file_name(&sanitized_fname);
-                game_file.path = Some(new_file_path.to_str().unwrap().to_string());
-            }
-
-            if let Ok(current_file) = current_file {
-                let old_path = PathBuf::from(&current_file.path);
-
-                let is_rename = old_path.file_name() != new_file_path.file_name();
-                let can_rename = old_path.exists() && !new_file_path.exists();
-                let paths_safe = old_path.parent() == new_file_path.parent();
-
-                if is_rename && can_rename && paths_safe {
-                    if let Err(why) = tokio::fs::rename(&old_path, &new_file_path).await {
-                        tracing::error!("Failed to rename file: {}", why);
-
-                        continue;
-                    }
-                } else {
-                    tracing::error!("Failed to rename file: {:?}: path error", game_file.id);
-
-                    continue;
-                }
-            }
-        }
-
-        let updated_game_file: GameFile =
-            diesel::update(schema::game_files::table.filter(schema::game_files::id.eq(id)))
-                .set(game_file)
-                .get_result(&mut conn)
-                .await
-                .map_err(|why| Status::new(Code::Internal, why.to_string()))?;
-
-        let game_id = updated_game_file.game_id;
-
-        let game: Game = schema::games::table
-            .find(&game_id)
-            .first(&mut conn)
+        let updated: GameFile = builder
+            .build_query_as()
+            .fetch_one(&mut *tx)
             .await
-            .expect("Could not find game entry for game file");
+            .map_err(|e| Status::internal(e.to_string()))?;
 
-        if let Ok(StorageType::SingleFileGame) = StorageType::try_from(game.storage_type) {
-            diesel::update(&game)
-                .set(schema::games::path.eq(&updated_game_file.path))
-                .execute(&mut conn)
-                .await
-                .expect("Could not update game path");
-        }
-
-        game_files_updated.push(updated_game_file);
+        game_files_updated.push(updated);
     }
 
-    Ok(retrom::UpdateGameFilesResponse { game_files_updated })
+    tx.commit()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    Ok(UpdateGameFilesResponse { game_files_updated })
+}
+
+pub async fn delete_game_files(
+    db_pool: DbPool,
+    request: DeleteGameFilesRequest,
+) -> Result<DeleteGameFilesResponse, Status> {
+    let ids = request.ids;
+
+    if ids.is_empty() {
+        return Ok(DeleteGameFilesResponse {
+            game_files_deleted: vec![],
+        });
+    }
+
+    let mut builder = if request.blacklist_entries {
+        let mut builder = QueryBuilder::<RetromDB>::new("update game_files set is_deleted = ");
+        builder.push_bind(true);
+        builder.push(", deleted_at = current_timestamp where id in (");
+        builder
+    } else {
+        QueryBuilder::<RetromDB>::new("delete from game_files where id in (")
+    };
+
+    let mut separated = builder.separated(", ");
+    for id in &ids {
+        separated.push_bind(id);
+    }
+    separated.push_unseparated(") returning *");
+
+    let game_files_deleted: Vec<GameFile> = builder
+        .build_query_as()
+        .fetch_all(&db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    if request.delete_from_disk {
+        for game_file in &game_files_deleted {
+            let file_path = PathBuf::from(&game_file.path);
+            if !file_path.exists() {
+                continue;
+            }
+
+            let result = if file_path.is_dir() {
+                tokio::fs::remove_dir_all(&file_path).await
+            } else {
+                tokio::fs::remove_file(&file_path).await
+            };
+
+            if let Err(why) = result {
+                tracing::error!(
+                    "Failed to remove game file {} from disk: {}",
+                    game_file.id,
+                    why
+                );
+            }
+        }
+    }
+
+    Ok(DeleteGameFilesResponse { game_files_deleted })
 }

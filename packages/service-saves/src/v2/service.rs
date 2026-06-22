@@ -16,7 +16,7 @@ use retrom_codegen::retrom::{
     },
 };
 use retrom_db::DbPool;
-use retrom_service_config::retrom_dirs::RetromDirs;
+use retrom_service_common::retrom_dirs::RetromDirs;
 use std::{path::PathBuf, time::SystemTime};
 use tonic::{Request, Response, Status};
 use tracing::instrument;

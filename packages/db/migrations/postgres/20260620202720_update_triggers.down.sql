@@ -1,0 +1,26 @@
+drop trigger if exists set_metadata_providers_updated_at on metadata_providers;
+drop trigger if exists set_libraries_updated_at on libraries;
+drop trigger if exists set_root_directories_updated_at on root_directories;
+drop trigger if exists set_platforms_updated_at on platforms;
+drop trigger if exists set_games_updated_at on games;
+drop trigger if exists set_game_files_updated_at on game_files;
+drop trigger if exists set_default_game_files_updated_at on default_game_files;
+drop trigger if exists set_platform_metadata_updated_at on platform_metadata;
+drop trigger if exists set_game_metadata_updated_at on game_metadata;
+drop trigger if exists set_similar_games_updated_at on similar_games;
+drop trigger if exists set_tag_domains_updated_at on tag_domains;
+drop trigger if exists set_tags_updated_at on tags;
+drop trigger if exists set_clients_updated_at on clients;
+drop trigger if exists set_emulators_updated_at on emulators;
+drop trigger if exists set_emulator_profiles_updated_at on emulator_profiles;
+drop trigger if exists set_default_emulator_profiles_updated_at on default_emulator_profiles;
+drop trigger if exists set_local_emulator_configs_updated_at on local_emulator_configs;
+drop trigger if exists set_library_root_directories_updated_at on library_root_directories;
+drop trigger if exists set_platform_root_directories_updated_at on platform_root_directories;
+drop trigger if exists set_game_root_directories_updated_at on game_root_directories;
+drop trigger if exists set_platform_libraries_updated_at on platform_libraries;
+drop trigger if exists set_game_platforms_updated_at on game_platforms;
+drop trigger if exists set_platform_tags_updated_at on platform_tags;
+drop trigger if exists set_game_tags_updated_at on game_tags;
+
+drop function if exists set_updated_at_timestamp();

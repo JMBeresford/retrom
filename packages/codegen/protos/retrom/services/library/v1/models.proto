@@ -8,8 +8,9 @@ import "retrom/services/config/v1/models.proto";
 
 // Library is a first-class entity representing a game library.
 message Library {
-  // OUTPUT_ONLY — set by the server; omit on create/update.
-  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // OUTPUT_ONLY — set by the server on create; include for update targets.
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Human-readable name for this library.
   string name = 2;
 
   // structure_definition is a parameterized path template that describes how the
@@ -23,48 +24,79 @@ message Library {
   //
   // Arbitrary tokens (e.g. {region}) are also supported and will eventually be used
   // to populate tag values for library items during library scans.
+  // Path template describing how filesystem paths map to library entities.
   string structure_definition = 3;
+  // Timestamp when the library row was created.
   google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when the library row was last updated.
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // RootDirectory is a filesystem path that can be assigned to libraries, platforms,
 // or games via mapping tables, enabling flexible directory sharing across entities.
 message RootDirectory {
-  // OUTPUT_ONLY — set by the server; omit on create/update.
-  int32 id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // OUTPUT_ONLY — set by the server on create; include for update targets.
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Absolute path for this root directory.
   string path = 2;
+  // Timestamp when the root directory row was created.
   google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when the root directory row was last updated.
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
+// Platform is a console/system that games can target.
 message Platform {
-  string id = 1;
-  google.protobuf.Timestamp created_at = 2;
-  google.protobuf.Timestamp updated_at = 3;
+  // OUTPUT_ONLY — set by the server on create; include for update targets.
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when the platform row was created.
+  google.protobuf.Timestamp created_at = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when the platform row was last updated.
+  google.protobuf.Timestamp updated_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when this platform was soft-deleted.
   google.protobuf.Timestamp deleted_at = 4;
+  // Whether this platform is soft-deleted.
   bool is_deleted = 5;
-  bool third_party = 6;
+  // Whether this platform originated from a third-party source.
+  bool third_party = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
+// Game is a title tracked in the library.
 message Game {
-  string id = 1;
-  google.protobuf.Timestamp created_at = 2;
-  google.protobuf.Timestamp updated_at = 3;
+  // OUTPUT_ONLY — set by the server on create; include for update targets.
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when the game row was created.
+  google.protobuf.Timestamp created_at = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when the game row was last updated.
+  google.protobuf.Timestamp updated_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when this game was soft-deleted.
   google.protobuf.Timestamp deleted_at = 4;
+  // Whether this game is soft-deleted.
   bool is_deleted = 5;
-  bool third_party = 6;
+  // Whether this game originated from a third-party source.
+  bool third_party = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Steam AppID associated with this game when available.
   optional string steam_app_id = 7;
 }
 
+// GameFile is a filesystem entry associated with a game and platform.
 message GameFile {
-  string id = 1;
-  int64 byte_size = 2;
-  string path = 3;
+  // OUTPUT_ONLY — set by the server on create; include for update targets.
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Size in bytes of the file on disk.
+  int64 byte_size = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Absolute path to the file or directory on disk.
+  string path = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // ID of the game this file belongs to.
   string game_id = 4;
+  // ID of the platform this file belongs to.
   string platform_id = 5;
-  google.protobuf.Timestamp created_at = 6;
-  google.protobuf.Timestamp updated_at = 7;
+  // Timestamp when the game file row was created.
+  google.protobuf.Timestamp created_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when the game file row was last updated.
+  google.protobuf.Timestamp updated_at = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when this game file was soft-deleted.
   optional google.protobuf.Timestamp deleted_at = 8;
+  // Whether this game file is soft-deleted.
   bool is_deleted = 9;
 }

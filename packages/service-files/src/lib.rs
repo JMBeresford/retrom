@@ -5,7 +5,7 @@ use retrom_codegen::retrom::{
         GetFilesystemNodeResponse, GetStatRequest, GetStatResponse,
     },
 };
-use retrom_service_config::retrom_dirs::RetromDirs;
+use retrom_service_common::retrom_dirs::RetromDirs;
 use std::path::PathBuf;
 use walkdir::WalkDir;
 

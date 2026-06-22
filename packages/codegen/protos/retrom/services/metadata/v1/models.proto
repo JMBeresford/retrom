@@ -5,62 +5,94 @@ package retrom.services.metadata.v1;
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
 
+// GameMetadata represents the metadata for a game, sourced from a specific metadata provider (e.g. IGDB, Steam).
 message GameMetadata {
+  // The unique ID of the game metadata record.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The ID of the game that this metadata is associated with.
   string game_id = 2;
   // The ID of the metadata provider that this metadata was sourced from (e.g. IGDB, Steam).
   string provider_id = 3;
   // The ID of the game in the provider's database (e.g. IGDB game ID, Steam app ID).
   string provider_game_id = 4;
+  // Timestamp for when the game metadata record was created.
   google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp for when the game metadata record was last updated.
   google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The display name of the game.
   optional string name = 7;
+  // A description of the game.
   optional string description = 8;
+  // A URL to the game's cover image.
   optional string cover_url = 9;
+  // A URL to the game's background image.
   optional string background_url = 10;
+  // A URL to the game's icon image.
   optional string icon_url = 11;
+  // A URL to the game's logo image.
   optional string logo_url = 12;
+  // The release date of the game.
   google.protobuf.Timestamp release_date = 13;
+  // The last time the game was played.
   google.protobuf.Timestamp last_played = 14;
+  // The total number of minutes played for the game.
   optional int32 minutes_played = 15;
 }
 
+// PlatformMetadata represents the metadata for a platform, sourced from a specific metadata provider (e.g. IGDB, Steam).
 message PlatformMetadata {
+  // The unique ID of the platform metadata record.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The ID of the platform that this metadata is associated with.
   string platform_id = 2;
   // The ID of the metadata provider that this metadata was sourced from (e.g. IGDB, Steam).
   string provider_id = 3;
   // The ID of the platform in the provider's database (e.g. IGDB platform ID).
   string provider_platform_id = 4;
+  // Timestamp for when the platform metadata record was created.
   google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp for when the platform metadata record was last updated.
   google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The display name of the platform.
   optional string name = 7;
+  // A description of the platform.
   optional string description = 8;
+  // A URL to the platform's background image.
   optional string background_url = 9;
+  // A URL to the platform's icon image.
   optional string icon_url = 10;
+  // A URL to the platform's logo image.
   optional string logo_url = 11;
 }
 
+// SimilarGame represents a relationship between two games that are similar to each other
 message SimilarGame {
+  // The ID of the first game in the similar game relationship.
   string game_id = 1;
+  // The ID of the second game in the similar game relationship.
   string similar_game_id = 2;
+  // Timestamp for when the similar game relationship was created.
   optional google.protobuf.Timestamp created_at = 3;
+  // Timestamp for when the similar game relationship was last updated.
   optional google.protobuf.Timestamp updated_at = 4;
 }
 
 // MetadataProvider represents a registered metadata source (e.g. IGDB, Steam).
 // Well-known providers are seeded at startup.
 message MetadataProvider {
+  // The unique ID of the metadata provider.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // The name of the provider (e.g. "IGDB", "Steam").
+  // The display name of the provider (e.g. "IGDB", "Steam").
   string name = 2;
+  // Timestamp for when the metadata provider record was created.
   google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp for when the metadata provider record was last updated.
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // GameMetadataVideo is a single video URL associated with a game_metadata record.
 message GameMetadataVideo {
-  // References game_metadata.id.
+  // The ID of the game metadata record that this video is associated with.
   string game_metadata_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // The URL of the video (e.g. YouTube, Twitch).
   string url = 2;
@@ -68,7 +100,7 @@ message GameMetadataVideo {
 
 // GameMetadataScreenshot is a single screenshot URL associated with a game_metadata record.
 message GameMetadataScreenshot {
-  // References game_metadata.id.
+  // The ID of the game metadata record that this screenshot is associated with.
   string game_metadata_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // The URL of the screenshot.
   string url = 2;
@@ -76,7 +108,7 @@ message GameMetadataScreenshot {
 
 // GameMetadataArtwork is a single artwork URL associated with a game_metadata record.
 message GameMetadataArtwork {
-  // References game_metadata.id.
+  // The ID of the game metadata record that this artwork is associated with.
   string game_metadata_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // The URL of the artwork.
   string url = 2;
@@ -84,7 +116,7 @@ message GameMetadataArtwork {
 
 // GameMetadataLink is a single link URL associated with a game_metadata record (e.g. official website, store page).
 message GameMetadataLink {
-  // References game_metadata.id.
+  // The ID of the game metadata record that this link is associated with.
   string game_metadata_id = 1;
   // The URL of the link.
   string url = 2;

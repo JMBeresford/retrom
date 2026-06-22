@@ -2,83 +2,89 @@ syntax = "proto3";
 
 package retrom.providers.igdb.v1;
 
+// IgdbSearch represents the search query for IGDB.
 message IgdbSearch {
+  // The search query string.
   string value = 1;
 }
 
+// IgdbPagination represents the pagination parameters for IGDB queries.
 message IgdbPagination {
+  // The maximum number of results to return. If not specified, a default value will be used.
   optional int32 limit = 1;
+  // The number of results to skip before starting to return results. If not specified, a default value will be used.
   optional int32 offset = 2;
 }
 
+// IgdbFields represents the fields to include or exclude in IGDB queries.
 message IgdbFilters {
+  // FilterOperator represents the operator to use for filtering results in IGDB queries.
   enum FilterOperator {
-    EQUAL = 0;
-    NOT_EQUAL = 1;
-    GREATER_THAN = 2;
-    GREATER_THAN_OR_EQUAL = 3;
-    LESS_THAN = 4;
-    LESS_THAN_OR_EQUAL = 5;
-    PREFIX_MATCH = 6;
-    SUFFIX_MATCH = 7;
-    INFIX_MATCH = 8;
-    ANY = 9;
-    ALL = 10;
-    NONE = 11;
-    NOT_ALL = 12;
-    EXACT = 13;
+    // Unspecified operator.
+    FILTER_OPERATOR_UNSPECIFIED = 0;
+    // The field value must be equal to the specified value.
+    FILTER_OPERATOR_EQUAL = 1;
+    // The field value must not be equal to the specified value.
+    FILTER_OPERATOR_NOT_EQUAL = 2;
+    // The field value must be greater than the specified value.
+    FILTER_OPERATOR_GREATER_THAN = 3;
+    // The field value must be greater than or equal to the specified value.
+    FILTER_OPERATOR_GREATER_THAN_OR_EQUAL = 4;
+    // The field value must be less than the specified value.
+    FILTER_OPERATOR_LESS_THAN = 5;
+    // The field value must be less than or equal to the specified value.
+    FILTER_OPERATOR_LESS_THAN_OR_EQUAL = 6;
+    // The field value must start with the specified value.
+    FILTER_OPERATOR_PREFIX_MATCH = 7;
+    // The field value must end with the specified value.
+    FILTER_OPERATOR_SUFFIX_MATCH = 8;
+    // The field value must contain the specified value.
+    FILTER_OPERATOR_INFIX_MATCH = 9;
+    // The field value must match any of the specified values.
+    FILTER_OPERATOR_ANY = 10;
+    // The field value must match all of the specified values.
+    FILTER_OPERATOR_ALL = 11;
+    // The field value must not match any of the specified values.
+    FILTER_OPERATOR_NONE = 12;
+    // The field value must not match all of the specified values.
+    FILTER_OPERATOR_NOT_ALL = 13;
+    // The field value must match the specified value exactly.
+    FILTER_OPERATOR_EXACT = 14;
   }
 
+  // FilterValue represents a single filter operation for a field in IGDB queries.
   message FilterValue {
+    // The value to filter by.
     string value = 1;
+    // The operator to use for filtering results. If not specified, a default operator will be used.
     optional FilterOperator operator = 2;
   }
 
-  // map of field name to filter operation
+  // The filters to apply to the IGDB query, represented as a map where the key is the field name and
+  // the value is the filter operation to apply to that field.
   map<string, FilterValue> filters = 1;
 }
 
+// IgdbFields represents the fields to include or exclude in IGDB queries.
 message IgdbFields {
+  // IncludeFields represents the fields to include in the IGDB query results.
   message IncludeFields {
+    // The list of field names to include in the IGDB query results.
     repeated string value = 1;
   }
 
+  // ExcludeFields represents the fields to exclude from the IGDB query results.
   message ExcludeFields {
+    // The list of field names to exclude from the IGDB query results.
     repeated string value = 1;
   }
 
+  // The selector for including or excluding fields in the IGDB query results.
+  // Only one of the options can be set at a time.
   oneof selector {
+    // The fields to include in the IGDB query results.
     IncludeFields include = 1;
+    // The fields to exclude from the IGDB query results.
     ExcludeFields exclude = 2;
   }
-}
-
-message IgdbGameSearchQuery {
-  message Fields {
-    optional uint64 id = 1;
-    optional string title = 2;
-    // IGDB id of the platform this game is for
-    optional uint64 platform = 3;
-  }
-
-  // the retrom game id we are searching for
-  int32 game_id = 1;
-
-  IgdbSearch search = 2;
-  optional Fields fields = 3;
-  optional IgdbPagination pagination = 4;
-}
-
-message IgdbPlatformSearchQuery {
-  message Fields {
-    optional uint64 id = 1;
-    optional string name = 2;
-  }
-
-  // the retrom platform id we are searching for
-  int32 platform_id = 1;
-
-  IgdbSearch search = 2;
-  optional Fields fields = 3;
-  optional IgdbPagination pagination = 4;
 }

@@ -1,0 +1,16 @@
+// Tag views represent useful aggregations of tag data for various use cases in which the required data
+// is fragmented across multiple tables in the database.
+
+syntax = "proto3";
+
+package retrom.services.tags.v1;
+
+import "retrom/services/tags/v1/models.proto";
+
+// TagView represents a comprehensive view of a tag, including the tag's domain and the tag itself.
+message TagView {
+  // The tag domain that this tag belongs to.
+  TagDomain domain = 1;
+  // The tag value.
+  Tag tag = 2;
+}

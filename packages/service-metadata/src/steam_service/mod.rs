@@ -1,18 +1,16 @@
-use retrom_codegen::{
-    retrom::services::metadata::v1::{
-        steam_service_server::SteamService, SyncSteamMetadataRequest, SyncSteamMetadataResponse,
-    },
-    timestamp::Timestamp,
+use retrom_codegen::retrom::services::metadata::v1::{
+    steam_service_server::SteamService, GetSteamGameMetadataRequest, GetSteamGameMetadataResponse,
 };
-use retrom_db::{DbPool, RetromDB};
-use retrom_service_common::metadata_providers::steam::provider::{
-    SteamWebApiProvider, STEAM_PROVIDER_ID,
+use retrom_db::DbPool;
+use retrom_service_common::metadata_providers::{
+    steam::{games::SteamGameMetadata, provider::SteamWebApiProvider},
+    ToGameMetadata,
 };
+use sqlx::QueryBuilder;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
-use tracing::Level;
 
-pub mod router;
+pub(crate) mod router;
 
 #[derive(Clone)]
 pub struct SteamServiceHandlers {
@@ -20,43 +18,30 @@ pub struct SteamServiceHandlers {
     pub steam_provider: Arc<SteamWebApiProvider>,
 }
 
-#[derive(sqlx::FromRow)]
-struct SteamGameRow {
-    id: String,
-    steam_app_id: Option<String>,
-}
-
 #[tonic::async_trait]
 impl SteamService for SteamServiceHandlers {
-    #[tracing::instrument(level = Level::DEBUG, skip_all)]
-    async fn sync_steam_metadata(
+    #[tracing::instrument(skip(self))]
+    async fn get_steam_game_metadata(
         &self,
-        request: Request<SyncSteamMetadataRequest>,
-    ) -> Result<Response<SyncSteamMetadataResponse>, Status> {
-        let selectors = request.into_inner().selectors;
-        let game_ids = selectors
-            .iter()
-            .map(|s| s.game_id.clone())
-            .collect::<Vec<_>>();
+        request: Request<GetSteamGameMetadataRequest>,
+    ) -> Result<Response<GetSteamGameMetadataResponse>, Status> {
+        let request = request.into_inner();
+        let game_id = request.game_id;
 
-        if game_ids.is_empty() {
-            return Ok(Response::new(SyncSteamMetadataResponse {}));
-        }
+        let steam_app_id: Option<String> =
+            QueryBuilder::new("select steam_app_id from games where id = ")
+                .push_bind(&game_id)
+                .build_query_scalar()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
 
-        let mut builder = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-            "select id, steam_app_id from games where steam_app_id is not null and id in (",
-        );
-        let mut separated = builder.separated(", ");
-        for id in &game_ids {
-            separated.push_bind(id);
-        }
-        separated.push_unseparated(")");
-
-        let games: Vec<SteamGameRow> = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+        let steam_app_id = steam_app_id.ok_or_else(|| {
+            Status::not_found(format!(
+                "Game with id {} not found or does not have a Steam app ID",
+                game_id
+            ))
+        })?;
 
         let steam_games = self
             .steam_provider
@@ -69,67 +54,33 @@ impl SteamService for SteamServiceHandlers {
             .response
             .games;
 
-        let steam_games_map: std::collections::HashMap<u32, _> =
-            steam_games.iter().map(|g| (g.appid, g)).collect();
+        let steam_game = steam_games
+            .into_iter()
+            .find(|g| g.appid.to_string() == steam_app_id)
+            .ok_or_else(|| Status::not_found("Steam game not found"))?;
 
-        let mut tx = self
-            .db_pool
-            .begin()
+        let app_details = self
+            .steam_provider
+            .get_app_details(steam_game.appid)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(|why| {
+                tracing::error!(
+                    "Failed to fetch Steam app details for app {}: {:?}",
+                    steam_game.appid,
+                    why
+                );
+                Status::internal(why.to_string())
+            })?;
 
-        for game in games {
-            let Some(app_id) = game
-                .steam_app_id
-                .as_deref()
-                .and_then(|app_id| app_id.parse::<u32>().ok())
-            else {
-                continue;
-            };
+        let steam_game_metadata = SteamGameMetadata {
+            game: steam_game,
+            details: app_details,
+        };
 
-            let Some(steam_game) = steam_games_map.get(&app_id) else {
-                continue;
-            };
+        let metadata_view = steam_game_metadata.to_game_metadata(&game_id);
 
-            let last_played = if steam_game.rtime_last_played > 0 {
-                Some(Timestamp {
-                    seconds: steam_game.rtime_last_played,
-                    nanos: 0,
-                })
-            } else {
-                None
-            };
-
-            let minutes_played = if steam_game.playtime_forever > 0 {
-                Some(steam_game.playtime_forever)
-            } else {
-                None
-            };
-
-            let mut builder =
-                sqlx::QueryBuilder::<RetromDB>::new("update game_metadata set last_played = ");
-            builder
-                .push_bind(last_played)
-                .push(", minutes_played = ")
-                .push_bind(minutes_played)
-                .push("where game_id = ")
-                .push_bind(game.id)
-                .push(" and provider_game_id = ")
-                .push_bind(app_id.to_string())
-                .push(" and provider_id = ")
-                .push_bind(STEAM_PROVIDER_ID.to_string());
-
-            builder
-                .build()
-                .execute(&mut *tx)
-                .await
-                .map_err(|why| Status::internal(why.to_string()))?;
-        }
-
-        tx.commit()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(SyncSteamMetadataResponse {}))
+        Ok(Response::new(GetSteamGameMetadataResponse {
+            metadata: Some(metadata_view),
+        }))
     }
 }

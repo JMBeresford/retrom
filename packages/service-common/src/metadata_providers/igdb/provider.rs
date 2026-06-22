@@ -1,4 +1,4 @@
-use crate::metadata_providers::{MetadataProvider, RetryAttempts};
+use crate::{config::ServerConfigManager, metadata_providers::RetryAttempts};
 use prost::Message;
 use retrom_codegen::{
     igdb,
@@ -7,10 +7,9 @@ use retrom_codegen::{
             igdb_fields::Selector,
             igdb_filters::{FilterOperator, FilterValue},
         },
-        services::metadata::v1::{get_igdb_search_request::IgdbSearchType, GetIgdbSearchRequest},
+        services::metadata::v1::IgdbSearchRequest,
     },
 };
-use retrom_service_config::config::ServerConfigManager;
 use std::{
     env,
     sync::Arc,
@@ -23,9 +22,62 @@ use tracing::{debug, error, instrument, Instrument, Level};
 pub const IGDB_PROVIDER_ID: &str = "00000000-0000-0000-0000-000000000002";
 const IGDB_CONCURRENT_REQUESTS_LIMIT: usize = 8;
 
+/// Which IGDB endpoint a search targets. Replaces the proto-defined search-type enum so the
+/// provider stays decoupled from the gRPC request shape.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IgdbSearchType {
+    Game,
+    Platform,
+}
+
+/// A raw IGDB search paired with the endpoint to target. [`IgdbSearchRequest`] carries the
+/// search query, filters, fields, and pagination.
+pub struct IgdbSearchQuery {
+    pub search_type: IgdbSearchType,
+    pub request: IgdbSearchRequest,
+}
+
 pub enum IgdbSearchData {
     Game(igdb::GameResult),
     Platform(igdb::PlatformResult),
+}
+
+/// The default set of IGDB fields requested for game searches. Callers building raw IGDB
+/// search requests should include these to receive fully-populated game results (cover,
+/// artwork, screenshots, videos, genres, franchises, similar games).
+pub fn default_game_fields() -> Vec<String> {
+    [
+        "name",
+        "cover",
+        "artworks",
+        "screenshots",
+        "summary",
+        "websites",
+        "videos",
+        "genres",
+        "franchises",
+        "similar_games",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect()
+}
+
+/// The default set of IGDB fields requested for platform searches. Callers building raw IGDB
+/// search requests should include these to receive fully-populated platform results (logo,
+/// platform family).
+pub fn default_platform_fields() -> Vec<String> {
+    [
+        "name",
+        "summary",
+        "platform_logo",
+        "websites",
+        "platform_family",
+        "generation",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect()
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -105,27 +157,8 @@ impl IGDBProvider {
             .instrument(tracing::info_span!("IGDBProviderService")),
         );
 
-        let game_fields = vec![
-            "name".to_string(),
-            "cover.url".to_string(),
-            "artworks.url".to_string(),
-            "artworks.height".to_string(),
-            "artworks.width".to_string(),
-            "screenshots.url".to_string(),
-            "summary".to_string(),
-            "websites.url".to_string(),
-            "websites.trusted".to_string(),
-            "videos.name".to_string(),
-            "videos.video_id".to_string(),
-        ];
-
-        let platform_fields = vec![
-            "name".to_string(),
-            "summary".to_string(),
-            "platform_logo.url".to_string(),
-            "websites.url".to_string(),
-            "websites.trusted".to_string(),
-        ];
+        let game_fields = default_game_fields();
+        let platform_fields = default_platform_fields();
 
         Self {
             auth: RwLock::new(IGDBAuth::new(None, Duration::from_secs(0))),
@@ -273,20 +306,13 @@ impl IGDBProvider {
             }
         }
     }
-}
 
-fn base_url() -> String {
-    env::var("IGDB_BASE_URL").unwrap_or("https://api.igdb.com/v4".into())
-}
-
-fn oauth2_url() -> String {
-    env::var("IGDB_OAUTH2_URL").unwrap_or("https://id.twitch.tv/oauth2/token".into())
-}
-
-impl MetadataProvider<GetIgdbSearchRequest, IgdbSearchData> for IGDBProvider {
     #[instrument(level = Level::DEBUG, skip_all)]
-    async fn search_metadata(&self, request: GetIgdbSearchRequest) -> Option<IgdbSearchData> {
-        let search_type = request.search_type();
+    pub async fn search_metadata(&self, query: IgdbSearchQuery) -> Option<IgdbSearchData> {
+        let IgdbSearchQuery {
+            search_type,
+            request,
+        } = query;
 
         let search_clause = match request.search.map(|search| search.value) {
             Some(value) => {
@@ -405,6 +431,14 @@ impl MetadataProvider<GetIgdbSearchRequest, IgdbSearchData> for IGDBProvider {
     }
 }
 
+fn base_url() -> String {
+    env::var("IGDB_BASE_URL").unwrap_or("https://api.igdb.com/v4".into())
+}
+
+fn oauth2_url() -> String {
+    env::var("IGDB_OAUTH2_URL").unwrap_or("https://id.twitch.tv/oauth2/token".into())
+}
+
 fn render_filter_operation(igdb_filter: (String, FilterValue)) -> String {
     let (field, filter) = igdb_filter;
 
@@ -412,6 +446,7 @@ fn render_filter_operation(igdb_filter: (String, FilterValue)) -> String {
     let operator = filter.operator();
 
     match operator {
+        FilterOperator::Unspecified => "".to_string(),
         FilterOperator::Equal => format!("{field} = {value}"),
         FilterOperator::NotEqual => format!("{field} != {value}"),
         FilterOperator::LessThan => format!("{field} < {value}"),

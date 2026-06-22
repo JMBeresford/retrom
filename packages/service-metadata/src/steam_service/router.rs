@@ -1,8 +1,9 @@
 use crate::steam_service::SteamServiceHandlers;
 use retrom_codegen::retrom::services::metadata::v1::steam_service_server::SteamServiceServer;
 use retrom_db::DbPool;
-use retrom_service_common::metadata_providers::steam::provider::SteamWebApiProvider;
-use retrom_service_config::config::ServerConfigManager;
+use retrom_service_common::{
+    config::ServerConfigManager, metadata_providers::steam::provider::SteamWebApiProvider,
+};
 use std::sync::Arc;
 
 pub fn steam_router(db_pool: DbPool) -> axum::Router {

@@ -3,6 +3,7 @@
   "name": "retrom-codegen",
   "targets": {
     "buf:format": {},
+    "buf:lint": {},
     "cargo:lint": {},
     "cargo:build": {},
     "generate": {

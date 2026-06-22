@@ -1,6 +1,6 @@
-mod igdb_service;
-mod metadata_service;
-mod provider_service;
-mod steam_service;
+pub mod igdb_service;
+pub mod metadata_service;
+pub mod provider_service;
+pub mod steam_service;
 
 pub mod router;

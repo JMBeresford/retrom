@@ -6,9 +6,11 @@ use retrom_codegen::retrom::services::tags::v1::{
     DeleteTagDomainsRequest, DeleteTagDomainsResponse, DeleteTagsRequest, DeleteTagsResponse,
     GetGameTagsRequest, GetGameTagsResponse, GetPlatformTagsRequest, GetPlatformTagsResponse,
     GetTagDomainsRequest, GetTagDomainsResponse, GetTagsRequest, GetTagsResponse, Tag, TagDomain,
+    TagView,
 };
 use retrom_db::{DbPool, RetromDB};
 use sqlx::Execute;
+use std::collections::HashMap;
 use tracing::instrument;
 
 pub mod router;
@@ -106,6 +108,7 @@ impl TagsService for TagServiceHandlers {
             separated.push_unseparated(")");
         }
 
+        builder.push(" on conflict (name) do update set name = excluded.name ");
         builder.push(" returning *");
 
         let tag_domains_created: Vec<TagDomain> = builder
@@ -232,6 +235,7 @@ impl TagsService for TagServiceHandlers {
             separated.push_unseparated(")");
         }
 
+        builder.push(" on conflict (tag_domain_id, value) do update set value = excluded.value ");
         builder.push(" returning *");
 
         let tags_created: Vec<Tag> = builder
@@ -283,10 +287,12 @@ impl TagsService for TagServiceHandlers {
 
         let mut builder = sqlx::QueryBuilder::new(
             r#"
-                select t.* from tags t 
-                inner join game_tag gt 
-                on t.id = gt.tag_id 
-                where gt.game_id = 
+                select
+                    t.*
+                from tags t
+                join game_tags gt
+                    on t.id = gt.tag_id
+                where gt.game_id =
             "#,
         );
 
@@ -298,7 +304,41 @@ impl TagsService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        Ok(tonic::Response::new(GetGameTagsResponse { tags }))
+        if tags.is_empty() {
+            return Ok(tonic::Response::new(GetGameTagsResponse { tags: vec![] }));
+        }
+
+        let mut builder = sqlx::QueryBuilder::new("select * from tag_domains where id in (");
+        let mut separated = builder.separated(", ");
+        for tag in tags.iter() {
+            separated.push_bind(&tag.tag_domain_id);
+        }
+
+        separated.push_unseparated(")");
+        let tag_domains: HashMap<String, TagDomain> = builder
+            .build_query_as::<TagDomain>()
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(|e| tonic::Status::internal(e.to_string()))?
+            .into_iter()
+            .map(|domain| (domain.id.clone(), domain))
+            .collect();
+
+        let tag_views = tags
+            .into_iter()
+            .map(|tag| {
+                let domain = tag_domains.get(&tag.tag_domain_id).cloned();
+
+                TagView {
+                    domain,
+                    tag: Some(tag),
+                }
+            })
+            .collect();
+
+        Ok(tonic::Response::new(GetGameTagsResponse {
+            tags: tag_views,
+        }))
     }
 
     #[instrument(skip_all)]
@@ -308,11 +348,49 @@ impl TagsService for TagServiceHandlers {
     ) -> Result<tonic::Response<AddGameTagsResponse>, tonic::Status> {
         let request = request.into_inner();
         let game_id = request.game_id;
-        let tags = request.tag_ids;
+        let tags = request.tags;
 
-        let mut builder = sqlx::QueryBuilder::new("insert into game_tag (game_id, tag_id) values ");
+        if tags.is_empty() {
+            return Err(tonic::Status::invalid_argument(
+                "At least one tag must be provided",
+            ));
+        }
 
-        for (i, tag_id) in tags.iter().enumerate() {
+        let domains = self
+            .create_tag_domains(tonic::Request::new(CreateTagDomainsRequest {
+                tag_domains: tags
+                    .iter()
+                    .filter_map(|t| t.domain.as_ref().cloned())
+                    .collect(),
+            }))
+            .await?
+            .into_inner()
+            .tag_domains_created;
+
+        let tags = self
+            .create_tags(tonic::Request::new(CreateTagsRequest {
+                tags: tags
+                    .into_iter()
+                    .filter_map(|t| {
+                        let domain = domains
+                            .iter()
+                            .find(|d| Some(&d.name) == t.domain.as_ref().map(|d| &d.name))?;
+
+                        t.tag.map(|mut t| {
+                            t.tag_domain_id = domain.id.clone();
+                            t
+                        })
+                    })
+                    .collect(),
+            }))
+            .await?
+            .into_inner()
+            .tags_created;
+
+        let mut builder =
+            sqlx::QueryBuilder::new("insert into game_tags (game_id, tag_id) values ");
+
+        for (i, tag) in tags.iter().enumerate() {
             if i > 0 {
                 builder.push(", ");
             }
@@ -321,7 +399,7 @@ impl TagsService for TagServiceHandlers {
             let mut separated = builder.separated(", ");
 
             separated.push_bind(&game_id);
-            separated.push_bind(tag_id);
+            separated.push_bind(&tag.id);
 
             separated.push_unseparated(")");
         }
@@ -336,7 +414,21 @@ impl TagsService for TagServiceHandlers {
 
         let tags_added = self.fetch_tags_by_ids(&inserted_ids).await?;
 
-        Ok(tonic::Response::new(AddGameTagsResponse { tags_added }))
+        let tag_views = tags_added
+            .into_iter()
+            .map(|tag| {
+                let domain = domains.iter().find(|d| d.id == tag.tag_domain_id).cloned();
+
+                TagView {
+                    domain,
+                    tag: Some(tag),
+                }
+            })
+            .collect();
+
+        Ok(tonic::Response::new(AddGameTagsResponse {
+            tags_added: tag_views,
+        }))
     }
 
     #[instrument(skip_all)]
@@ -346,17 +438,23 @@ impl TagsService for TagServiceHandlers {
     ) -> Result<tonic::Response<DeleteGameTagsResponse>, tonic::Status> {
         let request = request.into_inner();
         let game_id = request.game_id;
+        let tag_ids = request.tag_ids;
 
-        let mut builder = sqlx::QueryBuilder::new("delete from game_tag where game_id = ");
+        let mut builder = sqlx::QueryBuilder::new("delete from game_tags where game_id = ");
         builder.push_bind(game_id);
-        builder.push(" and tag_id in (");
 
-        let mut separated = builder.separated(", ");
-        for tag_id in request.tag_ids.iter() {
-            separated.push_bind(tag_id);
+        if !tag_ids.is_empty() {
+            builder.push(" and tag_id in (");
+
+            let mut separated = builder.separated(", ");
+            for tag_id in tag_ids.iter() {
+                separated.push_bind(tag_id);
+            }
+
+            separated.push_unseparated(")");
         }
 
-        separated.push_unseparated(") returning tag_id");
+        builder.push(" returning tag_id");
 
         let deleted_tag_ids: Vec<String> = builder
             .build_query_scalar()
@@ -380,9 +478,11 @@ impl TagsService for TagServiceHandlers {
 
         let mut builder = sqlx::QueryBuilder::new(
             r#"
-                select t.* from tags t
-                inner join platform_tag pt
-                on t.id = pt.tag_id
+                select
+                    t.*
+                from tags t
+                join platform_tags pt
+                    on t.id = pt.tag_id
                 where pt.platform_id =
             "#,
         );
@@ -395,6 +495,40 @@ impl TagsService for TagServiceHandlers {
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
+        if tags.is_empty() {
+            return Ok(tonic::Response::new(GetPlatformTagsResponse {
+                tags: vec![],
+            }));
+        }
+
+        let mut builder = sqlx::QueryBuilder::new("select * from tag_domains where id in (");
+        let mut separated = builder.separated(", ");
+        for tag in tags.iter() {
+            separated.push_bind(&tag.tag_domain_id);
+        }
+
+        separated.push_unseparated(")");
+        let tag_domains: HashMap<String, TagDomain> = builder
+            .build_query_as::<TagDomain>()
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(|e| tonic::Status::internal(e.to_string()))?
+            .into_iter()
+            .map(|domain| (domain.id.clone(), domain))
+            .collect();
+
+        let tags = tags
+            .into_iter()
+            .map(|tag| {
+                let domain = tag_domains.get(&tag.tag_domain_id).cloned();
+
+                TagView {
+                    domain,
+                    tag: Some(tag),
+                }
+            })
+            .collect();
+
         Ok(tonic::Response::new(GetPlatformTagsResponse { tags }))
     }
 
@@ -405,18 +539,49 @@ impl TagsService for TagServiceHandlers {
     ) -> Result<tonic::Response<AddPlatformTagsResponse>, tonic::Status> {
         let request = request.into_inner();
         let platform_id = request.platform_id;
-        let tag_ids = request.tag_ids;
+        let tags = request.tags;
 
-        if tag_ids.is_empty() {
+        if tags.is_empty() {
             return Err(tonic::Status::invalid_argument(
-                "At least one tag ID must be provided",
+                "At least one tag must be provided",
             ));
         }
 
-        let mut builder =
-            sqlx::QueryBuilder::new("insert into platform_tag (platform_id, tag_id) values ");
+        let domains = self
+            .create_tag_domains(tonic::Request::new(CreateTagDomainsRequest {
+                tag_domains: tags
+                    .iter()
+                    .filter_map(|t| t.domain.as_ref().cloned())
+                    .collect(),
+            }))
+            .await?
+            .into_inner()
+            .tag_domains_created;
 
-        for (i, tag_id) in tag_ids.iter().enumerate() {
+        let tags = self
+            .create_tags(tonic::Request::new(CreateTagsRequest {
+                tags: tags
+                    .into_iter()
+                    .filter_map(|t| {
+                        let domain = domains
+                            .iter()
+                            .find(|d| Some(&d.name) == t.domain.as_ref().map(|d| &d.name))?;
+
+                        t.tag.map(|mut t| {
+                            t.tag_domain_id = domain.id.clone();
+                            t
+                        })
+                    })
+                    .collect(),
+            }))
+            .await?
+            .into_inner()
+            .tags_created;
+
+        let mut builder =
+            sqlx::QueryBuilder::new("insert into platform_tags (platform_id, tag_id) values ");
+
+        for (i, tag) in tags.iter().enumerate() {
             if i > 0 {
                 builder.push(", ");
             }
@@ -425,7 +590,7 @@ impl TagsService for TagServiceHandlers {
             let mut separated = builder.separated(", ");
 
             separated.push_bind(&platform_id);
-            separated.push_bind(tag_id);
+            separated.push_bind(&tag.id);
 
             separated.push_unseparated(")");
         }
@@ -440,7 +605,21 @@ impl TagsService for TagServiceHandlers {
 
         let tags_added = self.fetch_tags_by_ids(&inserted_ids).await?;
 
-        Ok(tonic::Response::new(AddPlatformTagsResponse { tags_added }))
+        let tag_views = tags_added
+            .into_iter()
+            .map(|tag| {
+                let domain = domains.iter().find(|d| d.id == tag.tag_domain_id).cloned();
+
+                TagView {
+                    domain,
+                    tag: Some(tag),
+                }
+            })
+            .collect();
+
+        Ok(tonic::Response::new(AddPlatformTagsResponse {
+            tags_added: tag_views,
+        }))
     }
 
     #[instrument(skip_all)]
@@ -458,7 +637,7 @@ impl TagsService for TagServiceHandlers {
             ));
         }
 
-        let mut builder = sqlx::QueryBuilder::new("delete from platform_tag where platform_id = ");
+        let mut builder = sqlx::QueryBuilder::new("delete from platform_tags where platform_id = ");
 
         builder.push_bind(platform_id);
         builder.push(" and tag_id in (");

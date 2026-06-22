@@ -65,6 +65,26 @@ impl EmulatorService for EmulatorServiceHandlers {
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
+        let emulator_ids: Vec<String> = emulators_created.iter().map(|e| e.id.clone()).collect();
+
+        let mut builder = sqlx::QueryBuilder::new(
+            "insert into emulator_profiles (id, emulator_id, name, custom_args) ",
+        );
+
+        builder.push_values(emulator_ids, |mut b, emulator_id| {
+            b.push_bind(uuid::Uuid::now_v7().to_string())
+                .push_bind(emulator_id)
+                .push_bind("Default Profile")
+                .push_bind("{file}");
+        });
+
+        builder
+            .push(" on conflict do nothing ")
+            .build()
+            .execute(&self.db_pool)
+            .await
+            .map_err(|why| Status::internal(why.to_string()))?;
+
         Ok(Response::new(CreateEmulatorsResponse { emulators_created }))
     }
 

@@ -14,7 +14,7 @@ links = "tauri-plugin-standalone"
 tauri = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
-retrom-service = { workspace = true, features = ["embedded_db"] }
+retrom-service = { workspace = true }
 retrom-plugin-config = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }

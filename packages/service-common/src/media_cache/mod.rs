@@ -1,10 +1,10 @@
+use crate::{config::ServerConfigManager, retrom_dirs::RetromDirs};
 use bigdecimal::ToPrimitive;
 use caesium::{compress_in_memory, convert_in_memory, parameters::CSParameters};
 use index::{IndexEntry, IndexManager};
 use rayon::ThreadPool;
 use reqwest::StatusCode;
 use retrom_codegen::retrom::services::config::v1::metadata_config::ImageFormat;
-use retrom_service_config::{config::ServerConfigManager, retrom_dirs::RetromDirs};
 use std::{
     path::{Path, PathBuf},
     str::FromStr,
@@ -362,9 +362,9 @@ impl MediaCache {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
+    use crate::config::ServerConfigManager;
     use cacheable_media::CacheableMetadata;
     use retrom_codegen::retrom::services::metadata::v1::{GameMetadata, PlatformMetadata};
-    use retrom_service_config::config::ServerConfigManager;
     use tempfile::TempDir;
 
     #[tokio::test]

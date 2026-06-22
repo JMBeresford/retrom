@@ -9,7 +9,7 @@ use retrom_codegen::retrom::{
     },
 };
 use retrom_db::DbPool;
-use retrom_service_config::{config::ServerConfigManager, retrom_dirs::RetromDirs};
+use retrom_service_common::{config::ServerConfigManager, retrom_dirs::RetromDirs};
 use std::{path::PathBuf, sync::Arc};
 use tracing::instrument;
 use walkdir::WalkDir;

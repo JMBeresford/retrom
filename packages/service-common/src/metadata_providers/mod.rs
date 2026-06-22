@@ -1,11 +1,5 @@
 use reqwest::StatusCode;
-use retrom_codegen::retrom::services::{
-    library::v1::{Game, Platform},
-    metadata::v1::{
-        GameMetadata, GameMetadataArtwork, GameMetadataScreenshot, GameMetadataVideo,
-        PlatformMetadata,
-    },
-};
+use retrom_codegen::retrom::services::metadata::v1::{GameMetadataView, PlatformMetadataView};
 use std::time::Duration;
 use tower::{
     retry::{
@@ -18,49 +12,141 @@ use tower::{
 pub mod igdb;
 pub mod steam;
 
+pub const MANUAL_PROVIDER_ID: &str = "00000000-0000-0000-0000-000000000001";
+
 #[derive(Debug, thiserror::Error)]
 pub enum MetadataProviderError {
     #[error("HTTP error: {0}")]
     HttpError(#[from] reqwest::Error),
+    #[error("No matches found")]
+    NoMatchesFound,
+    #[error("Invalid search parameters: {0}")]
+    InvalidSearchParams(String),
+    #[error("Status code error: {0}")]
+    StatusCodeError(StatusCode),
     #[error("MetadataProviderError: {0}")]
     Other(String),
 }
 
+impl From<StatusCode> for MetadataProviderError {
+    fn from(status: StatusCode) -> Self {
+        MetadataProviderError::StatusCodeError(status)
+    }
+}
+
 pub type Result<T> = std::result::Result<T, MetadataProviderError>;
 
-pub trait MetadataProvider<Query, Data> {
-    fn search_metadata(&self, query: Query) -> impl std::future::Future<Output = Option<Data>>;
+#[derive(Debug)]
+pub struct GameMetadataSearchParams<Id> {
+    /// The Retrom ID of the game we're trying to get metadata for.
+    pub game_id: String,
+    /// The provider's canonical ID of the game, used for search queries.
+    pub provider_game_id: Option<Id>,
+    /// The name of the game, used for search queries.
+    pub name: Option<String>,
+    /// The provider's canonical ID for the platform the game is on, used for search queries.
+    pub provider_platform_id: Option<Id>,
 }
 
-pub type GameMetadataSearchResult = (
-    Option<GameMetadata>,
-    Option<Vec<GameMetadataArtwork>>,
-    Option<Vec<GameMetadataScreenshot>>,
-    Option<Vec<GameMetadataVideo>>,
-);
+/// A trait for converting a provider's native game model into a format that can be used by the rest
+/// of the application.
+pub trait ToGameMetadata {
+    fn to_game_metadata(&self, game_id: &str) -> GameMetadataView;
+}
 
-pub trait GameMetadataProvider<Query, SearchResult> {
+/// A trait for converting a provider's native platform model into a format that can be used by the
+/// rest of the application.
+pub trait ToPlatformMetadata {
+    fn to_platform_metadata(&self, platform_id: &str) -> PlatformMetadataView;
+}
+
+/// A trait for game metadata providers. This is used to abstract over different
+/// metadata providers, such as IGDB, Steam, etc.
+pub trait GameMetadataProvider {
+    /// The value type that the provider uses to identify games.
+    /// For example, IGDB uses an integer ID, while other providers
+    /// might use a string slug.
+    type ProviderGameId;
+
+    /// The type of the game model that the provider uses to represent games. This type
+    /// should encapsulate all the information that the provider returns for a game, including
+    /// metadata, artwork, screenshots, videos, etc.
+    type GameModel: ToGameMetadata;
+
+    /// The type of the search query used for searching game metadata.
+    type SearchQuery;
+
+    /// Get a best match result for a game based on the provided naive search parameters. The provider
+    /// should use the the information in the parameters to find the best possible match for the
+    /// game, and return a single [Self::GameModel] that represents the game's metadata in full.
+    ///
+    /// For robust searching with more potentially more complex search parameters, the provider
+    /// should implement `search_game_metadata` and `to_game_metadata` to return a list of possible
+    /// matches and convert them into a format that can be used by the rest of the application.
     fn get_game_metadata(
         &self,
-        game: Game,
-        query: Query,
-    ) -> impl std::future::Future<Output = GameMetadataSearchResult>;
+        params: GameMetadataSearchParams<Self::ProviderGameId>,
+    ) -> impl std::future::Future<Output = Result<Self::GameModel>>;
 
-    fn search_game_metadata(&self, query: Query)
-        -> impl std::future::Future<Output = SearchResult>;
+    /// Get a list of search results for a game based on the provided search query. The provider
+    /// should use the information in the search query to find a list of possible matches for the
+    /// game, and return them in the provider's native search result format. This is used for cases
+    /// where we want to present the user with a list of possible matches to choose from, rather than
+    /// trying to automatically determine the best match.
+    fn search_game_metadata(
+        &self,
+        query: Self::SearchQuery,
+    ) -> impl std::future::Future<Output = Result<Vec<Self::GameModel>>>;
 }
 
-pub trait PlatformMetadataProvider<Query> {
+#[derive(Debug)]
+pub struct PlatformMetadataSearchParams<Id> {
+    /// The Retrom ID of the platform we're trying to get metadata for.
+    pub platform_id: String,
+    /// The provider's canonical ID of the platform, used for search queries.
+    pub provider_platform_id: Option<Id>,
+    /// The name of the platform, used for search queries.
+    pub name: Option<String>,
+}
+
+/// A trait for platform metadata providers. This is used to abstract over different
+/// metadata providers, such as IGDB, Steam, etc.
+pub trait PlatformMetadataProvider {
+    /// The value type that the provider uses to identify platforms. For example, IGDB uses an
+    /// integer ID, while other providers might use a string slug.
+    type ProviderPlatformId;
+
+    /// The type of the platform model that the provider uses to represent platforms. This type
+    /// should encapsulate all the information that the provider returns for a platform, including
+    /// metadata, logo, etc.
+    type PlatformModel: ToPlatformMetadata;
+
+    /// The type of the search query used for searching platform metadata.
+    type SearchQuery;
+
+    /// Get a best match result for a platform based on the provided naive search parameters. The
+    /// provider should use the information in the parameters to find the best possible match for
+    /// the platform, and return a single [Self::PlatformModel] that represents the platform's
+    /// metadata in full.
+    ///
+    /// For robust searching with more potentially more complex search parameters, the provider
+    /// should implement `search_platform_metadata` and `to_platform_metadata` to return a list of
+    /// possible matches and convert them into a format that can be used by the rest of the
+    /// application.
     fn get_platform_metadata(
         &self,
-        platform: Platform,
-        query: Query,
-    ) -> impl std::future::Future<Output = Option<PlatformMetadata>>;
+        params: PlatformMetadataSearchParams<Self::ProviderPlatformId>,
+    ) -> impl std::future::Future<Output = Result<Self::PlatformModel>>;
 
+    /// Get a list of search results for a platform based on the provided search query. The provider
+    /// should use the information in the search query to find a list of possible matches for the
+    /// platform, and return them in the provider's native search result format. This is used for
+    /// cases where we want to present the user with a list of possible matches to choose from,
+    /// rather than trying to automatically determine the best match.
     fn search_platform_metadata(
         &self,
-        query: Query,
-    ) -> impl std::future::Future<Output = Vec<PlatformMetadata>>;
+        query: Self::SearchQuery,
+    ) -> impl std::future::Future<Output = Result<Vec<Self::PlatformModel>>>;
 }
 
 #[derive(Clone)]

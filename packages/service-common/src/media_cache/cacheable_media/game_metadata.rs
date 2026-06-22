@@ -1,8 +1,10 @@
-use crate::media_cache::{cacheable_media::CacheableMetadata, CacheMediaOpts};
+use crate::{
+    media_cache::{cacheable_media::CacheableMetadata, CacheMediaOpts},
+    retrom_dirs::RetromDirs,
+};
 use retrom_codegen::retrom::services::metadata::v1::{
     GameMetadata, GameMetadataArtwork, GameMetadataScreenshot, GameMetadataVideo,
 };
-use retrom_service_config::retrom_dirs::RetromDirs;
 use std::path::PathBuf;
 
 impl CacheableMetadata for GameMetadata {

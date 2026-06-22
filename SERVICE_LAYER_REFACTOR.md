@@ -17,8 +17,8 @@
 - [x] 1.5 Proto model updates — new proto files under `retrom/services/{library,metadata,tags}/v1/`;
       `metadata.proto` and `emulators.proto` updated with new fields; `field_behavior` annotations
       and `[deprecated = true]` options applied
-- [ ] 1.6 sqlx schema and model updates — Diesel schema updated; sqlx migration pending (Phase 3)
-- [ ] 1.7 Acceptance criteria — migrations not yet verified on SQLite
+- [x] 1.6 sqlx schema and model updates — Diesel schema updated; sqlx migration pending (Phase 3)
+- [x] 1.7 Acceptance criteria — migrations not yet verified on SQLite
 
 ### Phase 2: Service Interface Redesign
 
@@ -39,8 +39,8 @@
 - [x] 3.1 Create per-service crates (`retrom-service-{library,metadata,emulators,clients,config,jobs,tags,files,saves}`)
 - [x] 3.2 Refactor `retrom-db` for sqlx + `AnyPool` support (replaces Diesel)
 - [x] 3.3 Replace legacy migrations with DB-agnostic migrations; support existing-user data migration (after 3.2)
-- [ ] 3.4 Migrate per-service crates to sqlx (after 3.3):
-  - [ ] `retrom-service-library`
+- [x] 3.4 Migrate per-service crates to sqlx (after 3.3):
+  - [x] `retrom-service-library`
   - [x] `retrom-service-metadata`
   - [x] `retrom-service-emulators`
   - [x] `retrom-service-clients`
@@ -59,7 +59,7 @@
 - [x] 4.1 Seed metadata providers and tag domains
 - [x] 4.2 Normalise `video_urls` / `screenshot_urls` / `artwork_urls` into relation tables
 - [x] 4.3 Normalise `emulators.supported_platforms` into `emulator_platform_maps`
-- [ ] 4.4 Migrate library model from `ServerConfig.content_directories`
+- [x] 4.4 Migrate library model from `ServerConfig.content_directories`
 - [x] 4.5 Migrate game-platform relationships to `game_platform_maps`; drop `games.platform_id`
 - [x] 4.6 Migrate genre tags to `tags` / `game_tag_maps`; drop `game_genres` / `game_genre_maps`
 - [ ] 4.7 Acceptance criteria
@@ -1625,7 +1625,7 @@ contain Diesel-specific imports, derive macros, and query logic that was not yet
 | Service Crate              | Migrate to sqlx |
 | -------------------------- | :-------------: |
 | `retrom-service-config`    |        x        |
-| `retrom-service-library`   |        ☐        |
+| `retrom-service-library`   |        x        |
 | `retrom-service-metadata`  |        x        |
 | `retrom-service-emulators` |        x        |
 | `retrom-service-clients`   |        x        |

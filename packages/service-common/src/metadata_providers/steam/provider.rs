@@ -1,10 +1,7 @@
-use crate::metadata_providers::{steam::models, RetryAttempts};
-use chrono::DateTime;
-use retrom_codegen::{
-    retrom::services::metadata::v1::{GameMetadata, GameMetadataScreenshot, GameMetadataVideo},
-    timestamp::Timestamp,
+use crate::{
+    config::ServerConfigManager,
+    metadata_providers::{steam::models, RetryAttempts},
 };
-use retrom_service_config::config::ServerConfigManager;
 use std::{str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::{mpsc, oneshot};
 use tower::{Service, ServiceExt};
@@ -74,111 +71,6 @@ impl SteamWebApiProvider {
             base_url,
             store_base_url,
         }
-    }
-
-    pub fn app_details_to_game_metadata(
-        &self,
-        app: &models::Game,
-        app_details: &models::AppDetails,
-    ) -> GameMetadata {
-        let cover_url = app_details.steam_appid.map(|id| {
-            format!("https://steamcdn-a.akamaihd.net/steam/apps/{id}/library_600x900_2x.jpg")
-        });
-
-        let icon_url = app.img_icon_url.as_ref().map(|icon_id| {
-            format!(
-                "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/{}/{}.jpg",
-                app.appid, icon_id
-            )
-        });
-
-        let background_url = Some(format!(
-            "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_hero.jpg",
-            app.appid
-        ));
-
-        let last_played = if app.rtime_last_played > 0 {
-            let dt = DateTime::from_timestamp(app.rtime_last_played, 0);
-
-            dt.map(|dt| Timestamp {
-                seconds: dt.timestamp(),
-                nanos: 0,
-            })
-        } else {
-            None
-        };
-
-        let minutes_played = if app.playtime_forever > 0 {
-            Some(app.playtime_forever)
-        } else {
-            None
-        };
-
-        GameMetadata {
-            description: app_details.short_description.clone(),
-            name: app_details.name.clone(),
-            cover_url,
-            background_url,
-            icon_url,
-            last_played,
-            minutes_played,
-            ..Default::default()
-        }
-    }
-
-    pub fn app_details_to_screenshot_metadata(
-        &self,
-        app_details: &models::AppDetails,
-    ) -> Vec<GameMetadataScreenshot> {
-        let screenshot_urls: Vec<String> = app_details
-            .screenshots
-            .as_ref()
-            .map(|screenshots| {
-                screenshots
-                    .iter()
-                    .map(|screenshot| screenshot.path_full.clone())
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        screenshot_urls
-            .into_iter()
-            .map(|url| GameMetadataScreenshot {
-                url,
-                ..Default::default()
-            })
-            .collect()
-    }
-
-    pub fn app_details_to_video_metadata(
-        &self,
-        app_details: &models::AppDetails,
-    ) -> Vec<GameMetadataVideo> {
-        let video_urls: Vec<String> = app_details
-            .movies
-            .as_ref()
-            .map(|movies| {
-                movies
-                    .iter()
-                    .filter_map(|movie| {
-                        movie
-                            .webm
-                            .as_ref()
-                            .map(|quality| quality.max.clone())
-                            .or(movie.mp4.as_ref().map(|quality| quality.max.clone()))
-                            .flatten()
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-
-        video_urls
-            .into_iter()
-            .map(|url| GameMetadataVideo {
-                url,
-                ..Default::default()
-            })
-            .collect()
     }
 
     #[instrument(skip(self))]
