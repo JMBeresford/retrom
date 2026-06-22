@@ -1,8 +1,9 @@
 use crate::igdb_service::IgdbServiceHandlers;
 use retrom_codegen::retrom::services::metadata::v1::igdb_service_server::IgdbServiceServer;
 use retrom_db::DbPool;
-use retrom_service_common::metadata_providers::igdb::provider::IGDBProvider;
-use retrom_service_config::config::ServerConfigManager;
+use retrom_service_common::{
+    config::ServerConfigManager, metadata_providers::igdb::provider::IGDBProvider,
+};
 use std::sync::Arc;
 
 pub fn igdb_router(db_pool: DbPool) -> axum::Router {
@@ -11,7 +12,7 @@ pub fn igdb_router(db_pool: DbPool) -> axum::Router {
 
     let igdb_client = Arc::new(IGDBProvider::new(config_manager));
 
-    let svc = IgdbServiceServer::new(IgdbServiceHandlers::new(db_pool, igdb_client));
+    let svc = IgdbServiceServer::new(IgdbServiceHandlers::new(igdb_client, db_pool));
 
     let mut routes_builder = tonic::service::Routes::builder();
     routes_builder.add_service(svc);

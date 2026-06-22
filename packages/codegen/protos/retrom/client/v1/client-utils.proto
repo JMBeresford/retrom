@@ -5,33 +5,54 @@ package retrom.client.v1;
 import "retrom/services/emulators/v1/models.proto";
 import "retrom/services/library/v1/models.proto";
 
+// RetromHostInfo represents the information needed to connect to a Retrom host.
 message RetromHostInfo {
+  // The host name of the Retrom server.
   string host_name = 1;
+  // The port number of the Retrom server.
   string port = 2;
+  // The host address of the Retrom server.
   string host = 3;
 }
 
+// PlayStatus represents the current play status of a game.
 enum PlayStatus {
-  PLAYING = 0;
-  NOT_PLAYING = 1;
+  // The play status is unspecified.
+  PLAY_STATUS_UNSPECIFIED = 0;
+  // The game is currently being played.
+  PLAY_STATUS_PLAYING = 1;
+  // The game is not currently being played.
+  PLAY_STATUS_NOT_PLAYING = 2;
 }
 
+// PlayGamePayload represents the payload for a request to play a game.
 message PlayGamePayload {
+  // The game to be played.
   retrom.services.library.v1.Game game = 1;
+  // The emulator profile to be used for playing the game.
   retrom.services.emulators.v1.EmulatorProfile emulator_profile = 2;
+  // The emulator to be used for playing the game.
   retrom.services.emulators.v1.Emulator emulator = 3;
+  // The game file to be used for playing the game.
   retrom.services.library.v1.GameFile file = 4;
 }
 
+// StopGamePayload represents the payload for a request to stop playing a game.
 message StopGamePayload {
+  // The game to be stopped.
   retrom.services.library.v1.Game game = 1;
 }
 
+// GetGamePlayStatusPayload represents the payload for a request to get the play status of a game.
 message GetGamePlayStatusPayload {
+  // The game for which to get the play status.
   retrom.services.library.v1.Game game = 1;
 }
 
+// GamePlayStatusUpdate represents an update on the play status of a game.
 message GamePlayStatusUpdate {
+  // The ID of the game for which the play status is being updated.
   string game_id = 1;
+  // The current play status of the game.
   PlayStatus play_status = 2;
 }

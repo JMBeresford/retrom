@@ -4,65 +4,97 @@ package retrom.services.jobs.v1;
 
 import "retrom/services/jobs/v1/models.proto";
 
+// JobService defines the gRPC service for managing jobs in Retrom.
 service JobService {
+  // CreateJob creates a new job in Retrom.
   rpc CreateJob(CreateJobRequest) returns (CreateJobResponse);
+  // GetJob retrieves a job by its unique identifier.
   rpc GetJob(GetJobRequest) returns (GetJobResponse);
+  // ListJobs retrieves a list of jobs, optionally filtered by status.
   rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  // UpdateJob updates the details of an existing job.
   rpc UpdateJob(UpdateJobRequest) returns (UpdateJobResponse);
   // Streams JobProgress updates until the job reaches a terminal state.
   rpc WatchJob(WatchJobRequest) returns (stream JobProgress);
+  // CompleteJob marks a job as completed, either successfully or with failure.
   rpc CompleteJob(CompleteJobRequest) returns (CompleteJobResponse);
 }
 
+// CreateJobRequest represents the request message for creating a new job in Retrom.
 message CreateJobRequest {
+  // The name of the job to be created.
   string name = 1;
+  // An optional message providing additional context or details about the job.
   string message = 2;
 }
 
+// CreateJobResponse represents the response message for creating a new job in Retrom.
 message CreateJobResponse {
+  // The job that was created.
   Job job = 1;
 }
 
+// GetJobRequest represents the request message for retrieving a job by its unique identifier.
 message GetJobRequest {
+  // The unique identifier of the job to retrieve.
   string id = 1;
 }
 
+// GetJobResponse represents the response message for retrieving a job by its unique identifier.
 message GetJobResponse {
+  // The job that was retrieved.
   Job job = 1;
 }
 
+// ListJobsRequest represents the request message for retrieving a list of jobs, optionally filtered by status.
 message ListJobsRequest {
   // When provided, only jobs matching this status are returned.
   optional JobStatus status = 1;
 }
 
+// ListJobsResponse represents the response message for retrieving a list of jobs.
 message ListJobsResponse {
+  // The list of jobs that were retrieved.
   repeated Job jobs = 1;
 }
 
 // Reports incremental progress on a running job.
 // Only provided fields are updated; omitted fields retain their current value.
 message UpdateJobRequest {
+  // The unique identifier of the job to update.
   string id = 1;
+  // The percentage of the job that has been completed, represented as a float between 0.0 and 1.0.
   optional float percent_complete = 2;
+  // The current status of the job, which can be one of the defined JobStatus values.
   optional JobStatus status = 3;
+  // An optional message providing additional context or details about the job's progress.
   optional string message = 4;
 }
 
+// UpdateJobResponse represents the response message for updating a job in Retrom.
 message UpdateJobResponse {
+  // The job that was updated.
   Job job = 1;
 }
 
+// WatchJobRequest represents the request message for watching a job's progress.
 message WatchJobRequest {
+  // The unique identifier of the job to watch.
   string id = 1;
 }
 
+// CompleteJobRequest represents the request message for marking a job as completed.
 message CompleteJobRequest {
+  // The unique identifier of the job to complete.
   string id = 1;
+  // Indicates whether the job failed.
   bool failed = 2;
+  // An optional message providing additional context or details about the job's completion.
   string message = 3;
 }
 
+// CompleteJobResponse represents the response message for marking a job as completed.
 message CompleteJobResponse {
+  // The job that was completed.
   Job job = 1;
 }

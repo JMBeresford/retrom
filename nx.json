@@ -32,6 +32,13 @@
         }
       }
     },
+    "buf:lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm buf lint",
+        "cwd": "{projectRoot}"
+      }
+    },
     "cargo:format": {
       "executor": "nx:run-commands",
       "options": {

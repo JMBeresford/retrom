@@ -2,57 +2,139 @@ syntax = "proto3";
 
 package retrom.services.metadata.v1;
 
+import "google/api/field_behavior.proto";
+import "igdbapi.proto";
 import "retrom/providers/igdb/v1/igdb.proto";
 import "retrom/services/metadata/v1/models.proto";
+import "retrom/services/metadata/v1/views.proto";
 
+// IgdbService defines the RPC service for interacting with IGDB to retrieve game and platform metadata.
 service IgdbService {
-  rpc GetIgdbSearch(GetIgdbSearchRequest) returns (GetIgdbSearchResponse);
-  rpc GetIgdbGameSearchResults(GetIgdbGameSearchResultsRequest) returns (GetIgdbGameSearchResultsResponse);
-  rpc GetIgdbPlatformSearchResults(GetIgdbPlatformSearchResultsRequest) returns (GetIgdbPlatformSearchResultsResponse);
+  // Search IGDB games by arbitrary search query, filters, and fields.
+  rpc SearchIgdbGames(SearchIgdbGamesRequest) returns (SearchIgdbGamesResponse);
+  // Search IGDB platforms by arbitrary search query, filters, and fields.
+  rpc SearchIgdbPlatforms(SearchIgdbPlatformsRequest) returns (SearchIgdbPlatformsResponse);
+
+  // Search IGDB for a game and return a Retrom [GameMetadata][retrom.services.metadata.v1.GameMetadata]
+  // object containing the relevant metadata for that game derived from the best matching IGDB game result.
+  rpc GetIgdbGameMetadata(GetIgdbGameMetadataRequest) returns (GetIgdbGameMetadataResponse);
+  // Search IGDB for a game and return a list of Retrom [GameMetadata][retrom.services.metadata.v1.GameMetadata]
+  // objects containing the relevant metadata for each game derived from the matching IGDB game results.
+  rpc ListIgdbGameMetadata(ListIgdbGameMetadataRequest) returns (ListIgdbGameMetadataResponse);
+
+  // Search IGDB for a platform and return a Retrom [PlatformMetadata][retrom.services.metadata.v1.PlatformMetadata]
+  // object containing the relevant metadata for that platform derived from the best matching IGDB platform result.
+  rpc GetIgdbPlatformMetadata(GetIgdbPlatformMetadataRequest) returns (GetIgdbPlatformMetadataResponse);
+  // Search IGDB for a platform and return a list of Retrom [PlatformMetadata][retrom.services.metadata.v1.PlatformMetadata]
+  // objects containing the relevant metadata for each platform derived from the matching IGDB platform results.
+  rpc ListIgdbPlatformMetadata(ListIgdbPlatformMetadataRequest) returns (ListIgdbPlatformMetadataResponse);
 }
 
-//
-// Arbitrary search query for IGDB
-message GetIgdbSearchRequest {
-  enum IgdbSearchType {
-    GAME = 0;
-    PLATFORM = 1;
-  }
-
-  IgdbSearchType search_type = 1;
-  optional retrom.providers.igdb.v1.IgdbSearch search = 2;
-  optional retrom.providers.igdb.v1.IgdbPagination pagination = 3;
-  optional retrom.providers.igdb.v1.IgdbFilters filters = 4;
-  optional retrom.providers.igdb.v1.IgdbFields fields = 5;
+// A generic IGDB request message that can be used for arbitrary searches against
+// IGDB's search endpoint.
+// https://api-docs.igdb.com/?javascript#search-1
+message IgdbSearchRequest {
+  // An optional search query, used for raw searches against IGDB's search endpoint.
+  optional retrom.providers.igdb.v1.IgdbSearch search = 1;
+  // Optional pagination parameters to control the number of results returned and the offset
+  optional retrom.providers.igdb.v1.IgdbPagination pagination = 2;
+  // Optional filters to apply to the search query, used for raw searches against IGDB's endpoint.
+  optional retrom.providers.igdb.v1.IgdbFilters filters = 3;
+  // Fields to return in the IGDB search results, used for raw searches against IGDB's endpoint.
+  optional retrom.providers.igdb.v1.IgdbFields fields = 4;
 }
 
-message IgdbSearchGameResponse {
-  repeated GameMetadata games = 1;
+// Search IGDB games by arbitrary search query, filters, and fields.
+// https://api-docs.igdb.com/?javascript#search-1
+message SearchIgdbGamesRequest {
+  // The search query, filters, pagination, and fields to return in the IGDB search results.
+  IgdbSearchRequest search = 1;
 }
 
-message IgdbSearchPlatformResponse {
-  repeated PlatformMetadata platforms = 1;
+// Response message for SearchIgdbGames, containing the raw IGDB game results.
+message SearchIgdbGamesResponse {
+  // The upstream IGDB game results returned by the search query, including all requested
+  // fields and related entities.
+  igdb.GameResult result = 1;
 }
 
-message GetIgdbSearchResponse {
-  oneof search_results {
-    IgdbSearchGameResponse game_matches = 1;
-    IgdbSearchPlatformResponse platform_matches = 2;
-  }
+// Search IGDB platforms by arbitrary search query, filters, and fields.
+// https://api-docs.igdb.com/?javascript#search-1
+message SearchIgdbPlatformsRequest {
+  // The search query, filters, pagination, and fields to return in the IGDB search results.
+  IgdbSearchRequest search = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
-message GetIgdbGameSearchResultsRequest {
-  retrom.providers.igdb.v1.IgdbGameSearchQuery query = 1;
+// Response message for SearchIgdbPlatforms, containing the raw IGDB platform results.
+message SearchIgdbPlatformsResponse {
+  // The upstream IGDB platform results returned by the search query, including all requested
+  // fields and related entities.
+  igdb.PlatformResult result = 1;
 }
 
-message GetIgdbGameSearchResultsResponse {
-  repeated GameMetadata metadata = 1;
+// Get IGDB game metadata for a single game, based on a search query and filters.
+message GetIgdbGameMetadataRequest {
+  // The Retrom game ID for the game to retrieve IGDB metadata for.
+  string game_id = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The search query, used to search against IGDB's search endpoint.
+  IgdbSearchRequest search = 2 [(google.api.field_behavior) = REQUIRED];
+
+  // The ID of the IGDB platform to filter the search results by.
+  optional uint64 igdb_platform_id = 3;
 }
 
-message GetIgdbPlatformSearchResultsRequest {
-  retrom.providers.igdb.v1.IgdbPlatformSearchQuery query = 1;
+// Response message for [GetIgdbGameMetadata], containing the best matching IGDB game result's metadata.
+message GetIgdbGameMetadataResponse {
+  // The best matching IGDB game result for the given search query and filters, including all requested
+  // fields and related entities.
+  GameMetadataView game_metadata = 1;
 }
 
-message GetIgdbPlatformSearchResultsResponse {
-  repeated PlatformMetadata metadata = 1;
+// List IGDB game metadata matches for a single game, based on a search query and filters.
+message ListIgdbGameMetadataRequest {
+  // The Retrom game ID for the game to retrieve IGDB metadata for.
+  string game_id = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The search query, used to search against IGDB's search endpoint.
+  IgdbSearchRequest search = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Response message for [ListIgdbGameMetadata], containing the matching IGDB game results' metadata.
+message ListIgdbGameMetadataResponse {
+  // A list of IGDB game results for the given search query and filters, including all requested
+  // fields and related entities.
+  repeated GameMetadataView game_metadata = 1;
+}
+
+// Get IGDB platform metadata for a single platform, based on a search query and filters.
+message GetIgdbPlatformMetadataRequest {
+  // The Retrom platform ID for the platform to retrieve IGDB metadata for.
+  string platform_id = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The search query, used to search against IGDB's search endpoint.
+  IgdbSearchRequest search = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Response message for [GetIgdbPlatformMetadata], containing the best matching IGDB platform result's metadata.
+message GetIgdbPlatformMetadataResponse {
+  // The best matching IGDB platform result for the given search query and filters, including all requested
+  // fields and related entities.
+  PlatformMetadataView platform_metadata = 1;
+}
+
+// List IGDB platform metadata matches for a single platform, based on a search query and filters.
+message ListIgdbPlatformMetadataRequest {
+  // The Retrom platform ID for the platform to retrieve IGDB metadata for.
+  string platform_id = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The search query, used to search against IGDB's search endpoint.
+  IgdbSearchRequest search = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Response message for [ListIgdbPlatformMetadata], containing the matching IGDB platform results' metadata.
+message ListIgdbPlatformMetadataResponse {
+  // A list of IGDB platform results for the given search query and filters, including all requested
+  // fields and related entities.
+  repeated PlatformMetadataView platform_metadata = 1;
 }

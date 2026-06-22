@@ -274,7 +274,7 @@ create table if not exists local_emulator_configs (
 -- Library / directory mapping tables
 -- ────────────────────────────────────────────────────────────────────────────
 
-create table if not exists library_root_directory (
+create table if not exists library_root_directories (
     library_id text not null references libraries (id) on delete cascade,
     root_directory_id text not null references root_directories (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -282,7 +282,7 @@ create table if not exists library_root_directory (
     primary key (library_id, root_directory_id)
 );
 
-create table if not exists platform_root_directory (
+create table if not exists platform_root_directories (
     platform_id text not null references platforms (id) on delete cascade,
     root_directory_id text not null references root_directories (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -290,7 +290,7 @@ create table if not exists platform_root_directory (
     primary key (platform_id, root_directory_id)
 );
 
-create table if not exists game_root_directory (
+create table if not exists game_root_directories (
     game_id text not null references games (id) on delete cascade,
     root_directory_id text not null references root_directories (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -298,7 +298,7 @@ create table if not exists game_root_directory (
     primary key (game_id, root_directory_id)
 );
 
-create table if not exists platform_library (
+create table if not exists platform_libraries (
     platform_id text not null references platforms (id) on delete cascade,
     library_id text not null references libraries (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -306,7 +306,7 @@ create table if not exists platform_library (
     primary key (platform_id, library_id)
 );
 
-create table if not exists game_platform (
+create table if not exists game_platforms (
     game_id text not null references games (id) on delete cascade,
     platform_id text not null references platforms (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -314,7 +314,7 @@ create table if not exists game_platform (
     primary key (game_id, platform_id)
 );
 
-create table if not exists platform_tag (
+create table if not exists platform_tags (
     platform_id text not null references platforms (id) on delete cascade,
     tag_id text not null references tags (id) on delete cascade,
     created_at text not null default current_timestamp,
@@ -322,7 +322,7 @@ create table if not exists platform_tag (
     primary key (platform_id, tag_id)
 );
 
-create table if not exists game_tag (
+create table if not exists game_tags (
     game_id text not null references games (id) on delete cascade,
     tag_id text not null references tags (id) on delete cascade,
     created_at text not null default current_timestamp,

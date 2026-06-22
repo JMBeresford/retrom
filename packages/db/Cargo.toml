@@ -10,9 +10,6 @@ edition.workspace = true
 
 [dependencies]
 sqlx = { workspace = true }
-postgresql_embedded = { optional = true, version = "^0.19.0", features = [
-  "tokio",
-] }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 tokio = { workspace = true }
@@ -21,4 +18,3 @@ tokio = { workspace = true }
 default = []
 sqlite = ["sqlx/sqlite"]
 postgres = ["sqlx/postgres"]
-embedded = ["dep:postgresql_embedded"]

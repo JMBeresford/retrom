@@ -2,6 +2,25 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "retrom-db",
   "targets": {
+    "add-migration": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "sqlx migrate add -r --source migrations/{args.db} {args.name}"
+      },
+      "configurations": {
+        "sqlite": {
+          "args": {
+            "db": "sqlite"
+          }
+        },
+        "postgres": {
+          "args": {
+            "db": "postgres"
+          }
+        }
+      }
+    },
     "cargo:lint": {},
     "cargo:format": {},
     "cargo:build": {}

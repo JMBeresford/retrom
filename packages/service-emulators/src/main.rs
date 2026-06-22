@@ -1,16 +1,9 @@
 use retrom_codegen::descriptors::retrom::FILE_DESCRIPTOR_SET;
-use retrom_service_config::config::ServerConfigManager;
+use retrom_db::DEFAULT_DB_URL;
+use retrom_service_common::{config::ServerConfigManager, svc_definitions::EMULATOR_SVC_PORT};
 use retrom_service_emulators::router::emulators_router;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit};
-
-const DEFAULT_PORT: u16 = 5111;
-
-#[cfg(not(feature = "postgres"))]
-const DEFAULT_DB_URL: &str = "sqlite://retrom-dev.db";
-
-#[cfg(feature = "postgres")]
-const DEFAULT_DB_URL: &str = "postgres://postgres:password@localhost/retrom-dev";
 
 #[tokio::main]
 async fn main() {
@@ -42,14 +35,14 @@ async fn main() {
         exit(1);
     });
 
-    retrom_db::run_migrations(&pool, &db_url)
+    retrom_db::run_migrations(&pool)
         .await
         .unwrap_or_else(|err| {
             eprintln!("Failed to run database migrations: {err:#?}");
             exit(1);
         });
 
-    let addr: SocketAddr = format!("0.0.0.0:{DEFAULT_PORT}").parse().unwrap();
+    let addr: SocketAddr = format!("0.0.0.0:{EMULATOR_SVC_PORT}").parse().unwrap();
 
     let reflection_service = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)

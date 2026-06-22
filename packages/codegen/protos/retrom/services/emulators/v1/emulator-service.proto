@@ -4,179 +4,284 @@ package retrom.services.emulators.v1;
 
 import "retrom/services/emulators/v1/models.proto";
 
+// EmulatorService defines the gRPC service for managing emulators, emulator profiles, local emulator configurations,
+// and emulator platforms in Retrom.
 service EmulatorService {
+  // CreateEmulators creates new emulators in Retrom with the specified details.
   rpc CreateEmulators(CreateEmulatorsRequest) returns (CreateEmulatorsResponse);
+  // GetEmulators retrieves emulators from Retrom based on the specified criteria, such as their IDs or supported platform IDs.
   rpc GetEmulators(GetEmulatorsRequest) returns (GetEmulatorsResponse);
+  // UpdateEmulators updates existing emulators in Retrom with the specified details.
   rpc UpdateEmulators(UpdateEmulatorsRequest) returns (UpdateEmulatorsResponse);
+  // DeleteEmulators deletes emulators from Retrom based on the specified criteria, such as their IDs.
   rpc DeleteEmulators(DeleteEmulatorsRequest) returns (DeleteEmulatorsResponse);
 
+  // CreateEmulatorProfiles creates new emulator profiles in Retrom with the specified details.
   rpc CreateEmulatorProfiles(CreateEmulatorProfilesRequest) returns (CreateEmulatorProfilesResponse);
+  // GetEmulatorProfiles retrieves emulator profiles from Retrom based on the specified criteria, such as their IDs or associated emulator IDs.
   rpc GetEmulatorProfiles(GetEmulatorProfilesRequest) returns (GetEmulatorProfilesResponse);
+  // UpdateEmulatorProfiles updates existing emulator profiles in Retrom with the specified details.
   rpc UpdateEmulatorProfiles(UpdateEmulatorProfilesRequest) returns (UpdateEmulatorProfilesResponse);
+  // DeleteEmulatorProfiles deletes emulator profiles from Retrom based on the specified criteria, such as their IDs.
   rpc DeleteEmulatorProfiles(DeleteEmulatorProfilesRequest) returns (DeleteEmulatorProfilesResponse);
 
+  // GetDefaultEmulatorProfiles retrieves default emulator profiles from Retrom based on the specified criteria, such as platform IDs and client ID.
   rpc GetDefaultEmulatorProfiles(GetDefaultEmulatorProfilesRequest) returns (GetDefaultEmulatorProfilesResponse);
+  // UpdateDefaultEmulatorProfiles updates existing default emulator profiles in Retrom with the specified details.
   rpc UpdateDefaultEmulatorProfiles(UpdateDefaultEmulatorProfilesRequest) returns (UpdateDefaultEmulatorProfilesResponse);
+  // DeleteDefaultEmulatorProfiles deletes default emulator profiles from Retrom based on the specified criteria, such as platform IDs and client ID.
   rpc DeleteDefaultEmulatorProfiles(DeleteDefaultEmulatorProfilesRequest) returns (DeleteDefaultEmulatorProfilesResponse);
 
+  // CreateLocalEmulatorConfigs creates new local emulator configurations in Retrom with the specified details.
   rpc CreateLocalEmulatorConfigs(CreateLocalEmulatorConfigsRequest) returns (CreateLocalEmulatorConfigsResponse);
+  // GetLocalEmulatorConfigs retrieves local emulator configurations from Retrom based on the specified criteria, such as associated emulator IDs and client ID.
   rpc GetLocalEmulatorConfigs(GetLocalEmulatorConfigsRequest) returns (GetLocalEmulatorConfigsResponse);
+  // UpdateLocalEmulatorConfigs updates existing local emulator configurations in Retrom with the specified details.
   rpc UpdateLocalEmulatorConfigs(UpdateLocalEmulatorConfigsRequest) returns (UpdateLocalEmulatorConfigsResponse);
+  // DeleteLocalEmulatorConfigs deletes local emulator configurations from Retrom based on the specified criteria, such as their IDs.
   rpc DeleteLocalEmulatorConfigs(DeleteLocalEmulatorConfigsRequest) returns (DeleteLocalEmulatorConfigsResponse);
 
+  // GetEmulatorPlatforms retrieves emulator platforms from Retrom based on the specified criteria, such as associated emulator IDs and platform IDs.
   rpc GetEmulatorPlatforms(GetEmulatorPlatformsRequest) returns (GetEmulatorPlatformsResponse);
+  // UpdateEmulatorPlatforms updates existing emulator platforms in Retrom with the specified details, such as associated emulator ID and platform IDs.
   rpc UpdateEmulatorPlatforms(UpdateEmulatorPlatformsRequest) returns (UpdateEmulatorPlatformsResponse);
+  // DeleteEmulatorPlatforms deletes emulator platforms from Retrom based on the specified criteria, such as associated emulator ID and platform IDs.
   rpc DeleteEmulatorPlatforms(DeleteEmulatorPlatformsRequest) returns (DeleteEmulatorPlatformsResponse);
 }
 
+// CreateEmulatorsRequest represents the request message for creating new emulators in Retrom.
 message CreateEmulatorsRequest {
+  // The emulators to be created.
   repeated Emulator emulators = 1;
 }
 
+// CreateEmulatorsResponse represents the response message for creating new emulators in Retrom.
 message CreateEmulatorsResponse {
+  // The emulators that were created in Retrom.
   repeated Emulator emulators_created = 1;
 }
 
+// GetEmulatorsRequest represents the request message for retrieving emulators from Retrom based on specified criteria.
 message GetEmulatorsRequest {
+  // Filter emulators by their unique identifiers. If specified, only emulators with matching IDs will be returned.
   repeated string ids = 1;
+  // Filter emulators by their supported platform IDs. If specified, only emulators that support at least one of
+  // the provided platform IDs will be returned.
   repeated string supported_platform_ids = 2;
 }
 
+// GetEmulatorsResponse represents the response message for retrieving emulators from Retrom based on specified criteria.
 message GetEmulatorsResponse {
+  // The emulators that match the specified criteria and were retrieved from Retrom.
   repeated Emulator emulators = 1;
 }
 
+// UpdateEmulatorsRequest represents the request message for updating existing emulators in Retrom.
 message UpdateEmulatorsRequest {
+  // The emulators to be updated, identified by their IDs.
   repeated Emulator emulators = 1;
 }
 
+// UpdateEmulatorsResponse represents the response message for updating existing emulators in Retrom.
 message UpdateEmulatorsResponse {
+  // The emulators that were updated in Retrom.
   repeated Emulator emulators_updated = 1;
 }
 
+// DeleteEmulatorsRequest represents the request message for deleting emulators from Retrom based on specified criteria.
 message DeleteEmulatorsRequest {
+  // The unique identifiers of the emulators to be deleted.
   repeated string ids = 1;
 }
 
+// DeleteEmulatorsResponse represents the response message for deleting emulators from Retrom based on specified criteria.
 message DeleteEmulatorsResponse {
+  // The emulators that were deleted from Retrom.
   repeated Emulator emulators_deleted = 1;
 }
 
+// CreateEmulatorProfilesRequest represents the request message for creating new emulator profiles in Retrom.
 message CreateEmulatorProfilesRequest {
+  // The emulator profiles to be created.
   repeated EmulatorProfile profiles = 1;
 }
 
+// CreateEmulatorProfilesResponse represents the response message for creating new emulator profiles in Retrom.
 message CreateEmulatorProfilesResponse {
+  // The emulator profiles that were created in Retrom.
   repeated EmulatorProfile profiles_created = 1;
 }
 
+// GetEmulatorProfilesRequest represents the request message for retrieving emulator profiles from Retrom based on specified criteria.
 message GetEmulatorProfilesRequest {
+  // Filter emulator profiles by their unique identifiers. If specified, only profiles with matching IDs will be returned.
   repeated string ids = 1;
+  // Filter emulator profiles by their associated emulator IDs. If specified, only profiles belonging to one of the
+  // provided emulator IDs will be returned.
   repeated string emulator_ids = 2;
 }
 
+// GetEmulatorProfilesResponse represents the response message for retrieving emulator profiles from Retrom based on specified criteria.
 message GetEmulatorProfilesResponse {
+  // The emulator profiles that match the specified criteria and were retrieved from Retrom.
   repeated EmulatorProfile profiles = 1;
 }
 
+// UpdateEmulatorProfilesRequest represents the request message for updating existing emulator profiles in Retrom.
 message UpdateEmulatorProfilesRequest {
+  // The emulator profiles to be updated, identified by their IDs.
   repeated EmulatorProfile profiles = 1;
 }
 
+// UpdateEmulatorProfilesResponse represents the response message for updating existing emulator profiles in Retrom.
 message UpdateEmulatorProfilesResponse {
+  // The emulator profiles that were updated in Retrom.
   repeated EmulatorProfile profiles_updated = 1;
 }
 
+// DeleteEmulatorProfilesRequest represents the request message for deleting emulator profiles from Retrom based on specified criteria.
 message DeleteEmulatorProfilesRequest {
+  // The unique identifiers of the emulator profiles to be deleted.
   repeated string ids = 1;
 }
 
+// DeleteEmulatorProfilesResponse represents the response message for deleting emulator profiles from Retrom based on specified criteria.
 message DeleteEmulatorProfilesResponse {
+  // The emulator profiles that were deleted from Retrom.
   repeated EmulatorProfile profiles_deleted = 1;
 }
 
+// GetDefaultEmulatorProfilesRequest represents the request message for retrieving default emulator profiles from Retrom based on specified criteria.
 message GetDefaultEmulatorProfilesRequest {
+  // Filter default emulator profiles by platform IDs. If specified, only default profiles for one of the provided
+  // platform IDs will be returned.
   repeated string platform_ids = 1;
+  // The identifier of the client for which to retrieve default emulator profiles.
   string client_id = 2;
 }
 
+// GetDefaultEmulatorProfilesResponse represents the response message for retrieving default emulator profiles from Retrom based on specified criteria.
 message GetDefaultEmulatorProfilesResponse {
+  // The default emulator profiles that match the specified criteria and were retrieved from Retrom.
   repeated DefaultEmulatorProfile default_profiles = 1;
 }
 
+// UpdateDefaultEmulatorProfilesRequest represents the request message for updating existing default emulator profiles in Retrom.
 message UpdateDefaultEmulatorProfilesRequest {
+  // The default emulator profiles to be updated.
   repeated DefaultEmulatorProfile default_profiles = 1;
 }
 
+// UpdateDefaultEmulatorProfilesResponse represents the response message for updating existing default emulator profiles in Retrom.
 message UpdateDefaultEmulatorProfilesResponse {
+  // The default emulator profiles that were updated in Retrom.
   repeated DefaultEmulatorProfile default_profiles_updated = 1;
 }
 
+// DeleteDefaultEmulatorProfilesRequest represents the request message for deleting default emulator profiles from Retrom based on specified criteria.
 message DeleteDefaultEmulatorProfilesRequest {
+  // The platform IDs for which to delete default emulator profiles.
   repeated string platform_ids = 1;
+  // The identifier of the client for which to delete default emulator profiles.
   string client_id = 2;
 }
 
+// DeleteDefaultEmulatorProfilesResponse represents the response message for deleting default emulator profiles from Retrom based on specified criteria.
 message DeleteDefaultEmulatorProfilesResponse {
+  // The default emulator profiles that were deleted from Retrom.
   repeated DefaultEmulatorProfile default_profiles_deleted = 1;
 }
 
+// CreateLocalEmulatorConfigsRequest represents the request message for creating new local emulator configurations in Retrom.
 message CreateLocalEmulatorConfigsRequest {
+  // The local emulator configurations to be created.
   repeated LocalEmulatorConfig configs = 1;
 }
 
+// CreateLocalEmulatorConfigsResponse represents the response message for creating new local emulator configurations in Retrom.
 message CreateLocalEmulatorConfigsResponse {
+  // The local emulator configurations that were created in Retrom.
   repeated LocalEmulatorConfig configs_created = 1;
 }
 
+// GetLocalEmulatorConfigsRequest represents the request message for retrieving local emulator configurations from Retrom based on specified criteria.
 message GetLocalEmulatorConfigsRequest {
+  // Filter local emulator configurations by their associated emulator IDs. If specified, only configurations belonging
+  // to one of the provided emulator IDs will be returned.
   repeated string emulator_ids = 1;
+  // The identifier of the client for which to retrieve local emulator configurations.
   string client_id = 2;
 }
 
+// GetLocalEmulatorConfigsResponse represents the response message for retrieving local emulator configurations from Retrom based on specified criteria.
 message GetLocalEmulatorConfigsResponse {
+  // The local emulator configurations that match the specified criteria and were retrieved from Retrom.
   repeated LocalEmulatorConfig configs = 1;
 }
 
+// UpdateLocalEmulatorConfigsRequest represents the request message for updating existing local emulator configurations in Retrom.
 message UpdateLocalEmulatorConfigsRequest {
+  // The local emulator configurations to be updated, identified by their IDs.
   repeated LocalEmulatorConfig configs = 1;
 }
 
+// UpdateLocalEmulatorConfigsResponse represents the response message for updating existing local emulator configurations in Retrom.
 message UpdateLocalEmulatorConfigsResponse {
+  // The local emulator configurations that were updated in Retrom.
   repeated LocalEmulatorConfig configs_updated = 1;
 }
 
+// DeleteLocalEmulatorConfigsRequest represents the request message for deleting local emulator configurations from Retrom based on specified criteria.
 message DeleteLocalEmulatorConfigsRequest {
+  // The unique identifiers of the local emulator configurations to be deleted.
   repeated string ids = 1;
 }
 
+// DeleteLocalEmulatorConfigsResponse represents the response message for deleting local emulator configurations from Retrom based on specified criteria.
 message DeleteLocalEmulatorConfigsResponse {
+  // The local emulator configurations that were deleted from Retrom.
   repeated LocalEmulatorConfig configs_deleted = 1;
 }
 
+// GetEmulatorPlatformsRequest represents the request message for retrieving emulator platforms from Retrom based on specified criteria.
 message GetEmulatorPlatformsRequest {
+  // Filter emulator platforms by their associated emulator IDs. If specified, only platforms belonging to one of the
+  // provided emulator IDs will be returned.
   repeated string emulator_ids = 1;
+  // Filter emulator platforms by platform IDs. If specified, only platforms with matching platform IDs will be returned.
   repeated string platform_ids = 2;
 }
 
+// GetEmulatorPlatformsResponse represents the response message for retrieving emulator platforms from Retrom based on specified criteria.
 message GetEmulatorPlatformsResponse {
+  // The emulator platforms that match the specified criteria and were retrieved from Retrom.
   repeated EmulatorPlatform emulator_platforms = 1;
 }
 
+// UpdateEmulatorPlatformsRequest represents the request message for updating the platforms associated with an emulator in Retrom.
 message UpdateEmulatorPlatformsRequest {
+  // The identifier of the emulator whose associated platforms are being updated.
   string emulator_id = 1;
+  // The platform IDs to associate with the emulator.
   repeated string platform_ids = 2;
 }
 
+// UpdateEmulatorPlatformsResponse represents the response message for updating the platforms associated with an emulator in Retrom.
 message UpdateEmulatorPlatformsResponse {
+  // The emulator platforms that were updated in Retrom.
   repeated EmulatorPlatform emulator_platforms = 1;
 }
 
+// DeleteEmulatorPlatformsRequest represents the request message for deleting the platforms associated with an emulator in Retrom.
 message DeleteEmulatorPlatformsRequest {
+  // The identifier of the emulator whose associated platforms are being deleted.
   string emulator_id = 1;
+  // The platform IDs to disassociate from the emulator.
   repeated string platform_ids = 2;
 }
 
+// DeleteEmulatorPlatformsResponse represents the response message for deleting the platforms associated with an emulator in Retrom.
 message DeleteEmulatorPlatformsResponse {
+  // The emulator platforms that were deleted from Retrom.
   repeated EmulatorPlatform emulator_platforms_deleted = 1;
 }

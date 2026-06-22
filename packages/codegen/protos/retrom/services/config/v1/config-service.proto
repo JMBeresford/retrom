@@ -18,22 +18,34 @@ service ConfigService {
   rpc UpdateServerConfig(UpdateServerConfigRequest) returns (UpdateServerConfigResponse);
 }
 
+// GetServerInfoRequest represents the request message for retrieving metadata about the running server instance,
+// such as the current version.
 message GetServerInfoRequest {}
 
+// GetServerInfoResponse represents the response message for retrieving metadata about the running server instance,
 message GetServerInfoResponse {
+  // Metadata about the running server instance, such as the current version.
   ServerInfo server_info = 1;
 }
 
+// GetServerConfigRequest represents the request message for retrieving the current server configuration.
 message GetServerConfigRequest {}
 
+// GetServerConfigResponse represents the response message for retrieving the current server configuration.
 message GetServerConfigResponse {
+  // The current server configuration.
   ServerConfig config = 1;
 }
 
+// UpdateServerConfigRequest represents the request message for replacing the server configuration with the provided value
+// and persisting it to disk.
 message UpdateServerConfigRequest {
+  // The new server configuration to be applied and persisted.
   ServerConfig config = 1;
 }
 
+// UpdateServerConfigResponse represents the response message for updating the server configuration.
 message UpdateServerConfigResponse {
+  // The updated server configuration.
   ServerConfig config_updated = 1;
 }

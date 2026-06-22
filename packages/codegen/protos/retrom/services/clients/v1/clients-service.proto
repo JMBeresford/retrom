@@ -4,42 +4,65 @@ package retrom.services.clients.v1;
 
 import "retrom/services/clients/v1/models.proto";
 
+// ClientService defines the gRPC service for managing clients in Retrom.
 service ClientService {
+  // CreateClient creates a new client in Retrom with the specified details.
   rpc CreateClient(CreateClientRequest) returns (CreateClientResponse);
+  // GetClients retrieves clients from Retrom based on the specified criteria, such as their IDs or names.
   rpc GetClients(GetClientsRequest) returns (GetClientsResponse);
+  // UpdateClients updates existing clients in Retrom with the specified details.
   rpc UpdateClients(UpdateClientsRequest) returns (UpdateClientsResponse);
+  // DeleteClients deletes clients from Retrom based on the specified criteria, such as their IDs.
   rpc DeleteClients(DeleteClientsRequest) returns (DeleteClientsResponse);
 }
 
+// CreateClientRequest represents the request message for creating a new client in Retrom.
 message CreateClientRequest {
+  // The details of the client to be created.
   Client client = 1;
 }
 
+// CreateClientResponse represents the response message for creating a new client in Retrom.
 message CreateClientResponse {
+  // The client that was created.
   Client client_created = 1;
 }
 
+// GetClientsRequest represents the request message for retrieving clients from Retrom based on specified criteria.
 message GetClientsRequest {
+  // Filter clients by their unique identifiers. If specified, only clients with matching IDs will be returned.
   repeated string ids = 1;
+  // Filter clients by their names. If specified, only clients with matching names will be returned.
   repeated string names = 2;
 }
 
+// GetClientsResponse represents the response message for retrieving clients from Retrom based on specified criteria.
 message GetClientsResponse {
+  // The clients that match the specified criteria and were retrieved from Retrom.
   repeated Client clients = 1;
 }
 
+// UpdateClientsRequest represents the request message for updating existing clients in Retrom with specified details.
 message UpdateClientsRequest {
+  // The details of the clients to be updated. Each client in this list should include its unique
+  // identifier and the fields to be updated.
   repeated Client clients = 1;
 }
 
+// UpdateClientsResponse represents the response message for updating existing clients in Retrom with specified details.
 message UpdateClientsResponse {
+  // The clients that were updated in Retrom.
   repeated Client clients_updated = 1;
 }
 
+// DeleteClientsRequest represents the request message for deleting clients from Retrom based on specified criteria.
 message DeleteClientsRequest {
+  // The unique identifiers of the clients to be deleted. If specified, only clients with matching IDs will be deleted.
   repeated string ids = 1;
 }
 
+// DeleteClientsResponse represents the response message for deleting clients from Retrom based on specified criteria.
 message DeleteClientsResponse {
+  // The clients that were deleted from Retrom.
   repeated Client clients_deleted = 1;
 }

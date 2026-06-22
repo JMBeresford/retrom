@@ -4,26 +4,42 @@ package retrom.services.file_explorer.v1;
 
 import "retrom/files/v1/files.proto";
 
+// FileExplorerService defines the gRPC service for exploring the filesystem in Retrom.
 service FileExplorerService {
+  // GetFilesystemNode retrieves a filesystem node and its children based on the specified path.
   rpc GetFilesystemNode(GetFilesystemNodeRequest) returns (GetFilesystemNodeResponse);
+  // GetStat retrieves file statistics for files and directories.
   rpc GetStat(GetStatRequest) returns (GetStatResponse);
 }
 
+// GetFilesystemNodeRequest represents the request message for retrieving a filesystem node.
 message GetFilesystemNodeRequest {
+  // The absolute path of the filesystem node to retrieve,
+  // e.g. "C:/Games/MyGame/SaveData" or "/home/user/.config/retrom/config.yaml".
   optional string path = 1;
 }
 
+// GetFilesystemNodeResponse represents the response message for retrieving a filesystem node.
 message GetFilesystemNodeResponse {
+  // The retrieved filesystem node, which can be either a directory or a file.
   optional retrom.files.v1.FilesystemNode node = 1;
+  // The children of the retrieved filesystem node, if it is a directory.
   repeated retrom.files.v1.FilesystemNode children = 2;
 }
 
+// GetStatRequest represents the request message for retrieving file statistics.
 message GetStatRequest {
+  // The absolute path of the file or directory for which to retrieve statistics,
   string path = 1;
+  // The maximum depth of the directory tree to traverse when retrieving statistics.
   optional int32 max_depth = 2;
+  // Whether to include directories in the statistics response. If set to true, directories
+  // will be included; if false, only files will be included.
   optional bool include_directories = 3;
 }
 
+// GetStatResponse represents the response message for retrieving file statistics.
 message GetStatResponse {
+  // The list of file statistics for the requested path and its children, if applicable.
   repeated retrom.files.v1.FileStat stats = 1;
 }

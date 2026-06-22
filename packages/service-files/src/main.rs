@@ -1,9 +1,9 @@
-use retrom_service_config::config::ServerConfigManager;
+use retrom_service_common::{
+    config::ServerConfigManager, reflection::reflection_router, svc_definitions::FILE_SVC_PORT,
+};
 use retrom_service_files::router::files_router;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit};
-
-const DEFAULT_PORT: u16 = 5108;
 
 #[tokio::main]
 async fn main() {
@@ -27,9 +27,11 @@ async fn main() {
 
     init_tracing_subscriber(telemetry_enabled, "retrom-service-files.log").await;
 
-    let addr: SocketAddr = format!("0.0.0.0:{DEFAULT_PORT}").parse().unwrap();
+    let addr: SocketAddr = format!("0.0.0.0:{FILE_SVC_PORT}").parse().unwrap();
 
-    let router = files_router().layer(tonic_web::GrpcWebLayer::new());
+    let router = files_router()
+        .layer(tonic_web::GrpcWebLayer::new())
+        .merge(reflection_router());
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await

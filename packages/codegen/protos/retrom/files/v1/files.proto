@@ -4,29 +4,46 @@ package retrom.files.v1;
 
 import "google/protobuf/timestamp.proto";
 
+// FilesystemNodeType represents the type of a filesystem node, which can be either a directory or a file.
 enum FilesystemNodeType {
+  // Unspecified node type.
   FILESYSTEM_NODE_TYPE_UNKNOWN = 0;
+  // The node is a directory.
   FILESYSTEM_NODE_TYPE_DIRECTORY = 1;
+  // The node is a file.
   FILESYSTEM_NODE_TYPE_FILE = 2;
 }
 
+// FilesystemNode represents a single node in the filesystem, which can be either a directory or a file.
 message FilesystemNode {
+  // Absolute path to the node, e.g. "C:/Games/MyGame/SaveData" or "/home/user/.config/retrom/config.yaml".
   string path = 1;
+  // The name of the node, e.g. "SaveData" or "config.yaml".
   string name = 2;
+  // The type of the node, which can be either a directory or a file.
   FilesystemNodeType node_type = 3;
 }
 
+// FileStat represents the metadata of a file, including its path, creation and update timestamps, type, size, and etag.
 message FileStat {
   /* Relative path to the file, usually from the public directory */
   string path = 1;
+  // The timestamp when the file was created.
   google.protobuf.Timestamp created_at = 2;
+  // The timestamp when the file was last updated.
   google.protobuf.Timestamp updated_at = 3;
+  // The type of the node, which can be either a directory or a file.
   FilesystemNodeType node_type = 4;
+  // The size of the file in bytes. This field is only applicable if the node type is FILE.
   optional uint64 byte_size = 5;
+  // The etag of the file, which is a unique identifier that changes whenever the file is updated.
   string etag = 6;
 }
 
+// File represents a file in the filesystem, including its metadata and content.
 message File {
+  // The metadata of the file, such as its path, creation and update timestamps, type, size, and etag.
   FileStat stat = 1;
+  // The content of the file in bytes. This field is only applicable if the node type is FILE.
   bytes content = 2;
 }

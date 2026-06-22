@@ -1,5 +1,5 @@
 [sqlfluff]
-dialect = postgres
+dialect = ansi
 max_line_length = 100
 exclude_rules = references.keywords
 large_file_skip_byte_limit = 0

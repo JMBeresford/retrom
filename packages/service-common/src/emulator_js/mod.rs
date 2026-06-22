@@ -1,5 +1,5 @@
+use crate::retrom_dirs::RetromDirs;
 use futures::StreamExt;
-use retrom_service_config::retrom_dirs::RetromDirs;
 use std::path::PathBuf;
 
 const EMULATOR_JS_VER: &str = "4.2.3";

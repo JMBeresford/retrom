@@ -35,6 +35,3 @@ opentelemetry-otlp = { workspace = true }
 [target.'cfg(not(windows))'.dependencies]
 signal-hook = { workspace = true }
 signal-hook-tokio = { workspace = true }
-
-[features]
-embedded_db = ["retrom-db/embedded"]

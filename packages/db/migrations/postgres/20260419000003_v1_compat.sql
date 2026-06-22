@@ -184,8 +184,8 @@ BEGIN
   FROM _v1_platforms v WHERE v.third_party = false
   ON CONFLICT DO NOTHING;
 
-  -- platform_root_directory (one entry per platform, keyed by path)
-  INSERT INTO platform_root_directory (platform_id, root_directory_id, created_at, updated_at)
+  -- platform_root_directories (one entry per platform, keyed by path)
+  INSERT INTO platform_root_directories (platform_id, root_directory_id, created_at, updated_at)
   SELECT
     mp.new_id,
     rd.id,
@@ -223,8 +223,8 @@ BEGIN
   FROM _v1_games v WHERE v.third_party = false
   ON CONFLICT DO NOTHING;
 
-  -- game_root_directory (one entry per game, keyed by path)
-  INSERT INTO game_root_directory (game_id, root_directory_id, created_at, updated_at)
+  -- game_root_directories (one entry per game, keyed by path)
+  INSERT INTO game_root_directories (game_id, root_directory_id, created_at, updated_at)
   SELECT
     mg.new_id,
     rd.id,
@@ -362,8 +362,8 @@ BEGIN
   FROM _v1_game_genres v
   ON CONFLICT DO NOTHING;
 
-  -- Migrate legacy game_genre_maps to game_tag.
-  INSERT INTO game_tag (game_id, tag_id, created_at, updated_at)
+  -- Migrate legacy game_genre_maps to game_tags.
+  INSERT INTO game_tags (game_id, tag_id, created_at, updated_at)
   SELECT
     mg.new_id,
     t.id,
@@ -386,8 +386,8 @@ BEGIN
   JOIN _map_games ms ON v.similar_game_id = ms.old_id
   ON CONFLICT DO NOTHING;
 
-  -- game_platform (derived from v1 games.platform_id)
-  INSERT INTO game_platform (game_id, platform_id, created_at, updated_at)
+  -- game_platforms (derived from v1 games.platform_id)
+  INSERT INTO game_platforms (game_id, platform_id, created_at, updated_at)
   SELECT mg.new_id, mp.new_id,
          to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
          to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
@@ -521,5 +521,7 @@ BEGIN
   -- DROP TABLE IF EXISTS _map_game_files;
   -- DROP TABLE IF EXISTS _map_games;
   -- DROP TABLE IF EXISTS _map_platforms;
+
+DROP TABLE __diesel_schema_migrations;
 
 END $$;

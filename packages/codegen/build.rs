@@ -24,7 +24,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "retrom.services.clients.v1.Client",
         "retrom.services.library.v1.Library",
         "retrom.services.library.v1.RootDirectory",
+        "retrom.services.library.v1.Platform",
         "retrom.services.library.v1.Game",
+        "retrom.services.library.v1.GameFile",
         "retrom.services.metadata.v1.GameMetadata",
         "retrom.services.metadata.v1.PlatformMetadata",
         "retrom.services.metadata.v1.GameMetadataArtwork",
@@ -48,6 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .extern_path(".google.protobuf.Timestamp", "crate::timestamp::Timestamp")
         .extern_path(".google.protobuf.Duration", "::prost_wkt_types::Duration")
         .extern_path(".google.protobuf.Value", "::prost_wkt_types::Value")
+        .extern_path(".google.protobuf.FieldMask", "::prost_wkt_types::FieldMask")
         .message_attribute(
             ".retrom",
             "#[serde(rename_all(serialize = \"camelCase\", deserialize = \"camelCase\"))]",
@@ -83,7 +86,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
     for model_name in row_models.into_iter() {
-        build = build.type_attribute(model_name, format!("#[derive({row_derivations})]"));
+        build = build.type_attribute(
+            model_name,
+            format!("#[derive({row_derivations})]\n#[sqlx(default)]"),
+        );
     }
 
     build

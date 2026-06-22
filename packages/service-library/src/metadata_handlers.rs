@@ -1,617 +1,382 @@
-use super::LibraryServiceHandlers;
-use crate::job_manager::{JobError, JobOptions};
-use bigdecimal::ToPrimitive;
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
-use retrom_codegen::retrom::{
-    self,
-    get_igdb_search_request::IgdbSearchType,
-    igdb_fields::{IncludeFields, Selector},
-    igdb_filters::{FilterOperator, FilterValue},
-    igdb_game_search_query, igdb_platform_search_query, GameGenre, GameMetadata,
-    GetIgdbSearchRequest, IgdbFields, IgdbFilters, IgdbGameSearchQuery, IgdbPlatformSearchQuery,
-    NewGameGenre, NewGameGenreMap, NewSimilarGameMap, PlatformMetadata,
-    UpdateLibraryMetadataResponse, UpdatedGameMetadata,
-};
-use retrom_db::schema;
-use retrom_service_common::metadata_providers::{
-    igdb::provider::IgdbSearchData, GameMetadataProvider, MetadataProvider,
-    PlatformMetadataProvider,
-};
-use std::{
-    collections::{HashMap, HashSet},
-    convert::Infallible,
-    sync::Arc,
-};
-use tracing::instrument;
+//! Library metadata refresh, backed by sqlx + the v2 schema.
+//!
+//! Orchestrates manual, IGDB, and Steam metadata for every platform and game in the
+//! database. IGDB and Steam lookups are delegated to the metadata service via the gRPC
+//! clients carried on [`LibraryServiceHandlers`] (`igdb_svc_client`, `steam_svc_client`);
+//! all persistence is performed locally with [`sqlx::QueryBuilder`].
 
-#[instrument(skip(state))]
-pub async fn update_metadata(
+use crate::LibraryServiceHandlers;
+use retrom_codegen::retrom::services::{
+    jobs::v1::JobStatus,
+    library::v1::{UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse},
+    metadata::v1::{DownloadGameMetadataRequest, DownloadPlatformMetadataRequest},
+};
+use sqlx::QueryBuilder;
+use tonic::{Request, Status};
+use tracing::Instrument;
+
+pub async fn update_library_metadata(
     state: &LibraryServiceHandlers,
-    overwrite: bool,
-) -> Result<UpdateLibraryMetadataResponse, String> {
+    request: Request<UpdateLibraryMetadataRequest>,
+) -> Result<UpdateLibraryMetadataResponse, Status> {
+    let request = request.into_inner();
+    let _overwrite = request.overwrite();
+
+    let platform_metadata_job = state
+        .job_manager
+        .create_job(
+            "Updating Platform Metadata".to_string(),
+            "Discovering and updating metadata for all platforms".to_string(),
+        )
+        .await;
+
+    let game_metadata_job = state
+        .job_manager
+        .create_job(
+            "Updating Game Metadata".to_string(),
+            "Discovering and updating metadata for all games".to_string(),
+        )
+        .await;
+
+    let extra_metadata_job = state
+        .job_manager
+        .create_job(
+            "Updating Extra Metadata".to_string(),
+            "Discovering and updating extra metadata for all library entries".to_string(),
+        )
+        .await;
+
     let db_pool = state.db_pool.clone();
-    let mut conn = match db_pool.get().await {
-        Ok(conn) => conn,
-        Err(why) => {
-            tracing::error!("Failed to get connection: {}", why);
-            return Err(why.to_string());
-        }
-    };
+    let platform_metadata_job_id = platform_metadata_job.id.clone();
+    let extra_metadata_job_id = extra_metadata_job.id.clone();
+    let metadata_svc = state.metadata_svc_client.clone();
+    let job_manager = state.job_manager.clone();
 
-    let platforms = match schema::platforms::table
-        .filter(schema::platforms::third_party.eq(false))
-        .load::<retrom::Platform>(&mut conn)
-        .await
-    {
-        Ok(platforms) => platforms,
-        Err(e) => {
-            tracing::error!("Failed to load platforms: {}", e);
-            vec![]
-        }
-    };
+    tokio::spawn(
+        async move {
+            job_manager
+                .update_job(
+                    &platform_metadata_job_id,
+                    Some(0.0),
+                    Some(JobStatus::Running),
+                    None,
+                )
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
 
-    let platform_tasks = platforms
-        .into_iter()
-        .map(|platform| {
-            let igdb_provider = state.igdb_client.clone();
-            let db_pool = db_pool.clone();
-
-            async move {
-                let mut conn = match db_pool.get().await {
-                    Ok(conn) => conn,
-                    Err(why) => {
-                        tracing::error!("Failed to get connection: {}", why);
-                        return Err(why.to_string());
-                    }
-                };
-
-                let existing = PlatformMetadata::belonging_to(&platform)
-                    .first::<PlatformMetadata>(&mut conn)
-                    .await
-                    .optional()
-                    .ok()
-                    .flatten();
-
-                let mut query = IgdbPlatformSearchQuery {
-                    fields: Some(igdb_platform_search_query::Fields::default()),
-                    ..Default::default()
-                };
-
-                if let Some(exists) = existing.and_then(|meta| meta.igdb_id) {
-                    query
-                        .fields
-                        .as_mut()
-                        .unwrap()
-                        .id
-                        .replace(exists.to_u64().unwrap());
-                };
-
-                drop(conn);
-
-                let metadata = igdb_provider
-                    .get_platform_metadata(platform, Some(query))
-                    .await;
-
-                if let Some(metadata) = metadata {
-                    let mut conn = match db_pool.get().await {
-                        Ok(conn) => conn,
-                        Err(why) => {
-                            tracing::error!("Failed to get connection: {}", why);
-                            return Err(why.to_string());
-                        }
-                    };
-
-                    diesel::insert_into(schema::platform_metadata::table)
-                        .values(&metadata)
-                        .on_conflict(schema::platform_metadata::platform_id)
-                        .do_update()
-                        .set(&metadata)
-                        .execute(&mut conn)
-                        .await
-                        .map_err(|e| {
-                            tracing::error!("Failed to insert metadata: {}", e);
-                            e.to_string()
-                        })?;
-                };
-
-                tracing::debug!("Platform metadata task completed");
-
-                Ok(())
-            }
-        })
-        .collect();
-
-    let games: Vec<retrom::Game> = schema::games::table
-        .filter(schema::games::third_party.eq(false))
-        .load(&mut conn)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to load games: {}", e);
-            e.to_string()
-        })?;
-
-    let game_tasks = games
-        .iter()
-        .map(|game| {
-            let game = game.clone();
-            let igdb_provider = state.igdb_client.clone();
-            let db_pool = db_pool.clone();
-
-            async move {
-                let mut conn = match db_pool.get().await {
-                    Ok(conn) => conn,
-                    Err(why) => {
-                        return Err(why.to_string());
-                    }
-                };
-
-                let existing = GameMetadata::belonging_to(&game)
-                    .first::<GameMetadata>(&mut conn)
-                    .await
-                    .optional()
-                    .ok()
-                    .flatten();
-
-                if existing.is_some() && !overwrite {
-                    return Ok(());
-                }
-
-                let mut query = IgdbGameSearchQuery {
-                    fields: Some(igdb_game_search_query::Fields::default()),
-                    ..Default::default()
-                };
-
-                if let Some(id) = game.platform_id {
-                    let platform_meta: Option<PlatformMetadata> = schema::platform_metadata::table
-                        .find(id)
-                        .first(&mut conn)
-                        .await
-                        .ok();
-
-                    let platform_igdb_id = platform_meta
-                        .and_then(|meta| meta.igdb_id)
-                        .and_then(|id| id.to_u64());
-
-                    if let Some(igdb_id) = platform_igdb_id {
-                        query.fields.as_mut().unwrap().platform.replace(igdb_id);
-                    }
-                };
-
-                if let Some(exists) = existing.and_then(|meta| meta.igdb_id) {
-                    query
-                        .fields
-                        .as_mut()
-                        .unwrap()
-                        .id
-                        .replace(exists.to_u64().unwrap());
-                };
-
-                // don't hold the db connection while we fetch metadata, as we are likely
-                // to be rate limited
-                drop(conn);
-                let metadata = igdb_provider.get_game_metadata(game, Some(query)).await;
-
-                if let Some(metadata) = metadata {
-                    let mut conn = match db_pool.get().await {
-                        Ok(conn) => conn,
-                        Err(why) => {
-                            return Err(why.to_string());
-                        }
-                    };
-
-                    if let Err(e) = diesel::insert_into(schema::game_metadata::table)
-                        .values(&metadata)
-                        .on_conflict(schema::game_metadata::game_id)
-                        .do_update()
-                        .set(&metadata)
-                        .get_results::<retrom::GameMetadata>(&mut conn)
-                        .await
-                        .optional()
-                    {
-                        return Err(e.to_string());
-                    };
-                };
-
-                tracing::debug!("Game metadata task completed");
-
-                Ok(())
-            }
-        })
-        .collect();
-
-    let extra_metadata_tasks = games
-        .into_iter()
-        .map(|game| {
-            let igdb_provider = state.igdb_client.clone();
-            let db_pool = db_pool.clone();
-
-            async move {
-                let mut conn = match db_pool.get().await {
-                    Ok(conn) => conn,
-                    Err(why) => {
-                        return Err(why.to_string());
-                    }
-                };
-
-                let game_meta: GameMetadata = match schema::game_metadata::table
-                    .filter(schema::game_metadata::game_id.eq(game.id))
-                    .first::<retrom::GameMetadata>(&mut conn)
-                    .await
-                {
-                    Ok(metadata) => metadata,
-                    Err(_) => {
-                        tracing::debug!("Game does not have metadata");
-                        return Ok(());
-                    }
-                };
-
-                // don't hold the db connection while we fetch metadata, as we are likely
-                // to be rate limited
-                drop(conn);
-
-                let game_igdb_id = match game_meta.igdb_id {
-                    Some(id) => id,
-                    None => {
-                        tracing::debug!("Game does not have an IGDB ID");
-                        return Ok(());
-                    }
-                };
-
-                let mut filter_map = HashMap::<String, FilterValue>::new();
-
-                filter_map.insert(
-                    "id".to_string(),
-                    FilterValue {
-                        value: game_igdb_id.to_string(),
-                        operator: i32::from(FilterOperator::Equal).into(),
-                    },
-                );
-
-                let filters = IgdbFilters {
-                    filters: filter_map,
-                }
-                .into();
-
-                let fields = IgdbFields {
-                    selector: Some(Selector::Include(IncludeFields {
-                        value: [
-                            "genres.*",
-                            "similar_games.id",
-                            "franchise.games.id",
-                            "franchises.games.id",
-                        ]
-                        .into_iter()
-                        .map(String::from)
-                        .collect(),
-                    })),
-                }
-                .into();
-
-                let query = GetIgdbSearchRequest {
-                    search_type: IgdbSearchType::Game.into(),
-                    fields,
-                    filters,
-                    ..Default::default()
-                };
-
-                let extra_metadata = match igdb_provider.search_metadata(query).await {
-                    Some(IgdbSearchData::Game(matches)) => matches,
-                    _ => {
-                        return Ok(());
-                    }
-                };
-
-                let mut similar_game_ids = HashSet::new();
-
-                extra_metadata.games.iter().for_each(|game| {
-                    game.similar_games.iter().for_each(|game| {
-                        similar_game_ids.insert(game.id);
-                    });
-
-                    if let Some(franchise) = game.franchise.as_ref() {
-                        franchise.games.iter().for_each(|game| {
-                            similar_game_ids.insert(game.id);
-                        });
-                    }
-
-                    game.franchises.iter().for_each(|franchise| {
-                        franchise.games.iter().for_each(|game| {
-                            similar_game_ids.insert(game.id);
-                        });
-                    });
-                });
-
-                let mut conn = match db_pool.get().await {
-                    Ok(conn) => conn,
-                    Err(why) => {
-                        return Err(why.to_string());
-                    }
-                };
-
-                let similar_game_metas = match schema::game_metadata::table
-                    .filter(
-                        schema::game_metadata::igdb_id
-                            .eq_any(similar_game_ids.iter().map(|id| id.to_i64())),
-                    )
-                    .load::<retrom::GameMetadata>(&mut conn)
-                    .await
-                {
-                    Ok(metas) => metas,
-                    Err(why) => {
-                        tracing::error!("Failed to load similar game metadata: {}", why);
-                        return Err(why.to_string());
-                    }
-                };
-
-                drop(conn);
-
-                let new_similar_game_maps = similar_game_ids
-                    .into_iter()
-                    .filter_map(|id| {
-                        let similar_game_id = match similar_game_metas
-                            .iter()
-                            .find(|metadata| metadata.igdb_id == id.to_i64())
-                            .map(|metadata| metadata.game_id)
-                        {
-                            Some(id) => id,
-                            None => return None,
-                        };
-
-                        if similar_game_id == game_meta.game_id {
-                            return None;
-                        }
-
-                        Some(NewSimilarGameMap {
-                            game_id: game_meta.game_id,
-                            similar_game_id,
-                            ..Default::default()
-                        })
-                    })
-                    .collect::<Vec<_>>();
-
-                let new_genres = extra_metadata
-                    .games
-                    .iter()
-                    .flat_map(|igdb_game| {
-                        igdb_game.genres.iter().map(|genre| NewGameGenre {
-                            slug: genre.slug.clone(),
-                            name: genre.name.clone(),
-                            ..Default::default()
-                        })
-                    })
-                    .collect::<Vec<_>>();
-
-                let mut conn = match db_pool.get().await {
-                    Ok(conn) => conn,
-                    Err(why) => {
-                        return Err(why.to_string());
-                    }
-                };
-
-                if let Err(why) = diesel::insert_into(schema::similar_game_maps::table)
-                    .values(&new_similar_game_maps)
-                    .on_conflict_do_nothing()
-                    .execute(&mut conn)
-                    .await
-                {
-                    tracing::error!("Failed to insert similar games: {}", why);
-                }
-
-                if let Err(why) = diesel::insert_into(schema::game_genres::table)
-                    .values(&new_genres)
-                    .on_conflict_do_nothing()
-                    .execute(&mut conn)
-                    .await
-                {
-                    tracing::error!("Failed to insert genres: {}", why);
-                }
-
-                let genres: Vec<GameGenre> = schema::game_genres::table
-                    .filter(
-                        schema::game_genres::slug
-                            .eq_any(new_genres.iter().map(|genre| &genre.slug)),
-                    )
-                    .load(&mut conn)
-                    .await
-                    .unwrap_or_default();
-
-                let new_genre_maps = genres
-                    .into_iter()
-                    .map(|genre| NewGameGenreMap {
-                        game_id: game_meta.game_id,
-                        genre_id: genre.id,
-                        ..Default::default()
-                    })
-                    .collect::<Vec<_>>();
-
-                if let Err(why) = diesel::insert_into(schema::game_genre_maps::table)
-                    .values(&new_genre_maps)
-                    .on_conflict_do_nothing()
-                    .execute(&mut conn)
-                    .await
-                {
-                    tracing::error!("Failed to insert genre maps: {}", why);
-                }
-
-                drop(conn);
-
-                tracing::debug!("Extra metadata task completed");
-
-                Ok(())
-            }
-        })
-        .collect();
-
-    let steam_provider = state.steam_web_api_client.clone();
-    let all_steam_apps = match steam_provider.get_owned_games().await {
-        Ok(res) => res.response.games,
-        Err(e) => {
-            tracing::error!("Failed to get owned games: {}", e);
-            vec![]
-        }
-    };
-
-    let steam_games: Arc<Vec<retrom::Game>> = Arc::new(
-        schema::games::table
-            .filter(schema::games::steam_app_id.is_not_null())
-            .load::<retrom::Game>(&mut conn)
-            .await
-            .unwrap_or_default(),
-    );
-
-    let steam_tasks: Vec<_> = all_steam_apps
-        .into_iter()
-        .filter_map(|app| {
-            let steam_provider = steam_provider.clone();
-            let db_pool = db_pool.clone();
-            let steam_games = steam_games.clone();
-            let steam_appid = app.appid;
-
-            let game = match steam_games
-                .iter()
-                .find(|game| game.steam_app_id == steam_appid.to_i64())
+            let all_platform_ids: Vec<String> = match QueryBuilder::new("select id from platforms")
+                .build_query_scalar()
+                .fetch_all(&db_pool)
+                .await
             {
-                Some(game) => game.clone(),
-                None => {
-                    tracing::warn!("No game found for Steam App ID: {}", steam_appid);
-                    return None;
+                Ok(platform_ids) => platform_ids,
+                Err(why) => {
+                    tracing::error!("Failed to fetch platform ids: {why:#?}");
+                    vec![]
                 }
             };
 
-            let game_id = game.id;
+            let mut tasks = tokio::task::JoinSet::new();
+            all_platform_ids.into_iter().for_each(|platform_id| {
+                let mut metadata_svc = metadata_svc.clone();
+                tasks.spawn(
+                    async move {
+                        metadata_svc
+                            .download_platform_metadata(DownloadPlatformMetadataRequest {
+                                platform_id,
+                            })
+                            .await
+                            .map_err(|why| Status::internal(why.to_string()))?;
 
-            Some(async move {
-                let mut conn = db_pool.get().await.expect("Failed to get connection");
-
-                let existing = schema::game_metadata::table
-                    .find(game.id)
-                    .first::<retrom::GameMetadata>(&mut conn)
-                    .await;
-
-                // don't hold the db connection while we fetch metadata, as we are likely
-                // to be rate limited
-                drop(conn);
-
-                let metadata = match steam_provider.get_game_metadata(game, Some(app)).await {
-                    Some(meta) => meta,
-                    None => {
-                        tracing::warn!(
-                            "No metadata found for game with Steam App ID: {}",
-                            steam_appid
-                        );
-                        return Ok(());
+                        Ok::<(), Status>(())
                     }
+                    .in_current_span(),
+                );
+            });
+
+            let total_tasks = tasks.len();
+            let mut completed_tasks = 0;
+            while let Some(join_result) = tasks.join_next().await {
+                let percent_complete = (completed_tasks as f32 / total_tasks as f32) * 100.0;
+                match &join_result {
+                    Err(why) => {
+                        tracing::error!(
+                            "A task in the update library metadata job panicked: {why:#?}"
+                        );
+                    }
+                    Ok(Err(why)) => {
+                        tracing::error!(
+                            "A task in the update library metadata job failed: {why:#?}"
+                        );
+                    }
+                    _ => {}
                 };
 
-                let mut conn = db_pool.get().await.expect("Failed to get connection");
-
-                if let Ok(existing) = existing {
-                    if !overwrite {
-                        tracing::debug!("Metadata already exists for game {}", existing.name());
-
-                        let updated_meta = UpdatedGameMetadata {
-                            last_played: metadata.last_played,
-                            minutes_played: metadata.minutes_played,
-                            ..Default::default()
-                        };
-
-                        if let Err(why) = diesel::update(schema::game_metadata::table)
-                            .filter(schema::game_metadata::game_id.eq(game_id))
-                            .set(&updated_meta)
-                            .execute(&mut conn)
-                            .await
-                        {
-                            tracing::error!("Failed to update metadata: {}", why);
-                        };
-
-                        return Ok(());
-                    }
-                }
-
-                if let Err(why) = diesel::insert_into(schema::game_metadata::table)
-                    .values(&metadata)
-                    .on_conflict_do_nothing()
-                    .execute(&mut conn)
+                job_manager
+                    .update_job(
+                        &platform_metadata_job_id,
+                        Some(percent_complete),
+                        if join_result.is_err() {
+                            Some(JobStatus::Failed)
+                        } else {
+                            None
+                        },
+                        None,
+                    )
                     .await
-                {
-                    tracing::error!("Failed to update metadata: {}", why);
+                    .map_err(|why| Status::internal(why.to_string()))?;
+
+                completed_tasks += 1;
+            }
+
+            job_manager
+                .update_job(
+                    &platform_metadata_job_id,
+                    Some(100.0),
+                    Some(JobStatus::Complete),
+                    None,
+                )
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
+
+            Ok::<_, Status>(())
+        }
+        .instrument(tracing::info_span!("update_platform_metadata_job")),
+    );
+
+    let db_pool = state.db_pool.clone();
+    let job_manager = state.job_manager.clone();
+    let platform_metadata_job_id = platform_metadata_job.id.clone();
+    let game_metadata_job_id = game_metadata_job.id.clone();
+    let metadata_svc = state.metadata_svc_client.clone();
+
+    tokio::spawn(
+        async move {
+            let mut sub = job_manager.subscribe(platform_metadata_job_id);
+
+            while let Ok(update) = sub.recv().await {
+                if update.status() == JobStatus::Complete {
+                    break;
                 }
+            }
 
-                tracing::debug!("Steam metadata task completed");
+            job_manager
+                .update_job(
+                    &game_metadata_job_id,
+                    Some(0.0),
+                    Some(JobStatus::Running),
+                    None,
+                )
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
 
-                Ok::<(), Infallible>(())
-            })
-        })
-        .collect();
+            let all_game_ids: Vec<String> = match QueryBuilder::new("select id from games")
+                .build_query_scalar()
+                .fetch_all(&db_pool)
+                .await
+            {
+                Ok(game_ids) => game_ids,
+                Err(why) => {
+                    tracing::error!("Failed to fetch game ids: {why:#?}");
+                    vec![]
+                }
+            };
+
+            let mut tasks = tokio::task::JoinSet::new();
+            all_game_ids.into_iter().for_each(|game_id| {
+                let mut metadata_svc = metadata_svc.clone();
+
+                tasks.spawn(
+                    async move {
+                        metadata_svc
+                            .download_game_metadata(DownloadGameMetadataRequest { game_id })
+                            .await
+                            .map_err(|why| Status::internal(why.to_string()))?;
+
+                        Ok::<(), Status>(())
+                    }
+                    .in_current_span(),
+                );
+            });
+
+            let total_tasks = tasks.len();
+            let mut completed_tasks = 0;
+            while let Some(join_result) = tasks.join_next().await {
+                let percent_complete = (completed_tasks as f32 / total_tasks as f32) * 100.0;
+                match &join_result {
+                    Err(why) => {
+                        tracing::error!(
+                            "A task in the update library metadata job panicked: {why:#?}"
+                        );
+                    }
+                    Ok(Err(why)) => {
+                        tracing::error!(
+                            "A task in the update library metadata job failed: {why:#?}"
+                        );
+                    }
+                    _ => {}
+                };
+
+                job_manager
+                    .update_job(
+                        &game_metadata_job_id,
+                        Some(percent_complete),
+                        if join_result.is_err() {
+                            Some(JobStatus::Failed)
+                        } else {
+                            None
+                        },
+                        None,
+                    )
+                    .await
+                    .map_err(|why| Status::internal(why.to_string()))?;
+
+                completed_tasks += 1;
+            }
+
+            job_manager
+                .update_job(
+                    &game_metadata_job_id,
+                    Some(100.0),
+                    Some(JobStatus::Complete),
+                    None,
+                )
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
+
+            Ok::<_, Status>(())
+        }
+        .instrument(tracing::info_span!("update_game_metadata_job")),
+    );
 
     let job_manager = state.job_manager.clone();
-    let platform_metadata_job_id = match job_manager
-        .spawn("Downloading Platform Metadata", platform_tasks, None)
-        .await
-    {
-        Ok(id) => id,
-        Err(JobError::JobAlreadyRunning(_)) => {
-            return Err("Platform metadata job is already running".to_string())
-        }
-        _ => return Err("Failed to spawn platform metadata job".to_string()),
-    };
+    let db_pool = state.db_pool.clone();
+    tokio::spawn(
+        async move {
+            job_manager
+                .update_job(
+                    &extra_metadata_job_id,
+                    Some(0.0),
+                    Some(JobStatus::Running),
+                    None,
+                )
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
 
-    let game_job_opts = JobOptions {
-        wait_on_jobs: Some(vec![platform_metadata_job_id]),
-    };
+            let all_game_ids: Vec<String> = QueryBuilder::new("select id from games")
+                .build_query_scalar()
+                .fetch_all(&db_pool)
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
 
-    let steam_metadata_job_id = if !steam_tasks.is_empty() {
-        let id = match job_manager
-            .spawn("Downloading Steam Metadata", steam_tasks, None)
-            .await
-        {
-            Ok(id) => id,
-            Err(JobError::JobAlreadyRunning(_)) => {
-                return Err("Steam metadata job is already running".to_string())
+            let mut tasks = tokio::task::JoinSet::new();
+            all_game_ids.into_iter().for_each(|game_id| {
+                let db_pool = db_pool.clone();
+
+                tasks.spawn(
+                    async move {
+                        // Collect IDs of other games that share tags with this game.
+                        let similar_game_ids: Vec<String> = QueryBuilder::new(
+                            r#"
+                            select distinct other_tags.game_id
+                            from game_tags this_tags
+                            join game_tags other_tags on this_tags.tag_id = other_tags.tag_id
+                            where this_tags.game_id = 
+                            "#,
+                        )
+                        .push_bind(&game_id)
+                        .push(" and other_tags.game_id != ")
+                        .push_bind(&game_id)
+                        .build_query_scalar()
+                        .fetch_all(&db_pool)
+                        .await
+                        .map_err(|why| Status::internal(why.to_string()))?;
+
+                        if similar_game_ids.is_empty() {
+                            return Ok::<(), Status>(());
+                        }
+
+                        let mut insert_builder = QueryBuilder::new(
+                            "insert into similar_games (game_id, similar_game_id) ",
+                        );
+
+                        insert_builder.push_values(
+                            similar_game_ids.iter(),
+                            |mut row, similar_game_id| {
+                                row.push_bind(&game_id);
+                                row.push_bind(similar_game_id);
+                            },
+                        );
+
+                        insert_builder.push(" on conflict do nothing");
+
+                        insert_builder
+                            .build()
+                            .execute(&db_pool)
+                            .await
+                            .map_err(|why| Status::internal(why.to_string()))?;
+
+                        Ok::<(), Status>(())
+                    }
+                    .in_current_span(),
+                );
+            });
+
+            let total_tasks = tasks.len();
+            let mut completed_tasks = 0;
+            while let Some(join_result) = tasks.join_next().await {
+                let percent_complete = (completed_tasks as f32 / total_tasks as f32) * 100.0;
+                match &join_result {
+                    Err(why) => {
+                        tracing::error!(
+                            "A task in the update library metadata job panicked: {why:#?}"
+                        );
+                    }
+                    Ok(Err(why)) => {
+                        tracing::error!(
+                            "A task in the update library metadata job failed: {why:#?}"
+                        );
+                    }
+                    _ => {}
+                };
+
+                job_manager
+                    .update_job(
+                        &extra_metadata_job_id,
+                        Some(percent_complete),
+                        if join_result.is_err() {
+                            Some(JobStatus::Failed)
+                        } else {
+                            None
+                        },
+                        None,
+                    )
+                    .await
+                    .map_err(|why| Status::internal(why.to_string()))?;
+
+                completed_tasks += 1;
             }
-            _ => return Err("Failed to spawn Steam metadata job".to_string()),
-        };
 
-        Some(id.to_string())
-    } else {
-        None
-    };
+            job_manager
+                .update_job(
+                    &extra_metadata_job_id,
+                    Some(100.0),
+                    Some(JobStatus::Complete),
+                    None,
+                )
+                .await
+                .map_err(|why| Status::internal(why.to_string()))?;
 
-    let game_metadata_job_id = match job_manager
-        .spawn("Downloading Game Metadata", game_tasks, Some(game_job_opts))
-        .await
-    {
-        Ok(id) => id,
-        Err(JobError::JobAlreadyRunning(_)) => {
-            return Err("Game metadata job is already running".to_string())
+            Ok::<(), Status>(())
         }
-        _ => return Err("Failed to spawn game metadata job".to_string()),
-    };
-
-    let extra_metadata_job_opts = JobOptions {
-        wait_on_jobs: Some(vec![game_metadata_job_id]),
-    };
-
-    let extra_metadata_job_id = match job_manager
-        .spawn(
-            "Downloading Extra Metadata",
-            extra_metadata_tasks,
-            Some(extra_metadata_job_opts),
-        )
-        .await
-    {
-        Ok(id) => id,
-        Err(JobError::JobAlreadyRunning(_)) => {
-            return Err("Extra metadata job is already running".to_string())
-        }
-        _ => return Err("Failed to spawn extra metadata job".to_string()),
-    };
+        .instrument(tracing::info_span!("update_extra_metadata_job")),
+    );
 
     Ok(UpdateLibraryMetadataResponse {
-        platform_metadata_job_id: platform_metadata_job_id.to_string(),
-        game_metadata_job_id: game_metadata_job_id.to_string(),
-        extra_metadata_job_id: extra_metadata_job_id.to_string(),
-        steam_metadata_job_id,
+        job_ids: vec![
+            platform_metadata_job.id,
+            game_metadata_job.id,
+            extra_metadata_job.id,
+        ],
     })
 }

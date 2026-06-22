@@ -5,133 +5,175 @@ package retrom.services.saves.v2;
 import "retrom/files/v1/files.proto";
 import "retrom/services/saves/v2/models.proto";
 
+// EmulatorSavesService defines the gRPC service for managing emulator save files and save states in Retrom.
 service EmulatorSavesService {
+  // StatSaveFiles retrieves statistics about save files for specified emulators.
   rpc StatSaveFiles(StatSaveFilesRequest) returns (StatSaveFilesResponse);
+  // BackupSaveFiles creates backups of save files for specified emulators.
   rpc BackupSaveFiles(BackupSaveFilesRequest) returns (BackupSaveFilesResponse);
+  // RestoreSaveFilesFromBackup restores save files from backups for specified emulators.
   rpc RestoreSaveFilesFromBackup(RestoreSaveFilesFromBackupRequest) returns (RestoreSaveFilesFromBackupResponse);
 
+  // StatSaveStates retrieves statistics about save states for specified emulators.
   rpc StatSaveStates(StatSaveStatesRequest) returns (StatSaveStatesResponse);
+  // BackupSaveStates creates backups of save states for specified emulators.
   rpc BackupSaveStates(BackupSaveStatesRequest) returns (BackupSaveStatesResponse);
+  // RestoreSaveStatesFromBackup restores save states from backups for specified emulators.
   rpc RestoreSaveStatesFromBackup(RestoreSaveStatesFromBackupRequest) returns (RestoreSaveStatesFromBackupResponse);
 }
 
+// StatSaveFilesRequest represents the request to retrieve statistics of save files for specified emulators.
 message StatSaveFilesRequest {
+  // Specifies which emulator's save files to retrieve statistics for.
   message Selector {
+    // The unique identifier of the emulator for which to retrieve save file statistics.
     string emulator_id = 1;
   }
 
+  // Configuration options for the statistics retrieval.
   message Config {
+    // Whether to include backup information in the statistics response.
     optional bool include_backups = 1;
   }
 
+  // A list of selectors specifying which emulators' save files to retrieve statistics for.
   repeated Selector save_files_selectors = 1;
+  // Configuration options for the statistics retrieval.
   optional Config config = 2;
 }
 
+// StatSaveFilesResponse represents the response containing statistics of save files for specified emulators.
 message StatSaveFilesResponse {
+  // A list of statistics for the save files of the specified emulators.
   repeated SaveFilesStat save_files_stats = 1;
 }
 
+// BackupSaveFilesRequest represents the request to create backups of save files for specified emulators.
 message BackupSaveFilesRequest {
+  // Specifies which emulator's save files to back up.
   message Selector {
+    // The unique identifier of the emulator for which to back up save files.
     string emulator_id = 1;
   }
 
+  // Configuration options for the backup operation.
   message Config {
+    // Whether to perform a dry run of the backup operation without making any changes.
     optional bool dry_run = 1;
   }
 
+  // A list of selectors specifying which emulators' save files to back up.
   repeated Selector save_files_selectors = 1;
+  // Configuration options for the backup operation.
   optional Config config = 2;
 }
 
+// BackupSaveFilesResponse represents the response after creating backups of save files for specified emulators.
 message BackupSaveFilesResponse {}
 
+// RestoreSaveFilesFromBackupRequest represents the request to restore save files from backups for specified emulators.
 message RestoreSaveFilesFromBackupRequest {
+  // Specifies which emulator's save files to restore from backup.
   message Selector {
+    // The unique identifier of the emulator for which to restore save files from backup.
     string emulator_id = 1;
+    // The specific backup to restore from for the emulator's save files.
     Backup backup = 2;
   }
 
+  // Configuration options for the restore operation.
   message Config {
+    // Whether to perform a dry run of the restore operation without making any changes.
     optional bool dry_run = 1;
   }
 
+  // A list of selectors specifying which emulators' save files to restore from backup.
   repeated Selector save_files_selectors = 1;
+  // Configuration options for the restore operation.
   optional Config config = 2;
 }
 
+// RestoreSaveFilesFromBackupResponse represents the response after restoring save files from backups for specified emulators.
 message RestoreSaveFilesFromBackupResponse {
+  // A list of save files that were restored from backups for the specified emulators.
   repeated SaveFiles save_files = 1;
 }
 
-message SaveStatesStat {
-  string emulator_id = 1;
-
-  // File stats relative to the emulator's states root
-  repeated retrom.files.v1.FileStat file_stats = 2;
-
-  // Backup stats for this emulator's states
-  repeated Backup backups = 3;
-
-  // Directory where the save states are stored on disk
-  string save_states_directory = 4;
-}
-
-message SaveStates {
-  string emulator_id = 1;
-
-  // Files relative to the emulator's states root
-  repeated retrom.files.v1.File files = 2;
-}
-
+// Request message for retrieving statistics about save states for specified emulators.
 message StatSaveStatesRequest {
+  // Specifies which emulator's save states to retrieve statistics for.
   message Selector {
+    // The unique identifier of the emulator for which to retrieve save state statistics.
     string emulator_id = 1;
   }
 
+  // Configuration options for the statistics retrieval.
   message Config {
+    // Whether to include backup information in the statistics response.
     optional bool include_backups = 1;
   }
 
+  // A list of selectors specifying which emulators' save states to retrieve statistics for.
   repeated Selector save_states_selectors = 1;
+  // Configuration options for the statistics retrieval.
   optional Config config = 2;
 }
 
+// Response message for retrieving statistics about save states for specified emulators.
 message StatSaveStatesResponse {
+  // A list of statistics for the save states of the specified emulators.
   repeated SaveStatesStat save_states_stats = 1;
 }
 
+// Request message for creating backups of save states for specified emulators.
 message BackupSaveStatesRequest {
+  // Specifies which emulator's save states to back up.
   message Selector {
+    // The unique identifier of the emulator for which to back up save states.
     string emulator_id = 1;
   }
 
+  // Configuration options for the backup operation.
   message Config {
+    // Whether to perform a dry run of the backup operation without making any changes.
     optional bool dry_run = 1;
   }
 
+  // A list of selectors specifying which emulators' save states to back up.
   repeated Selector save_states_selectors = 1;
+  // Configuration options for the backup operation.
   optional Config config = 2;
 }
 
+// Response message for creating backups of save states for specified emulators.
 message BackupSaveStatesResponse {}
 
+// Request message for restoring save states from backups for specified emulators.
 message RestoreSaveStatesFromBackupRequest {
+  // Specifies which emulator's save states to restore from backup.
   message Selector {
+    // The unique identifier of the emulator for which to restore save states from backup.
     string emulator_id = 1;
+    // The specific backup to restore from for the emulator's save states.
     Backup backup = 2;
   }
 
+  // Configuration options for the restore operation.
   message Config {
+    // Whether to perform a dry run of the restore operation without making any changes.
     optional bool dry_run = 1;
+    // Whether to reindex the backups after restoring the save states.
     optional bool reindex_backups = 2;
   }
 
+  // A list of selectors specifying which emulators' save states to restore from backup.
   repeated Selector save_states_selectors = 1;
+  // Configuration options for the restore operation.
   optional Config config = 2;
 }
 
+// Response message for restoring save states from backups for specified emulators.
 message RestoreSaveStatesFromBackupResponse {
+  // A list of save states that were restored from backups for the specified emulators.
   repeated SaveStates save_states = 1;
 }

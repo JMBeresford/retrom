@@ -4,7 +4,7 @@ use retrom_codegen::retrom::services::saves::{
     v2::emulator_saves_service_server::EmulatorSavesServiceServer,
 };
 use retrom_db::DbPool;
-use retrom_service_config::config::ServerConfigManager;
+use retrom_service_common::config::ServerConfigManager;
 use std::sync::Arc;
 
 /// Build an [`axum::Router`] that serves the saves gRPC endpoints.
