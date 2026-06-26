@@ -1,0 +1,36 @@
+name: Validate agent-generated assets
+
+on:
+  pull_request:
+    paths:
+      - '.agents/**'
+      - '.github/agents/**'
+      - 'AGENTS.md'
+      - 'CONTRIBUTING.md'
+
+jobs:
+  agents-sync-check:
+    name: Check generated agent assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up jq (required by sync script)
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Run sync-mcp check
+        run: ./.agents/scripts/sync-mcp.sh check
+
+      - name: Run link-skills and detect changes
+        run: |
+          set -euo pipefail
+          ./.agents/scripts/link-skills.sh
+          git status --porcelain
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Generated agent assets are out-of-date. The scripts created changes that are not committed:" >&2
+            git --no-pager diff --name-only
+            exit 1
+          fi
