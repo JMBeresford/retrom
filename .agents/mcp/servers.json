@@ -1,0 +1,6 @@
+{
+  "example": {
+    "type": "http",
+    "url": "https://example-mcp.local"
+  }
+}
