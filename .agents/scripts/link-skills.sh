@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 AGENTS_DIR="$REPO_ROOT/.agents"
 TARGET_DIR="$REPO_ROOT/.github/agents/skills"
 

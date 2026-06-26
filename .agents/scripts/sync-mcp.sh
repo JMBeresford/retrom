@@ -4,7 +4,7 @@ set -euo pipefail
 # Simple generator: render .github/agents/mcp.json from .agents/mcp/servers.json
 # Supports `check` mode: exit 0 if up-to-date, non-zero if stale.
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SRC="$REPO_ROOT/.agents/mcp/servers.json"
 OUT_DIR="$REPO_ROOT/.github/agents"
 OUT_FILE="$OUT_DIR/mcp.json"
