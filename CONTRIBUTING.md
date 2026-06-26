@@ -181,6 +181,17 @@ Before committing changes, ensure:
 - Documentation is updated if necessary
 - Tests pass (if applicable)
 
+Agent sync
+
+This repository uses an agent-agnostic layout under `.agents/`. If your change touches agent skills (`.agents/skills/*`) or MCP servers (`.agents/mcp/servers.json`), please run the sync scripts locally and commit any generated outputs before opening a PR:
+
+```bash
+.agents/scripts/link-skills.sh
+.agents/scripts/sync-mcp.sh
+```
+
+Use `sync-mcp.sh check` in CI to validate generated MCP files; a dedicated GitHub Actions job will enforce this on pull requests.
+
 ## Pushing changes
 
 1. **Create a branch**: Always work in a feature branch, not directly on main
