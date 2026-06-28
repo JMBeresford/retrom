@@ -14,14 +14,17 @@ pub type DbPool = sqlx::Pool<RetromDB>;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("Error running migrations: {0}")]
-    MigrationError(String),
+    #[error(transparent)]
+    MigrationError(#[from] sqlx::migrate::MigrateError),
 
     #[error("Error connecting to database: {0}")]
     ConnectionError(String),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    SqlxError(#[from] sqlx::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -61,11 +64,14 @@ pub async fn run_migrations(pool: &DbPool) -> Result<()> {
     #[cfg(not(feature = "postgres"))]
     let mut migrations_runner = sqlx::migrate!("./migrations/sqlite");
 
+    let mut tx = pool.begin().await?;
+
     migrations_runner
         .set_ignore_missing(true)
-        .run(pool)
-        .await
-        .map_err(|e| Error::MigrationError(e.to_string()))
+        .run(&mut *tx)
+        .await?;
+
+    Ok(tx.commit().await?)
 }
 
 #[cfg(test)]
