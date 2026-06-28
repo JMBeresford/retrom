@@ -215,18 +215,6 @@ async fn compute() -> Result<i32, tokio::task::JoinError> {
 }
 ```
 
-### Prefer `impl Future` Over `async fn` for async traits
-
-```rust
-trait MyAsyncTrait {
-    // GOOD
-    fn do_work_good(&self) -> impl Future<Output = Result<(), MyError>>;
-
-    // BAD - async fn in trait requires boxing or dyn Future
-    async fn do_work_bad(&self) -> Result<(), MyError>;
-}
-```
-
 ## Testing
 
 ### Unit Tests in Sibling `*_test.rs` Module
