@@ -747,7 +747,7 @@ on conflict do nothing;
 --  Seed steam platform metadata
 --  ────────────────────────────────────────────────────────────────────────────
 insert into platform_metadata (
-    id, platform_id, metadata_provider_id, name
+    id, platform_id, provider_id, name
 ) values
 (
     '00000000-0000-0000-0000-000000000001',
