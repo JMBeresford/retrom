@@ -6,7 +6,7 @@ REPO_ROOT="$(cd "$AGENTS_DIR/.." && pwd)"
 SRC="$REPO_ROOT/.agents/mcp/servers.json"
 
 if [ ! -f "$SRC" ]; then
-  echo "No $SRC found; nothing to sync." 
+  echo "No $SRC found; nothing to sync."
   exit 0
 fi
 
@@ -26,6 +26,7 @@ import json, sys
 src, claude_out, cursor_out, codex_out = sys.argv[1:5]
 with open(src) as f:
     data = json.load(f)
+    data.pop("$schema", None)  # Remove schema entry if present
 with open(claude_out, "w") as f:
     json.dump(data, f, indent=2, sort_keys=True)
 with open(cursor_out, "w") as f:
@@ -46,9 +47,9 @@ if [ "$mode" = "check" ]; then
   # Map tmp files to destinations
   for srcfile in "$tmpdir/claude.json" "$tmpdir/cursor.json" "$tmpdir/codex.toml"; do
     case "$srcfile" in
-      */claude.json) dest="$CLAUDE_OUT" ;;
-      */cursor.json) dest="$CURSOR_OUT" ;;
-      */codex.toml) dest="$CODEX_OUT" ;;
+    */claude.json) dest="$CLAUDE_OUT" ;;
+    */cursor.json) dest="$CURSOR_OUT" ;;
+    */codex.toml) dest="$CODEX_OUT" ;;
     esac
     if [ ! -f "$dest" ]; then
       echo "Missing generated file: $dest"

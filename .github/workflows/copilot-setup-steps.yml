@@ -1,6 +1,5 @@
 name: "Copilot Setup Steps"
 
-# Allow testing of the setup steps from your repository's "Actions" tab.
 on: workflow_dispatch
 
 jobs:
@@ -8,10 +7,7 @@ jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
 
-    # Set the permissions to the lowest permissions possible needed for your steps.
-    # Copilot will be given its own token for its operations.
     permissions:
-      # If you want to clone the repository as part of your setup steps, for example to install dependencies, you'll need the `contents: read` permission. If you don't clone the repository in your setup steps, Copilot will do this for you automatically after the steps complete.
       contents: read
 
     # You can define any steps you want, and they will run before the agent starts.
@@ -58,6 +54,3 @@ jobs:
       - name: disable NX cloud
         if: steps.nx-check.outcome != 'success'
         run: echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
-
-      - name: fetch and compile cargo dependencies
-        run: cargo check
