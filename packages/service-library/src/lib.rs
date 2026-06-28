@@ -1,4 +1,5 @@
 use retrom_codegen::retrom::services::{
+    config::v1::config_service_client::ConfigServiceClient,
     library::v1::{
         library_service_server::LibraryService, AddGameRootDirectoryRequest,
         AddGameRootDirectoryResponse, AddLibraryRootDirectoryRequest,
@@ -21,7 +22,9 @@ use retrom_codegen::retrom::services::{
     metadata::v1::metadata_service_client::MetadataServiceClient,
 };
 use retrom_db::DbPool;
-use retrom_service_common::grpc_clients::metadata_svc::get_metadata_svc_client;
+use retrom_service_common::grpc_clients::{
+    config_svc::get_config_svc_client, metadata_svc::get_metadata_svc_client,
+};
 use retrom_service_jobs::job_manager::JobManager;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
@@ -39,6 +42,7 @@ pub mod scan_handlers;
 pub struct LibraryServiceHandlers {
     pub db_pool: DbPool,
     pub job_manager: Arc<JobManager>,
+    config_svc_client: ConfigServiceClient<tonic::transport::Channel>,
     metadata_svc_client: MetadataServiceClient<tonic::transport::Channel>,
 }
 
@@ -47,6 +51,7 @@ impl LibraryServiceHandlers {
         Self {
             db_pool,
             job_manager,
+            config_svc_client: get_config_svc_client(None),
             metadata_svc_client: get_metadata_svc_client(),
         }
     }
@@ -221,9 +226,13 @@ impl LibraryService for LibraryServiceHandlers {
         &self,
         request: Request<GetPlatformsRequest>,
     ) -> Result<Response<GetPlatformsResponse>, Status> {
-        platform_handlers::get_platforms(self.db_pool.clone(), request.into_inner())
-            .await
-            .map(Response::new)
+        platform_handlers::get_platforms(
+            self.db_pool.clone(),
+            request.into_inner(),
+            self.config_svc_client.clone(),
+        )
+        .await
+        .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]

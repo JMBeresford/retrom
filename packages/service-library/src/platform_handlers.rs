@@ -1,18 +1,34 @@
-use retrom_codegen::retrom::services::library::v1::{
-    CreatePlatformsRequest, CreatePlatformsResponse, DeletePlatformsRequest,
-    DeletePlatformsResponse, GetPlatformsRequest, GetPlatformsResponse, Platform,
-    UpdatePlatformsRequest, UpdatePlatformsResponse,
+use retrom_codegen::retrom::services::{
+    config::v1::{config_service_client::ConfigServiceClient, GetServerConfigRequest},
+    library::v1::{
+        CreatePlatformsRequest, CreatePlatformsResponse, DeletePlatformsRequest,
+        DeletePlatformsResponse, GetPlatformsRequest, GetPlatformsResponse, Platform,
+        UpdatePlatformsRequest, UpdatePlatformsResponse,
+    },
 };
 use retrom_db::{DbPool, RetromDB};
+use retrom_service_common::metadata_providers::steam::provider::STEAM_PLATFORM_ID;
 use sqlx::QueryBuilder;
 use tonic::Status;
 
 pub async fn get_platforms(
     db_pool: DbPool,
     request: GetPlatformsRequest,
+    mut config_svc: ConfigServiceClient<tonic::transport::Channel>,
 ) -> Result<GetPlatformsResponse, Status> {
     let ids = request.ids;
     let include_deleted = request.include_deleted.unwrap_or(false);
+
+    let config = config_svc
+        .get_server_config(GetServerConfigRequest::default())
+        .await?
+        .into_inner()
+        .config
+        .expect("Config should be present");
+
+    let steam_configured = config
+        .steam
+        .is_some_and(|s| !s.api_key.is_empty() && !s.user_id.is_empty());
 
     let mut platforms_builder = QueryBuilder::<RetromDB>::new("select * from platforms");
     let mut has_condition = false;
@@ -25,6 +41,16 @@ pub async fn get_platforms(
         }
         separated.push_unseparated(")");
         has_condition = true;
+    }
+
+    if !steam_configured {
+        if has_condition {
+            platforms_builder.push(" and id != ");
+        } else {
+            platforms_builder.push(" where id != ");
+            has_condition = true;
+        }
+        platforms_builder.push_bind(STEAM_PLATFORM_ID);
     }
 
     if !include_deleted {
