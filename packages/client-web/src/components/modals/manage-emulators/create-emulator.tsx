@@ -25,8 +25,10 @@ import {
   Emulator,
   SaveStrategy,
 } from "@retrom/codegen/retrom/models/emulators_pb";
+import { Code, ConnectError } from "@connectrpc/connect";
 import { useCreateEmulators } from "@/mutations/useCreateEmulators";
 import { saveStrategyDisplayMap } from "./utils";
+import { toast } from "@retrom/ui/hooks/use-toast";
 
 export function CreateEmulator(props: {
   platforms: PlatformWithMetadata[];
@@ -46,7 +48,7 @@ export function CreateEmulator(props: {
   });
 
   const { mutateAsync: createEmulators, isPending: creationPending } =
-    useCreateEmulators();
+    useCreateEmulators({ showErrorToast: false });
 
   const handleSubmit = useCallback(
     async (values: EmulatorSchema) => {
@@ -65,9 +67,29 @@ export function CreateEmulator(props: {
         onSuccess(emulatorsCreated[0]);
       } catch (error) {
         console.error(error);
+
+        if (
+          error instanceof ConnectError &&
+          error.code === Code.InvalidArgument
+        ) {
+          form.setError("name", {
+            message: error.message,
+          });
+
+          return;
+        }
+
+        toast({
+          title: "Failed to create emulators",
+          description:
+            error instanceof ConnectError
+              ? error.message
+              : "Check the console for more information.",
+          variant: "destructive",
+        });
       }
     },
-    [form, onSuccess, createEmulators],
+    [createEmulators, form, onSuccess],
   );
 
   return (
@@ -83,7 +105,14 @@ export function CreateEmulator(props: {
             <FormItem className="w-full">
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter emulator name" />
+                <Input
+                  {...field}
+                  onChange={(event) => {
+                    form.clearErrors("name");
+                    field.onChange(event);
+                  }}
+                  placeholder="Enter emulator name"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
