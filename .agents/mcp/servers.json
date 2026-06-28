@@ -1,4 +1,5 @@
 {
+  "$schema": "./servers.schema.json",
   "nx-mcp": {
     "type": "stdio",
     "command": "npx",
@@ -7,6 +8,6 @@
   "shadcn": {
     "type": "stdio",
     "command": "npx",
-    "args": ["shadcn-ui@latest", "mcp"]
+    "args": ["shadcn@latest", "mcp"]
   }
 }

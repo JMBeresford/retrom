@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/.agents/mcp/servers.schema.json",
+  "title": "MCP servers configuration",
+  "description": "Schema for .agents/mcp/servers.json: a map of named MCP servers to their configuration objects.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" }
+  },
+  "additionalProperties": {
+    "$ref": "#/definitions/serverDef"
+  },
+  "definitions": {
+    "stdio": {
+      "type": "object",
+      "description": "A server implemented as a stdio subprocess",
+      "properties": {
+        "type": { "const": "stdio" },
+        "command": {
+          "type": "string",
+          "description": "The executable to run (e.g. npx)"
+        },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Argument list passed to the command"
+        },
+        "cwd": {
+          "type": "string",
+          "description": "Optional working directory"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Optional environment variables"
+        }
+      },
+      "required": ["type", "command"],
+      "additionalProperties": true
+    },
+    "http": {
+      "type": "object",
+      "description": "A server reachable over HTTP(S)",
+      "properties": {
+        "type": { "const": "http" },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Base URL for the MCP HTTP endpoint"
+        },
+        "method": {
+          "type": "string",
+          "description": "Optional HTTP method (default: POST)"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Optional HTTP headers"
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Optional timeout in seconds"
+        }
+      },
+      "required": ["type", "url"],
+      "additionalProperties": true
+    },
+    "serverDef": {
+      "oneOf": [
+        { "$ref": "#/definitions/stdio" },
+        { "$ref": "#/definitions/http" },
+        {
+          "type": "object",
+          "description": "Fallback: an object with a 'type' string and any additional properties. This allows other agent-specific server kinds (excluding known types).",
+          "properties": {
+            "type": { "type": "string" }
+          },
+          "required": ["type"],
+          "not": {
+            "anyOf": [
+              { "$ref": "#/definitions/stdio" },
+              { "$ref": "#/definitions/http" }
+            ]
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
+  }
+}

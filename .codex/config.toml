@@ -1,0 +1,10 @@
+# Generated from .agents/mcp/servers.json
+[mcp_servers.nx-mcp]
+type = "stdio"
+command = "npx"
+args = ["nx-mcp@latest"]
+
+[mcp_servers.shadcn]
+type = "stdio"
+command = "npx"
+args = ["shadcn@latest", "mcp"]

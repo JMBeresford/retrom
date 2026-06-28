@@ -23,3 +23,11 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 .gh_token.txt
 vendor
+
+# Agent skills (machine-local)
+.agents/skills-local/*
+!.agents/skills-local/.gitkeep
+
+# Agent settings (machine-local)
+.claude/settings.local.json
+.claude/worktrees/

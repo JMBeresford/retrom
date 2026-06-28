@@ -1,0 +1,17 @@
+{
+  "nx-mcp": {
+    "args": [
+      "nx-mcp@latest"
+    ],
+    "command": "npx",
+    "type": "stdio"
+  },
+  "shadcn": {
+    "args": [
+      "shadcn@latest",
+      "mcp"
+    ],
+    "command": "npx",
+    "type": "stdio"
+  }
+}
