@@ -210,8 +210,8 @@ async fn good() {
 }
 
 // GOOD - spawn blocking for CPU-intensive work
-async fn compute() -> i32 {
-    tokio::task::spawn_blocking(|| expensive_computation()).await.unwrap()
+async fn compute() -> Result<i32, tokio::task::JoinError> {
+    Ok(tokio::task::spawn_blocking(|| expensive_computation()).await?)
 }
 ```
 
@@ -235,7 +235,7 @@ trait MyAsyncTrait {
 // src/my_module.rs
 
 #[cfg(test)]
-use my_module_test;
+mod my_module_test;
 
 pub struct MyStruct;
 
@@ -257,17 +257,17 @@ impl MyStruct {
 ```rust
 // src/my_module_test.rs
 
-use super::my_module;
+use super::*;
 
 #[test]
 fn test_add() {
-    assert_eq!(my_module::MyStruct::add(2, 3), 5);
+    assert_eq!(MyStruct::add(2, 3), 5);
 }
 
 #[test]
 fn test_validate() {
-    assert!(my_module::MyStruct::validate("valid").is_ok());
-    assert!(my_module::MyStruct::validate("").is_err());
+    assert!(MyStruct::validate("valid").is_ok());
+    assert!(MyStruct::validate("").is_err());
 }
 ```
 
