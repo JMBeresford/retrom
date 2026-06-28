@@ -10,6 +10,8 @@ description = "Common service utils for the Retrom video game library service"
 
 [dependencies]
 tracing = { workspace = true }
+bytes = "1.12.0"
+http-body-util = { workspace = true }
 directories = { workspace = true }
 config = { workspace = true }
 dotenvy = { workspace = true }
