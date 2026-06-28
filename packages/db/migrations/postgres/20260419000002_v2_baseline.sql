@@ -87,7 +87,7 @@ create table if not exists platform_metadata (
     id text not null primary key,
     platform_id text not null references platforms (id) on delete cascade,
     provider_id text not null references metadata_providers (id) on delete cascade,
-    provider_platform_id text not null,
+    provider_platform_id text,
     name text,
     description text,
     background_url text,
@@ -102,7 +102,7 @@ create table if not exists game_metadata (
     id text not null primary key,
     game_id text not null references games (id) on delete cascade,
     provider_id text not null references metadata_providers (id) on delete cascade,
-    provider_game_id text not null,
+    provider_game_id text,
     name text,
     description text,
     cover_url text,
@@ -329,6 +329,13 @@ create table if not exists game_tags (
     updated_at text not null default current_timestamp,
     primary key (game_id, tag_id)
 );
+
+-- ────────────────────────────────────────────────────────────────────────────
+-- Seed third_party platforms (only steam for now)
+-- ────────────────────────────────────────────────────────────────────────────
+insert into platforms (id, third_party) values
+('00000000-0000-0000-0000-000000000001', true)
+on conflict do nothing;
 
 -- ────────────────────────────────────────────────────────────────────────────
 -- Seed built-in emulators (stable UUIDs so v1_compat can reference them)
@@ -734,6 +741,20 @@ insert into metadata_providers (id, name) values
 ('00000000-0000-0000-0000-000000000001', 'manual'),
 ('00000000-0000-0000-0000-000000000002', 'igdb'),
 ('00000000-0000-0000-0000-000000000003', 'steam')
+on conflict do nothing;
+
+--  ────────────────────────────────────────────────────────────────────────────
+--  Seed steam platform metadata
+--  ────────────────────────────────────────────────────────────────────────────
+insert into platform_metadata (
+    id, platform_id, metadata_provider_id, name
+) values
+(
+    '00000000-0000-0000-0000-000000000001',
+    '00000000-0000-0000-0000-000000000001',
+    '00000000-0000-0000-0000-000000000003',
+    'Steam'
+)
 on conflict do nothing;
 
 -- ────────────────────────────────────────────────────────────────────────────

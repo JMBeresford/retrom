@@ -28,7 +28,11 @@ BEGIN
 
   -- platforms
   CREATE TEMP TABLE _map_platforms AS
-    SELECT id AS old_id, gen_random_uuid()::text AS new_id
+    SELECT id AS old_id, 
+    CASE
+      WHEN path = '__RETROM_RESERVED__/Steam' THEN '00000000-0000-0000-0000-000000000001'
+      ELSE gen_random_uuid()::text
+    END AS new_id
     FROM _v1_platforms;
 
   -- games
