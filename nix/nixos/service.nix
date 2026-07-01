@@ -6,20 +6,27 @@
 }:
 let
   cfg = config.services.retrom;
-  pgPort = config.services.postgresql.settings.port;
-  settings = cfg.settings // {
-    connection = {
-      inherit (cfg) port;
-      dbUrl = if isNull cfg.dbUrl then
-        "postgres:///retrom?host=/var/run/postgresql"
-      else
-        cfg.dbUrl;
-    };
-  };
-  configFile = if isNull cfg.configFile then
-    pkgs.writeText "retrom-service-config.json" (builtins.toJSON settings)
-  else
-    cfg.configFile;
+  defaultPort = 5101;
+  dbUrl =
+    if !isNull cfg.dbUrl then
+      cfg.dbUrl
+    else if cfg.enableDatabase then
+      "postgres:///retrom?host=/var/run/postgresql"
+    else
+      null;
+  connection =
+    lib.optionalAttrs (cfg.port != defaultPort) { inherit (cfg) port; }
+    // lib.optionalAttrs (!isNull dbUrl) { inherit dbUrl; };
+  settings = cfg.settings // lib.optionalAttrs (connection != { }) { inherit connection; };
+  initialConfigFile = pkgs.writeText "retrom-service-config.json" (builtins.toJSON settings);
+  configFilePath =
+    if !isNull cfg.configFile then
+      cfg.configFile
+    else if settings != { } then
+      "${cfg.dataDir}/.config/retrom/server/config.json"
+    else
+      null;
+  seedConfig = isNull cfg.configFile && settings != { };
 in {
   options.services.retrom = {
     enable = lib.mkEnableOption "Enable Retrom service.";
@@ -49,19 +56,29 @@ in {
     };
     port = lib.mkOption {
       type = lib.types.int;
-      default = 5101;
+      default = defaultPort;
       description = "Port to run the service on. If configFile is set this will only have effect with the openFirewall option.";
     };
     openFirewall = lib.mkEnableOption "Open firewall for TCP port.";
     settings = lib.mkOption {
       type = lib.types.anything;
       default = { };
-      description = "Settings for retrom service. If configFile is set these will be ignored.";
+      description = ''
+        Initial settings for the Retrom service. If this is set, the module
+        seeds a writable configuration file before the first service start.
+        Existing configuration files are left in place so Retrom can update its
+        own server configuration at runtime.
+      '';
     };
     configFile = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
-      description = "Path to the configuration file. If this is set settings will be replaced by it.";
+      description = ''
+        Path to the configuration file. If unset and no initial settings are
+        needed, RETROM_CONFIG is left unset and Retrom uses its default writable
+        configuration path. This can point at an immutable generated file when
+        fully declarative configuration is desired.
+      '';
     };
   };
 
@@ -99,16 +116,26 @@ in {
 
       wantedBy = [ "multi-user.target" ];
 
+      preStart = lib.mkIf seedConfig ''
+        config_file=${lib.escapeShellArg configFilePath}
+        mkdir -p "$(dirname "$config_file")"
+
+        if [ ! -e "$config_file" ]; then
+          install -m 0640 ${initialConfigFile} "$config_file"
+        fi
+      '';
+
       serviceConfig = {
         ExecStart = "${lib.getExe cfg.package}";
         Restart = "on-failure";
         User = cfg.user;
         Group = cfg.group;
         WorkingDirectory = cfg.dataDir;
-        Environment = [
-          "RETROM_DATA_DIR=${cfg.dataDir}"
-          "RETROM_CONFIG=${configFile}"
-        ];
+        Environment =
+          [
+            "RETROM_DATA_DIR=${cfg.dataDir}"
+          ]
+          ++ lib.optional (!isNull configFilePath) "RETROM_CONFIG=${configFilePath}";
       };
     };
 

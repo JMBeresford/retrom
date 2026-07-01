@@ -41,6 +41,16 @@ The NixOS and Home Manager modules build their default packages with the
 caller's `pkgs`. Override `programs.retrom.package` or `services.retrom.package`
 to use a custom package.
 
+By default the service module leaves `RETROM_CONFIG` unset, so the server
+creates and updates configuration in its normal writable application config
+directory. Setting `services.retrom.settings`, `services.retrom.dbUrl`,
+`services.retrom.enableDatabase`, or a non-default `services.retrom.port` seeds
+a writable service configuration before the first start. Existing configuration
+files are left in place so Retrom can update its own server configuration at
+runtime. Set `services.retrom.configFile` to point the service at another
+explicit configuration file, including an immutable generated file when fully
+declarative configuration is desired.
+
 ```nix
 {
   inputs.retrom.url = "github:JMBeresford/retrom";
