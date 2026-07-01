@@ -36,11 +36,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     fetcherVersion = 3;
-    hash = "sha256-MmWCpe7NzzT8W/Ic9y1VzGAp4rk0vxoOxbz5sRRlQs0=";
+    hash = "sha256-b4OG+4i+ssaaJFj0SWyzI+dHWLk5XQCiq1TVMhIo/10=";
   };
 
   cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
-  
+
   cargoLock.outputHashes = {
     "ludusavi-0.30.0" = "sha256-tDGfnX3fDDvrLvSnWvurIBwgDTWCjmbIJXDxgxQV5Og=";
     "webdav-meta-0.1.0" = "sha256-1XWBxlkdftg/Et7TexNmhKDZXl7ro+agMXodCRMV+e8=";
