@@ -23,11 +23,16 @@
       flake-utils,
       ...
     }:
+    let
+      mkPackages = pkgs: import ./nix/packages.nix { inherit pkgs; };
+    in
     {
+      overlays.default = final: _prev: mkPackages final;
+
       nixosModules.retrom =
         { lib, pkgs, ... }:
         let
-          retromPackages = self.packages.${pkgs.stdenv.hostPlatform.system};
+          retromPackages = mkPackages pkgs;
         in
         {
           imports = [
@@ -40,7 +45,7 @@
       homeModules.retrom =
         { lib, pkgs, ... }:
         let
-          retromPackages = self.packages.${pkgs.stdenv.hostPlatform.system};
+          retromPackages = mkPackages pkgs;
         in
         {
           imports = [
@@ -55,11 +60,7 @@
         pkgs = import nixpkgs { inherit system; };
       in
       {
-        packages = rec {
-          retrom-unwrapped = pkgs.callPackage ./nix/pkgs/retrom-unwrapped/package.nix { };
-          retrom = pkgs.callPackage ./nix/pkgs/retrom/package.nix { inherit retrom-unwrapped; };
-          retrom-service = pkgs.callPackage ./nix/pkgs/retrom-service/package.nix { };
-        };
+        packages = mkPackages pkgs;
       }
     );
 }
