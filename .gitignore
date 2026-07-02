@@ -2,6 +2,8 @@
 mock_content*
 mock.db
 **/retrom-dev.db
+**/retrom-dev.db-shm
+**/retrom-dev.db-wal
 .env
 config_dev
 config.dev.*

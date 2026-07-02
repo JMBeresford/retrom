@@ -1,38 +1,26 @@
+use config_manager::ServerConfigManager;
 use retrom_codegen::retrom::services::config::v1::{
     config_service_server::ConfigService, version::Pre, GetServerConfigRequest,
     GetServerConfigResponse, GetServerInfoRequest, GetServerInfoResponse, ServerInfo,
     UpdateServerConfigRequest, UpdateServerConfigResponse, Version,
 };
-use retrom_service_common::config::ServerConfigManager;
 use std::sync::Arc;
 use tracing::instrument;
 
+mod config_manager;
 pub mod router;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub struct ConfigServiceHandlers {
-    pub config: Arc<ServerConfigManager>,
+    config: Arc<ServerConfigManager>,
 }
 
 impl ConfigServiceHandlers {
-    pub fn new() -> Self {
-        let config_manager =
-            ServerConfigManager::new().expect("Failed to initialize ServerConfigManager");
-
+    pub fn new(config_manager: ServerConfigManager) -> Self {
         Self {
             config: Arc::new(config_manager),
         }
-    }
-
-    pub fn with_config(config: Arc<ServerConfigManager>) -> Self {
-        Self { config }
-    }
-}
-
-impl Default for ConfigServiceHandlers {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

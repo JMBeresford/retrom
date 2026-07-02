@@ -1,9 +1,9 @@
-use crate::retrom_dirs::RetromDirs;
 use config::{Config, ConfigError, File};
 use retrom_codegen::retrom::services::config::v1::{
     metadata_config::OptimizationConfig, ContentDirectory, MetadataConfig, SavesConfig,
     ServerConfig, StorageType,
 };
+use retrom_service_common::retrom_dirs::RetromDirs;
 use std::path::PathBuf;
 use tokio::sync::RwLock;
 
