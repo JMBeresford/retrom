@@ -13,7 +13,6 @@ tracing = { workspace = true }
 bytes = "1.12.0"
 http-body-util = { workspace = true }
 directories = { workspace = true }
-config = { workspace = true }
 dotenvy = { workspace = true }
 reqwest = { workspace = true }
 tower = { workspace = true }
@@ -37,3 +36,6 @@ sha2 = { workspace = true }
 sevenz-rust2 = { workspace = true }
 rayon = { workspace = true }
 tempfile = { workspace = true }
+
+[dev-dependencies]
+retrom-service-config = { workspace = true }

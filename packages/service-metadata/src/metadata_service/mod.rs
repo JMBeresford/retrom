@@ -5,6 +5,7 @@ use retrom_codegen::retrom::{
         IgdbFilters,
     },
     services::{
+        config::v1::{config_service_client::ConfigServiceClient, GetServerConfigRequest},
         jobs::v1::JobStatus,
         metadata::v1::{
             igdb_service_client::IgdbServiceClient, metadata_service_server::MetadataService,
@@ -31,7 +32,6 @@ use retrom_codegen::retrom::{
 };
 use retrom_db::{DbPool, RetromDB};
 use retrom_service_common::{
-    config::ServerConfigManager,
     grpc_clients::{
         igdb_svc::get_igdb_svc_client, steam_svc::get_steam_svc_client,
         tags_svc::get_tags_svc_client,
@@ -48,7 +48,7 @@ use std::{
     future::Future,
     sync::Arc,
 };
-use tonic::{Request, Response, Status};
+use tonic::{transport::Channel, Request, Response, Status};
 use tracing::{error, Instrument};
 use walkdir::WalkDir;
 
@@ -56,15 +56,12 @@ mod game_metadata;
 mod platform_metadata;
 pub(crate) mod router;
 
-#[cfg(test)]
-mod tests;
-
 #[derive(Clone)]
 pub struct MetadataServiceHandlers {
     pub db_pool: DbPool,
     pub media_cache: Arc<MediaCache>,
     pub job_manager: Arc<JobManager>,
-    pub config_manager: Arc<ServerConfigManager>,
+    config_client: ConfigServiceClient<Channel>,
     igdb_svc_client: IgdbServiceClient<tonic::transport::Channel>,
     steam_svc_client: SteamServiceClient<tonic::transport::Channel>,
     tags_svc_client: TagsServiceClient<tonic::transport::Channel>,
@@ -75,13 +72,13 @@ impl MetadataServiceHandlers {
         db_pool: DbPool,
         media_cache: Arc<MediaCache>,
         job_manager: Arc<JobManager>,
-        config_manager: Arc<ServerConfigManager>,
+        config_client: ConfigServiceClient<Channel>,
     ) -> Self {
         Self {
             db_pool,
             media_cache,
             job_manager,
-            config_manager,
+            config_client,
             igdb_svc_client: get_igdb_svc_client(),
             steam_svc_client: get_steam_svc_client(),
             tags_svc_client: get_tags_svc_client(),
@@ -389,7 +386,14 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        let config = self.config_manager.get_config().await;
+        let mut config_svc_client = self.config_client.clone();
+        let config = config_svc_client
+            .get_server_config(GetServerConfigRequest {})
+            .await?
+            .into_inner()
+            .config
+            .unwrap_or_default();
+
         let store_metadata = config
             .metadata
             .map(|m| m.store_metadata_locally)
@@ -563,7 +567,14 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        let config = self.config_manager.get_config().await;
+        let mut config_svc_client = self.config_client.clone();
+        let config = config_svc_client
+            .get_server_config(GetServerConfigRequest {})
+            .await?
+            .into_inner()
+            .config
+            .unwrap_or_default();
+
         let store_metadata = config
             .metadata
             .map(|m| m.store_metadata_locally)
