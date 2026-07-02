@@ -1,6 +1,11 @@
-use retrom_codegen::descriptors::retrom::FILE_DESCRIPTOR_SET;
+use retrom_codegen::{
+    descriptors::retrom::FILE_DESCRIPTOR_SET,
+    retrom::services::config::v1::GetServerConfigRequest,
+};
 use retrom_db::DEFAULT_DB_URL;
-use retrom_service_common::{config::ServerConfigManager, svc_definitions::EMULATOR_SVC_PORT};
+use retrom_service_common::{
+    grpc_clients::config_svc::get_config_svc_client, svc_definitions::EMULATOR_SVC_PORT,
+};
 use retrom_service_emulators::router::emulators_router;
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit};
@@ -11,15 +16,21 @@ async fn main() {
         dotenvy::dotenv().ok();
     }
 
-    let config_manager = match ServerConfigManager::new() {
-        Ok(config) => config,
+    let mut config_client = get_config_svc_client(None);
+
+    let config = match config_client
+        .get_server_config(GetServerConfigRequest {})
+        .await
+    {
+        Ok(response) => response.into_inner().config.unwrap_or_else(|| {
+            eprintln!("Server configuration is missing in the response");
+            exit(1);
+        }),
         Err(err) => {
-            eprintln!("Could not load configuration: {err:#?}");
+            eprintln!("Failed to fetch server configuration: {err:#?}");
             exit(1);
         }
     };
-
-    let config = config_manager.get_config().await;
 
     let telemetry_enabled = config.telemetry.as_ref().is_some_and(|t| t.enabled);
 
