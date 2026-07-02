@@ -5,8 +5,8 @@ use axum::{
     Extension, Router,
 };
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
+use download::download_routes;
 use file::file_routes;
-use game::game_routes;
 use middleware::{
     cache_control::cache_control_middleware,
     cross_origin_isolation::cross_origin_isolation_middleware,
@@ -18,9 +18,9 @@ use tower_http::{
 };
 use web::web_routes;
 
+pub mod download;
 pub mod error;
 pub mod file;
-pub mod game;
 mod middleware;
 mod public;
 mod web;
@@ -28,7 +28,7 @@ mod web;
 pub fn rest_service(pool: DbPool) -> Router {
     let api_routes = Router::new()
         .nest("/file", file_routes())
-        .nest("/game", game_routes())
+        .nest("/download", download_routes())
         .nest("/public", public_routes());
 
     Router::new()
