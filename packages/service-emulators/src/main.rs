@@ -1,6 +1,5 @@
 use retrom_codegen::{
-    descriptors::retrom::FILE_DESCRIPTOR_SET,
-    retrom::services::config::v1::GetServerConfigRequest,
+    descriptors::retrom::FILE_DESCRIPTOR_SET, retrom::services::config::v1::GetServerConfigRequest,
 };
 use retrom_db::DEFAULT_DB_URL;
 use retrom_service_common::{

@@ -1,4 +1,3 @@
-use std::{path::PathBuf, str::FromStr};
 use retrom_codegen::retrom::services::library::v1::{
     AddGameRootDirectoryRequest, AddGameRootDirectoryResponse, AddLibraryRootDirectoryRequest,
     AddLibraryRootDirectoryResponse, AddPlatformRootDirectoryRequest,
@@ -9,6 +8,7 @@ use retrom_codegen::retrom::services::library::v1::{
 };
 use retrom_db::{DbPool, RetromDB};
 use sqlx::{Executor, QueryBuilder};
+use std::{path::PathBuf, str::FromStr};
 use tonic::Status;
 
 pub async fn get_root_directories(

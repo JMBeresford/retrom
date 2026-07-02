@@ -3,14 +3,16 @@ use futures::future::join_all;
 use retrom_codegen::retrom::{
     files::v1::FileStat,
     services::{
+        config::v1::{config_service_client::ConfigServiceClient, GetServerConfigRequest},
         emulators::v1::Emulator,
         library::v1::Game,
         saves::v1::{BackupStats, SaveStates, SaveStatesStat},
     },
 };
 use retrom_db::DbPool;
-use retrom_service_common::{config::ServerConfigManager, retrom_dirs::RetromDirs};
-use std::{path::PathBuf, sync::Arc};
+use retrom_service_common::retrom_dirs::RetromDirs;
+use std::path::PathBuf;
+use tonic::transport::Channel;
 use tracing::instrument;
 use walkdir::WalkDir;
 
@@ -33,15 +35,19 @@ type Result<T> = std::result::Result<T, SaveStateManagerError>;
 pub struct GameSaveStateManager {
     game: Game,
     db_pool: DbPool,
-    config: Arc<ServerConfigManager>,
+    config_svc_client: ConfigServiceClient<Channel>,
 }
 
 impl GameSaveStateManager {
-    pub fn new(game: Game, db_pool: DbPool, config: Arc<ServerConfigManager>) -> Self {
+    pub fn new(
+        game: Game,
+        db_pool: DbPool,
+        config_svc_client: ConfigServiceClient<Channel>,
+    ) -> Self {
         Self {
             game,
             db_pool,
-            config,
+            config_svc_client,
         }
     }
 }
@@ -226,7 +232,19 @@ impl SaveStateManager for GameSaveStateManager {
 
     #[instrument(skip(self), fields(game_id = self.game.id))]
     async fn reindex_backups(&self, emulator_id: Option<&str>) -> Result<()> {
-        let config = self.config.get_config().await;
+        let mut config_svc_client = self.config_svc_client.clone();
+        let config = config_svc_client
+            .get_server_config(GetServerConfigRequest::default())
+            .await
+            .map_err(|e| SaveStateManagerError::Internal(e.to_string()))?
+            .into_inner()
+            .config
+            .unwrap_or_else(|| {
+                tracing::warn!(
+                    "Missing server configuration in ConfigService response; using default values"
+                );
+                Default::default()
+            });
         let max_backup_count =
             config.saves.map(|s| s.max_save_states_backups).unwrap_or(5) as usize;
 

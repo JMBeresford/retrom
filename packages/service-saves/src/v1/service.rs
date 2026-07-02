@@ -1,6 +1,7 @@
 use super::save_file_manager::{GameSaveFileManager, SaveFileManager};
 use super::save_state_manager::{GameSaveStateManager, SaveStateManager};
 use retrom_codegen::retrom::services::{
+    config::v1::config_service_client::ConfigServiceClient,
     library::v1::Game,
     saves::v1::{
         saves_service_server::SavesService, DeleteSaveFilesRequest, DeleteSaveFilesResponse,
@@ -14,20 +15,20 @@ use retrom_codegen::retrom::services::{
     },
 };
 use retrom_db::DbPool;
-use retrom_service_common::config::ServerConfigManager;
-use std::{path::PathBuf, sync::Arc};
+use std::path::PathBuf;
+use tonic::transport::Channel;
 use tracing::instrument;
 
 pub struct SavesServiceHandlers {
     db_pool: DbPool,
-    config_manager: Arc<ServerConfigManager>,
+    config_svc_client: ConfigServiceClient<Channel>,
 }
 
 impl SavesServiceHandlers {
-    pub fn new(db_pool: DbPool, config_manager: Arc<ServerConfigManager>) -> Self {
+    pub fn new(db_pool: DbPool, config_svc_client: ConfigServiceClient<Channel>) -> Self {
         Self {
             db_pool,
-            config_manager,
+            config_svc_client,
         }
     }
 }
@@ -49,9 +50,13 @@ impl SavesService for SavesServiceHandlers {
         let mut response = StatSaveFilesResponse::default();
 
         for selector in selectors {
-            let config = self.config_manager.clone();
+            let config = self.config_svc_client.clone();
             let db_pool = self.db_pool.clone();
             let game_id = selector.game_id;
+
+            if game_id.is_empty() {
+                return Err(tonic::Status::invalid_argument("Game ID must be provided"));
+            }
 
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
@@ -99,7 +104,7 @@ impl SavesService for SavesServiceHandlers {
         let mut response = StatSaveStatesResponse::default();
 
         for selector in selectors {
-            let config = self.config_manager.clone();
+            let config = self.config_svc_client.clone();
             let db_pool = self.db_pool.clone();
             let game_id = selector.game_id;
 
@@ -145,7 +150,7 @@ impl SavesService for SavesServiceHandlers {
         let mut response = GetSaveFilesResponse::default();
 
         for selector in selectors {
-            let config = self.config_manager.clone();
+            let config = self.config_svc_client.clone();
             let db_pool = self.db_pool.clone();
             let game_id = selector.game_id;
             let emulator_id = selector.emulator_id;
@@ -229,7 +234,7 @@ impl SavesService for SavesServiceHandlers {
         let mut response = GetSaveStatesResponse::default();
 
         for selector in selectors {
-            let config = self.config_manager.clone();
+            let config = self.config_svc_client.clone();
             let db_pool = self.db_pool.clone();
             let game_id = selector.game_id;
             let emulator_id = selector.emulator_id;
@@ -313,7 +318,7 @@ impl SavesService for SavesServiceHandlers {
         let response = UpdateSaveFilesResponse::default();
 
         for selector in selectors {
-            let config = self.config_manager.clone();
+            let config = self.config_svc_client.clone();
             let db_pool = self.db_pool.clone();
             let game_id = selector.game_id;
             let emulator_id = match selector.emulator_id {
@@ -369,7 +374,7 @@ impl SavesService for SavesServiceHandlers {
         let response = UpdateSaveStatesResponse::default();
 
         for selector in selectors {
-            let config = self.config_manager.clone();
+            let config = self.config_svc_client.clone();
             let db_pool = self.db_pool.clone();
             let game_id = selector.game_id;
             let emulator_id = match selector.emulator_id {
@@ -443,8 +448,11 @@ impl SavesService for SavesServiceHandlers {
                     })?
             };
 
-            let save_file_manager =
-                GameSaveFileManager::new(game, self.db_pool.clone(), self.config_manager.clone());
+            let save_file_manager = GameSaveFileManager::new(
+                game,
+                self.db_pool.clone(),
+                self.config_svc_client.clone(),
+            );
 
             save_file_manager
                 .delete_save_files(selector.emulator_id.as_deref(), dry_run)
@@ -484,8 +492,11 @@ impl SavesService for SavesServiceHandlers {
                     })?
             };
 
-            let save_state_manager =
-                GameSaveStateManager::new(game, self.db_pool.clone(), self.config_manager.clone());
+            let save_state_manager = GameSaveStateManager::new(
+                game,
+                self.db_pool.clone(),
+                self.config_svc_client.clone(),
+            );
 
             save_state_manager
                 .delete_save_states(selector.emulator_id.as_deref(), selector.files, dry_run)
@@ -536,8 +547,11 @@ impl SavesService for SavesServiceHandlers {
                     })?
             };
 
-            let save_file_manager =
-                GameSaveFileManager::new(game, self.db_pool.clone(), self.config_manager.clone());
+            let save_file_manager = GameSaveFileManager::new(
+                game,
+                self.db_pool.clone(),
+                self.config_svc_client.clone(),
+            );
 
             save_file_manager
                 .restore_save_files_from_backup(backup, reindex, emulator_id.as_deref(), dry_run)
@@ -632,8 +646,11 @@ impl SavesService for SavesServiceHandlers {
                     })?
             };
 
-            let save_state_manager =
-                GameSaveStateManager::new(game, self.db_pool.clone(), self.config_manager.clone());
+            let save_state_manager = GameSaveStateManager::new(
+                game,
+                self.db_pool.clone(),
+                self.config_svc_client.clone(),
+            );
 
             save_state_manager
                 .restore_save_states_from_backup(backup, reindex, emulator_id.as_deref(), dry_run)
