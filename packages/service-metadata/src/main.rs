@@ -1,6 +1,8 @@
+use retrom_codegen::retrom::services::config::v1::GetServerConfigRequest;
 use retrom_db::DEFAULT_DB_URL;
 use retrom_service_common::{
-    config::ServerConfigManager, reflection::reflection_router, svc_definitions::METADATA_SVC_PORT,
+    grpc_clients::config_svc::get_config_svc_client, reflection::reflection_router,
+    svc_definitions::METADATA_SVC_PORT,
 };
 use retrom_service_metadata::router::metadata_router;
 use retrom_telemetry::init_tracing_subscriber;
@@ -12,15 +14,21 @@ async fn main() {
         dotenvy::dotenv().ok();
     }
 
-    let config_manager = match ServerConfigManager::new() {
-        Ok(config) => config,
+    let mut config_client = get_config_svc_client(None);
+
+    let config = match config_client
+        .get_server_config(GetServerConfigRequest {})
+        .await
+    {
+        Ok(response) => response.into_inner().config.unwrap_or_else(|| {
+            eprintln!("Server configuration is missing in the response");
+            exit(1);
+        }),
         Err(err) => {
-            eprintln!("Could not load configuration: {err:#?}");
+            eprintln!("Failed to fetch server configuration: {err:#?}");
             exit(1);
         }
     };
-
-    let config = config_manager.get_config().await;
 
     let telemetry_enabled = config.telemetry.as_ref().is_some_and(|t| t.enabled);
 
@@ -45,7 +53,7 @@ async fn main() {
 
     let addr: SocketAddr = format!("0.0.0.0:{METADATA_SVC_PORT}").parse().unwrap();
 
-    let router = metadata_router(pool)
+    let router = metadata_router(pool, config_client)
         .layer(tonic_web::GrpcWebLayer::new())
         .merge(reflection_router());
 

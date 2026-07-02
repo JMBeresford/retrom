@@ -1,9 +1,10 @@
-use crate::{
-    config::ServerConfigManager,
-    metadata_providers::{steam::models, RetryAttempts},
+use crate::metadata_providers::{steam::models, RetryAttempts};
+use retrom_codegen::retrom::services::config::v1::{
+    config_service_client::ConfigServiceClient, GetServerConfigRequest,
 };
-use std::{str::FromStr, sync::Arc, time::Duration};
+use std::{str::FromStr, time::Duration};
 use tokio::sync::{mpsc, oneshot};
+use tonic::transport::Channel;
 use tower::{Service, ServiceExt};
 use tracing::{instrument, Instrument};
 
@@ -19,11 +20,11 @@ pub struct SteamWebApiProvider {
     base_url: String,
     store_base_url: String,
     request_tx: mpsc::Sender<SteamSenderMsg>,
-    config_manager: Arc<ServerConfigManager>,
+    config_svc_client: ConfigServiceClient<Channel>,
 }
 
 impl SteamWebApiProvider {
-    pub fn new(config_manager: Arc<ServerConfigManager>) -> Self {
+    pub fn new(config_svc_client: ConfigServiceClient<Channel>) -> Self {
         let base_url = "https://api.steampowered.com".into();
         let store_base_url = "https://store.steampowered.com/api".into();
         let http_client = reqwest::Client::new();
@@ -68,7 +69,7 @@ impl SteamWebApiProvider {
 
         Self {
             request_tx: tx,
-            config_manager,
+            config_svc_client,
             base_url,
             store_base_url,
         }
@@ -117,7 +118,18 @@ impl SteamWebApiProvider {
     ) -> Result<models::GetOwnedGamesResponse, reqwest::StatusCode> {
         let path = self.base_url.to_string() + "/IPlayerService/GetOwnedGames/v1/";
         let mut url = reqwest::Url::from_str(&path).expect("Invalid Base URL");
-        let config = self.config_manager.get_config().await;
+        let mut config_client = self.config_svc_client.clone();
+
+        let config = config_client
+            .get_server_config(GetServerConfigRequest {})
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to fetch server config: {:?}", e);
+                reqwest::StatusCode::INTERNAL_SERVER_ERROR
+            })?
+            .into_inner()
+            .config
+            .unwrap_or_default();
 
         let user = match config.steam {
             Some(steam) => steam,

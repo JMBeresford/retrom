@@ -1,4 +1,4 @@
-use crate::{config::ServerConfigManager, metadata_providers::RetryAttempts};
+use crate::metadata_providers::RetryAttempts;
 use prost::Message;
 use retrom_codegen::{
     igdb,
@@ -7,12 +7,14 @@ use retrom_codegen::{
             igdb_fields::Selector,
             igdb_filters::{FilterOperator, FilterValue},
         },
-        services::metadata::v1::IgdbSearchRequest,
+        services::{
+            config::v1::{config_service_client::ConfigServiceClient, GetServerConfigRequest},
+            metadata::v1::IgdbSearchRequest,
+        },
     },
 };
 use std::{
     env,
-    sync::Arc,
     time::{Duration, Instant},
 };
 use tokio::sync::{mpsc, oneshot, RwLock};
@@ -99,7 +101,7 @@ type IGDBSenderMsg = (
 
 pub struct IGDBProvider {
     auth: RwLock<IGDBAuth>,
-    config_manager: Arc<ServerConfigManager>,
+    config_client: ConfigServiceClient<tonic::transport::Channel>,
     request_tx: mpsc::Sender<IGDBSenderMsg>,
     pub game_fields: Vec<String>,
     pub platform_fields: Vec<String>,
@@ -116,7 +118,7 @@ impl IGDBAuth {
 }
 
 impl IGDBProvider {
-    pub fn new(config_manager: Arc<ServerConfigManager>) -> Self {
+    pub fn new(config_client: ConfigServiceClient<tonic::transport::Channel>) -> Self {
         let http_client = reqwest::Client::new();
 
         let (tx, mut rx) = mpsc::channel::<IGDBSenderMsg>(IGDB_CONCURRENT_REQUESTS_LIMIT);
@@ -162,7 +164,7 @@ impl IGDBProvider {
 
         Self {
             auth: RwLock::new(IGDBAuth::new(None, Duration::from_secs(0))),
-            config_manager,
+            config_client,
             request_tx: tx,
             game_fields,
             platform_fields,
@@ -184,9 +186,19 @@ impl IGDBProvider {
 
     #[instrument(level = Level::DEBUG, skip_all)]
     async fn refresh_token(&self) -> Result<(), reqwest::StatusCode> {
-        let config = self.config_manager.get_config().await;
+        let config_svc_client = self.config_client.clone();
+        let config = config_svc_client
+            .clone()
+            .get_server_config(GetServerConfigRequest {})
+            .await
+            .map_err(|e| {
+                error!("Failed to fetch server config: {:?}", e);
+                reqwest::StatusCode::INTERNAL_SERVER_ERROR
+            })?
+            .into_inner()
+            .config;
 
-        let user = match config.igdb {
+        let user = match config.and_then(|c| c.igdb) {
             Some(user) => user,
             None => {
                 return Err(reqwest::StatusCode::FORBIDDEN);
@@ -272,8 +284,18 @@ impl IGDBProvider {
 
         let mut req = reqwest::Request::new(reqwest::Method::POST, url);
 
-        let config = self.config_manager.get_config().await;
-        let user = match config.igdb {
+        let mut config_svc_client = self.config_client.clone();
+        let config = config_svc_client
+            .get_server_config(GetServerConfigRequest {})
+            .await
+            .map_err(|e| {
+                error!("Failed to fetch server config: {:?}", e);
+                reqwest::StatusCode::INTERNAL_SERVER_ERROR
+            })?
+            .into_inner()
+            .config;
+
+        let user = match config.and_then(|c| c.igdb) {
             Some(user) => user,
             None => {
                 return Err(reqwest::StatusCode::FORBIDDEN);

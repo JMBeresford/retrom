@@ -37,6 +37,13 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub async fn connect(url: &str) -> Result<DbPool> {
     #[cfg(not(feature = "postgres"))]
     {
+        use sqlx::migrate::MigrateDatabase;
+
+        if !sqlx::Sqlite::database_exists(url).await? {
+            tracing::info!("Database does not exist at {url}, creating it...");
+            sqlx::Sqlite::create_database(url).await?;
+        }
+
         sqlx::sqlite::SqlitePoolOptions::new()
             .connect(url)
             .await

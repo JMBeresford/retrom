@@ -8,7 +8,7 @@ pub fn get_tags_svc_client() -> TagsServiceClient<Channel> {
         .and_then(|p| p.parse::<u16>().ok())
         .unwrap_or(TAG_SVC_PORT);
 
-    let tags_svc_host = format!("http://[::1]:{tags_svc_port}");
+    let tags_svc_host = format!("http://0.0.0.0:{tags_svc_port}");
 
     let tags_svc_transport = Channel::from_shared(tags_svc_host.clone())
         .unwrap_or_else(|_| panic!("Failed to create TagsServiceClient with host {tags_svc_host}"))
