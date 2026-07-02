@@ -30,9 +30,9 @@ with open(src) as f:
     # Support new shape: top-level 'mcpServers' dict; fallback to legacy top-level map
     servers = data.get("mcpServers") if isinstance(data.get("mcpServers"), dict) else data
 with open(claude_out, "w") as f:
-    json.dump(servers, f, indent=2, sort_keys=True)
+    json.dump({"mcpServers": servers}, f, indent=2, sort_keys=True)
 with open(cursor_out, "w") as f:
-    json.dump(servers, f, indent=2, sort_keys=True)
+    json.dump({"mcpServers": servers}, f, indent=2, sort_keys=True)
 lines = ["# Generated from .agents/mcp/servers.json"]
 for name, cfg in servers.items():
     lines.append(f'[mcp_servers.{name}]')
