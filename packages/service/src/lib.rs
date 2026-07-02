@@ -1,14 +1,11 @@
-use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
 use hyper::{body::Incoming, Request};
 use hyper_util::rt::{TokioExecutor, TokioIo};
 use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
-use retrom_db::run_migrations;
 use retrom_grpc_service::grpc_service;
 use retrom_rest_service::rest_service;
 use retrom_service_common::{config::ServerConfigManager, emulator_js};
 use retrom_webdav_service::webdav_service;
-use retry::retry;
 use std::{net::SocketAddr, process::exit, sync::Arc};
 use tokio::{net::TcpListener, task::JoinHandle};
 use tower::ServiceExt;
@@ -96,43 +93,31 @@ pub async fn get_server(
         }
     }
 
-    let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(&db_url);
-
-    // pool used for REST service endpoints
-    let pool = deadpool::managed::Pool::builder(pool_config)
-        .max_size(
-            std::thread::available_parallelism()
-                .unwrap_or(std::num::NonZero::new(2_usize).unwrap())
-                .into(),
-        )
-        .build()
-        .expect("Could not create pool");
-
-    let db_url_clone = db_url.clone();
-    tokio::task::spawn_blocking(move || {
-        let mut conn = retry(retry::delay::Exponential::from_millis(100), || {
-            match retrom_db::get_db_connection_sync(&db_url_clone) {
-                Ok(conn) => retry::OperationResult::Ok(conn),
-                Err(diesel::ConnectionError::BadConnection(err)) => {
-                    tracing::info!("Error connecting to database, is the server running and accessible? Retrying...");
-                    retry::OperationResult::Retry(err)
-                },
-                _ => retry::OperationResult::Err("Could not connect to database".to_string())
+    let db_pool = {
+        let mut delay_ms = 100u64;
+        loop {
+            match retrom_db::connect(&db_url).await {
+                Ok(pool) => break pool,
+                Err(e) => {
+                    tracing::info!(
+                        "Error connecting to database, is the server running and accessible? \
+                         Retrying in {delay_ms}ms...: {e}"
+                    );
+                    tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
+                    delay_ms = (delay_ms * 2).min(5_000);
+                }
             }
-        }).expect("Could not connect to database");
+        }
+    };
 
-        let migrations = run_migrations(&mut conn).expect("Could not run migrations");
+    retrom_db::run_migrations(&db_pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::error!("Could not run migrations: {e:#?}");
+            exit(1)
+        });
 
-        migrations
-            .into_iter()
-            .for_each(|migration| tracing::info!("Ran migration: {}", migration));
-    })
-    .await
-    .expect("Could not run migrations");
-
-    let pool_state = Arc::new(pool);
-
-    let rest_service = rest_service(pool_state.clone());
+    let rest_service = rest_service(db_pool.clone());
     let grpc_service = grpc_service(&db_url, config_manager);
     let webdav_service = webdav_service(Some("/dav"));
 

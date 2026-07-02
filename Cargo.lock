@@ -9274,13 +9274,12 @@ dependencies = [
  "axum",
  "axum-tracing-opentelemetry",
  "bytes",
- "diesel",
- "diesel-async",
  "futures-util",
  "http 1.4.0",
  "retrom-codegen",
  "retrom-db",
  "retrom-service-common",
+ "sqlx",
  "thiserror 1.0.69",
  "tokio",
  "tokio-util",
@@ -9294,9 +9293,6 @@ name = "retrom-service"
 version = "0.8.4"
 dependencies = [
  "config",
- "deadpool",
- "diesel",
- "diesel-async",
  "dotenvy",
  "futures",
  "http 1.4.0",
@@ -9311,7 +9307,6 @@ dependencies = [
  "retrom-service-common",
  "retrom-telemetry",
  "retrom-webdav-service",
- "retry",
  "signal-hook",
  "signal-hook-tokio",
  "tokio",
@@ -9577,15 +9572,6 @@ dependencies = [
  "retrom-telemetry",
  "tokio",
  "tracing",
-]
-
-[[package]]
-name = "retry"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cab9bd343c737660e523ee69f788018f3db686d537d2fd0f99c9f747c1bda4f"
-dependencies = [
- "rand 0.9.2",
 ]
 
 [[package]]
