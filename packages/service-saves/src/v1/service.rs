@@ -444,8 +444,11 @@ impl SavesService for SavesServiceHandlers {
                     })?
             };
 
-            let save_file_manager =
-                GameSaveFileManager::new(game, self.db_pool.clone(), self.config_svc_client.clone());
+            let save_file_manager = GameSaveFileManager::new(
+                game,
+                self.db_pool.clone(),
+                self.config_svc_client.clone(),
+            );
 
             save_file_manager
                 .delete_save_files(selector.emulator_id.as_deref(), dry_run)
@@ -485,8 +488,11 @@ impl SavesService for SavesServiceHandlers {
                     })?
             };
 
-            let save_state_manager =
-                GameSaveStateManager::new(game, self.db_pool.clone(), self.config_svc_client.clone());
+            let save_state_manager = GameSaveStateManager::new(
+                game,
+                self.db_pool.clone(),
+                self.config_svc_client.clone(),
+            );
 
             save_state_manager
                 .delete_save_states(selector.emulator_id.as_deref(), selector.files, dry_run)
@@ -537,8 +543,11 @@ impl SavesService for SavesServiceHandlers {
                     })?
             };
 
-            let save_file_manager =
-                GameSaveFileManager::new(game, self.db_pool.clone(), self.config_svc_client.clone());
+            let save_file_manager = GameSaveFileManager::new(
+                game,
+                self.db_pool.clone(),
+                self.config_svc_client.clone(),
+            );
 
             save_file_manager
                 .restore_save_files_from_backup(backup, reindex, emulator_id.as_deref(), dry_run)
@@ -633,8 +642,11 @@ impl SavesService for SavesServiceHandlers {
                     })?
             };
 
-            let save_state_manager =
-                GameSaveStateManager::new(game, self.db_pool.clone(), self.config_svc_client.clone());
+            let save_state_manager = GameSaveStateManager::new(
+                game,
+                self.db_pool.clone(),
+                self.config_svc_client.clone(),
+            );
 
             save_state_manager
                 .restore_save_states_from_backup(backup, reindex, emulator_id.as_deref(), dry_run)
