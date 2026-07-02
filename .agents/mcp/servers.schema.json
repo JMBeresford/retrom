@@ -5,7 +5,12 @@
   "description": "Schema for .agents/mcp/servers.json: a map of named MCP servers to their configuration objects.",
   "type": "object",
   "properties": {
-    "$schema": { "type": "string" }
+    "$schema": { "type": "string" },
+    "mcpServers": {
+      "type": "object",
+      "description": "Map of MCP server names to server definitions",
+      "additionalProperties": { "$ref": "#/definitions/serverDef" }
+    }
   },
   "additionalProperties": {
     "$ref": "#/definitions/serverDef"
