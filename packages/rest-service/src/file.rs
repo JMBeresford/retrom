@@ -6,13 +6,9 @@ use axum::{
     routing::get,
     Extension, Router,
 };
-use diesel::associations::HasTable;
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
-use retrom_codegen::retrom;
-use retrom_db::Pool;
-use std::sync::Arc;
+use retrom_codegen::retrom::services::library::v1::GameFile;
+use retrom_db::DbPool;
 use tokio::fs::File;
 use tokio_util::io::ReaderStream;
 
@@ -21,18 +17,21 @@ pub fn file_routes() -> Router {
 }
 
 pub async fn file_handler(
-    Extension(pool): Extension<Arc<Pool>>,
-    Path(file_id): Path<i32>,
+    Extension(pool): Extension<DbPool>,
+    Path(file_id): Path<String>,
 ) -> Result<Response, StatusCode> {
-    let mut conn = pool.get().await.unwrap();
+    let game_file: GameFile = {
+        let mut query =
+            sqlx::QueryBuilder::<retrom_db::RetromDB>::new("select * from game_files where id = ");
+        query.push_bind(&file_id);
+        query
+            .build_query_as()
+            .fetch_one(&pool)
+            .await
+            .map_err(|_| StatusCode::NOT_FOUND)?
+    };
 
-    let file_path = retrom::GameFile::table()
-        .find(file_id)
-        .first::<retrom::GameFile>(&mut conn)
-        .await
-        .map_err(|_| StatusCode::NOT_FOUND)?
-        .path;
-
+    let file_path = game_file.path;
     let file = File::open(&file_path)
         .await
         .map_err(|_| StatusCode::NOT_FOUND)?;

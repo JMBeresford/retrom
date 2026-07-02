@@ -9,13 +9,9 @@ edition.workspace = true
 description = "The Retrom video game library service"
 
 [dependencies]
-retry = { workspace = true }
 dotenvy = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
-deadpool = { workspace = true }
 retrom-db = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-service-common = { workspace = true }
@@ -31,6 +27,11 @@ hyper-util = { workspace = true }
 http = { workspace = true }
 config = { workspace = true }
 opentelemetry-otlp = { workspace = true }
+
+[features]
+default = []
+sqlite = ["retrom-db/sqlite", "retrom-rest-service/sqlite"]
+postgres = ["retrom-db/postgres", "retrom-rest-service/postgres"]
 
 [target.'cfg(not(windows))'.dependencies]
 signal-hook = { workspace = true }
