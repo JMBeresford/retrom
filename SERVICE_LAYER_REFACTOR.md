@@ -1691,7 +1691,7 @@ are updated in a single pass.
 
 | Service Crate              | Use ConfigService via RPC |
 | -------------------------- | :-----------------------: |
-| `retrom-service-library`   |             ☐             |
+| `retrom-service-library`   |             x             |
 | `retrom-service-metadata`  |             x             |
 | `retrom-service-emulators` |             ☐             |
 | `retrom-service-clients`   |             ☐             |
