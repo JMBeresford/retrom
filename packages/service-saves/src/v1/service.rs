@@ -54,6 +54,10 @@ impl SavesService for SavesServiceHandlers {
             let db_pool = self.db_pool.clone();
             let game_id = selector.game_id;
 
+            if game_id.is_empty() {
+                return Err(tonic::Status::invalid_argument("Game ID must be provided"));
+            }
+
             let game: Game = {
                 let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
                     "select * from games where id = ",

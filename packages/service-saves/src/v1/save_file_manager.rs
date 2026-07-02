@@ -96,7 +96,7 @@ impl SaveFileManager for GameSaveFileManager {
     async fn resolve_save_files(&self, include_backups: bool) -> Result<Vec<SaveFilesStat>> {
         let platform_ids: Vec<String> = {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "select platform_id from game_platform where game_id = ",
+                "select platform_id from game_platforms where game_id = ",
             );
             query.push_bind(&self.game.id);
             query
