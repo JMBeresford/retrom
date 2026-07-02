@@ -78,13 +78,29 @@ pub async fn game_handler(
 
             let src_dir = match game_path.is_dir() {
                 true => game_path.clone(),
-                false => game_path.parent().unwrap().to_path_buf(),
+                false => match game_path.parent() {
+                    Some(parent) => parent.to_path_buf(),
+                    None => game_path.clone(),
+                },
             };
 
             for entry in it {
                 let path = entry.path();
 
-                let entry_name = path.strip_prefix(&src_dir).unwrap().to_str().unwrap();
+                let relative = match path.strip_prefix(&src_dir) {
+                    Ok(rel) => rel,
+                    Err(e) => {
+                        warn!("Failed to strip prefix from path, skipping: {:?}", e);
+                        continue;
+                    }
+                };
+                let entry_name = match relative.to_str() {
+                    Some(s) => s,
+                    None => {
+                        warn!("Path contains non-UTF-8 characters, skipping: {:?}", relative);
+                        continue;
+                    }
+                };
                 let mut file = match tokio::fs::File::open(path).await {
                     Ok(file) => file,
                     Err(e) => {

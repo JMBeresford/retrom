@@ -94,18 +94,20 @@ pub async fn get_server(
     }
 
     let db_pool = {
-        let mut result = retrom_db::connect(&db_url).await;
-        while let Err(ref e) = result {
-            tracing::info!(
-                "Error connecting to database, is the server running and accessible? Retrying...: {e}"
-            );
-            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
-            result = retrom_db::connect(&db_url).await;
+        let mut delay_ms = 100u64;
+        loop {
+            match retrom_db::connect(&db_url).await {
+                Ok(pool) => break pool,
+                Err(e) => {
+                    tracing::info!(
+                        "Error connecting to database, is the server running and accessible? \
+                         Retrying in {delay_ms}ms...: {e}"
+                    );
+                    tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
+                    delay_ms = (delay_ms * 2).min(5_000);
+                }
+            }
         }
-        result.unwrap_or_else(|e| {
-            tracing::error!("Could not connect to database: {e:#?}");
-            exit(1)
-        })
     };
 
     retrom_db::run_migrations(&db_pool)
