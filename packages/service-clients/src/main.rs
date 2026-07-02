@@ -1,7 +1,9 @@
+use retrom_codegen::retrom::services::config::v1::GetServerConfigRequest;
 use retrom_db::DEFAULT_DB_URL;
 use retrom_service_clients::router::clients_router;
 use retrom_service_common::{
-    config::ServerConfigManager, reflection::reflection_router, svc_definitions::CLIENT_SVC_PORT,
+    grpc_clients::config_svc::get_config_svc_client, reflection::reflection_router,
+    svc_definitions::CLIENT_SVC_PORT,
 };
 use retrom_telemetry::init_tracing_subscriber;
 use std::{net::SocketAddr, process::exit};
@@ -12,25 +14,27 @@ async fn main() {
         dotenvy::dotenv().ok();
     }
 
-    let config_manager = match ServerConfigManager::new() {
-        Ok(config) => config,
+    let mut config_client = get_config_svc_client(None);
+
+    let config = match config_client
+        .get_server_config(GetServerConfigRequest {})
+        .await
+    {
+        Ok(response) => response.into_inner().config.unwrap_or_else(|| {
+            eprintln!("Server configuration is missing in the response");
+            exit(1);
+        }),
         Err(err) => {
-            eprintln!("Could not load configuration: {err:#?}");
+            eprintln!("Failed to fetch server configuration: {err:#?}");
             exit(1);
         }
     };
 
-    let telemetry_enabled = config_manager
-        .get_config()
-        .await
-        .telemetry
-        .is_some_and(|t| t.enabled);
+    let telemetry_enabled = config.telemetry.is_some_and(|t| t.enabled);
 
     init_tracing_subscriber(telemetry_enabled, "retrom-service-clients.log").await;
 
-    let db_url = config_manager
-        .get_config()
-        .await
+    let db_url = config
         .connection
         .and_then(|conn| conn.db_url)
         .unwrap_or_else(|| DEFAULT_DB_URL.to_string());

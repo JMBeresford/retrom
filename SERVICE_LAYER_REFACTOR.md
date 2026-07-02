@@ -1693,12 +1693,12 @@ are updated in a single pass.
 | -------------------------- | :-----------------------: |
 | `retrom-service-library`   |             x             |
 | `retrom-service-metadata`  |             x             |
-| `retrom-service-emulators` |             ☐             |
-| `retrom-service-clients`   |             ☐             |
+| `retrom-service-emulators` |             x             |
+| `retrom-service-clients`   |             x             |
 | `retrom-service-config`    |             ☐             |
-| `retrom-service-jobs`      |             ☐             |
-| `retrom-service-tags`      |             ☐             |
-| `retrom-service-files`     |             ☐             |
+| `retrom-service-jobs`      |             x             |
+| `retrom-service-tags`      |             x             |
+| `retrom-service-files`     |             x             |
 | `retrom-service-saves`     |             ☐             |
 
 **Acceptance criteria:**
