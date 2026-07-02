@@ -27,12 +27,14 @@ src, claude_out, cursor_out, codex_out = sys.argv[1:5]
 with open(src) as f:
     data = json.load(f)
     data.pop("$schema", None)  # Remove schema entry if present
+    # Support new shape: top-level 'mcpServers' dict; fallback to legacy top-level map
+    servers = data.get("mcpServers") if isinstance(data.get("mcpServers"), dict) else data
 with open(claude_out, "w") as f:
-    json.dump(data, f, indent=2, sort_keys=True)
+    json.dump(servers, f, indent=2, sort_keys=True)
 with open(cursor_out, "w") as f:
-    json.dump(data, f, indent=2, sort_keys=True)
+    json.dump(servers, f, indent=2, sort_keys=True)
 lines = ["# Generated from .agents/mcp/servers.json"]
-for name, cfg in data.items():
+for name, cfg in servers.items():
     lines.append(f'[mcp_servers.{name}]')
     for k, v in cfg.items():
         import json as _json
