@@ -237,7 +237,12 @@ impl SaveFileManager for GameSaveFileManager {
             .map_err(|e| SaveFileManagerError::Internal(e.to_string()))?
             .into_inner()
             .config
-            .unwrap_or_default();
+            .unwrap_or_else(|| {
+                tracing::warn!(
+                    "Missing server configuration in ConfigService response; using default values"
+                );
+                Default::default()
+            });
         let max_backup_count = config.saves.map(|s| s.max_save_files_backups).unwrap_or(5) as usize;
 
         let mut current_save_files = self.resolve_save_files(true).await?;

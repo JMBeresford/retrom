@@ -19,7 +19,13 @@ async fn main() {
         .get_server_config(GetServerConfigRequest {})
         .await
     {
-        Ok(response) => response.into_inner().config.unwrap_or_default(),
+        Ok(response) => {
+            let response = response.into_inner();
+            response.config.unwrap_or_else(|| {
+                eprintln!("Server configuration is missing in response; using default values");
+                Default::default()
+            })
+        }
         Err(err) => {
             eprintln!("Failed to fetch server configuration: {err:#?}");
             exit(1);
