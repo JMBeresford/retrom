@@ -92,6 +92,8 @@ async fn game_handler(
 
     let src_dir = PathBuf::from(&game_root);
 
+    tracing::debug!("Downloading game files for game ID {game_id} from root directory {game_root}");
+
     if game_files.is_empty() {
         return Err((
             StatusCode::NOT_FOUND,

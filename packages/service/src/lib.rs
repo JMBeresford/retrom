@@ -98,13 +98,17 @@ pub async fn get_server(
         loop {
             match retrom_db::connect(&db_url).await {
                 Ok(pool) => break pool,
-                Err(e) => {
+                Err(e @ retrom_db::Error::ConnectionError(_)) => {
                     tracing::info!(
                         "Error connecting to database, is the server running and accessible? \
                          Retrying in {delay_ms}ms...: {e}"
                     );
                     tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
                     delay_ms = (delay_ms * 2).min(5_000);
+                }
+                Err(e) => {
+                    tracing::error!("Error connecting to database: {e}");
+                    exit(1);
                 }
             }
         }

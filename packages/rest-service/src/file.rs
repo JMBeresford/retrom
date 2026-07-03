@@ -24,6 +24,8 @@ pub async fn file_handler(
         let mut query =
             sqlx::QueryBuilder::<retrom_db::RetromDB>::new("select * from game_files where id = ");
         query.push_bind(&file_id);
+        query.push(" and is_deleted = ");
+        query.push_bind(false);
         query
             .build_query_as()
             .fetch_one(&pool)
