@@ -11,6 +11,7 @@ const config = defineConfig({
   extends: [tseslint.configs.recommendedTypeChecked],
   languageOptions: {
     parserOptions: {
+      project: false,
       projectService: {
         tsconfigRootDir: __dirname,
         allowDefaultProject: ["*.js", "*.config.ts"],

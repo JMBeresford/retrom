@@ -17,6 +17,7 @@
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
+    "strictNullChecks": true,
     "moduleDetection": "force",
     "resolveJsonModule": true,
     "declaration": true,

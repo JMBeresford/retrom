@@ -1,4 +1,5 @@
 {
+  "extends": "@retrom/configs/tsconfig/base.json",
   "include": [],
   "references": [
     {
