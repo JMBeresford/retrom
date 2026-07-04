@@ -52,6 +52,19 @@ pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr
         .parse()
         .expect("Could not parse address");
 
+    let mut listener = TcpListener::bind(&addr).await;
+    while listener.is_err() {
+        let port = addr.port();
+
+        tracing::warn!("Could not bind to port {}, trying port {}", port, port + 1);
+        addr.set_port(port + 1);
+        listener = TcpListener::bind(&addr).await;
+    }
+
+    let listener = listener.expect("Could not bind to address");
+
+    std::env::set_var("RETROM_SVC_PORT", addr.port().to_string());
+
     let db_pool = {
         let mut delay_ms = 100u64;
         loop {
@@ -109,19 +122,6 @@ pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr
 
     check_version_announcements().await;
 
-    let mut listener = TcpListener::bind(&addr).await;
-    while listener.is_err() {
-        let port = addr.port();
-
-        tracing::warn!("Could not bind to port {}, trying port {}", port, port + 1);
-        let new_port = port + 1;
-        addr.set_port(new_port);
-        listener = TcpListener::bind(&addr).await;
-    }
-
-    let listener = listener.expect("Could not bind to address");
-    let port = listener.local_addr().expect("Could not get local address");
-
     let handle: JoinHandle<_> = tokio::spawn(
         async move {
             let (tx, rx) = tokio::sync::oneshot::channel::<()>();
@@ -148,10 +148,10 @@ pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr
 
             Ok::<(), std::io::Error>(())
         }
-        .instrument(tracing::info_span!("retrom_server")),
+        .in_current_span(),
     );
 
-    (handle, port)
+    (handle, addr)
 }
 
 async fn check_version_announcements() {

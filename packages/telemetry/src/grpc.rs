@@ -88,7 +88,9 @@ impl<B> MakeSpan<B> for GrpcOnRequestSpan {
             exception.details = Empty,
         );
 
-        span.set_parent(parent_context);
+        if let Err(err) = span.set_parent(parent_context) {
+            tracing::warn!("Failed to set parent context for span: {:?}", err);
+        }
 
         span
     }
