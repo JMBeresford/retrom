@@ -79,9 +79,9 @@ impl MetadataServiceHandlers {
             media_cache,
             job_manager,
             config_client,
-            igdb_svc_client: get_igdb_svc_client(),
-            steam_svc_client: get_steam_svc_client(),
-            tags_svc_client: get_tags_svc_client(),
+            igdb_svc_client: get_igdb_svc_client(None),
+            steam_svc_client: get_steam_svc_client(None),
+            tags_svc_client: get_tags_svc_client(None),
         }
     }
 

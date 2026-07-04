@@ -4,9 +4,14 @@ use tonic::transport::Channel;
 
 pub fn get_config_svc_client(port: Option<u16>) -> ConfigServiceClient<Channel> {
     let config_svc_port = port.unwrap_or_else(|| {
-        std::env::var("RETROM_CONFIG_SERVICE_PORT")
+        std::env::var("RETROM_SVC_PORT")
             .ok()
             .and_then(|p| p.parse::<u16>().ok())
+            .or_else(|| {
+                std::env::var("RETROM_CONFIG_SVC_PORT")
+                    .ok()
+                    .and_then(|p| p.parse::<u16>().ok())
+            })
             .unwrap_or(CONFIG_SVC_PORT)
     });
 
