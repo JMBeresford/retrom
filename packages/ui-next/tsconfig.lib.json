@@ -1,16 +1,14 @@
 {
   "extends": "@retrom/configs/tsconfig/base.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"]
-    }
-  },
-  "include": ["./src/**/*.ts", "./src/**/*.tsx"],
-  "references": [
-    {
-      "path": "../ui-next/tsconfig.lib.json"
     },
+    "rootDir": "./src",
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*"],
+  "references": [
     {
       "path": "../configs/tsconfig.lib.json"
     }
