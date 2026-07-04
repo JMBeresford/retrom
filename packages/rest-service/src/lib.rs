@@ -54,4 +54,5 @@ pub fn rest_service(pool: DbPool) -> Router {
                 .on_response(AxumOtelOnResponse::new().level(Level::INFO))
                 .on_failure(AxumOtelOnFailure::new().level(Level::ERROR)),
         )
+        .reset_fallback()
 }

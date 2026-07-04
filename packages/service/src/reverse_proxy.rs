@@ -34,34 +34,40 @@ async fn trace_handler(
 
     tracing::debug!("Forwarding request to upstream: {} {}", parts.method, url);
 
-    let req_bytes = axum::body::to_bytes(body, usize::MAX).await.map_err(|e| {
-        tracing::error!("Error reading request body: {}", e);
-        StatusCode::BAD_REQUEST
-    })?;
+    // 16 MB max body size
+    let req_bytes = axum::body::to_bytes(body, 16 * 1024 * 1024)
+        .await
+        .map_err(|e| {
+            tracing::error!("Error reading request body: {}", e);
+            StatusCode::BAD_REQUEST
+        })?;
 
     let forward_request = client
         .request(parts.method, &url)
         .body(req_bytes)
         .headers(parts.headers);
 
-    let upstream_response = forward_request.send().await.map_err(|e| {
+    let mut upstream_response = forward_request.send().await.map_err(|e| {
         tracing::error!("Error forwarding request to upstream: {}", e);
         StatusCode::BAD_GATEWAY
     })?;
 
+    let headers = std::mem::take(upstream_response.headers_mut());
     let upstream_status = upstream_response.status();
     let upstream_bytes = upstream_response.bytes().await.map_err(|e| {
         tracing::error!("Error reading upstream response body: {}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    let response = Response::builder()
+    let mut response = Response::builder()
         .status(upstream_status)
         .body(Body::from(upstream_bytes))
         .map_err(|e| {
             tracing::error!("Error building response: {}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
+
+    *response.headers_mut() = headers;
 
     Ok(response)
 }

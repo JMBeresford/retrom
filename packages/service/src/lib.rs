@@ -81,7 +81,7 @@ pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr
         });
 
     let rest_service = rest_service(db_pool.clone());
-    let webdav_service = webdav_service(Some("/dav"));
+    let webdav_service = Router::new().nest_service("/dav", webdav_service(None));
     let grpc_service = Router::new().nest(
         "/api/v1",
         reflection_router()
