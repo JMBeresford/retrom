@@ -9,6 +9,8 @@ edition.workspace = true
 description = "The Retrom video game library service"
 
 [dependencies]
+axum = { workspace = true }
+axum-otel = { workspace = true }
 dotenvy = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
@@ -16,12 +18,21 @@ retrom-db = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-service-common = { workspace = true }
 retrom-telemetry = { workspace = true }
-retrom-grpc-service = { workspace = true }
+retrom-service-clients = { workspace = true }
+retrom-service-config = { workspace = true }
+retrom-service-emulators = { workspace = true }
+retrom-service-files = { workspace = true }
+retrom-service-jobs = { workspace = true }
+retrom-service-library = { workspace = true }
+retrom-service-metadata = { workspace = true }
+retrom-service-saves = { workspace = true }
+retrom-service-tags = { workspace = true }
 retrom-rest-service = { workspace = true }
 retrom-webdav-service = { workspace = true }
 reqwest = { workspace = true }
 futures = { workspace = true }
 tower = { workspace = true }
+tower-http = { workspace = true }
 hyper = { workspace = true }
 hyper-util = { workspace = true }
 http = { workspace = true }

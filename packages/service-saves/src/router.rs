@@ -1,19 +1,14 @@
 use crate::{v1::service::SavesServiceHandlers, v2::service::EmulatorSavesServiceHandlers};
-use retrom_codegen::retrom::services::{
-    config::v1::config_service_client::ConfigServiceClient,
-    saves::{
-        v1::saves_service_server::SavesServiceServer,
-        v2::emulator_saves_service_server::EmulatorSavesServiceServer,
-    },
+use retrom_codegen::retrom::services::saves::{
+    v1::saves_service_server::SavesServiceServer,
+    v2::emulator_saves_service_server::EmulatorSavesServiceServer,
 };
 use retrom_db::DbPool;
-use tonic::transport::Channel;
+use retrom_service_common::grpc_clients::config_svc::get_config_svc_client;
 
 /// Build an [`axum::Router`] that serves the saves gRPC endpoints.
-pub fn saves_router(
-    db_pool: DbPool,
-    config_svc_client: ConfigServiceClient<Channel>,
-) -> axum::Router {
+pub fn saves_router(db_pool: DbPool) -> axum::Router {
+    let config_svc_client = get_config_svc_client(None);
     let saves_service_v1 = SavesServiceServer::new(SavesServiceHandlers::new(
         db_pool.clone(),
         config_svc_client,
@@ -27,5 +22,5 @@ pub fn saves_router(
         .add_service(saves_service_v1)
         .add_service(emulator_saves_service_v2);
 
-    routes_builder.routes().into_axum_router()
+    routes_builder.routes().into_axum_router().reset_fallback()
 }

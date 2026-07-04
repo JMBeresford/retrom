@@ -1,3 +1,8 @@
+/// Default port for top-level Retrom Server
+pub const DEFAULT_RETROM_SVC_PORT: u16 = 5101;
+
+/// Default ports for each individual gRPC service,
+/// in the case of running them separately
 pub const CONFIG_SVC_PORT: u16 = 5103;
 pub const CLIENT_SVC_PORT: u16 = 5104;
 pub const JOB_SVC_PORT: u16 = 5105;

@@ -5,10 +5,12 @@ package retrom.services.config.v1;
 // ConnectionConfig defines the configuration for the server's network connections.
 message ConnectionConfig {
   // The port on which the server will listen for incoming connections.
-  optional int32 port = 1;
+  optional int32 port = 1 [deprecated = true]; // Use `RETROM_SVC_PORT` environment variable instead.
   // An optional external database URL for the server to connect to, if applicable.
   // When not provided, the server will use a default local database instance.
-  optional string db_url = 2;
+  optional string db_url = 2 [deprecated = true]; // Use `RETROM_DB_URL` environment variable instead.
+
+  option deprecated = true;
 }
 
 // IgnorePatterns defines a list of glob patterns to be used for ignoring files or directories during content scanning.

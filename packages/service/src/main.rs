@@ -1,21 +1,17 @@
+use retrom_codegen::retrom::services::config::v1::{GetServerConfigRequest, ServerConfig};
 use retrom_service::get_server;
+use retrom_service_common::grpc_clients::config_svc::get_config_svc_client;
+use retrom_service_config::router::config_router;
 use retrom_telemetry::init_tracing_subscriber;
+use tokio::net::TcpListener;
 
 #[tokio::main]
 #[tracing::instrument]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut telemetry_enabled = false;
-    let server_config = retrom_service_common::config::ServerConfigManager::new();
 
-    if let Ok(config) = server_config {
-        if config
-            .get_config()
-            .await
-            .telemetry
-            .is_some_and(|t| t.enabled)
-        {
-            telemetry_enabled = true;
-        }
+    if let Some(config) = get_config_from_oneshot_config_svc().await {
+        telemetry_enabled = config.telemetry.map(|t| t.enabled).unwrap_or(false);
     };
 
     std::env::set_var("SERVICE_NAME", env!("CARGO_PKG_NAME"));
@@ -28,17 +24,44 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         dotenvy::dotenv().ok();
     }
 
-    #[cfg(not(feature = "embedded_db"))]
-    let opts = None;
-
-    #[cfg(feature = "embedded_db")]
-    let db_opts = std::env::var("EMBEDDED_DB_OPTS").ok();
-    #[cfg(feature = "embedded_db")]
-    let opts: Option<&str> = db_opts.as_deref();
-
-    let (server, _port) = get_server(opts).await;
+    let (server, _port) = get_server().await;
 
     let _ = server.await;
 
     Ok(())
+}
+
+async fn get_config_from_oneshot_config_svc() -> Option<ServerConfig> {
+    let router = config_router(None);
+    let (tx, rx) = tokio::sync::oneshot::channel::<()>();
+
+    let listener = TcpListener::bind("127.0.0.1:0")
+        .await
+        .expect("Failed to bind to address");
+
+    let port = listener
+        .local_addr()
+        .expect("Failed to get local address")
+        .port();
+
+    tokio::spawn(async move {
+        axum::serve(listener, router)
+            .with_graceful_shutdown(async {
+                rx.await.ok();
+            })
+            .await
+            .expect("Failed to start config service");
+    });
+
+    let mut client = get_config_svc_client(Some(port));
+
+    let config = client
+        .get_server_config(GetServerConfigRequest {})
+        .await
+        .ok()
+        .and_then(|r| r.into_inner().config);
+
+    tx.send(()).ok();
+
+    config
 }

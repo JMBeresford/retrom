@@ -1,102 +1,61 @@
-use http::header::{ACCESS_CONTROL_REQUEST_HEADERS, CONTENT_TYPE};
-use hyper::{body::Incoming, Request};
-use hyper_util::rt::{TokioExecutor, TokioIo};
-use opentelemetry_otlp::OTEL_EXPORTER_OTLP_ENDPOINT;
-use retrom_grpc_service::grpc_service;
+use axum::Router;
+use retrom_codegen::retrom::utils::v1::VersionAnnouncementsPayload;
 use retrom_rest_service::rest_service;
-use retrom_service_common::{config::ServerConfigManager, emulator_js};
+use retrom_service_clients::router::clients_router;
+use retrom_service_common::{
+    emulator_js, reflection::reflection_router, svc_definitions::DEFAULT_RETROM_SVC_PORT,
+};
+use retrom_service_config::router::config_router;
+use retrom_service_emulators::router::emulators_router;
+use retrom_service_files::router::files_router;
+use retrom_service_jobs::router::jobs_router;
+use retrom_service_library::router::library_router;
+use retrom_service_metadata::router::metadata_router;
+use retrom_service_saves::router::saves_router;
+use retrom_service_tags::router::tags_router;
 use retrom_webdav_service::webdav_service;
-use std::{net::SocketAddr, process::exit, sync::Arc};
+use std::{net::SocketAddr, process::exit};
 use tokio::{net::TcpListener, task::JoinHandle};
-use tower::ServiceExt;
-use tracing::{info_span, Instrument};
+use tracing::Instrument;
 
-#[cfg(feature = "embedded_db")]
-use retrom_db::embedded::DB_NAME;
+use crate::reverse_proxy::reverse_proxy;
 
-pub const DEFAULT_PORT: i32 = 5101;
-pub const DEFAULT_DB_URL: &str = "postgres://postgres:postgres@localhost/retrom";
+mod reverse_proxy;
+
 const CARGO_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tracing::instrument(name = "root_span")]
-pub async fn get_server(
-    db_params: Option<&str>,
-) -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr) {
+pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr) {
     let _ = emulator_js::EmulatorJs::new().await;
-    let config_manager = match ServerConfigManager::new() {
-        Ok(config) => Arc::new(config),
-        Err(err) => {
-            tracing::error!("Could not load configuration: {:#?}", err);
-            exit(1)
+
+    let svc_port = match std::env::var("RETROM_SVC_PORT") {
+        Ok(port_str) => match port_str.parse::<u16>() {
+            Ok(port) => Some(port),
+            Err(_) => {
+                tracing::warn!("Invalid RETROM_SVC_PORT value '{port_str}'",);
+                None
+            }
+        },
+        Err(_) => None,
+    };
+
+    let svc_port = match svc_port {
+        Some(port) => port,
+        None => {
+            tracing::info!("Using default RETROM_SVC_PORT: {DEFAULT_RETROM_SVC_PORT}",);
+            std::env::set_var("RETROM_SVC_PORT", DEFAULT_RETROM_SVC_PORT.to_string());
+            DEFAULT_RETROM_SVC_PORT
         }
     };
 
-    if config_manager
-        .get_config()
-        .await
-        .telemetry
-        .is_some_and(|t| t.enabled)
-    {
-        tracing::info!(
-            "OpenTelemetry Tracing enabled: {:#?}",
-            std::env::var(OTEL_EXPORTER_OTLP_ENDPOINT).unwrap_or("endpoint unset".into())
-        );
-    } else {
-        tracing::warn!("OpenTelemetry Tracing is disabled, no telemetry data will be collected.");
-    }
-
-    let (mut port, mut db_url) = (DEFAULT_PORT, DEFAULT_DB_URL.to_string());
-
-    let conn_config = config_manager.get_config().await.connection;
-    if let Some(config_port) = conn_config.as_ref().and_then(|conn| conn.port) {
-        port = config_port;
-        tracing::info!("Using port from configuration: {}", port);
-    }
-
-    if let Some(config_db_url) = conn_config.as_ref().and_then(|conn| conn.db_url.clone()) {
-        db_url = config_db_url;
-        tracing::info!("Using database url from configuration file");
-    }
-
-    let mut addr: SocketAddr = format!("0.0.0.0:{port}").parse().unwrap();
-
-    #[cfg(feature = "embedded_db")]
-    let mut psql = None;
-
-    #[cfg(feature = "embedded_db")]
-    {
-        use core::panic;
-        let config_db_url = conn_config.and_then(|conn| conn.db_url);
-
-        if config_db_url.is_none() {
-            let mut db_url_with_params = db_url.clone();
-            if let Some(db_params) = db_params {
-                db_url_with_params.push_str(db_params);
-            }
-
-            psql.replace(
-                match retrom_db::embedded::start_embedded_db(&db_url_with_params).await {
-                    Ok(psql) => psql,
-                    Err(why) => {
-                        tracing::error!("Could not start embedded db: {:#?}", why);
-                        panic!("Could not start embedded db");
-                    }
-                },
-            );
-
-            // Port may be random, so get new db_url from running instance
-            if let Some(psql) = &psql {
-                db_url = psql.settings().url(DB_NAME);
-            }
-        } else {
-            tracing::debug!("Opting out of embedded db");
-        }
-    }
+    let mut addr: SocketAddr = format!("0.0.0.0:{svc_port}")
+        .parse()
+        .expect("Could not parse address");
 
     let db_pool = {
         let mut delay_ms = 100u64;
         loop {
-            match retrom_db::connect(&db_url).await {
+            match retrom_db::connect().await {
                 Ok(pool) => break pool,
                 Err(e @ retrom_db::Error::ConnectionError(_)) => {
                     tracing::info!(
@@ -122,8 +81,25 @@ pub async fn get_server(
         });
 
     let rest_service = rest_service(db_pool.clone());
-    let grpc_service = grpc_service(&db_url, config_manager);
     let webdav_service = webdav_service(Some("/dav"));
+    let grpc_service = Router::new().nest(
+        "/api/v1",
+        reflection_router()
+            .merge(config_router(None))
+            .merge(clients_router(db_pool.clone()))
+            .merge(emulators_router(db_pool.clone()))
+            .merge(files_router())
+            .merge(jobs_router())
+            .merge(library_router(db_pool.clone()))
+            .merge(metadata_router(db_pool.clone()))
+            .merge(saves_router(db_pool.clone()))
+            .merge(tags_router(db_pool)),
+    );
+
+    let router = rest_service
+        .merge(reverse_proxy())
+        .merge(webdav_service)
+        .merge(grpc_service.clone());
 
     tracing::info!(
         "Starting Retrom {} service at: {}",
@@ -148,107 +124,31 @@ pub async fn get_server(
 
     let handle: JoinHandle<_> = tokio::spawn(
         async move {
-            let server = async {
-                loop {
-                    let (socket, addr) = listener
-                        .accept()
-                        .await
-                        .expect("Could not accept connection");
+            let (tx, rx) = tokio::sync::oneshot::channel::<()>();
 
-                    let grpc_service = grpc_service.clone();
-                    let rest_service = rest_service.clone();
-                    let webdav_service = webdav_service.clone();
-
-                    tokio::spawn(
-                        async move {
-                            let socket = TokioIo::new(socket);
-
-                            let hyper_service =
-                                hyper::service::service_fn(move |req: Request<Incoming>| {
-                                    let is_grpc = req
-                                        .headers()
-                                        .get(CONTENT_TYPE)
-                                        .map(|content_type| content_type.as_bytes())
-                                        .filter(|content_type| {
-                                            content_type.starts_with(b"application/grpc")
-                                        })
-                                        .is_some();
-
-                                    let is_grpc_preflight = req.method() == hyper::Method::OPTIONS
-                                        && req
-                                            .headers()
-                                            .get(ACCESS_CONTROL_REQUEST_HEADERS)
-                                            .map(|headers| {
-                                                headers.to_str().ok().map(|headers| {
-                                                    headers.contains("content-type")
-                                                        && headers.contains("grpc")
-                                                })
-                                            })
-                                            .is_some();
-
-                                    if is_grpc || is_grpc_preflight {
-                                        tracing::debug!(
-                                            "Routing request to gRPC service: {} {}",
-                                            req.method(),
-                                            req.uri().path()
-                                        );
-                                        grpc_service.clone().oneshot(req)
-                                    } else if req.uri().path().starts_with("/dav") {
-                                        tracing::debug!(
-                                            "Routing request to WebDAV service: {} {}",
-                                            req.method(),
-                                            req.uri().path()
-                                        );
-
-                                        webdav_service.clone().oneshot(req)
-                                    } else {
-                                        tracing::debug!(
-                                            "Routing request to REST service: {} {}",
-                                            req.method(),
-                                            req.uri().path()
-                                        );
-
-                                        rest_service.clone().oneshot(req)
-                                    }
-                                });
-
-                            if let Err(err) =
-                                hyper_util::server::conn::auto::Builder::new(TokioExecutor::new())
-                                    .serve_connection(socket, hyper_service)
-                                    .await
-                            {
-                                tracing::error!("Error serving connection for {}: {}", addr, err);
-                            }
-                        }
-                        .instrument(info_span!("connection", %addr)),
-                    );
-                }
-            }
-            .instrument(info_span!("server_loop"));
+            let handle = tokio::spawn(async move {
+                axum::serve(listener, router)
+                    .with_graceful_shutdown(async {
+                        rx.await.ok();
+                    })
+                    .await
+            });
 
             tokio::select! {
-                _ = server => {
+                _ = handle => {
                     tracing::info!("Server exited");
                 }
                 _ = shutdown_signal() => {
+                    tx.send(()).ok();
                     tracing::info!("Shutdown signal received");
                 }
-            }
-
-            #[cfg(feature = "embedded_db")]
-            if let Some(psql_running) = psql {
-                if let Err(why) = psql_running.stop().await {
-                    tracing::error!("Could not stop embedded db: {}", why);
-                }
-
-                tracing::info!("Embedded db stopped");
             }
 
             tracing::info!("Server stopped");
 
             Ok::<(), std::io::Error>(())
         }
-        .instrument(tracing::info_span!("server_task")),
+        .instrument(tracing::info_span!("retrom_server")),
     );
 
     (handle, port)
@@ -270,10 +170,7 @@ async fn check_version_announcements() {
         return;
     }
 
-    let json = match res
-        .json::<retrom_codegen::retrom::VersionAnnouncementsPayload>()
-        .await
-    {
+    let json = match res.json::<VersionAnnouncementsPayload>().await {
         Ok(json) => json,
         Err(err) => {
             tracing::error!("Could not parse version announcements: {}", err);

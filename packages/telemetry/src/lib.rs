@@ -120,7 +120,7 @@ pub fn get_tracer_provider() -> SdkTracerProvider {
     let exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_http()
         .build()
-        .unwrap();
+        .expect("Failed to create OTLP exporter");
 
     let tracer_provider = SdkTracerProvider::builder()
         .with_batch_exporter(exporter)
