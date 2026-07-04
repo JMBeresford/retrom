@@ -16,7 +16,7 @@ pub fn get_metadata_svc_client(port: Option<u16>) -> MetadataServiceClient<Chann
             .unwrap_or(METADATA_SVC_PORT)
     });
 
-    let metadata_svc_host = format!("http://0.0.0.0:{metadata_svc_port}");
+    let metadata_svc_host = format!("http://localhost:{metadata_svc_port}");
 
     let metadata_svc_transport = Channel::from_shared(metadata_svc_host.clone())
         .unwrap_or_else(|_| {
