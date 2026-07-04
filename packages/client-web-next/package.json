@@ -1,0 +1,46 @@
+{
+  "name": "@retrom/client-web-next",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "catalog:",
+    "@tanstack/react-devtools": "catalog:tanstack-next",
+    "@tanstack/react-form": "catalog:tanstack-next",
+    "@tanstack/react-hotkeys": "catalog:tanstack-next",
+    "@tanstack/react-query": "catalog:tanstack-next",
+    "@tanstack/react-query-devtools": "catalog:tanstack-next",
+    "@tanstack/react-router": "catalog:tanstack-next",
+    "@tanstack/react-router-devtools": "catalog:tanstack-next",
+    "@tanstack/react-router-ssr-query": "catalog:tanstack-next",
+    "@tanstack/react-start": "catalog:tanstack-next",
+    "@tanstack/react-virtual": "catalog:tanstack-next",
+    "@tanstack/router-plugin": "catalog:tanstack-next",
+    "lucide-react": "catalog:",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "tailwindcss": "catalog:",
+    "zod": "catalog:zod4"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "catalog:",
+    "@nx/vite": "catalog:",
+    "@tanstack/devtools-vite": "catalog:tanstack-next",
+    "@tanstack/eslint-config": "catalog:tanstack-next",
+    "@tanstack/router-cli": "catalog:tanstack-next",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:react19",
+    "eslint": "catalog:",
+    "jsdom": "catalog:react19",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

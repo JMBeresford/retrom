@@ -15,6 +15,7 @@
   "devDependencies": {
     "@eslint/js": "catalog:",
     "@tanstack/eslint-plugin-query": "catalog:",
+    "@tanstack/eslint-config": "catalog:tanstack-next",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "vite": "catalog:",

@@ -1,0 +1,9 @@
+{
+  "extends": "@retrom/configs/tsconfig/base.json",
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

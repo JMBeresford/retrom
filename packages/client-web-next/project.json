@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "retrom-client-web-next",
+  "targets": {
+    "prettier:format": {},
+    "build": {
+      "dependsOn": ["vite:build"]
+    },
+    "typecheck": {
+      "dependsOn": ["tsc:typecheck"]
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "vite dev --port 3001"
+      }
+    },
+    "generate-routes": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "pnpm tsr generate"
+      }
+    }
+  }
+}
