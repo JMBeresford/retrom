@@ -10,7 +10,9 @@ import { defineConfig } from "eslint/config";
 const config = defineConfig({
   name: "web",
   extends: [
-    reactRefresh.configs.vite(),
+    reactRefresh.configs.vite({
+      extraHOCs: ["createFileRoute", "createRootRouteWithContext"],
+    }),
     tanstackConfig,
     tanstackQuery.configs["flat/recommended"],
     reactConfig,

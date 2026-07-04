@@ -46,6 +46,12 @@
     },
     {
       "path": "./plugins/retrom-plugin-save-manager"
+    },
+    {
+      "path": "./packages/client-web-next"
+    },
+    {
+      "path": "./packages/ui-next"
     }
   ]
 }
