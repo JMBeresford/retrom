@@ -4,6 +4,7 @@ import {
   createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { TanStackDevtools } from "@tanstack/react-devtools";
+import { SidebarProvider } from "@retrom/ui-next/components/sidebar";
 import TanStackQueryDevtools from "../devtools/tanstack-query";
 import TanStackRouterDevtools from "../devtools/tanstack-router";
 import appCss from "../globals.css?url";
@@ -41,7 +42,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <SidebarProvider>{children}</SidebarProvider>
+        </ThemeProvider>
         <TanStackDevtools
           config={{
             position: "bottom-right",

@@ -12,18 +12,20 @@
   "files": [
     "./dist/**"
   ],
-  "dependencies": {},
   "peerDependencies": {
     "@base-ui/react": "catalog:",
+    "@fontsource-variable/exo-2": "catalog:",
     "@fontsource-variable/geist": "catalog:",
+    "@fontsource-variable/geist-mono": "catalog:",
+    "@fontsource-variable/manrope": "catalog:",
     "@fontsource-variable/oxanium": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "tailwindcss": "catalog:",
     "tailwind-merge": "catalog:",
+    "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:"
   },
   "devDependencies": {
@@ -31,8 +33,8 @@
     "@retrom/configs": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:",
-    "@types/react": "catalog:react19",
-    "@types/react-dom": "catalog:react19",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:react19",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
@@ -41,10 +43,14 @@
     "globals": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "catalog:",
+    "rolldown": "catalog:",
     "shadcn": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:"
+  },
+  "dependencies": {
+    "cmdk": "catalog:"
   }
 }
