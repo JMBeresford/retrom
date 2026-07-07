@@ -12,6 +12,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "continuous": true,
+      "dependsOn": ["vite:watch-deps"],
       "options": {
         "cwd": "{projectRoot}",
         "command": "vite dev --port 3001"

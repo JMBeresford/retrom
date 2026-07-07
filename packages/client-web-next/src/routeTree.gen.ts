@@ -9,38 +9,170 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppPlatformsRouteRouteImport } from './routes/app/platforms/route'
+import { Route as AppLibrariesRouteRouteImport } from './routes/app/libraries/route'
+import { Route as AppGamesRouteRouteImport } from './routes/app/games/route'
+import { Route as AppEmulatorsRouteRouteImport } from './routes/app/emulators/route'
+import { Route as AppDownloadsRouteRouteImport } from './routes/app/downloads/route'
+import { Route as AppConfigRouteRouteImport } from './routes/app/config/route'
+import { Route as AppConfigMetadataRouteImport } from './routes/app/config/metadata'
+import { Route as AppConfigInterfaceRouteImport } from './routes/app/config/interface'
+import { Route as AppConfigCloudSavesRouteImport } from './routes/app/config/cloud-saves'
 
+const AppRouteRoute = AppRouteRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppPlatformsRouteRoute = AppPlatformsRouteRouteImport.update({
+  id: '/platforms',
+  path: '/platforms',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppLibrariesRouteRoute = AppLibrariesRouteRouteImport.update({
+  id: '/libraries',
+  path: '/libraries',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppGamesRouteRoute = AppGamesRouteRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppEmulatorsRouteRoute = AppEmulatorsRouteRouteImport.update({
+  id: '/emulators',
+  path: '/emulators',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppDownloadsRouteRoute = AppDownloadsRouteRouteImport.update({
+  id: '/downloads',
+  path: '/downloads',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppConfigRouteRoute = AppConfigRouteRouteImport.update({
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppConfigMetadataRoute = AppConfigMetadataRouteImport.update({
+  id: '/metadata',
+  path: '/metadata',
+  getParentRoute: () => AppConfigRouteRoute,
+} as any)
+const AppConfigInterfaceRoute = AppConfigInterfaceRouteImport.update({
+  id: '/interface',
+  path: '/interface',
+  getParentRoute: () => AppConfigRouteRoute,
+} as any)
+const AppConfigCloudSavesRoute = AppConfigCloudSavesRouteImport.update({
+  id: '/cloud-saves',
+  path: '/cloud-saves',
+  getParentRoute: () => AppConfigRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/config': typeof AppConfigRouteRouteWithChildren
+  '/app/downloads': typeof AppDownloadsRouteRoute
+  '/app/emulators': typeof AppEmulatorsRouteRoute
+  '/app/games': typeof AppGamesRouteRoute
+  '/app/libraries': typeof AppLibrariesRouteRoute
+  '/app/platforms': typeof AppPlatformsRouteRoute
+  '/app/config/cloud-saves': typeof AppConfigCloudSavesRoute
+  '/app/config/interface': typeof AppConfigInterfaceRoute
+  '/app/config/metadata': typeof AppConfigMetadataRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/config': typeof AppConfigRouteRouteWithChildren
+  '/app/downloads': typeof AppDownloadsRouteRoute
+  '/app/emulators': typeof AppEmulatorsRouteRoute
+  '/app/games': typeof AppGamesRouteRoute
+  '/app/libraries': typeof AppLibrariesRouteRoute
+  '/app/platforms': typeof AppPlatformsRouteRoute
+  '/app/config/cloud-saves': typeof AppConfigCloudSavesRoute
+  '/app/config/interface': typeof AppConfigInterfaceRoute
+  '/app/config/metadata': typeof AppConfigMetadataRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/config': typeof AppConfigRouteRouteWithChildren
+  '/app/downloads': typeof AppDownloadsRouteRoute
+  '/app/emulators': typeof AppEmulatorsRouteRoute
+  '/app/games': typeof AppGamesRouteRoute
+  '/app/libraries': typeof AppLibrariesRouteRoute
+  '/app/platforms': typeof AppPlatformsRouteRoute
+  '/app/config/cloud-saves': typeof AppConfigCloudSavesRoute
+  '/app/config/interface': typeof AppConfigInterfaceRoute
+  '/app/config/metadata': typeof AppConfigMetadataRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/app/config'
+    | '/app/downloads'
+    | '/app/emulators'
+    | '/app/games'
+    | '/app/libraries'
+    | '/app/platforms'
+    | '/app/config/cloud-saves'
+    | '/app/config/interface'
+    | '/app/config/metadata'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/app'
+    | '/app/config'
+    | '/app/downloads'
+    | '/app/emulators'
+    | '/app/games'
+    | '/app/libraries'
+    | '/app/platforms'
+    | '/app/config/cloud-saves'
+    | '/app/config/interface'
+    | '/app/config/metadata'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/app/config'
+    | '/app/downloads'
+    | '/app/emulators'
+    | '/app/games'
+    | '/app/libraries'
+    | '/app/platforms'
+    | '/app/config/cloud-saves'
+    | '/app/config/interface'
+    | '/app/config/metadata'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRouteRoute: typeof AppRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +180,113 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/platforms': {
+      id: '/app/platforms'
+      path: '/platforms'
+      fullPath: '/app/platforms'
+      preLoaderRoute: typeof AppPlatformsRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/libraries': {
+      id: '/app/libraries'
+      path: '/libraries'
+      fullPath: '/app/libraries'
+      preLoaderRoute: typeof AppLibrariesRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/games': {
+      id: '/app/games'
+      path: '/games'
+      fullPath: '/app/games'
+      preLoaderRoute: typeof AppGamesRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/emulators': {
+      id: '/app/emulators'
+      path: '/emulators'
+      fullPath: '/app/emulators'
+      preLoaderRoute: typeof AppEmulatorsRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/downloads': {
+      id: '/app/downloads'
+      path: '/downloads'
+      fullPath: '/app/downloads'
+      preLoaderRoute: typeof AppDownloadsRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/config': {
+      id: '/app/config'
+      path: '/config'
+      fullPath: '/app/config'
+      preLoaderRoute: typeof AppConfigRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/config/metadata': {
+      id: '/app/config/metadata'
+      path: '/metadata'
+      fullPath: '/app/config/metadata'
+      preLoaderRoute: typeof AppConfigMetadataRouteImport
+      parentRoute: typeof AppConfigRouteRoute
+    }
+    '/app/config/interface': {
+      id: '/app/config/interface'
+      path: '/interface'
+      fullPath: '/app/config/interface'
+      preLoaderRoute: typeof AppConfigInterfaceRouteImport
+      parentRoute: typeof AppConfigRouteRoute
+    }
+    '/app/config/cloud-saves': {
+      id: '/app/config/cloud-saves'
+      path: '/cloud-saves'
+      fullPath: '/app/config/cloud-saves'
+      preLoaderRoute: typeof AppConfigCloudSavesRouteImport
+      parentRoute: typeof AppConfigRouteRoute
+    }
   }
 }
 
+interface AppConfigRouteRouteChildren {
+  AppConfigCloudSavesRoute: typeof AppConfigCloudSavesRoute
+  AppConfigInterfaceRoute: typeof AppConfigInterfaceRoute
+  AppConfigMetadataRoute: typeof AppConfigMetadataRoute
+}
+
+const AppConfigRouteRouteChildren: AppConfigRouteRouteChildren = {
+  AppConfigCloudSavesRoute: AppConfigCloudSavesRoute,
+  AppConfigInterfaceRoute: AppConfigInterfaceRoute,
+  AppConfigMetadataRoute: AppConfigMetadataRoute,
+}
+
+const AppConfigRouteRouteWithChildren = AppConfigRouteRoute._addFileChildren(
+  AppConfigRouteRouteChildren,
+)
+
+interface AppRouteRouteChildren {
+  AppConfigRouteRoute: typeof AppConfigRouteRouteWithChildren
+  AppDownloadsRouteRoute: typeof AppDownloadsRouteRoute
+  AppEmulatorsRouteRoute: typeof AppEmulatorsRouteRoute
+  AppGamesRouteRoute: typeof AppGamesRouteRoute
+  AppLibrariesRouteRoute: typeof AppLibrariesRouteRoute
+  AppPlatformsRouteRoute: typeof AppPlatformsRouteRoute
+}
+
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppConfigRouteRoute: AppConfigRouteRouteWithChildren,
+  AppDownloadsRouteRoute: AppDownloadsRouteRoute,
+  AppEmulatorsRouteRoute: AppEmulatorsRouteRoute,
+  AppGamesRouteRoute: AppGamesRouteRoute,
+  AppLibrariesRouteRoute: AppLibrariesRouteRoute,
+  AppPlatformsRouteRoute: AppPlatformsRouteRoute,
+}
+
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRouteRoute: AppRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,7 +1,7 @@
 import path from "path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, esmExternalRequirePlugin } from "vite";
 import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 import { globSync } from "glob";
@@ -34,15 +34,13 @@ export default defineConfig({
       ),
       formats: ["es" as const],
     },
-    rollupOptions: {
-      // External packages that should not be bundled into your library.
-      external: [
-        "react",
-        "react/jsx-runtime",
-        "react-dom",
-        "tailwindcss",
-        "tw-animate-css",
+    rolldownOptions: {
+      plugins: [
+        esmExternalRequirePlugin({
+          external: ["react", "react-dom"],
+        }),
       ],
+      external: ["react/jsx-runtime", "tailwindcss", "tw-animate-css"],
       output: {
         globals: {
           react: "React",

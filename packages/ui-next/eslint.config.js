@@ -1,3 +1,3 @@
-import { config } from "@retrom/configs/eslint/react.config.js"
+import { config } from "@retrom/configs/eslint/web.config.js";
 
-export default config
+export default config;

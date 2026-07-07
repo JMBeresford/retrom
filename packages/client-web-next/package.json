@@ -3,14 +3,14 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@base-ui/react": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@fontsource-variable/geist": "catalog:",
     "@fontsource-variable/oxanium": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "tailwind-merge": "catalog:",
     "tw-animate-css": "catalog:",
-    "shadcn": "catalog:",
+    "@retrom/codegen": "workspace:*",
     "@retrom/ui-next": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-devtools": "catalog:tanstack-next",
@@ -28,7 +28,8 @@
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "tailwindcss": "catalog:",
-    "zod": "catalog:zod4"
+    "zod": "catalog:zod4",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/typography": "catalog:",
@@ -39,12 +40,13 @@
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "catalog:",
-    "@types/react": "catalog:react19",
-    "@types/react-dom": "catalog:react19",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:react19",
     "eslint": "catalog:",
     "jsdom": "catalog:react19",
     "prettier": "catalog:",
+    "shadcn": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
