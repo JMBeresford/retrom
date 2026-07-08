@@ -11,6 +11,7 @@
     "tailwind-merge": "catalog:",
     "tw-animate-css": "catalog:",
     "@retrom/codegen": "workspace:*",
+    "@retrom/plugin-config": "workspace:*",
     "@retrom/ui-next": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-devtools": "catalog:tanstack-next",

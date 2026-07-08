@@ -1,8 +1,8 @@
 import * as ConfigFile from "@retrom/plugin-config";
-import { StateStorage } from "zustand/middleware";
 import { create, fromJsonString, toJsonString } from "@bufbuild/protobuf";
-import { RetromClientConfigSchema } from "@retrom/codegen/retrom/client/client-config_pb";
-import { LocalConfig } from ".";
+import { RetromClientConfigSchema } from "@retrom/codegen/retrom/client/v1/client-config_pb";
+import type { StateStorage } from "zustand/middleware";
+import type { LocalConfig } from "./store";
 
 async function retry<T>(fn: () => Promise<T>, count = 5): Promise<T> {
   let attempts = 0;

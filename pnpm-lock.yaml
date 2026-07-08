@@ -749,6 +749,9 @@ importers:
       '@retrom/codegen':
         specifier: workspace:*
         version: link:../codegen
+      '@retrom/plugin-config':
+        specifier: workspace:*
+        version: link:../../plugins/retrom-plugin-config
       '@retrom/ui-next':
         specifier: workspace:*
         version: link:../ui-next
