@@ -4,9 +4,12 @@ modules:
 lint:
   use:
     - COMMENTS
+    - STANDARD
   ignore:
     - protos/igdbapi.proto
+    - protos/google
     - protos/retrom/services/saves/v1/saves-service.proto
+    - protos/retrom/services/saves/v1/models.proto
 breaking:
   use:
     - FILE
