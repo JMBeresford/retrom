@@ -1,11 +1,4 @@
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@retrom/ui-next/components/card";
 import { SidebarTrigger } from "@retrom/ui-next/components/sidebar";
 import {
   CirclePlay,
@@ -15,7 +8,6 @@ import {
   Library,
   Settings2,
 } from "lucide-react";
-import { Button } from "@retrom/ui-next/components/button";
 import { cn } from "@retrom/ui-next/lib/utils";
 import { Separator } from "@retrom/ui-next/components/separator";
 import { InstallationTracker } from "./-components/installation-tracker";
@@ -29,6 +21,29 @@ import { ModeToggle } from "@/themes/mode-toggle";
 export const Route = createFileRoute("/app")({
   component: RouteComponent,
 });
+
+function RouteComponent() {
+  return (
+    <AppSidebar config={sidebarConfig}>
+      <header
+        className={cn(
+          "sticky top-0 flex items-center justify-between px-2 pt-4 pb-2 h-14",
+          "bg-background border-b",
+        )}
+      >
+        <div className="flex items-center gap-2">
+          <SidebarTrigger size="icon-lg"></SidebarTrigger>
+          <Separator orientation="vertical" className="mr-2" />
+          <SearchCommand />
+        </div>
+        <div></div>
+        <div></div>
+      </header>
+
+      <Outlet />
+    </AppSidebar>
+  );
+}
 
 const sidebarConfig: SidebarConfig = {
   header: {
@@ -161,109 +176,3 @@ const sidebarConfig: SidebarConfig = {
     ],
   },
 };
-
-function RouteComponent() {
-  return (
-    <AppSidebar config={sidebarConfig}>
-      <header
-        className={cn(
-          "sticky top-0 flex items-center justify-between px-2 pt-4 pb-2 h-14",
-          "bg-background border-b",
-        )}
-      >
-        <div className="flex items-center gap-2">
-          <SidebarTrigger size="icon-lg"></SidebarTrigger>
-          <Separator orientation="vertical" className="mr-2" />
-          <SearchCommand />
-        </div>
-        <div></div>
-        <div></div>
-      </header>
-
-      <div className="mt-24 p-8 w-[64ch]">
-        <h3 className="font-heading text-3xl font-bold">Foo bar baz</h3>
-
-        <p className="text-foreground">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. In metus
-          purus, porta ut lacus eu, egestas commodo lectus. Curabitur a orci
-          bibendum, aliquam nibh non, luctus justo. Aenean tincidunt lectus sed
-          massa laoreet, sit amet vestibulum risus viverra. In ultrices, urna
-          sit amet dapibus molestie, massa dolor auctor metus, id dictum felis
-          metus ac turpis. Sed gravida elit neque, sit amet scelerisque diam
-          facilisis sit amet. Proin nec ligula sed orci pellentesque sodales.
-          Donec tristique felis non quam porta mollis.
-        </p>
-      </div>
-
-      <div className="p-8 flex flex-row gap-2">
-        <Button variant="default">Click me</Button>
-        <Button variant="secondary">Click me</Button>
-        <Button variant="ghost">Click me</Button>
-        <Button variant="outline">Click me</Button>
-        <Button variant="destructive">Click me</Button>
-      </div>
-
-      <Card className="mx-8 w-[75ch]">
-        <CardHeader>
-          <CardTitle>Foo Magoo</CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. In metus
-          purus, porta ut lacus eu, egestas commodo lectus. Curabitur a orci
-          bibendum, aliquam nibh non, luctus justo.
-        </CardContent>
-
-        <CardFooter>
-          <Button variant="default">Click me</Button>
-        </CardFooter>
-      </Card>
-
-      <div className="p-8 flex flex-row gap-2">
-        <div className="p-8 bg-primary grid place-items-center">
-          <h3 className="font-heading text-primary-foreground font-bold text-xl">
-            Foo, bar, foobar
-          </h3>
-
-          <p className="text-primary-foreground text-sm text-pretty text-center">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-          </p>
-        </div>
-
-        <div className="p-8 bg-accent grid place-items-center">
-          <h3 className="font-heading text-accent-foreground font-bold text-xl">
-            Foo, bar, foobar
-          </h3>
-
-          <p className="text-accent-foreground text-sm text-pretty text-center">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-          </p>
-        </div>
-      </div>
-
-      <div className="px-8 flex flex-row gap-2">
-        <div className="p-8 bg-muted grid place-items-center">
-          <h3 className="font-heading text-muted-foreground font-bold text-xl">
-            Foo, bar, foobar
-          </h3>
-
-          <p className="text-muted-foreground text-sm text-pretty text-center">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-          </p>
-        </div>
-
-        <div className="p-8 bg-secondary grid place-items-center">
-          <h3 className="font-heading text-secondary-foreground font-bold text-xl">
-            Foo, bar, foobar
-          </h3>
-
-          <p className="text-secondary-foreground text-sm text-pretty text-center">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-          </p>
-        </div>
-      </div>
-
-      <Outlet />
-    </AppSidebar>
-  );
-}

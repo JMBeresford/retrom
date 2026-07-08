@@ -1,9 +1,9 @@
 import { z } from "zod";
 import type { RetromClientConfigJson } from "@retrom/codegen/retrom/client/v1/client-config_pb";
-import { RETROM_HOST, RETROM_HOSTNAME, RETROM_PORT } from "@/env";
+import { RETROM_HOSTNAME, RETROM_PORT } from "@/env";
 
 export function defaultAPIHostname() {
-  return RETROM_HOSTNAME || "http://localhost";
+  return RETROM_HOSTNAME;
 }
 
 export function defaultAPIPort() {
@@ -16,7 +16,7 @@ export function defaultAPIPort() {
 }
 
 export function defaultAPIHost() {
-  return RETROM_HOST || `${defaultAPIHostname()}:${defaultAPIPort()}`;
+  return RETROM_HOSTNAME || `${defaultAPIHostname()}:${defaultAPIPort()}`;
 }
 
 export const configSchema = z.object({

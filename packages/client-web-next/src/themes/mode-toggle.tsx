@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@retrom/ui-next/components/dropdown-menu";
-import { useTheme } from "./theme-provider";
+import { useTheme } from "./use-theme";
 
 export function ModeToggle() {
   const { setTheme } = useTheme();
