@@ -1,13 +1,13 @@
 import {
   create,
   fromBinary,
-  MessageInitShape,
+  type MessageInitShape,
   toBinary,
 } from "@bufbuild/protobuf";
 import {
-  RetromClientConfig,
+  type RetromClientConfig,
   RetromClientConfigSchema,
-} from "@retrom/codegen/retrom/client/client-config_pb";
+} from "@retrom/codegen/retrom/client/v1/client-config_pb";
 import { invoke } from "@tauri-apps/api/core";
 
 export async function getConfig(): Promise<RetromClientConfig> {

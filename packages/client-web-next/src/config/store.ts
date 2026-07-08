@@ -1,29 +1,30 @@
-import { create, StoreApi, UseBoundStore } from "zustand";
+import { create } from "zustand";
 import {
   createJSONStorage,
   persist,
   subscribeWithSelector,
 } from "zustand/middleware";
-import {
-  RetromClientConfig,
-  RetromClientConfigJson,
-  RetromClientConfigSchema,
-} from "@retrom/codegen/retrom/client/client-config_pb";
-import { createContext, PropsWithChildren, useContext } from "react";
-import { defaultAPIHostname, defaultAPIPort } from "./utils";
-import { checkIsDesktop } from "@/lib/env";
-import { migrate } from "./migrations";
-import { desktopStorage } from "./desktop";
+import { RetromClientConfigSchema } from "@retrom/codegen/retrom/client/v1/client-config_pb";
+import { createContext, useContext } from "react";
 import * as ConfigFile from "@retrom/plugin-config";
 import { toJson } from "@bufbuild/protobuf";
-import { timestampNow, TimestampSchema } from "@bufbuild/protobuf/wkt";
+import { TimestampSchema, timestampNow } from "@bufbuild/protobuf/wkt";
+import { desktopStorage } from "./desktop";
+import { migrate } from "./migrations";
+import { defaultAPIHostname, defaultAPIPort } from "./utils";
+import type {
+  RetromClientConfig,
+  RetromClientConfigJson,
+} from "@retrom/codegen/retrom/client/v1/client-config_pb";
+import type { StoreApi, UseBoundStore } from "zustand";
+import { IS_DESKTOP } from "@/env";
 
 const STORAGE_KEY = "retrom-client-config";
 export type LocalConfig = RetromClientConfigJson;
 
-const context = createContext<UseBoundStore<StoreApi<LocalConfig>> | undefined>(
-  undefined,
-);
+export const context = createContext<
+  UseBoundStore<StoreApi<LocalConfig>> | undefined
+>(undefined);
 
 const defaultConfig: RetromClientConfigJson = {
   server: {
@@ -33,11 +34,11 @@ const defaultConfig: RetromClientConfigJson = {
     installGamesInStandalone: false,
   },
   config: {
-    clientInfo: checkIsDesktop()
+    clientInfo: IS_DESKTOP
       ? undefined
       : {
-          name: `retrom-web${navigator?.userAgent ? `_${navigator.userAgent}` : ""}`,
-          id: -1,
+          name: `retrom-web${navigator.userAgent ? `_${navigator.userAgent}` : ""}`,
+          id: "",
           createdAt: toJson(TimestampSchema, timestampNow()),
           updatedAt: toJson(TimestampSchema, timestampNow()),
         },
@@ -47,7 +48,7 @@ const defaultConfig: RetromClientConfigJson = {
         gridList: {
           columns: 4,
           gap: 20,
-          imageType: "COVER",
+          imageType: "GAME_LIST_ENTRY_IMAGE_COVER",
         },
       },
     },
@@ -62,7 +63,7 @@ const defaultConfig: RetromClientConfigJson = {
 };
 
 let configFile: RetromClientConfig | undefined;
-if (checkIsDesktop()) {
+if (IS_DESKTOP) {
   const fromLegacyStorage = localStorage.getItem(STORAGE_KEY);
   if (fromLegacyStorage) {
     console.warn("Legacy localStorage found, this config is no longer used!");
@@ -82,11 +83,11 @@ export const configStore = create<LocalConfig>()(
       name: STORAGE_KEY,
       version: 6,
       migrate,
-      skipHydration: checkIsDesktop(),
+      skipHydration: IS_DESKTOP,
       onRehydrateStorage: (state) => {
         console.log("Rehydrating config state", state);
       },
-      storage: checkIsDesktop()
+      storage: IS_DESKTOP
         ? createJSONStorage(() => desktopStorage, {
             replacer: (_, v) => (typeof v === "bigint" ? v.toString() : v),
           })
@@ -96,12 +97,6 @@ export const configStore = create<LocalConfig>()(
     }),
   ),
 );
-
-export function ConfigProvider(props: PropsWithChildren) {
-  const { children } = props;
-
-  return <context.Provider value={configStore}>{children}</context.Provider>;
-}
 
 export function useConfigStore() {
   const store = useContext(context);

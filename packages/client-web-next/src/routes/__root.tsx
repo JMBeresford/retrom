@@ -10,6 +10,7 @@ import TanStackRouterDevtools from "../devtools/tanstack-router";
 import appCss from "../globals.css?url";
 import type { MyRouterContext } from "@/router-context";
 import { ThemeProvider } from "@/themes/theme-provider";
+import { ConfigProvider } from "@/config";
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   head: () => ({
@@ -43,8 +44,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider>
+          <ConfigProvider></ConfigProvider>
           <SidebarProvider>{children}</SidebarProvider>
         </ThemeProvider>
+
         <TanStackDevtools
           config={{
             position: "bottom-right",

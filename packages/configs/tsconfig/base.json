@@ -16,6 +16,7 @@
     "allowJs": true,
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
+    "noUncheckedIndexedAccess": true,
     "isolatedModules": true,
     "strictNullChecks": true,
     "moduleDetection": "force",

@@ -12,6 +12,12 @@
       "path": "../ui-next/tsconfig.lib.json"
     },
     {
+      "path": "../../plugins/retrom-plugin-config/tsconfig.lib.json"
+    },
+    {
+      "path": "../codegen/tsconfig.lib.json"
+    },
+    {
       "path": "../configs/tsconfig.lib.json"
     }
   ]
