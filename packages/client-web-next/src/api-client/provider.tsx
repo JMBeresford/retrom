@@ -1,9 +1,8 @@
-import { createContext, useContext, useMemo } from "react";
+import { useMemo } from "react";
+import { useApiUrl } from "./use-api-url";
 import { RetromClient } from "./client";
+import { context } from "./context";
 import type { PropsWithChildren } from "react";
-import { useApiUrl } from "@/utils/urls";
-
-const context = createContext<RetromClient | undefined>(undefined);
 
 export function RetromClientProvider(props: PropsWithChildren) {
   const { children } = props;
@@ -15,16 +14,4 @@ export function RetromClientProvider(props: PropsWithChildren) {
   }, [apiUrl]);
 
   return <context.Provider value={client}>{children}</context.Provider>;
-}
-
-export function useRetromClient() {
-  const client = useContext(context);
-
-  if (!client) {
-    throw new Error(
-      "useRetromClient must be used within a RetromClientProvider",
-    );
-  }
-
-  return client;
 }

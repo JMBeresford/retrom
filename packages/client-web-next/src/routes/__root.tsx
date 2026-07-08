@@ -8,11 +8,11 @@ import { SidebarProvider } from "@retrom/ui-next/components/sidebar";
 import TanStackQueryDevtools from "../devtools/tanstack-query";
 import TanStackRouterDevtools from "../devtools/tanstack-router";
 import appCss from "../globals.css?url";
-import type { MyRouterContext } from "@/router-context";
+import type { PropsWithChildren, ReactNode } from "react";
+import type { RouterContext } from "@/router";
 import { ThemeProvider } from "@/themes/theme-provider";
-import { ConfigProvider } from "@/config";
 
-export const Route = createRootRouteWithContext<MyRouterContext>()({
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       {
@@ -36,26 +36,28 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   shellComponent: RootDocument,
 });
 
-function RootDocument({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <ThemeProvider>
-          <ConfigProvider></ConfigProvider>
-          <SidebarProvider>{children}</SidebarProvider>
-        </ThemeProvider>
+const providers = [ThemeProvider, SidebarProvider];
 
-        <TanStackDevtools
-          config={{
-            position: "bottom-right",
-          }}
-          plugins={[TanStackRouterDevtools, TanStackQueryDevtools]}
-        />
-        <Scripts />
-      </body>
-    </html>
+function RenderRootProviders({ children }: PropsWithChildren) {
+  return providers.reduceRight((acc, Provider) => {
+    return <Provider>{acc}</Provider>;
+  }, children);
+}
+
+function RootDocument({ children }: { children: ReactNode }) {
+  return (
+    <>
+      <HeadContent />
+
+      <RenderRootProviders>{children}</RenderRootProviders>
+
+      <TanStackDevtools
+        config={{
+          position: "bottom-right",
+        }}
+        plugins={[TanStackRouterDevtools, TanStackQueryDevtools]}
+      />
+      <Scripts />
+    </>
   );
 }

@@ -1,17 +1,12 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ScriptOnce } from "@tanstack/react-router";
+import { ThemeProviderContext } from "./context";
+import type { Theme } from "./context";
 
-type Theme = "dark" | "light" | "system";
-
-type ThemeProviderProps = {
+export type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
   storageKey?: string;
-};
-
-type ThemeProviderState = {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
 };
 
 function getThemeScript(storageKey: string, defaultTheme: Theme) {
@@ -20,11 +15,6 @@ function getThemeScript(storageKey: string, defaultTheme: Theme) {
 
   return `(function(){try{var t=localStorage.getItem(${key});if(t!=='light'&&t!=='dark'&&t!=='system'){t=${fallback}}var d=matchMedia('(prefers-color-scheme: dark)').matches;var r=t==='system'?(d?'dark':'light'):t;var e=document.documentElement;e.classList.add(r);e.style.colorScheme=r}catch(e){}})();`;
 }
-
-const ThemeProviderContext = createContext<ThemeProviderState>({
-  theme: "system",
-  setTheme: () => {},
-});
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
@@ -85,10 +75,4 @@ export function ThemeProvider({
       {children}
     </ThemeProviderContext>
   );
-}
-
-export function useTheme() {
-  const context = useContext(ThemeProviderContext);
-
-  return context;
 }

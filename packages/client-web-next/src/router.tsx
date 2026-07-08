@@ -1,20 +1,25 @@
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
-import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { routeTree } from "./routeTree.gen";
-import { getContext } from "./router-context";
+import { BASE_URL } from "./env";
+import type { QueryClient } from "@tanstack/react-query";
+import type { RetromClient } from "./api-client/client";
+import type { RetromClientConfigJson } from "@retrom/codegen/retrom/client/v1/client-config_pb";
 
-export function getRouter() {
-  const context = getContext();
+export interface RouterContext {
+  queryClient: QueryClient;
+  config: RetromClientConfigJson;
+  retromClient: RetromClient;
+}
 
+export function getRouter(context: RouterContext) {
   const router = createTanStackRouter({
     routeTree,
     context,
+    basepath: BASE_URL,
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
   });
-
-  setupRouterSsrQueryIntegration({ router, queryClient: context.queryClient });
 
   return router;
 }
