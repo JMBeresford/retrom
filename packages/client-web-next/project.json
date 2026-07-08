@@ -12,7 +12,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "continuous": true,
-      "dependsOn": ["retrom-ui-next:vite:dev"],
+      "dependsOn": ["retrom-ui-next:vite:dev", "retrom-service:cargo:run"],
       "options": {
         "cwd": "{projectRoot}",
         "command": "vite dev --port 3001"
