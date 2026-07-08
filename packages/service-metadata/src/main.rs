@@ -1,5 +1,4 @@
 use retrom_codegen::retrom::services::config::v1::GetServerConfigRequest;
-use retrom_db::DEFAULT_DB_URL;
 use retrom_service_common::{
     grpc_clients::config_svc::get_config_svc_client, reflection::reflection_router,
     svc_definitions::METADATA_SVC_PORT,
@@ -34,12 +33,7 @@ async fn main() {
 
     init_tracing_subscriber(telemetry_enabled, "retrom-service-metadata.log").await;
 
-    let db_url = config
-        .connection
-        .and_then(|conn| conn.db_url)
-        .unwrap_or_else(|| DEFAULT_DB_URL.to_string());
-
-    let pool = retrom_db::connect(&db_url).await.unwrap_or_else(|err| {
+    let pool = retrom_db::connect().await.unwrap_or_else(|err| {
         tracing::error!("Failed to connect to database: {err:#?}");
         exit(1);
     });
@@ -53,7 +47,7 @@ async fn main() {
 
     let addr: SocketAddr = format!("0.0.0.0:{METADATA_SVC_PORT}").parse().unwrap();
 
-    let router = metadata_router(pool, config_client)
+    let router = metadata_router(pool)
         .layer(tonic_web::GrpcWebLayer::new())
         .merge(reflection_router());
 

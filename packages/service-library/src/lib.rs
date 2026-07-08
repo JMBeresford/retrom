@@ -52,7 +52,7 @@ impl LibraryServiceHandlers {
             db_pool,
             job_manager,
             config_svc_client: get_config_svc_client(None),
-            metadata_svc_client: get_metadata_svc_client(),
+            metadata_svc_client: get_metadata_svc_client(None),
         }
     }
 }

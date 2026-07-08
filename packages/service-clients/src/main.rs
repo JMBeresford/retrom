@@ -1,5 +1,4 @@
 use retrom_codegen::retrom::services::config::v1::GetServerConfigRequest;
-use retrom_db::DEFAULT_DB_URL;
 use retrom_service_clients::router::clients_router;
 use retrom_service_common::{
     grpc_clients::config_svc::get_config_svc_client, reflection::reflection_router,
@@ -34,14 +33,7 @@ async fn main() {
 
     init_tracing_subscriber(telemetry_enabled, "retrom-service-clients.log").await;
 
-    let db_url = config
-        .connection
-        .and_then(|conn| conn.db_url)
-        .unwrap_or_else(|| DEFAULT_DB_URL.to_string());
-
-    tracing::info!("Using database URL: {db_url}");
-
-    let pool = retrom_db::connect(&db_url).await.unwrap_or_else(|err| {
+    let pool = retrom_db::connect().await.unwrap_or_else(|err| {
         tracing::error!("Failed to connect to database: {err:#?}");
         exit(1);
     });

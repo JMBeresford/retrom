@@ -29,14 +29,7 @@ async fn main() {
 
     init_tracing_subscriber(telemetry_enabled, "retrom-service-jobs.log").await;
 
-    let port = config
-        .connection
-        .as_ref()
-        .and_then(|conn| conn.port)
-        .map(|p| p as u16)
-        .unwrap_or(JOB_SVC_PORT);
-
-    let addr: SocketAddr = format!("0.0.0.0:{port}").parse().unwrap();
+    let addr: SocketAddr = format!("0.0.0.0:{JOB_SVC_PORT}").parse().unwrap();
 
     let router = jobs_router()
         .layer(tonic_web::GrpcWebLayer::new())

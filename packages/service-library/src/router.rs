@@ -13,5 +13,5 @@ pub fn library_router(db_pool: DbPool) -> axum::Router {
     let mut routes_builder = tonic::service::Routes::builder();
     routes_builder.add_service(library_service);
 
-    routes_builder.routes().into_axum_router()
+    routes_builder.routes().into_axum_router().reset_fallback()
 }

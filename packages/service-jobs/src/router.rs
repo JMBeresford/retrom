@@ -10,5 +10,5 @@ pub fn jobs_router() -> axum::Router {
     let mut routes_builder = tonic::service::Routes::builder();
     routes_builder.add_service(job_service);
 
-    routes_builder.routes().into_axum_router()
+    routes_builder.routes().into_axum_router().reset_fallback()
 }

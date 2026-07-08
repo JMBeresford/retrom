@@ -34,18 +34,20 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// The driver is selected at runtime from the URL scheme:
 /// - `postgres://` or `postgresql://` → PostgreSQL
 /// - `sqlite://` → SQLite
-pub async fn connect(url: &str) -> Result<DbPool> {
+pub async fn connect() -> Result<DbPool> {
+    let url = std::env::var("RETROM_DB_URL").unwrap_or_else(|_| DEFAULT_DB_URL.to_string());
+
     #[cfg(not(feature = "postgres"))]
     {
         use sqlx::migrate::MigrateDatabase;
 
-        if !sqlx::Sqlite::database_exists(url).await? {
+        if !sqlx::Sqlite::database_exists(&url).await? {
             tracing::info!("Database does not exist at {url}, creating it...");
-            sqlx::Sqlite::create_database(url).await?;
+            sqlx::Sqlite::create_database(&url).await?;
         }
 
         sqlx::sqlite::SqlitePoolOptions::new()
-            .connect(url)
+            .connect(&url)
             .await
             .map_err(|e| Error::ConnectionError(e.to_string()))
     }
@@ -53,7 +55,7 @@ pub async fn connect(url: &str) -> Result<DbPool> {
     #[cfg(feature = "postgres")]
     {
         sqlx::postgres::PgPoolOptions::new()
-            .connect(url)
+            .connect(&url)
             .await
             .map_err(|e| Error::ConnectionError(e.to_string()))
     }

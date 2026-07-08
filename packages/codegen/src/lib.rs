@@ -6,7 +6,6 @@ pub mod igdb {
 }
 
 pub mod retrom {
-
     pub mod client {
         pub mod v1 {
             tonic::include_proto!("retrom.client.v1");
@@ -96,6 +95,12 @@ pub mod retrom {
             pub mod v1 {
                 tonic::include_proto!("retrom.services.tags.v1");
             }
+        }
+    }
+
+    pub mod utils {
+        pub mod v1 {
+            tonic::include_proto!("retrom.utils");
         }
     }
 }
