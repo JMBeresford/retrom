@@ -95,19 +95,16 @@ pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr
 
     let rest_service = rest_service(db_pool.clone());
     let webdav_service = Router::new().nest_service("/dav", webdav_service(None));
-    let grpc_service = Router::new().nest(
-        "/api/v1",
-        reflection_router()
-            .merge(config_router(None))
-            .merge(clients_router(db_pool.clone()))
-            .merge(emulators_router(db_pool.clone()))
-            .merge(files_router())
-            .merge(jobs_router())
-            .merge(library_router(db_pool.clone()))
-            .merge(metadata_router(db_pool.clone()))
-            .merge(saves_router(db_pool.clone()))
-            .merge(tags_router(db_pool)),
-    );
+    let grpc_service = reflection_router()
+        .merge(config_router(None))
+        .merge(clients_router(db_pool.clone()))
+        .merge(emulators_router(db_pool.clone()))
+        .merge(files_router())
+        .merge(jobs_router())
+        .merge(library_router(db_pool.clone()))
+        .merge(metadata_router(db_pool.clone()))
+        .merge(saves_router(db_pool.clone()))
+        .merge(tags_router(db_pool));
 
     let router = rest_service
         .merge(reverse_proxy())

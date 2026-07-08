@@ -55,11 +55,13 @@ async fn get_config_from_oneshot_config_svc() -> Option<ServerConfig> {
 
     let mut client = get_config_svc_client(Some(port));
 
-    let config = client
-        .get_server_config(GetServerConfigRequest {})
-        .await
-        .ok()
-        .and_then(|r| r.into_inner().config);
+    let config = match client.get_server_config(GetServerConfigRequest {}).await {
+        Ok(r) => r.into_inner().config,
+        Err(err) => {
+            tracing::warn!("Failed to fetch server config from oneshot config service: {err}");
+            None
+        }
+    };
 
     tx.send(()).ok();
 
