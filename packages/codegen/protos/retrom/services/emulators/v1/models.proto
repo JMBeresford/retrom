@@ -24,7 +24,7 @@ enum OperatingSystem {
   // macOS operating system.
   MACOS = 1;
   // Linux operating system for x86_64 architecture.
-  LINUX_x86_64 = 2;
+  LINUX_X86_64 = 2;
   // Linux operating system for WebAssembly (WASM) architecture.
   WASM = 3;
 
