@@ -40,7 +40,9 @@ function RouteComponent() {
         <div></div>
       </header>
 
-      <Outlet />
+      <main className="flex flex-col gap-4 p-4">
+        <Outlet />
+      </main>
     </AppSidebar>
   );
 }
