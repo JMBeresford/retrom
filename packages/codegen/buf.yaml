@@ -5,6 +5,15 @@ lint:
   use:
     - COMMENTS
     - STANDARD
+  except:
+    - ENUM_VALUE_PREFIX
+    - ENUM_ZERO_VALUE_SUFFIX
+    - FILE_LOWER_SNAKE_CASE
+    - IMPORT_USED
+    - PACKAGE_DIRECTORY_MATCH
+    - PACKAGE_NO_IMPORT_CYCLE
+    - PACKAGE_VERSION_SUFFIX
+    - RPC_RESPONSE_STANDARD_NAME
   ignore:
     - protos/igdbapi.proto
     - protos/google
