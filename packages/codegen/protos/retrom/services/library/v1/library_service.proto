@@ -3,7 +3,8 @@ syntax = "proto3";
 package retrom.services.library.v1;
 
 import "google/api/field_behavior.proto";
-import "retrom/services/library/v1/models.proto";
+import "retrom/services/library/v1/resources.proto";
+import "retrom/services/metadata/v1/models.proto";
 
 // LibraryService provides CRUD and maintenance operations for library entities.
 service LibraryService {

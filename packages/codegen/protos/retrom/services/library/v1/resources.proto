@@ -3,27 +3,35 @@ syntax = "proto3";
 package retrom.services.library.v1;
 
 import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
 import "google/protobuf/timestamp.proto";
+import "retrom/services/config/v1/models.proto";
 
-// RootDirectoryRow represents a row in the `root_directories` table.
-message RootDirectoryRow {
+// RootDirectory represents a row in the `root_directories` table.
+message RootDirectory {
   // OUTPUT_ONLY — set by the server on create; include for update targets.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Absolute path for this root directory.
-  string path = 2;
+  string path = 2 [(google.api.field_behavior) = REQUIRED];
   // Timestamp when the root directory row was created.
   google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Timestamp when the root directory row was last updated.
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
-// LibraryRow represents a row in the `libraries` table.
-message LibraryRow {
+// Library represents a collection of games and platforms that can be scanned for game files.
+message Library {
+  option (google.api.resource) = {
+    name_field: "id"
+    type: "retrom.services.library.v1.LibraryService/Library"
+    singular: "library"
+    plural: "libraries"
+  };
+
   // OUTPUT_ONLY — set by the server on create; include for update targets.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Human-readable name for this library.
-  string name = 2;
-
+  string name = 2 [(google.api.field_behavior) = REQUIRED];
   // structure_definition is a parameterized path template that describes how the
   // library's file tree maps to game entities.  Well-known tokens:
   //   {library}  — the root directory for this library
@@ -36,15 +44,25 @@ message LibraryRow {
   // Arbitrary tokens (e.g. {region}) are also supported and will eventually be used
   // to populate tag values for library items during library scans.
   // Path template describing how filesystem paths map to library entities.
-  string structure_definition = 3;
+  string structure_definition = 3 [(google.api.field_behavior) = REQUIRED];
   // Timestamp when the library row was created.
   google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Timestamp when the library row was last updated.
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Path to the root directory for this library.
+  string path = 6 [(google.api.field_behavior) = REQUIRED];
 }
 
-// PlatformRow represents a row in the `platforms` table.
-message PlatformRow {
+// Platform represents a platform that games can be associated with. For example,
+// "Sony Playstation" or "Sega Dreamcast".
+message Platform {
+  option (google.api.resource) = {
+    name_field: "id"
+    type: "retrom.services.library.v1.LibraryService/Platform"
+    singular: "platform"
+    plural: "platforms"
+  };
+
   // OUTPUT_ONLY — set by the server on create; include for update targets.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Timestamp when the platform row was created.
@@ -57,10 +75,21 @@ message PlatformRow {
   bool is_deleted = 5;
   // Whether this platform originated from a third-party source.
   bool third_party = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The paths to the root directories for this platform. Each path should be an absolute path
+  // to a directory on the filesystem that contains games for this platform.
+  repeated string paths = 7 [(google.api.field_behavior) = REQUIRED];
 }
 
-// GameRow represents a row in the `games` table.
-message GameRow {
+// Game represents a game that can be associated with a platform and library. For example,
+// "Final Fantasy VII" or "Sonic the Hedgehog".
+message Game {
+  option (google.api.resource) = {
+    name_field: "id"
+    type: "retrom.services.library.v1.LibraryService/Game"
+    singular: "game"
+    plural: "games"
+  };
+
   // OUTPUT_ONLY — set by the server on create; include for update targets.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Timestamp when the game row was created.
@@ -75,10 +104,16 @@ message GameRow {
   bool third_party = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Steam AppID associated with this game when available.
   optional string steam_app_id = 7;
+  // The path to the game file or directory on disk. This should be an absolute path to the file or directory
+  // that represents the game. If the game is a directory, it should contain all the files necessary to run the game.
+  string path = 8 [(google.api.field_behavior) = REQUIRED];
+  // The IDs of the platforms that this game is associated with. A game can be associated with multiple platforms
+  // (e.g. a game that was released on both the PlayStation and Xbox).
+  repeated string platform_ids = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
-// GameFileRow represents a row in the `game_files` table.
-message GameFileRow {
+// GameFile represents a file that is associated with a game. For example, a ROM file or an ISO file.
+message GameFile {
   // OUTPUT_ONLY — set by the server on create; include for update targets.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Size in bytes of the file on disk.
