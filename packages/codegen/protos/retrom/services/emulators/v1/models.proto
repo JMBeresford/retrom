@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 
 // SaveStrategy represents the strategy used to save game data in an emulator profile.
 enum SaveStrategy {
-  // Unspecified save strategy. This should generally be considered as SINGLE_FILE.
+  // Unspecified save strategy.
   SAVE_STRATEGY_UNSPECIFIED = 0;
   // Save data is stored in a single file, such as a .sav file.
   SAVE_STRATEGY_SINGLE_FILE = 1;
