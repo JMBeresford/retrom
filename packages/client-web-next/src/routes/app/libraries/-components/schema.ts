@@ -1,6 +1,6 @@
 import z from "zod";
 import type { LibrarySchema } from "@retrom/codegen/retrom/services/library/v1/models_pb";
-import type { MessageInitShape } from "@bufbuild/protobuf";
+import type { MessageInitShape, MessageShape } from "@bufbuild/protobuf";
 
 const builtinMacros = ["{library}", "{platform}", "{gameFile}", "{gameDir}"];
 
@@ -86,11 +86,11 @@ export const structureDefinitionSchema = z.literal("").or(
 
 export const librarySchema = z.object({
   path: z.string().min(1),
+  name: z.string().min(1),
   structureDefinition: structureDefinitionSchema,
-  newly: z.enum(["added", "removed"]).optional(),
-  ignorePatterns: z
-    .object({
-      patterns: z.string().array(),
-    })
-    .default({ patterns: [] }),
-}) satisfies z.ZodSchema<MessageInitShape<typeof LibrarySchema>>;
+  ignorePatterns: z.object({
+    patterns: z.string().array(),
+  }),
+}) satisfies z.ZodType<
+  Pick<MessageShape<typeof LibrarySchema>, "name" | "structureDefinition">
+>;

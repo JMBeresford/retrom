@@ -11,7 +11,7 @@ import { cn } from "@retrom/ui-next/lib/utils";
 import { useLayoutEffect, useMemo } from "react";
 import { Separator } from "@retrom/ui-next/components/separator";
 import { ScrollArea } from "@retrom/ui-next/components/scroll-area";
-import type { librarySchema } from "./schema";
+import type { librarySchema } from "../schema";
 
 export function CustomLibraryDefinitionInput<
   TField extends ControllerRenderProps<
