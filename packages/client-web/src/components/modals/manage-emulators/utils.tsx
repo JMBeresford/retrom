@@ -26,7 +26,7 @@ export const operatingSystemDisplayMap: Record<
 > = {
   [Emulator_OperatingSystem.WINDOWS]: "Windows",
   [Emulator_OperatingSystem.MACOS]: "macOS",
-  [Emulator_OperatingSystem.LINUX_X86_64]: "Linux",
+  [Emulator_OperatingSystem.LINUX_x86_64]: "Linux",
   [Emulator_OperatingSystem.WASM]: "Web",
 };
 

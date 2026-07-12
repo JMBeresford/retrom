@@ -5,15 +5,45 @@ lint:
   use:
     - COMMENTS
     - STANDARD
-  except:
-    - ENUM_VALUE_PREFIX
-    - ENUM_ZERO_VALUE_SUFFIX
-    - FILE_LOWER_SNAKE_CASE
-    - IMPORT_USED
-    - PACKAGE_DIRECTORY_MATCH
-    - PACKAGE_NO_IMPORT_CYCLE
-    - PACKAGE_VERSION_SUFFIX
-    - RPC_RESPONSE_STANDARD_NAME
+  ignore_only:
+    ENUM_VALUE_PREFIX:
+      - protos/retrom/services/config/v1/models.proto
+      - protos/retrom/services/emulators/v1/models.proto
+    ENUM_ZERO_VALUE_SUFFIX:
+      - protos/retrom/files/v1/files.proto
+      - protos/retrom/services/config/v1/models.proto
+      - protos/retrom/services/emulators/v1/models.proto
+    FILE_LOWER_SNAKE_CASE:
+      - protos/retrom/client/v1/client-config.proto
+      - protos/retrom/client/v1/client-utils.proto
+      - protos/retrom/services/clients/v1/clients-service.proto
+      - protos/retrom/services/config/v1/config-service.proto
+      - protos/retrom/services/emulators/v1/emulator-service.proto
+      - protos/retrom/services/file-explorer/v1/file-explorer-service.proto
+      - protos/retrom/services/jobs/v1/job-service.proto
+      - protos/retrom/services/library/v1/library-service.proto
+      - protos/retrom/services/metadata/v1/igdb-service.proto
+      - protos/retrom/services/metadata/v1/metadata-service.proto
+      - protos/retrom/services/metadata/v1/provider-service.proto
+      - protos/retrom/services/metadata/v1/steam-service.proto
+      - protos/retrom/services/saves/v2/emulator-saves-service.proto
+      - protos/retrom/services/tags/v1/tags-service.proto
+    IMPORT_USED:
+      - protos/retrom/services/library/v1/library-service.proto
+      - protos/retrom/services/library/v1/models.proto
+      - protos/retrom/services/metadata/v1/igdb-service.proto
+      - protos/retrom/services/metadata/v1/metadata-service.proto
+      - protos/retrom/services/saves/v2/emulator-saves-service.proto
+    PACKAGE_DIRECTORY_MATCH:
+      - protos/retrom/services/file-explorer/v1/file-explorer-service.proto
+      - protos/retrom/utils.proto
+    PACKAGE_NO_IMPORT_CYCLE:
+      - protos/retrom/services/library/v1/library-service.proto
+      - protos/retrom/services/metadata/v1/metadata-service.proto
+    PACKAGE_VERSION_SUFFIX:
+      - protos/retrom/utils.proto
+    RPC_RESPONSE_STANDARD_NAME:
+      - protos/retrom/services/jobs/v1/job-service.proto
   ignore:
     - protos/igdbapi.proto
     - protos/google
