@@ -17,6 +17,7 @@
   "devDependencies": {
     "@bufbuild/buf": "^1.53.0",
     "@retrom/configs": "workspace:*",
+    "@nx/vite": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
     "vite-plugin-dts": "catalog:",

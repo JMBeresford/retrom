@@ -1,4 +1,5 @@
 generated/
+src/gen/
 dist/
 
 .nx/cache

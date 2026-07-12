@@ -1,120 +1,122 @@
-pub mod storage_type;
 pub mod timestamp;
 
-pub mod igdb {
-    tonic::include_proto!("igdb");
-}
+include!("gen/rs/mod.rs");
 
-pub mod retrom {
-    pub mod client {
-        pub mod v1 {
-            tonic::include_proto!("retrom.client.v1");
-        }
+// pub mod igdb {
+//     tonic::include_proto!("igdb");
+// }
+//
+// pub mod retrom {
+//     pub mod client {
+//         pub mod v1 {
+//             tonic::include_proto!("retrom.client.v1");
+//         }
+//
+//         pub mod installation {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.client.installation.v1");
+//             }
+//         }
+//
+//         pub mod saves {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.client.saves.v1");
+//             }
+//         }
+//     }
+//
+//     pub mod files {
+//         pub mod v1 {
+//             tonic::include_proto!("retrom.files.v1");
+//         }
+//     }
+//
+//     pub mod providers {
+//         pub mod igdb {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.providers.igdb.v1");
+//             }
+//         }
+//     }
+//
+//     pub mod services {
+//         pub mod clients {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.services.clients.v1");
+//             }
+//         }
+//
+//         pub mod config {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.services.config.v1");
+//             }
+//         }
+//
+//         pub mod library {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.services.library.v1");
+//             }
+//         }
+//
+//         pub mod metadata {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.services.metadata.v1");
+//             }
+//         }
+//
+//         pub mod emulators {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.services.emulators.v1");
+//             }
+//         }
+//
+//         pub mod file_explorer {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.services.file_explorer.v1");
+//             }
+//         }
+//
+//         pub mod saves {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.services.saves.v1");
+//             }
+//
+//             pub mod v2 {
+//                 tonic::include_proto!("retrom.services.saves.v2");
+//             }
+//         }
+//
+//         pub mod jobs {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.services.jobs.v1");
+//             }
+//         }
+//
+//         pub mod tags {
+//             pub mod v1 {
+//                 tonic::include_proto!("retrom.services.tags.v1");
+//             }
+//         }
+//     }
+//
+//     pub mod utils {
+//         pub mod v1 {
+//             tonic::include_proto!("retrom.utils");
+//         }
+//     }
+// }
 
-        pub mod installation {
-            pub mod v1 {
-                tonic::include_proto!("retrom.client.installation.v1");
-            }
-        }
-
-        pub mod saves {
-            pub mod v1 {
-                tonic::include_proto!("retrom.client.saves.v1");
-            }
-        }
-    }
-
-    pub mod files {
-        pub mod v1 {
-            tonic::include_proto!("retrom.files.v1");
-        }
-    }
-
-    pub mod providers {
-        pub mod igdb {
-            pub mod v1 {
-                tonic::include_proto!("retrom.providers.igdb.v1");
-            }
-        }
-    }
-
-    pub mod services {
-        pub mod clients {
-            pub mod v1 {
-                tonic::include_proto!("retrom.services.clients.v1");
-            }
-        }
-
-        pub mod config {
-            pub mod v1 {
-                tonic::include_proto!("retrom.services.config.v1");
-            }
-        }
-
-        pub mod library {
-            pub mod v1 {
-                tonic::include_proto!("retrom.services.library.v1");
-            }
-        }
-
-        pub mod metadata {
-            pub mod v1 {
-                tonic::include_proto!("retrom.services.metadata.v1");
-            }
-        }
-
-        pub mod emulators {
-            pub mod v1 {
-                tonic::include_proto!("retrom.services.emulators.v1");
-            }
-        }
-
-        pub mod file_explorer {
-            pub mod v1 {
-                tonic::include_proto!("retrom.services.file_explorer.v1");
-            }
-        }
-
-        pub mod saves {
-            pub mod v1 {
-                tonic::include_proto!("retrom.services.saves.v1");
-            }
-
-            pub mod v2 {
-                tonic::include_proto!("retrom.services.saves.v2");
-            }
-        }
-
-        pub mod jobs {
-            pub mod v1 {
-                tonic::include_proto!("retrom.services.jobs.v1");
-            }
-        }
-
-        pub mod tags {
-            pub mod v1 {
-                tonic::include_proto!("retrom.services.tags.v1");
-            }
-        }
-    }
-
-    pub mod utils {
-        pub mod v1 {
-            tonic::include_proto!("retrom.utils");
-        }
-    }
-}
-
+use chrono::{DateTime, Utc};
 use std::path::{Component, Path, PathBuf};
 
 use crate::retrom::files::v1::{FileStat, FilesystemNode, FilesystemNodeType};
 
-pub mod descriptors {
-    pub mod retrom {
-        pub const FILE_DESCRIPTOR_SET: &[u8] =
-            tonic::include_file_descriptor_set!("retrom_descriptor");
-    }
-}
+// pub mod descriptors {
+//     pub mod retrom {
+//         pub const FILE_DESCRIPTOR_SET: &[u8] =
+//             tonic::include_file_descriptor_set!("retrom_descriptor");
+//     }
+// }
 
 impl TryFrom<PathBuf> for FilesystemNode {
     type Error = ();
@@ -180,16 +182,16 @@ impl TryFrom<PathBuf> for FileStat {
         let node_type = match metadata.as_ref().map(|m| m.is_dir()) {
             Some(true) => FilesystemNodeType::Directory as i32,
             Some(false) => FilesystemNodeType::File as i32,
-            None => FilesystemNodeType::Unknown as i32,
+            None => FilesystemNodeType::Unspecified as i32,
         };
 
         let created_at = metadata
             .as_ref()
-            .and_then(|m| m.created().ok().map(|t| t.into()));
+            .and_then(|m| m.created().ok().map(|t| DateTime::<Utc>::from(t).into()));
 
         let updated_at = metadata
             .as_ref()
-            .and_then(|m| m.modified().ok().map(|t| t.into()));
+            .and_then(|m| m.modified().ok().map(|t| DateTime::<Utc>::from(t).into()));
 
         let byte_size = metadata.as_ref().map(|m| m.len());
 

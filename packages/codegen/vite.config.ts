@@ -12,7 +12,7 @@ export default defineConfig(() => ({
     nxViteTsPaths(),
     nxCopyAssetsPlugin(["*.md"]),
     dts({
-      entryRoot: "generated",
+      entryRoot: "src/gen/ts",
       tsconfigPath: resolve(__dirname, "tsconfig.lib.json"),
     }),
   ],
@@ -25,10 +25,10 @@ export default defineConfig(() => ({
     },
     lib: {
       entry: Object.fromEntries(
-        globSync(resolve(__dirname, "generated/**/*.ts"), {
+        globSync(resolve(__dirname, "src/gen/ts/**/*.ts"), {
           windowsPathsNoEscape: true,
         }).map((f) => [
-          relative("generated", f.slice(0, f.length - extname(f).length)),
+          relative("src/gen/ts", f.slice(0, f.length - extname(f).length)),
           resolve(__dirname, f),
         ]),
       ),

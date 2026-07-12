@@ -5,7 +5,9 @@
     "buf:format": {},
     "buf:lint": {},
     "cargo:lint": {},
-    "cargo:build": {},
+    "cargo:build": {
+      "dependsOn": ["generate"]
+    },
     "generate": {
       "executor": "nx:run-commands",
       "cache": true,

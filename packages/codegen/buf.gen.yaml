@@ -2,5 +2,28 @@ version: v2
 clean: true
 plugins:
   - local: protoc-gen-es
-    out: generated
+    out: src/gen/ts
+    include_imports: true
     opt: target=ts,json_types=true
+
+  - remote: buf.build/community/neoeinstein-prost:v0.5.0
+    out: src/gen/rs
+    opt:
+      - bytes=.
+      - compile_well_known_types
+      - extern_path=.google.protobuf=::pbjson_types
+      - file_descriptor_set
+
+  - remote: buf.build/community/neoeinstein-prost-serde:v0.4.0
+    out: src/gen/rs
+
+  - remote: buf.build/community/neoeinstein-tonic:v0.5.0
+    out: src/gen/rs
+    opt:
+      - compile_well_known_types
+      - extern_path=.google.protobuf=::pbjson_types
+
+  - remote: buf.build/community/neoeinstein-prost-crate:v0.5.0
+    out: src/gen/rs
+    opt:
+      - no_features

@@ -3,7 +3,7 @@ syntax = "proto3";
 package retrom.client.v1;
 
 import "retrom/services/emulators/v1/models.proto";
-import "retrom/services/library/v1/models.proto";
+import "retrom/services/library/v1/resources.proto";
 
 // RetromHostInfo represents the information needed to connect to a Retrom host.
 message RetromHostInfo {
