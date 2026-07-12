@@ -8,11 +8,11 @@ import "google/protobuf/timestamp.proto";
 // SaveStrategy represents the strategy used to save game data in an emulator profile.
 enum SaveStrategy {
   // Unspecified save strategy. This should generally be considered as SINGLE_FILE.
-  SINGLE_FILE = 0;
+  SAVE_STRATEGY_SINGLE_FILE_UNSPECIFIED = 0;
   // Save data is stored in a single file, such as a .sav file.
-  FILE_SYSTEM_DIRECTORY = 1;
+  SAVE_STRATEGY_FILE_SYSTEM_DIRECTORY = 1;
   // Save data is stored in a disk image, such as a .iso or .bin file.
-  DISK_IMAGE = 2;
+  SAVE_STRATEGY_DISK_IMAGE = 2;
 
   option deprecated = true;
 }
@@ -20,13 +20,13 @@ enum SaveStrategy {
 // OperatingSystem represents the operating system on which an emulator can run.
 enum OperatingSystem {
   // Windows operating system.
-  WINDOWS = 0;
+  OPERATING_SYSTEM_WINDOWS_UNSPECIFIED = 0;
   // macOS operating system.
-  MACOS = 1;
+  OPERATING_SYSTEM_MACOS = 1;
   // Linux operating system for x86_64 architecture.
-  LINUX_X86_64 = 2;
+  OPERATING_SYSTEM_LINUX_X86_64 = 2;
   // Linux operating system for WebAssembly (WASM) architecture.
-  WASM = 3;
+  OPERATING_SYSTEM_WASM = 3;
 
   option deprecated = true;
 }

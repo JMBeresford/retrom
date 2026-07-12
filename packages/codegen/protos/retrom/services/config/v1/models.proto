@@ -25,18 +25,18 @@ message IgnorePatterns {
 enum StorageType {
   // Standard library directory with single-file games
   // e.g. /contentDir/platformX/game.rom
-  SINGLE_FILE_GAME = 0;
+  STORAGE_TYPE_SINGLE_FILE_GAME_UNSPECIFIED = 0;
 
   // Standard library directory with multi-file games
   // e.g. /contentDir/platformX/game/game.rom
-  MULTI_FILE_GAME = 1;
+  STORAGE_TYPE_MULTI_FILE_GAME = 1;
 
   // Custom, user-defined structure composed of named macros
   // used for non-standard library directories and/or automatic
   // tagging of scanned entries
   //
   // example user definition: "/some/path/{platform}/{game}/{region}/{file}"
-  CUSTOM = 2;
+  STORAGE_TYPE_CUSTOM = 2;
 
   option deprecated = true;
 }

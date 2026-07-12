@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 // FilesystemNodeType represents the type of a filesystem node, which can be either a directory or a file.
 enum FilesystemNodeType {
   // Unspecified node type.
-  FILESYSTEM_NODE_TYPE_UNKNOWN = 0;
+  FILESYSTEM_NODE_TYPE_UNSPECIFIED = 0;
   // The node is a directory.
   FILESYSTEM_NODE_TYPE_DIRECTORY = 1;
   // The node is a file.

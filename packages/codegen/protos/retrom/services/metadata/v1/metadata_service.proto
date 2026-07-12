@@ -2,11 +2,7 @@ syntax = "proto3";
 
 package retrom.services.metadata.v1;
 
-import "google/api/field_behavior.proto";
 import "google/protobuf/field_mask.proto";
-import "google/protobuf/timestamp.proto";
-import "retrom/services/library/v1/models.proto";
-import "retrom/services/metadata/v1/models.proto";
 import "retrom/services/metadata/v1/views.proto";
 
 // MetadataService defines the RPC service for managing game and platform metadata in Retrom.
