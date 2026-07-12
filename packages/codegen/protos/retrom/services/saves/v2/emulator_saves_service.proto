@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package retrom.services.saves.v2;
 
-import "retrom/files/v1/files.proto";
 import "retrom/services/saves/v2/models.proto";
 
 // EmulatorSavesService defines the gRPC service for managing emulator save files and save states in Retrom.

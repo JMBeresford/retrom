@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package retrom.utils;
+package retrom.utils.v1;
 
 // VersionAnnouncement represents a single announcement relating to specified versions of Retrom.
 message VersionAnnouncement {

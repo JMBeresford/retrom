@@ -15,7 +15,7 @@ service JobService {
   // UpdateJob updates the details of an existing job.
   rpc UpdateJob(UpdateJobRequest) returns (UpdateJobResponse);
   // Streams JobProgress updates until the job reaches a terminal state.
-  rpc WatchJob(WatchJobRequest) returns (stream JobProgress);
+  rpc WatchJob(WatchJobRequest) returns (stream WatchJobResponse);
   // CompleteJob marks a job as completed, either successfully or with failure.
   rpc CompleteJob(CompleteJobRequest) returns (CompleteJobResponse);
 }
@@ -81,6 +81,12 @@ message UpdateJobResponse {
 message WatchJobRequest {
   // The unique identifier of the job to watch.
   string id = 1;
+}
+
+// WatchJobResponse represents a streamed update for a watched job.
+message WatchJobResponse {
+  // The latest progress update for the watched job.
+  JobProgress job_progress = 1;
 }
 
 // CompleteJobRequest represents the request message for marking a job as completed.

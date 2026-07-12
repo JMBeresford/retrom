@@ -5,7 +5,6 @@ package retrom.services.metadata.v1;
 import "google/api/field_behavior.proto";
 import "igdbapi.proto";
 import "retrom/providers/igdb/v1/igdb.proto";
-import "retrom/services/metadata/v1/models.proto";
 import "retrom/services/metadata/v1/views.proto";
 
 // IgdbService defines the RPC service for interacting with IGDB to retrieve game and platform metadata.
