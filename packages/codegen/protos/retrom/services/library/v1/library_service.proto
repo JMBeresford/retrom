@@ -244,12 +244,6 @@ message CreateRootDirectoryRequest {
   string path = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
-// Response containing created root directory.
-message CreateRootDirectoryResponse {
-  // Root directory created by the operation.
-  RootDirectory root_directory = 1;
-}
-
 // Request to update a root directory.
 message UpdateRootDirectoryRequest {
   // Root directory to update.
