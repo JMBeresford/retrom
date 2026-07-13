@@ -17,6 +17,7 @@ prost = { workspace = true }
 prost-types = { workspace = true }
 prost-wkt = { version = "0.7" }
 prost-wkt-types = { version = "0.7" }
+protoc-wkt = { version = "1.0.0+3.20.1" }
 serde = { workspace = true }
 diesel = { workspace = true }
 sqlx = { workspace = true }

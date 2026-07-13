@@ -1,5 +1,7 @@
 pub mod timestamp;
 
+pub use protoc_wkt::google::protobuf::FILE_DESCRIPTOR_SET as GOOGLE_PROTOBUF_FILE_DESCRIPTOR_SET;
+
 include!("gen/rs/mod.rs");
 
 // pub mod igdb {
@@ -106,7 +108,6 @@ include!("gen/rs/mod.rs");
 //     }
 // }
 
-use chrono::{DateTime, Utc};
 use std::path::{Component, Path, PathBuf};
 
 use crate::retrom::files::v1::{FileStat, FilesystemNode, FilesystemNodeType};
@@ -187,11 +188,11 @@ impl TryFrom<PathBuf> for FileStat {
 
         let created_at = metadata
             .as_ref()
-            .and_then(|m| m.created().ok().map(|t| DateTime::<Utc>::from(t).into()));
+            .and_then(|m| m.created().ok().map(|t| t.into()));
 
         let updated_at = metadata
             .as_ref()
-            .and_then(|m| m.modified().ok().map(|t| DateTime::<Utc>::from(t).into()));
+            .and_then(|m| m.modified().ok().map(|t| t.into()));
 
         let byte_size = metadata.as_ref().map(|m| m.len());
 

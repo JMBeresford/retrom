@@ -8298,6 +8298,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "protoc-wkt"
+version = "1.0.0+3.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae1d0fdc23ea945d58449259496ba12d3b520da1a45ce5011f631c990add9029"
+
+[[package]]
 name = "ptr_meta"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9052,6 +9058,7 @@ dependencies = [
  "prost-wkt-build",
  "prost-wkt-types",
  "protobuf-src",
+ "protoc-wkt",
  "serde",
  "sqlx",
  "tonic",

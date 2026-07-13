@@ -1,3 +1,4 @@
+use retrom_codegen::retrom::services::config::v1::FILE_DESCRIPTOR_SET;
 use retrom_service_common::{reflection::reflection_router, svc_definitions::CONFIG_SVC_PORT};
 use retrom_service_config::router::config_router;
 use retrom_telemetry::init_tracing_subscriber;
@@ -10,7 +11,7 @@ async fn main() {
     let addr: SocketAddr = format!("0.0.0.0:{CONFIG_SVC_PORT}").parse().unwrap();
     let router = config_router(None)
         .layer(tonic_web::GrpcWebLayer::new())
-        .merge(reflection_router());
+        .merge(reflection_router(&[FILE_DESCRIPTOR_SET]));
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await

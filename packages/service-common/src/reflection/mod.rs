@@ -1,13 +1,26 @@
-use retrom_codegen::descriptors::retrom::FILE_DESCRIPTOR_SET;
+use retrom_codegen::GOOGLE_PROTOBUF_FILE_DESCRIPTOR_SET;
 
-pub fn reflection_router() -> axum::Router {
-    let reflection_service = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
+pub fn reflection_router(file_descriptor_sets: &[&[u8]]) -> axum::Router {
+    let mut reflection_service = tonic_reflection::server::Builder::configure();
+
+    for fds in file_descriptor_sets.iter() {
+        reflection_service = reflection_service.register_encoded_file_descriptor_set(fds);
+    }
+
+    let reflection_service = reflection_service
+        .register_encoded_file_descriptor_set(GOOGLE_PROTOBUF_FILE_DESCRIPTOR_SET)
         .build_v1()
         .expect("Failed to build gRPC reflection service");
 
-    let reflection_service_alpha = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
+    let mut reflection_service_alpha = tonic_reflection::server::Builder::configure();
+
+    for fds in file_descriptor_sets.iter() {
+        reflection_service_alpha =
+            reflection_service_alpha.register_encoded_file_descriptor_set(fds);
+    }
+
+    let reflection_service_alpha = reflection_service_alpha
+        .register_encoded_file_descriptor_set(GOOGLE_PROTOBUF_FILE_DESCRIPTOR_SET)
         .build_v1alpha()
         .expect("Failed to build gRPC reflection service (alpha)");
 

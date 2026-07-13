@@ -1,3 +1,4 @@
+use retrom_codegen::retrom::services::clients::v1::FILE_DESCRIPTOR_SET;
 use retrom_codegen::retrom::services::config::v1::GetServerConfigRequest;
 use retrom_service_clients::router::clients_router;
 use retrom_service_common::{
@@ -49,7 +50,7 @@ async fn main() {
 
     let router = clients_router(pool)
         .layer(tonic_web::GrpcWebLayer::new())
-        .merge(reflection_router());
+        .merge(reflection_router(&[FILE_DESCRIPTOR_SET]));
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await
