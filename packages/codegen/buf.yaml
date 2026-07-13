@@ -7,6 +7,9 @@ lint:
   use:
     - COMMENTS
     - STANDARD
+  except:
+    - RPC_REQUEST_RESPONSE_UNIQUE
+    - RPC_RESPONSE_STANDARD_NAME
   ignore:
     - protos/igdbapi.proto
     - protos/google

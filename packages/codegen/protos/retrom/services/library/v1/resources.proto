@@ -9,6 +9,13 @@ import "retrom/services/config/v1/models.proto";
 
 // RootDirectory represents a row in the `root_directories` table.
 message RootDirectory {
+  option (google.api.resource) = {
+    name_field: "id"
+    type: "retrom.services.library.v1.LibraryService/RootDirectory"
+    singular: "rootDirectory"
+    plural: "rootDirectories"
+  };
+
   // OUTPUT_ONLY — set by the server on create; include for update targets.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Absolute path for this root directory.
@@ -114,6 +121,13 @@ message Game {
 
 // GameFile represents a file that is associated with a game. For example, a ROM file or an ISO file.
 message GameFile {
+  option (google.api.resource) = {
+    name_field: "id"
+    type: "retrom.services.library.v1.LibraryService/GameFile"
+    singular: "gameFile"
+    plural: "gameFiles"
+  };
+
   // OUTPUT_ONLY — set by the server on create; include for update targets.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Size in bytes of the file on disk.
