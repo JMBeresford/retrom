@@ -34,6 +34,7 @@ thiserror = { workspace = true }
 dotenvy = { workspace = true }
 uuid = { workspace = true }
 sqlx = { workspace = true }
+pbjson-types = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

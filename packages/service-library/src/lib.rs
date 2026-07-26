@@ -1,23 +1,28 @@
+use pbjson_types::Empty;
 use retrom_codegen::retrom::services::{
     config::v1::config_service_client::ConfigServiceClient,
     library::v1::{
         library_service_server::LibraryService, AddGameRootDirectoryRequest,
         AddGameRootDirectoryResponse, AddLibraryRootDirectoryRequest,
         AddLibraryRootDirectoryResponse, AddPlatformRootDirectoryRequest,
-        AddPlatformRootDirectoryResponse, CreateGamesRequest, CreateGamesResponse,
-        CreateLibrariesRequest, CreateLibrariesResponse, CreatePlatformsRequest,
-        CreatePlatformsResponse, CreateRootDirectoriesRequest, CreateRootDirectoriesResponse,
-        CreateRootDirectoryRequest, CreateRootDirectoryResponse, DeleteGameFilesRequest,
-        DeleteGameFilesResponse, DeleteGamesRequest, DeleteGamesResponse, DeleteLibraryRequest,
-        DeleteLibraryResponse, DeleteMissingEntriesRequest, DeleteMissingEntriesResponse,
-        DeletePlatformsRequest, DeletePlatformsResponse, DeleteRootDirectoriesRequest,
-        DeleteRootDirectoriesResponse, GetGameFilesRequest, GetGameFilesResponse, GetGamesRequest,
-        GetGamesResponse, GetLibrariesRequest, GetLibrariesResponse, GetPlatformsRequest,
-        GetPlatformsResponse, GetRootDirectoriesRequest, GetRootDirectoriesResponse,
-        ScanLibraryRequest, ScanLibraryResponse, UpdateGameFilesRequest, UpdateGameFilesResponse,
-        UpdateGamesRequest, UpdateGamesResponse, UpdateLibrariesRequest, UpdateLibrariesResponse,
-        UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdatePlatformsRequest,
-        UpdatePlatformsResponse, UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
+        AddPlatformRootDirectoryResponse, BatchCreateGamesRequest, BatchCreateGamesResponse,
+        BatchCreateLibrariesRequest, BatchCreateLibrariesResponse, BatchCreatePlatformsRequest,
+        BatchCreatePlatformsResponse, BatchCreateRootDirectoriesRequest,
+        BatchCreateRootDirectoriesResponse, BatchDeleteGameFilesRequest,
+        BatchDeleteGameFilesResponse, BatchDeleteGamesRequest, BatchDeleteGamesResponse,
+        BatchDeletePlatformsRequest, BatchDeletePlatformsResponse, BatchGetPlatformsRequest,
+        BatchGetPlatformsResponse, BatchUpdatePlatformsRequest, BatchUpdatePlatformsResponse,
+        CreateGameRequest, CreateLibraryRequest, CreatePlatformRequest, CreateRootDirectoryRequest,
+        DeleteGameFileRequest, DeleteGameRequest, DeleteLibraryRequest,
+        DeleteMissingEntriesRequest, DeleteMissingEntriesResponse, DeletePlatformRequest,
+        DeleteRootDirectoryRequest, Game, GameFile, GetGameFileRequest, GetGameRequest,
+        GetLibraryRequest, GetPlatformRequest, GetRootDirectoryRequest, Library,
+        ListGameFilesRequest, ListGameFilesResponse, ListGamesRequest, ListGamesResponse,
+        ListLibrariesRequest, ListLibrariesResponse, ListPlatformsRequest, ListPlatformsResponse,
+        ListRootDirectoriesRequest, ListRootDirectoriesResponse, Platform, RootDirectory,
+        ScanLibraryRequest, ScanLibraryResponse, UpdateGameFileRequest, UpdateGameRequest,
+        UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdateLibraryRequest,
+        UpdatePlatformRequest,
     },
     metadata::v1::metadata_service_client::MetadataServiceClient,
 };
@@ -28,6 +33,9 @@ use retrom_service_common::grpc_clients::{
 use retrom_service_jobs::job_manager::JobManager;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
+
+#[cfg(test)]
+pub mod tests;
 
 pub mod game_handlers;
 pub mod library_handlers;
@@ -80,16 +88,6 @@ impl LibraryService for LibraryServiceHandlers {
     }
 
     #[tracing::instrument(skip(self))]
-    async fn delete_library(
-        &self,
-        request: Request<DeleteLibraryRequest>,
-    ) -> Result<Response<DeleteLibraryResponse>, Status> {
-        library_handlers::delete_library(self.db_pool.clone(), request.into_inner())
-            .await
-            .map(Response::new)
-    }
-
-    #[tracing::instrument(skip(self))]
     async fn delete_missing_entries(
         &self,
         request: Request<DeleteMissingEntriesRequest>,
@@ -100,41 +98,81 @@ impl LibraryService for LibraryServiceHandlers {
     }
 
     #[tracing::instrument(skip(self))]
-    async fn get_libraries(
+    async fn get_library(
         &self,
-        request: Request<GetLibrariesRequest>,
-    ) -> Result<Response<GetLibrariesResponse>, Status> {
-        library_handlers::get_libraries(self.db_pool.clone(), request.into_inner())
+        request: Request<GetLibraryRequest>,
+    ) -> Result<Response<Library>, Status> {
+        library_handlers::get_library(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn create_libraries(
+    async fn list_libraries(
         &self,
-        request: Request<CreateLibrariesRequest>,
-    ) -> Result<Response<CreateLibrariesResponse>, Status> {
-        library_handlers::create_libraries(self.db_pool.clone(), request.into_inner())
+        request: Request<ListLibrariesRequest>,
+    ) -> Result<Response<ListLibrariesResponse>, Status> {
+        library_handlers::list_libraries(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn update_libraries(
+    async fn create_library(
         &self,
-        request: Request<UpdateLibrariesRequest>,
-    ) -> Result<Response<UpdateLibrariesResponse>, Status> {
-        library_handlers::update_libraries(self.db_pool.clone(), request.into_inner())
+        request: Request<CreateLibraryRequest>,
+    ) -> Result<Response<Library>, Status> {
+        library_handlers::create_library(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn get_root_directories(
+    async fn update_library(
         &self,
-        request: Request<GetRootDirectoriesRequest>,
-    ) -> Result<Response<GetRootDirectoriesResponse>, Status> {
-        root_directory_handlers::get_root_directories(self.db_pool.clone(), request.into_inner())
+        request: Request<UpdateLibraryRequest>,
+    ) -> Result<Response<Library>, Status> {
+        library_handlers::update_library(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn delete_library(
+        &self,
+        request: Request<DeleteLibraryRequest>,
+    ) -> Result<Response<Empty>, Status> {
+        library_handlers::delete_library(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn batch_create_libraries(
+        &self,
+        request: Request<BatchCreateLibrariesRequest>,
+    ) -> Result<Response<BatchCreateLibrariesResponse>, Status> {
+        library_handlers::batch_create_libraries(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn get_root_directory(
+        &self,
+        request: Request<GetRootDirectoryRequest>,
+    ) -> Result<Response<RootDirectory>, Status> {
+        root_directory_handlers::get_root_directory(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn list_root_directories(
+        &self,
+        request: Request<ListRootDirectoriesRequest>,
+    ) -> Result<Response<ListRootDirectoriesResponse>, Status> {
+        root_directory_handlers::list_root_directories(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
@@ -143,43 +181,33 @@ impl LibraryService for LibraryServiceHandlers {
     async fn create_root_directory(
         &self,
         request: Request<CreateRootDirectoryRequest>,
-    ) -> Result<Response<CreateRootDirectoryResponse>, Status> {
-        root_directory_handlers::create_root_directory(&self.db_pool.clone(), request.into_inner())
+    ) -> Result<Response<RootDirectory>, Status> {
+        root_directory_handlers::create_root_directory(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn create_root_directories(
+    async fn delete_root_directory(
         &self,
-        request: Request<CreateRootDirectoriesRequest>,
-    ) -> Result<Response<CreateRootDirectoriesResponse>, Status> {
-        root_directory_handlers::create_root_directories(
-            &self.db_pool.clone(),
+        request: Request<DeleteRootDirectoryRequest>,
+    ) -> Result<Response<Empty>, Status> {
+        root_directory_handlers::delete_root_directory(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn batch_create_root_directories(
+        &self,
+        request: Request<BatchCreateRootDirectoriesRequest>,
+    ) -> Result<Response<BatchCreateRootDirectoriesResponse>, Status> {
+        root_directory_handlers::batch_create_root_directories(
+            self.db_pool.clone(),
             request.into_inner(),
         )
         .await
         .map(Response::new)
-    }
-
-    #[tracing::instrument(skip(self))]
-    async fn update_root_directories(
-        &self,
-        request: Request<UpdateRootDirectoriesRequest>,
-    ) -> Result<Response<UpdateRootDirectoriesResponse>, Status> {
-        root_directory_handlers::update_root_directories(self.db_pool.clone(), request.into_inner())
-            .await
-            .map(Response::new)
-    }
-
-    #[tracing::instrument(skip(self))]
-    async fn delete_root_directories(
-        &self,
-        request: Request<DeleteRootDirectoriesRequest>,
-    ) -> Result<Response<DeleteRootDirectoriesResponse>, Status> {
-        root_directory_handlers::delete_root_directories(self.db_pool.clone(), request.into_inner())
-            .await
-            .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
@@ -188,7 +216,7 @@ impl LibraryService for LibraryServiceHandlers {
         request: Request<AddLibraryRootDirectoryRequest>,
     ) -> Result<Response<AddLibraryRootDirectoryResponse>, Status> {
         root_directory_handlers::add_library_root_directory(
-            &self.db_pool.clone(),
+            self.db_pool.clone(),
             request.into_inner(),
         )
         .await
@@ -201,7 +229,7 @@ impl LibraryService for LibraryServiceHandlers {
         request: Request<AddPlatformRootDirectoryRequest>,
     ) -> Result<Response<AddPlatformRootDirectoryResponse>, Status> {
         root_directory_handlers::add_platform_root_directory(
-            &self.db_pool.clone(),
+            self.db_pool.clone(),
             request.into_inner(),
         )
         .await
@@ -213,124 +241,213 @@ impl LibraryService for LibraryServiceHandlers {
         &self,
         request: Request<AddGameRootDirectoryRequest>,
     ) -> Result<Response<AddGameRootDirectoryResponse>, Status> {
-        root_directory_handlers::add_game_root_directory(
-            &self.db_pool.clone(),
-            request.into_inner(),
-        )
-        .await
-        .map(Response::new)
-    }
-
-    #[tracing::instrument(skip(self))]
-    async fn get_platforms(
-        &self,
-        request: Request<GetPlatformsRequest>,
-    ) -> Result<Response<GetPlatformsResponse>, Status> {
-        platform_handlers::get_platforms(
-            self.db_pool.clone(),
-            request.into_inner(),
-            self.config_svc_client.clone(),
-        )
-        .await
-        .map(Response::new)
-    }
-
-    #[tracing::instrument(skip(self))]
-    async fn create_platforms(
-        &self,
-        request: Request<CreatePlatformsRequest>,
-    ) -> Result<Response<CreatePlatformsResponse>, Status> {
-        platform_handlers::create_platforms(self.db_pool.clone(), request.into_inner())
+        root_directory_handlers::add_game_root_directory(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn delete_platforms(
+    async fn get_platform(
         &self,
-        request: Request<DeletePlatformsRequest>,
-    ) -> Result<Response<DeletePlatformsResponse>, Status> {
-        platform_handlers::delete_platforms(self.db_pool.clone(), request.into_inner())
+        request: Request<GetPlatformRequest>,
+    ) -> Result<Response<Platform>, Status> {
+        platform_handlers::get_platform(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn update_platforms(
+    async fn list_platforms(
         &self,
-        request: Request<UpdatePlatformsRequest>,
-    ) -> Result<Response<UpdatePlatformsResponse>, Status> {
-        platform_handlers::update_platforms(self.db_pool.clone(), request.into_inner())
+        request: Request<ListPlatformsRequest>,
+    ) -> Result<Response<ListPlatformsResponse>, Status> {
+        platform_handlers::list_platforms(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn get_games(
+    async fn create_platform(
         &self,
-        request: Request<GetGamesRequest>,
-    ) -> Result<Response<GetGamesResponse>, Status> {
-        game_handlers::get_games(self.db_pool.clone(), request.into_inner())
+        request: Request<CreatePlatformRequest>,
+    ) -> Result<Response<Platform>, Status> {
+        platform_handlers::create_platform(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn create_games(
+    async fn delete_platform(
         &self,
-        request: Request<CreateGamesRequest>,
-    ) -> Result<Response<CreateGamesResponse>, Status> {
-        game_handlers::create_games(self.db_pool.clone(), request.into_inner())
+        request: Request<DeletePlatformRequest>,
+    ) -> Result<Response<Platform>, Status> {
+        platform_handlers::delete_platform(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn delete_games(
+    async fn update_platform(
         &self,
-        request: Request<DeleteGamesRequest>,
-    ) -> Result<Response<DeleteGamesResponse>, Status> {
-        game_handlers::delete_games(self.db_pool.clone(), request.into_inner())
+        request: Request<UpdatePlatformRequest>,
+    ) -> Result<Response<Platform>, Status> {
+        platform_handlers::update_platform(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn update_games(
+    async fn batch_get_platforms(
         &self,
-        request: Request<UpdateGamesRequest>,
-    ) -> Result<Response<UpdateGamesResponse>, Status> {
-        game_handlers::update_games(self.db_pool.clone(), request.into_inner())
+        request: Request<BatchGetPlatformsRequest>,
+    ) -> Result<Response<BatchGetPlatformsResponse>, Status> {
+        platform_handlers::batch_get_platforms(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn get_game_files(
+    async fn batch_create_platforms(
         &self,
-        request: Request<GetGameFilesRequest>,
-    ) -> Result<Response<GetGameFilesResponse>, Status> {
-        game_handlers::get_game_files(self.db_pool.clone(), request.into_inner())
+        request: Request<BatchCreatePlatformsRequest>,
+    ) -> Result<Response<BatchCreatePlatformsResponse>, Status> {
+        platform_handlers::batch_create_platforms(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn delete_game_files(
+    async fn batch_update_platforms(
         &self,
-        request: Request<DeleteGameFilesRequest>,
-    ) -> Result<Response<DeleteGameFilesResponse>, Status> {
-        game_handlers::delete_game_files(self.db_pool.clone(), request.into_inner())
+        request: Request<BatchUpdatePlatformsRequest>,
+    ) -> Result<Response<BatchUpdatePlatformsResponse>, Status> {
+        platform_handlers::batch_update_platforms(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
     #[tracing::instrument(skip(self))]
-    async fn update_game_files(
+    async fn batch_delete_platforms(
         &self,
-        request: Request<UpdateGameFilesRequest>,
-    ) -> Result<Response<UpdateGameFilesResponse>, Status> {
-        game_handlers::update_game_files(self.db_pool.clone(), request.into_inner())
+        request: Request<BatchDeletePlatformsRequest>,
+    ) -> Result<Response<BatchDeletePlatformsResponse>, Status> {
+        platform_handlers::batch_delete_platforms(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn get_game(&self, request: Request<GetGameRequest>) -> Result<Response<Game>, Status> {
+        game_handlers::get_game(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn list_games(
+        &self,
+        request: Request<ListGamesRequest>,
+    ) -> Result<Response<ListGamesResponse>, Status> {
+        game_handlers::list_games(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn create_game(
+        &self,
+        request: Request<CreateGameRequest>,
+    ) -> Result<Response<Game>, Status> {
+        game_handlers::create_game(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn delete_game(
+        &self,
+        request: Request<DeleteGameRequest>,
+    ) -> Result<Response<Game>, Status> {
+        game_handlers::delete_game(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn update_game(
+        &self,
+        request: Request<UpdateGameRequest>,
+    ) -> Result<Response<Game>, Status> {
+        game_handlers::update_game(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn batch_create_games(
+        &self,
+        request: Request<BatchCreateGamesRequest>,
+    ) -> Result<Response<BatchCreateGamesResponse>, Status> {
+        game_handlers::batch_create_games(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn batch_delete_games(
+        &self,
+        request: Request<BatchDeleteGamesRequest>,
+    ) -> Result<Response<BatchDeleteGamesResponse>, Status> {
+        game_handlers::batch_delete_games(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn get_game_file(
+        &self,
+        request: Request<GetGameFileRequest>,
+    ) -> Result<Response<GameFile>, Status> {
+        game_handlers::get_game_file(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn list_game_files(
+        &self,
+        request: Request<ListGameFilesRequest>,
+    ) -> Result<Response<ListGameFilesResponse>, Status> {
+        game_handlers::list_game_files(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn update_game_file(
+        &self,
+        request: Request<UpdateGameFileRequest>,
+    ) -> Result<Response<GameFile>, Status> {
+        game_handlers::update_game_file(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn delete_game_file(
+        &self,
+        request: Request<DeleteGameFileRequest>,
+    ) -> Result<Response<GameFile>, Status> {
+        game_handlers::delete_game_file(self.db_pool.clone(), request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    async fn batch_delete_game_files(
+        &self,
+        request: Request<BatchDeleteGameFilesRequest>,
+    ) -> Result<Response<BatchDeleteGameFilesResponse>, Status> {
+        game_handlers::batch_delete_game_files(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }

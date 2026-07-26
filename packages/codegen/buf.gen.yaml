@@ -8,6 +8,7 @@ plugins:
 
   - remote: buf.build/community/neoeinstein-prost:v0.5.0
     out: src/gen/rs
+    include_imports: true
     opt:
       - bytes=.
       - compile_well_known_types
@@ -49,5 +50,6 @@ plugins:
 
   - remote: buf.build/community/neoeinstein-prost-crate:v0.5.0
     out: src/gen/rs
+    include_imports: true
     opt:
       - no_features

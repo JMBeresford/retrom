@@ -1,7 +1,6 @@
 use retrom_codegen::retrom::services::config::v1::GetServerConfigRequest;
 use retrom_service_common::{
-    grpc_clients::config_svc::get_config_svc_client, reflection::reflection_router,
-    svc_definitions::LIBRARY_SVC_PORT,
+    grpc_clients::config_svc::get_config_svc_client, svc_definitions::LIBRARY_SVC_PORT,
 };
 use retrom_service_library::router::library_router;
 use retrom_telemetry::init_tracing_subscriber;
@@ -47,9 +46,7 @@ async fn main() {
 
     let addr: SocketAddr = format!("0.0.0.0:{LIBRARY_SVC_PORT}").parse().unwrap();
 
-    let router = library_router(pool)
-        .layer(tonic_web::GrpcWebLayer::new())
-        .merge(reflection_router());
+    let router = library_router(pool).layer(tonic_web::GrpcWebLayer::new());
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await

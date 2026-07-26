@@ -1,15 +1,14 @@
 pub mod job_manager;
 pub mod router;
 
-use std::{pin::Pin, sync::Arc};
-
 use futures::Stream;
 use job_manager::JobManager;
 use retrom_codegen::retrom::services::jobs::v1::{
     job_service_server::JobService, CompleteJobRequest, CompleteJobResponse, CreateJobRequest,
-    CreateJobResponse, GetJobRequest, GetJobResponse, JobProgress, JobStatus, ListJobsRequest,
-    ListJobsResponse, UpdateJobRequest, UpdateJobResponse, WatchJobRequest,
+    CreateJobResponse, GetJobRequest, GetJobResponse, JobStatus, ListJobsRequest, ListJobsResponse,
+    UpdateJobRequest, UpdateJobResponse, WatchJobRequest, WatchJobResponse,
 };
+use std::{pin::Pin, sync::Arc};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 use tracing::instrument;
@@ -102,7 +101,7 @@ impl JobService for JobServiceHandlers {
         Ok(Response::new(UpdateJobResponse { job: Some(job) }))
     }
 
-    type WatchJobStream = Pin<Box<dyn Stream<Item = Result<JobProgress, Status>> + Send>>;
+    type WatchJobStream = Pin<Box<dyn Stream<Item = Result<WatchJobResponse, Status>> + Send>>;
 
     #[instrument(skip_all)]
     async fn watch_job(
@@ -121,7 +120,13 @@ impl JobService for JobServiceHandlers {
 
         tokio::spawn(async move {
             while let Ok(progress) = progress_rx.recv().await {
-                if tx.send(Ok(progress)).await.is_err() {
+                if tx
+                    .send(Ok(WatchJobResponse {
+                        job_progress: Some(progress),
+                    }))
+                    .await
+                    .is_err()
+                {
                     tracing::debug!("WatchJob client disconnected for job {id}");
                     break;
                 }

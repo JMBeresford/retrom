@@ -1,23 +1,54 @@
+use futures::future::join_all;
+use pbjson_types::Empty;
 use retrom_codegen::retrom::services::library::v1::{
     AddGameRootDirectoryRequest, AddGameRootDirectoryResponse, AddLibraryRootDirectoryRequest,
     AddLibraryRootDirectoryResponse, AddPlatformRootDirectoryRequest,
-    AddPlatformRootDirectoryResponse, CreateRootDirectoriesRequest, CreateRootDirectoriesResponse,
-    CreateRootDirectoryRequest, CreateRootDirectoryResponse, DeleteRootDirectoriesRequest,
-    DeleteRootDirectoriesResponse, GetRootDirectoriesRequest, GetRootDirectoriesResponse,
-    RootDirectory, UpdateRootDirectoriesRequest, UpdateRootDirectoriesResponse,
+    AddPlatformRootDirectoryResponse, BatchCreateRootDirectoriesRequest,
+    BatchCreateRootDirectoriesResponse, CreateRootDirectoryRequest, DeleteRootDirectoryRequest,
+    GetRootDirectoryRequest, ListRootDirectoriesRequest, ListRootDirectoriesResponse,
+    RootDirectory, RootDirectoryRow,
 };
 use retrom_db::{DbPool, RetromDB};
-use sqlx::{Executor, QueryBuilder};
+use sqlx::QueryBuilder;
 use std::{path::PathBuf, str::FromStr};
 use tonic::Status;
 
-pub async fn get_root_directories(
+fn rd_row_to_rd(row: RootDirectoryRow) -> RootDirectory {
+    RootDirectory {
+        id: row.id,
+        path: row.path,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+    }
+}
+
+pub async fn get_root_directory(
     db_pool: DbPool,
-    request: GetRootDirectoriesRequest,
-) -> Result<GetRootDirectoriesResponse, Status> {
+    request: GetRootDirectoryRequest,
+) -> Result<RootDirectory, Status> {
+    let mut builder = QueryBuilder::new("select * from root_directories where id = ");
+    builder.push_bind(request.id);
+    builder.push(" limit 1");
+
+    let row: RootDirectoryRow = builder
+        .build_query_as()
+        .fetch_one(&db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    let root_directory = rd_row_to_rd(row);
+
+    Ok(root_directory)
+}
+
+pub async fn list_root_directories(
+    db_pool: DbPool,
+    request: ListRootDirectoriesRequest,
+) -> Result<ListRootDirectoriesResponse, Status> {
     let root_directory_ids = request.root_directory_ids;
     let game_ids = request.game_ids;
     let platform_ids = request.platform_ids;
+    let library_ids = request.library_ids;
 
     let mut builder = QueryBuilder::<RetromDB>::new("select * from root_directories");
 
@@ -57,21 +88,37 @@ pub async fn get_root_directories(
             separated.push_bind(id);
         }
         separated.push_unseparated(")) ");
+        where_clause = true;
     }
 
-    let root_directories: Vec<RootDirectory> = builder
+    if !library_ids.is_empty() {
+        if where_clause {
+            builder.push(" and id in (select root_directory_id from library_root_directories where library_id in (");
+        } else {
+            builder.push(" where id in (select root_directory_id from library_root_directories where library_id in (");
+        }
+        let mut separated = builder.separated(", ");
+        for id in &library_ids {
+            separated.push_bind(id);
+        }
+        separated.push_unseparated(")) ");
+    }
+
+    let rows: Vec<RootDirectoryRow> = builder
         .build_query_as()
         .fetch_all(&db_pool)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    Ok(GetRootDirectoriesResponse { root_directories })
+    let root_directories = rows.into_iter().map(rd_row_to_rd).collect();
+
+    Ok(ListRootDirectoriesResponse { root_directories })
 }
 
 pub async fn create_root_directory(
-    conn: impl Executor<'_, Database = RetromDB>,
+    db_pool: DbPool,
     request: CreateRootDirectoryRequest,
-) -> Result<CreateRootDirectoryResponse, Status> {
+) -> Result<RootDirectory, Status> {
     let path = request.path;
 
     if let Ok(Err(why)) = PathBuf::from_str(&path).map(|d| d.canonicalize()) {
@@ -91,119 +138,62 @@ pub async fn create_root_directory(
     builder.push(") on conflict (path) do update set path = excluded.path");
     builder.push(" returning *");
 
-    let root_directory: RootDirectory = builder
+    let row: RootDirectoryRow = builder
         .build_query_as()
-        .fetch_one(conn)
+        .fetch_one(&db_pool)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    Ok(CreateRootDirectoryResponse {
-        root_directory: Some(root_directory),
-    })
+    let root_directory = rd_row_to_rd(row);
+
+    Ok(root_directory)
 }
 
-pub async fn create_root_directories(
-    conn: impl Executor<'_, Database = RetromDB>,
-    request: CreateRootDirectoriesRequest,
-) -> Result<CreateRootDirectoriesResponse, Status> {
-    if request.root_directories.is_empty() {
-        return Err(Status::invalid_argument(
-            "At least one root directory must be provided",
-        ));
-    }
-
-    let mut builder =
-        QueryBuilder::<RetromDB>::new("insert into root_directories (id, path) values ");
-
-    builder.push_values(request.root_directories.iter(), |mut row, directory| {
-        row.push_bind(uuid::Uuid::now_v7().to_string());
-        row.push_bind(&directory.path);
-    });
-
-    builder.push(" on conflict (path) do update set path = excluded.path");
-    builder.push(" returning *");
-
-    let root_directories_created: Vec<RootDirectory> = builder
-        .build_query_as()
-        .fetch_all(conn)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
-
-    Ok(CreateRootDirectoriesResponse {
-        root_directories_created,
-    })
-}
-
-pub async fn update_root_directories(
+pub async fn delete_root_directory(
     db_pool: DbPool,
-    request: UpdateRootDirectoriesRequest,
-) -> Result<UpdateRootDirectoriesResponse, Status> {
-    let mut root_directories_updated = Vec::with_capacity(request.root_directories.len());
+    request: DeleteRootDirectoryRequest,
+) -> Result<Empty, Status> {
+    let mut builder = QueryBuilder::new("delete from root_directories where id = ");
+    builder.push_bind(request.id);
 
-    for directory in request.root_directories {
-        let mut builder = QueryBuilder::<RetromDB>::new("update root_directories set path = ");
-        builder.push_bind(directory.path);
-        builder.push(" where id = ");
-        builder.push_bind(directory.id);
-        builder.push(" returning *");
-
-        let updated: RootDirectory = builder
-            .build_query_as()
-            .fetch_one(&db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-
-        root_directories_updated.push(updated);
-    }
-
-    Ok(UpdateRootDirectoriesResponse {
-        root_directories_updated,
-    })
-}
-
-pub async fn delete_root_directories(
-    db_pool: DbPool,
-    request: DeleteRootDirectoriesRequest,
-) -> Result<DeleteRootDirectoriesResponse, Status> {
-    if request.ids.is_empty() {
-        return Ok(DeleteRootDirectoriesResponse {
-            root_directories_deleted: vec![],
-        });
-    }
-
-    let mut builder = QueryBuilder::<RetromDB>::new("delete from root_directories where id in (");
-    let mut separated = builder.separated(", ");
-    for id in &request.ids {
-        separated.push_bind(id);
-    }
-    separated.push_unseparated(") returning *");
-
-    let root_directories_deleted: Vec<RootDirectory> = builder
-        .build_query_as()
-        .fetch_all(&db_pool)
+    builder
+        .build()
+        .execute(&db_pool)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    Ok(DeleteRootDirectoriesResponse {
-        root_directories_deleted,
-    })
+    Ok(Empty {})
+}
+
+pub async fn batch_create_root_directories(
+    db_pool: DbPool,
+    request: BatchCreateRootDirectoriesRequest,
+) -> Result<BatchCreateRootDirectoriesResponse, Status> {
+    let root_directories = join_all(request.requests.into_iter().map(|r| {
+        let db_pool = db_pool.clone();
+
+        async move { create_root_directory(db_pool, r).await }
+    }))
+    .await
+    .into_iter()
+    .collect::<Result<Vec<RootDirectory>, Status>>()?;
+
+    Ok(BatchCreateRootDirectoriesResponse { root_directories })
 }
 
 pub async fn add_library_root_directory(
-    conn: impl Executor<'_, Database = RetromDB> + Clone,
+    db_pool: DbPool,
     request: AddLibraryRootDirectoryRequest,
 ) -> Result<AddLibraryRootDirectoryResponse, Status> {
     let library_id = request.library_id;
 
     let root_directory = create_root_directory(
-        conn.clone(),
+        db_pool.clone(),
         CreateRootDirectoryRequest {
             path: request.path.clone(),
         },
     )
-    .await?
-    .root_directory
-    .ok_or_else(|| Status::internal("Failed to create root directory"))?;
+    .await?;
 
     let mut builder = QueryBuilder::new(
         "insert into library_root_directories (library_id, root_directory_id) values (",
@@ -225,7 +215,7 @@ pub async fn add_library_root_directory(
 
     builder
         .build()
-        .execute(conn)
+        .execute(&db_pool)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -235,20 +225,18 @@ pub async fn add_library_root_directory(
 }
 
 pub async fn add_platform_root_directory(
-    conn: impl Executor<'_, Database = RetromDB> + Clone,
+    db_pool: DbPool,
     request: AddPlatformRootDirectoryRequest,
 ) -> Result<AddPlatformRootDirectoryResponse, Status> {
     let platform_id = request.platform_id;
 
     let root_directory = create_root_directory(
-        conn.clone(),
+        db_pool.clone(),
         CreateRootDirectoryRequest {
             path: request.path.clone(),
         },
     )
-    .await?
-    .root_directory
-    .ok_or_else(|| Status::internal("Failed to create root directory"))?;
+    .await?;
 
     let mut builder = QueryBuilder::new(
         "insert into platform_root_directories (platform_id, root_directory_id) values (",
@@ -270,7 +258,7 @@ pub async fn add_platform_root_directory(
 
     builder
         .build()
-        .execute(conn)
+        .execute(&db_pool)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -280,20 +268,18 @@ pub async fn add_platform_root_directory(
 }
 
 pub async fn add_game_root_directory(
-    conn: impl Executor<'_, Database = RetromDB> + Clone,
+    db_pool: DbPool,
     request: AddGameRootDirectoryRequest,
 ) -> Result<AddGameRootDirectoryResponse, Status> {
     let game_id = request.game_id;
 
     let root_directory = create_root_directory(
-        conn.clone(),
+        db_pool.clone(),
         CreateRootDirectoryRequest {
             path: request.path.clone(),
         },
     )
-    .await?
-    .root_directory
-    .ok_or_else(|| Status::internal("Failed to create root directory"))?;
+    .await?;
 
     let mut builder = QueryBuilder::new(
         "insert into game_root_directories (game_id, root_directory_id) values (",
@@ -315,7 +301,7 @@ pub async fn add_game_root_directory(
 
     builder
         .build()
-        .execute(conn)
+        .execute(&db_pool)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
