@@ -176,11 +176,14 @@ pub async fn create_game(db_pool: DbPool, request: CreateGameRequest) -> Result<
     }
 
     let mut builder =
-        QueryBuilder::<RetromDB>::new("insert into games (id, third_party, steam_app_id) values ");
+        QueryBuilder::<RetromDB>::new("insert into games (id, third_party, steam_app_id) values (");
 
-    builder.push_bind(uuid::Uuid::now_v7().to_string());
-    builder.push_bind(game.third_party);
-    builder.push_bind(&game.steam_app_id);
+    let mut separated = builder.separated(", ");
+    separated.push_bind(uuid::Uuid::now_v7().to_string());
+    separated.push_bind(game.third_party);
+    separated.push_bind(&game.steam_app_id);
+
+    builder.push(")");
 
     builder.push(" returning *");
 
@@ -190,14 +193,13 @@ pub async fn create_game(db_pool: DbPool, request: CreateGameRequest) -> Result<
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    let mut builder = QueryBuilder::new("insert into game_platforms (game_id, platform_id) ");
-
-    builder.push_values(&game.platforms, |mut row, platform_id| {
-        row.push_bind(&game_row.id);
-        row.push_bind(platform_id);
-    });
-
     if !game.platforms.is_empty() {
+        let mut builder = QueryBuilder::new("insert into game_platforms (game_id, platform_id) ");
+        builder.push_values(&game.platforms, |mut row, platform_id| {
+            row.push_bind(&game_row.id);
+            row.push_bind(platform_id);
+        });
+
         builder
             .build()
             .execute(&db_pool)
@@ -227,17 +229,7 @@ pub async fn create_game(db_pool: DbPool, request: CreateGameRequest) -> Result<
         vec![]
     };
 
-    Ok(Game {
-        id: game_row.id,
-        created_at: game_row.created_at,
-        updated_at: game_row.updated_at,
-        deleted_at: game_row.deleted_at,
-        is_deleted: game_row.is_deleted,
-        third_party: game_row.third_party,
-        steam_app_id: game_row.steam_app_id,
-        paths,
-        platforms: game.platforms,
-    })
+    Ok(game_row_to_game(game_row, paths, game.platforms))
 }
 
 pub async fn update_game(db_pool: DbPool, request: UpdateGameRequest) -> Result<Game, Status> {
@@ -723,4 +715,192 @@ pub async fn batch_delete_game_files(
     .collect::<Result<Vec<GameFile>, Status>>()?;
 
     Ok(BatchDeleteGameFilesResponse { game_files })
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::game_handlers::*;
+    use crate::tests::{
+        create_test_game_dir, create_test_library_dir, create_test_platform_dir, get_test_db_pool,
+    };
+
+    use retrom_codegen::retrom::services::library::v1::{
+        CreateGameRequest, DeleteGameRequest, Game, GetGameRequest,
+    };
+
+    async fn create_test_game(
+        db_pool: retrom_db::DbPool,
+        paths: Vec<String>,
+    ) -> Result<Game, tonic::Status> {
+        create_game(
+            db_pool,
+            CreateGameRequest {
+                game: Some(Game {
+                    third_party: false,
+                    steam_app_id: None,
+                    paths,
+                    platforms: vec![],
+                    ..Default::default()
+                }),
+            },
+        )
+        .await
+    }
+
+    #[tokio::test]
+    async fn test_get_game() -> Result<(), tonic::Status> {
+        let db_pool = get_test_db_pool().await;
+        let library_dir = create_test_library_dir().await;
+        let platform_dir = create_test_platform_dir(&library_dir, "PlayStation").await;
+        let game_dir = create_test_game_dir(&platform_dir, "Crash Bandicoot").await;
+        let game_path = game_dir
+            .canonicalize()
+            .expect("Failed to canonicalize game path")
+            .to_str()
+            .expect("Failed to convert game path to string")
+            .to_string();
+
+        let created = create_test_game(db_pool.clone(), vec![game_path.clone()]).await?;
+
+        let fetched = get_game(
+            db_pool,
+            GetGameRequest {
+                id: created.id.clone(),
+            },
+        )
+        .await?;
+
+        assert_eq!(fetched.id, created.id);
+        assert_eq!(fetched.third_party, created.third_party);
+        assert_eq!(fetched.steam_app_id, created.steam_app_id);
+        assert_eq!(fetched.paths, vec![game_path]);
+        assert!(fetched.platforms.is_empty());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_create_game() -> Result<(), tonic::Status> {
+        let db_pool = get_test_db_pool().await;
+        let library_dir = create_test_library_dir().await;
+        let platform_dir = create_test_platform_dir(&library_dir, "Dreamcast").await;
+        let game_dir = create_test_game_dir(&platform_dir, "Skies of Arcadia").await;
+        let game_path = game_dir
+            .canonicalize()
+            .expect("Failed to canonicalize game path")
+            .to_str()
+            .expect("Failed to convert game path to string")
+            .to_string();
+
+        let game = create_game(
+            db_pool,
+            CreateGameRequest {
+                game: Some(Game {
+                    paths: vec![game_path.clone()],
+                    ..Default::default()
+                }),
+            },
+        )
+        .await?;
+
+        assert!(!game.id.is_empty());
+        assert!(!game.is_deleted);
+        assert_eq!(game.paths, vec![game_path]);
+        assert!(game.platforms.is_empty());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_game() -> Result<(), tonic::Status> {
+        let db_pool = get_test_db_pool().await;
+        let game = create_test_game(db_pool.clone(), vec![]).await?;
+
+        let deleted = delete_game(
+            db_pool.clone(),
+            DeleteGameRequest {
+                id: game.id.clone(),
+                soft_delete: false,
+                delete_from_disk: false,
+            },
+        )
+        .await?;
+
+        assert_eq!(deleted.id, game.id);
+
+        let count: i64 = sqlx::query_scalar("select count(*) from games where id = ?")
+            .bind(&game.id)
+            .fetch_one(&db_pool)
+            .await
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+        assert_eq!(count, 0);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_game_soft_delete() -> Result<(), tonic::Status> {
+        let db_pool = get_test_db_pool().await;
+        let game = create_test_game(db_pool.clone(), vec![]).await?;
+
+        let deleted = delete_game(
+            db_pool.clone(),
+            DeleteGameRequest {
+                id: game.id.clone(),
+                soft_delete: true,
+                delete_from_disk: false,
+            },
+        )
+        .await?;
+
+        assert_eq!(deleted.id, game.id);
+        assert!(deleted.is_deleted);
+        assert!(deleted.deleted_at.is_some());
+
+        let is_deleted: bool = sqlx::query_scalar("select is_deleted from games where id = ?")
+            .bind(&game.id)
+            .fetch_one(&db_pool)
+            .await
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+        assert!(is_deleted);
+
+        assert!(get_game(db_pool, GetGameRequest { id: game.id })
+            .await
+            .is_err());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_game_from_disk() -> Result<(), tonic::Status> {
+        let db_pool = get_test_db_pool().await;
+        let library_dir = create_test_library_dir().await;
+        let platform_dir = create_test_platform_dir(&library_dir, "SNES").await;
+        let game_dir = create_test_game_dir(&platform_dir, "Chrono Trigger").await;
+        let game_path = game_dir
+            .canonicalize()
+            .expect("Failed to canonicalize game path")
+            .to_str()
+            .expect("Failed to convert game path to string")
+            .to_string();
+
+        let game = create_test_game(db_pool.clone(), vec![game_path.clone()]).await?;
+        assert!(std::path::Path::new(&game_path).exists());
+
+        delete_game(
+            db_pool.clone(),
+            DeleteGameRequest {
+                id: game.id.clone(),
+                soft_delete: false,
+                delete_from_disk: true,
+            },
+        )
+        .await?;
+
+        assert!(!std::path::Path::new(&game_path).exists());
+
+        Ok(())
+    }
 }

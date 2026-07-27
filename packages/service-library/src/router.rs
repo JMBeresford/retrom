@@ -1,9 +1,6 @@
 use crate::LibraryServiceHandlers;
-use retrom_codegen::retrom::services::library::v1::{
-    library_service_server::LibraryServiceServer, FILE_DESCRIPTOR_SET,
-};
+use retrom_codegen::retrom::services::library::v1::library_service_server::LibraryServiceServer;
 use retrom_db::DbPool;
-use retrom_service_common::reflection::reflection_router;
 use retrom_service_jobs::job_manager::JobManager;
 use std::sync::Arc;
 
@@ -16,9 +13,5 @@ pub fn library_router(db_pool: DbPool) -> axum::Router {
     let mut routes_builder = tonic::service::Routes::builder();
     routes_builder.add_service(library_service);
 
-    routes_builder
-        .routes()
-        .into_axum_router()
-        .reset_fallback()
-        .merge(reflection_router(&[FILE_DESCRIPTOR_SET]))
+    routes_builder.routes().into_axum_router().reset_fallback()
 }
