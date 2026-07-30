@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package retrom.services.metadata.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+
+// GameMetadata represents a collection of metadata for a specific game.
+message GameMetadata {
+  option (google.api.resource) = {
+    name_field: "id"
+    type: "retrom.services.metadata.v1.MetadataService/GameMetadata"
+    singular: "gameMetadata"
+    plural: "gameMetadata"
+  };
+
+  // The unique ID of the game metadata record.
+  string id = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+  // The ID of the game that this metadata is associated with.
+  string game = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.field_behavior) = IMMUTABLE
+  ];
+  // The ID of the metadata provider that this metadata was sourced from (e.g. IGDB, Steam).
+  string provider = 3 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.field_behavior) = IMMUTABLE
+  ];
+  // The ID of the game in the provider's database (e.g. IGDB game ID, Steam app ID).
+  string provider_game_id = 4 [(google.api.field_behavior) = REQUIRED];
+  // Timestamp for when the game metadata record was created.
+  google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp for when the game metadata record was last updated.
+  google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The display name of the game.
+  optional string name = 7;
+  // A description of the game.
+  optional string description = 8;
+  // A URL to the game's cover image.
+  optional string cover_url = 9;
+  // A URL to the game's background image.
+  optional string background_url = 10;
+  // A URL to the game's icon image.
+  optional string icon_url = 11;
+  // A URL to the game's logo image.
+  optional string logo_url = 12;
+  // The release date of the game.
+  google.protobuf.Timestamp release_date = 13;
+  // The last time the game was played.
+  google.protobuf.Timestamp last_played = 14;
+  // The total number of minutes played for the game.
+  optional int32 minutes_played = 15;
+  // URLs to screenshots of the game.
+  repeated string screenshots = 16;
+  // URLs to artworks of the game.
+  repeated string artworks = 17;
+  // URLs to videos of the game.
+  repeated string videos = 18;
+  // URLs to external links related to the game (e.g. official website, store page).
+  repeated string links = 19;
+  // The IDs of similar games in the Retrom database.
+  repeated string similar_games = 20;
+}
+
+// PlatformMetadata represents a collection of metadata for a specific platform.
+message PlatformMetadata {
+  option (google.api.resource) = {
+    name_field: "id"
+    type: "retrom.services.metadata.v1.MetadataService/PlatformMetadata"
+    singular: "platformMetadata"
+    plural: "platformMetadata"
+  };
+
+  // The unique ID of the platform metadata record.
+  string id = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+  // The ID of the platform that this metadata is associated with.
+  string platform = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.field_behavior) = IMMUTABLE
+  ];
+  // The ID of the metadata provider that this metadata was sourced from (e.g. IGDB, Steam).
+  string provider = 3 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.field_behavior) = IMMUTABLE
+  ];
+  // The ID of the platform in the provider's database (e.g. IGDB platform ID).
+  string provider_platform_id = 4 [(google.api.field_behavior) = REQUIRED];
+  // Timestamp for when the platform metadata record was created.
+  google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp for when the platform metadata record was last updated.
+  google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The display name of the platform.
+  optional string name = 7;
+  // A description of the platform.
+  optional string description = 8;
+  // A URL to the platform's background image.
+  optional string background_url = 9;
+  // A URL to the platform's icon image.
+  optional string icon_url = 10;
+  // A URL to the platform's logo image.
+  optional string logo_url = 11;
+}

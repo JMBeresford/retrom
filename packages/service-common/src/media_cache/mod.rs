@@ -4,10 +4,7 @@ use caesium::{compress_in_memory, convert_in_memory, parameters::CSParameters};
 use index::{IndexEntry, IndexManager};
 use rayon::ThreadPool;
 use reqwest::StatusCode;
-use retrom_codegen::retrom::services::config::v1::{
-    config_service_client::ConfigServiceClient, metadata_config::ImageFormat,
-    GetServerConfigRequest,
-};
+use retrom_codegen::retrom::services::config::v1::{metadata_config::ImageFormat, MetadataConfig};
 use std::{
     path::{Path, PathBuf},
     str::FromStr,
@@ -16,7 +13,6 @@ use std::{
 use thiserror::Error;
 use tokio::fs;
 use tokio_retry::Condition;
-use tonic::transport::Channel;
 use tracing::{debug, instrument, warn, Instrument};
 
 pub mod cacheable_media;
@@ -128,7 +124,6 @@ pub struct MediaCache {
     client: reqwest::Client,
     compression_threads: Arc<ThreadPool>,
     index_manager: IndexManager,
-    config_svc_client: ConfigServiceClient<Channel>,
 }
 
 struct RetryCondition {}
@@ -153,8 +148,14 @@ impl Condition<MediaCacheError> for RetryCondition {
     }
 }
 
+impl Default for MediaCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MediaCache {
-    pub fn new(config_svc_client: ConfigServiceClient<Channel>) -> Self {
+    pub fn new() -> Self {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
@@ -175,7 +176,6 @@ impl MediaCache {
             client,
             compression_threads,
             index_manager: IndexManager::new(),
-            config_svc_client,
         }
     }
 
@@ -206,7 +206,11 @@ impl MediaCache {
     /// If semantic_name is provided, uses semantic filename (e.g., "cover.jpg")
     /// Otherwise uses hashed filename for uniqueness
     #[instrument(skip(self))]
-    pub async fn cache_media_file(&self, opts: &CacheMediaOpts) -> Result<PathBuf> {
+    pub async fn cache_media_file(
+        &self,
+        opts: &CacheMediaOpts,
+        config: Option<MetadataConfig>,
+    ) -> Result<PathBuf> {
         if let Some(ref base_dir) = opts.base_dir {
             if base_dir.is_absolute() {
                 return Err(MediaCacheError::AbsoluteBasePath(
@@ -255,15 +259,8 @@ impl MediaCache {
 
         let bytes = response.bytes().await?;
 
-        let mut config_svc_client = self.config_svc_client.clone();
-        let config = config_svc_client
-            .get_server_config(GetServerConfigRequest {})
-            .await?
-            .into_inner()
-            .config
-            .unwrap_or_default();
-
-        let optimization_config = config.metadata.and_then(|m| m.optimization);
+        let config = config.unwrap_or_default();
+        let optimization_config = config.optimization;
         let mut params = CSParameters::new();
         params.keep_metadata = false;
 
@@ -375,57 +372,18 @@ impl MediaCache {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use crate::grpc_clients::config_svc::get_config_svc_client;
     use cacheable_media::CacheableMetadata;
     use retrom_codegen::retrom::services::metadata::v1::{GameMetadata, PlatformMetadata};
-    use retrom_service_config::router::config_router;
     use tempfile::TempDir;
-    use tokio::sync::oneshot;
-
-    async fn config_service() -> oneshot::Sender<()> {
-        let config_svc_router = config_router(None);
-
-        let listener = tokio::net::TcpListener::bind("0.0.0.0:0")
-            .await
-            .expect("Failed to bind to address");
-
-        let (tx, rx) = oneshot::channel::<()>();
-
-        tokio::spawn(async move {
-            if let Err(e) = axum::serve(listener, config_svc_router)
-                .with_graceful_shutdown(async move {
-                    let _ = rx.await;
-                })
-                .await
-            {
-                eprintln!("Config service failed: {:?}", e);
-            }
-        });
-
-        tx
-    }
 
     #[tokio::test]
     async fn test_media_cache_basic_functionality() {
-        let shutdown = config_service().await;
-
         // Test that cache directories are created correctly using trait implementations
         let game_metadata = GameMetadata {
             id: "1".to_string(),
-            provider_id: "foo".to_string(),
-            provider_game_id: "123".to_string(),
-            game_id: "42".to_string(),
+            game: "42".to_string(),
             name: Some("Test Game".to_string()),
-            description: None,
-            cover_url: None,
-            background_url: None,
-            icon_url: None,
-            logo_url: None,
-            created_at: None,
-            updated_at: None,
-            release_date: None,
-            last_played: None,
-            minutes_played: Some(0),
+            ..Default::default()
         };
 
         let cache_dir = game_metadata.get_cache_dir().unwrap();
@@ -436,16 +394,9 @@ mod integration_tests {
 
         let platform_metadata = PlatformMetadata {
             id: "1".to_string(),
-            provider_id: "foo".to_string(),
-            provider_platform_id: "123".to_string(),
-            platform_id: "1".to_string(),
+            platform: "1".to_string(),
             name: Some("Test Platform".to_string()),
-            description: None,
-            background_url: None,
-            icon_url: None,
-            logo_url: None,
-            created_at: None,
-            updated_at: None,
+            ..Default::default()
         };
 
         let platform_cache_dir = platform_metadata.get_cache_dir().unwrap();
@@ -453,28 +404,20 @@ mod integration_tests {
         assert!(platform_cache_dir
             .to_string_lossy()
             .ends_with("media/platforms/1"));
-
-        shutdown.send(()).unwrap();
     }
 
     #[tokio::test]
     async fn test_url_to_public_path_conversion() {
-        let shutdown = config_service().await;
-
         // Use the actual media directory from RetromDirs::new() (which uses the test env)
         let media_dir = RetromDirs::new().media_dir();
         let test_path = media_dir.join("game_metadata").join("42").join("image.jpg");
         let public_url = get_public_url(&test_path).unwrap();
 
         assert_eq!(public_url, "media/game_metadata/42/image.jpg");
-
-        shutdown.send(()).unwrap();
     }
 
     #[tokio::test]
     async fn test_hash_generation_is_deterministic() {
-        let shutdown = config_service().await;
-
         let url1 = "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/abcd1234.jpg";
         let url2 = "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/abcd1234.jpg";
         let url3 = "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/different.jpg";
@@ -495,14 +438,10 @@ mod integration_tests {
 
         // Should be 16 characters + extension
         assert_eq!(filename1.len(), 20); // 16 + ".jpg" = 20
-
-        shutdown.send(()).unwrap();
     }
 
     #[tokio::test]
     async fn test_semantic_vs_hashed_filename_generation() {
-        let shutdown = config_service().await;
-
         let url = "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/abcd1234.jpg";
 
         // Test semantic filename generation
@@ -520,31 +459,16 @@ mod integration_tests {
             utils::generate_semantic_filename(url, "background", None).unwrap();
         assert_eq!(background_filename, "background.jpg");
         assert_ne!(semantic_filename, background_filename);
-
-        shutdown.send(()).unwrap();
     }
 
     #[tokio::test]
     async fn test_subdirectory_organization() {
-        let shutdown = config_service().await;
-
         // Create test game metadata with artwork and screenshot URLs
         let game_metadata = GameMetadata {
             id: "1".to_string(),
-            provider_id: "foo".to_string(),
-            provider_game_id: "123".to_string(),
-            game_id: "123".to_string(),
+            game: "123".to_string(),
             name: Some("Test Game".to_string()),
-            description: None,
-            cover_url: None,
-            background_url: None,
-            icon_url: None,
-            logo_url: None,
-            created_at: None,
-            updated_at: None,
-            release_date: None,
-            last_played: None,
-            minutes_played: Some(0),
+            ..Default::default()
         };
 
         let cache_dir = game_metadata.get_cache_dir().unwrap();
@@ -573,19 +497,15 @@ mod integration_tests {
 
         assert_eq!(artwork_url, "media/game_metadata/1/artwork/test.jpg");
         assert_eq!(screenshot_url, "media/game_metadata/1/screenshots/test.png");
-
-        shutdown.send(()).unwrap();
     }
 
     #[tokio::test]
     async fn test_index_integration_with_cache_operations() {
-        let shutdown = config_service().await;
-
-        let cache = MediaCache::new(get_config_svc_client(None));
+        let cache = MediaCache::new();
 
         let game_metadata = GameMetadata {
             id: "123".to_string(),
-            game_id: "123".to_string(),
+            game: "123".to_string(),
             ..Default::default()
         };
 
@@ -659,38 +579,33 @@ mod integration_tests {
 
         let index_path = cache.index_manager().get_index_path(&cache_dir);
         assert!(!index_path.exists());
-
-        shutdown.send(()).unwrap();
     }
 
     #[tokio::test]
     async fn test_cache_media_opts_absolute_path_validation() {
-        let shutdown = config_service().await;
-
-        let cache = MediaCache::new(get_config_svc_client(None));
+        let cache = MediaCache::new();
         let cache_dir = RetromDirs::new().media_dir().join("games").join("test");
 
         // Test with absolute path should return error
         let result = cache
-            .cache_media_file(&CacheMediaOpts {
-                remote_url: "https://example.com/test.jpg".to_string(),
-                cache_dir: cache_dir.clone(),
-                semantic_name: Some("test".to_string()),
-                base_dir: Some(PathBuf::from("/absolute/path")),
-            })
+            .cache_media_file(
+                &CacheMediaOpts {
+                    remote_url: "https://example.com/test.jpg".to_string(),
+                    cache_dir: cache_dir.clone(),
+                    semantic_name: Some("test".to_string()),
+                    base_dir: Some(PathBuf::from("/absolute/path")),
+                },
+                None,
+            )
             .await;
 
         assert!(matches!(result, Err(MediaCacheError::AbsoluteBasePath(_))));
-
-        shutdown.send(()).unwrap();
     }
 
     #[tokio::test]
     async fn test_cache_file_overwrite_on_url_change() {
-        let shutdown = config_service().await;
-
         let temp_dir = TempDir::new().unwrap();
-        let cache = MediaCache::new(get_config_svc_client(None));
+        let cache = MediaCache::new();
 
         // Create a test cache directory
         let cache_dir = temp_dir.path().join("cache");
@@ -772,7 +687,5 @@ mod integration_tests {
         assert_eq!(updated_index.entries.len(), 1);
         let updated_entry = &updated_index.entries["cover.jpg"];
         assert_eq!(updated_entry.remote_url, Some(new_url.to_string()));
-
-        shutdown.send(()).unwrap();
     }
 }

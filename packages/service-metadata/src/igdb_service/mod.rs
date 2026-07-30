@@ -1,9 +1,11 @@
-use retrom_codegen::retrom::services::metadata::v1::{
-    igdb_service_server::IgdbService, GetIgdbGameMetadataRequest, GetIgdbGameMetadataResponse,
-    GetIgdbPlatformMetadataRequest, GetIgdbPlatformMetadataResponse, ListIgdbGameMetadataRequest,
-    ListIgdbGameMetadataResponse, ListIgdbPlatformMetadataRequest,
-    ListIgdbPlatformMetadataResponse, SearchIgdbGamesRequest, SearchIgdbGamesResponse,
-    SearchIgdbPlatformsRequest, SearchIgdbPlatformsResponse,
+use retrom_codegen::{
+    igdb::{GameResult, PlatformResult},
+    retrom::services::metadata::v1::{
+        igdb_service_server::IgdbService, GameMetadata, GetIgdbGameMetadataRequest,
+        GetIgdbPlatformMetadataRequest, ListIgdbGameMetadataRequest, ListIgdbGameMetadataResponse,
+        ListIgdbPlatformMetadataRequest, ListIgdbPlatformMetadataResponse, PlatformMetadata,
+        SearchIgdbGamesRequest, SearchIgdbPlatformsRequest,
+    },
 };
 use retrom_db::DbPool;
 use retrom_service_common::metadata_providers::{
@@ -41,7 +43,7 @@ impl IgdbService for IgdbServiceHandlers {
     async fn search_igdb_games(
         &self,
         request: Request<SearchIgdbGamesRequest>,
-    ) -> Result<Response<SearchIgdbGamesResponse>, Status> {
+    ) -> Result<Response<GameResult>, Status> {
         let search = request
             .into_inner()
             .search
@@ -55,16 +57,17 @@ impl IgdbService for IgdbServiceHandlers {
         let result = match self.igdb_client.search_metadata(query).await {
             Some(IgdbSearchData::Game(result)) => Some(result),
             _ => None,
-        };
+        }
+        .ok_or_else(|| Status::not_found("No results found for the given search query"))?;
 
-        Ok(Response::new(SearchIgdbGamesResponse { result }))
+        Ok(Response::new(result))
     }
 
     #[instrument(skip(self))]
     async fn search_igdb_platforms(
         &self,
         request: Request<SearchIgdbPlatformsRequest>,
-    ) -> Result<Response<SearchIgdbPlatformsResponse>, Status> {
+    ) -> Result<Response<PlatformResult>, Status> {
         let search = request
             .into_inner()
             .search
@@ -78,16 +81,17 @@ impl IgdbService for IgdbServiceHandlers {
         let result = match self.igdb_client.search_metadata(query).await {
             Some(IgdbSearchData::Platform(result)) => Some(result),
             _ => None,
-        };
+        }
+        .ok_or_else(|| Status::not_found("No results found for the given search query"))?;
 
-        Ok(Response::new(SearchIgdbPlatformsResponse { result }))
+        Ok(Response::new(result))
     }
 
     #[instrument(skip(self))]
     async fn get_igdb_game_metadata(
         &self,
         request: Request<GetIgdbGameMetadataRequest>,
-    ) -> Result<Response<GetIgdbGameMetadataResponse>, Status> {
+    ) -> Result<Response<GameMetadata>, Status> {
         let request = request.into_inner();
         let game_id = request.game_id;
         let provider_platform_id = request.igdb_platform_id;
@@ -124,9 +128,9 @@ impl IgdbService for IgdbServiceHandlers {
             .await
             .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?;
 
-        let game_metadata = result.to_game_metadata(&game_id).into();
+        let game_metadata = result.to_game_metadata(&game_id);
 
-        Ok(Response::new(GetIgdbGameMetadataResponse { game_metadata }))
+        Ok(Response::new(game_metadata))
     }
 
     #[instrument(skip(self))]
@@ -160,7 +164,7 @@ impl IgdbService for IgdbServiceHandlers {
     async fn get_igdb_platform_metadata(
         &self,
         request: Request<GetIgdbPlatformMetadataRequest>,
-    ) -> Result<Response<GetIgdbPlatformMetadataResponse>, Status> {
+    ) -> Result<Response<PlatformMetadata>, Status> {
         let request = request.into_inner();
         let platform_id = request.platform_id;
 
@@ -195,12 +199,9 @@ impl IgdbService for IgdbServiceHandlers {
             .get_platform_metadata(params)
             .await
             .map(|platform| platform.to_platform_metadata(&platform_id))
-            .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?
-            .into();
+            .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?;
 
-        Ok(Response::new(GetIgdbPlatformMetadataResponse {
-            platform_metadata,
-        }))
+        Ok(Response::new(platform_metadata))
     }
 
     #[instrument(skip(self))]

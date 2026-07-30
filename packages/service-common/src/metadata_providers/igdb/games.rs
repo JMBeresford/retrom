@@ -12,31 +12,77 @@ use retrom_codegen::{
             igdb_filters::{FilterOperator, FilterValue},
             IgdbFields, IgdbFilters, IgdbSearch,
         },
-        services::{
-            metadata::v1::{
-                GameMetadata, GameMetadataArtwork, GameMetadataLink, GameMetadataScreenshot,
-                GameMetadataVideo, GameMetadataView, IgdbSearchRequest,
-            },
-            tags::v1::{Tag, TagDomain, TagView},
-        },
+        services::metadata::v1::{GameMetadata, IgdbSearchRequest},
     },
 };
 use tracing::{instrument, Level};
 
 impl ToGameMetadata for igdb::Game {
-    fn to_game_metadata(&self, game_id: &str) -> GameMetadataView {
-        let mut metadata = igdb_game_to_metadata(self);
-        metadata.game_id = game_id.to_string();
-        metadata.provider_game_id = self.id.to_string();
-        metadata.provider_id = IGDB_PROVIDER_ID.to_string();
+    fn to_game_metadata(&self, game_id: &str) -> GameMetadata {
+        let cover_url = self.cover.as_ref().map(|cover| {
+            cover
+                .url
+                .to_string()
+                .replace("t_thumb", "t_cover_big_2x")
+                .replace("//", "https://")
+        });
 
-        GameMetadataView {
-            metadata: Some(metadata),
+        let background_url = self
+            .artworks
+            .iter()
+            .find(|artwork| artwork.width > artwork.height)
+            .map(|artwork| {
+                artwork
+                    .url
+                    .to_string()
+                    .replace("//", "https://")
+                    .replace("t_thumb", "t_1080p_2x")
+            })
+            .or(self.artworks.first().map(|artwork| {
+                artwork
+                    .url
+                    .to_string()
+                    .replace("//", "https://")
+                    .replace("t_thumb", "t_1080p_2x")
+            }));
+
+        let icon_url = self
+            .artworks
+            .iter()
+            .find(|artwork| artwork.width == artwork.height)
+            .map(|artwork| artwork.url.to_string().replace("//", "https://"))
+            .or(cover_url
+                .as_ref()
+                .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")));
+
+        let icon_url = match icon_url {
+            Some(icon_url) => Some(icon_url),
+            None => cover_url
+                .as_ref()
+                .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")),
+        };
+
+        GameMetadata {
+            id: Default::default(),
+            game: game_id.to_string(),
+            provider: IGDB_PROVIDER_ID.to_string(),
+            provider_game_id: self.id.to_string(),
+            created_at: None,
+            updated_at: None,
+            name: Some(self.name.clone()),
+            description: Some(self.summary.clone()),
+            cover_url,
+            icon_url,
+            background_url,
+            logo_url: None,
+            release_date: self.first_release_date,
+            minutes_played: None,
+            last_played: None,
+            similar_games: vec![],
             artworks: igdb_game_artwork(self),
             screenshots: igdb_game_screenshots(self),
             videos: igdb_game_videos(self),
             links: igdb_game_links(self),
-            tags: igdb_game_tags(self),
         }
     }
 }
@@ -144,67 +190,7 @@ impl GameMetadataProvider for IGDBProvider {
     }
 }
 
-fn igdb_game_to_metadata(igdb_match: &igdb::Game) -> GameMetadata {
-    let description = Some(igdb_match.summary.clone());
-    let name = Some(igdb_match.name.clone());
-    let igdb_id = igdb_match.id.to_string();
-
-    let cover_url = igdb_match.cover.as_ref().map(|cover| {
-        cover
-            .url
-            .to_string()
-            .replace("t_thumb", "t_cover_big_2x")
-            .replace("//", "https://")
-    });
-
-    let background_url = igdb_match
-        .artworks
-        .iter()
-        .find(|artwork| artwork.width > artwork.height)
-        .map(|artwork| {
-            artwork
-                .url
-                .to_string()
-                .replace("//", "https://")
-                .replace("t_thumb", "t_1080p_2x")
-        })
-        .or(igdb_match.artworks.first().map(|artwork| {
-            artwork
-                .url
-                .to_string()
-                .replace("//", "https://")
-                .replace("t_thumb", "t_1080p_2x")
-        }));
-
-    let icon_url = igdb_match
-        .artworks
-        .iter()
-        .find(|artwork| artwork.width == artwork.height)
-        .map(|artwork| artwork.url.to_string().replace("//", "https://"))
-        .or(cover_url
-            .as_ref()
-            .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")));
-
-    let icon_url = match icon_url {
-        Some(icon_url) => Some(icon_url),
-        None => cover_url
-            .as_ref()
-            .map(|cover_url| cover_url.clone().replace("t_cover_big", "t_thumb")),
-    };
-
-    GameMetadata {
-        provider_id: IGDB_PROVIDER_ID.to_string(),
-        provider_game_id: igdb_id,
-        name,
-        description,
-        cover_url,
-        background_url,
-        icon_url,
-        ..Default::default()
-    }
-}
-
-fn igdb_game_artwork(igdb_match: &igdb::Game) -> Vec<GameMetadataArtwork> {
+fn igdb_game_artwork(igdb_match: &igdb::Game) -> Vec<String> {
     igdb_match
         .artworks
         .iter()
@@ -214,14 +200,10 @@ fn igdb_game_artwork(igdb_match: &igdb::Game) -> Vec<GameMetadataArtwork> {
                 .replace("t_thumb", "t_1080p_2x")
                 .replace("//", "https://")
         })
-        .map(|url| GameMetadataArtwork {
-            url,
-            ..Default::default()
-        })
         .collect()
 }
 
-fn igdb_game_screenshots(igdb_match: &igdb::Game) -> Vec<GameMetadataScreenshot> {
+fn igdb_game_screenshots(igdb_match: &igdb::Game) -> Vec<String> {
     igdb_match
         .screenshots
         .iter()
@@ -231,67 +213,27 @@ fn igdb_game_screenshots(igdb_match: &igdb::Game) -> Vec<GameMetadataScreenshot>
                 .replace("//", "https://")
                 .replace("t_thumb", "t_screenshot_huge_2x")
         })
-        .map(|url| GameMetadataScreenshot {
-            url,
-            ..Default::default()
-        })
         .collect()
 }
 
-fn igdb_game_videos(igdb_match: &igdb::Game) -> Vec<GameMetadataVideo> {
+fn igdb_game_videos(igdb_match: &igdb::Game) -> Vec<String> {
     igdb_match
         .videos
         .iter()
         .map(|video| format!("https://www.youtube.com/embed/{}", video.video_id))
-        .map(|url| GameMetadataVideo {
-            url,
-            ..Default::default()
-        })
         .collect()
 }
 
-fn igdb_game_links(igdb_match: &igdb::Game) -> Vec<GameMetadataLink> {
-    let urls = vec![GameMetadataLink {
-        url: igdb_match.url.clone(),
-        ..Default::default()
-    }];
+fn igdb_game_links(igdb_match: &igdb::Game) -> Vec<String> {
+    let urls = vec![igdb_match.url.clone()];
 
     let websites = igdb_match
         .websites
         .iter()
         .filter(|w| w.trusted)
-        .map(|website| GameMetadataLink {
-            url: website.url.clone(),
-            ..Default::default()
-        });
+        .map(|w| w.url.clone());
 
     urls.into_iter().chain(websites).collect()
-}
-
-fn igdb_game_tags(igdb_match: &igdb::Game) -> Vec<TagView> {
-    let genres = igdb_match.genres.iter().map(|genre| TagView {
-        domain: Some(TagDomain {
-            name: "genre".to_string(),
-            ..Default::default()
-        }),
-        tag: Some(Tag {
-            value: genre.name.clone(),
-            ..Default::default()
-        }),
-    });
-
-    let franchises = igdb_match.franchises.iter().map(|franchise| TagView {
-        domain: Some(TagDomain {
-            name: "franchise".to_string(),
-            ..Default::default()
-        }),
-        tag: Some(Tag {
-            value: franchise.name.clone(),
-            ..Default::default()
-        }),
-    });
-
-    genres.chain(franchises).collect()
 }
 
 fn normalize_name(name: &str) -> String {

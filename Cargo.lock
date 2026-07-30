@@ -9329,7 +9329,6 @@ dependencies = [
  "rayon",
  "reqwest 0.12.28",
  "retrom-codegen",
- "retrom-service-config",
  "serde",
  "serde_json",
  "sevenz-rust2",

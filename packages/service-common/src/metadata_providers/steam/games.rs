@@ -4,12 +4,7 @@ use crate::metadata_providers::{
     MetadataProviderError, Result, ToGameMetadata,
 };
 use chrono::DateTime;
-use retrom_codegen::{
-    retrom::services::metadata::v1::{
-        GameMetadata, GameMetadataScreenshot, GameMetadataVideo, GameMetadataView,
-    },
-    timestamp::Timestamp,
-};
+use retrom_codegen::{retrom::services::metadata::v1::GameMetadata, timestamp::Timestamp};
 use tracing::{instrument, Level};
 
 #[derive(Debug)]
@@ -19,22 +14,64 @@ pub struct SteamGameMetadata {
 }
 
 impl ToGameMetadata for SteamGameMetadata {
-    fn to_game_metadata(&self, game_id: &str) -> GameMetadataView {
+    fn to_game_metadata(&self, game_id: &str) -> GameMetadata {
         let app = &self.game;
         let app_details = &self.details;
 
-        let mut metadata = app_details_to_game_metadata(app, app_details);
-        metadata.game_id = game_id.to_string();
-        metadata.provider_game_id = app.appid.to_string();
-        metadata.provider_id = STEAM_PROVIDER_ID.to_string();
+        let cover_url = app_details.steam_appid.map(|id| {
+            format!("https://steamcdn-a.akamaihd.net/steam/apps/{id}/library_600x900_2x.jpg")
+        });
 
-        GameMetadataView {
-            metadata: Some(metadata),
+        let icon_url = app.img_icon_url.as_ref().map(|icon_id| {
+            format!(
+                "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/{}/{}.jpg",
+                app.appid, icon_id
+            )
+        });
+
+        let background_url = Some(format!(
+            "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_hero.jpg",
+            app.appid
+        ));
+
+        let last_played = if app.rtime_last_played > 0 {
+            let dt = DateTime::from_timestamp(app.rtime_last_played, 0);
+
+            dt.map(|dt| Timestamp {
+                seconds: dt.timestamp(),
+                nanos: 0,
+            })
+        } else {
+            None
+        };
+
+        let minutes_played = if app.playtime_forever > 0 {
+            Some(app.playtime_forever)
+        } else {
+            None
+        };
+
+        GameMetadata {
+            id: Default::default(),
+            provider: STEAM_PROVIDER_ID.to_string(),
+            provider_game_id: app.appid.to_string(),
+            game: game_id.to_string(),
+            name: app_details.name.clone(),
+            description: app_details.short_description.clone(),
+            release_date: None,
+            created_at: Default::default(),
+            updated_at: Default::default(),
+            cover_url,
+            icon_url,
+            logo_url: None,
+            background_url,
+            last_played,
+            minutes_played,
             screenshots: app_details_to_screenshot_metadata(app_details),
             artworks: vec![],
             videos: app_details_to_video_metadata(app_details),
             links: vec![],
-            tags: vec![],
+            similar_games: vec![],
         }
     }
 }
@@ -80,59 +117,8 @@ impl GameMetadataProvider for SteamWebApiProvider {
     }
 }
 
-fn app_details_to_game_metadata(
-    app: &models::Game,
-    app_details: &models::AppDetails,
-) -> GameMetadata {
-    let cover_url = app_details.steam_appid.map(|id| {
-        format!("https://steamcdn-a.akamaihd.net/steam/apps/{id}/library_600x900_2x.jpg")
-    });
-
-    let icon_url = app.img_icon_url.as_ref().map(|icon_id| {
-        format!(
-            "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/{}/{}.jpg",
-            app.appid, icon_id
-        )
-    });
-
-    let background_url = Some(format!(
-        "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_hero.jpg",
-        app.appid
-    ));
-
-    let last_played = if app.rtime_last_played > 0 {
-        let dt = DateTime::from_timestamp(app.rtime_last_played, 0);
-
-        dt.map(|dt| Timestamp {
-            seconds: dt.timestamp(),
-            nanos: 0,
-        })
-    } else {
-        None
-    };
-
-    let minutes_played = if app.playtime_forever > 0 {
-        Some(app.playtime_forever)
-    } else {
-        None
-    };
-
-    GameMetadata {
-        description: app_details.short_description.clone(),
-        name: app_details.name.clone(),
-        cover_url,
-        background_url,
-        icon_url,
-        last_played,
-        minutes_played,
-        ..Default::default()
-    }
-}
-
-fn app_details_to_screenshot_metadata(
-    app_details: &models::AppDetails,
-) -> Vec<GameMetadataScreenshot> {
-    let screenshot_urls: Vec<String> = app_details
+fn app_details_to_screenshot_metadata(app_details: &models::AppDetails) -> Vec<String> {
+    app_details
         .screenshots
         .as_ref()
         .map(|screenshots| {
@@ -141,19 +127,11 @@ fn app_details_to_screenshot_metadata(
                 .map(|screenshot| screenshot.path_full.clone())
                 .collect()
         })
-        .unwrap_or_default();
-
-    screenshot_urls
-        .into_iter()
-        .map(|url| GameMetadataScreenshot {
-            url,
-            ..Default::default()
-        })
-        .collect()
+        .unwrap_or_default()
 }
 
-fn app_details_to_video_metadata(app_details: &models::AppDetails) -> Vec<GameMetadataVideo> {
-    let video_urls: Vec<String> = app_details
+fn app_details_to_video_metadata(app_details: &models::AppDetails) -> Vec<String> {
+    app_details
         .movies
         .as_ref()
         .map(|movies| {
@@ -169,13 +147,5 @@ fn app_details_to_video_metadata(app_details: &models::AppDetails) -> Vec<GameMe
                 })
                 .collect()
         })
-        .unwrap_or_default();
-
-    video_urls
-        .into_iter()
-        .map(|url| GameMetadataVideo {
-            url,
-            ..Default::default()
-        })
-        .collect()
+        .unwrap_or_default()
 }

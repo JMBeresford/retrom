@@ -1,5 +1,5 @@
 use reqwest::StatusCode;
-use retrom_codegen::retrom::services::metadata::v1::{GameMetadataView, PlatformMetadataView};
+use retrom_codegen::retrom::services::metadata::v1::{GameMetadata, PlatformMetadata};
 use std::time::Duration;
 use tower::{
     retry::{
@@ -51,13 +51,13 @@ pub struct GameMetadataSearchParams<Id> {
 /// A trait for converting a provider's native game model into a format that can be used by the rest
 /// of the application.
 pub trait ToGameMetadata {
-    fn to_game_metadata(&self, game_id: &str) -> GameMetadataView;
+    fn to_game_metadata(&self, game_id: &str) -> GameMetadata;
 }
 
 /// A trait for converting a provider's native platform model into a format that can be used by the
 /// rest of the application.
 pub trait ToPlatformMetadata {
-    fn to_platform_metadata(&self, platform_id: &str) -> PlatformMetadataView;
+    fn to_platform_metadata(&self, platform_id: &str) -> PlatformMetadata;
 }
 
 /// A trait for game metadata providers. This is used to abstract over different

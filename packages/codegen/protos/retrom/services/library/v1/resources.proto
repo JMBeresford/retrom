@@ -120,9 +120,9 @@ message Game {
   // Timestamp when the game row was last updated.
   google.protobuf.Timestamp updated_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Timestamp when this game was soft-deleted.
-  google.protobuf.Timestamp deleted_at = 4;
+  google.protobuf.Timestamp deleted_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Whether this game is soft-deleted.
-  bool is_deleted = 5;
+  bool is_deleted = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Whether this game originated from a third-party source.
   bool third_party = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Steam AppID associated with this game when available.

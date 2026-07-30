@@ -13,7 +13,7 @@ pub fn metadata_router(
     db_pool: DbPool,
     config_svc_client: ConfigServiceClient<Channel>,
 ) -> axum::Router {
-    let media_cache = Arc::new(MediaCache::new(config_svc_client.clone()));
+    let media_cache = Arc::new(MediaCache::new());
     let job_manager = Arc::new(JobManager::new());
 
     let svc = MetadataServiceServer::new(MetadataServiceHandlers::new(

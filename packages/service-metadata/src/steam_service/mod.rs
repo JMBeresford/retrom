@@ -1,5 +1,5 @@
 use retrom_codegen::retrom::services::metadata::v1::{
-    steam_service_server::SteamService, GetSteamGameMetadataRequest, GetSteamGameMetadataResponse,
+    steam_service_server::SteamService, GameMetadata, GetSteamGameMetadataRequest,
 };
 use retrom_db::DbPool;
 use retrom_service_common::metadata_providers::{
@@ -24,7 +24,7 @@ impl SteamService for SteamServiceHandlers {
     async fn get_steam_game_metadata(
         &self,
         request: Request<GetSteamGameMetadataRequest>,
-    ) -> Result<Response<GetSteamGameMetadataResponse>, Status> {
+    ) -> Result<Response<GameMetadata>, Status> {
         let request = request.into_inner();
         let game_id = request.game_id;
 
@@ -77,10 +77,8 @@ impl SteamService for SteamServiceHandlers {
             details: app_details,
         };
 
-        let metadata_view = steam_game_metadata.to_game_metadata(&game_id);
+        let metadata = steam_game_metadata.to_game_metadata(&game_id);
 
-        Ok(Response::new(GetSteamGameMetadataResponse {
-            metadata: Some(metadata_view),
-        }))
+        Ok(Response::new(metadata))
     }
 }

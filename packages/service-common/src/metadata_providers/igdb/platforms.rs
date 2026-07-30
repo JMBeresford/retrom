@@ -12,24 +12,30 @@ use retrom_codegen::{
             igdb_filters::{FilterOperator, FilterValue},
             IgdbFields, IgdbFilters, IgdbSearch,
         },
-        services::{
-            metadata::v1::{IgdbSearchRequest, PlatformMetadata, PlatformMetadataView},
-            tags::v1::{Tag, TagDomain, TagView},
-        },
+        services::metadata::v1::{IgdbSearchRequest, PlatformMetadata},
     },
 };
 use tracing::{instrument, Level};
 
 impl ToPlatformMetadata for igdb::Platform {
-    fn to_platform_metadata(&self, platform_id: &str) -> PlatformMetadataView {
-        let mut metadata = igdb_platform_to_metadata(self);
-        metadata.platform_id = platform_id.to_string();
-        metadata.provider_platform_id = self.id.to_string();
-        metadata.provider_id = IGDB_PROVIDER_ID.to_string();
+    fn to_platform_metadata(&self, platform_id: &str) -> PlatformMetadata {
+        let logo_url = self
+            .platform_logo
+            .as_ref()
+            .map(|logo| logo.url.to_string().replace("//", "https://"));
 
-        PlatformMetadataView {
-            metadata: Some(metadata),
-            tags: igdb_platform_tags(self),
+        PlatformMetadata {
+            id: Default::default(),
+            provider: IGDB_PROVIDER_ID.to_string(),
+            provider_platform_id: self.id.to_string(),
+            platform: platform_id.to_string(),
+            created_at: None,
+            updated_at: None,
+            name: Some(self.name.clone()),
+            description: Some(self.summary.clone()),
+            logo_url,
+            background_url: None,
+            icon_url: None,
         }
     }
 }
@@ -127,52 +133,4 @@ impl PlatformMetadataProvider for IGDBProvider {
             _ => Err(MetadataProviderError::NoMatchesFound),
         }
     }
-}
-
-fn igdb_platform_to_metadata(igdb_match: &igdb::Platform) -> PlatformMetadata {
-    let description = Some(igdb_match.summary.clone());
-    let name = Some(igdb_match.name.clone());
-    let igdb_id = igdb_match.id.to_string();
-
-    let logo_url = igdb_match
-        .platform_logo
-        .as_ref()
-        .map(|logo| logo.url.to_string().replace("//", "https://"));
-
-    PlatformMetadata {
-        provider_id: IGDB_PROVIDER_ID.to_string(),
-        provider_platform_id: igdb_id,
-        name,
-        description,
-        logo_url,
-        ..Default::default()
-    }
-}
-
-fn igdb_platform_tags(igdb_match: &igdb::Platform) -> Vec<TagView> {
-    let mut tags = vec![TagView {
-        domain: Some(TagDomain {
-            name: "generation".to_string(),
-            ..Default::default()
-        }),
-        tag: Some(Tag {
-            value: igdb_match.generation.to_string(),
-            ..Default::default()
-        }),
-    }];
-
-    if let Some(family) = &igdb_match.platform_family {
-        tags.push(TagView {
-            domain: Some(TagDomain {
-                name: "family".to_string(),
-                ..Default::default()
-            }),
-            tag: Some(Tag {
-                value: family.name.to_string(),
-                ..Default::default()
-            }),
-        });
-    };
-
-    tags.into_iter().collect()
 }

@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 impl CacheableMetadata for PlatformMetadata {
     fn get_cache_dir(&self) -> Option<PathBuf> {
-        if self.platform_id.trim().is_empty() {
+        if self.platform.trim().is_empty() {
             return None;
         }
 
@@ -15,7 +15,7 @@ impl CacheableMetadata for PlatformMetadata {
             RetromDirs::new()
                 .media_dir()
                 .join("platforms")
-                .join(&self.platform_id),
+                .join(&self.platform),
         )
     }
 
@@ -59,7 +59,7 @@ mod tests {
     #[test]
     fn platform_cache_dir_is_none_for_empty_platform_id() {
         let metadata = PlatformMetadata {
-            platform_id: "".to_string(),
+            platform: "".to_string(),
             ..Default::default()
         };
 

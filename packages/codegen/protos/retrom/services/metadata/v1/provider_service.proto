@@ -17,5 +17,5 @@ message GetMetadataProvidersRequest {}
 // GetMetadataProvidersResponse represents the response message for retrieving a list of all
 message GetMetadataProvidersResponse {
   // The list of available metadata providers in Retrom.
-  repeated MetadataProvider providers = 1;
+  repeated MetadataProviderRow providers = 1;
 }
