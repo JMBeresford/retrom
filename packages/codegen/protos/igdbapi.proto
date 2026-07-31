@@ -270,7 +270,8 @@ message Artwork {
   string url = 7;
   int32 width = 8;
   string checksum = 9;
-  ArtworkType artwork_type = 10;
+  ArtworkType artwork_type = 10 [deprecated = true];
+  ImageType image_type = 11;
 }
 
 message ArtworkTypeResult {
@@ -634,6 +635,7 @@ message Cover {
   int32 width = 8;
   string checksum = 9;
   GameLocalization game_localization = 10;
+  ImageType image_type = 11;
 }
 
 message DateFormatResult {
@@ -1095,6 +1097,18 @@ message Genre {
   google.protobuf.Timestamp updated_at = 5;
   string url = 6;
   string checksum = 7;
+}
+
+message ImageTypeResult {
+  repeated ImageType imagetypes = 1;
+}
+
+message ImageType {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string checksum = 5;
 }
 
 message InvolvedCompanyResult {
