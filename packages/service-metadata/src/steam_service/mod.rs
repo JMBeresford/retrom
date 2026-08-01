@@ -32,13 +32,14 @@ impl SteamService for SteamServiceHandlers {
             QueryBuilder::new("select steam_app_id from games where id = ")
                 .push_bind(&game_id)
                 .build_query_scalar()
-                .fetch_one(&self.db_pool)
+                .fetch_optional(&self.db_pool)
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+                .map_err(|why| Status::internal(why.to_string()))?
+                .ok_or_else(|| Status::not_found(format!("Game with id {} not found", game_id)))?;
 
         let steam_app_id = steam_app_id.ok_or_else(|| {
             Status::not_found(format!(
-                "Game with id {} not found or does not have a Steam app ID",
+                "Game with id {} does not have a Steam app ID",
                 game_id
             ))
         })?;

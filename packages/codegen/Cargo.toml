@@ -14,10 +14,11 @@ tracing = { workspace = true }
 pbjson = { workspace = true }
 pbjson-types = { workspace = true }
 prost = { workspace = true }
+prost-reflect = { workspace = true }
 prost-types = { workspace = true }
 prost-wkt = { version = "0.7" }
 prost-wkt-types = { version = "0.7" }
-protoc-wkt = { version = "1.0.0+3.20.1" }
+protoc-wkt = { version = "1.0.0" }
 serde = { workspace = true }
 diesel = { workspace = true }
 sqlx = { workspace = true }

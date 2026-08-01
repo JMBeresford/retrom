@@ -8233,6 +8233,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost-reflect"
+version = "0.16.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01b80ea363c31af2de2b92e3c07ed1156628f7838c4afb4df75ee78a37fedbd1"
+dependencies = [
+ "prost",
+ "prost-reflect-derive",
+ "prost-types",
+]
+
+[[package]]
+name = "prost-reflect-derive"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30320eb03b43b7dfcaf9b361f808a4f1adad1e718ad219df1d7e4283e34e73f5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "prost-types"
 version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9053,6 +9075,7 @@ dependencies = [
  "pbjson",
  "pbjson-types",
  "prost",
+ "prost-reflect",
  "prost-types",
  "prost-wkt",
  "prost-wkt-build",
@@ -9460,6 +9483,8 @@ dependencies = [
  "chrono",
  "dotenvy",
  "futures",
+ "once_cell",
+ "prost-reflect",
  "retrom-codegen",
  "retrom-db",
  "retrom-service-common",

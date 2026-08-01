@@ -31,6 +31,8 @@ chrono = { workspace = true }
 dotenvy = { workspace = true }
 sqlx = { workspace = true }
 uuid = { workspace = true }
+prost-reflect = { workspace = true }
+once_cell = { workspace = true }
 
 [features]
 default = ["client"]

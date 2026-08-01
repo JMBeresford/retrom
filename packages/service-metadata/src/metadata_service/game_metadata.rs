@@ -1,3 +1,4 @@
+use prost_reflect::{DynamicMessage, Value};
 use retrom_codegen::retrom::services::metadata::v1::{
     GameMetadata, GameMetadataArtworkRow, GameMetadataLinkRow, GameMetadataRow,
     GameMetadataScreenshotRow, GameMetadataVideoRow, SimilarGameRow,
@@ -284,67 +285,60 @@ pub async fn update_game_metadata(
     metadata: &GameMetadataRow,
     field_mask: &HashSet<String>,
 ) -> Result<GameMetadataRow, Status> {
+    let message_descriptor = super::descriptor_pool::DESCRIPTOR_POOL
+        .get_message_by_name("retrom.services.metadata.v1.GameMetadata")
+        .ok_or_else(|| Status::internal("Failed to get message descriptor for GameMetadata"))?;
+
+    let mut reflection = DynamicMessage::new(message_descriptor);
+    reflection
+        .transcode_from(metadata)
+        .map_err(|e| Status::internal(e.to_string()))?;
+
     let empty_mask = field_mask.is_empty();
 
+    let fields_to_update: Vec<String> = vec![
+        "name",
+        "description",
+        "cover_url",
+        "background_url",
+        "icon_url",
+        "logo_url",
+        "release_date",
+        "last_played",
+        "minutes_played",
+    ]
+    .into_iter()
+    .filter(|field| empty_mask || field_mask.contains(*field))
+    .map(|s| s.to_string())
+    .collect();
+
     let mut builder = QueryBuilder::new("update game_metadata set ");
-
     let mut separated = builder.separated(", ");
-
     separated.push("updated_at = current_timestamp ");
 
-    if empty_mask || field_mask.contains("name") {
-        separated
-            .push("name = ")
-            .push_bind_unseparated(&metadata.name);
-    };
+    for field in fields_to_update {
+        let value = match reflection.get_field_by_name(&field) {
+            Some(value) => value.into_owned(),
+            None => {
+                return Err(Status::internal(format!(
+                    "Failed to get value for field {}",
+                    field
+                )))
+            }
+        };
 
-    if empty_mask || field_mask.contains("description") {
-        separated
-            .push("description = ")
-            .push_bind_unseparated(&metadata.description);
-    };
-
-    if empty_mask || field_mask.contains("cover_url") {
-        separated
-            .push("cover_url = ")
-            .push_bind_unseparated(&metadata.cover_url);
-    };
-
-    if empty_mask || field_mask.contains("background_url") {
-        separated
-            .push("background_url = ")
-            .push_bind_unseparated(&metadata.background_url);
-    };
-
-    if empty_mask || field_mask.contains("icon_url") {
-        separated
-            .push("icon_url = ")
-            .push_bind_unseparated(&metadata.icon_url);
-    };
-
-    if empty_mask || field_mask.contains("logo_url") {
-        separated
-            .push("logo_url = ")
-            .push_bind_unseparated(&metadata.logo_url);
-    };
-
-    if empty_mask || field_mask.contains("release_date") {
-        separated
-            .push("release_date = ")
-            .push_bind_unseparated(metadata.release_date);
-    };
-
-    if empty_mask || field_mask.contains("last_played") {
-        separated
-            .push("last_played = ")
-            .push_bind_unseparated(metadata.last_played);
-    };
-
-    if empty_mask || field_mask.contains("minutes_played") {
-        separated
-            .push("minutes_played = ")
-            .push_bind_unseparated(metadata.minutes_played);
-    };
+        separated.push(format!("{} = ", field));
+        match value {
+            Value::String(s) => separated.push_bind_unseparated(s),
+            Value::I32(num) => separated.push_bind_unseparated(num),
+            _ => {
+                return Err(Status::internal(format!(
+                    "Unsupported value: {} for field: {}",
+                    value, field
+                )))
+            }
+        };
+    }
 
     builder.push("where id = ");
     builder.push_bind(&metadata.id);

@@ -1,3 +1,4 @@
+use prost_reflect::{DynamicMessage, Value};
 use retrom_codegen::retrom::services::metadata::v1::{PlatformMetadata, PlatformMetadataRow};
 use retrom_db::RetromDB;
 use sqlx::{Executor, QueryBuilder};
@@ -84,39 +85,54 @@ pub async fn update_platform_metadata(
     metadata: &PlatformMetadataRow,
     field_mask: &HashSet<String>,
 ) -> Result<PlatformMetadataRow, Status> {
+    let message_descriptor = super::descriptor_pool::DESCRIPTOR_POOL
+        .get_message_by_name("retrom.services.metadata.v1.PlatformMetadata")
+        .ok_or_else(|| Status::internal("Failed to get message descriptor for PlatformMetadata"))?;
+
+    let mut reflection = DynamicMessage::new(message_descriptor);
+    reflection
+        .transcode_from(metadata)
+        .map_err(|e| Status::internal(e.to_string()))?;
+
     let empty_mask = field_mask.is_empty();
+
+    let fields_to_update: Vec<String> = vec![
+        "name",
+        "description",
+        "background_url",
+        "icon_url",
+        "logo_url",
+    ]
+    .into_iter()
+    .filter(|field| empty_mask || field_mask.contains(*field))
+    .map(|s| s.to_string())
+    .collect();
 
     let mut builder = QueryBuilder::new("update platform_metadata set ");
     let mut separated = builder.separated(", ");
+    separated.push("updated_at = current_timestamp ");
 
-    if empty_mask || field_mask.contains("name") {
-        separated
-            .push_unseparated("name = ")
-            .push_bind(&metadata.name);
-    }
+    for field in fields_to_update {
+        let value = match reflection.get_field_by_name(&field) {
+            Some(value) => value.into_owned(),
+            None => {
+                return Err(Status::internal(format!(
+                    "Failed to get value for field {}",
+                    field
+                )))
+            }
+        };
 
-    if empty_mask || field_mask.contains("description") {
-        separated
-            .push_unseparated("description = ")
-            .push_bind(&metadata.description);
-    }
-
-    if empty_mask || field_mask.contains("background_url") {
-        separated
-            .push_unseparated("background_url = ")
-            .push_bind(&metadata.background_url);
-    }
-
-    if empty_mask || field_mask.contains("icon_url") {
-        separated
-            .push_unseparated("icon_url = ")
-            .push_bind(&metadata.icon_url);
-    }
-
-    if empty_mask || field_mask.contains("logo_url") {
-        separated
-            .push_unseparated("logo_url = ")
-            .push_bind(&metadata.logo_url);
+        separated.push(format!("{} = ", field));
+        match value {
+            Value::String(s) => separated.push_bind_unseparated(s),
+            _ => {
+                return Err(Status::internal(format!(
+                    "Unsupported value: {} for field: {}",
+                    value, field
+                )))
+            }
+        };
     }
 
     builder.push(" where id = ");

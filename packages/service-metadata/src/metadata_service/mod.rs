@@ -63,9 +63,10 @@ use tonic::{transport::Channel, Request, Response, Status};
 use tracing::{error, Instrument};
 use walkdir::WalkDir;
 
+pub(crate) mod descriptor_pool;
 mod game_metadata;
 mod platform_metadata;
-pub(crate) mod router;
+pub(super) mod router;
 
 #[derive(Clone)]
 pub struct MetadataServiceHandlers {
@@ -389,6 +390,12 @@ impl MetadataServiceHandlers {
                 ));
             }
         };
+
+        if metadata.id.trim().is_empty() {
+            return Err(Status::invalid_argument(
+                "id field is required for updating platform metadata".to_string(),
+            ));
+        }
 
         let row = rows_from_platform_metadata(metadata);
         let row = update_platform_metadata_row(&db_pool, &row, &field_mask).await?;
