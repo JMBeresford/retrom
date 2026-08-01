@@ -44,6 +44,24 @@
             "command": ".agents/scripts/link-skills.sh"
           }
         }
+      },
+      "agents:sync-mcp": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": ".agents/scripts/sync-mcp.sh",
+          "cwd": "{projectRoot}"
+        },
+        "defaultConfiguration": "check",
+        "configurations": {
+          "check": {
+            "args": [
+              "check"
+            ]
+          },
+          "fix": {
+            "args": []
+          }
+        }
       }
     }
   },

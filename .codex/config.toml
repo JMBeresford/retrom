@@ -8,3 +8,8 @@ args = ["nx-mcp@latest"]
 type = "stdio"
 command = "npx"
 args = ["shadcn@latest", "mcp"]
+
+[mcp_servers.chrome-devtools]
+type = "stdio"
+command = "npx"
+args = ["-y", "chrome-devtools-mcp@latest"]

@@ -1,5 +1,13 @@
 {
   "mcpServers": {
+    "chrome-devtools": {
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ],
+      "command": "npx",
+      "type": "stdio"
+    },
     "nx-mcp": {
       "args": [
         "nx-mcp@latest"
