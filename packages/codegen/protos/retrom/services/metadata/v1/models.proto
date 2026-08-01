@@ -82,7 +82,7 @@ message MetadataProviderRow {
   // The unique ID of the metadata provider.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // The display name of the provider (e.g. "IGDB", "Steam").
-  string name = 2;
+  string name = 2 [(google.api.field_behavior) = IMMUTABLE];
   // Timestamp for when the metadata provider record was created.
   google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Timestamp for when the metadata provider record was last updated.

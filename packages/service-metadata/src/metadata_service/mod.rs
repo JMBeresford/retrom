@@ -1,8 +1,10 @@
 use crate::metadata_service::game_metadata::{
-    game_metadata_from_rows, insert_game_metadata, rows_from_game_metadata,
-    select_game_metadata_artworks, select_game_metadata_links, select_game_metadata_screenshots,
-    select_game_metadata_videos, select_similar_games, upsert_game_artworks, upsert_game_links,
-    upsert_game_screenshots, upsert_game_videos, upsert_similar_games,
+    game_artwork_rows_from_data, game_link_rows_from_data, game_metadata_from_rows,
+    game_metadata_row_from_metadata, game_screenshot_rows_from_data, game_video_rows_from_data,
+    insert_game_metadata, select_game_metadata_artworks, select_game_metadata_links,
+    select_game_metadata_screenshots, select_game_metadata_videos, select_similar_games,
+    similar_game_rows_from_data, upsert_game_artworks, upsert_game_links, upsert_game_screenshots,
+    upsert_game_videos, upsert_similar_games, GameMetadataRows,
 };
 use crate::metadata_service::platform_metadata::{
     insert_platform_metadata, platform_metadata_from_rows, rows_from_platform_metadata,
@@ -39,15 +41,11 @@ use retrom_codegen::retrom::{
             PurgeLocalMetadataResponse, StatLocalMetadataRequest, StatLocalMetadataResponse,
             UpdateGameMetadataRequest, UpdatePlatformMetadataRequest,
         },
-        tags::v1::tags_service_client::TagsServiceClient,
     },
 };
 use retrom_db::DbPool;
 use retrom_service_common::{
-    grpc_clients::{
-        igdb_svc::get_igdb_svc_client, steam_svc::get_steam_svc_client,
-        tags_svc::get_tags_svc_client,
-    },
+    grpc_clients::{igdb_svc::get_igdb_svc_client, steam_svc::get_steam_svc_client},
     media_cache::{cacheable_media::CacheableMetadata, MediaCache},
     metadata_providers::igdb::provider::IGDB_PROVIDER_ID,
     retrom_dirs::RetromDirs,
@@ -77,7 +75,6 @@ pub struct MetadataServiceHandlers {
     config_client: ConfigServiceClient<Channel>,
     igdb_svc_client: IgdbServiceClient<tonic::transport::Channel>,
     steam_svc_client: SteamServiceClient<tonic::transport::Channel>,
-    tags_svc_client: TagsServiceClient<tonic::transport::Channel>,
 }
 
 impl MetadataServiceHandlers {
@@ -94,7 +91,6 @@ impl MetadataServiceHandlers {
             config_client,
             igdb_svc_client: get_igdb_svc_client(None),
             steam_svc_client: get_steam_svc_client(None),
-            tags_svc_client: get_tags_svc_client(None),
         }
     }
 
@@ -115,7 +111,7 @@ impl MetadataServiceHandlers {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let (artworks, screenshots, videos, links, similar_games) = try_join!(
+        let (artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) = try_join!(
             select_game_metadata_artworks(&db_pool, &row.id),
             select_game_metadata_screenshots(&db_pool, &row.id),
             select_game_metadata_videos(&db_pool, &row.id),
@@ -123,14 +119,14 @@ impl MetadataServiceHandlers {
             select_similar_games(&db_pool, &row.game_id)
         )?;
 
-        Ok(game_metadata_from_rows(
-            row,
-            artworks,
-            screenshots,
-            videos,
-            links,
-            similar_games,
-        ))
+        Ok(game_metadata_from_rows(GameMetadataRows {
+            metadata_row: row,
+            artwork_rows,
+            screenshot_rows,
+            video_rows,
+            link_rows,
+            similar_game_rows,
+        }))
     }
 
     async fn handle_create_game_metadata(
@@ -158,11 +154,18 @@ impl MetadataServiceHandlers {
             ));
         }
 
-        let (row, artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) =
-            rows_from_game_metadata(metadata);
+        let to_create = game_metadata_row_from_metadata(&metadata);
+        let row = insert_game_metadata(&db_pool, &to_create).await?;
 
-        let (row, artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) = try_join!(
-            insert_game_metadata(&db_pool, &row),
+        let (artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) = (
+            game_artwork_rows_from_data(&row.id, metadata.artworks.clone()),
+            game_screenshot_rows_from_data(&row.id, metadata.screenshots.clone()),
+            game_video_rows_from_data(&row.id, metadata.videos.clone()),
+            game_link_rows_from_data(&row.id, metadata.links.clone()),
+            similar_game_rows_from_data(&row.game_id, metadata.similar_games.clone()),
+        );
+
+        let (artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) = try_join!(
             upsert_game_artworks(&db_pool, artwork_rows),
             upsert_game_screenshots(&db_pool, screenshot_rows),
             upsert_game_videos(&db_pool, video_rows),
@@ -170,14 +173,14 @@ impl MetadataServiceHandlers {
             upsert_similar_games(&db_pool, similar_game_rows)
         )?;
 
-        Ok(game_metadata_from_rows(
-            row,
+        Ok(game_metadata_from_rows(GameMetadataRows {
+            metadata_row: row,
             artwork_rows,
             screenshot_rows,
             video_rows,
             link_rows,
             similar_game_rows,
-        ))
+        }))
     }
 
     async fn cache_metadata<T: CacheableMetadata>(
@@ -227,51 +230,75 @@ impl MetadataServiceHandlers {
             }
         };
 
+        if metadata.id.trim().is_empty() {
+            return Err(Status::invalid_argument(
+                "id field is required for updating game metadata".to_string(),
+            ));
+        }
+
+        if metadata.game.trim().is_empty() {
+            return Err(Status::invalid_argument(
+                "game field is required for updating game metadata".to_string(),
+            ));
+        }
+
+        if metadata.provider.trim().is_empty() {
+            return Err(Status::invalid_argument(
+                "provider field is required for updating game metadata".to_string(),
+            ));
+        }
+
         let empty_mask = field_mask.is_empty();
 
-        let (row, artworks, screenshots, videos, links, similar_games) =
-            rows_from_game_metadata(metadata);
+        let (row, artworks, screenshots, videos, links, similar_games) = (
+            game_metadata_row_from_metadata(&metadata),
+            game_artwork_rows_from_data(&metadata.id, metadata.artworks.clone()),
+            game_screenshot_rows_from_data(&metadata.id, metadata.screenshots.clone()),
+            game_video_rows_from_data(&metadata.id, metadata.videos.clone()),
+            game_link_rows_from_data(&metadata.id, metadata.links.clone()),
+            similar_game_rows_from_data(&metadata.game, metadata.similar_games.clone()),
+        );
 
         let row_future = game_metadata::update_game_metadata(&db_pool, &row, &field_mask);
 
         let artwork_rows_future = async {
             if empty_mask || field_mask.contains("artworks") {
-                game_metadata::upsert_game_artworks(&db_pool, artworks).await
-            } else {
-                Ok(vec![])
+                game_metadata::upsert_game_artworks(&db_pool, artworks).await?;
             }
+
+            game_metadata::select_game_metadata_artworks(&db_pool, &row.id).await
         };
 
         let screenshot_rows_future = async {
             if empty_mask || field_mask.contains("screenshots") {
-                game_metadata::upsert_game_screenshots(&db_pool, screenshots).await
-            } else {
-                Ok(vec![])
+                game_metadata::upsert_game_screenshots(&db_pool, screenshots).await?;
             }
+
+            game_metadata::select_game_metadata_screenshots(&db_pool, &row.id).await
         };
 
         let video_rows_future = async {
             if empty_mask || field_mask.contains("videos") {
-                game_metadata::upsert_game_videos(&db_pool, videos).await
-            } else {
-                Ok(vec![])
+                game_metadata::upsert_game_videos(&db_pool, videos).await?;
             }
+
+            game_metadata::select_game_metadata_videos(&db_pool, &row.id).await
         };
 
         let link_rows_future = async {
             if empty_mask || field_mask.contains("links") {
-                game_metadata::upsert_game_links(&db_pool, links).await
-            } else {
-                Ok(vec![])
+                game_metadata::upsert_game_links(&db_pool, links).await?;
             }
+
+            game_metadata::select_game_metadata_links(&db_pool, &row.id).await
         };
 
         let similar_game_rows_future = async {
             if empty_mask || field_mask.contains("similar_games") {
-                game_metadata::upsert_similar_games(&db_pool, similar_games).await
-            } else {
-                Ok(vec![])
+                game_metadata::upsert_similar_games(&db_pool, similar_games).await?;
             }
+
+            game_metadata::select_similar_games(&db_pool, &row.game_id).await
         };
 
         let (row, artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) = try_join!(
@@ -283,14 +310,14 @@ impl MetadataServiceHandlers {
             similar_game_rows_future
         )?;
 
-        Ok(game_metadata_from_rows(
-            row,
+        Ok(game_metadata_from_rows(GameMetadataRows {
+            metadata_row: row,
             artwork_rows,
             screenshot_rows,
             video_rows,
             link_rows,
             similar_game_rows,
-        ))
+        }))
     }
 
     async fn handle_get_platform_metadata(

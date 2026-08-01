@@ -107,3 +107,15 @@ message PlatformMetadata {
   // A URL to the platform's logo image.
   optional string logo_url = 11;
 }
+
+// MetadataProvider represents a metadata provider in Retrom (e.g. IGDB, Steam).
+message MetadataProvider {
+  // The unique ID of the metadata provider.
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The display name of the provider (e.g. "IGDB", "Steam").
+  string name = 2 [(google.api.field_behavior) = IMMUTABLE];
+  // Timestamp for when the metadata provider record was created.
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp for when the metadata provider record was last updated.
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+}

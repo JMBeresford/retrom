@@ -136,7 +136,7 @@ create table if not exists game_metadata_screenshots (
     primary key (game_metadata_id, url)
 );
 
-create table if not exists game_metadata_artwork (
+create table if not exists game_metadata_artworks (
     game_metadata_id text not null references game_metadata (id) on delete cascade,
     url text not null,
     primary key (game_metadata_id, url)

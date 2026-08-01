@@ -345,8 +345,8 @@ BEGIN
   WHERE array_length(v.screenshot_urls, 1) > 0
   ON CONFLICT DO NOTHING;
 
-  -- game_metadata_artwork (from v1 artwork_urls text[])
-  INSERT INTO game_metadata_artwork (game_metadata_id, url)
+  -- game_metadata_artworks (from v1 artwork_urls text[])
+  INSERT INTO game_metadata_artworks (game_metadata_id, url)
   SELECT gm.id, unnest(v.artwork_urls)
   FROM _v1_game_metadata v
   JOIN _map_games mg ON v.game_id = mg.old_id

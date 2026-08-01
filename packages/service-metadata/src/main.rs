@@ -1,5 +1,6 @@
-use retrom_codegen::retrom::services::{
-    config::v1::GetServerConfigRequest, metadata::v1::FILE_DESCRIPTOR_SET,
+use retrom_codegen::retrom::{
+    providers::igdb::v1::FILE_DESCRIPTOR_SET as IGDB_FILE_DESCRIPTOR_SET,
+    services::{config::v1::GetServerConfigRequest, metadata::v1::FILE_DESCRIPTOR_SET},
 };
 use retrom_service_common::{
     grpc_clients::config_svc::get_config_svc_client, reflection::reflection_router,
@@ -51,7 +52,10 @@ async fn main() {
 
     let router = metadata_router(pool)
         .layer(tonic_web::GrpcWebLayer::new())
-        .merge(reflection_router(&[FILE_DESCRIPTOR_SET]));
+        .merge(reflection_router(&[
+            FILE_DESCRIPTOR_SET,
+            IGDB_FILE_DESCRIPTOR_SET,
+        ]));
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await

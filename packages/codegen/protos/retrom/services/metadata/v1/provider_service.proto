@@ -2,20 +2,21 @@ syntax = "proto3";
 
 package retrom.services.metadata.v1;
 
-import "retrom/services/metadata/v1/models.proto";
+import "retrom/services/metadata/v1/resources.proto";
 
 // MetadataProviderService defines the gRPC service for managing metadata providers in Retrom.
 service MetadataProviderService {
-  // GetMetadataProviders retrieves a list of all available metadata providers in Retrom.
-  rpc GetMetadataProviders(GetMetadataProvidersRequest) returns (GetMetadataProvidersResponse);
+  // ListMetadataProviders retrieves a list of all available metadata providers in Retrom.
+  rpc ListMetadataProviders(ListMetadataProvidersRequest) returns (ListMetadataProvidersResponse);
 }
 
-// GetMetadataProvidersRequest represents the request message for retrieving a list of all
+// ListMetadataProvidersRequest represents the request message for retrieving a list of all
 // available metadata providers in Retrom.
-message GetMetadataProvidersRequest {}
+message ListMetadataProvidersRequest {}
 
-// GetMetadataProvidersResponse represents the response message for retrieving a list of all
-message GetMetadataProvidersResponse {
+// ListMetadataProvidersResponse represents the response message for retrieving a list of all
+// available metadata providers in Retrom.
+message ListMetadataProvidersResponse {
   // The list of available metadata providers in Retrom.
-  repeated MetadataProviderRow providers = 1;
+  repeated MetadataProvider providers = 1;
 }
