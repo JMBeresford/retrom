@@ -29,6 +29,21 @@
             "command": "pnpm markdownlint-cli2 '**/*.md' '#**/node_modules' '#**/dist' '#**/target'"
           }
         }
+      },
+      "agents:sync-skills": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}"
+        },
+        "defaultConfiguration": "check",
+        "configurations": {
+          "check": {
+            "command": ".agents/scripts/check-links.sh"
+          },
+          "fix": {
+            "command": ".agents/scripts/link-skills.sh"
+          }
+        }
       }
     }
   },
