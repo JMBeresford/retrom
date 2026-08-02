@@ -1,34 +1,40 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { create } from "@bufbuild/protobuf";
-import { LibrarySchema } from "@retrom/codegen/retrom/services/library/v1/models_pb";
+import { Separator } from "@retrom/ui-next/components/separator";
+import { Button } from "@retrom/ui-next/components/button";
 import { LibraryTable } from "./-components/table";
-import { useLibraries } from "@/data/libraries/use-libraries";
+import { AddLibraryDialog } from "./-components/add-library-dialog";
+import { useModalAction } from "@/modals/use-modal-action";
 
 export const Route = createFileRoute("/app/libraries")({
   component: RouteComponent,
 });
 
-const libraries = [
-  create(LibrarySchema, { id: "1", name: "foo" }),
-  create(LibrarySchema, { id: "2", name: "bar" }),
-];
-
 function RouteComponent() {
-  const { data: _libraries, isPending, error } = useLibraries();
-
-  // if (isPending) {
-  //   return <div>Loading...</div>;
-  // }
-  //
-  // if (error) {
-  //   return <div>Error: {error.message}</div>;
-  // }
+  const addLibraryModal = useModalAction("addLibrary");
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="font-heading text-3xl font-bold">Libraries</h1>
+    <>
+      <div className="flex flex-col gap-4 h-full">
+        <div className="flex gap-2 items-end">
+          <h1 className="font-heading text-4xl font-bold">Libraries</h1>
+          <Separator orientation="vertical" />
+          <Button onClick={() => addLibraryModal.openModal()}>
+            Add Library
+          </Button>
+        </div>
 
-      <LibraryTable libraries={libraries} />
-    </div>
+        <p className="pretty max-w-prose text-muted-foreground">
+          A library is a collection of games and platforms that can be organized
+          and accessed through the Retrom application. You can add, edit, or
+          delete libraries as needed.
+        </p>
+
+        <div className="mt-4">
+          <LibraryTable />
+        </div>
+      </div>
+
+      <AddLibraryDialog />
+    </>
   );
 }

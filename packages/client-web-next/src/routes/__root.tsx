@@ -5,12 +5,14 @@ import {
 } from "@tanstack/react-router";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { SidebarProvider } from "@retrom/ui-next/components/sidebar";
+import { ScrollArea } from "@retrom/ui-next/components/scroll-area";
 import TanStackQueryDevtools from "../devtools/tanstack-query";
 import TanStackRouterDevtools from "../devtools/tanstack-router";
 import appCss from "../globals.css?url";
 import type { PropsWithChildren, ReactNode } from "react";
 import type { RouterContext } from "@/router";
 import { ThemeProvider } from "@/themes/theme-provider";
+import { ModalActionProvider } from "@/modals/provider";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
@@ -36,7 +38,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   shellComponent: RootDocument,
 });
 
-const providers = [ThemeProvider, SidebarProvider];
+const providers = [ThemeProvider, SidebarProvider, ModalActionProvider];
 
 function RenderRootProviders({ children }: PropsWithChildren) {
   return providers.reduceRight((acc, Provider) => {
@@ -49,7 +51,9 @@ function RootDocument({ children }: { children: ReactNode }) {
     <>
       <HeadContent />
 
-      <RenderRootProviders>{children}</RenderRootProviders>
+      <ScrollArea className="h-dvh max-w-dvw">
+        <RenderRootProviders>{children}</RenderRootProviders>
+      </ScrollArea>
 
       <TanStackDevtools
         config={{
