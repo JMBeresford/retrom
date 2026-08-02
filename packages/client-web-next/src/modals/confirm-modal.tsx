@@ -19,6 +19,8 @@ declare global {
   namespace RetromModals {
     interface ModalActions {
       confirmModal: BaseModalActionProps & {
+        title?: string;
+        description?: string;
         content?: ReactNode;
         onConfirm?: () => void | Promise<void>;
         onCancel?: () => void | Promise<void>;

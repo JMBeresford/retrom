@@ -1,9 +1,9 @@
 import {
   InterfaceConfig_GameListEntryImage,
   RetromClientConfigSchema,
-} from "@retrom/codegen/retrom/client/v1/client-config_pb";
+} from "@retrom/codegen/retrom/client/v1/client_config_pb";
 import { create } from "@bufbuild/protobuf";
-import type { RetromClientConfig } from "@retrom/codegen/retrom/client/v1/client-config_pb";
+import type { RetromClientConfig } from "@retrom/codegen/retrom/client/v1/client_config_pb";
 import type * as Versions from "./version-index";
 
 export function migrate(

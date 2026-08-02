@@ -1,6 +1,6 @@
 import * as ConfigFile from "@retrom/plugin-config";
 import { create, fromJsonString, toJsonString } from "@bufbuild/protobuf";
-import { RetromClientConfigSchema } from "@retrom/codegen/retrom/client/v1/client-config_pb";
+import { RetromClientConfigSchema } from "@retrom/codegen/retrom/client/v1/client_config_pb";
 import type { StateStorage } from "zustand/middleware";
 import type { LocalConfig } from "./store";
 

@@ -4,7 +4,7 @@ import {
   persist,
   subscribeWithSelector,
 } from "zustand/middleware";
-import { RetromClientConfigSchema } from "@retrom/codegen/retrom/client/v1/client-config_pb";
+import { RetromClientConfigSchema } from "@retrom/codegen/retrom/client/v1/client_config_pb";
 import { createContext, useContext } from "react";
 import * as ConfigFile from "@retrom/plugin-config";
 import { toJson } from "@bufbuild/protobuf";
@@ -15,7 +15,7 @@ import { defaultAPIHostname, defaultAPIPort } from "./utils";
 import type {
   RetromClientConfig,
   RetromClientConfigJson,
-} from "@retrom/codegen/retrom/client/v1/client-config_pb";
+} from "@retrom/codegen/retrom/client/v1/client_config_pb";
 import type { StoreApi, UseBoundStore } from "zustand";
 import { IS_DESKTOP } from "@/env";
 

@@ -1,10 +1,10 @@
 import z from "zod";
-import type { LibrarySchema } from "@retrom/codegen/retrom/services/library/v1/models_pb";
-import type { MessageInitShape, MessageShape } from "@bufbuild/protobuf";
+import type { LibrarySchema } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
+import type { MessageShape } from "@bufbuild/protobuf";
 
-const builtinMacros = ["{library}", "{platform}", "{gameFile}", "{gameDir}"];
+export const builtinMacros = ["{library}", "{platform}", "{game}"];
 
-export const structureDefinitionSchema = z.literal("").or(
+export const structureDefinitionValidationSchema = z.literal("").or(
   z
     .string()
     .refine(
@@ -15,29 +15,17 @@ export const structureDefinitionSchema = z.literal("").or(
     .refine((value) => value.includes("{platform}"), {
       message: "Must contain {platform}",
     })
-    .refine(
-      (value) => value.includes("{gameFile}") || value.includes("gameDir"),
-      {
-        message: "Must contain {gameFile} or {gameDir}",
-      },
-    )
-    .refine(
-      (value) => !(value.includes("{gameFile}") && value.includes("{gameDir}")),
-      {
-        message: "Cannot contain both {gameFile} and {gameDir}",
-      },
-    )
+    .refine((value) => value.includes("{game}"), {
+      message: "Must contain {game}",
+    })
     .refine(
       (value) => {
-        const gamePos = value.includes("{gameFile}")
-          ? value.indexOf("{gameFile}")
-          : value.indexOf("{gameDir}");
-
+        const gamePos = value.indexOf("{game}");
         const platformPos = value.indexOf("{platform}");
 
         return gamePos > platformPos;
       },
-      { message: "{platform} must be before {gameDir} or {gameFile}" },
+      { message: "{platform} must be before {game}" },
     )
     .superRefine((value, ctx) => {
       const macro = builtinMacros.find((m) => value.split(m).length > 2);
@@ -76,18 +64,15 @@ export const structureDefinitionSchema = z.literal("").or(
     .refine((value) => !value.includes("//"), {
       message: "Cannot contain empty sections between slashes",
     })
-    .refine(
-      (value) => value.endsWith("{gameFile}") || value.endsWith("{gameDir}"),
-      {
-        message: "Must end with {gameFile} or {gameDir}",
-      },
-    ),
+    .refine((value) => value.endsWith("{game}"), {
+      message: "Must end with {game}",
+    }),
 );
 
-export const librarySchema = z.object({
+export const libraryValidationSchema = z.object({
   path: z.string().min(1),
   name: z.string().min(1),
-  structureDefinition: structureDefinitionSchema,
+  structureDefinition: structureDefinitionValidationSchema,
   ignorePatterns: z.object({
     patterns: z.string().array(),
   }),
