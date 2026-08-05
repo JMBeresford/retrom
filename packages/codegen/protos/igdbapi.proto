@@ -1182,6 +1182,23 @@ message LanguageSupportType {
   string checksum = 5;
 }
 
+message LogoResult {
+  repeated Logo logos = 1;
+}
+
+message Logo {
+  uint64 id = 1;
+  bool alpha_channel = 2;
+  bool animated = 3;
+  Game game = 4;
+  int32 height = 5;
+  string image_id = 6;
+  string url = 7;
+  int32 width = 8;
+  string checksum = 9;
+  ImageType image_type = 10;
+}
+
 message MultiplayerModeResult {
   repeated MultiplayerMode multiplayermodes = 1;
 }
