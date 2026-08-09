@@ -54,8 +54,6 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let is_ignored = |path: &str| ignore_patterns.iter().any(|pattern| pattern.is_match(path));
-
     let platform_depth = parser.platform_depth();
     let game_depth_from_platform = parser.game_depth_from_platform();
 
@@ -66,7 +64,7 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
             None => continue,
         };
 
-        if is_ignored(&root_canonical) {
+        if is_ignored_path(&ignore_patterns, &root_canonical) {
             continue;
         }
 
@@ -90,7 +88,7 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
                 None => continue,
             };
 
-            if is_ignored(&platform_path) {
+            if is_ignored_path(&ignore_patterns, &platform_path) {
                 continue;
             }
 
@@ -134,10 +132,7 @@ async fn scan_game_entry(
         None => return Ok(()),
     };
 
-    if ignore_patterns
-        .iter()
-        .any(|pattern| pattern.is_match(&game_path))
-    {
+    if is_ignored_path(ignore_patterns, &game_path) {
         return Ok(());
     }
 
@@ -153,10 +148,7 @@ async fn scan_game_entry(
 
         for file in walk_files {
             if let Some(file_path) = canonical_string(&file) {
-                if ignore_patterns
-                    .iter()
-                    .any(|pattern| pattern.is_match(&file_path))
-                {
+                if is_ignored_path(ignore_patterns, &file_path) {
                     continue;
                 }
 
@@ -170,6 +162,10 @@ async fn scan_game_entry(
     }
 
     Ok(())
+}
+
+fn is_ignored_path(ignore_patterns: &[Regex], path: &str) -> bool {
+    ignore_patterns.iter().any(|pattern| pattern.is_match(path))
 }
 
 async fn upsert_platform(db_pool: &DbPool, library_id: &str, path: &str) -> Result<String> {

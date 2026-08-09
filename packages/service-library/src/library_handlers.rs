@@ -407,11 +407,11 @@ pub async fn create_library(
     separated.push_bind(&library_id);
     separated.push_bind(&library.name);
     separated.push_bind(&library.structure_definition);
-    separated.push_unseparated(") returning *");
+    separated.push_unseparated(")");
 
-    let _row: LibraryRow = library_builder
-        .build_query_as()
-        .fetch_one(&mut *tx)
+    library_builder
+        .build()
+        .execute(&mut *tx)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -478,13 +478,15 @@ pub async fn update_library(
     builder.push_bind(&library.structure_definition);
     builder.push(" where id = ");
     builder.push_bind(&library.id);
-    builder.push(" returning *");
-
-    let _row: LibraryRow = builder
-        .build_query_as()
-        .fetch_one(&mut *tx)
+    let update_result = builder
+        .build()
+        .execute(&mut *tx)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
+
+    if update_result.rows_affected() == 0 {
+        return Err(Status::not_found("Library not found"));
+    }
 
     let mut root_builder = QueryBuilder::new("insert into root_directories (id, path) values (");
     let mut separated = root_builder.separated(", ");
