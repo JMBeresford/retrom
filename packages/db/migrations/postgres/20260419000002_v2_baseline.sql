@@ -282,6 +282,14 @@ create table if not exists library_root_directories (
     primary key (library_id, root_directory_id)
 );
 
+create table if not exists library_ignore_patterns (
+    library_id text not null references libraries (id) on delete cascade,
+    pattern text not null,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
+    primary key (library_id, pattern)
+);
+
 create table if not exists platform_root_directories (
     platform_id text not null references platforms (id) on delete cascade,
     root_directory_id text not null references root_directories (id) on delete cascade,

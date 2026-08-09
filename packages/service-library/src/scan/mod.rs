@@ -10,6 +10,7 @@
 pub mod parser;
 
 use parser::{ParserError, StructureParser};
+use regex::Regex;
 use retrom_db::DbPool;
 use retrom_service_common::metadata_providers::MANUAL_PROVIDER_ID;
 use sqlx::QueryBuilder;
@@ -34,17 +35,40 @@ pub struct LibraryScanTarget {
     pub library_id: String,
     pub structure_definition: String,
     pub root_paths: Vec<String>,
+    pub ignore_patterns: Vec<String>,
 }
 
 /// Scan a single library: walk each mapped root directory and upsert the discovered entities.
 #[tracing::instrument(skip(db_pool))]
 pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -> Result<()> {
     let parser = StructureParser::new(&target.structure_definition)?;
+    let ignore_patterns: Vec<Regex> = target
+        .ignore_patterns
+        .iter()
+        .map(|pattern| {
+            Regex::new(pattern).map_err(|why| {
+                ScanError::Parser(ParserError::Other(format!(
+                    "Invalid ignore pattern `{pattern}`: {why}"
+                )))
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let is_ignored = |path: &str| ignore_patterns.iter().any(|pattern| pattern.is_match(path));
+
     let platform_depth = parser.platform_depth();
     let game_depth_from_platform = parser.game_depth_from_platform();
 
     for root_path in &target.root_paths {
         let root = PathBuf::from(root_path);
+        let root_canonical = match canonical_string(&root) {
+            Some(path) => path,
+            None => continue,
+        };
+
+        if is_ignored(&root_canonical) {
+            continue;
+        }
 
         let platform_dirs: Vec<PathBuf> = WalkDir::new(&root)
             .min_depth(platform_depth)
@@ -66,6 +90,10 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
                 None => continue,
             };
 
+            if is_ignored(&platform_path) {
+                continue;
+            }
+
             let platform_id = upsert_platform(db_pool, &target.library_id, &platform_path).await?;
 
             let game_entries: Vec<PathBuf> = WalkDir::new(&platform_dir)
@@ -82,7 +110,9 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
                 .collect();
 
             for game_entry in game_entries {
-                if let Err(why) = scan_game_entry(db_pool, &platform_id, &game_entry).await {
+                if let Err(why) =
+                    scan_game_entry(db_pool, &platform_id, &game_entry, &ignore_patterns).await
+                {
                     warn!("Failed to scan game entry {:?}: {}", game_entry, why);
                 }
             }
@@ -93,11 +123,23 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
 }
 
 #[tracing::instrument(skip(db_pool))]
-async fn scan_game_entry(db_pool: &DbPool, platform_id: &str, game_entry: &Path) -> Result<()> {
+async fn scan_game_entry(
+    db_pool: &DbPool,
+    platform_id: &str,
+    game_entry: &Path,
+    ignore_patterns: &[Regex],
+) -> Result<()> {
     let game_path = match canonical_string(game_entry) {
         Some(path) => path,
         None => return Ok(()),
     };
+
+    if ignore_patterns
+        .iter()
+        .any(|pattern| pattern.is_match(&game_path))
+    {
+        return Ok(());
+    }
 
     let game_id = upsert_game(db_pool, platform_id, &game_path).await?;
 
@@ -111,11 +153,25 @@ async fn scan_game_entry(db_pool: &DbPool, platform_id: &str, game_entry: &Path)
 
         for file in walk_files {
             if let Some(file_path) = canonical_string(&file) {
+                if ignore_patterns
+                    .iter()
+                    .any(|pattern| pattern.is_match(&file_path))
+                {
+                    continue;
+                }
+
                 let byte_size = file_byte_size(&file);
                 insert_game_file(db_pool, &game_id, platform_id, &file_path, byte_size).await?;
             }
         }
     } else {
+        if ignore_patterns
+            .iter()
+            .any(|pattern| pattern.is_match(&game_path))
+        {
+            return Ok(());
+        }
+
         let byte_size = file_byte_size(game_entry);
         insert_game_file(db_pool, &game_id, platform_id, &game_path, byte_size).await?;
     }

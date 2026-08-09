@@ -43,6 +43,18 @@ message LibraryRow {
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
+// LibraryIgnorePatternRow represents a row in the `library_ignore_patterns` table.
+message LibraryIgnorePatternRow {
+  // Library ID this ignore pattern belongs to.
+  string library_id = 1;
+  // Regex pattern used to ignore files/directories during scans.
+  string pattern = 2;
+  // Timestamp when this ignore pattern row was created.
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Timestamp when this ignore pattern row was last updated.
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
 // PlatformRow represents a row in the `platforms` table.
 message PlatformRow {
   // OUTPUT_ONLY — set by the server on create; include for update targets.

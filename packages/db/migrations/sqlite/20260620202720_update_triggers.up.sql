@@ -165,6 +165,15 @@ begin
     where rowid = new.rowid;
 end;
 
+create trigger if not exists set_library_ignore_patterns_updated_at
+after update on library_ignore_patterns
+for each row
+when new.updated_at = old.updated_at
+begin
+    update library_ignore_patterns set updated_at = current_timestamp
+    where rowid = new.rowid;
+end;
+
 create trigger if not exists set_platform_root_directories_updated_at
 after update on platform_root_directories
 for each row

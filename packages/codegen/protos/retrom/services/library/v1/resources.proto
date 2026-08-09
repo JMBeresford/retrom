@@ -63,6 +63,8 @@ message Library {
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Path to the root directory for this library.
   string path = 6 [(google.api.field_behavior) = REQUIRED];
+  // Regex patterns used to ignore files/directories during library scans.
+  repeated string ignore_patterns = 7;
 }
 
 // Platform represents a platform that games can be associated with. For example,
