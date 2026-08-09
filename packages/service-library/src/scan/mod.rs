@@ -165,13 +165,6 @@ async fn scan_game_entry(
             }
         }
     } else {
-        if ignore_patterns
-            .iter()
-            .any(|pattern| pattern.is_match(&game_path))
-        {
-            return Ok(());
-        }
-
         let byte_size = file_byte_size(game_entry);
         insert_game_file(db_pool, &game_id, platform_id, &game_path, byte_size).await?;
     }
