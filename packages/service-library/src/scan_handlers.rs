@@ -96,14 +96,13 @@ async fn load_scan_targets(db_pool: &DbPool) -> Result<Vec<LibraryScanTarget>, s
         builder.push_bind(&library_id);
 
         let root_paths: Vec<String> = builder.build_query_scalar().fetch_all(db_pool).await?;
-        let ignore_patterns: Vec<String> = QueryBuilder::new(
-            "select pattern from library_ignore_patterns where library_id = ",
-        )
-        .push_bind(&library_id)
-        .push(" order by created_at asc, pattern asc")
-        .build_query_scalar()
-        .fetch_all(db_pool)
-        .await?;
+        let ignore_patterns: Vec<String> =
+            QueryBuilder::new("select pattern from library_ignore_patterns where library_id = ")
+                .push_bind(&library_id)
+                .push(" order by created_at asc, pattern asc")
+                .build_query_scalar()
+                .fetch_all(db_pool)
+                .await?;
 
         if root_paths.is_empty() {
             continue;

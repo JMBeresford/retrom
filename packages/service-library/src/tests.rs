@@ -47,4 +47,3 @@ pub async fn create_test_game_file(game_dir: impl AsRef<Path>, name: &str) -> Pa
 
     game_file
 }
-

@@ -755,7 +755,8 @@ mod tests {
         let db_pool = get_test_db_pool().await;
         let library_dir = create_test_library_dir().await;
 
-        let included_platform_dir = create_test_platform_dir(&library_dir, "IncludedPlatform").await;
+        let included_platform_dir =
+            create_test_platform_dir(&library_dir, "IncludedPlatform").await;
         let ignored_platform_dir = create_test_platform_dir(&library_dir, "IgnoredPlatform").await;
         let included_game_dir = create_test_game_dir(&included_platform_dir, "IncludedGame").await;
         let ignored_game_dir = create_test_game_dir(&included_platform_dir, "IgnoredGame").await;
@@ -802,16 +803,18 @@ mod tests {
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-        let platform_count: i64 = sqlx::query_scalar("select count(*) from platforms where third_party = 0")
-            .fetch_one(&db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+        let platform_count: i64 =
+            sqlx::query_scalar("select count(*) from platforms where third_party = 0")
+                .fetch_one(&db_pool)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
         assert_eq!(platform_count, 1);
 
-        let game_count: i64 = sqlx::query_scalar("select count(*) from games where third_party = 0")
-            .fetch_one(&db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+        let game_count: i64 =
+            sqlx::query_scalar("select count(*) from games where third_party = 0")
+                .fetch_one(&db_pool)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
         assert_eq!(game_count, 1);
 
         let file_paths: Vec<String> = sqlx::query_scalar("select path from game_files")
