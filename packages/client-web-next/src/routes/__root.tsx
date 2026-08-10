@@ -8,6 +8,7 @@ import { SidebarProvider } from "@retrom/ui-next/components/sidebar";
 import { ScrollArea } from "@retrom/ui-next/components/scroll-area";
 import TanStackQueryDevtools from "../devtools/tanstack-query";
 import TanStackRouterDevtools from "../devtools/tanstack-router";
+import TanStackFormDevtools from "../devtools/tanstack-form";
 import appCss from "../globals.css?url";
 import type { PropsWithChildren, ReactNode } from "react";
 import type { RouterContext } from "@/router";
@@ -59,7 +60,11 @@ function RootDocument({ children }: { children: ReactNode }) {
         config={{
           position: "bottom-right",
         }}
-        plugins={[TanStackRouterDevtools, TanStackQueryDevtools]}
+        plugins={[
+          TanStackRouterDevtools,
+          TanStackQueryDevtools,
+          TanStackFormDevtools,
+        ]}
       />
       <Scripts />
     </>

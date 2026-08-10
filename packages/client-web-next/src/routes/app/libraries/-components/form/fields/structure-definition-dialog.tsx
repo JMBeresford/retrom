@@ -7,7 +7,6 @@ import {
 } from "@retrom/ui-next/components/field";
 import { useMemo } from "react";
 import { cn } from "@retrom/ui-next/lib/utils";
-import { Separator } from "@retrom/ui-next/components/separator";
 import { ScrollArea } from "@retrom/ui-next/components/scroll-area";
 import {
   Accordion,
@@ -15,8 +14,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@retrom/ui-next/components/accordion";
-import { builtinMacros } from "./schema";
-import { useFieldContext } from ".";
+import { builtinMacros } from "../schema";
+import { useFieldContext } from "..";
 
 export function StructureDefinitionField() {
   const field = useFieldContext<string>();
@@ -139,17 +138,20 @@ function File({
   name,
   suffix,
   depth,
+  extension = ".rom",
 }: {
   name: string;
   suffix?: string;
   depth: number;
+  extension?: string;
 }) {
   return (
     <span className="flex">
       <Indentation depth={depth} />
       <span>
         {name}
-        {suffix}.rom
+        {suffix}
+        {extension}
       </span>
     </span>
   );
@@ -168,7 +170,7 @@ function GameDirectory({ suffix, depth }: { suffix?: string; depth: number }) {
 
       <span className={cn("flex flex-col", depth && "*:ml-[2ch]")}>
         <span className="border-l">
-          <File name="gamefile_1" depth={depth + 1} />
+          <File name="gamefile_1" extension=".bin" depth={depth + 1} />
         </span>
         <span
           className={cn(
@@ -176,7 +178,7 @@ function GameDirectory({ suffix, depth }: { suffix?: string; depth: number }) {
             "before:h-[1ch] before:w-px before:bg-border",
           )}
         >
-          <File name="gamefile_2" depth={depth + 1} />
+          <File name="gamefile_2" extension=".cue" depth={depth + 1} />
         </span>
       </span>
     </span>
@@ -211,7 +213,7 @@ function Directory({
             isMacro(part) ? "text-accent-text" : "text-muted-foreground",
           )}
         >
-          {name}/
+          {isMacro(part) ? name : "(untracked)"}/
         </span>
       </span>
 

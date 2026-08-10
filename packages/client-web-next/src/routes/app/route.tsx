@@ -1,4 +1,5 @@
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
+import { Toaster } from "@retrom/ui-next/components/toast";
 import { SidebarTrigger } from "@retrom/ui-next/components/sidebar";
 import {
   CirclePlay,
@@ -43,6 +44,8 @@ function RouteComponent() {
       <main className="p-4">
         <Outlet />
       </main>
+
+      <Toaster />
     </AppSidebar>
   );
 }

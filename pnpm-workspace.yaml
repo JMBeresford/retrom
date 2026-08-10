@@ -42,6 +42,7 @@ catalog:
   '@tailwindcss/vite': ^4.3.2
   '@tanstack/eslint-plugin-query': ^5.101.2
   '@tanstack/react-form': ^1.33.0
+  '@tanstack/react-form-devtools': ^0.2.33
   '@tanstack/react-table': 9.0.0-beta.69
   '@tanstack/react-virtual': ^3.13.12
   '@tauri-apps/api': 2.8.0
