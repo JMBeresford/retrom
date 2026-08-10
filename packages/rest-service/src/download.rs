@@ -6,7 +6,7 @@ use axum::{
     routing::get,
     Extension, Router,
 };
-use retrom_codegen::retrom::services::library::v1::{GameFile, RootDirectory};
+use retrom_codegen::retrom::services::library::v1::{GameFileRow, RootDirectoryRow};
 use retrom_db::DbPool;
 use std::path::PathBuf;
 use tokio_util::{compat::FuturesAsyncWriteCompatExt, io::ReaderStream};
@@ -21,10 +21,8 @@ async fn game_handler(
     Extension(pool): Extension<DbPool>,
     Path((platform_id, game_id)): Path<(String, String)>,
 ) -> Result<Response, (StatusCode, String)> {
-    let game_files: Vec<GameFile> = {
-        let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-            "select * from game_files where game_id = ",
-        );
+    let game_files: Vec<GameFileRow> = {
+        let mut query = sqlx::QueryBuilder::new("select * from game_files where game_id = ");
         query.push_bind(&game_id);
         query.push(" and platform_id = ");
         query.push_bind(&platform_id);
@@ -42,10 +40,9 @@ async fn game_handler(
     // the `root_directories`, `platform_root_diretories`, and `game_root_directories` tables.
     // A game will have a single `root_directory` where `root_directory.path` is like
     // `{prd}%` and `prd` is a platform's `root_directory.path`.
-    let platform_root_dirs: Vec<RootDirectory> = {
-        let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-            "select * from root_directories where platform_id = ",
-        );
+    let platform_root_dirs: Vec<RootDirectoryRow> = {
+        let mut query =
+            sqlx::QueryBuilder::new("select * from root_directories where platform_id = ");
         query.push_bind(&platform_id);
         query.build_query_as().fetch_all(&pool).await.map_err(|e| {
             (
@@ -55,10 +52,8 @@ async fn game_handler(
         })?
     };
 
-    let game_root_dir: Option<RootDirectory> = {
-        let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-            "select * from root_directories where game_id = ",
-        );
+    let game_root_dir: Option<RootDirectoryRow> = {
+        let mut query = sqlx::QueryBuilder::new("select * from root_directories where game_id = ");
         query.push_bind(&game_id);
         query.push(" and (path like ");
         let mut separated = query.separated(" or path like ");

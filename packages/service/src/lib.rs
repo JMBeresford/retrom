@@ -1,5 +1,22 @@
+use crate::reverse_proxy::reverse_proxy;
 use axum::Router;
-use retrom_codegen::retrom::utils::v1::VersionAnnouncementsPayload;
+use retrom_codegen::retrom::{
+    files::v1::FILE_DESCRIPTOR_SET as FILES_FILE_DESCRIPTOR_SET,
+    providers::igdb::v1::FILE_DESCRIPTOR_SET as IGDB_FILE_DESCRIPTOR_SET,
+    services::{
+        clients::v1::FILE_DESCRIPTOR_SET as CLIENTS_FILE_DESCRIPTOR_SET,
+        config::v1::FILE_DESCRIPTOR_SET as CONFIG_FILE_DESCRIPTOR_SET,
+        emulators::v1::FILE_DESCRIPTOR_SET as EMULATORS_FILE_DESCRIPTOR_SET,
+        file_explorer::v1::FILE_DESCRIPTOR_SET as FILE_EXPLORER_FILE_DESCRIPTOR_SET,
+        jobs::v1::FILE_DESCRIPTOR_SET as JOBS_FILE_DESCRIPTOR_SET,
+        library::v1::FILE_DESCRIPTOR_SET as LIBRARY_FILE_DESCRIPTOR_SET,
+        metadata::v1::FILE_DESCRIPTOR_SET as METADATA_FILE_DESCRIPTOR_SET,
+        saves::v1::FILE_DESCRIPTOR_SET as SAVES_V1_FILE_DESCRIPTOR_SET,
+        saves::v2::FILE_DESCRIPTOR_SET as SAVES_V2_FILE_DESCRIPTOR_SET,
+        tags::v1::FILE_DESCRIPTOR_SET as TAGS_FILE_DESCRIPTOR_SET,
+    },
+    utils::v1::VersionAnnouncementsPayload,
+};
 use retrom_rest_service::rest_service;
 use retrom_service_clients::router::clients_router;
 use retrom_service_common::{
@@ -17,8 +34,6 @@ use retrom_webdav_service::webdav_service;
 use std::{net::SocketAddr, process::exit};
 use tokio::{net::TcpListener, task::JoinHandle};
 use tracing::Instrument;
-
-use crate::reverse_proxy::reverse_proxy;
 
 mod reverse_proxy;
 
@@ -95,16 +110,29 @@ pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr
 
     let rest_service = rest_service(db_pool.clone());
     let webdav_service = Router::new().nest_service("/dav", webdav_service(None));
-    let grpc_service = reflection_router()
-        .merge(config_router(None))
-        .merge(clients_router(db_pool.clone()))
-        .merge(emulators_router(db_pool.clone()))
-        .merge(files_router())
-        .merge(jobs_router())
-        .merge(library_router(db_pool.clone()))
-        .merge(metadata_router(db_pool.clone()))
-        .merge(saves_router(db_pool.clone()))
-        .merge(tags_router(db_pool));
+    let grpc_service = reflection_router(&[
+        LIBRARY_FILE_DESCRIPTOR_SET,
+        METADATA_FILE_DESCRIPTOR_SET,
+        IGDB_FILE_DESCRIPTOR_SET,
+        CLIENTS_FILE_DESCRIPTOR_SET,
+        CONFIG_FILE_DESCRIPTOR_SET,
+        EMULATORS_FILE_DESCRIPTOR_SET,
+        FILE_EXPLORER_FILE_DESCRIPTOR_SET,
+        FILES_FILE_DESCRIPTOR_SET,
+        JOBS_FILE_DESCRIPTOR_SET,
+        SAVES_V1_FILE_DESCRIPTOR_SET,
+        SAVES_V2_FILE_DESCRIPTOR_SET,
+        TAGS_FILE_DESCRIPTOR_SET,
+    ])
+    .merge(config_router(None))
+    .merge(clients_router(db_pool.clone()))
+    .merge(emulators_router(db_pool.clone()))
+    .merge(files_router())
+    .merge(jobs_router())
+    .merge(library_router(db_pool.clone()))
+    .merge(metadata_router(db_pool.clone()))
+    .merge(saves_router(db_pool.clone()))
+    .merge(tags_router(db_pool));
 
     let router = rest_service
         .merge(reverse_proxy())

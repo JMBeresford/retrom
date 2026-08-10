@@ -7,7 +7,7 @@ use axum::{
     Extension, Router,
 };
 use futures_util::TryStreamExt;
-use retrom_codegen::retrom::services::library::v1::GameFile;
+use retrom_codegen::retrom::services::library::v1::GameFileRow;
 use retrom_db::DbPool;
 use tokio::fs::File;
 use tokio_util::io::ReaderStream;
@@ -20,9 +20,8 @@ pub async fn file_handler(
     Extension(pool): Extension<DbPool>,
     Path(file_id): Path<String>,
 ) -> Result<Response, StatusCode> {
-    let game_file: GameFile = {
-        let mut query =
-            sqlx::QueryBuilder::<retrom_db::RetromDB>::new("select * from game_files where id = ");
+    let game_file: GameFileRow = {
+        let mut query = sqlx::QueryBuilder::new("select * from game_files where id = ");
         query.push_bind(&file_id);
         query.push(" and is_deleted = ");
         query.push_bind(false);
