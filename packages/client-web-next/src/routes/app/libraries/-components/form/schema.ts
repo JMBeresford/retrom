@@ -58,6 +58,20 @@ export const structureDefinitionValidationSchema = z.literal("").or(
           "Macros must not be immediately followed or preceeded by anything but '/'",
       },
     )
+    .superRefine((value, ctx) => {
+      const allMacros = value.match(/{[^}]+}/g) || [];
+
+      for (const macro of allMacros) {
+        const name = macro.slice(1, -1);
+
+        if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Macro ${macro} contains invalid characters. Only letters, numbers, and underscores are allowed.`,
+          });
+        }
+      }
+    })
     .refine((value) => !value.endsWith("/") && !value.startsWith("/"), {
       message: "Cannot end with a slash",
     })

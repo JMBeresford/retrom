@@ -27,6 +27,7 @@
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-devtools": "catalog:tanstack-next",
     "@tanstack/react-form": "catalog:tanstack-next",
+    "@tanstack/react-form-devtools": "catalog:",
     "@tanstack/react-hotkeys": "catalog:tanstack-next",
     "@tanstack/react-query": "catalog:tanstack-next",
     "@tanstack/react-query-devtools": "catalog:tanstack-next",

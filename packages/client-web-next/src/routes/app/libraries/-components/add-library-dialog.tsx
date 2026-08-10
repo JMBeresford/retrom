@@ -8,10 +8,12 @@ import {
   DialogTitle,
 } from "@retrom/ui-next/components/dialog";
 import { Button } from "@retrom/ui-next/components/button";
-import { ScrollArea } from "@retrom/ui-next/components/scroll-area";
-import { LibraryForm } from "./form";
+import { toast } from "@retrom/ui-next/components/toast";
+import { useAppForm } from "./form";
+import { formOptions } from "./form/defs";
 import type { BaseModalActionProps } from "@/modals/modals";
 import { useModalAction } from "@/modals/use-modal-action";
+import { useCreateLibrary } from "@/data/libraries/use-create-library";
 
 export type AddLibraryDialogProps = BaseModalActionProps;
 
@@ -25,6 +27,28 @@ declare global {
 
 export function AddLibraryDialog() {
   const dialog = useModalAction("addLibrary");
+  const { mutateAsync: createLibrary } = useCreateLibrary();
+
+  const libraryForm = useAppForm({
+    ...formOptions,
+    onSubmit: async ({ value, formApi }) => {
+      await createLibrary(
+        { library: value },
+        {
+          onSuccess: () => {
+            formApi.reset();
+          },
+          onError: (error) => {
+            toast.add({
+              title: "Failed to create library",
+              type: "error",
+              description: error.message,
+            });
+          },
+        },
+      );
+    },
+  });
 
   return (
     <Dialog
@@ -35,21 +59,44 @@ export function AddLibraryDialog() {
         }
       }}
     >
-      <DialogContent className="flex flex-col max-h-[90dvh] justify-between overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>Add Library</DialogTitle>
-          <DialogDescription>
-            Configure Retrom to track a new library.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent>
+        <libraryForm.AppForm>
+          <DialogHeader>
+            <DialogTitle>Add Library</DialogTitle>
+            <DialogDescription>
+              Configure Retrom to track a new library.
+            </DialogDescription>
+          </DialogHeader>
 
-        <ScrollArea className="flex flex-col h-full overflow-y-auto [&>div>div]:scroll-fade-y">
-          <LibraryForm />
-        </ScrollArea>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              libraryForm.handleSubmit().catch(console.error);
+            }}
+          >
+            <libraryForm.AppField name="name">
+              {(field) => <field.NameField />}
+            </libraryForm.AppField>
 
-        <DialogFooter>
-          <DialogClose render={<Button variant="ghost">Close</Button>} />
-        </DialogFooter>
+            <libraryForm.AppField name="path">
+              {(field) => <field.PathField />}
+            </libraryForm.AppField>
+
+            <libraryForm.AppField name="ignorePatterns.patterns">
+              {(field) => <field.IgnorePatternsField />}
+            </libraryForm.AppField>
+
+            <libraryForm.AppField name="structureDefinition">
+              {(field) => <field.StructureDefinitionField />}
+            </libraryForm.AppField>
+          </form>
+
+          <DialogFooter>
+            <DialogClose render={<Button variant="ghost">Close</Button>} />
+            <libraryForm.SubmitButton />
+          </DialogFooter>
+        </libraryForm.AppForm>
       </DialogContent>
     </Dialog>
   );
