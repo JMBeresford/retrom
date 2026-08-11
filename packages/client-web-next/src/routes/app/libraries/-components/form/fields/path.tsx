@@ -4,11 +4,19 @@ import {
   FieldError,
   FieldLabel,
 } from "@retrom/ui-next/components/field";
-import { Input } from "@retrom/ui-next/components/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@retrom/ui-next/components/input-group";
+import { FolderOpenIcon } from "lucide-react";
 import { useFieldContext } from "../defs";
+import { useModalAction } from "@/modals/use-modal-action";
 
 export function PathField() {
   const field = useFieldContext<string>();
+  const fileExplorerDialog = useModalAction("fileExplorer");
 
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -16,14 +24,32 @@ export function PathField() {
     <Field>
       <FieldLabel>Path</FieldLabel>
 
-      <Input
-        id={field.name}
-        name={field.name}
-        value={field.state.value}
-        onBlur={field.handleBlur}
-        onChange={(e) => field.handleChange(e.target.value)}
-        placeholder="/path/to/library"
-      />
+      <InputGroup>
+        <InputGroupInput
+          id={field.name}
+          name={field.name}
+          value={field.state.value}
+          onBlur={field.handleBlur}
+          onChange={(e) => field.handleChange(e.target.value)}
+          placeholder="/path/to/library"
+        />
+
+        <InputGroupAddon>
+          <InputGroupButton
+            variant="secondary"
+            onClick={() =>
+              fileExplorerDialog.openModal({
+                initialPath: field.state.value,
+                onConfirm: (path) => {
+                  field.handleChange(path);
+                },
+              })
+            }
+          >
+            <FolderOpenIcon /> Browse
+          </InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
 
       <FieldDescription>
         The path to the library on the filesystem.

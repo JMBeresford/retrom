@@ -1,6 +1,20 @@
 import { useCallback, useContext, useMemo } from "react";
 import { ModalActionContext } from "./context";
 import type { ModalName } from "./context";
+import type { DialogHandle } from "@retrom/ui-next/components/dialog";
+
+export type ModalHandles = typeof modalHandles;
+
+const modalHandles: {
+  [K in ModalName]?: DialogHandle<RetromModals.ModalActions[K]>;
+} = {};
+
+export function registerModalHandle<T extends keyof ModalHandles>(
+  modal: T,
+  handle: Exclude<ModalHandles[T], undefined>,
+) {
+  modalHandles[modal] = handle;
+}
 
 export function useModalAction<T extends ModalName>(modal: T) {
   const modalContext = useContext(ModalActionContext);
@@ -8,25 +22,27 @@ export function useModalAction<T extends ModalName>(modal: T) {
     throw new Error("useModalAction must be used within a ModalActionProvider");
   }
 
-  const { modals, setModalState } = modalContext;
+  const { modals } = modalContext;
 
   const openModal = useCallback(
-    (props?: Omit<RetromModals.ModalActions[T], "open">) => {
-      setModalState(modal, (prev) => ({
-        ...prev,
-        ...props,
-        open: true,
-      }));
+    (props: RetromModals.ModalActions[T]) => {
+      const handle = modalHandles[modal];
+
+      if (!handle) {
+        console.error(`No handle registered for modal: ${modal}`);
+      }
+
+      console.log(`Opening modal ${modal} with payload:`, props);
+      handle?.openWithPayload(props);
     },
-    [modal, setModalState],
+    [modal],
   );
 
-  const closeModal = useCallback(
-    (props?: Omit<RetromModals.ModalActions[T], "open">) => {
-      setModalState(modal, (prev) => ({ ...prev, ...props, open: false }));
-    },
-    [setModalState, modal],
-  );
+  const closeModal = useCallback(() => {
+    const handle = modalHandles[modal];
+
+    handle?.close();
+  }, [modal]);
 
   const modalState = useMemo(() => modals[modal], [modal, modals]);
 

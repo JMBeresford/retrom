@@ -7,7 +7,7 @@ import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 const serviceHostname = process.env.VITE_RETROM_HOSTNAME || "http://localhost";
-const servicePort = process.env.VITE_RETROM_PORT || "5109";
+const servicePort = process.env.VITE_RETROM_PORT || "5101";
 const serviceHost = `${serviceHostname}:${servicePort}`;
 
 const config = defineConfig(({ mode }) => ({

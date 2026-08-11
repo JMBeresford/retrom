@@ -22,6 +22,14 @@ const config = defineConfig({
   },
   rules: {
     "react-refresh/only-export-components": "warn",
+    "@tanstack/query/exhaustive-deps": [
+      "error",
+      {
+        allowlist: {
+          types: ["RetromClient"],
+        },
+      },
+    ],
   },
 });
 

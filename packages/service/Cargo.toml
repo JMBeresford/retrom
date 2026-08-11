@@ -14,6 +14,7 @@ axum-otel = { workspace = true }
 dotenvy = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
+tonic-web = { workspace = true }
 retrom-db = { workspace = true }
 retrom-codegen = { workspace = true }
 retrom-service-common = { workspace = true }

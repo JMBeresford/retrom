@@ -16,15 +16,11 @@ export type LibrariesQueryKey<T extends keyof typeof libraryKeys> = ReturnType<
 
 export const libraryKeys = {
   all: () => ["libraries"] as const,
-  get: (
-    request: MessageInitShape<typeof GetLibraryRequestSchema>,
-    client: RetromClient,
-  ) => [...libraryKeys.all(), "get", request, client] as const,
+  get: (request: MessageInitShape<typeof GetLibraryRequestSchema>) =>
+    [...libraryKeys.all(), "get", request] as const,
   allList: () => [...libraryKeys.all(), "list"] as const,
-  list: (
-    request: MessageInitShape<typeof ListLibrariesRequestSchema>,
-    client: RetromClient,
-  ) => [...libraryKeys.allList(), request, client] as const,
+  list: (request: MessageInitShape<typeof ListLibrariesRequestSchema>) =>
+    [...libraryKeys.allList(), request] as const,
 };
 
 export const libraryQueries = {
@@ -40,7 +36,7 @@ export const libraryQueries = {
   ) =>
     queryOptions({
       ...options,
-      queryKey: libraryKeys.get(request, retromClient),
+      queryKey: libraryKeys.get(request),
       queryFn: () => retromClient.libraryClient.getLibrary(request),
     }),
   list: <TData>(
@@ -55,7 +51,7 @@ export const libraryQueries = {
   ) =>
     queryOptions({
       ...options,
-      queryKey: libraryKeys.list(request, retromClient),
+      queryKey: libraryKeys.list(request),
       queryFn: () => retromClient.libraryClient.listLibraries(request),
     }),
 };

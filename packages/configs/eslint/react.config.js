@@ -8,11 +8,14 @@ import { defineConfig } from "eslint/config";
 const config = defineConfig({
   name: "react",
   extends: [
-    react.configs.flat.recommended,
-    react.configs.flat["jsx-runtime"],
+    react.configs.flat.recommended ?? {},
+    react.configs.flat["jsx-runtime"] ?? {},
     reactHooks.configs.flat.recommended,
     baseConfig,
   ],
+  rules: {
+    "react/prop-types": "off",
+  },
   settings: {
     react: {
       version: "detect",

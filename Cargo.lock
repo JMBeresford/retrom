@@ -9309,6 +9309,7 @@ dependencies = [
  "signal-hook",
  "signal-hook-tokio",
  "tokio",
+ "tonic-web",
  "tower 0.5.3",
  "tower-http",
  "tracing",

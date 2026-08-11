@@ -1,16 +1,17 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-
 import { XIcon } from "lucide-react";
 import { ScrollArea } from "./scroll-area";
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/button";
 
-function Dialog({ ...props }: DialogPrimitive.Root.Props) {
+function Dialog<T>({ ...props }: DialogPrimitive.Root.Props<T>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
-function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
+Dialog.createHandle = DialogPrimitive.createHandle;
+
+function DialogTrigger<T>({ ...props }: DialogPrimitive.Trigger.Props<T>) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
 }
 
@@ -58,7 +59,7 @@ function DialogContent({
             className={cn(
               "relative flex flex-col w-full max-w-[calc(100%-2rem)]",
               "gap-4 p-4 my-[5dvh] mx-auto",
-              "sm:max-w-sm",
+              "sm:max-w-sm md:max-w-md lg:max-w-lg",
               "rounded-xl bg-popover text-sm text-popover-foreground ring-1 ring-foreground/10 outline-none",
               "duration-100 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
               className,
@@ -153,6 +154,8 @@ function DialogDescription({
     />
   );
 }
+
+export type DialogHandle<T = unknown> = DialogPrimitive.Handle<T>;
 
 export {
   Dialog,
