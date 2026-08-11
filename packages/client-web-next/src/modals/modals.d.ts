@@ -1,5 +1,6 @@
 export type BaseModalActionProps = {
-  open: boolean;
+  title?: string;
+  description?: React.ReactNode;
 };
 
 declare global {

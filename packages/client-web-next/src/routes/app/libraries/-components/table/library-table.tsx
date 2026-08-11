@@ -10,28 +10,27 @@ import { useTable } from "@tanstack/react-table";
 import { cn } from "@retrom/ui-next/lib/utils";
 import { ScrollArea, ScrollBar } from "@retrom/ui-next/components/scroll-area";
 import { Skeleton } from "@retrom/ui-next/components/skeleton";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@retrom/ui-next/components/alert";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@retrom/ui-next/components/collapsible";
-import { AlertCircleIcon, ChevronDownIcon } from "lucide-react";
+import { toast } from "@retrom/ui-next/components/toast";
 import { libraryTableColumns, libraryTableFeatures } from "./defs";
 import { useListLibraries } from "@/data/libraries/use-list-libraries";
 
 export const LibraryTableKey = "library-table" as const;
 
 export function LibraryTable() {
-  const { data, isPending, isError, error } = useListLibraries({
+  const { data, isPending, isError, error, isFetching } = useListLibraries({
     options: {
       select: (response) => response.libraries,
     },
   });
+
+  if (isError && !isFetching) {
+    toast.add({
+      id: "library-table-fetch-error",
+      title: "Error loading libraries",
+      type: "error",
+      description: error.message,
+    });
+  }
 
   const table = useTable({
     key: LibraryTableKey,
@@ -75,26 +74,6 @@ export function LibraryTable() {
         <TableBody>
           {isPending ? (
             <RowSkeletons />
-          ) : isError ? (
-            <div className="absolute w-full grid place-items-center p-10">
-              <Alert variant="destructive" className="w-auto">
-                <AlertCircleIcon />
-                <AlertTitle>Error fetching libraries</AlertTitle>
-                <AlertDescription className="max-w-[40ch]">
-                  There was an error fetching the libraries. Please check your
-                  connection and try again later.
-                  <Collapsible className="mt-4">
-                    <CollapsibleTrigger className="w-full flex items-center justify-between text-muted-foreground group/button">
-                      Error Details
-                      <ChevronDownIcon className="group-data-panel-open/button:rotate-180" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="bg-muted text-muted-foreground rounded p-2">
-                      {error.message}
-                    </CollapsibleContent>
-                  </Collapsible>
-                </AlertDescription>
-              </Alert>
-            </div>
           ) : rows.length > 0 ? (
             rows.map((row) => (
               <TableRow key={row.id} className="isolate">
@@ -103,7 +82,7 @@ export function LibraryTable() {
                     key={cell.id}
                     className={cn(
                       cell.column.getIsPinned() &&
-                        "sticky right-0 bg-background text-right inset-shadow-[1px_0_0_0] inset-shadow-border",
+                        "sticky right-0 bg-background text-center inset-shadow-[1px_0_0_0] inset-shadow-border",
                     )}
                   >
                     <table.FlexRender cell={cell} />

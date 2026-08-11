@@ -132,7 +132,8 @@ pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr
     .merge(library_router(db_pool.clone()))
     .merge(metadata_router(db_pool.clone()))
     .merge(saves_router(db_pool.clone()))
-    .merge(tags_router(db_pool));
+    .merge(tags_router(db_pool))
+    .layer(tonic_web::GrpcWebLayer::new());
 
     let router = rest_service
         .merge(reverse_proxy())

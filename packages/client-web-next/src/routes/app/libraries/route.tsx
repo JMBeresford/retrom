@@ -2,15 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Separator } from "@retrom/ui-next/components/separator";
 import { Button } from "@retrom/ui-next/components/button";
 import { LibraryTable } from "./-components/table";
-import { AddLibraryDialog } from "./-components/add-library-dialog";
+import { LibraryFormDialog } from "./-components/library-form-dialog";
 import { useModalAction } from "@/modals/use-modal-action";
+import { FileExplorerDialog } from "@/modals/file-explorer";
+import { ConfirmDialog } from "@/modals/confirm-modal";
 
 export const Route = createFileRoute("/app/libraries")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const addLibraryModal = useModalAction("addLibrary");
+  const libraryFormModal = useModalAction("libraryForm");
 
   return (
     <>
@@ -18,7 +20,9 @@ function RouteComponent() {
         <div className="flex gap-2 items-end">
           <h1 className="font-heading text-4xl font-bold">Libraries</h1>
           <Separator orientation="vertical" />
-          <Button onClick={() => addLibraryModal.openModal()}>
+          <Button
+            onClick={() => libraryFormModal.openModal({ action: "create" })}
+          >
             Add Library
           </Button>
         </div>
@@ -34,7 +38,9 @@ function RouteComponent() {
         </div>
       </div>
 
-      <AddLibraryDialog />
+      <LibraryFormDialog />
+      <FileExplorerDialog />
+      <ConfirmDialog />
     </>
   );
 }

@@ -14,15 +14,18 @@ import type z from "zod";
 export const { fieldContext, formContext, useFieldContext, useFormContext } =
   createFormHookContexts();
 
+export const defaultValues = {
+  name: "",
+  path: "",
+  ignorePatterns: {
+    patterns: Array<string>(),
+  },
+  structureDefinition: "{library}/{platform}/{game}",
+} satisfies z.output<typeof libraryValidationSchema>;
+
 export const formOptions = formOptionsImpl({
-  defaultValues: {
-    name: "",
-    path: "",
-    ignorePatterns: {
-      patterns: Array<string>(),
-    },
-    structureDefinition: "{library}/{platform}/{game}",
-  } satisfies z.output<typeof libraryValidationSchema>,
+  formId: "library-form",
+  defaultValues,
   validators: {
     onChange: libraryValidationSchema,
   },
