@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package retrom.services.emulators.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+
+// DefaultEmulatorProfile represents the default emulator profile for a given platform and client.
+message DefaultEmulatorProfile {
+  option (google.api.resource) = {
+    name_field: "platform"
+    type: "retrom.services.emulators.v1.EmulatorService/DefaultEmulatorProfile"
+    singular: "defaultEmulatorProfile"
+    plural: "defaultEmulatorProfiles"
+  };
+
+  // The unique identifier of the default emulator profile.
+  string id = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+  // The unique identifier of the platform.
+  string platform = 2 [(google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/Platform"}];
+  // The unique identifier of the client.
+  string client = 3 [(google.api.resource_reference) = {type: "retrom.services.client.v1.ClientService/Client"}];
+  // The unique identifier of the emulator profile.
+  string emulator_profile = 4 [(google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/EmulatorProfile"}];
+  // The timestamp when the default emulator profile was created.
+  google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the default emulator profile was last updated.
+  google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// DefaultEmulatorProfileRow represents a row in the default_emulator_profiles table.
+message DefaultEmulatorProfileRow {
+  // The unique identifier of the default emulator profile.
+  string id = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+  // The unique identifier of the platform.
+  string platform = 2;
+  // The unique identifier of the client.
+  string client = 3;
+  // The unique identifier of the emulator profile.
+  string emulator_profile = 4;
+  // The timestamp when the default emulator profile was created.
+  google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the default emulator profile was last updated.
+  google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+}

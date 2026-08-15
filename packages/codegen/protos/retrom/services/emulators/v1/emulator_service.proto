@@ -2,51 +2,39 @@ syntax = "proto3";
 
 package retrom.services.emulators.v1;
 
-import "retrom/services/emulators/v1/models.proto";
+import "google/protobuf/empty.proto";
+import "retrom/services/emulators/v1/default_emulator_profile.proto";
+import "retrom/services/emulators/v1/emulator.proto";
+import "retrom/services/emulators/v1/emulator_profile.proto";
+import "retrom/services/emulators/v1/local_emulator_config.proto";
 
 // EmulatorService defines the gRPC service for managing emulators, emulator profiles, local emulator configurations,
 // and emulator platforms in Retrom.
 service EmulatorService {
-  // CreateEmulators creates new emulators in Retrom with the specified details.
-  rpc CreateEmulators(CreateEmulatorsRequest) returns (CreateEmulatorsResponse);
-  // GetEmulators retrieves emulators from Retrom based on the specified criteria, such as their IDs or supported platform IDs.
-  rpc GetEmulators(GetEmulatorsRequest) returns (GetEmulatorsResponse);
-  // UpdateEmulators updates existing emulators in Retrom with the specified details.
-  rpc UpdateEmulators(UpdateEmulatorsRequest) returns (UpdateEmulatorsResponse);
-  // DeleteEmulators deletes emulators from Retrom based on the specified criteria, such as their IDs.
-  rpc DeleteEmulators(DeleteEmulatorsRequest) returns (DeleteEmulatorsResponse);
+  // GetEmulator retrieves a single emulator from Retrom based on its unique identifier.
+  rpc GetEmulator(GetEmulatorRequest) returns (Emulator);
+  // ListEmulators retrieves emulators from Retrom based on the specified criteria, such as their IDs or supported platform IDs.
+  rpc ListEmulators(ListEmulatorsRequest) returns (ListEmulatorsResponse);
+  // CreateEmulator creates a new emulator in Retrom.
+  rpc CreateEmulator(CreateEmulatorRequest) returns (Emulator);
+  // UpdateEmulator updates an existing emulator in Retrom.
+  rpc UpdateEmulator(UpdateEmulatorRequest) returns (Emulator);
+  // DeleteEmulator deletes an emulator from Retrom.
+  rpc DeleteEmulator(DeleteEmulatorRequest) returns (google.protobuf.Empty);
 
-  // CreateEmulatorProfiles creates new emulator profiles in Retrom with the specified details.
-  rpc CreateEmulatorProfiles(CreateEmulatorProfilesRequest) returns (CreateEmulatorProfilesResponse);
-  // GetEmulatorProfiles retrieves emulator profiles from Retrom based on the specified criteria, such as their IDs or associated emulator IDs.
-  rpc GetEmulatorProfiles(GetEmulatorProfilesRequest) returns (GetEmulatorProfilesResponse);
-  // UpdateEmulatorProfiles updates existing emulator profiles in Retrom with the specified details.
-  rpc UpdateEmulatorProfiles(UpdateEmulatorProfilesRequest) returns (UpdateEmulatorProfilesResponse);
-  // DeleteEmulatorProfiles deletes emulator profiles from Retrom based on the specified criteria, such as their IDs.
-  rpc DeleteEmulatorProfiles(DeleteEmulatorProfilesRequest) returns (DeleteEmulatorProfilesResponse);
+  // GetEmulatorProfile retrieves a single emulator profile from Retrom based on its unique identifier.
+  rpc GetEmulatorProfile(GetEmulatorProfileRequest) returns (EmulatorProfile);
+  // ListEmulatorProfiles retrieves emulator profiles from Retrom based on the specified criteria, such as their IDs or associated emulator IDs.
+  rpc ListEmulatorProfiles(ListEmulatorProfilesRequest) returns (ListEmulatorProfilesResponse);
+  // CreateEmulatorProfile creates a new emulator profile in Retrom.
+  rpc CreateEmulatorProfile(CreateEmulatorProfileRequest) returns (EmulatorProfile);
+  // UpdateEmulatorProfile updates an existing emulator profile in Retrom.
+  rpc UpdateEmulatorProfile(UpdateEmulatorProfileRequest) returns (EmulatorProfile);
+  // DeleteEmulatorProfile deletes an emulator profile from Retrom.
+  rpc DeleteEmulatorProfile(DeleteEmulatorProfileRequest) returns (google.protobuf.Empty);
+  // TODO: DefaultEmulatorProfiles
 
-  // GetDefaultEmulatorProfiles retrieves default emulator profiles from Retrom based on the specified criteria, such as platform IDs and client ID.
-  rpc GetDefaultEmulatorProfiles(GetDefaultEmulatorProfilesRequest) returns (GetDefaultEmulatorProfilesResponse);
-  // UpdateDefaultEmulatorProfiles updates existing default emulator profiles in Retrom with the specified details.
-  rpc UpdateDefaultEmulatorProfiles(UpdateDefaultEmulatorProfilesRequest) returns (UpdateDefaultEmulatorProfilesResponse);
-  // DeleteDefaultEmulatorProfiles deletes default emulator profiles from Retrom based on the specified criteria, such as platform IDs and client ID.
-  rpc DeleteDefaultEmulatorProfiles(DeleteDefaultEmulatorProfilesRequest) returns (DeleteDefaultEmulatorProfilesResponse);
-
-  // CreateLocalEmulatorConfigs creates new local emulator configurations in Retrom with the specified details.
-  rpc CreateLocalEmulatorConfigs(CreateLocalEmulatorConfigsRequest) returns (CreateLocalEmulatorConfigsResponse);
-  // GetLocalEmulatorConfigs retrieves local emulator configurations from Retrom based on the specified criteria, such as associated emulator IDs and client ID.
-  rpc GetLocalEmulatorConfigs(GetLocalEmulatorConfigsRequest) returns (GetLocalEmulatorConfigsResponse);
-  // UpdateLocalEmulatorConfigs updates existing local emulator configurations in Retrom with the specified details.
-  rpc UpdateLocalEmulatorConfigs(UpdateLocalEmulatorConfigsRequest) returns (UpdateLocalEmulatorConfigsResponse);
-  // DeleteLocalEmulatorConfigs deletes local emulator configurations from Retrom based on the specified criteria, such as their IDs.
-  rpc DeleteLocalEmulatorConfigs(DeleteLocalEmulatorConfigsRequest) returns (DeleteLocalEmulatorConfigsResponse);
-
-  // GetEmulatorPlatforms retrieves emulator platforms from Retrom based on the specified criteria, such as associated emulator IDs and platform IDs.
-  rpc GetEmulatorPlatforms(GetEmulatorPlatformsRequest) returns (GetEmulatorPlatformsResponse);
-  // UpdateEmulatorPlatforms updates existing emulator platforms in Retrom with the specified details, such as associated emulator ID and platform IDs.
-  rpc UpdateEmulatorPlatforms(UpdateEmulatorPlatformsRequest) returns (UpdateEmulatorPlatformsResponse);
-  // DeleteEmulatorPlatforms deletes emulator platforms from Retrom based on the specified criteria, such as associated emulator ID and platform IDs.
-  rpc DeleteEmulatorPlatforms(DeleteEmulatorPlatformsRequest) returns (DeleteEmulatorPlatformsResponse);
+  // TODO: LocalEmulatorConfigs
 }
 
 // CreateEmulatorsRequest represents the request message for creating new emulators in Retrom.
@@ -61,8 +49,8 @@ message CreateEmulatorsResponse {
   repeated Emulator emulators_created = 1;
 }
 
-// GetEmulatorsRequest represents the request message for retrieving emulators from Retrom based on specified criteria.
-message GetEmulatorsRequest {
+// ListEmulatorsRequest represents the request message for retrieving emulators from Retrom based on specified criteria.
+message ListEmulatorsRequest {
   // Filter emulators by their unique identifiers. If specified, only emulators with matching IDs will be returned.
   repeated string ids = 1;
   // Filter emulators by their supported platform IDs. If specified, only emulators that support at least one of
@@ -70,8 +58,8 @@ message GetEmulatorsRequest {
   repeated string supported_platform_ids = 2;
 }
 
-// GetEmulatorsResponse represents the response message for retrieving emulators from Retrom based on specified criteria.
-message GetEmulatorsResponse {
+// ListEmulatorsResponse represents the response message for retrieving emulators from Retrom based on specified criteria.
+message ListEmulatorsResponse {
   // The emulators that match the specified criteria and were retrieved from Retrom.
   repeated Emulator emulators = 1;
 }
@@ -112,8 +100,8 @@ message CreateEmulatorProfilesResponse {
   repeated EmulatorProfile profiles_created = 1;
 }
 
-// GetEmulatorProfilesRequest represents the request message for retrieving emulator profiles from Retrom based on specified criteria.
-message GetEmulatorProfilesRequest {
+// ListEmulatorProfilesRequest represents the request message for retrieving emulator profiles from Retrom based on specified criteria.
+message ListEmulatorProfilesRequest {
   // Filter emulator profiles by their unique identifiers. If specified, only profiles with matching IDs will be returned.
   repeated string ids = 1;
   // Filter emulator profiles by their associated emulator IDs. If specified, only profiles belonging to one of the
@@ -121,8 +109,8 @@ message GetEmulatorProfilesRequest {
   repeated string emulator_ids = 2;
 }
 
-// GetEmulatorProfilesResponse represents the response message for retrieving emulator profiles from Retrom based on specified criteria.
-message GetEmulatorProfilesResponse {
+// ListEmulatorProfilesResponse represents the response message for retrieving emulator profiles from Retrom based on specified criteria.
+message ListEmulatorProfilesResponse {
   // The emulator profiles that match the specified criteria and were retrieved from Retrom.
   repeated EmulatorProfile profiles = 1;
 }

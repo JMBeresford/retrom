@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package retrom.services.emulators.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+
+// EmulatorProfile represents a specific configuration of an emulator for a given platform and operating system.
+message EmulatorProfile {
+  option (google.api.resource) = {
+    name_field: "id"
+    type: "retrom.services.emulators.v1.EmulatorService/EmulatorProfile"
+    singular: "emulatorProfile"
+    plural: "emulatorProfiles"
+  };
+
+  // The unique identifier of the emulator profile.
+  string id = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+  // The unique identifier of the emulator that this profile belongs to.
+  string emulator = 2 [(google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/Emulator"}];
+  // The name of the emulator profile, e.g. "Default" or "Fullscreen".
+  string name = 3;
+  // Custom arguments to be passed to the emulator when launching a game with this profile.
+  string custom_args = 4;
+  // Indicates whether the emulator profile is built-in to the system or provided by the user.
+  bool built_in = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the emulator profile was created.
+  google.protobuf.Timestamp created_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the emulator profile was last updated.
+  google.protobuf.Timestamp updated_at = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // A list of file extensions that are supported by this emulator profile. For example, a profile for a
+  // SNES emulator might support the .sfc file extension.
+  repeated string supported_extensions = 8;
+}
+
+// EmulatorProfileRow represents a row in the emulator_profiles table.
+message EmulatorProfileRow {
+  // The unique identifier of the emulator profile.
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The unique identifier of the emulator that this profile belongs to.
+  string emulator = 2;
+  // The name of the emulator profile, e.g. "Default" or "Fullscreen".
+  string name = 3;
+  // Custom arguments to be passed to the emulator when launching a game with this profile.
+  string custom_args = 4;
+  // Indicates whether the emulator profile is built-in to the system or provided by the user.
+  bool built_in = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the emulator profile was created.
+  google.protobuf.Timestamp created_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the emulator profile was last updated.
+  google.protobuf.Timestamp updated_at = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// EmulatorProfileExtensionRow represents a row in the emulator_profile_extensions table.
+message EmulatorProfileExtensionRow {
+  // The unique identifier of the emulator profile.
+  string emulator_profile = 1;
+  // The file extension supported by the emulator profile.
+  string extension = 2;
+}
