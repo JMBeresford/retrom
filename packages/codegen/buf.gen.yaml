@@ -16,6 +16,7 @@ plugins:
       - extern_path=.google.protobuf.Timestamp=crate::timestamp::Timestamp
       - type_attribute=retrom.services.clients.v1.Client=#[derive(sqlx::FromRow)]#[sqlx(default)]
       - type_attribute=retrom.services.library.v1.LibraryRow=#[derive(sqlx::FromRow)]#[sqlx(default)]
+      - type_attribute=retrom.services.library.v1.LibraryIgnorePatternRow=#[derive(sqlx::FromRow)]#[sqlx(default)]
       - type_attribute=retrom.services.library.v1.RootDirectoryRow=#[derive(sqlx::FromRow)]#[sqlx(default)]
       - type_attribute=retrom.services.library.v1.PlatformRow=#[derive(sqlx::FromRow)]#[sqlx(default)]
       - type_attribute=retrom.services.library.v1.GameRow=#[derive(sqlx::FromRow)]#[sqlx(default)]

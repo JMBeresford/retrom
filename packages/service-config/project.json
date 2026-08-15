@@ -5,6 +5,7 @@
     "cargo:lint": {},
     "cargo:test": {},
     "cargo:format": {},
-    "cargo:build": {}
+    "cargo:build": {},
+    "cargo:run": {}
   }
 }
