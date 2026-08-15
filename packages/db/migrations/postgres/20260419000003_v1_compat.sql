@@ -200,6 +200,81 @@ BEGIN
   JOIN root_directories rd ON rd.path = v.path
   ON CONFLICT DO NOTHING;
 
+  -- library_ignore_patterns from legacy content directories, when available.
+  IF EXISTS (
+       SELECT 1
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = '_v1_content_directories'
+         AND column_name = 'path'
+     )
+     AND EXISTS (
+       SELECT 1
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = '_v1_content_directories'
+         AND column_name = 'ignore_patterns'
+     ) THEN
+    EXECUTE $sql$
+      INSERT INTO library_ignore_patterns (library_id, pattern, created_at, updated_at)
+      SELECT
+        lrd.library_id,
+        p.pattern,
+        current_timestamp::text,
+        current_timestamp::text
+      FROM _v1_content_directories v
+      JOIN root_directories rd ON rd.path = v.path
+      JOIN library_root_directories lrd ON lrd.root_directory_id = rd.id
+      CROSS JOIN LATERAL (
+        SELECT value AS pattern
+        FROM jsonb_array_elements_text(
+          CASE
+            WHEN jsonb_typeof(to_jsonb(v.ignore_patterns)) = 'array' THEN to_jsonb(v.ignore_patterns)
+            ELSE '[]'::jsonb
+          END
+        )
+      ) AS p
+      ON CONFLICT DO NOTHING
+    $sql$;
+  END IF;
+
+  IF EXISTS (
+       SELECT 1
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = 'content_directories'
+         AND column_name = 'path'
+     )
+     AND EXISTS (
+       SELECT 1
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = 'content_directories'
+         AND column_name = 'ignore_patterns'
+     ) THEN
+    EXECUTE $sql$
+      INSERT INTO library_ignore_patterns (library_id, pattern, created_at, updated_at)
+      SELECT
+        lrd.library_id,
+        p.pattern,
+        current_timestamp::text,
+        current_timestamp::text
+      FROM content_directories v
+      JOIN root_directories rd ON rd.path = v.path
+      JOIN library_root_directories lrd ON lrd.root_directory_id = rd.id
+      CROSS JOIN LATERAL (
+        SELECT value AS pattern
+        FROM jsonb_array_elements_text(
+          CASE
+            WHEN jsonb_typeof(to_jsonb(v.ignore_patterns)) = 'array' THEN to_jsonb(v.ignore_patterns)
+            ELSE '[]'::jsonb
+          END
+        )
+      ) AS p
+      ON CONFLICT DO NOTHING
+    $sql$;
+  END IF;
+
   -- games
   INSERT INTO games (id, created_at, updated_at, deleted_at,
                      is_deleted, third_party, steam_app_id)

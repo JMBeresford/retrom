@@ -16,6 +16,7 @@ drop trigger if exists set_emulator_profiles_updated_at on emulator_profiles;
 drop trigger if exists set_default_emulator_profiles_updated_at on default_emulator_profiles;
 drop trigger if exists set_local_emulator_configs_updated_at on local_emulator_configs;
 drop trigger if exists set_library_root_directories_updated_at on library_root_directories;
+drop trigger if exists set_library_ignore_patterns_updated_at on library_ignore_patterns;
 drop trigger if exists set_platform_root_directories_updated_at on platform_root_directories;
 drop trigger if exists set_game_root_directories_updated_at on game_root_directories;
 drop trigger if exists set_platform_libraries_updated_at on platform_libraries;

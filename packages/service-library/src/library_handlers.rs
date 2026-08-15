@@ -1,11 +1,12 @@
 use futures::future::join_all;
 use pbjson_types::Empty;
+use regex::Regex;
 use retrom_codegen::retrom::services::library::v1::{
     BatchCreateLibrariesRequest, BatchCreateLibrariesResponse, BatchGetPlatformsRequest,
     CreateLibraryRequest, DeleteLibraryRequest, DeleteMissingEntriesRequest,
     DeleteMissingEntriesResponse, Game, GameFile, GameRow, GetLibraryRequest, GetPlatformRequest,
-    Library, LibraryRow, ListGameFilesRequest, ListGamesRequest, ListLibrariesRequest,
-    ListLibrariesResponse, Platform, PlatformRow, UpdateLibraryRequest,
+    Library, LibraryIgnorePatternRow, LibraryRow, ListGameFilesRequest, ListGamesRequest,
+    ListLibrariesRequest, ListLibrariesResponse, Platform, PlatformRow, UpdateLibraryRequest,
 };
 use retrom_db::DbPool;
 use sqlx::QueryBuilder;
@@ -96,7 +97,7 @@ async fn list_games_for_cleanup(db_pool: &DbPool) -> Result<Vec<Game>, Status> {
     .map(|response| response.games)
 }
 
-fn library_row_to_library(row: LibraryRow, path: String) -> Library {
+fn library_row_to_library(row: LibraryRow, path: String, ignore_patterns: Vec<String>) -> Library {
     Library {
         id: row.id,
         name: row.name,
@@ -104,6 +105,7 @@ fn library_row_to_library(row: LibraryRow, path: String) -> Library {
         created_at: row.created_at,
         updated_at: row.updated_at,
         path,
+        ignore_patterns,
     }
 }
 
@@ -147,6 +149,57 @@ fn validate_library_payload(library: &Library) -> Result<(), Status> {
             library.path, why
         )));
     };
+
+    for pattern in &library.ignore_patterns {
+        Regex::new(pattern).map_err(|why| {
+            Status::invalid_argument(format!(
+                "Invalid ignore pattern `{pattern}` for library {}: {why}",
+                library.name
+            ))
+        })?;
+    }
+
+    Ok(())
+}
+
+async fn get_library_ignore_pattern_rows(
+    db_pool: &DbPool,
+    library_id: &str,
+) -> Result<Vec<LibraryIgnorePatternRow>, Status> {
+    let mut builder = QueryBuilder::new(
+        "select library_id, pattern, created_at, updated_at from library_ignore_patterns where library_id = ",
+    );
+    builder.push_bind(library_id);
+    builder.push(" order by created_at asc, pattern asc");
+
+    builder
+        .build_query_as()
+        .fetch_all(db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))
+}
+
+async fn insert_library_ignore_patterns(
+    tx: &mut sqlx::Transaction<'_, retrom_db::RetromDB>,
+    library_id: &str,
+    ignore_patterns: &[String],
+) -> Result<(), Status> {
+    if ignore_patterns.is_empty() {
+        return Ok(());
+    }
+
+    let mut builder =
+        QueryBuilder::new("insert into library_ignore_patterns (library_id, pattern) ");
+    builder.push_values(ignore_patterns, |mut row, pattern| {
+        row.push_bind(library_id).push_bind(pattern);
+    });
+    builder.push(" on conflict do nothing");
+
+    builder
+        .build()
+        .execute(&mut **tx)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(())
 }
@@ -288,8 +341,13 @@ pub async fn get_library(db_pool: DbPool, request: GetLibraryRequest) -> Result<
         .map_err(|e| Status::internal(e.to_string()))?;
 
     let path = get_library_path(&db_pool, &id).await?;
+    let ignore_patterns = get_library_ignore_pattern_rows(&db_pool, &id)
+        .await?
+        .into_iter()
+        .map(|row| row.pattern)
+        .collect();
 
-    Ok(library_row_to_library(row, path))
+    Ok(library_row_to_library(row, path, ignore_patterns))
 }
 
 pub async fn list_libraries(
@@ -349,11 +407,11 @@ pub async fn create_library(
     separated.push_bind(&library_id);
     separated.push_bind(&library.name);
     separated.push_bind(&library.structure_definition);
-    separated.push_unseparated(") returning *");
+    separated.push_unseparated(")");
 
-    let row: LibraryRow = library_builder
-        .build_query_as()
-        .fetch_one(&mut *tx)
+    library_builder
+        .build()
+        .execute(&mut *tx)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -386,11 +444,13 @@ pub async fn create_library(
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
+    insert_library_ignore_patterns(&mut tx, &library_id, &library.ignore_patterns).await?;
+
     tx.commit()
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    Ok(library_row_to_library(row, library.path))
+    get_library(db_pool, GetLibraryRequest { id: library_id }).await
 }
 
 pub async fn update_library(
@@ -418,13 +478,15 @@ pub async fn update_library(
     builder.push_bind(&library.structure_definition);
     builder.push(" where id = ");
     builder.push_bind(&library.id);
-    builder.push(" returning *");
-
-    let row: LibraryRow = builder
-        .build_query_as()
-        .fetch_one(&mut *tx)
+    let update_result = builder
+        .build()
+        .execute(&mut *tx)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
+
+    if update_result.rows_affected() == 0 {
+        return Err(Status::not_found("Library not found"));
+    }
 
     let mut root_builder = QueryBuilder::new("insert into root_directories (id, path) values (");
     let mut separated = root_builder.separated(", ");
@@ -461,11 +523,26 @@ pub async fn update_library(
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
+    QueryBuilder::new("delete from library_ignore_patterns where library_id = ")
+        .push_bind(&library.id)
+        .build()
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    insert_library_ignore_patterns(&mut tx, &library.id, &library.ignore_patterns).await?;
+
     tx.commit()
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    Ok(library_row_to_library(row, library.path))
+    get_library(
+        db_pool,
+        GetLibraryRequest {
+            id: library.id.clone(),
+        },
+    )
+    .await
 }
 
 pub async fn delete_library(
@@ -581,6 +658,7 @@ mod tests {
             &fetched_library.structure_definition,
             "{library}/{platform}/{game}"
         );
+        assert!(fetched_library.ignore_patterns.is_empty());
 
         Ok(())
     }
@@ -611,6 +689,143 @@ mod tests {
 
         assert_eq!(library.name, "test_library");
         assert_eq!(library.path, lib_path);
+        assert!(library.ignore_patterns.is_empty());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_library_ignore_patterns_round_trip() -> Result<(), Status> {
+        let db_pool = get_test_db_pool().await;
+        let library_dir = create_test_library_dir().await;
+
+        let lib_path = library_dir
+            .path()
+            .to_str()
+            .expect("Failed to convert library path to string")
+            .to_string();
+
+        let mut library = create_library(
+            db_pool.clone(),
+            CreateLibraryRequest {
+                library: Some(Library {
+                    name: "test_library".to_string(),
+                    path: lib_path.clone(),
+                    structure_definition: "{library}/{platform}/{game}".to_string(),
+                    ignore_patterns: vec![".*/IgnoredPlatform(/.*)?$".to_string()],
+                    ..Default::default()
+                }),
+            },
+        )
+        .await?;
+
+        assert_eq!(
+            library.ignore_patterns,
+            vec![".*/IgnoredPlatform(/.*)?$".to_string()]
+        );
+
+        library.ignore_patterns = vec![
+            ".*/IgnoredGame(/.*)?$".to_string(),
+            ".*/skip\\.bin$".to_string(),
+        ];
+
+        let updated = update_library(
+            db_pool.clone(),
+            UpdateLibraryRequest {
+                library: Some(library.clone()),
+            },
+        )
+        .await?;
+
+        assert_eq!(updated.ignore_patterns, library.ignore_patterns);
+
+        let fetched = get_library(
+            db_pool,
+            GetLibraryRequest {
+                id: updated.id.clone(),
+            },
+        )
+        .await?;
+
+        assert_eq!(fetched.ignore_patterns, library.ignore_patterns);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_scan_library_respects_ignore_patterns() -> Result<(), Status> {
+        let db_pool = get_test_db_pool().await;
+        let library_dir = create_test_library_dir().await;
+
+        let included_platform_dir =
+            create_test_platform_dir(&library_dir, "IncludedPlatform").await;
+        let ignored_platform_dir = create_test_platform_dir(&library_dir, "IgnoredPlatform").await;
+        let included_game_dir = create_test_game_dir(&included_platform_dir, "IncludedGame").await;
+        let ignored_game_dir = create_test_game_dir(&included_platform_dir, "IgnoredGame").await;
+        let _ignored_platform_game_dir =
+            create_test_game_dir(&ignored_platform_dir, "IgnoredPlatformGame").await;
+
+        let _kept_file = create_test_game_file(&included_game_dir, "keep.bin").await;
+        let _ignored_file = create_test_game_file(&included_game_dir, "skip.bin").await;
+        let _ignored_game_file = create_test_game_file(&ignored_game_dir, "ignored.bin").await;
+
+        let library_path = library_dir
+            .path()
+            .to_str()
+            .expect("Failed to convert library path to string")
+            .to_string();
+
+        let library = create_library(
+            db_pool.clone(),
+            CreateLibraryRequest {
+                library: Some(Library {
+                    name: "test_library".to_string(),
+                    path: library_path.clone(),
+                    structure_definition: "{library}/{platform}/{game}".to_string(),
+                    ignore_patterns: vec![
+                        ".*/IgnoredPlatform(/.*)?$".to_string(),
+                        ".*/IgnoredGame(/.*)?$".to_string(),
+                        ".*/skip\\.bin$".to_string(),
+                    ],
+                    ..Default::default()
+                }),
+            },
+        )
+        .await?;
+
+        scan_library_target(
+            &db_pool,
+            &LibraryScanTarget {
+                library_id: library.id,
+                structure_definition: library.structure_definition,
+                root_paths: vec![library_path],
+                ignore_patterns: library.ignore_patterns,
+            },
+        )
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+        let platform_count: i64 =
+            sqlx::query_scalar("select count(*) from platforms where third_party = 0")
+                .fetch_one(&db_pool)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+        assert_eq!(platform_count, 1);
+
+        let game_count: i64 =
+            sqlx::query_scalar("select count(*) from games where third_party = 0")
+                .fetch_one(&db_pool)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+        assert_eq!(game_count, 1);
+
+        let file_paths: Vec<String> = sqlx::query_scalar("select path from game_files")
+            .fetch_all(&db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        assert_eq!(file_paths.len(), 1);
+        assert!(file_paths[0].ends_with("keep.bin"));
 
         Ok(())
     }
@@ -666,6 +881,7 @@ mod tests {
                 library_id: library.id,
                 structure_definition: library.structure_definition,
                 root_paths: vec![library_path],
+                ignore_patterns: vec![],
             },
         )
         .await
@@ -761,6 +977,7 @@ mod tests {
                 library_id: library.id,
                 structure_definition: library.structure_definition,
                 root_paths: vec![library_path],
+                ignore_patterns: vec![],
             },
         )
         .await

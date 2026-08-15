@@ -83,6 +83,10 @@ create or replace trigger set_library_root_directories_updated_at
 before update on library_root_directories
 for each row execute procedure set_updated_at_timestamp();
 
+create or replace trigger set_library_ignore_patterns_updated_at
+before update on library_ignore_patterns
+for each row execute procedure set_updated_at_timestamp();
+
 create or replace trigger set_platform_root_directories_updated_at
 before update on platform_root_directories
 for each row execute procedure set_updated_at_timestamp();

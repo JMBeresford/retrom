@@ -10,6 +10,7 @@
 pub mod parser;
 
 use parser::{ParserError, StructureParser};
+use regex::Regex;
 use retrom_db::DbPool;
 use retrom_service_common::metadata_providers::MANUAL_PROVIDER_ID;
 use sqlx::QueryBuilder;
@@ -34,17 +35,56 @@ pub struct LibraryScanTarget {
     pub library_id: String,
     pub structure_definition: String,
     pub root_paths: Vec<String>,
+    pub ignore_patterns: Vec<String>,
 }
 
 /// Scan a single library: walk each mapped root directory and upsert the discovered entities.
 #[tracing::instrument(skip(db_pool))]
 pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -> Result<()> {
     let parser = StructureParser::new(&target.structure_definition)?;
+    let ignore_patterns: Vec<Regex> = target
+        .ignore_patterns
+        .iter()
+        .map(|pattern| {
+            Regex::new(pattern).map_err(|why| {
+                ScanError::Parser(ParserError::Other(format!(
+                    "Invalid ignore pattern `{pattern}`: {why}"
+                )))
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+
     let platform_depth = parser.platform_depth();
     let game_depth_from_platform = parser.game_depth_from_platform();
 
     for root_path in &target.root_paths {
         let root = PathBuf::from(root_path);
+        let root_canonical = match root.canonicalize().ok() {
+            Some(path) => path,
+            None => continue,
+        };
+
+        // Patterns are matched against paths relative to the library root's
+        // parent so that anchors like `^` and `$` refer to the visible
+        // library hierarchy rather than the machine's absolute filesystem.
+        let ignore_base = root_canonical
+            .parent()
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| root_canonical.clone());
+
+        if is_ignored_path(
+            &ignore_patterns,
+            &relative_path_str(&root_canonical, &ignore_base),
+        ) {
+            tracing::debug!(
+                root_path = ?root_canonical,
+                library_path = &relative_path_str(&root_canonical, &ignore_base),
+                ?ignore_patterns,
+                "Library root path ignored",
+            );
+
+            continue;
+        }
 
         let platform_dirs: Vec<PathBuf> = WalkDir::new(&root)
             .min_depth(platform_depth)
@@ -61,10 +101,27 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
             .collect();
 
         for platform_dir in platform_dirs {
-            let platform_path = match canonical_string(&platform_dir) {
+            let platform_canonical = match platform_dir.canonicalize().ok() {
                 Some(path) => path,
                 None => continue,
             };
+            let platform_path = match platform_canonical.to_str() {
+                Some(s) => s.to_string(),
+                None => continue,
+            };
+
+            if is_ignored_path(
+                &ignore_patterns,
+                &relative_path_str(&platform_canonical, &ignore_base),
+            ) {
+                tracing::debug!(
+                    platform_root_path = ?platform_canonical,
+                    platform_path = &relative_path_str(&platform_canonical, &ignore_base),
+                    ?ignore_patterns,
+                    "Platform root path ignored"
+                );
+                continue;
+            }
 
             let platform_id = upsert_platform(db_pool, &target.library_id, &platform_path).await?;
 
@@ -82,7 +139,15 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
                 .collect();
 
             for game_entry in game_entries {
-                if let Err(why) = scan_game_entry(db_pool, &platform_id, &game_entry).await {
+                if let Err(why) = scan_game_entry(
+                    db_pool,
+                    &platform_id,
+                    &game_entry,
+                    &ignore_patterns,
+                    &ignore_base,
+                )
+                .await
+                {
                     warn!("Failed to scan game entry {:?}: {}", game_entry, why);
                 }
             }
@@ -93,11 +158,34 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
 }
 
 #[tracing::instrument(skip(db_pool))]
-async fn scan_game_entry(db_pool: &DbPool, platform_id: &str, game_entry: &Path) -> Result<()> {
-    let game_path = match canonical_string(game_entry) {
+async fn scan_game_entry(
+    db_pool: &DbPool,
+    platform_id: &str,
+    game_entry: &Path,
+    ignore_patterns: &[Regex],
+    ignore_base: &Path,
+) -> Result<()> {
+    let game_canonical = match game_entry.canonicalize().ok() {
         Some(path) => path,
         None => return Ok(()),
     };
+    let game_path = match game_canonical.to_str() {
+        Some(s) => s.to_string(),
+        None => return Ok(()),
+    };
+
+    if is_ignored_path(
+        ignore_patterns,
+        &relative_path_str(&game_canonical, ignore_base),
+    ) {
+        tracing::debug!(
+            game_root_path = ?game_canonical,
+            game_path = &relative_path_str(&game_canonical, ignore_base),
+            ?ignore_patterns,
+            "Game root path ignored",
+        );
+        return Ok(());
+    }
 
     let game_id = upsert_game(db_pool, platform_id, &game_path).await?;
 
@@ -110,7 +198,24 @@ async fn scan_game_entry(db_pool: &DbPool, platform_id: &str, game_entry: &Path)
             .collect();
 
         for file in walk_files {
-            if let Some(file_path) = canonical_string(&file) {
+            if let Ok(file_canonical) = file.canonicalize() {
+                let file_path = match file_canonical.to_str() {
+                    Some(s) => s.to_string(),
+                    None => continue,
+                };
+                if is_ignored_path(
+                    ignore_patterns,
+                    &relative_path_str(&file_canonical, ignore_base),
+                ) {
+                    tracing::debug!(
+                        file_root_path = ?file_canonical,
+                        file_path = &relative_path_str(&file_canonical, ignore_base),
+                        ?ignore_patterns,
+                        "Game file path ignored",
+                    );
+                    continue;
+                }
+
                 let byte_size = file_byte_size(&file);
                 insert_game_file(db_pool, &game_id, platform_id, &file_path, byte_size).await?;
             }
@@ -121,6 +226,20 @@ async fn scan_game_entry(db_pool: &DbPool, platform_id: &str, game_entry: &Path)
     }
 
     Ok(())
+}
+
+fn is_ignored_path(ignore_patterns: &[Regex], path: &str) -> bool {
+    ignore_patterns.iter().any(|pattern| pattern.is_match(path))
+}
+
+/// Returns the portion of `path` that is relative to `base`, with all
+/// directory separators normalized to `/` for cross-platform consistency.
+/// Falls back to the full path string if `path` is not beneath `base`.
+fn relative_path_str(path: &Path, base: &Path) -> String {
+    path.strip_prefix(base)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/")
 }
 
 async fn upsert_platform(db_pool: &DbPool, library_id: &str, path: &str) -> Result<String> {
@@ -363,16 +482,6 @@ async fn insert_game_file(
     builder.build().execute(db_pool).await?;
 
     Ok(())
-}
-
-fn canonical_string(path: &Path) -> Option<String> {
-    match path.canonicalize() {
-        Ok(canonical) => canonical.to_str().map(|s| s.to_string()),
-        Err(why) => {
-            warn!("Could not canonicalize path {:?}: {}", path, why);
-            None
-        }
-    }
 }
 
 fn file_byte_size(path: &Path) -> i64 {
