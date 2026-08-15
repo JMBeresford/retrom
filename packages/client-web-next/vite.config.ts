@@ -26,7 +26,11 @@ const config = defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    devtools(),
+    devtools({
+      enhancedLogs: {
+        enabled: false,
+      },
+    }),
     tailwindcss(),
     tanstackRouter({
       target: "react",

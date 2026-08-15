@@ -58,7 +58,7 @@ export function LibraryTable() {
                   className={cn(
                     "text-sm text-muted-foreground font-semibold",
                     header.column.getIsPinned() &&
-                      "sticky right-0 bg-background",
+                      "sticky right-0 bg-background inset-shadow-[1px_0_0_0] inset-shadow-border",
                   )}
                   key={header.id}
                 >

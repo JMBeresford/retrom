@@ -1,8 +1,8 @@
 import * as ConfigFile from "@retrom/plugin-config";
 import { create, fromJsonString, toJsonString } from "@bufbuild/protobuf";
 import { RetromClientConfigSchema } from "@retrom/codegen/retrom/client/v1/client_config_pb";
+import type { RetromClientConfigJson } from "@retrom/codegen/retrom/client/v1/client_config_pb";
 import type { StateStorage } from "zustand/middleware";
-import type { LocalConfig } from "./store";
 
 async function retry<T>(fn: () => Promise<T>, count = 5): Promise<T> {
   let attempts = 0;
@@ -30,7 +30,7 @@ export const desktopStorage: StateStorage = {
   },
 
   setItem: async (_key: string, value: string) => {
-    const parsed = JSON.parse(value) as { state: LocalConfig };
+    const parsed = JSON.parse(value) as { state: RetromClientConfigJson };
 
     const config = fromJsonString(
       RetromClientConfigSchema,

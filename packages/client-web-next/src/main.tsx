@@ -6,7 +6,6 @@ import {
   restoreStateCurrent,
 } from "@tauri-apps/plugin-window-state";
 import { IS_DESKTOP } from "./env";
-import { ConfigProvider } from "./config/provider";
 import { RetromClientProvider } from "./api-client/provider";
 import { App } from "./app";
 
@@ -22,11 +21,9 @@ if (!rootElement.innerHTML) {
   try {
     root.render(
       <StrictMode>
-        <ConfigProvider>
-          <RetromClientProvider>
-            <App />
-          </RetromClientProvider>
-        </ConfigProvider>
+        <RetromClientProvider>
+          <App />
+        </RetromClientProvider>
       </StrictMode>,
     );
   } catch (error) {

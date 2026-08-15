@@ -12,7 +12,6 @@ import TanStackFormDevtools from "../devtools/tanstack-form";
 import appCss from "../globals.css?url";
 import type { PropsWithChildren, ReactNode } from "react";
 import type { RouterContext } from "@/router";
-import { ThemeProvider } from "@/themes/theme-provider";
 import { ModalActionProvider } from "@/modals/provider";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -39,7 +38,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   shellComponent: RootDocument,
 });
 
-const providers = [ThemeProvider, SidebarProvider, ModalActionProvider];
+const providers = [SidebarProvider, ModalActionProvider];
 
 function RenderRootProviders({ children }: PropsWithChildren) {
   return providers.reduceRight((acc, Provider) => {
