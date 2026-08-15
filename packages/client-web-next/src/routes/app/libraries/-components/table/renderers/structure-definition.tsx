@@ -1,5 +1,13 @@
-export function RenderStructureDefinition({ children }: { children: string }) {
-  const parts = children.split("/");
+import type { Row } from "@tanstack/react-table";
+import type { LibraryTableFeatures } from "../defs";
+import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
+
+export function StructureDefinition({
+  row,
+}: {
+  row: Row<LibraryTableFeatures, Library>;
+}) {
+  const parts = row.original.structureDefinition.split("/");
 
   return (
     <span className="font-mono">

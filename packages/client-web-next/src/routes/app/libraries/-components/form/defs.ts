@@ -17,10 +17,8 @@ export const { fieldContext, formContext, useFieldContext, useFormContext } =
 export const defaultValues = {
   name: "",
   path: "",
-  ignorePatterns: {
-    patterns: Array<string>(),
-  },
   structureDefinition: "{library}/{platform}/{game}",
+  ignorePatterns: Array<string>(),
 } satisfies z.output<typeof libraryValidationSchema>;
 
 export const formOptions = formOptionsImpl({

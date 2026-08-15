@@ -4,8 +4,9 @@ import {
   tableFeatures,
 } from "@tanstack/react-table";
 import { FilePath } from "@retrom/ui-next/components/file-path";
-import { RenderStructureDefinition } from "./renderers/structure-definition";
+import { StructureDefinition } from "./renderers/structure-definition";
 import { RowActions } from "./renderers/row-actions";
+import { IgnorePatterns } from "./renderers/ignore-patterns";
 import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
 
 export type LibraryTableFeatures = typeof libraryTableFeatures;
@@ -28,9 +29,11 @@ export const libraryTableColumns = columns([
   }),
   accessor("structureDefinition", {
     header: "Structure Definition",
-    cell: (info) => (
-      <RenderStructureDefinition>{info.getValue()}</RenderStructureDefinition>
-    ),
+    cell: (info) => <StructureDefinition row={info.row} />,
+  }),
+  accessor("ignorePatterns", {
+    header: "Ignore Patterns",
+    cell: (info) => <IgnorePatterns row={info.row} />,
   }),
   display({
     id: "actions",

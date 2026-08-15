@@ -87,9 +87,7 @@ export const libraryValidationSchema = z.object({
   path: z.string().min(1),
   name: z.string().min(1),
   structureDefinition: structureDefinitionValidationSchema,
-  ignorePatterns: z.object({
-    patterns: z.string().array(),
-  }),
+  ignorePatterns: z.string().array(),
 }) satisfies z.ZodType<
-  Pick<MessageShape<typeof LibrarySchema>, "name" | "structureDefinition">
+  Omit<MessageShape<typeof LibrarySchema>, "$typeName" | "id">
 >;
