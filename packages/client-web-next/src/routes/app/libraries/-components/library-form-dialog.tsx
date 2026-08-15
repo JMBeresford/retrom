@@ -83,13 +83,9 @@ export function LibraryFormDialog() {
 
     if (open) {
       if (modalState?.action === "update") {
-        libraryForm.reset(
-          {
-            ...modalState.currentValue,
-            ignorePatterns: { patterns: [] },
-          },
-          { keepDefaultValues: false },
-        );
+        libraryForm.reset(modalState.currentValue, {
+          keepDefaultValues: false,
+        });
       } else {
         libraryForm.reset(defaultValues, { keepDefaultValues: false });
       }
@@ -127,7 +123,7 @@ export function LibraryFormDialog() {
                   {(field) => <field.PathField />}
                 </libraryForm.AppField>
 
-                <libraryForm.AppField name="ignorePatterns.patterns">
+                <libraryForm.AppField name="ignorePatterns">
                   {(field) => <field.IgnorePatternsField />}
                 </libraryForm.AppField>
 
