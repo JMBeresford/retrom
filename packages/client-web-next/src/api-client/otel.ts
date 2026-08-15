@@ -35,14 +35,6 @@ export const otelInterceptor: Interceptor = (next) => (req) => {
         req.header.set("tracestate", output.tracestate);
       }
 
-      if (reqHeaders.length) {
-        const curValue = req.header.get("Access-Control-Request-Headers") ?? "";
-        req.header.set(
-          "Access-Control-Request-Headers",
-          `${reqHeaders.join(", ")}${curValue ? `${curValue}` : ""}`,
-        );
-      }
-
       next(req)
         .then(resolve)
         .catch((err) => {

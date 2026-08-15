@@ -259,7 +259,7 @@ export function FileExplorerDialog() {
               <Button
                 variant="secondary"
                 onClick={() => {
-                  close();
+                  handle.close();
                 }}
               >
                 Close
