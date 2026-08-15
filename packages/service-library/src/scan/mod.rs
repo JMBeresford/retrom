@@ -72,7 +72,17 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
             .map(|p| p.to_path_buf())
             .unwrap_or_else(|| root_canonical.clone());
 
-        if is_ignored_path(&ignore_patterns, &relative_path_str(&root_canonical, &ignore_base)) {
+        if is_ignored_path(
+            &ignore_patterns,
+            &relative_path_str(&root_canonical, &ignore_base),
+        ) {
+            tracing::debug!(
+                root_path = ?root_canonical,
+                library_path = &relative_path_str(&root_canonical, &ignore_base),
+                ?ignore_patterns,
+                "Library root path ignored",
+            );
+
             continue;
         }
 
@@ -104,6 +114,12 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
                 &ignore_patterns,
                 &relative_path_str(&platform_canonical, &ignore_base),
             ) {
+                tracing::debug!(
+                    platform_root_path = ?platform_canonical,
+                    platform_path = &relative_path_str(&platform_canonical, &ignore_base),
+                    ?ignore_patterns,
+                    "Platform root path ignored"
+                );
                 continue;
             }
 
@@ -162,6 +178,12 @@ async fn scan_game_entry(
         ignore_patterns,
         &relative_path_str(&game_canonical, ignore_base),
     ) {
+        tracing::debug!(
+            game_root_path = ?game_canonical,
+            game_path = &relative_path_str(&game_canonical, ignore_base),
+            ?ignore_patterns,
+            "Game root path ignored",
+        );
         return Ok(());
     }
 
@@ -185,6 +207,12 @@ async fn scan_game_entry(
                     ignore_patterns,
                     &relative_path_str(&file_canonical, ignore_base),
                 ) {
+                    tracing::debug!(
+                        file_root_path = ?file_canonical,
+                        file_path = &relative_path_str(&file_canonical, ignore_base),
+                        ?ignore_patterns,
+                        "Game file path ignored",
+                    );
                     continue;
                 }
 

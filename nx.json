@@ -52,7 +52,11 @@
       }
     },
     "cargo:run": {
-      "executor": "@monodon/rust:run",
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "cargo run"
+      },
       "dependsOn": [],
       "continuous": true
     },
