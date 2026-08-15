@@ -3,7 +3,7 @@ import { routeTree } from "./routeTree.gen";
 import { BASE_URL } from "./env";
 import type { QueryClient } from "@tanstack/react-query";
 import type { RetromClient } from "./api-client/client";
-import type { RetromClientConfigJson } from "@retrom/codegen/retrom/client/v1/client-config_pb";
+import type { RetromClientConfigJson } from "@retrom/codegen/retrom/client/v1/client_config_pb";
 
 export interface RouterContext {
   queryClient: QueryClient;

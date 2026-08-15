@@ -28,9 +28,6 @@
     },
     "tsc:typecheck": {
       "dependsOn": ["generate"]
-    },
-    "typecheck": {
-      "dependsOn": ["tsc:typecheck"]
     }
   }
 }
