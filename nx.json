@@ -2,11 +2,20 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "parallel": 5,
   "targetDefaults": {
-    "tsc:typecheck": {
-      "dependsOn": ["^tsc:typecheck"]
-    },
     "build": {
-      "dependsOn": ["typecheck"]
+      "dependsOn": ["tsc:typecheck"]
+    },
+    "tsc:typecheck": {
+      "inputs": [
+        "{projectRoot}/tsconfig*.json",
+        "{projectRoot}/**/*.ts",
+        "{projectRoot}/**/*.js"
+      ],
+      "outputs": ["{projectRoot}/*.tsbuildinfo"],
+      "dependsOn": ["^tsc:typecheck"],
+      "options": {
+        "command": "tsc --build --emitDeclarationOnly"
+      }
     },
     "prettier:format": {
       "executor": "nx:run-commands",
@@ -74,7 +83,7 @@
       }
     },
     "eslint:lint": {
-      "dependsOn": ["^typecheck"],
+      "dependsOn": ["^tsc:typecheck"],
       "configurations": {
         "fix": {
           "args": ["--fix"]
@@ -118,14 +127,13 @@
     },
     {
       "plugin": "@nx/js/typescript",
+      "exclude": ["."],
       "options": {
         "typecheck": {
           "targetName": "tsc:typecheck"
         },
         "build": {
-          "targetName": "tsc:build",
-          "buildDepsName": "tsc:build-deps",
-          "watchDepsName": "tsc:watch-deps"
+          "targetName": "tsc:build"
         }
       }
     },

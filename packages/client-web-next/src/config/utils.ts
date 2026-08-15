@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { RetromClientConfigJson } from "@retrom/codegen/retrom/client/v1/client-config_pb";
+import type { RetromClientConfigJson } from "@retrom/codegen/retrom/client/v1/client_config_pb";
 import { RETROM_HOSTNAME, RETROM_PORT } from "@/env";
 
 export function defaultAPIHostname() {

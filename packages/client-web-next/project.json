@@ -6,9 +6,6 @@
     "build": {
       "dependsOn": ["vite:build"]
     },
-    "typecheck": {
-      "dependsOn": ["tsc:typecheck"]
-    },
     "dev": {
       "executor": "nx:run-commands",
       "continuous": true,
