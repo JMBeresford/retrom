@@ -5,7 +5,6 @@ import {
   subscribeWithSelector,
 } from "zustand/middleware";
 import { RetromClientConfigSchema } from "@retrom/codegen/retrom/client/v1/client_config_pb";
-import { createContext, useContext } from "react";
 import * as ConfigFile from "@retrom/plugin-config";
 import { toJson } from "@bufbuild/protobuf";
 import { TimestampSchema, timestampNow } from "@bufbuild/protobuf/wkt";
@@ -16,15 +15,10 @@ import type {
   RetromClientConfig,
   RetromClientConfigJson,
 } from "@retrom/codegen/retrom/client/v1/client_config_pb";
-import type { StoreApi, UseBoundStore } from "zustand";
 import { IS_DESKTOP } from "@/env";
 
 const STORAGE_KEY = "retrom-client-config";
-export type LocalConfig = RetromClientConfigJson;
-
-export const context = createContext<
-  UseBoundStore<StoreApi<LocalConfig>> | undefined
->(undefined);
+const STORAGE_VERSION = 6;
 
 const defaultConfig: RetromClientConfigJson = {
   server: {
@@ -77,15 +71,25 @@ const initialConfig = configFile
   ? toJson(RetromClientConfigSchema, configFile)
   : defaultConfig;
 
-export const configStore = create<LocalConfig>()(
+export const useConfig = create<RetromClientConfigJson>()(
   subscribeWithSelector(
     persist(() => initialConfig, {
       name: STORAGE_KEY,
-      version: 6,
+      version: STORAGE_VERSION,
       migrate,
       skipHydration: IS_DESKTOP,
-      onRehydrateStorage: (state) => {
-        console.log("Rehydrating config state", state);
+      onRehydrateStorage: (current) => {
+        console.debug(
+          "[ConfigStore] Rehydrating config store. Current non-hydrated state:",
+          current,
+        );
+
+        return (state) => {
+          console.debug(
+            "[ConfigStore] Rehydrated config store. New state:",
+            state,
+          );
+        };
       },
       storage: IS_DESKTOP
         ? createJSONStorage(() => desktopStorage, {
@@ -97,17 +101,3 @@ export const configStore = create<LocalConfig>()(
     }),
   ),
 );
-
-export function useConfigStore() {
-  const store = useContext(context);
-
-  if (!store) {
-    throw new Error("useConfig must be used within a ConfigProvider");
-  }
-
-  return store;
-}
-
-export function useConfig<T>(selector: (state: LocalConfig) => T) {
-  return useConfigStore()(selector);
-}
