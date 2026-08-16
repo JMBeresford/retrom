@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 // DefaultEmulatorProfile represents the default emulator profile for a given platform and client.
 message DefaultEmulatorProfile {
   option (google.api.resource) = {
-    name_field: "platform"
+    name_field: "id"
     type: "retrom.services.emulators.v1.EmulatorService/DefaultEmulatorProfile"
     singular: "defaultEmulatorProfile"
     plural: "defaultEmulatorProfiles"
