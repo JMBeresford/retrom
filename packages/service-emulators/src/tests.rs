@@ -5,15 +5,12 @@ use retrom_codegen::retrom::services::emulators::v1::{
     ListEmulatorsRequest, ListEmulatorProfilesRequest, UpdateEmulatorProfileRequest,
     UpdateEmulatorRequest, DeleteDefaultEmulatorProfileRequest, GetDefaultEmulatorProfileRequest,
 };
-use retrom_db::DbPool;
 use tonic::{Request, Status};
 
 use crate::EmulatorServiceHandlers;
 
 async fn get_test_db_pool() -> DbPool {
-    std::env::set_var("RETROM_DB_URL", "sqlite::memory:");
-
-    let pool = retrom_db::connect()
+    let pool = sqlx::SqlitePool::connect("sqlite::memory:")
         .await
         .expect("Failed to connect to test database");
 
@@ -99,7 +96,7 @@ async fn test_list_emulators() -> Result<(), Status> {
         .await?
         .into_inner();
 
-    assert!(list.emulators.len() >= 2);
+    assert_eq!(list.emulators.len(), 2);
 
     Ok(())
 }
