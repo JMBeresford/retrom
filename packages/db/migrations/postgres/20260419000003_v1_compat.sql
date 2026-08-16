@@ -496,7 +496,7 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- emulator_platforms (from v1 integer array)
-  INSERT INTO emulator_platforms (emulator_id, platform_id)
+  INSERT INTO emulator_platforms (emulator, platform)
   SELECT DISTINCT me.new_id, mp.new_id
   FROM _v1_emulators e
   JOIN _map_emulators me ON e.id = me.old_id
@@ -510,7 +510,7 @@ BEGIN
   --   1 (MACOS)   → 00000000-0000-0000-0003-000000000002
   --   2 (LINUX)   → 00000000-0000-0000-0003-000000000003
   --   3 (WASM)    → 00000000-0000-0000-0003-000000000004
-  INSERT INTO emulator_operating_systems (emulator_id, os_id)
+  INSERT INTO emulator_operating_systems (emulator, operating_system)
   SELECT DISTINCT me.new_id,
     CASE old_os_id
       WHEN 0 THEN '00000000-0000-0000-0003-000000000001'
@@ -525,7 +525,7 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- emulator_profiles (built-in Default profiles already seeded – skip via DO NOTHING)
-  INSERT INTO emulator_profiles (id, emulator_id, name, custom_args, built_in, created_at, updated_at)
+  INSERT INTO emulator_profiles (id, emulator, name, custom_args, built_in, created_at, updated_at)
   SELECT
     mep.new_id, me.new_id, ep.name,
     array_to_string(ep.custom_args, ' '),
@@ -538,7 +538,7 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- emulator_profile_extensions (from v1 supported_extensions text[])
-  INSERT INTO emulator_profile_extensions (profile_id, extension)
+  INSERT INTO emulator_profile_extensions (emulator_profile, extension)
   SELECT DISTINCT mep.new_id, unnest(ep.supported_extensions)
   FROM _v1_emulator_profiles ep
   JOIN _map_emulator_profiles mep ON ep.id = mep.old_id
@@ -546,7 +546,7 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- default_emulator_profiles
-  INSERT INTO default_emulator_profiles (platform_id, emulator_profile_id, client_id, created_at, updated_at)
+  INSERT INTO default_emulator_profiles (platform, emulator_profile, client, created_at, updated_at)
   SELECT mp.new_id, mep.new_id, mc.new_id,
          to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
          to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
@@ -558,7 +558,7 @@ BEGIN
 
   -- local_emulator_configs (phase1 columns default_profile_id / bios_directory /
   -- extra_files_directory did not exist in v1 and are left NULL in v2)
-  INSERT INTO local_emulator_configs (id, emulator_id, client_id, created_at, updated_at,
+  INSERT INTO local_emulator_configs (id, emulator, client, created_at, updated_at,
                                        executable_path, nickname, save_data_path,
                                        save_states_path)
   SELECT

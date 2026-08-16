@@ -9396,6 +9396,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "dotenvy",
+ "futures",
  "pbjson",
  "pbjson-types",
  "retrom-codegen",
