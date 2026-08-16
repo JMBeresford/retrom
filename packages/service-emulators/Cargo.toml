@@ -19,6 +19,8 @@ retrom-service-config = { workspace = true }
 retrom-service-common = { workspace = true }
 retrom-telemetry = { workspace = true }
 diesel = { workspace = true }
+pbjson = { workspace = true }
+pbjson-types = { workspace = true }
 diesel-async = { workspace = true }
 deadpool = { workspace = true }
 tonic = { workspace = true }

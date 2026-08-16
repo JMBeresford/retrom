@@ -128,7 +128,7 @@ message ListEmulatorProfilesResponse {
 // Request to create an emulator profile.
 message CreateEmulatorProfileRequest {
   // Emulator profile to create.
-  EmulatorProfile profile = 1 [(google.api.field_behavior) = REQUIRED];
+  EmulatorProfile emulator_profile = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 // Request to update an emulator profile.
@@ -172,7 +172,7 @@ message ListDefaultEmulatorProfilesResponse {
 // Request to create a default emulator profile.
 message CreateDefaultEmulatorProfileRequest {
   // Default emulator profile to create.
-  DefaultEmulatorProfile default_profile = 1 [(google.api.field_behavior) = REQUIRED];
+  DefaultEmulatorProfile default_emulator_profile = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 // Request to update a default emulator profile.
@@ -216,7 +216,7 @@ message ListLocalEmulatorConfigsResponse {
 // Request to create a local emulator configuration.
 message CreateLocalEmulatorConfigRequest {
   // Local emulator configuration to create.
-  LocalEmulatorConfig config = 1 [(google.api.field_behavior) = REQUIRED];
+  LocalEmulatorConfig local_emulator_config = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 // Request to update a local emulator configuration.

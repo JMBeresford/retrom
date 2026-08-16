@@ -247,12 +247,13 @@ create table if not exists emulator_profile_extensions (
 );
 
 create table if not exists default_emulator_profiles (
+    id text not null primary key,
     platform_id text not null references platforms (id) on delete cascade,
     client_id text not null references clients (id) on delete cascade,
     emulator_profile_id text not null references emulator_profiles (id) on delete cascade,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
-    primary key (platform_id, client_id)
+    constraint default_emulator_profiles_platform_client_unique unique (platform_id, client_id)
 );
 
 create table if not exists local_emulator_configs (

@@ -9396,6 +9396,8 @@ dependencies = [
  "diesel",
  "diesel-async",
  "dotenvy",
+ "pbjson",
+ "pbjson-types",
  "retrom-codegen",
  "retrom-db",
  "retrom-service-common",

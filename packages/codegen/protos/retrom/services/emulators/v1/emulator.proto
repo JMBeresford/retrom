@@ -15,6 +15,20 @@ message Emulator {
     plural: "emulators"
   };
 
+  // The operating systems that the emulator supports.
+  enum OperatingSystem {
+    // The operating system is unspecified.
+    OPERATING_SYSTEM_UNSPECIFIED = 0;
+    // The emulator supports Windows.
+    OPERATING_SYSTEM_WINDOWS = 1;
+    // The emulator supports macOS.
+    OPERATING_SYSTEM_MACOS = 2;
+    // The emulator supports Linux.
+    OPERATING_SYSTEM_LINUX = 3;
+    // The emulator supports Web/WASM.
+    OPERATING_SYSTEM_WEB = 4;
+  }
+
   // The unique identifier of the emulator.
   string id = 1 [
     (google.api.field_behavior) = OUTPUT_ONLY,
@@ -33,7 +47,7 @@ message Emulator {
   // A list of IDs of platforms that the emulator supports.
   repeated string platforms = 7 [(google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/Platform"}];
   // A list of IDs of operating systems that the emulator supports.
-  repeated string operating_systems = 8;
+  repeated OperatingSystem operating_systems = 8;
 }
 
 // EmulatorRow represents a row in the emulators table.
