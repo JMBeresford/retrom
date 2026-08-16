@@ -546,8 +546,8 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- default_emulator_profiles
-  INSERT INTO default_emulator_profiles (platform, emulator_profile, client, created_at, updated_at)
-  SELECT mp.new_id, mep.new_id, mc.new_id,
+  INSERT INTO default_emulator_profiles (id, platform, emulator_profile, client, created_at, updated_at)
+  SELECT gen_random_uuid()::text, mp.new_id, mep.new_id, mc.new_id,
          to_char(v.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
          to_char(v.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
   FROM _v1_default_emulator_profiles v
