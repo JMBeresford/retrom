@@ -22,13 +22,23 @@ use uuid::Uuid;
 
 pub mod router;
 
+#[cfg(test)]
+mod tests;
+
 pub struct EmulatorServiceHandlers {
-    db_pool: DbPool,
+    pub db_pool: DbPool,
 }
 
 impl EmulatorServiceHandlers {
     pub fn new(db_pool: DbPool) -> Self {
         Self { db_pool }
+    }
+}
+
+fn sqlx_err_to_status(e: sqlx::Error) -> Status {
+    match e {
+        sqlx::Error::RowNotFound => Status::not_found("Resource not found"),
+        _ => Status::internal(e.to_string()),
     }
 }
 
@@ -61,7 +71,7 @@ async fn get_emulator_platforms(
         .build_query_scalar()
         .fetch_all(db_pool)
         .await
-        .map_err(|e| Status::internal(e.to_string()))
+        .map_err(sqlx_err_to_status)
 }
 
 async fn get_emulator_operating_systems(
@@ -81,7 +91,7 @@ async fn get_emulator_operating_systems(
     .build_query_scalar()
     .fetch_all(db_pool)
     .await
-    .map_err(|e| Status::internal(e.to_string()))?;
+    .map_err(sqlx_err_to_status)?;
 
     Ok(os_names
         .into_iter()
@@ -112,7 +122,7 @@ async fn get_profile_extensions(db_pool: &DbPool, profile_id: &str) -> Result<Ve
         .build_query_scalar()
         .fetch_all(db_pool)
         .await
-        .map_err(|e| Status::internal(e.to_string()))
+        .map_err(sqlx_err_to_status)
 }
 
 fn profile_row_to_profile(
@@ -148,7 +158,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build_query_as()
             .fetch_one(&self.db_pool)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         let platforms = get_emulator_platforms(&self.db_pool, &id).await?;
         let operating_systems = get_emulator_operating_systems(&self.db_pool, &id)
@@ -201,7 +211,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build_query_scalar()
             .fetch_all(&self.db_pool)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         let platforms_futures: Vec<_> = emulator_ids
             .iter()
@@ -224,7 +234,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .build_query_as()
                 .fetch_one(&self.db_pool)
                 .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
 
             let operating_systems = get_emulator_operating_systems(&self.db_pool, &emulator_id)
                 .await?
@@ -257,7 +267,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .db_pool
             .begin()
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         let row: EmulatorRow =
             QueryBuilder::new("insert into emulators (id, name, built_in) values (")
@@ -270,7 +280,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .build_query_as()
                 .fetch_one(&mut *tx)
                 .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
 
         if !emulator.platforms.is_empty() {
             QueryBuilder::new("insert into emulator_platforms (emulator, platform) ")
@@ -281,7 +291,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .build()
                 .execute(&mut *tx)
                 .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
         }
 
         let os_ids: Vec<&str> = emulator
@@ -302,12 +312,12 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build()
             .execute(&mut *tx)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
         }
 
         tx.commit()
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(emulator_row_to_emulator(
             row,
@@ -337,7 +347,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .db_pool
             .begin()
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         let row: EmulatorRow = QueryBuilder::new("update emulators set name = ")
             .push_bind(&emulator.name)
@@ -347,7 +357,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build_query_as()
             .fetch_one(&mut *tx)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         // Delete existing platforms and operating systems
         QueryBuilder::new("delete from emulator_platforms where emulator = ")
@@ -355,14 +365,14 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build()
             .execute(&mut *tx)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         QueryBuilder::new("delete from emulator_operating_systems where emulator = ")
             .push_bind(&emulator.id)
             .build()
             .execute(&mut *tx)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         // Insert new platforms and operating systems
         if !emulator.platforms.is_empty() {
@@ -374,7 +384,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .build()
                 .execute(&mut *tx)
                 .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
         }
 
         let os_ids: Vec<&str> = emulator
@@ -395,12 +405,12 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build()
             .execute(&mut *tx)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
         }
 
         tx.commit()
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(emulator_row_to_emulator(
             row,
@@ -426,7 +436,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build()
             .execute(&self.db_pool)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(Empty {}))
     }
@@ -449,7 +459,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .build_query_as()
                 .fetch_one(&self.db_pool)
                 .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
 
         let supported_extensions = get_profile_extensions(&self.db_pool, &id).await?;
 
@@ -492,7 +502,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build_query_scalar()
             .fetch_all(&self.db_pool)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         let profiles = join_all(profile_ids.into_iter().map(|id| {
             let db_pool = self.db_pool.clone();
@@ -503,7 +513,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                         .build_query_as()
                         .fetch_one(&db_pool)
                         .await
-                        .map_err(|e| Status::internal(e.to_string()))?;
+                        .map_err(sqlx_err_to_status)?;
 
                 let extensions = get_profile_extensions(&db_pool, &id).await?;
                 Ok(profile_row_to_profile(row, extensions))
@@ -539,7 +549,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .db_pool
             .begin()
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         let row: EmulatorProfileRow = QueryBuilder::new(
             "insert into emulator_profiles (id, emulator, name, custom_args, built_in) values (",
@@ -557,7 +567,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         .build_query_as()
         .fetch_one(&mut *tx)
         .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        .map_err(sqlx_err_to_status)?;
 
         if !profile.supported_extensions.is_empty() {
             QueryBuilder::new(
@@ -570,12 +580,12 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build()
             .execute(&mut *tx)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
         }
 
         tx.commit()
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(profile_row_to_profile(
             row,
@@ -600,11 +610,25 @@ impl EmulatorService for EmulatorServiceHandlers {
             return Err(Status::invalid_argument("Profile name must be provided"));
         }
 
+        let existing: EmulatorProfileRow =
+            QueryBuilder::new("select * from emulator_profiles where id = ")
+                .push_bind(&profile.id)
+                .build_query_as()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(sqlx_err_to_status)?;
+
+        if existing.built_in {
+            return Err(Status::invalid_argument(
+                "Cannot update a built-in emulator profile",
+            ));
+        }
+
         let mut tx = self
             .db_pool
             .begin()
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         let row: EmulatorProfileRow = QueryBuilder::new("update emulator_profiles set name = ")
             .push_bind(&profile.name)
@@ -616,7 +640,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build_query_as()
             .fetch_one(&mut *tx)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         // Delete existing extensions
         QueryBuilder::new("delete from emulator_profile_extensions where emulator_profile = ")
@@ -624,7 +648,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build()
             .execute(&mut *tx)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         // Insert new extensions
         if !profile.supported_extensions.is_empty() {
@@ -638,12 +662,12 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build()
             .execute(&mut *tx)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
         }
 
         tx.commit()
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(profile_row_to_profile(
             row,
@@ -668,7 +692,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build()
             .execute(&self.db_pool)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(Empty {}))
     }
@@ -691,7 +715,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .build_query_as()
                 .fetch_one(&self.db_pool)
                 .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(DefaultEmulatorProfile {
             id: row.id,
@@ -732,7 +756,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build_query_as()
             .fetch_all(&self.db_pool)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         let default_profiles = rows
             .into_iter()
@@ -790,7 +814,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         .build_query_as()
         .fetch_one(&self.db_pool)
         .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(DefaultEmulatorProfile {
             id: row.id,
@@ -830,7 +854,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .build_query_as()
                 .fetch_one(&self.db_pool)
                 .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(DefaultEmulatorProfile {
             id: row.id,
@@ -857,7 +881,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build()
             .execute(&self.db_pool)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(Empty {}))
     }
@@ -880,7 +904,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .build_query_as()
                 .fetch_one(&self.db_pool)
                 .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(LocalEmulatorConfig {
             id: row.id,
@@ -926,7 +950,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build_query_as()
             .fetch_all(&self.db_pool)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         let configs = rows
             .into_iter()
@@ -1007,7 +1031,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         .build_query_as()
         .fetch_one(&self.db_pool)
         .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(LocalEmulatorConfig {
             id: row.id,
@@ -1060,7 +1084,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .build_query_as()
                 .fetch_one(&self.db_pool)
                 .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(LocalEmulatorConfig {
             id: row.id,
@@ -1092,7 +1116,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .build()
             .execute(&self.db_pool)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(Empty {}))
     }
