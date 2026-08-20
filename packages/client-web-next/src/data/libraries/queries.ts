@@ -10,48 +10,49 @@ import type { MessageInitShape } from "@bufbuild/protobuf";
 import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
 import type { QueryOptionsExt } from "../common";
 
-export type LibrariesQueryKey<T extends keyof typeof libraryKeys> = ReturnType<
-  (typeof libraryKeys)[T]
->;
+export type LibraryQueryKey<T extends keyof typeof libraryQueryKeys> =
+  ReturnType<(typeof libraryQueryKeys)[T]>;
 
-export const libraryKeys = {
+export const libraryQueryKeys = {
   all: () => ["libraries"] as const,
-  get: (request: MessageInitShape<typeof GetLibraryRequestSchema>) =>
-    [...libraryKeys.all(), "get", request] as const,
-  allList: () => [...libraryKeys.all(), "list"] as const,
-  list: (request: MessageInitShape<typeof ListLibrariesRequestSchema>) =>
-    [...libraryKeys.allList(), request] as const,
+  getLibrary: (request: MessageInitShape<typeof GetLibraryRequestSchema>) =>
+    [...libraryQueryKeys.all(), "getLibrary", request] as const,
+  listAllLibraries: () =>
+    [...libraryQueryKeys.all(), "listAllLibraries"] as const,
+  listLibraries: (
+    request: MessageInitShape<typeof ListLibrariesRequestSchema>,
+  ) => [...libraryQueryKeys.listAllLibraries(), request] as const,
 };
 
 export const libraryQueries = {
-  get: <TData>(
+  getLibrary: <TData>(
     request: MessageInitShape<typeof GetLibraryRequestSchema>,
     retromClient: RetromClient,
     options: QueryOptionsExt<
       Library,
       ConnectError,
       TData,
-      LibrariesQueryKey<"get">
+      LibraryQueryKey<"getLibrary">
     > = {},
   ) =>
     queryOptions({
       ...options,
-      queryKey: libraryKeys.get(request),
+      queryKey: libraryQueryKeys.getLibrary(request),
       queryFn: () => retromClient.libraryClient.getLibrary(request),
     }),
-  list: <TData>(
+  listLibraries: <TData>(
     request: MessageInitShape<typeof ListLibrariesRequestSchema>,
     retromClient: RetromClient,
     options: QueryOptionsExt<
       ListLibrariesResponse,
       ConnectError,
       TData,
-      LibrariesQueryKey<"list">
+      LibraryQueryKey<"listLibraries">
     > = {},
   ) =>
     queryOptions({
       ...options,
-      queryKey: libraryKeys.list(request),
+      queryKey: libraryQueryKeys.listLibraries(request),
       queryFn: () => retromClient.libraryClient.listLibraries(request),
     }),
 };

@@ -8,14 +8,14 @@ import type {
   GetFilesystemNodeResponse,
 } from "@retrom/codegen/retrom/services/file_explorer/v1/file_explorer_service_pb";
 
-export type FileExplorerQueryKey<T extends keyof typeof fileExplorerKeys> =
-  ReturnType<(typeof fileExplorerKeys)[T]>;
+export type FileExplorerQueryKey<T extends keyof typeof fileExplorerQueryKeys> =
+  ReturnType<(typeof fileExplorerQueryKeys)[T]>;
 
-export const fileExplorerKeys = {
+export const fileExplorerQueryKeys = {
   all: () => ["fileExplorer"] as const,
   getFilesystemNode: (
     request: MessageInitShape<typeof GetFilesystemNodeRequestSchema>,
-  ) => [...fileExplorerKeys.all(), "getFilesystemNode", request] as const,
+  ) => [...fileExplorerQueryKeys.all(), "getFilesystemNode", request] as const,
 };
 
 export const fileExplorerQueries = {
@@ -31,7 +31,7 @@ export const fileExplorerQueries = {
   ) =>
     queryOptions({
       ...options,
-      queryKey: fileExplorerKeys.getFilesystemNode(request),
+      queryKey: fileExplorerQueryKeys.getFilesystemNode(request),
       queryFn: async () =>
         retromClient.fileExplorerClient.getFilesystemNode(request),
     }),

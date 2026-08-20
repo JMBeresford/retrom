@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { libraryQueries } from "./queries";
-import type { LibrariesQueryKey } from "./queries";
+import type { LibraryQueryKey } from "./queries";
 import type {
   ListLibrariesRequestSchema,
   ListLibrariesResponse,
@@ -17,12 +17,12 @@ export function useListLibraries<TData>(
       ListLibrariesResponse,
       ConnectError,
       TData,
-      LibrariesQueryKey<"list">
+      LibraryQueryKey<"listLibraries">
     >;
   } = {},
 ) {
   const { request = {}, options = {} } = params;
   const retromClient = useRetromClient();
 
-  return useQuery(libraryQueries.list(request, retromClient, options));
+  return useQuery(libraryQueries.listLibraries(request, retromClient, options));
 }

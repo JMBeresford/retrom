@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { libraryKeys } from "./queries";
+import { libraryQueryKeys } from "./queries";
 import type { MessageInitShape } from "@bufbuild/protobuf";
 import type { UpdateLibraryRequestSchema } from "@retrom/codegen/retrom/services/library/v1/library_service_pb";
 import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
@@ -18,10 +18,13 @@ export function useUpdateLibrary() {
     mutationFn: async (request) =>
       retromClient.libraryClient.updateLibrary(request),
     onSuccess: async (_, { library }) => {
-      queryClient.setQueryData(libraryKeys.get({ id: library?.id }), library);
+      queryClient.setQueryData(
+        libraryQueryKeys.getLibrary({ id: library?.id }),
+        library,
+      );
 
       await queryClient.invalidateQueries({
-        queryKey: libraryKeys.allList(),
+        queryKey: libraryQueryKeys.listAllLibraries(),
       });
     },
   });
