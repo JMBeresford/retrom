@@ -1,22 +1,24 @@
+use futures::future::join_all;
+use pbjson_types::Empty;
 use retrom_codegen::retrom::services::emulators::v1::{
-    emulator_service_server::EmulatorService, CreateEmulatorProfilesRequest,
-    CreateEmulatorProfilesResponse, CreateEmulatorsRequest, CreateEmulatorsResponse,
-    CreateLocalEmulatorConfigsRequest, CreateLocalEmulatorConfigsResponse, DefaultEmulatorProfile,
-    DeleteDefaultEmulatorProfilesRequest, DeleteDefaultEmulatorProfilesResponse,
-    DeleteEmulatorPlatformsRequest, DeleteEmulatorPlatformsResponse, DeleteEmulatorProfilesRequest,
-    DeleteEmulatorProfilesResponse, DeleteEmulatorsRequest, DeleteEmulatorsResponse,
-    DeleteLocalEmulatorConfigsRequest, DeleteLocalEmulatorConfigsResponse, Emulator,
-    EmulatorProfile, GetDefaultEmulatorProfilesRequest, GetDefaultEmulatorProfilesResponse,
-    GetEmulatorPlatformsRequest, GetEmulatorPlatformsResponse, GetEmulatorProfilesRequest,
-    GetEmulatorProfilesResponse, GetEmulatorsRequest, GetEmulatorsResponse,
-    GetLocalEmulatorConfigsRequest, GetLocalEmulatorConfigsResponse,
-    UpdateDefaultEmulatorProfilesRequest, UpdateDefaultEmulatorProfilesResponse,
-    UpdateEmulatorPlatformsRequest, UpdateEmulatorPlatformsResponse, UpdateEmulatorProfilesRequest,
-    UpdateEmulatorProfilesResponse, UpdateEmulatorsRequest, UpdateEmulatorsResponse,
-    UpdateLocalEmulatorConfigsRequest, UpdateLocalEmulatorConfigsResponse,
+    emulator::{self},
+    emulator_service_server::EmulatorService,
+    CreateDefaultEmulatorProfileRequest, CreateEmulatorProfileRequest, CreateEmulatorRequest,
+    CreateLocalEmulatorConfigRequest, DefaultEmulatorProfile, DefaultEmulatorProfileRow,
+    DeleteDefaultEmulatorProfileRequest, DeleteEmulatorProfileRequest, DeleteEmulatorRequest,
+    DeleteLocalEmulatorConfigRequest, Emulator, EmulatorProfile, EmulatorProfileRow, EmulatorRow,
+    GetDefaultEmulatorProfileRequest, GetEmulatorProfileRequest, GetEmulatorRequest,
+    GetLocalEmulatorConfigRequest, ListDefaultEmulatorProfilesRequest,
+    ListDefaultEmulatorProfilesResponse, ListEmulatorProfilesRequest, ListEmulatorProfilesResponse,
+    ListEmulatorsRequest, ListEmulatorsResponse, ListLocalEmulatorConfigsRequest,
+    ListLocalEmulatorConfigsResponse, LocalEmulatorConfig, LocalEmulatorConfigRow,
+    UpdateDefaultEmulatorProfileRequest, UpdateEmulatorProfileRequest, UpdateEmulatorRequest,
+    UpdateLocalEmulatorConfigRequest,
 };
 use retrom_db::DbPool;
+use sqlx::QueryBuilder;
 use tonic::{Request, Response, Status};
+use uuid::Uuid;
 
 pub mod router;
 
@@ -24,7 +26,7 @@ pub mod router;
 mod tests;
 
 pub struct EmulatorServiceHandlers {
-    db_pool: DbPool,
+    pub db_pool: DbPool,
 }
 
 impl EmulatorServiceHandlers {
@@ -33,777 +35,1089 @@ impl EmulatorServiceHandlers {
     }
 }
 
+fn sqlx_err_to_status(e: sqlx::Error) -> Status {
+    match e {
+        sqlx::Error::RowNotFound => Status::not_found("Resource not found"),
+        _ => Status::internal(e.to_string()),
+    }
+}
+
+fn os_name_to_enum(name: &str) -> emulator::OperatingSystem {
+    match name {
+        "Windows" => emulator::OperatingSystem::Windows,
+        "MacOS" => emulator::OperatingSystem::Macos,
+        "Linux" => emulator::OperatingSystem::Linux,
+        "Web" => emulator::OperatingSystem::Web,
+        _ => emulator::OperatingSystem::Unspecified,
+    }
+}
+
+fn enum_to_os_id(os: emulator::OperatingSystem) -> Option<&'static str> {
+    match os {
+        emulator::OperatingSystem::Windows => Some("00000000-0000-0000-0003-000000000001"), // Windows
+        emulator::OperatingSystem::Macos => Some("00000000-0000-0000-0003-000000000002"),   // MacOS
+        emulator::OperatingSystem::Linux => Some("00000000-0000-0000-0003-000000000003"),   // Linux
+        emulator::OperatingSystem::Web => Some("00000000-0000-0000-0003-000000000004"),     // Web
+        emulator::OperatingSystem::Unspecified => None,
+    }
+}
+
+async fn get_emulator_platforms(
+    db_pool: &DbPool,
+    emulator_id: &str,
+) -> Result<Vec<String>, Status> {
+    QueryBuilder::new("select platform from emulator_platforms where emulator = ")
+        .push_bind(emulator_id)
+        .build_query_scalar()
+        .fetch_all(db_pool)
+        .await
+        .map_err(sqlx_err_to_status)
+}
+
+async fn get_emulator_operating_systems(
+    db_pool: &DbPool,
+    emulator_id: &str,
+) -> Result<Vec<emulator::OperatingSystem>, Status> {
+    let os_names: Vec<String> = QueryBuilder::new(
+        r#"
+        select os.name 
+        from operating_systems os 
+        join emulator_operating_systems eos 
+        on eos.operating_system = os.id 
+        where eos.emulator = 
+        "#,
+    )
+    .push_bind(emulator_id)
+    .build_query_scalar()
+    .fetch_all(db_pool)
+    .await
+    .map_err(sqlx_err_to_status)?;
+
+    Ok(os_names
+        .into_iter()
+        .map(|name| os_name_to_enum(&name))
+        .collect())
+}
+
+fn emulator_row_to_emulator(
+    row: EmulatorRow,
+    platforms: Vec<String>,
+    operating_systems: Vec<i32>,
+) -> Emulator {
+    Emulator {
+        id: row.id,
+        name: row.name,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        built_in: row.built_in,
+        libretro_name: row.libretro_name,
+        platforms,
+        operating_systems,
+    }
+}
+
+async fn get_profile_extensions(db_pool: &DbPool, profile_id: &str) -> Result<Vec<String>, Status> {
+    QueryBuilder::new("select extension from emulator_profile_extensions where emulator_profile = ")
+        .push_bind(profile_id)
+        .build_query_scalar()
+        .fetch_all(db_pool)
+        .await
+        .map_err(sqlx_err_to_status)
+}
+
+fn profile_row_to_profile(
+    row: EmulatorProfileRow,
+    supported_extensions: Vec<String>,
+) -> EmulatorProfile {
+    EmulatorProfile {
+        id: row.id,
+        emulator: row.emulator,
+        name: row.name,
+        custom_args: row.custom_args,
+        built_in: row.built_in,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        supported_extensions,
+    }
+}
+
 #[tonic::async_trait]
 impl EmulatorService for EmulatorServiceHandlers {
-    async fn create_emulators(
+    async fn get_emulator(
         &self,
-        request: Request<CreateEmulatorsRequest>,
-    ) -> Result<Response<CreateEmulatorsResponse>, Status> {
-        let request = request.into_inner();
-        let emulators = request.emulators;
+        request: Request<GetEmulatorRequest>,
+    ) -> Result<Response<Emulator>, Status> {
+        let id = request.into_inner().id;
 
-        if emulators.is_empty() {
-            return Err(Status::invalid_argument("emulators list cannot be empty"));
+        if id.is_empty() {
+            return Err(Status::invalid_argument("Emulator ID must be provided"));
         }
 
-        let mut builder = sqlx::QueryBuilder::new("insert into emulators (id, name, built_in) ");
-
-        builder.push_values(emulators, |mut b, mut emulator| {
-            emulator.id = uuid::Uuid::now_v7().to_string();
-            emulator.built_in = false;
-
-            b.push_bind(emulator.id)
-                .push_bind(emulator.name)
-                .push_bind(emulator.built_in);
-        });
-
-        builder.push(" returning *");
-
-        let emulators_created: Vec<Emulator> = builder
+        let row: EmulatorRow = QueryBuilder::new("select * from emulators where id = ")
+            .push_bind(&id)
             .build_query_as()
-            .fetch_all(&self.db_pool)
+            .fetch_one(&self.db_pool)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
-        let emulator_ids: Vec<String> = emulators_created.iter().map(|e| e.id.clone()).collect();
+        let platforms = get_emulator_platforms(&self.db_pool, &id).await?;
+        let operating_systems = get_emulator_operating_systems(&self.db_pool, &id)
+            .await?
+            .into_iter()
+            .map(i32::from)
+            .collect();
 
-        let mut builder = sqlx::QueryBuilder::new(
-            "insert into emulator_profiles (id, emulator_id, name, custom_args) ",
-        );
-
-        builder.push_values(emulator_ids, |mut b, emulator_id| {
-            b.push_bind(uuid::Uuid::now_v7().to_string())
-                .push_bind(emulator_id)
-                .push_bind("Default Profile")
-                .push_bind("{file}");
-        });
-
-        builder
-            .push(" on conflict do nothing ")
-            .build()
-            .execute(&self.db_pool)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(CreateEmulatorsResponse { emulators_created }))
+        Ok(Response::new(emulator_row_to_emulator(
+            row,
+            platforms,
+            operating_systems,
+        )))
     }
 
-    async fn get_emulators(
+    async fn list_emulators(
         &self,
-        request: Request<GetEmulatorsRequest>,
-    ) -> Result<Response<GetEmulatorsResponse>, Status> {
-        let request = request.into_inner();
-        let ids = &request.ids;
-        let supported_platform_ids = &request.supported_platform_ids;
+        request: Request<ListEmulatorsRequest>,
+    ) -> Result<Response<ListEmulatorsResponse>, Status> {
+        let req = request.into_inner();
+        let ids = req.ids;
+        let supported_platform_ids = req.supported_platform_ids;
 
-        let mut builder = sqlx::QueryBuilder::new("select * from emulators");
+        let mut query_builder = QueryBuilder::new("select distinct e.id from emulators e");
 
+        if !supported_platform_ids.is_empty() {
+            query_builder.push(" join emulator_platforms ep on ep.emulator = e.id ");
+        }
+
+        query_builder.push(" where e.id is not null ");
+
+        if !supported_platform_ids.is_empty() {
+            query_builder.push(" and ep.platform in (");
+            let mut separated = query_builder.separated(", ");
+            for platform_id in &supported_platform_ids {
+                separated.push_bind(platform_id);
+            }
+            separated.push_unseparated(")");
+        }
         if !ids.is_empty() {
-            builder.push(" where id in (");
-
-            let mut separated = builder.separated(", ");
-            for id in ids {
+            query_builder.push(" and e.id in (");
+            let mut separated = query_builder.separated(", ");
+            for id in &ids {
                 separated.push_bind(id);
             }
-
             separated.push_unseparated(")");
         }
 
-        if !supported_platform_ids.is_empty() {
-            builder.push(if ids.is_empty() { " where " } else { " and " });
-
-            builder.push(
-                "id in (select emulator_id from emulator_supported_platforms where platform_id in (",
-            );
-
-            let mut separated = builder.separated(", ");
-            for platform_id in supported_platform_ids {
-                separated.push_bind(platform_id);
-            }
-
-            separated.push_unseparated("))");
-        }
-
-        let emulators: Vec<Emulator> = builder
-            .build_query_as()
+        let emulator_ids: Vec<String> = query_builder
+            .build_query_scalar()
             .fetch_all(&self.db_pool)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(GetEmulatorsResponse { emulators }))
-    }
+        let platforms_futures: Vec<_> = emulator_ids
+            .iter()
+            .map(|id| {
+                let db_pool = self.db_pool.clone();
+                let id = id.clone();
+                async move { get_emulator_platforms(&db_pool, &id).await.map(|p| (id, p)) }
+            })
+            .collect();
 
-    async fn update_emulators(
-        &self,
-        request: Request<UpdateEmulatorsRequest>,
-    ) -> Result<Response<UpdateEmulatorsResponse>, Status> {
-        let emulators = request.into_inner().emulators;
+        let emulators_with_platforms = join_all(platforms_futures)
+            .await
+            .into_iter()
+            .collect::<Result<Vec<(String, Vec<String>)>, Status>>()?;
 
-        if emulators.iter().any(|e| e.built_in) {
-            return Err(Status::invalid_argument("cannot update built-in emulators"));
+        let mut result = vec![];
+        for (emulator_id, platforms) in emulators_with_platforms {
+            let row: EmulatorRow = QueryBuilder::new("select * from emulators where id = ")
+                .push_bind(&emulator_id)
+                .build_query_as()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(sqlx_err_to_status)?;
+
+            let operating_systems = get_emulator_operating_systems(&self.db_pool, &emulator_id)
+                .await?
+                .into_iter()
+                .map(i32::from)
+                .collect();
+
+            result.push(emulator_row_to_emulator(row, platforms, operating_systems));
         }
 
-        let mut emulators_updated = vec![];
+        Ok(Response::new(ListEmulatorsResponse { emulators: result }))
+    }
+
+    async fn create_emulator(
+        &self,
+        request: Request<CreateEmulatorRequest>,
+    ) -> Result<Response<Emulator>, Status> {
+        let emulator = request
+            .into_inner()
+            .emulator
+            .ok_or_else(|| Status::invalid_argument("Emulator must be provided"))?;
+
+        if emulator.name.is_empty() {
+            return Err(Status::invalid_argument("Emulator name must be provided"));
+        }
+
+        let emulator_id = Uuid::now_v7().to_string();
 
         let mut tx = self
             .db_pool
             .begin()
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
-        for emulator in &emulators {
-            let mut builder = sqlx::QueryBuilder::new("update emulators set ");
-
-            builder
-                .push("name = ")
+        let row: EmulatorRow =
+            QueryBuilder::new("insert into emulators (id, name, built_in) values (")
+                .push_bind(&emulator_id)
+                .push(", ")
                 .push_bind(&emulator.name)
-                .push(" where id = ")
-                .push_bind(&emulator.id)
-                .push(" and built_in = ")
-                .push_bind(false);
-
-            builder.push(" returning *");
-
-            let emulator_updated: Emulator = builder
+                .push(", ")
+                .push_bind(false)
+                .push(") returning *")
                 .build_query_as()
                 .fetch_one(&mut *tx)
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
 
-            emulators_updated.push(emulator_updated);
+        if !emulator.platforms.is_empty() {
+            QueryBuilder::new("insert into emulator_platforms (emulator, platform) ")
+                .push_values(&emulator.platforms, |mut b, platform_id| {
+                    b.push_bind(&emulator_id);
+                    b.push_bind(platform_id);
+                })
+                .build()
+                .execute(&mut *tx)
+                .await
+                .map_err(sqlx_err_to_status)?;
         }
 
-        tx.commit()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+        let os_ids: Vec<&str> = emulator
+            .operating_systems
+            .iter()
+            .filter_map(|os| emulator::OperatingSystem::try_from(*os).ok())
+            .filter_map(enum_to_os_id)
+            .collect();
 
-        Ok(Response::new(UpdateEmulatorsResponse { emulators_updated }))
-    }
-
-    async fn delete_emulators(
-        &self,
-        request: Request<DeleteEmulatorsRequest>,
-    ) -> Result<Response<DeleteEmulatorsResponse>, Status> {
-        let request = request.into_inner();
-        let ids = request.ids;
-
-        if ids.is_empty() {
-            return Err(Status::invalid_argument("ids list cannot be empty"));
-        }
-
-        let mut builder = sqlx::QueryBuilder::new("delete from emulators where id in (");
-        let mut separated = builder.separated(", ");
-        for id in ids {
-            separated.push_bind(id);
-        }
-
-        separated.push_unseparated(")");
-
-        builder
-            .push(" and built_in = ")
-            .push_bind(false)
-            .push(" returning *");
-
-        let emulators_deleted: Vec<Emulator> = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(DeleteEmulatorsResponse { emulators_deleted }))
-    }
-
-    async fn get_emulator_platforms(
-        &self,
-        request: Request<GetEmulatorPlatformsRequest>,
-    ) -> Result<Response<GetEmulatorPlatformsResponse>, Status> {
-        let request = request.into_inner();
-        let emulator_ids = request.emulator_ids;
-        let platform_ids = request.platform_ids;
-
-        let mut builder = sqlx::QueryBuilder::new("select * from emulator_supported_platforms");
-
-        if !emulator_ids.is_empty() {
-            builder.push(" where emulator_id in (");
-
-            let mut separated = builder.separated(", ");
-            for emulator_id in emulator_ids.iter() {
-                separated.push_bind(emulator_id);
-            }
-
-            separated.push_unseparated(")");
-        }
-
-        if !platform_ids.is_empty() {
-            builder.push(if emulator_ids.is_empty() {
-                " where "
-            } else {
-                " and "
-            });
-
-            builder.push("platform_id in (");
-
-            let mut separated = builder.separated(", ");
-            for platform_id in platform_ids {
-                separated.push_bind(platform_id);
-            }
-
-            separated.push_unseparated(")");
-        }
-
-        let emulator_platforms = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(GetEmulatorPlatformsResponse {
-            emulator_platforms,
-        }))
-    }
-
-    async fn update_emulator_platforms(
-        &self,
-        request: Request<UpdateEmulatorPlatformsRequest>,
-    ) -> Result<Response<UpdateEmulatorPlatformsResponse>, Status> {
-        let request = request.into_inner();
-        let emulator_id = request.emulator_id;
-        let platform_ids = request.platform_ids;
-
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut builder = sqlx::QueryBuilder::new("delete from emulator_supported_platforms");
-
-        builder
-            .push(" where emulator_id = ")
-            .push_bind(&emulator_id);
-
-        builder
+        if !os_ids.is_empty() {
+            QueryBuilder::new(
+                "insert into emulator_operating_systems (emulator, operating_system) ",
+            )
+            .push_values(&os_ids, |mut b, os_id| {
+                b.push_bind(&emulator_id);
+                b.push_bind(os_id);
+            })
             .build()
             .execute(&mut *tx)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut builder = sqlx::QueryBuilder::new("insert into emulator_supported_platforms ");
-
-        builder.push_values(platform_ids, |mut b, platform_id| {
-            b.push_bind(&emulator_id).push_bind(platform_id);
-        });
-
-        builder.push(" returning *");
-
-        let emulator_platforms = builder
-            .build_query_as()
-            .fetch_all(&mut *tx)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
+        }
 
         tx.commit()
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(UpdateEmulatorPlatformsResponse {
-            emulator_platforms,
-        }))
+        Ok(Response::new(emulator_row_to_emulator(
+            row,
+            emulator.platforms,
+            emulator.operating_systems,
+        )))
     }
 
-    async fn delete_emulator_platforms(
+    async fn update_emulator(
         &self,
-        request: Request<DeleteEmulatorPlatformsRequest>,
-    ) -> Result<Response<DeleteEmulatorPlatformsResponse>, Status> {
-        let request = request.into_inner();
-        let emulator_id = request.emulator_id;
-        let platform_ids = request.platform_ids;
+        request: Request<UpdateEmulatorRequest>,
+    ) -> Result<Response<Emulator>, Status> {
+        let emulator = request
+            .into_inner()
+            .emulator
+            .ok_or_else(|| Status::invalid_argument("Emulator must be provided"))?;
 
-        if platform_ids.is_empty() {
-            return Err(Status::invalid_argument(
-                "platform_ids list cannot be empty",
-            ));
+        if emulator.id.is_empty() {
+            return Err(Status::invalid_argument("Emulator ID must be provided"));
         }
 
-        let mut builder = sqlx::QueryBuilder::new("delete from emulator_supported_platforms");
-
-        builder
-            .push(" where emulator_id = ")
-            .push_bind(&emulator_id)
-            .push(" and platform_id in (");
-
-        let mut separated = builder.separated(", ");
-        for platform_id in platform_ids {
-            separated.push_bind(platform_id);
+        if emulator.name.is_empty() {
+            return Err(Status::invalid_argument("Emulator name must be provided"));
         }
-
-        separated.push_unseparated(")");
-
-        builder.push(" returning *");
-
-        let emulator_platforms_deleted = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(DeleteEmulatorPlatformsResponse {
-            emulator_platforms_deleted,
-        }))
-    }
-
-    async fn create_emulator_profiles(
-        &self,
-        request: Request<CreateEmulatorProfilesRequest>,
-    ) -> Result<Response<CreateEmulatorProfilesResponse>, Status> {
-        let request = request.into_inner();
-        let profiles = request.profiles;
-
-        let mut builder = sqlx::QueryBuilder::new(
-            "insert into emulator_profiles (id, emulator_id, name, custom_args, built_in) ",
-        );
-
-        builder.push_values(profiles, |mut b, mut profile| {
-            profile.id = uuid::Uuid::now_v7().to_string();
-            profile.built_in = false;
-
-            b.push_bind(profile.id)
-                .push_bind(profile.emulator_id)
-                .push_bind(profile.name)
-                .push_bind(profile.custom_args)
-                .push_bind(profile.built_in);
-        });
-
-        builder.push(" returning *");
-
-        let profiles_created: Vec<EmulatorProfile> = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(CreateEmulatorProfilesResponse {
-            profiles_created,
-        }))
-    }
-
-    async fn get_emulator_profiles(
-        &self,
-        request: Request<GetEmulatorProfilesRequest>,
-    ) -> Result<Response<GetEmulatorProfilesResponse>, Status> {
-        let request = request.into_inner();
-        let ids = request.ids;
-        let emulator_ids = request.emulator_ids;
-
-        let mut builder = sqlx::QueryBuilder::new("select * from emulator_profiles");
-
-        if !ids.is_empty() {
-            builder.push(" where id in (");
-
-            let mut separated = builder.separated(", ");
-            for id in ids.iter() {
-                separated.push_bind(id);
-            }
-
-            separated.push_unseparated(")");
-        }
-
-        if !emulator_ids.is_empty() {
-            builder.push(if ids.is_empty() { " where " } else { " and " });
-
-            builder.push("emulator_id in (");
-
-            let mut separated = builder.separated(", ");
-            for emulator_id in emulator_ids {
-                separated.push_bind(emulator_id);
-            }
-
-            separated.push_unseparated(")");
-        }
-
-        let profiles: Vec<EmulatorProfile> = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(GetEmulatorProfilesResponse { profiles }))
-    }
-
-    async fn update_emulator_profiles(
-        &self,
-        request: Request<UpdateEmulatorProfilesRequest>,
-    ) -> Result<Response<UpdateEmulatorProfilesResponse>, Status> {
-        let request = request.into_inner();
-        let profiles = request.profiles;
 
         let mut tx = self
             .db_pool
             .begin()
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
-        let mut profiles_updated = vec![];
+        let row: EmulatorRow = QueryBuilder::new("update emulators set name = ")
+            .push_bind(&emulator.name)
+            .push(" where id = ")
+            .push_bind(&emulator.id)
+            .push(" returning *")
+            .build_query_as()
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(sqlx_err_to_status)?;
 
-        for profile in profiles {
-            let mut builder = sqlx::QueryBuilder::new("update emulator_profiles set ");
+        // Delete existing platforms and operating systems
+        QueryBuilder::new("delete from emulator_platforms where emulator = ")
+            .push_bind(&emulator.id)
+            .build()
+            .execute(&mut *tx)
+            .await
+            .map_err(sqlx_err_to_status)?;
 
-            builder
-                .push("name = ")
-                .push_bind(&profile.name)
-                .push(", custom_args = ")
-                .push_bind(&profile.custom_args)
-                .push(" where id = ")
-                .push_bind(&profile.id)
-                .push(" and built_in = ")
-                .push_bind(false)
-                .push(" returning *");
+        QueryBuilder::new("delete from emulator_operating_systems where emulator = ")
+            .push_bind(&emulator.id)
+            .build()
+            .execute(&mut *tx)
+            .await
+            .map_err(sqlx_err_to_status)?;
 
-            let profile_updated: EmulatorProfile = builder
-                .build_query_as()
-                .fetch_one(&mut *tx)
+        // Insert new platforms and operating systems
+        if !emulator.platforms.is_empty() {
+            QueryBuilder::new("insert into emulator_platforms (emulator, platform) ")
+                .push_values(&emulator.platforms, |mut b, platform_id| {
+                    b.push_bind(&emulator.id);
+                    b.push_bind(platform_id);
+                })
+                .build()
+                .execute(&mut *tx)
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
+        }
 
-            profiles_updated.push(profile_updated);
+        let os_ids: Vec<&str> = emulator
+            .operating_systems
+            .iter()
+            .filter_map(|os| emulator::OperatingSystem::try_from(*os).ok())
+            .filter_map(enum_to_os_id)
+            .collect();
+
+        if !os_ids.is_empty() {
+            QueryBuilder::new(
+                "insert into emulator_operating_systems (emulator, operating_system) ",
+            )
+            .push_values(&os_ids, |mut b, os_id| {
+                b.push_bind(&emulator.id);
+                b.push_bind(os_id);
+            })
+            .build()
+            .execute(&mut *tx)
+            .await
+            .map_err(sqlx_err_to_status)?;
         }
 
         tx.commit()
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(UpdateEmulatorProfilesResponse {
-            profiles_updated,
-        }))
+        Ok(Response::new(emulator_row_to_emulator(
+            row,
+            emulator.platforms,
+            emulator.operating_systems,
+        )))
     }
 
-    async fn delete_emulator_profiles(
+    async fn delete_emulator(
         &self,
-        request: Request<DeleteEmulatorProfilesRequest>,
-    ) -> Result<Response<DeleteEmulatorProfilesResponse>, Status> {
-        let request = request.into_inner();
-        let ids = request.ids;
+        request: Request<DeleteEmulatorRequest>,
+    ) -> Result<Response<Empty>, Status> {
+        let id = request.into_inner().id;
 
-        if ids.is_empty() {
-            return Err(Status::invalid_argument("ids list cannot be empty"));
+        if id.is_empty() {
+            return Err(Status::invalid_argument("Emulator ID must be provided"));
         }
 
-        let mut builder = sqlx::QueryBuilder::new("delete from emulator_profiles where id in (");
-        let mut separated = builder.separated(", ");
-        for id in ids {
-            separated.push_bind(id);
-        }
-
-        separated.push_unseparated(")");
-
-        builder
+        QueryBuilder::new("delete from emulators where id = ")
+            .push_bind(&id)
             .push(" and built_in = ")
             .push_bind(false)
-            .push(" returning *");
-
-        let profiles_deleted: Vec<EmulatorProfile> = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
+            .build()
+            .execute(&self.db_pool)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(DeleteEmulatorProfilesResponse {
-            profiles_deleted,
-        }))
+        Ok(Response::new(Empty {}))
     }
 
-    async fn get_default_emulator_profiles(
+    async fn get_emulator_profile(
         &self,
-        request: Request<GetDefaultEmulatorProfilesRequest>,
-    ) -> Result<Response<GetDefaultEmulatorProfilesResponse>, Status> {
-        let request = request.into_inner();
-        let platform_ids = request.platform_ids;
-        let client_id = request.client_id;
+        request: Request<GetEmulatorProfileRequest>,
+    ) -> Result<Response<EmulatorProfile>, Status> {
+        let id = request.into_inner().id;
 
-        if platform_ids.is_empty() {
+        if id.is_empty() {
             return Err(Status::invalid_argument(
-                "at least one platform_id must be provided",
+                "Emulator profile ID must be provided",
             ));
         }
 
-        let mut builder = sqlx::QueryBuilder::new("select * from default_emulator_profiles");
+        let row: EmulatorProfileRow =
+            QueryBuilder::new("select * from emulator_profiles where id = ")
+                .push_bind(&id)
+                .build_query_as()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(sqlx_err_to_status)?;
 
-        builder.push(" where client_id = ").push_bind(client_id);
+        let supported_extensions = get_profile_extensions(&self.db_pool, &id).await?;
 
-        if !platform_ids.is_empty() {
-            builder.push(" and platform_id in (");
-            let mut separated = builder.separated(", ");
+        Ok(Response::new(profile_row_to_profile(
+            row,
+            supported_extensions,
+        )))
+    }
 
-            for platform_id in platform_ids {
-                separated.push_bind(platform_id);
+    async fn list_emulator_profiles(
+        &self,
+        request: Request<ListEmulatorProfilesRequest>,
+    ) -> Result<Response<ListEmulatorProfilesResponse>, Status> {
+        let req = request.into_inner();
+        let ids = req.ids;
+        let emulator_ids = req.emulator_ids;
+
+        let mut query_builder = QueryBuilder::new("select id from emulator_profiles");
+        query_builder.push(" where id is not null ");
+
+        if !ids.is_empty() {
+            query_builder.push(" and id in (");
+            let mut separated = query_builder.separated(", ");
+            for id in &ids {
+                separated.push_bind(id);
             }
-
             separated.push_unseparated(")");
         }
 
-        let default_profiles: Vec<DefaultEmulatorProfile> = builder
+        if !emulator_ids.is_empty() {
+            query_builder.push(" and emulator in (");
+            let mut separated = query_builder.separated(", ");
+            for emulator_id in &emulator_ids {
+                separated.push_bind(emulator_id);
+            }
+            separated.push_unseparated(")");
+        }
+
+        let profile_ids: Vec<String> = query_builder
+            .build_query_scalar()
+            .fetch_all(&self.db_pool)
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+        let profiles = join_all(profile_ids.into_iter().map(|id| {
+            let db_pool = self.db_pool.clone();
+            async move {
+                let row: EmulatorProfileRow =
+                    QueryBuilder::new("select * from emulator_profiles where id = ")
+                        .push_bind(&id)
+                        .build_query_as()
+                        .fetch_one(&db_pool)
+                        .await
+                        .map_err(sqlx_err_to_status)?;
+
+                let extensions = get_profile_extensions(&db_pool, &id).await?;
+                Ok(profile_row_to_profile(row, extensions))
+            }
+        }))
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, Status>>()?;
+
+        Ok(Response::new(ListEmulatorProfilesResponse { profiles }))
+    }
+
+    async fn create_emulator_profile(
+        &self,
+        request: Request<CreateEmulatorProfileRequest>,
+    ) -> Result<Response<EmulatorProfile>, Status> {
+        let profile = request
+            .into_inner()
+            .emulator_profile
+            .ok_or_else(|| Status::invalid_argument("Emulator profile must be provided"))?;
+
+        if profile.emulator.is_empty() {
+            return Err(Status::invalid_argument("Emulator ID must be provided"));
+        }
+
+        if profile.name.is_empty() {
+            return Err(Status::invalid_argument("Profile name must be provided"));
+        }
+
+        let profile_id = Uuid::now_v7().to_string();
+
+        let mut tx = self
+            .db_pool
+            .begin()
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+        let row: EmulatorProfileRow = QueryBuilder::new(
+            "insert into emulator_profiles (id, emulator, name, custom_args, built_in) values (",
+        )
+        .push_bind(&profile_id)
+        .push(", ")
+        .push_bind(&profile.emulator)
+        .push(", ")
+        .push_bind(&profile.name)
+        .push(", ")
+        .push_bind(&profile.custom_args)
+        .push(", ")
+        .push_bind(false)
+        .push(") returning *")
+        .build_query_as()
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(sqlx_err_to_status)?;
+
+        if !profile.supported_extensions.is_empty() {
+            QueryBuilder::new(
+                "insert into emulator_profile_extensions (emulator_profile, extension) ",
+            )
+            .push_values(&profile.supported_extensions, |mut b, ext| {
+                b.push_bind(&profile_id);
+                b.push_bind(ext);
+            })
+            .build()
+            .execute(&mut *tx)
+            .await
+            .map_err(sqlx_err_to_status)?;
+        }
+
+        tx.commit()
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+        Ok(Response::new(profile_row_to_profile(
+            row,
+            profile.supported_extensions,
+        )))
+    }
+
+    async fn update_emulator_profile(
+        &self,
+        request: Request<UpdateEmulatorProfileRequest>,
+    ) -> Result<Response<EmulatorProfile>, Status> {
+        let profile = request
+            .into_inner()
+            .profile
+            .ok_or_else(|| Status::invalid_argument("Emulator profile must be provided"))?;
+
+        if profile.id.is_empty() {
+            return Err(Status::invalid_argument("Profile ID must be provided"));
+        }
+
+        if profile.name.is_empty() {
+            return Err(Status::invalid_argument("Profile name must be provided"));
+        }
+
+        let existing: EmulatorProfileRow =
+            QueryBuilder::new("select * from emulator_profiles where id = ")
+                .push_bind(&profile.id)
+                .build_query_as()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(sqlx_err_to_status)?;
+
+        if existing.built_in {
+            return Err(Status::invalid_argument(
+                "Cannot update a built-in emulator profile",
+            ));
+        }
+
+        let mut tx = self
+            .db_pool
+            .begin()
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+        let row: EmulatorProfileRow = QueryBuilder::new("update emulator_profiles set name = ")
+            .push_bind(&profile.name)
+            .push(", custom_args = ")
+            .push_bind(&profile.custom_args)
+            .push(" where id = ")
+            .push_bind(&profile.id)
+            .push(" returning *")
+            .build_query_as()
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+        // Delete existing extensions
+        QueryBuilder::new("delete from emulator_profile_extensions where emulator_profile = ")
+            .push_bind(&profile.id)
+            .build()
+            .execute(&mut *tx)
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+        // Insert new extensions
+        if !profile.supported_extensions.is_empty() {
+            QueryBuilder::new(
+                "insert into emulator_profile_extensions (emulator_profile, extension) ",
+            )
+            .push_values(&profile.supported_extensions, |mut b, ext| {
+                b.push_bind(&profile.id);
+                b.push_bind(ext);
+            })
+            .build()
+            .execute(&mut *tx)
+            .await
+            .map_err(sqlx_err_to_status)?;
+        }
+
+        tx.commit()
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+        Ok(Response::new(profile_row_to_profile(
+            row,
+            profile.supported_extensions,
+        )))
+    }
+
+    async fn delete_emulator_profile(
+        &self,
+        request: Request<DeleteEmulatorProfileRequest>,
+    ) -> Result<Response<Empty>, Status> {
+        let id = request.into_inner().id;
+
+        if id.is_empty() {
+            return Err(Status::invalid_argument("Profile ID must be provided"));
+        }
+
+        QueryBuilder::new("delete from emulator_profiles where id = ")
+            .push_bind(&id)
+            .push(" and built_in = ")
+            .push_bind(false)
+            .build()
+            .execute(&self.db_pool)
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+        Ok(Response::new(Empty {}))
+    }
+
+    async fn get_default_emulator_profile(
+        &self,
+        request: Request<GetDefaultEmulatorProfileRequest>,
+    ) -> Result<Response<DefaultEmulatorProfile>, Status> {
+        let id = request.into_inner().id;
+
+        if id.is_empty() {
+            return Err(Status::invalid_argument(
+                "Default emulator profile ID must be provided",
+            ));
+        }
+
+        let row: DefaultEmulatorProfileRow =
+            QueryBuilder::new("select * from default_emulator_profiles where id = ")
+                .push_bind(&id)
+                .build_query_as()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(sqlx_err_to_status)?;
+
+        Ok(Response::new(DefaultEmulatorProfile {
+            id: row.id,
+            platform: row.platform,
+            client: row.client,
+            emulator_profile: row.emulator_profile,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+        }))
+    }
+
+    async fn list_default_emulator_profiles(
+        &self,
+        request: Request<ListDefaultEmulatorProfilesRequest>,
+    ) -> Result<Response<ListDefaultEmulatorProfilesResponse>, Status> {
+        let req = request.into_inner();
+        let platform_ids = req.platform_ids;
+        let client_id = req.client_id;
+
+        let mut query_builder = QueryBuilder::new("select * from default_emulator_profiles");
+        query_builder.push(" where id is not null ");
+
+        if !platform_ids.is_empty() {
+            query_builder.push(" and platform in (");
+            let mut separated = query_builder.separated(", ");
+            for platform_id in &platform_ids {
+                separated.push_bind(platform_id);
+            }
+            separated.push_unseparated(")");
+        }
+
+        if let Some(client) = &client_id {
+            query_builder.push(" and client = ");
+            query_builder.push_bind(client);
+        }
+
+        let rows: Vec<DefaultEmulatorProfileRow> = query_builder
             .build_query_as()
             .fetch_all(&self.db_pool)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(GetDefaultEmulatorProfilesResponse {
+        let default_profiles = rows
+            .into_iter()
+            .map(|row| DefaultEmulatorProfile {
+                id: row.id,
+                platform: row.platform,
+                client: row.client,
+                emulator_profile: row.emulator_profile,
+                created_at: row.created_at,
+                updated_at: row.updated_at,
+            })
+            .collect();
+
+        Ok(Response::new(ListDefaultEmulatorProfilesResponse {
             default_profiles,
         }))
     }
 
-    async fn update_default_emulator_profiles(
+    async fn create_default_emulator_profile(
         &self,
-        request: Request<UpdateDefaultEmulatorProfilesRequest>,
-    ) -> Result<Response<UpdateDefaultEmulatorProfilesResponse>, Status> {
-        let request = request.into_inner();
-        let default_profiles = request.default_profiles;
+        request: Request<CreateDefaultEmulatorProfileRequest>,
+    ) -> Result<Response<DefaultEmulatorProfile>, Status> {
+        let profile = request
+            .into_inner()
+            .default_emulator_profile
+            .ok_or_else(|| Status::invalid_argument("Default emulator profile must be provided"))?;
 
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        let mut default_profiles_updated = vec![];
-
-        for default_profile in default_profiles {
-            let mut builder = sqlx::QueryBuilder::new("update default_emulator_profiles set ");
-
-            builder
-                .push("emulator_profile_id = ")
-                .push_bind(&default_profile.emulator_profile_id)
-                .push(" where platform_id = ")
-                .push_bind(&default_profile.platform_id)
-                .push(" and client_id = ")
-                .push_bind(&default_profile.client_id)
-                .push(" returning *");
-
-            let default_profile_updated: DefaultEmulatorProfile = builder
-                .build_query_as()
-                .fetch_one(&mut *tx)
-                .await
-                .map_err(|why| Status::internal(why.to_string()))?;
-
-            default_profiles_updated.push(default_profile_updated);
+        if profile.platform.is_empty() {
+            return Err(Status::invalid_argument("Platform ID must be provided"));
         }
 
-        tx.commit()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+        if profile.client.is_empty() {
+            return Err(Status::invalid_argument("Client ID must be provided"));
+        }
 
-        Ok(Response::new(UpdateDefaultEmulatorProfilesResponse {
-            default_profiles_updated,
-        }))
-    }
-
-    async fn delete_default_emulator_profiles(
-        &self,
-        request: Request<DeleteDefaultEmulatorProfilesRequest>,
-    ) -> Result<Response<DeleteDefaultEmulatorProfilesResponse>, Status> {
-        let request = request.into_inner();
-        let platform_ids = request.platform_ids;
-        let client_id = request.client_id;
-
-        if platform_ids.is_empty() {
+        if profile.emulator_profile.is_empty() {
             return Err(Status::invalid_argument(
-                "at least one platform_id must be provided",
+                "Emulator profile ID must be provided",
             ));
         }
 
-        let mut builder = sqlx::QueryBuilder::new("delete from default_emulator_profiles where ");
+        let profile_id = Uuid::now_v7().to_string();
 
-        builder.push("client_id = ").push_bind(client_id);
-        builder.push(" and platform_id in (");
-        let mut separated = builder.separated(", ");
+        let row: DefaultEmulatorProfileRow = QueryBuilder::new(
+            "insert into default_emulator_profiles (id, platform, client, emulator_profile) values (",
+        )
+        .push_bind(&profile_id)
+        .push(", ")
+        .push_bind(&profile.platform)
+        .push(", ")
+        .push_bind(&profile.client)
+        .push(", ")
+        .push_bind(&profile.emulator_profile)
+        .push(") returning *")
+        .build_query_as()
+        .fetch_one(&self.db_pool)
+        .await
+        .map_err(sqlx_err_to_status)?;
 
-        for platform_id in platform_ids {
-            separated.push_bind(platform_id);
-        }
-
-        separated.push_unseparated(")");
-        builder.push(" returning *");
-
-        let default_profiles_deleted: Vec<DefaultEmulatorProfile> = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(DeleteDefaultEmulatorProfilesResponse {
-            default_profiles_deleted,
+        Ok(Response::new(DefaultEmulatorProfile {
+            id: row.id,
+            platform: row.platform,
+            client: row.client,
+            emulator_profile: row.emulator_profile,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
         }))
     }
 
-    async fn create_local_emulator_configs(
+    async fn update_default_emulator_profile(
         &self,
-        request: Request<CreateLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<CreateLocalEmulatorConfigsResponse>, Status> {
-        let request = request.into_inner();
-        let configs = request.configs;
+        request: Request<UpdateDefaultEmulatorProfileRequest>,
+    ) -> Result<Response<DefaultEmulatorProfile>, Status> {
+        let profile = request
+            .into_inner()
+            .default_profile
+            .ok_or_else(|| Status::invalid_argument("Default emulator profile must be provided"))?;
 
-        if configs.is_empty() {
-            return Err(Status::invalid_argument("configs list cannot be empty"));
+        if profile.id.is_empty() {
+            return Err(Status::invalid_argument("Profile ID must be provided"));
         }
 
-        let mut builder = sqlx::QueryBuilder::new("insert into local_emulator_configs");
+        if profile.emulator_profile.is_empty() {
+            return Err(Status::invalid_argument(
+                "Emulator profile ID must be provided",
+            ));
+        }
 
-        builder.push(
-            r#"
-            (id,
-            emulator_id,
-            client_id,
-            executable_path,
-            nickname,
-            save_data_path,
-            save_states_path,
-            bios_directory,
-            extra_files_directory)
-        "#,
-        );
+        let row: DefaultEmulatorProfileRow =
+            QueryBuilder::new("update default_emulator_profiles set emulator_profile = ")
+                .push_bind(&profile.emulator_profile)
+                .push(" where id = ")
+                .push_bind(&profile.id)
+                .push(" returning *")
+                .build_query_as()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(sqlx_err_to_status)?;
 
-        builder.push_values(configs, |mut b, mut config| {
-            config.id = uuid::Uuid::now_v7().to_string();
-
-            b.push_bind(config.id)
-                .push_bind(config.emulator_id)
-                .push_bind(config.client_id)
-                .push_bind(config.executable_path)
-                .push_bind(config.nickname)
-                .push_bind(config.save_data_path)
-                .push_bind(config.save_states_path)
-                .push_bind(config.bios_directory)
-                .push_bind(config.extra_files_directory);
-        });
-
-        builder.push(" returning *");
-
-        let configs_created = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(CreateLocalEmulatorConfigsResponse {
-            configs_created,
+        Ok(Response::new(DefaultEmulatorProfile {
+            id: row.id,
+            platform: row.platform,
+            client: row.client,
+            emulator_profile: row.emulator_profile,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
         }))
     }
 
-    async fn get_local_emulator_configs(
+    async fn delete_default_emulator_profile(
         &self,
-        request: Request<GetLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<GetLocalEmulatorConfigsResponse>, Status> {
-        let request = request.into_inner();
-        let emulator_ids = request.emulator_ids;
-        let client_id = request.client_id;
+        request: Request<DeleteDefaultEmulatorProfileRequest>,
+    ) -> Result<Response<Empty>, Status> {
+        let id = request.into_inner().id;
 
-        let mut builder = sqlx::QueryBuilder::new("select * from local_emulator_configs ");
+        if id.is_empty() {
+            return Err(Status::invalid_argument("Profile ID must be provided"));
+        }
 
-        builder.push("where client_id = ").push_bind(client_id);
+        QueryBuilder::new("delete from default_emulator_profiles where id = ")
+            .push_bind(&id)
+            .build()
+            .execute(&self.db_pool)
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+        Ok(Response::new(Empty {}))
+    }
+
+    async fn get_local_emulator_config(
+        &self,
+        request: Request<GetLocalEmulatorConfigRequest>,
+    ) -> Result<Response<LocalEmulatorConfig>, Status> {
+        let id = request.into_inner().id;
+
+        if id.is_empty() {
+            return Err(Status::invalid_argument(
+                "Local emulator config ID must be provided",
+            ));
+        }
+
+        let row: LocalEmulatorConfigRow =
+            QueryBuilder::new("select * from local_emulator_configs where id = ")
+                .push_bind(&id)
+                .build_query_as()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(sqlx_err_to_status)?;
+
+        Ok(Response::new(LocalEmulatorConfig {
+            id: row.id,
+            emulator: row.emulator,
+            client: row.client,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            executable_path: row.executable_path,
+            nickname: row.nickname,
+            save_data_path: row.save_data_path,
+            save_states_path: row.save_states_path,
+            bios_directory: row.bios_directory,
+            extra_files_directory: row.extra_files_directory,
+        }))
+    }
+
+    async fn list_local_emulator_configs(
+        &self,
+        request: Request<ListLocalEmulatorConfigsRequest>,
+    ) -> Result<Response<ListLocalEmulatorConfigsResponse>, Status> {
+        let req = request.into_inner();
+        let emulator_ids = req.emulator_ids;
+        let client_id = req.client_id;
+
+        let mut query_builder = QueryBuilder::new("select * from local_emulator_configs");
+        query_builder.push(" where id is not null ");
 
         if !emulator_ids.is_empty() {
-            builder.push(" and emulator_id in (");
-            let mut separated = builder.separated(", ");
-
-            for emulator_id in emulator_ids {
+            query_builder.push(" and emulator in (");
+            let mut separated = query_builder.separated(", ");
+            for emulator_id in &emulator_ids {
                 separated.push_bind(emulator_id);
             }
-
             separated.push_unseparated(")");
         }
 
-        let configs = builder
+        if let Some(client) = &client_id {
+            query_builder.push(" and client = ");
+            query_builder.push_bind(client);
+        }
+
+        let rows: Vec<LocalEmulatorConfigRow> = query_builder
             .build_query_as()
             .fetch_all(&self.db_pool)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(GetLocalEmulatorConfigsResponse { configs }))
+        let configs = rows
+            .into_iter()
+            .map(|row| LocalEmulatorConfig {
+                id: row.id,
+                emulator: row.emulator,
+                client: row.client,
+                created_at: row.created_at,
+                updated_at: row.updated_at,
+                executable_path: row.executable_path,
+                nickname: row.nickname,
+                save_data_path: row.save_data_path,
+                save_states_path: row.save_states_path,
+                bios_directory: row.bios_directory,
+                extra_files_directory: row.extra_files_directory,
+            })
+            .collect();
+
+        Ok(Response::new(ListLocalEmulatorConfigsResponse { configs }))
     }
 
-    async fn update_local_emulator_configs(
+    async fn create_local_emulator_config(
         &self,
-        request: Request<UpdateLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<UpdateLocalEmulatorConfigsResponse>, Status> {
-        let request = request.into_inner();
-        let configs = request.configs;
+        request: Request<CreateLocalEmulatorConfigRequest>,
+    ) -> Result<Response<LocalEmulatorConfig>, Status> {
+        let config = request
+            .into_inner()
+            .local_emulator_config
+            .ok_or_else(|| Status::invalid_argument("Local emulator config must be provided"))?;
 
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+        if config.emulator.is_empty() {
+            return Err(Status::invalid_argument("Emulator ID must be provided"));
+        }
 
-        let mut configs_updated = vec![];
+        if config.client.is_empty() {
+            return Err(Status::invalid_argument("Client ID must be provided"));
+        }
 
-        for config in configs {
-            let mut builder = sqlx::QueryBuilder::new("update local_emulator_configs set ");
+        if config.executable_path.is_empty() {
+            return Err(Status::invalid_argument("Executable path must be provided"));
+        }
 
-            builder
-                .push("executable_path = ")
+        let config_id = Uuid::now_v7().to_string();
+
+        let row: LocalEmulatorConfigRow = QueryBuilder::new(
+            r#"
+            insert into local_emulator_configs (
+                id, 
+                emulator, 
+                client, 
+                executable_path, 
+                nickname, 
+                save_data_path, 
+                save_states_path, 
+                bios_directory, 
+                extra_files_directory
+            ) values (
+            "#,
+        )
+        .push_bind(&config_id)
+        .push(", ")
+        .push_bind(&config.emulator)
+        .push(", ")
+        .push_bind(&config.client)
+        .push(", ")
+        .push_bind(&config.executable_path)
+        .push(", ")
+        .push_bind(config.nickname)
+        .push(", ")
+        .push_bind(config.save_data_path)
+        .push(", ")
+        .push_bind(config.save_states_path)
+        .push(", ")
+        .push_bind(config.bios_directory)
+        .push(", ")
+        .push_bind(config.extra_files_directory)
+        .push(") returning *")
+        .build_query_as()
+        .fetch_one(&self.db_pool)
+        .await
+        .map_err(sqlx_err_to_status)?;
+
+        Ok(Response::new(LocalEmulatorConfig {
+            id: row.id,
+            emulator: row.emulator,
+            client: row.client,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            executable_path: row.executable_path,
+            nickname: row.nickname,
+            save_data_path: row.save_data_path,
+            save_states_path: row.save_states_path,
+            bios_directory: row.bios_directory,
+            extra_files_directory: row.extra_files_directory,
+        }))
+    }
+
+    async fn update_local_emulator_config(
+        &self,
+        request: Request<UpdateLocalEmulatorConfigRequest>,
+    ) -> Result<Response<LocalEmulatorConfig>, Status> {
+        let config = request
+            .into_inner()
+            .config
+            .ok_or_else(|| Status::invalid_argument("Local emulator config must be provided"))?;
+
+        if config.id.is_empty() {
+            return Err(Status::invalid_argument("Config ID must be provided"));
+        }
+
+        if config.executable_path.is_empty() {
+            return Err(Status::invalid_argument("Executable path must be provided"));
+        }
+
+        let row: LocalEmulatorConfigRow =
+            QueryBuilder::new("update local_emulator_configs set executable_path = ")
                 .push_bind(&config.executable_path)
                 .push(", nickname = ")
-                .push_bind(&config.nickname)
+                .push_bind(config.nickname)
                 .push(", save_data_path = ")
-                .push_bind(&config.save_data_path)
+                .push_bind(config.save_data_path)
                 .push(", save_states_path = ")
-                .push_bind(&config.save_states_path)
+                .push_bind(config.save_states_path)
                 .push(", bios_directory = ")
-                .push_bind(&config.bios_directory)
+                .push_bind(config.bios_directory)
                 .push(", extra_files_directory = ")
-                .push_bind(&config.extra_files_directory)
+                .push_bind(config.extra_files_directory)
                 .push(" where id = ")
                 .push_bind(&config.id)
-                .push(" returning *");
-
-            let config_updated = builder
+                .push(" returning *")
                 .build_query_as()
-                .fetch_one(&mut *tx)
+                .fetch_one(&self.db_pool)
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+                .map_err(sqlx_err_to_status)?;
 
-            configs_updated.push(config_updated);
-        }
-
-        tx.commit()
-            .await
-            .map_err(|why| Status::internal(why.to_string()))?;
-
-        Ok(Response::new(UpdateLocalEmulatorConfigsResponse {
-            configs_updated,
+        Ok(Response::new(LocalEmulatorConfig {
+            id: row.id,
+            emulator: row.emulator,
+            client: row.client,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            executable_path: row.executable_path,
+            nickname: row.nickname,
+            save_data_path: row.save_data_path,
+            save_states_path: row.save_states_path,
+            bios_directory: row.bios_directory,
+            extra_files_directory: row.extra_files_directory,
         }))
     }
 
-    async fn delete_local_emulator_configs(
+    async fn delete_local_emulator_config(
         &self,
-        request: Request<DeleteLocalEmulatorConfigsRequest>,
-    ) -> Result<Response<DeleteLocalEmulatorConfigsResponse>, Status> {
-        let request = request.into_inner();
-        let ids = request.ids;
+        request: Request<DeleteLocalEmulatorConfigRequest>,
+    ) -> Result<Response<Empty>, Status> {
+        let id = request.into_inner().id;
 
-        if ids.is_empty() {
-            return Err(Status::invalid_argument("ids list cannot be empty"));
+        if id.is_empty() {
+            return Err(Status::invalid_argument("Config ID must be provided"));
         }
 
-        let mut builder =
-            sqlx::QueryBuilder::new("delete from local_emulator_configs where id in (");
-
-        let mut separated = builder.separated(", ");
-        for id in ids {
-            separated.push_bind(id);
-        }
-
-        separated.push_unseparated(")");
-        builder.push(" returning *");
-
-        let configs_deleted = builder
-            .build_query_as()
-            .fetch_all(&self.db_pool)
+        QueryBuilder::new("delete from local_emulator_configs where id = ")
+            .push_bind(&id)
+            .build()
+            .execute(&self.db_pool)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(DeleteLocalEmulatorConfigsResponse {
-            configs_deleted,
-        }))
+        Ok(Response::new(Empty {}))
     }
 }

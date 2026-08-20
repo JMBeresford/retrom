@@ -212,53 +212,56 @@ create table if not exists emulators (
     built_in boolean not null default false,
     libretro_name text,
     created_at text not null default current_timestamp,
-    updated_at text not null default current_timestamp
+    updated_at text not null default current_timestamp,
+    constraint emulators_name_unique unique (name)
 );
 
 -- Relational replacement for emulators.supported_platforms integer[]
 create table if not exists emulator_platforms (
-    emulator_id text not null references emulators (id) on delete cascade,
-    platform_id text not null references platforms (id) on delete cascade,
-    primary key (emulator_id, platform_id)
+    emulator text not null references emulators (id) on delete cascade,
+    platform text not null references platforms (id) on delete cascade,
+    primary key (emulator, platform)
 );
 
 -- Relational replacement for emulators.operating_systems integer[]
 create table if not exists emulator_operating_systems (
-    emulator_id text not null references emulators (id) on delete cascade,
-    os_id text not null references operating_systems (id) on delete cascade,
-    primary key (emulator_id, os_id)
+    emulator text not null references emulators (id) on delete cascade,
+    operating_system text not null references operating_systems (id) on delete cascade,
+    primary key (emulator, operating_system)
 );
 
 create table if not exists emulator_profiles (
     id text not null primary key,
-    emulator_id text not null references emulators (id) on delete cascade,
+    emulator text not null references emulators (id) on delete cascade,
     name text not null,
     custom_args text not null default '',
     built_in boolean not null default false,
     created_at text not null default current_timestamp,
-    updated_at text not null default current_timestamp
+    updated_at text not null default current_timestamp,
+    constraint emulator_profiles_emulator_name_unique unique (emulator, name)
 );
 
 -- Relational replacement for emulator_profiles.supported_extensions text[]
 create table if not exists emulator_profile_extensions (
-    profile_id text not null references emulator_profiles (id) on delete cascade,
+    emulator_profile text not null references emulator_profiles (id) on delete cascade,
     extension text not null,
-    primary key (profile_id, extension)
+    primary key (emulator_profile, extension)
 );
 
 create table if not exists default_emulator_profiles (
-    platform_id text not null references platforms (id) on delete cascade,
-    client_id text not null references clients (id) on delete cascade,
-    emulator_profile_id text not null references emulator_profiles (id) on delete cascade,
+    id text not null primary key,
+    platform text not null references platforms (id) on delete cascade,
+    client text not null references clients (id) on delete cascade,
+    emulator_profile text not null references emulator_profiles (id) on delete cascade,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
-    primary key (platform_id, client_id)
+    constraint default_emulator_profiles_platform_client_unique unique (platform, client)
 );
 
 create table if not exists local_emulator_configs (
     id text not null primary key,
-    emulator_id text not null references emulators (id) on delete cascade,
-    client_id text not null references clients (id) on delete cascade,
+    emulator text not null references emulators (id) on delete cascade,
+    client text not null references clients (id) on delete cascade,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     executable_path text not null,
@@ -267,7 +270,7 @@ create table if not exists local_emulator_configs (
     save_states_path text,
     bios_directory text,
     extra_files_directory text,
-    constraint local_emulator_configs_emulator_client_unique unique (emulator_id, client_id)
+    constraint local_emulator_configs_emulator_client_unique unique (emulator, client)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────
@@ -399,7 +402,7 @@ insert into emulators (id, name, libretro_name, built_in) values
 ('00000000-0000-0000-0001-00000000002a', 'DOSBox Pure', 'dosbox_pure', true)
 on conflict do nothing;
 
-insert into emulator_operating_systems (emulator_id, os_id) values
+insert into emulator_operating_systems (emulator, operating_system) values
 ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0003-000000000004'),
 ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0003-000000000004'),
 ('00000000-0000-0000-0001-000000000003', '00000000-0000-0000-0003-000000000004'),
@@ -444,7 +447,7 @@ insert into emulator_operating_systems (emulator_id, os_id) values
 ('00000000-0000-0000-0001-00000000002a', '00000000-0000-0000-0003-000000000004')
 on conflict do nothing;
 
-insert into emulator_profiles (id, emulator_id, name, built_in, custom_args) values
+insert into emulator_profiles (id, emulator, name, built_in, custom_args) values
 (
     '00000000-0000-0000-0002-000000000001',
     '00000000-0000-0000-0001-000000000001',

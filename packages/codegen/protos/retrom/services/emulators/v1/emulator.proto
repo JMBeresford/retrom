@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package retrom.services.emulators.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+
+// Emulator represents an emulator that can be used to run games on different platforms and operating systems.
+message Emulator {
+  option (google.api.resource) = {
+    name_field: "id"
+    type: "retrom.services.emulators.v1.EmulatorService/Emulator"
+    singular: "emulator"
+    plural: "emulators"
+  };
+
+  // The operating systems that the emulator supports.
+  enum OperatingSystem {
+    // The operating system is unspecified.
+    OPERATING_SYSTEM_UNSPECIFIED = 0;
+    // The emulator supports Windows.
+    OPERATING_SYSTEM_WINDOWS = 1;
+    // The emulator supports macOS.
+    OPERATING_SYSTEM_MACOS = 2;
+    // The emulator supports Linux.
+    OPERATING_SYSTEM_LINUX = 3;
+    // The emulator supports Web/WASM.
+    OPERATING_SYSTEM_WEB = 4;
+  }
+
+  // The unique identifier of the emulator.
+  string id = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+  // The name of the emulator, e.g. "RetroArch" or "Dolphin".
+  string name = 2;
+  // The timestamp when the emulator was created.
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the emulator was last updated.
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Indicates whether the emulator is built-in to the system or provided by the user.
+  bool built_in = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The name of the emulator in the libretro ecosystem, if applicable.
+  optional string libretro_name = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // A list of IDs of platforms that the emulator supports.
+  repeated string platforms = 7 [(google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/Platform"}];
+  // A list of IDs of operating systems that the emulator supports.
+  repeated OperatingSystem operating_systems = 8;
+}
+
+// EmulatorRow represents a row in the emulators table.
+message EmulatorRow {
+  // The unique identifier of the emulator.
+  string id = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+  // The name of the emulator, e.g. "RetroArch" or "Dolphin".
+  string name = 2;
+  // The timestamp when the emulator was created.
+  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The timestamp when the emulator was last updated.
+  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Indicates whether the emulator is built-in to the system or provided by the user.
+  bool built_in = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The name of the emulator in the libretro ecosystem, if applicable.
+  optional string libretro_name = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// EmulatorPlatformRow represents a row in the emulator_platforms table.
+message EmulatorPlatformRow {
+  // The unique identifier of the emulator.
+  string emulator = 1;
+  // The unique identifier of the platform that the emulator supports.
+  string platform = 2;
+}
+
+// EmulatorOperatingSystem represents a row in the emulator_operating_systems table.
+message EmulatorOperatingSystemRow {
+  // The unique identifier of the emulator.
+  string emulator = 1 [(google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/Emulator"}];
+  // The unique identifier of the operating system that the emulator supports.
+  string operating_system = 2;
+}

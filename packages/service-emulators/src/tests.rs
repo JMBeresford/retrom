@@ -1,508 +1,551 @@
-use std::collections::BTreeSet;
-
-use super::EmulatorServiceHandlers;
-use retrom_codegen::{
-    retrom::services::emulators::v1::{
-        emulator_service_server::EmulatorService, CreateEmulatorProfilesRequest,
-        CreateEmulatorsRequest, CreateLocalEmulatorConfigsRequest, DefaultEmulatorProfile,
-        DeleteDefaultEmulatorProfilesRequest, DeleteEmulatorPlatformsRequest,
-        DeleteEmulatorProfilesRequest, DeleteEmulatorsRequest, DeleteLocalEmulatorConfigsRequest,
-        Emulator, EmulatorProfile, GetDefaultEmulatorProfilesRequest, GetEmulatorPlatformsRequest,
-        GetEmulatorProfilesRequest, GetEmulatorsRequest, GetLocalEmulatorConfigsRequest,
-        LocalEmulatorConfig, UpdateDefaultEmulatorProfilesRequest, UpdateEmulatorPlatformsRequest,
-        UpdateEmulatorProfilesRequest, UpdateEmulatorsRequest, UpdateLocalEmulatorConfigsRequest,
-    },
-    timestamp::Timestamp,
+use retrom_codegen::retrom::services::emulators::v1::{
+    emulator_service_server::EmulatorService, CreateDefaultEmulatorProfileRequest,
+    CreateEmulatorProfileRequest, CreateEmulatorRequest, DefaultEmulatorProfile, DeleteEmulatorProfileRequest,
+    DeleteEmulatorRequest, Emulator, EmulatorProfile, GetEmulatorProfileRequest, GetEmulatorRequest,
+    ListEmulatorsRequest, ListEmulatorProfilesRequest, UpdateEmulatorProfileRequest,
+    UpdateEmulatorRequest, DeleteDefaultEmulatorProfileRequest, GetDefaultEmulatorProfileRequest,
 };
-use retrom_db::{run_migrations, DbPool};
-use sqlx::sqlite::SqlitePoolOptions;
-use tonic::{Code, Request};
+use tonic::{Request, Status};
 
-fn timestamp() -> Timestamp {
-    Timestamp {
-        seconds: 1_700_000_000,
-        nanos: 0,
-    }
-}
+use crate::EmulatorServiceHandlers;
 
-async fn test_service() -> (EmulatorServiceHandlers, DbPool) {
-    let url = "sqlite::memory:";
-    let pool = SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect(url)
+async fn get_test_db_pool() -> DbPool {
+    let pool = sqlx::SqlitePool::connect("sqlite::memory:")
         .await
-        .expect("could not open sqlite pool");
+        .expect("Failed to connect to test database");
 
-    run_migrations(&pool)
+    retrom_db::run_migrations(&pool)
         .await
-        .expect("could not run migrations");
+        .expect("Failed to run migrations on test database");
 
-    (EmulatorServiceHandlers::new(pool.clone()), pool)
+    pool
 }
 
-async fn insert_client(pool: &DbPool, id: &str, name: &str) {
-    sqlx::query("insert into clients (id, name) values (?, ?)")
-        .bind(id)
-        .bind(name)
-        .execute(pool)
-        .await
-        .expect("could not insert test client");
+fn make_service(pool: DbPool) -> EmulatorServiceHandlers {
+    EmulatorServiceHandlers::new(pool)
 }
 
-async fn insert_platform(pool: &DbPool, id: &str, path: &str) {
-    sqlx::query("insert into platforms (id, path) values (?, ?)")
-        .bind(id)
-        .bind(path)
-        .execute(pool)
-        .await
-        .expect("could not insert test platform");
-}
-
-async fn seed_default_profile(
-    pool: &DbPool,
-    platform_id: &str,
-    client_id: &str,
-    emulator_profile_id: &str,
-) {
-    sqlx::query(
-        "insert into default_emulator_profiles (platform_id, client_id, emulator_profile_id) values (?, ?, ?)",
-    )
-    .bind(platform_id)
-    .bind(client_id)
-    .bind(emulator_profile_id)
-    .execute(pool)
-    .await
-    .expect("could not insert default emulator profile");
-}
-
-async fn create_emulator(service: &EmulatorServiceHandlers, name: &str) -> Emulator {
-    service
-        .create_emulators(Request::new(CreateEmulatorsRequest {
-            emulators: vec![Emulator {
-                id: String::new(),
-                name: name.to_string(),
-                created_at: Some(timestamp()),
-                updated_at: Some(timestamp()),
-                built_in: true,
-                libretro_name: Some(format!("{}.core", name.to_lowercase().replace(' ', "-"))),
-            }],
-        }))
-        .await
-        .expect("create_emulators failed")
-        .into_inner()
-        .emulators_created
-        .into_iter()
-        .next()
-        .expect("expected created emulator")
-}
-
-async fn create_profile(
-    service: &EmulatorServiceHandlers,
-    emulator_id: &str,
-    name: &str,
-    custom_args: &str,
-) -> EmulatorProfile {
-    service
-        .create_emulator_profiles(Request::new(CreateEmulatorProfilesRequest {
-            profiles: vec![EmulatorProfile {
-                id: String::new(),
-                emulator_id: emulator_id.to_string(),
-                name: name.to_string(),
-                custom_args: custom_args.to_string(),
-                built_in: true,
-                created_at: Some(timestamp()),
-                updated_at: Some(timestamp()),
-            }],
-        }))
-        .await
-        .expect("create_emulator_profiles failed")
-        .into_inner()
-        .profiles_created
-        .into_iter()
-        .next()
-        .expect("expected created emulator profile")
-}
-
-async fn create_local_config(
-    service: &EmulatorServiceHandlers,
-    emulator_id: &str,
-    client_id: &str,
-) -> LocalEmulatorConfig {
-    service
-        .create_local_emulator_configs(Request::new(CreateLocalEmulatorConfigsRequest {
-            configs: vec![LocalEmulatorConfig {
-                id: String::new(),
-                emulator_id: emulator_id.to_string(),
-                client_id: client_id.to_string(),
-                created_at: Some(timestamp()),
-                updated_at: Some(timestamp()),
-                executable_path: "/Applications/RetroArch.app".to_string(),
-                nickname: Some("Desktop".to_string()),
-                save_data_path: Some("/saves".to_string()),
-                save_states_path: Some("/states".to_string()),
-                bios_directory: Some("/bios".to_string()),
-                extra_files_directory: Some("/extra".to_string()),
-            }],
-        }))
-        .await
-        .expect("create_local_emulator_configs failed")
-        .into_inner()
-        .configs_created
-        .into_iter()
-        .next()
-        .expect("expected created local emulator config")
-}
+// ─── Emulator CRUD ───────────────────────────────────────────────────────────
 
 #[tokio::test]
-async fn emulators_support_crud_and_reject_builtin_updates() {
-    let (service, _pool) = test_service().await;
+async fn test_create_and_get_emulator() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
 
-    let emulator = create_emulator(&service, "Test Emulator").await;
+    let emulator = svc
+        .create_emulator(Request::new(CreateEmulatorRequest {
+            emulator: Some(Emulator {
+                name: "TestEmu".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await?
+        .into_inner();
+
+    assert_eq!(emulator.name, "TestEmu");
     assert!(!emulator.id.is_empty());
-    assert!(!emulator.built_in);
-    assert!(emulator.created_at.is_some());
-    assert!(emulator.updated_at.is_some());
 
-    let emulators = service
-        .get_emulators(Request::new(GetEmulatorsRequest {
-            ids: vec![emulator.id.clone()],
-            supported_platform_ids: vec![],
+    let fetched = svc
+        .get_emulator(Request::new(GetEmulatorRequest {
+            id: emulator.id.clone(),
         }))
-        .await
-        .expect("get_emulators failed")
-        .into_inner()
-        .emulators;
+        .await?
+        .into_inner();
 
-    assert_eq!(emulators.len(), 1);
-    assert_eq!(emulators[0].name, "Test Emulator");
+    assert_eq!(fetched.id, emulator.id);
+    assert_eq!(fetched.name, "TestEmu");
 
-    let updated_emulator = service
-        .update_emulators(Request::new(UpdateEmulatorsRequest {
-            emulators: vec![Emulator {
-                name: "Updated Emulator".to_string(),
-                built_in: false,
-                ..emulator.clone()
-            }],
-        }))
-        .await
-        .expect("update_emulators failed")
-        .into_inner()
-        .emulators_updated
-        .into_iter()
-        .next()
-        .expect("expected updated emulator");
-
-    assert_eq!(updated_emulator.name, "Updated Emulator");
-
-    let err = service
-        .update_emulators(Request::new(UpdateEmulatorsRequest {
-            emulators: vec![Emulator {
-                built_in: true,
-                ..updated_emulator.clone()
-            }],
-        }))
-        .await
-        .expect_err("built-in emulator update should fail");
-
-    assert_eq!(err.code(), Code::InvalidArgument);
-    assert_eq!(err.message(), "cannot update built-in emulators");
-
-    let deleted_emulator = service
-        .delete_emulators(Request::new(DeleteEmulatorsRequest {
-            ids: vec![updated_emulator.id.clone()],
-        }))
-        .await
-        .expect("delete_emulators failed")
-        .into_inner()
-        .emulators_deleted
-        .into_iter()
-        .next()
-        .expect("expected deleted emulator");
-
-    assert_eq!(deleted_emulator.id, updated_emulator.id);
-
-    let emulators = service
-        .get_emulators(Request::new(GetEmulatorsRequest {
-            ids: vec![updated_emulator.id],
-            supported_platform_ids: vec![],
-        }))
-        .await
-        .expect("get_emulators after delete failed")
-        .into_inner()
-        .emulators;
-
-    assert!(emulators.is_empty());
+    Ok(())
 }
 
 #[tokio::test]
-async fn emulator_platforms_can_be_updated_filtered_and_deleted() {
-    let (service, pool) = test_service().await;
-    let emulator = create_emulator(&service, "Mapped Emulator").await;
+async fn test_get_emulator_not_found() {
+    let svc = make_service(get_test_db_pool().await);
 
-    let platform_a = "00000000-0000-0000-1000-000000000001";
-    let platform_b = "00000000-0000-0000-1000-000000000002";
-
-    insert_platform(&pool, platform_a, "/roms/platform-a").await;
-    insert_platform(&pool, platform_b, "/roms/platform-b").await;
-
-    let emulator_platforms = service
-        .update_emulator_platforms(Request::new(UpdateEmulatorPlatformsRequest {
-            emulator_id: emulator.id.clone(),
-            platform_ids: vec![platform_a.to_string(), platform_b.to_string()],
+    let result = svc
+        .get_emulator(Request::new(GetEmulatorRequest {
+            id: "nonexistent-id".to_string(),
         }))
-        .await
-        .expect("update_emulator_platforms failed")
-        .into_inner()
-        .emulator_platforms;
+        .await;
 
-    let platform_ids = emulator_platforms
-        .iter()
-        .map(|ep| ep.platform_id.clone())
-        .collect::<BTreeSet<_>>();
-
-    assert_eq!(
-        platform_ids,
-        BTreeSet::from([platform_a.to_string(), platform_b.to_string()])
-    );
-
-    let emulator_platforms = service
-        .get_emulator_platforms(Request::new(GetEmulatorPlatformsRequest {
-            emulator_ids: vec![emulator.id.clone()],
-            platform_ids: vec![],
-        }))
-        .await
-        .expect("get_emulator_platforms failed")
-        .into_inner()
-        .emulator_platforms;
-
-    assert_eq!(emulator_platforms.len(), 2);
-
-    let supported = service
-        .get_emulators(Request::new(GetEmulatorsRequest {
-            ids: vec![],
-            supported_platform_ids: vec![platform_b.to_string()],
-        }))
-        .await
-        .expect("get_emulators with supported_platform_ids failed")
-        .into_inner()
-        .emulators;
-
-    assert_eq!(supported.len(), 1);
-    assert_eq!(supported[0].id, emulator.id);
-
-    let deleted = service
-        .delete_emulator_platforms(Request::new(DeleteEmulatorPlatformsRequest {
-            emulator_id: emulator.id.clone(),
-            platform_ids: vec![platform_b.to_string()],
-        }))
-        .await
-        .expect("delete_emulator_platforms failed")
-        .into_inner()
-        .emulator_platforms_deleted;
-
-    assert_eq!(deleted.len(), 1);
-    assert_eq!(deleted[0].platform_id, platform_b);
-
-    let emulator_platforms = service
-        .get_emulator_platforms(Request::new(GetEmulatorPlatformsRequest {
-            emulator_ids: vec![emulator.id],
-            platform_ids: vec![],
-        }))
-        .await
-        .expect("get_emulator_platforms after delete failed")
-        .into_inner()
-        .emulator_platforms;
-
-    assert_eq!(emulator_platforms.len(), 1);
-    assert_eq!(emulator_platforms[0].platform_id, platform_a);
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code(), tonic::Code::NotFound);
 }
 
 #[tokio::test]
-async fn emulator_profiles_support_crud() {
-    let (service, _pool) = test_service().await;
-    let emulator = create_emulator(&service, "Profile Host").await;
+async fn test_list_emulators() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
 
-    let profile = create_profile(&service, &emulator.id, "Default", "{file}").await;
+    svc.create_emulator(Request::new(CreateEmulatorRequest {
+        emulator: Some(Emulator {
+            name: "Emu1".to_string(),
+            ..Default::default()
+        }),
+    }))
+    .await?;
+
+    svc.create_emulator(Request::new(CreateEmulatorRequest {
+        emulator: Some(Emulator {
+            name: "Emu2".to_string(),
+            ..Default::default()
+        }),
+    }))
+    .await?;
+
+    let list = svc
+        .list_emulators(Request::new(ListEmulatorsRequest::default()))
+        .await?
+        .into_inner();
+
+    assert_eq!(list.emulators.len(), 2);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_update_emulator() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
+
+    let emulator = svc
+        .create_emulator(Request::new(CreateEmulatorRequest {
+            emulator: Some(Emulator {
+                name: "OldName".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await?
+        .into_inner();
+
+    let updated = svc
+        .update_emulator(Request::new(UpdateEmulatorRequest {
+            emulator: Some(Emulator {
+                id: emulator.id.clone(),
+                name: "NewName".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await?
+        .into_inner();
+
+    assert_eq!(updated.name, "NewName");
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_update_emulator_not_found() {
+    let svc = make_service(get_test_db_pool().await);
+
+    let result = svc
+        .update_emulator(Request::new(UpdateEmulatorRequest {
+            emulator: Some(Emulator {
+                id: "nonexistent-id".to_string(),
+                name: "SomeName".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await;
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code(), tonic::Code::NotFound);
+}
+
+#[tokio::test]
+async fn test_delete_emulator() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
+
+    let emulator = svc
+        .create_emulator(Request::new(CreateEmulatorRequest {
+            emulator: Some(Emulator {
+                name: "ToDelete".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await?
+        .into_inner();
+
+    svc.delete_emulator(Request::new(DeleteEmulatorRequest {
+        id: emulator.id.clone(),
+    }))
+    .await?;
+
+    let result = svc
+        .get_emulator(Request::new(GetEmulatorRequest {
+            id: emulator.id,
+        }))
+        .await;
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code(), tonic::Code::NotFound);
+
+    Ok(())
+}
+
+// ─── EmulatorProfile CRUD ────────────────────────────────────────────────────
+
+async fn create_test_emulator(svc: &EmulatorServiceHandlers) -> Emulator {
+    svc.create_emulator(Request::new(CreateEmulatorRequest {
+        emulator: Some(Emulator {
+            name: "TestEmulator".to_string(),
+            ..Default::default()
+        }),
+    }))
+    .await
+    .expect("Failed to create test emulator")
+    .into_inner()
+}
+
+#[tokio::test]
+async fn test_create_and_get_emulator_profile() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
+    let emulator = create_test_emulator(&svc).await;
+
+    let profile = svc
+        .create_emulator_profile(Request::new(CreateEmulatorProfileRequest {
+            emulator_profile: Some(EmulatorProfile {
+                emulator: emulator.id.clone(),
+                name: "TestProfile".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await?
+        .into_inner();
+
+    assert_eq!(profile.name, "TestProfile");
+    assert_eq!(profile.emulator, emulator.id);
     assert!(!profile.id.is_empty());
-    assert!(!profile.built_in);
 
-    let profiles = service
-        .get_emulator_profiles(Request::new(GetEmulatorProfilesRequest {
-            ids: vec![],
-            emulator_ids: vec![emulator.id.clone()],
+    let fetched = svc
+        .get_emulator_profile(Request::new(GetEmulatorProfileRequest {
+            id: profile.id.clone(),
         }))
-        .await
-        .expect("get_emulator_profiles failed")
-        .into_inner()
-        .profiles;
+        .await?
+        .into_inner();
 
-    assert_eq!(profiles.len(), 1);
-    assert_eq!(profiles[0].id, profile.id);
+    assert_eq!(fetched.id, profile.id);
+    assert_eq!(fetched.name, "TestProfile");
 
-    let updated_profile = service
-        .update_emulator_profiles(Request::new(UpdateEmulatorProfilesRequest {
-            profiles: vec![EmulatorProfile {
-                name: "Fast Boot".to_string(),
-                custom_args: "--fast {file}".to_string(),
-                ..profile.clone()
-            }],
-        }))
-        .await
-        .expect("update_emulator_profiles failed")
-        .into_inner()
-        .profiles_updated
-        .into_iter()
-        .next()
-        .expect("expected updated emulator profile");
-
-    assert_eq!(updated_profile.name, "Fast Boot");
-    assert_eq!(updated_profile.custom_args, "--fast {file}");
-
-    let deleted_profile = service
-        .delete_emulator_profiles(Request::new(DeleteEmulatorProfilesRequest {
-            ids: vec![updated_profile.id.clone()],
-        }))
-        .await
-        .expect("delete_emulator_profiles failed")
-        .into_inner()
-        .profiles_deleted
-        .into_iter()
-        .next()
-        .expect("expected deleted emulator profile");
-
-    assert_eq!(deleted_profile.id, updated_profile.id);
+    Ok(())
 }
 
 #[tokio::test]
-async fn default_emulator_profiles_support_get_update_and_delete() {
-    let (service, pool) = test_service().await;
-    let client_id = "00000000-0000-0000-2000-000000000001";
-    let platform_id = "00000000-0000-0000-2000-000000000002";
+async fn test_get_emulator_profile_not_found() {
+    let svc = make_service(get_test_db_pool().await);
 
-    insert_client(&pool, client_id, "Desktop Client").await;
-    insert_platform(&pool, platform_id, "/roms/defaults").await;
-
-    let emulator = create_emulator(&service, "Default Profile Host").await;
-    let original_profile = create_profile(&service, &emulator.id, "Original", "{file}").await;
-    let updated_profile =
-        create_profile(&service, &emulator.id, "Updated", "--updated {file}").await;
-
-    seed_default_profile(&pool, platform_id, client_id, &original_profile.id).await;
-
-    let default_profile = service
-        .get_default_emulator_profiles(Request::new(GetDefaultEmulatorProfilesRequest {
-            platform_ids: vec![platform_id.to_string()],
-            client_id: client_id.to_string(),
+    let result = svc
+        .get_emulator_profile(Request::new(GetEmulatorProfileRequest {
+            id: "nonexistent-id".to_string(),
         }))
-        .await
-        .expect("get_default_emulator_profiles failed")
-        .into_inner()
-        .default_profiles
-        .into_iter()
-        .next()
-        .expect("expected default emulator profile");
+        .await;
 
-    assert_eq!(default_profile.platform_id, platform_id);
-    assert_eq!(default_profile.client_id, client_id);
-    assert_eq!(default_profile.emulator_profile_id, original_profile.id);
-
-    let default_profile = service
-        .update_default_emulator_profiles(Request::new(UpdateDefaultEmulatorProfilesRequest {
-            default_profiles: vec![DefaultEmulatorProfile {
-                platform_id: platform_id.to_string(),
-                client_id: client_id.to_string(),
-                emulator_profile_id: updated_profile.id.clone(),
-                created_at: None,
-                updated_at: None,
-            }],
-        }))
-        .await
-        .expect("update_default_emulator_profiles failed")
-        .into_inner()
-        .default_profiles_updated
-        .into_iter()
-        .next()
-        .expect("expected updated default emulator profile");
-
-    assert_eq!(default_profile.emulator_profile_id, updated_profile.id);
-
-    let deleted_profile = service
-        .delete_default_emulator_profiles(Request::new(DeleteDefaultEmulatorProfilesRequest {
-            platform_ids: vec![platform_id.to_string()],
-            client_id: client_id.to_string(),
-        }))
-        .await
-        .expect("delete_default_emulator_profiles failed")
-        .into_inner()
-        .default_profiles_deleted
-        .into_iter()
-        .next()
-        .expect("expected deleted default emulator profile");
-
-    assert_eq!(deleted_profile.platform_id, platform_id);
-    assert_eq!(deleted_profile.client_id, client_id);
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code(), tonic::Code::NotFound);
 }
 
 #[tokio::test]
-async fn local_emulator_configs_support_crud() {
-    let (service, pool) = test_service().await;
-    let client_id = "00000000-0000-0000-3000-000000000001";
+async fn test_list_emulator_profiles() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
+    let emulator = create_test_emulator(&svc).await;
 
-    insert_client(&pool, client_id, "Portable Client").await;
+    svc.create_emulator_profile(Request::new(CreateEmulatorProfileRequest {
+        emulator_profile: Some(EmulatorProfile {
+            emulator: emulator.id.clone(),
+            name: "Profile1".to_string(),
+            ..Default::default()
+        }),
+    }))
+    .await?;
 
-    let emulator = create_emulator(&service, "Config Host").await;
-    let config = create_local_config(&service, &emulator.id, client_id).await;
+    svc.create_emulator_profile(Request::new(CreateEmulatorProfileRequest {
+        emulator_profile: Some(EmulatorProfile {
+            emulator: emulator.id.clone(),
+            name: "Profile2".to_string(),
+            ..Default::default()
+        }),
+    }))
+    .await?;
 
-    let configs = service
-        .get_local_emulator_configs(Request::new(GetLocalEmulatorConfigsRequest {
+    let list = svc
+        .list_emulator_profiles(Request::new(ListEmulatorProfilesRequest {
             emulator_ids: vec![emulator.id.clone()],
-            client_id: client_id.to_string(),
+            ..Default::default()
         }))
-        .await
-        .expect("get_local_emulator_configs failed")
-        .into_inner()
-        .configs;
+        .await?
+        .into_inner();
 
-    assert_eq!(configs.len(), 1);
-    assert_eq!(configs[0].id, config.id);
+    assert_eq!(list.profiles.len(), 2);
 
-    let updated_config = service
-        .update_local_emulator_configs(Request::new(UpdateLocalEmulatorConfigsRequest {
-            configs: vec![LocalEmulatorConfig {
-                executable_path: "/Applications/AltRetroArch.app".to_string(),
-                nickname: Some("Laptop".to_string()),
-                save_data_path: Some("/new-saves".to_string()),
-                save_states_path: Some("/new-states".to_string()),
-                bios_directory: Some("/new-bios".to_string()),
-                extra_files_directory: Some("/new-extra".to_string()),
-                ..config.clone()
-            }],
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_update_emulator_profile() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
+    let emulator = create_test_emulator(&svc).await;
+
+    let profile = svc
+        .create_emulator_profile(Request::new(CreateEmulatorProfileRequest {
+            emulator_profile: Some(EmulatorProfile {
+                emulator: emulator.id.clone(),
+                name: "OriginalName".to_string(),
+                ..Default::default()
+            }),
         }))
-        .await
-        .expect("update_local_emulator_configs failed")
-        .into_inner()
-        .configs_updated
-        .into_iter()
-        .next()
-        .expect("expected updated local emulator config");
+        .await?
+        .into_inner();
 
-    assert_eq!(updated_config.nickname.as_deref(), Some("Laptop"));
-    assert_eq!(
-        updated_config.executable_path,
-        "/Applications/AltRetroArch.app"
-    );
-
-    let deleted_config = service
-        .delete_local_emulator_configs(Request::new(DeleteLocalEmulatorConfigsRequest {
-            ids: vec![updated_config.id.clone()],
+    let updated = svc
+        .update_emulator_profile(Request::new(UpdateEmulatorProfileRequest {
+            profile: Some(EmulatorProfile {
+                id: profile.id.clone(),
+                name: "UpdatedName".to_string(),
+                emulator: emulator.id.clone(),
+                ..Default::default()
+            }),
         }))
-        .await
-        .expect("delete_local_emulator_configs failed")
-        .into_inner()
-        .configs_deleted
-        .into_iter()
-        .next()
-        .expect("expected deleted local emulator config");
+        .await?
+        .into_inner();
 
-    assert_eq!(deleted_config.id, updated_config.id);
+    assert_eq!(updated.name, "UpdatedName");
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_update_emulator_profile_not_found() {
+    let svc = make_service(get_test_db_pool().await);
+
+    let result = svc
+        .update_emulator_profile(Request::new(UpdateEmulatorProfileRequest {
+            profile: Some(EmulatorProfile {
+                id: "nonexistent-id".to_string(),
+                name: "Name".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await;
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code(), tonic::Code::NotFound);
+}
+
+#[tokio::test]
+async fn test_update_builtin_emulator_profile_rejected() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
+
+    // Seed a built-in emulator profile directly in the DB
+    let pool = svc.db_pool.clone();
+    let emu_id = uuid::Uuid::now_v7().to_string();
+    let profile_id = uuid::Uuid::now_v7().to_string();
+
+    sqlx::query(
+        "insert into emulators (id, name, built_in) values (?, ?, ?)",
+    )
+    .bind(&emu_id)
+    .bind("BuiltInEmu")
+    .bind(true)
+    .execute(&pool)
+    .await
+    .expect("Failed to insert built-in emulator");
+
+    sqlx::query(
+        "insert into emulator_profiles (id, emulator, name, built_in) values (?, ?, ?, ?)",
+    )
+    .bind(&profile_id)
+    .bind(&emu_id)
+    .bind("BuiltInProfile")
+    .bind(true)
+    .execute(&pool)
+    .await
+    .expect("Failed to insert built-in profile");
+
+    let result = svc
+        .update_emulator_profile(Request::new(UpdateEmulatorProfileRequest {
+            profile: Some(EmulatorProfile {
+                id: profile_id,
+                name: "HackedName".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await;
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code(), tonic::Code::InvalidArgument);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_delete_emulator_profile() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
+    let emulator = create_test_emulator(&svc).await;
+
+    let profile = svc
+        .create_emulator_profile(Request::new(CreateEmulatorProfileRequest {
+            emulator_profile: Some(EmulatorProfile {
+                emulator: emulator.id.clone(),
+                name: "ToDeleteProfile".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await?
+        .into_inner();
+
+    svc.delete_emulator_profile(Request::new(DeleteEmulatorProfileRequest {
+        id: profile.id.clone(),
+    }))
+    .await?;
+
+    let result = svc
+        .get_emulator_profile(Request::new(GetEmulatorProfileRequest {
+            id: profile.id,
+        }))
+        .await;
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code(), tonic::Code::NotFound);
+
+    Ok(())
+}
+
+// ─── DefaultEmulatorProfile CRUD ─────────────────────────────────────────────
+
+#[tokio::test]
+async fn test_create_and_get_default_emulator_profile() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
+    let emulator = create_test_emulator(&svc).await;
+
+    // Need a client and platform first
+    let pool = &svc.db_pool;
+    let client_id = uuid::Uuid::now_v7().to_string();
+    let platform_id = uuid::Uuid::now_v7().to_string();
+
+    sqlx::query("insert into clients (id, name) values (?, ?)")
+        .bind(&client_id)
+        .bind("TestClient")
+        .execute(pool)
+        .await
+        .expect("Failed to insert client");
+
+    sqlx::query("insert into platforms (id) values (?)")
+        .bind(&platform_id)
+        .execute(pool)
+        .await
+        .expect("Failed to insert platform");
+
+    let profile = svc
+        .create_emulator_profile(Request::new(CreateEmulatorProfileRequest {
+            emulator_profile: Some(EmulatorProfile {
+                emulator: emulator.id.clone(),
+                name: "DefaultProfile".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await?
+        .into_inner();
+
+    let default_profile = svc
+        .create_default_emulator_profile(Request::new(CreateDefaultEmulatorProfileRequest {
+            default_emulator_profile: Some(DefaultEmulatorProfile {
+                platform: platform_id.clone(),
+                client: client_id.clone(),
+                emulator_profile: profile.id.clone(),
+                ..Default::default()
+            }),
+        }))
+        .await?
+        .into_inner();
+
+    assert_eq!(default_profile.platform, platform_id);
+    assert_eq!(default_profile.client, client_id);
+    assert_eq!(default_profile.emulator_profile, profile.id);
+    assert!(!default_profile.id.is_empty());
+
+    let fetched = svc
+        .get_default_emulator_profile(Request::new(GetDefaultEmulatorProfileRequest {
+            id: default_profile.id.clone(),
+        }))
+        .await?
+        .into_inner();
+
+    assert_eq!(fetched.id, default_profile.id);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_get_default_emulator_profile_not_found() {
+    let svc = make_service(get_test_db_pool().await);
+
+    let result = svc
+        .get_default_emulator_profile(Request::new(GetDefaultEmulatorProfileRequest {
+            id: "nonexistent-id".to_string(),
+        }))
+        .await;
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code(), tonic::Code::NotFound);
+}
+
+#[tokio::test]
+async fn test_delete_default_emulator_profile() -> Result<(), Status> {
+    let svc = make_service(get_test_db_pool().await);
+    let emulator = create_test_emulator(&svc).await;
+
+    let pool = &svc.db_pool;
+    let client_id = uuid::Uuid::now_v7().to_string();
+    let platform_id = uuid::Uuid::now_v7().to_string();
+
+    sqlx::query("insert into clients (id, name) values (?, ?)")
+        .bind(&client_id)
+        .bind("TestClient2")
+        .execute(pool)
+        .await
+        .expect("Failed to insert client");
+
+    sqlx::query("insert into platforms (id) values (?)")
+        .bind(&platform_id)
+        .execute(pool)
+        .await
+        .expect("Failed to insert platform");
+
+    let profile = svc
+        .create_emulator_profile(Request::new(CreateEmulatorProfileRequest {
+            emulator_profile: Some(EmulatorProfile {
+                emulator: emulator.id.clone(),
+                name: "AnotherProfile".to_string(),
+                ..Default::default()
+            }),
+        }))
+        .await?
+        .into_inner();
+
+    let default_profile = svc
+        .create_default_emulator_profile(Request::new(CreateDefaultEmulatorProfileRequest {
+            default_emulator_profile: Some(DefaultEmulatorProfile {
+                platform: platform_id.clone(),
+                client: client_id.clone(),
+                emulator_profile: profile.id.clone(),
+                ..Default::default()
+            }),
+        }))
+        .await?
+        .into_inner();
+
+    svc.delete_default_emulator_profile(Request::new(
+        DeleteDefaultEmulatorProfileRequest {
+            id: default_profile.id.clone(),
+        },
+    ))
+    .await?;
+
+    let result = svc
+        .get_default_emulator_profile(Request::new(GetDefaultEmulatorProfileRequest {
+            id: default_profile.id,
+        }))
+        .await;
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code(), tonic::Code::NotFound);
+
+    Ok(())
 }
