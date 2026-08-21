@@ -19,28 +19,32 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "retrom";
-  inherit ((builtins.fromTOML (builtins.readFile ../../../Cargo.toml)).workspace.package) version;
+  inherit ((fromTOML (builtins.readFile ../../../Cargo.toml)).workspace.package) version;
+
+  __structuredAttrs = true;
 
   src = lib.cleanSourceWith {
     src = ../../../.;
-    filter = path: _: !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
-      /nix
-      /flake.nix
-      /flake.lock
+    filter =
+      path: _:
+      !(builtins.any (prefix: lib.path.hasPrefix (../../../. + prefix) (/. + path)) [
+        /nix
+        /flake.nix
+        /flake.lock
 
-      /.github
-      /.gitignore
-    ]);
+        /.github
+        /.gitignore
+      ]);
   };
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     fetcherVersion = 3;
-    hash = "sha256-MmWCpe7NzzT8W/Ic9y1VzGAp4rk0vxoOxbz5sRRlQs0=";
+    hash = "sha256-b4OG+4i+ssaaJFj0SWyzI+dHWLk5XQCiq1TVMhIo/10=";
   };
 
   cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
-  
+
   cargoLock.outputHashes = {
     "ludusavi-0.30.0" = "sha256-tDGfnX3fDDvrLvSnWvurIBwgDTWCjmbIJXDxgxQV5Og=";
     "webdav-meta-0.1.0" = "sha256-1XWBxlkdftg/Et7TexNmhKDZXl7ro+agMXodCRMV+e8=";
@@ -68,22 +72,20 @@ rustPlatform.buildRustPackage (finalAttrs: {
     gst_all_1.gst-plugins-good
   ];
 
-  buildPhase = ''
+  preBuild = ''
     export CI=true
     export NX_NO_CLOUD=true
     export NX_DAEMON=false
 
     # See https://github.com/nrwl/nx/issues/22445
     faketty pnpm nx build:desktop retrom-client-web
-
-    runHook tauriBuildHook
   '';
 
-  meta = with lib; {
-    description = "A centralized game library/collection management service with a focus on emulation";
+  meta = {
+    description = "Desktop client for the Retrom game library management service";
     homepage = "https://github.com/JMBeresford/retrom";
-    license = licenses.gpl3;
-    platforms = platforms.linux;
+    license = lib.licenses.gpl3Only;
+    platforms = lib.platforms.linux;
     mainProgram = "Retrom";
   };
 })
