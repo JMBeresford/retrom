@@ -37,8 +37,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
+    pnpm = pnpm_10;
     fetcherVersion = 4;
-    hash = "sha256-vGNlVEYBGYwaUMfsz6Cat4ZWPOfTHjbjuehsFi3zDoE=";
+    hash = "sha256-5FkJc/rtptg4ZWlf1NU/57Ga8cLbW1LVc4MLxs+iyrA=";
   };
 
   buildAndTestSubdir = "packages/service";
@@ -73,6 +74,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     export NX_DAEMON=false
 
     export VITE_BASE_URL=/web
+    export VITE_UPTRACE_DSN=https://KgFBXOxX2RFeJurwr7R-4w@api.uptrace.dev?grpc=4317
 
     # See https://github.com/nrwl/nx/issues/22445
     faketty pnpm nx build retrom-client-web
