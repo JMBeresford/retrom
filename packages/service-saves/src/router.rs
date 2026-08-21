@@ -20,7 +20,7 @@ pub fn saves_router(db_pool: DbPool) -> axum::Router {
     ));
 
     let emulator_saves_service_v2 =
-        EmulatorSavesServiceServer::new(EmulatorSavesServiceHandlers::new(db_pool));
+        EmulatorSavesServiceServer::new(EmulatorSavesServiceHandlers::new());
 
     let mut routes_builder = tonic::service::Routes::builder();
     routes_builder

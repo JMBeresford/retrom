@@ -10,13 +10,12 @@ use ludusavi::{
         ZipCompression, ZipConfig,
     },
 };
-use retrom_codegen::retrom::services::emulators::v1::Emulator;
 use retrom_service_common::retrom_dirs::RetromDirs;
 use std::{collections::BTreeMap, path::PathBuf};
 use tracing::instrument;
 
 pub struct LudusaviManager {
-    emulators: Vec<Emulator>,
+    emulator_ids: Vec<String>,
     ludusavi: Ludusavi,
 }
 
@@ -28,19 +27,21 @@ pub enum SaveKind {
 }
 
 impl LudusaviManager {
-    pub fn new(emulators: &[Emulator], save_kind: SaveKind) -> Self {
-        let custom_games: Vec<CustomGame> = emulators
+    pub fn new(emulator_ids: &[&str], save_kind: SaveKind) -> Self {
+        let custom_games: Vec<CustomGame> = emulator_ids
             .iter()
-            .filter_map(|emulator| {
+            .filter_map(|emulator_id| {
                 let files_directory = match save_kind {
-                    SaveKind::Saves => Self::get_emulator_save_dir(emulator).to_str()?.to_string(),
-                    SaveKind::SaveStates => Self::get_emulator_save_states_dir(emulator)
+                    SaveKind::Saves => Self::get_emulator_save_dir(emulator_id)
+                        .to_str()?
+                        .to_string(),
+                    SaveKind::SaveStates => Self::get_emulator_save_states_dir(emulator_id)
                         .to_str()?
                         .to_string(),
                 };
 
                 Some(CustomGame {
-                    name: emulator.id.to_string(),
+                    name: emulator_id.to_string(),
                     files: vec![files_directory],
                     ..Default::default()
                 })
@@ -93,17 +94,17 @@ impl LudusaviManager {
         manifest.add_custom_games(&config);
 
         Self {
-            emulators: emulators.to_vec(),
+            emulator_ids: emulator_ids.into_iter().map(|s| s.to_string()).collect(),
             ludusavi: Ludusavi::new(config, manifest),
         }
     }
 
-    pub fn get_emulator_save_dir(emulator: &Emulator) -> PathBuf {
-        RetromDirs::new().saves_dir().join(&emulator.id)
+    pub fn get_emulator_save_dir(emulator_id: &str) -> PathBuf {
+        RetromDirs::new().saves_dir().join(emulator_id)
     }
 
-    pub fn get_emulator_save_states_dir(emulator: &Emulator) -> PathBuf {
-        RetromDirs::new().save_states_dir().join(&emulator.id)
+    pub fn get_emulator_save_states_dir(emulator_id: &str) -> PathBuf {
+        RetromDirs::new().save_states_dir().join(emulator_id)
     }
 
     #[instrument(skip(self))]
@@ -115,7 +116,7 @@ impl LudusaviManager {
 
         let output = self.ludusavi.back_up(BackUp {
             finality,
-            games: self.emulators.iter().map(|e| e.id.to_string()).collect(),
+            games: self.emulator_ids.clone(),
             resolve_cloud_conflict: None,
             wine_prefix: None,
             include_disabled: false,
@@ -134,7 +135,7 @@ impl LudusaviManager {
 
         let output = self.ludusavi.restore(Restore {
             finality,
-            games: self.emulators.iter().map(|e| e.id.to_string()).collect(),
+            games: self.emulator_ids.clone(),
             resolve_cloud_conflict: None,
             include_disabled: false,
             skip_downgrade: false,
@@ -147,7 +148,7 @@ impl LudusaviManager {
     #[instrument(skip_all)]
     pub fn list_backups(&self, params: Option<ListBackups>) -> Result<ApiOutput> {
         let params = params.unwrap_or(ListBackups {
-            games: self.emulators.iter().map(|e| e.id.to_string()).collect(),
+            games: self.emulator_ids.clone(),
         });
 
         let output = self.ludusavi.list_backups(params)?;

@@ -30,7 +30,7 @@ import {
   TableRow,
 } from "@retrom/ui-next/components/table";
 import { Button } from "@retrom/ui-next/components/button";
-import { useFieldContext } from "../defs";
+import { useLibraryFormFieldContext } from "../defs";
 
 const highlighter = await createHighlighterCore({
   themes: [import("@shikijs/themes/one-dark-pro")],
@@ -39,7 +39,7 @@ const highlighter = await createHighlighterCore({
 });
 
 export function IgnorePatternsField() {
-  const field = useFieldContext<Array<string>>();
+  const field = useLibraryFormFieldContext<Array<string>>();
   const [toAdd, setToAdd] = useState("");
 
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;

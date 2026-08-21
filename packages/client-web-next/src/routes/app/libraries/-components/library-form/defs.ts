@@ -11,27 +11,31 @@ import { PathField } from "./fields/path";
 import { IgnorePatternsField } from "./fields/ignore-patterns";
 import type z from "zod";
 
-export const { fieldContext, formContext, useFieldContext, useFormContext } =
-  createFormHookContexts();
+export const {
+  fieldContext: libraryFormFieldContext,
+  formContext: libraryFormContext,
+  useFieldContext: useLibraryFormFieldContext,
+  useFormContext: useLibraryFormContext,
+} = createFormHookContexts();
 
-export const defaultValues = {
+export const defaultLibraryFormValues = {
   name: "",
   path: "",
   structureDefinition: "{library}/{platform}/{game}",
   ignorePatterns: Array<string>(),
 } satisfies z.output<typeof libraryValidationSchema>;
 
-export const formOptions = formOptionsImpl({
+export const libraryFormOptions = formOptionsImpl({
   formId: "library-form",
-  defaultValues,
+  defaultValues: defaultLibraryFormValues,
   validators: {
     onChange: libraryValidationSchema,
   },
 });
 
-export const { useAppForm } = createFormHook({
-  fieldContext,
-  formContext,
+export const { useAppForm: useLibraryForm } = createFormHook({
+  fieldContext: libraryFormFieldContext,
+  formContext: libraryFormContext,
   fieldComponents: {
     NameField,
     PathField,

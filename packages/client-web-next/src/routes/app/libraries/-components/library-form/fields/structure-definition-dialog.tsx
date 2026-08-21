@@ -15,10 +15,10 @@ import {
   AccordionTrigger,
 } from "@retrom/ui-next/components/accordion";
 import { builtinMacros } from "../schema";
-import { useFieldContext } from "..";
+import { useLibraryFormFieldContext } from "..";
 
 export function StructureDefinitionField() {
-  const field = useFieldContext<string>();
+  const field = useLibraryFormFieldContext<string>();
 
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 

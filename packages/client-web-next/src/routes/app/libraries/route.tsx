@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Separator } from "@retrom/ui-next/components/separator";
 import { Button } from "@retrom/ui-next/components/button";
-import { LibraryTable } from "./-components/table";
+import { LibraryTable } from "./-components/library-table";
 import { LibraryFormDialog } from "./-components/library-form-dialog";
 import { useModalAction } from "@/modals/use-modal-action";
 import { FileExplorerDialog } from "@/modals/file-explorer";

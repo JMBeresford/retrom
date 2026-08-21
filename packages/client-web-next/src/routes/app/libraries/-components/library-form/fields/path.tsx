@@ -11,11 +11,11 @@ import {
   InputGroupInput,
 } from "@retrom/ui-next/components/input-group";
 import { FolderOpenIcon } from "lucide-react";
-import { useFieldContext } from "../defs";
+import { useLibraryFormFieldContext } from "../defs";
 import { useModalAction } from "@/modals/use-modal-action";
 
 export function PathField() {
-  const field = useFieldContext<string>();
+  const field = useLibraryFormFieldContext<string>();
   const fileExplorerDialog = useModalAction("fileExplorer");
 
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;

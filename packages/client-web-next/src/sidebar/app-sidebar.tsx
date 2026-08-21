@@ -134,7 +134,12 @@ function AppSidebarMenuItem({
 
   const ItemComponent = sub ? SidebarMenuSubItem : SidebarMenuItem;
   const size = sub ? "sm" : "default";
-  const isActive = config.type === "link" && pathname === config.route;
+  const isActive =
+    config.type === "link" &&
+    (pathname === config.route ||
+      (config.route &&
+        config.route !== "/app" &&
+        pathname.startsWith(config.route)));
 
   return (
     <ItemComponent>

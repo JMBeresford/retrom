@@ -9,8 +9,11 @@ import {
 } from "@retrom/ui-next/components/dialog";
 import { Button } from "@retrom/ui-next/components/button";
 import { toast } from "@retrom/ui-next/components/toast";
-import { useAppForm } from "./form";
-import { defaultValues, formOptions } from "./form/defs";
+import { useLibraryForm } from "./library-form";
+import {
+  defaultLibraryFormValues,
+  libraryFormOptions,
+} from "./library-form/defs";
 import type { BaseModalActionProps } from "@/modals/modals";
 import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
 import { useCreateLibrary } from "@/data/libraries/use-create-library";
@@ -44,8 +47,8 @@ export function LibraryFormDialog() {
   const { mutate: createLibrary } = useCreateLibrary();
   const { mutate: updateLibrary } = useUpdateLibrary();
 
-  const libraryForm = useAppForm({
-    ...formOptions,
+  const libraryForm = useLibraryForm({
+    ...libraryFormOptions,
     onSubmit: ({ value, formApi }) => {
       const { payload: modalState } = handle.store.getSnapshot();
 
@@ -87,7 +90,9 @@ export function LibraryFormDialog() {
           keepDefaultValues: false,
         });
       } else {
-        libraryForm.reset(defaultValues, { keepDefaultValues: false });
+        libraryForm.reset(defaultLibraryFormValues, {
+          keepDefaultValues: false,
+        });
       }
     }
   };

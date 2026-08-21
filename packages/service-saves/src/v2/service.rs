@@ -3,31 +3,25 @@ use futures::future::join_all;
 use ludusavi::report::ApiGame;
 use retrom_codegen::retrom::{
     files::v1::FileStat,
-    services::{
-        emulators::v1::Emulator,
-        saves::v2::{
-            emulator_saves_service_server::EmulatorSavesService, Backup, BackupSaveFilesRequest,
-            BackupSaveFilesResponse, BackupSaveStatesRequest, BackupSaveStatesResponse,
-            RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
-            RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, SaveFilesStat,
-            SaveStatesStat, StatSaveFilesRequest, StatSaveFilesResponse, StatSaveStatesRequest,
-            StatSaveStatesResponse,
-        },
+    services::saves::v2::{
+        emulator_saves_service_server::EmulatorSavesService, Backup, BackupSaveFilesRequest,
+        BackupSaveFilesResponse, BackupSaveStatesRequest, BackupSaveStatesResponse,
+        RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
+        RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, SaveFilesStat,
+        SaveStatesStat, StatSaveFilesRequest, StatSaveFilesResponse, StatSaveStatesRequest,
+        StatSaveStatesResponse,
     },
 };
-use retrom_db::DbPool;
 use retrom_service_common::retrom_dirs::RetromDirs;
 use std::{path::PathBuf, time::SystemTime};
 use tonic::{Request, Response, Status};
 use tracing::instrument;
 
-pub struct EmulatorSavesServiceHandlers {
-    db_pool: DbPool,
-}
+pub struct EmulatorSavesServiceHandlers {}
 
 impl EmulatorSavesServiceHandlers {
-    pub fn new(db_pool: DbPool) -> Self {
-        Self { db_pool }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -42,25 +36,15 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let selectors = request.save_files_selectors;
         let include_backups = request.config.map(|c| c.include_backups()).unwrap_or(false);
 
-        let emulators: Vec<Emulator> = if selectors.is_empty() {
-            vec![]
-        } else {
-            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "select * from emulators where id in (",
-            );
-            let mut separated = query.separated(", ");
-            for id in selectors.iter().map(|s| &s.emulator_id) {
-                separated.push_bind(id.to_string());
-            }
-            separated.push_unseparated(")");
-            query
-                .build_query_as()
-                .fetch_all(&self.db_pool)
-                .await
-                .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
-        };
+        let mut ludusavi_manager = LudusaviManager::new(
+            selectors
+                .iter()
+                .map(|s| s.emulator_id.as_str())
+                .collect::<Vec<_>>()
+                .as_slice(),
+            SaveKind::Saves,
+        );
 
-        let mut ludusavi_manager = LudusaviManager::new(&emulators, SaveKind::Saves);
         let (files, backups_output) = tokio::task::spawn_blocking(move || {
             let files = ludusavi_manager.list_files().map_err(|e| {
                 Status::internal(format!("Failed to list save files via Ludusavi: {}", e))
@@ -143,25 +127,15 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let selectors = request.save_files_selectors;
         let dry_run = request.config.map(|c| c.dry_run());
 
-        let emulators: Vec<Emulator> = if selectors.is_empty() {
-            vec![]
-        } else {
-            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "select * from emulators where id in (",
-            );
-            let mut separated = query.separated(", ");
-            for id in selectors.iter().map(|s| &s.emulator_id) {
-                separated.push_bind(id.to_string());
-            }
-            separated.push_unseparated(")");
-            query
-                .build_query_as()
-                .fetch_all(&self.db_pool)
-                .await
-                .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
-        };
+        let mut ludusavi_manager = LudusaviManager::new(
+            selectors
+                .iter()
+                .map(|s| s.emulator_id.as_str())
+                .collect::<Vec<_>>()
+                .as_slice(),
+            SaveKind::Saves,
+        );
 
-        let mut ludusavi_manager = LudusaviManager::new(&emulators, SaveKind::Saves);
         tokio::task::spawn_blocking(move || {
             let output = ludusavi_manager.back_up(dry_run).map_err(|e| {
                 Status::internal(format!("Failed to back up save files via Ludusavi: {}", e))
@@ -184,35 +158,14 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let selectors = request.save_files_selectors;
         let dry_run = request.config.and_then(|c| c.dry_run);
 
-        let emulators: Vec<Emulator> = if selectors.is_empty() {
-            vec![]
-        } else {
-            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "select * from emulators where id in (",
-            );
-            let mut separated = query.separated(", ");
-            for id in selectors.iter().map(|s| &s.emulator_id) {
-                separated.push_bind(id.to_string());
-            }
-            separated.push_unseparated(")");
-            query
-                .build_query_as()
-                .fetch_all(&self.db_pool)
-                .await
-                .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
-        };
-
         let restore_jobs: Vec<_> = selectors
             .into_iter()
             .filter_map(|selector| {
                 let backup_id = selector.backup.map(|b| b.backup_id);
-                let emulator = emulators
-                    .iter()
-                    .find(|e| e.id == selector.emulator_id)?
-                    .clone();
+                let emulator_id = selector.emulator_id;
 
-                let dir = LudusaviManager::get_emulator_save_dir(&emulator);
-                let mut ludusavi_manager = LudusaviManager::new(&[emulator], SaveKind::Saves);
+                let dir = LudusaviManager::get_emulator_save_dir(&emulator_id);
+                let mut ludusavi_manager = LudusaviManager::new(&[&emulator_id], SaveKind::Saves);
 
                 Some(tokio::task::spawn_blocking(move || {
                     if let Some(true) = dry_run {
@@ -258,25 +211,14 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let selectors = request.save_states_selectors;
         let include_backups = request.config.map(|c| c.include_backups()).unwrap_or(false);
 
-        let emulators: Vec<Emulator> = if selectors.is_empty() {
-            vec![]
-        } else {
-            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "select * from emulators where id in (",
-            );
-            let mut separated = query.separated(", ");
-            for id in selectors.iter().map(|s| &s.emulator_id) {
-                separated.push_bind(id.to_string());
-            }
-            separated.push_unseparated(")");
-            query
-                .build_query_as()
-                .fetch_all(&self.db_pool)
-                .await
-                .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
-        };
+        let mut ludusavi_manager = LudusaviManager::new(
+            &selectors
+                .iter()
+                .map(|s| s.emulator_id.as_str())
+                .collect::<Vec<_>>(),
+            SaveKind::SaveStates,
+        );
 
-        let mut ludusavi_manager = LudusaviManager::new(&emulators, SaveKind::SaveStates);
         let (files, backups_output) = tokio::task::spawn_blocking(move || {
             let files = ludusavi_manager.list_files().map_err(|e| {
                 Status::internal(format!("Failed to list save files via Ludusavi: {}", e))
@@ -359,25 +301,13 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let selectors = request.save_states_selectors;
         let dry_run = request.config.map(|c| c.dry_run());
 
-        let emulators: Vec<Emulator> = if selectors.is_empty() {
-            vec![]
-        } else {
-            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "select * from emulators where id in (",
-            );
-            let mut separated = query.separated(", ");
-            for id in selectors.iter().map(|s| &s.emulator_id) {
-                separated.push_bind(id.to_string());
-            }
-            separated.push_unseparated(")");
-            query
-                .build_query_as()
-                .fetch_all(&self.db_pool)
-                .await
-                .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
-        };
-
-        let mut ludusavi_manager = LudusaviManager::new(&emulators, SaveKind::SaveStates);
+        let mut ludusavi_manager = LudusaviManager::new(
+            &selectors
+                .iter()
+                .map(|s| s.emulator_id.as_str())
+                .collect::<Vec<_>>(),
+            SaveKind::SaveStates,
+        );
         tokio::task::spawn_blocking(move || {
             let output = ludusavi_manager.back_up(dry_run).map_err(|e| {
                 Status::internal(format!("Failed to back up save files via Ludusavi: {}", e))
@@ -400,35 +330,15 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
         let selectors = request.save_states_selectors;
         let dry_run = request.config.and_then(|c| c.dry_run);
 
-        let emulators: Vec<Emulator> = if selectors.is_empty() {
-            vec![]
-        } else {
-            let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
-                "select * from emulators where id in (",
-            );
-            let mut separated = query.separated(", ");
-            for id in selectors.iter().map(|s| &s.emulator_id) {
-                separated.push_bind(id.to_string());
-            }
-            separated.push_unseparated(")");
-            query
-                .build_query_as()
-                .fetch_all(&self.db_pool)
-                .await
-                .map_err(|e| Status::internal(format!("Failed to load emulators: {}", e)))?
-        };
-
         let restore_jobs = selectors
             .into_iter()
             .filter_map(|selector| {
                 let backup_id = selector.backup.map(|b| b.backup_id);
-                let emulator = emulators
-                    .iter()
-                    .find(|e| e.id == selector.emulator_id)?
-                    .clone();
+                let emulator_id = selector.emulator_id;
 
-                let dir = LudusaviManager::get_emulator_save_states_dir(&emulator);
-                let mut ludusavi_manager = LudusaviManager::new(&[emulator], SaveKind::SaveStates);
+                let dir = LudusaviManager::get_emulator_save_states_dir(&emulator_id);
+                let mut ludusavi_manager =
+                    LudusaviManager::new(&[&emulator_id], SaveKind::SaveStates);
 
                 Some(tokio::task::spawn_blocking(move || {
                     if let Some(true) = dry_run {

@@ -4,6 +4,8 @@ import type {
   GetLibraryRequestSchema,
   ListLibrariesRequestSchema,
   ListLibrariesResponse,
+  ListPlatformsRequestSchema,
+  ListPlatformsResponse,
 } from "@retrom/codegen/retrom/services/library/v1/library_service_pb";
 import type { RetromClient } from "@/api-client/client";
 import type { MessageInitShape } from "@bufbuild/protobuf";
@@ -22,6 +24,11 @@ export const libraryQueryKeys = {
   listLibraries: (
     request: MessageInitShape<typeof ListLibrariesRequestSchema>,
   ) => [...libraryQueryKeys.listAllLibraries(), request] as const,
+  listAllPlatforms: () =>
+    [...libraryQueryKeys.all(), "listAllPlatforms"] as const,
+  listPlatforms: (
+    request: MessageInitShape<typeof ListPlatformsRequestSchema>,
+  ) => [...libraryQueryKeys.listAllPlatforms(), request] as const,
 };
 
 export const libraryQueries = {
@@ -54,5 +61,20 @@ export const libraryQueries = {
       ...options,
       queryKey: libraryQueryKeys.listLibraries(request),
       queryFn: () => retromClient.libraryClient.listLibraries(request),
+    }),
+  listPlatforms: <TData>(
+    request: MessageInitShape<typeof ListPlatformsRequestSchema>,
+    retromClient: RetromClient,
+    options: QueryOptionsExt<
+      ListPlatformsResponse,
+      ConnectError,
+      TData,
+      LibraryQueryKey<"listPlatforms">
+    > = {},
+  ) =>
+    queryOptions({
+      ...options,
+      queryKey: libraryQueryKeys.listPlatforms(request),
+      queryFn: () => retromClient.libraryClient.listPlatforms(request),
     }),
 };

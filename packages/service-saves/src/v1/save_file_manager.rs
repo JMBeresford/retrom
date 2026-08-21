@@ -4,7 +4,7 @@ use retrom_codegen::retrom::{
     files::v1::FileStat,
     services::{
         config::v1::{config_service_client::ConfigServiceClient, GetServerConfigRequest},
-        emulators::v1::Emulator,
+        emulators::v1::EmulatorRow,
         library::v1::Game,
         saves::v1::{BackupStats, SaveFiles, SaveFilesStat},
     },
@@ -105,7 +105,7 @@ impl SaveFileManager for GameSaveFileManager {
                 .await?
         };
 
-        let emulators: Vec<Emulator> = if platform_ids.is_empty() {
+        let emulators: Vec<EmulatorRow> = if platform_ids.is_empty() {
             vec![]
         } else {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(

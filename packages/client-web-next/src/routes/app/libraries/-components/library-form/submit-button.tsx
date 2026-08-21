@@ -1,10 +1,10 @@
 import { Button } from "@retrom/ui-next/components/button";
 import { Loader2 } from "lucide-react";
 import { cn } from "@retrom/ui-next/lib/utils";
-import { useFormContext } from ".";
+import { useLibraryFormContext } from ".";
 
 export function SubmitButton() {
-  const form = useFormContext();
+  const form = useLibraryFormContext();
 
   const handleSubmit = () => {
     form.handleSubmit().catch(console.error);
