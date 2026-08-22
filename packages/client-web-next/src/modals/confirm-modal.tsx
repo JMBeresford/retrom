@@ -1,14 +1,12 @@
 import { Button } from "@retrom/ui-next/components/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@retrom/ui-next/components/dialog";
-import { useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import { registerModalHandle } from "./use-modal-action";
@@ -34,33 +32,20 @@ registerModalHandle("confirm", handle);
 
 export function ConfirmDialog() {
   return (
-    <Dialog
-      handle={handle}
-      onOpenChange={(open) => {
-        console.log("ConfirmDialog onOpenChange", { open });
-      }}
-    >
+    <Dialog handle={handle}>
       {function Render({ payload }) {
-        const { mutate, status } = useMutation({
-          mutationFn: async () => {
-            const fn = payload?.onConfirm;
-
-            if (fn) {
-              await fn();
-            }
-          },
-        });
-
-        const close = useCallback(
-          async (confirmed: boolean = false) => {
-            if (confirmed) {
-              mutate();
+        const { mutate: close, status } = useMutation({
+          mutationFn: async (confirmed: boolean) => {
+            if (confirmed && payload?.onConfirm) {
+              await payload.onConfirm();
             } else if (payload?.onCancel) {
               await payload.onCancel();
             }
           },
-          [payload, mutate],
-        );
+          onSuccess: () => {
+            handle.close();
+          },
+        });
 
         return (
           <DialogContent className="sm:min-w-100">
@@ -78,16 +63,16 @@ export function ConfirmDialog() {
             {payload?.content}
 
             <DialogFooter className="flex justify-end gap-2 mt-4">
-              <DialogClose
-                render={<Button variant="secondary">Cancel</Button>}
-              />
+              <Button variant="ghost" onClick={() => close(false)}>
+                Cancel
+              </Button>
 
               <Button
                 className="relative"
                 variant="destructive"
                 disabled={status === "pending"}
                 onClick={() => {
-                  close(true).catch(console.error);
+                  close(true);
                 }}
               >
                 {status === "pending" ? (

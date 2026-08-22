@@ -11,10 +11,14 @@ import { cn } from "@retrom/ui-next/lib/utils";
 import { ScrollArea, ScrollBar } from "@retrom/ui-next/components/scroll-area";
 import { Skeleton } from "@retrom/ui-next/components/skeleton";
 import { toast } from "@retrom/ui-next/components/toast";
-import { emulatorTableColumns, emulatorTableFeatures } from "./defs";
-import { useListEmulators } from "@/data/emulators/use-list-emulators";
+import {
+  emulatorProfileTableColumns,
+  emulatorProfileTableFeatures,
+} from "./defs";
+import { Route } from "@/routes/app/emulators/$emulator-id/route";
+import { useListEmulatorProfiles } from "@/data/emulators/use-list-emulator-profiles";
 
-export const EmulatorTableKey = "emulator-table" as const;
+export const EmulatorProfileTableKey = "emulator-profile-table" as const;
 
 function alignClassName(align?: "start" | "center" | "end") {
   switch (align) {
@@ -29,29 +33,34 @@ function alignClassName(align?: "start" | "center" | "end") {
   }
 }
 
-export function EmulatorTable() {
-  const { data, isPending, isError, error, isFetching } = useListEmulators({
-    options: {
-      select: (response) => response.emulators,
-    },
-  });
+export function EmulatorProfileTable() {
+  const emulatorId = Route.useParams()["emulator-id"];
+  const { data, isPending, isError, error, isFetching } =
+    useListEmulatorProfiles({
+      request: {
+        emulatorIds: [emulatorId],
+      },
+      options: {
+        select: (response) => response.emulatorProfiles,
+      },
+    });
 
   if (isError && !isFetching) {
     toast.add({
-      id: "emulator-table-fetch-error",
-      title: "Error loading emulators",
+      id: "emulator-profile-table-fetch-error",
+      title: "Error loading emulator profiles",
       type: "error",
       description: error.message,
     });
   }
 
   const table = useTable({
-    key: EmulatorTableKey,
-    features: emulatorTableFeatures,
+    key: EmulatorProfileTableKey,
+    features: emulatorProfileTableFeatures,
     defaultColumn: {
       size: undefined,
     },
-    columns: emulatorTableColumns,
+    columns: emulatorProfileTableColumns,
     data: data ?? [],
     initialState: {
       columnPinning: {

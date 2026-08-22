@@ -26,7 +26,7 @@ import { registerModalHandle } from "@/modals/use-modal-action";
 import { useCreateEmulator } from "@/data/emulators/use-create-emulator";
 import { useUpdateEmulator } from "@/data/emulators/use-update-emulator";
 
-export type EmulatorFormDialogProps = BaseModalActionProps &
+export type EmulatorFormDialogProps = Required<BaseModalActionProps> &
   (
     | {
         action: "create";
@@ -106,10 +106,7 @@ export function EmulatorFormDialog() {
   return (
     <Dialog handle={handle} onOpenChange={handleOpenChange}>
       {({ payload }) => {
-        const {
-          title = "Add Emulator",
-          description = "Configure Retrom to track a new emulator.",
-        } = payload ?? {};
+        const { title, description } = payload ?? {};
 
         return (
           <DialogContent>

@@ -78,7 +78,7 @@ export function LibraryTable() {
             rows.map((row) => (
               <TableRow
                 key={row.id}
-                className="isolate bg-background even:bg-[color-mix(in_srgb,var(--color-background),var(--color-muted)_20%)]"
+                className="isolate bg-background odd:bg-[color-mix(in_srgb,var(--color-background),var(--color-muted)_20%)]"
               >
                 {row.getAllCells().map((cell) => (
                   <TableCell

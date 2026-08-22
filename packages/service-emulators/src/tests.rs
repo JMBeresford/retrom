@@ -1,10 +1,12 @@
 use retrom_codegen::retrom::services::emulators::v1::{
     emulator_service_server::EmulatorService, CreateDefaultEmulatorProfileRequest,
-    CreateEmulatorProfileRequest, CreateEmulatorRequest, DefaultEmulatorProfile, DeleteEmulatorProfileRequest,
-    DeleteEmulatorRequest, Emulator, EmulatorProfile, GetEmulatorProfileRequest, GetEmulatorRequest,
-    ListEmulatorsRequest, ListEmulatorProfilesRequest, UpdateEmulatorProfileRequest,
-    UpdateEmulatorRequest, DeleteDefaultEmulatorProfileRequest, GetDefaultEmulatorProfileRequest,
+    CreateEmulatorProfileRequest, CreateEmulatorRequest, DefaultEmulatorProfile,
+    DeleteDefaultEmulatorProfileRequest, DeleteEmulatorProfileRequest, DeleteEmulatorRequest,
+    Emulator, EmulatorProfile, GetDefaultEmulatorProfileRequest, GetEmulatorProfileRequest,
+    GetEmulatorRequest, ListEmulatorProfilesRequest, ListEmulatorsRequest,
+    UpdateEmulatorProfileRequest, UpdateEmulatorRequest,
 };
+use retrom_db::DbPool;
 use tonic::{Request, Status};
 
 use crate::EmulatorServiceHandlers;
@@ -169,9 +171,7 @@ async fn test_delete_emulator() -> Result<(), Status> {
     .await?;
 
     let result = svc
-        .get_emulator(Request::new(GetEmulatorRequest {
-            id: emulator.id,
-        }))
+        .get_emulator(Request::new(GetEmulatorRequest { id: emulator.id }))
         .await;
 
     assert!(result.is_err());
@@ -272,7 +272,7 @@ async fn test_list_emulator_profiles() -> Result<(), Status> {
         .await?
         .into_inner();
 
-    assert_eq!(list.profiles.len(), 2);
+    assert_eq!(list.emulator_profiles.len(), 2);
 
     Ok(())
 }
@@ -295,7 +295,7 @@ async fn test_update_emulator_profile() -> Result<(), Status> {
 
     let updated = svc
         .update_emulator_profile(Request::new(UpdateEmulatorProfileRequest {
-            profile: Some(EmulatorProfile {
+            emulator_profile: Some(EmulatorProfile {
                 id: profile.id.clone(),
                 name: "UpdatedName".to_string(),
                 emulator: emulator.id.clone(),
@@ -316,7 +316,7 @@ async fn test_update_emulator_profile_not_found() {
 
     let result = svc
         .update_emulator_profile(Request::new(UpdateEmulatorProfileRequest {
-            profile: Some(EmulatorProfile {
+            emulator_profile: Some(EmulatorProfile {
                 id: "nonexistent-id".to_string(),
                 name: "Name".to_string(),
                 ..Default::default()
@@ -337,30 +337,26 @@ async fn test_update_builtin_emulator_profile_rejected() -> Result<(), Status> {
     let emu_id = uuid::Uuid::now_v7().to_string();
     let profile_id = uuid::Uuid::now_v7().to_string();
 
-    sqlx::query(
-        "insert into emulators (id, name, built_in) values (?, ?, ?)",
-    )
-    .bind(&emu_id)
-    .bind("BuiltInEmu")
-    .bind(true)
-    .execute(&pool)
-    .await
-    .expect("Failed to insert built-in emulator");
+    sqlx::query("insert into emulators (id, name, built_in) values (?, ?, ?)")
+        .bind(&emu_id)
+        .bind("BuiltInEmu")
+        .bind(true)
+        .execute(&pool)
+        .await
+        .expect("Failed to insert built-in emulator");
 
-    sqlx::query(
-        "insert into emulator_profiles (id, emulator, name, built_in) values (?, ?, ?, ?)",
-    )
-    .bind(&profile_id)
-    .bind(&emu_id)
-    .bind("BuiltInProfile")
-    .bind(true)
-    .execute(&pool)
-    .await
-    .expect("Failed to insert built-in profile");
+    sqlx::query("insert into emulator_profiles (id, emulator, name, built_in) values (?, ?, ?, ?)")
+        .bind(&profile_id)
+        .bind(&emu_id)
+        .bind("BuiltInProfile")
+        .bind(true)
+        .execute(&pool)
+        .await
+        .expect("Failed to insert built-in profile");
 
     let result = svc
         .update_emulator_profile(Request::new(UpdateEmulatorProfileRequest {
-            profile: Some(EmulatorProfile {
+            emulator_profile: Some(EmulatorProfile {
                 id: profile_id,
                 name: "HackedName".to_string(),
                 ..Default::default()
@@ -396,9 +392,7 @@ async fn test_delete_emulator_profile() -> Result<(), Status> {
     .await?;
 
     let result = svc
-        .get_emulator_profile(Request::new(GetEmulatorProfileRequest {
-            id: profile.id,
-        }))
+        .get_emulator_profile(Request::new(GetEmulatorProfileRequest { id: profile.id }))
         .await;
 
     assert!(result.is_err());
@@ -531,11 +525,9 @@ async fn test_delete_default_emulator_profile() -> Result<(), Status> {
         .await?
         .into_inner();
 
-    svc.delete_default_emulator_profile(Request::new(
-        DeleteDefaultEmulatorProfileRequest {
-            id: default_profile.id.clone(),
-        },
-    ))
+    svc.delete_default_emulator_profile(Request::new(DeleteDefaultEmulatorProfileRequest {
+        id: default_profile.id.clone(),
+    }))
     .await?;
 
     let result = svc

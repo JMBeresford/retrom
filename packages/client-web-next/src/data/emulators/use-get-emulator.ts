@@ -8,7 +8,7 @@ import type { GetEmulatorRequestSchema } from "@retrom/codegen/retrom/services/e
 import type { Emulator } from "@retrom/codegen/retrom/services/emulators/v1/emulator_pb";
 import { useRetromClient } from "@/api-client/context";
 
-export function useGetEmulator<TData>(
+export function useGetEmulator<TData = Emulator>(
   params: {
     request?: MessageInitShape<typeof GetEmulatorRequestSchema>;
     options?: QueryOptionsExt<

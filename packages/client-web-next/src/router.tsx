@@ -17,6 +17,7 @@ export function getRouter(context: RouterContext) {
     context,
     basepath: BASE_URL,
     scrollRestoration: true,
+    defaultViewTransition: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
   });

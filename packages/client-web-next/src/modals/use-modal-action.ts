@@ -32,7 +32,6 @@ export function useModalAction<T extends ModalName>(modal: T) {
         console.error(`No handle registered for modal: ${modal}`);
       }
 
-      console.log(`Opening modal ${modal} with payload:`, props);
       handle?.openWithPayload(props);
     },
     [modal],

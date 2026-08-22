@@ -3,6 +3,7 @@ import { Separator } from "@retrom/ui-next/components/separator";
 import { createFileRoute } from "@tanstack/react-router";
 import { EmulatorTable } from "./-components/emulator-table/emulator-table";
 import { EmulatorFormDialog } from "./-components/emulator-form-dialog";
+import { EmulatorsHeading } from "./-components/emulators-heading";
 import { ConfirmDialog } from "@/modals/confirm-modal";
 import { useModalAction } from "@/modals/use-modal-action";
 
@@ -17,10 +18,18 @@ function RouteComponent() {
     <>
       <div className="flex flex-col gap-4 h-full">
         <div className="flex gap-2 items-end">
-          <h1 className="font-heading text-4xl font-bold">Emulators</h1>
+          <EmulatorsHeading />
+
           <Separator orientation="vertical" />
+
           <Button
-            onClick={() => emulatorFormModal.openModal({ action: "create" })}
+            onClick={() =>
+              emulatorFormModal.openModal({
+                title: "Add Emulator",
+                description: "Configure Retrom to track a new emulator.",
+                action: "create",
+              })
+            }
           >
             Add Emulator
           </Button>

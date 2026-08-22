@@ -263,11 +263,7 @@ impl EmulatorService for EmulatorServiceHandlers {
 
         let emulator_id = Uuid::now_v7().to_string();
 
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(sqlx_err_to_status)?;
+        let mut tx = self.db_pool.begin().await.map_err(sqlx_err_to_status)?;
 
         let row: EmulatorRow =
             QueryBuilder::new("insert into emulators (id, name, built_in) values (")
@@ -315,9 +311,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .map_err(sqlx_err_to_status)?;
         }
 
-        tx.commit()
-            .await
-            .map_err(sqlx_err_to_status)?;
+        tx.commit().await.map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(emulator_row_to_emulator(
             row,
@@ -343,11 +337,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             return Err(Status::invalid_argument("Emulator name must be provided"));
         }
 
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(sqlx_err_to_status)?;
+        let mut tx = self.db_pool.begin().await.map_err(sqlx_err_to_status)?;
 
         let row: EmulatorRow = QueryBuilder::new("update emulators set name = ")
             .push_bind(&emulator.name)
@@ -408,9 +398,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .map_err(sqlx_err_to_status)?;
         }
 
-        tx.commit()
-            .await
-            .map_err(sqlx_err_to_status)?;
+        tx.commit().await.map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(emulator_row_to_emulator(
             row,
@@ -504,7 +492,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .await
             .map_err(sqlx_err_to_status)?;
 
-        let profiles = join_all(profile_ids.into_iter().map(|id| {
+        let emulator_profiles = join_all(profile_ids.into_iter().map(|id| {
             let db_pool = self.db_pool.clone();
             async move {
                 let row: EmulatorProfileRow =
@@ -523,7 +511,9 @@ impl EmulatorService for EmulatorServiceHandlers {
         .into_iter()
         .collect::<Result<Vec<_>, Status>>()?;
 
-        Ok(Response::new(ListEmulatorProfilesResponse { profiles }))
+        Ok(Response::new(ListEmulatorProfilesResponse {
+            emulator_profiles,
+        }))
     }
 
     async fn create_emulator_profile(
@@ -545,11 +535,7 @@ impl EmulatorService for EmulatorServiceHandlers {
 
         let profile_id = Uuid::now_v7().to_string();
 
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(sqlx_err_to_status)?;
+        let mut tx = self.db_pool.begin().await.map_err(sqlx_err_to_status)?;
 
         let row: EmulatorProfileRow = QueryBuilder::new(
             "insert into emulator_profiles (id, emulator, name, custom_args, built_in) values (",
@@ -583,9 +569,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .map_err(sqlx_err_to_status)?;
         }
 
-        tx.commit()
-            .await
-            .map_err(sqlx_err_to_status)?;
+        tx.commit().await.map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(profile_row_to_profile(
             row,
@@ -599,7 +583,7 @@ impl EmulatorService for EmulatorServiceHandlers {
     ) -> Result<Response<EmulatorProfile>, Status> {
         let profile = request
             .into_inner()
-            .profile
+            .emulator_profile
             .ok_or_else(|| Status::invalid_argument("Emulator profile must be provided"))?;
 
         if profile.id.is_empty() {
@@ -610,25 +594,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             return Err(Status::invalid_argument("Profile name must be provided"));
         }
 
-        let existing: EmulatorProfileRow =
-            QueryBuilder::new("select * from emulator_profiles where id = ")
-                .push_bind(&profile.id)
-                .build_query_as()
-                .fetch_one(&self.db_pool)
-                .await
-                .map_err(sqlx_err_to_status)?;
-
-        if existing.built_in {
-            return Err(Status::invalid_argument(
-                "Cannot update a built-in emulator profile",
-            ));
-        }
-
-        let mut tx = self
-            .db_pool
-            .begin()
-            .await
-            .map_err(sqlx_err_to_status)?;
+        let mut tx = self.db_pool.begin().await.map_err(sqlx_err_to_status)?;
 
         let row: EmulatorProfileRow = QueryBuilder::new("update emulator_profiles set name = ")
             .push_bind(&profile.name)
@@ -665,9 +631,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .map_err(sqlx_err_to_status)?;
         }
 
-        tx.commit()
-            .await
-            .map_err(sqlx_err_to_status)?;
+        tx.commit().await.map_err(sqlx_err_to_status)?;
 
         Ok(Response::new(profile_row_to_profile(
             row,
@@ -758,7 +722,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .await
             .map_err(sqlx_err_to_status)?;
 
-        let default_profiles = rows
+        let default_emulator_profiles = rows
             .into_iter()
             .map(|row| DefaultEmulatorProfile {
                 id: row.id,
@@ -771,7 +735,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .collect();
 
         Ok(Response::new(ListDefaultEmulatorProfilesResponse {
-            default_profiles,
+            default_emulator_profiles,
         }))
     }
 
@@ -832,7 +796,7 @@ impl EmulatorService for EmulatorServiceHandlers {
     ) -> Result<Response<DefaultEmulatorProfile>, Status> {
         let profile = request
             .into_inner()
-            .default_profile
+            .default_emulator_profile
             .ok_or_else(|| Status::invalid_argument("Default emulator profile must be provided"))?;
 
         if profile.id.is_empty() {
@@ -952,7 +916,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             .await
             .map_err(sqlx_err_to_status)?;
 
-        let configs = rows
+        let local_emulator_configs = rows
             .into_iter()
             .map(|row| LocalEmulatorConfig {
                 id: row.id,
@@ -969,7 +933,9 @@ impl EmulatorService for EmulatorServiceHandlers {
             })
             .collect();
 
-        Ok(Response::new(ListLocalEmulatorConfigsResponse { configs }))
+        Ok(Response::new(ListLocalEmulatorConfigsResponse {
+            local_emulator_configs,
+        }))
     }
 
     async fn create_local_emulator_config(
@@ -1054,7 +1020,7 @@ impl EmulatorService for EmulatorServiceHandlers {
     ) -> Result<Response<LocalEmulatorConfig>, Status> {
         let config = request
             .into_inner()
-            .config
+            .local_emulator_config
             .ok_or_else(|| Status::invalid_argument("Local emulator config must be provided"))?;
 
         if config.id.is_empty() {
