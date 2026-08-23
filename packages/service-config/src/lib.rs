@@ -1,8 +1,7 @@
 use config_manager::ServerConfigManager;
 use retrom_codegen::retrom::services::config::v1::{
     config_service_server::ConfigService, version::Pre, GetServerConfigRequest,
-    GetServerConfigResponse, GetServerInfoRequest, GetServerInfoResponse, ServerInfo,
-    UpdateServerConfigRequest, UpdateServerConfigResponse, Version,
+    GetServerInfoRequest, ServerConfig, ServerInfo, UpdateServerConfigRequest, Version,
 };
 use std::sync::Arc;
 use tracing::instrument;
@@ -69,29 +68,27 @@ impl ConfigService for ConfigServiceHandlers {
     async fn get_server_info(
         &self,
         _request: tonic::Request<GetServerInfoRequest>,
-    ) -> Result<tonic::Response<GetServerInfoResponse>, tonic::Status> {
+    ) -> Result<tonic::Response<ServerInfo>, tonic::Status> {
         let version = parse_version();
 
-        let server_info = Some(ServerInfo { version });
-
-        Ok(tonic::Response::new(GetServerInfoResponse { server_info }))
+        Ok(tonic::Response::new(ServerInfo { version }))
     }
 
     #[instrument(skip_all)]
     async fn get_server_config(
         &self,
         _request: tonic::Request<GetServerConfigRequest>,
-    ) -> Result<tonic::Response<GetServerConfigResponse>, tonic::Status> {
-        let config = self.config.get_config().await.into();
+    ) -> Result<tonic::Response<ServerConfig>, tonic::Status> {
+        let config = self.config.get_config().await;
 
-        Ok(tonic::Response::new(GetServerConfigResponse { config }))
+        Ok(tonic::Response::new(config))
     }
 
     #[instrument(skip_all)]
     async fn update_server_config(
         &self,
         request: tonic::Request<UpdateServerConfigRequest>,
-    ) -> Result<tonic::Response<UpdateServerConfigResponse>, tonic::Status> {
+    ) -> Result<tonic::Response<ServerConfig>, tonic::Status> {
         let new_config = request
             .into_inner()
             .config
@@ -103,9 +100,7 @@ impl ConfigService for ConfigServiceHandlers {
             return Err(tonic::Status::internal(msg));
         }
 
-        Ok(tonic::Response::new(UpdateServerConfigResponse {
-            config_updated: Some(new_config),
-        }))
+        Ok(tonic::Response::new(new_config))
     }
 }
 

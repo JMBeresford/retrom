@@ -237,14 +237,8 @@ impl SaveStateManager for GameSaveStateManager {
             .get_server_config(GetServerConfigRequest::default())
             .await
             .map_err(|e| SaveStateManagerError::Internal(e.to_string()))?
-            .into_inner()
-            .config
-            .unwrap_or_else(|| {
-                tracing::warn!(
-                    "Missing server configuration in ConfigService response; using default values"
-                );
-                Default::default()
-            });
+            .into_inner();
+
         let max_backup_count =
             config.saves.map(|s| s.max_save_states_backups).unwrap_or(5) as usize;
 

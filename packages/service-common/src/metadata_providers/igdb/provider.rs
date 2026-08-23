@@ -195,10 +195,9 @@ impl IGDBProvider {
                 error!("Failed to fetch server config: {:?}", e);
                 reqwest::StatusCode::INTERNAL_SERVER_ERROR
             })?
-            .into_inner()
-            .config;
+            .into_inner();
 
-        let user = match config.and_then(|c| c.igdb) {
+        let user = match config.igdb {
             Some(user) => user,
             None => {
                 return Err(reqwest::StatusCode::FORBIDDEN);
@@ -292,10 +291,9 @@ impl IGDBProvider {
                 error!("Failed to fetch server config: {:?}", e);
                 reqwest::StatusCode::INTERNAL_SERVER_ERROR
             })?
-            .into_inner()
-            .config;
+            .into_inner();
 
-        let user = match config.and_then(|c| c.igdb) {
+        let user = match config.igdb {
             Some(user) => user,
             None => {
                 return Err(reqwest::StatusCode::FORBIDDEN);

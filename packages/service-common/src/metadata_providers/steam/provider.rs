@@ -127,9 +127,7 @@ impl SteamWebApiProvider {
                 tracing::error!("Failed to fetch server config: {:?}", e);
                 reqwest::StatusCode::INTERNAL_SERVER_ERROR
             })?
-            .into_inner()
-            .config
-            .unwrap_or_default();
+            .into_inner();
 
         let user = match config.steam {
             Some(steam) => steam,

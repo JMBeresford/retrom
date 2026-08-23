@@ -549,9 +549,7 @@ impl MetadataService for MetadataServiceHandlers {
         let config = config_svc_client
             .get_server_config(GetServerConfigRequest {})
             .await?
-            .into_inner()
-            .config
-            .unwrap_or_default();
+            .into_inner();
 
         let store_metadata = config
             .metadata
@@ -572,8 +570,7 @@ impl MetadataService for MetadataServiceHandlers {
                     .get_server_config(GetServerConfigRequest {})
                     .await?
                     .into_inner()
-                    .config
-                    .and_then(|c| c.metadata);
+                    .metadata;
 
                 self.cache_metadata(
                     metadata,
@@ -714,9 +711,7 @@ impl MetadataService for MetadataServiceHandlers {
         let config = config_svc_client
             .get_server_config(GetServerConfigRequest {})
             .await?
-            .into_inner()
-            .config
-            .unwrap_or_default();
+            .into_inner();
 
         let store_metadata = config
             .metadata
@@ -737,8 +732,7 @@ impl MetadataService for MetadataServiceHandlers {
                     .get_server_config(GetServerConfigRequest {})
                     .await?
                     .into_inner()
-                    .config
-                    .and_then(|c| c.metadata);
+                    .metadata;
 
                 self.cache_metadata(
                     metadata,
