@@ -1,6 +1,10 @@
-import type { SidebarProps } from "@retrom/ui-next/components/sidebar";
+import type { ButtonVariants } from "@retrom/ui-next/components/button-variants";
+import type {
+  SidebarMenuButton,
+  SidebarProps,
+} from "@retrom/ui-next/components/sidebar";
 import type { LinkProps } from "@tanstack/react-router";
-import type { ReactElement, ReactNode } from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
 
 export interface SidebarConfig {
   header?: SidebarHeaderConfig;
@@ -30,7 +34,8 @@ export type SidebarMenuItemConfig = {
 } & (
   | {
       type: "inline";
-      content: ReactElement;
+      size?: ComponentProps<typeof SidebarMenuButton>["size"];
+      render: ComponentProps<typeof SidebarMenuButton>["render"];
     }
   | {
       type: "subMenu";
@@ -47,6 +52,7 @@ export type SidebarMenuItemConfig = {
     }
   | {
       type: "button";
+      variant?: ButtonVariants["variant"];
       label:
         | {
             children: ReactNode;

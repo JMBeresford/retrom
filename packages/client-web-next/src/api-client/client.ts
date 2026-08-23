@@ -7,6 +7,7 @@ import { JobService } from "@retrom/codegen/retrom/services/jobs/v1/job_service_
 import { FileExplorerService } from "@retrom/codegen/retrom/services/file_explorer/v1/file_explorer_service_pb";
 import { SavesService } from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { EmulatorSavesService } from "@retrom/codegen/retrom/services/saves/v2/emulator_saves_service_pb";
+import { ConfigService } from "@retrom/codegen/retrom/services/config/v1/config_service_pb";
 import type { Transport } from "@connectrpc/connect";
 
 export class RetromClient {
@@ -18,6 +19,7 @@ export class RetromClient {
   readonly fileExplorerClient;
   readonly savesV1Client;
   readonly emulatorSavesClient;
+  readonly configClient;
 
   constructor(protected transport: Transport) {
     this.libraryClient = createClient(LibraryService, transport);
@@ -28,5 +30,6 @@ export class RetromClient {
     this.jobClient = createClient(JobService, transport);
     this.fileExplorerClient = createClient(FileExplorerService, transport);
     this.emulatorSavesClient = createClient(EmulatorSavesService, transport);
+    this.configClient = createClient(ConfigService, transport);
   }
 }

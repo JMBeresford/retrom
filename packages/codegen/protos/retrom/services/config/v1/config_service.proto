@@ -8,44 +8,26 @@ import "retrom/services/config/v1/models.proto";
 service ConfigService {
   // GetServerInfo returns metadata about the running server instance, such as
   // the current version.
-  rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
+  rpc GetServerInfo(GetServerInfoRequest) returns (ServerInfo);
 
   // GetServerConfig returns the current server configuration.
-  rpc GetServerConfig(GetServerConfigRequest) returns (GetServerConfigResponse);
+  rpc GetServerConfig(GetServerConfigRequest) returns (ServerConfig);
 
   // UpdateServerConfig replaces the server configuration with the provided
   // value and persists it to disk.
-  rpc UpdateServerConfig(UpdateServerConfigRequest) returns (UpdateServerConfigResponse);
+  rpc UpdateServerConfig(UpdateServerConfigRequest) returns (ServerConfig);
 }
 
 // GetServerInfoRequest represents the request message for retrieving metadata about the running server instance,
 // such as the current version.
 message GetServerInfoRequest {}
 
-// GetServerInfoResponse represents the response message for retrieving metadata about the running server instance,
-message GetServerInfoResponse {
-  // Metadata about the running server instance, such as the current version.
-  ServerInfo server_info = 1;
-}
-
 // GetServerConfigRequest represents the request message for retrieving the current server configuration.
 message GetServerConfigRequest {}
-
-// GetServerConfigResponse represents the response message for retrieving the current server configuration.
-message GetServerConfigResponse {
-  // The current server configuration.
-  ServerConfig config = 1;
-}
 
 // UpdateServerConfigRequest represents the request message for replacing the server configuration with the provided value
 // and persisting it to disk.
 message UpdateServerConfigRequest {
   // The new server configuration to be applied and persisted.
   ServerConfig config = 1;
-}
-
-// UpdateServerConfigResponse represents the response message for updating the server configuration.
-message UpdateServerConfigResponse {
-  // The updated server configuration.
-  ServerConfig config_updated = 1;
 }

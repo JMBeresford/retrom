@@ -55,10 +55,16 @@ const sidebarConfig: SidebarConfig = {
     items: [
       {
         type: "inline",
-        content: (
+        size: "lg",
+        render: ({ className, ...props }) => (
           <Link
             to="/app"
-            className="flex h-8 not-last:mb-2 gap-2 w-full relative items-center"
+            className={cn(
+              className,
+              "h-12 w-full relative flex gap-2 items-center justify-start px-1",
+              "hover:bg-sidebar-primary/10 hover:text-sidebar-foreground",
+            )}
+            {...props}
           >
             <img src={logo} className="size-8 rounded-md border" />
             <h2 className="font-heading text-2xl font-bold">Retrom</h2>
@@ -157,20 +163,24 @@ const sidebarConfig: SidebarConfig = {
     items: [
       {
         type: "inline",
-        content: <ServerStatus />,
+        size: "lg",
+        render: (props) => <InstallationTracker {...props} />,
       },
       {
         type: "inline",
-        content: (
-          <Link to="/app/downloads">
-            <InstallationTracker />
-          </Link>
-        ),
+        size: "default",
+        render: (props) => <ServerStatus {...props} />,
       },
       {
         type: "inline",
-        content: (
-          <div className="flex flex-row items-center justify-between">
+        render: ({ className, ...props }) => (
+          <div
+            className={cn(
+              className,
+              "p-0 flex flex-row items-center justify-between",
+            )}
+            {...props}
+          >
             <ModeToggle />
             <span className="text-sm text-muted-foreground">
               Version: 0.7.45

@@ -1,48 +1,34 @@
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@retrom/ui-next/components/item";
-import { Link } from "@tanstack/react-router";
 import { ChevronRight, ServerCrash } from "lucide-react";
+import { cn } from "@retrom/ui-next/lib/utils";
 import { buttonVariants } from "@retrom/ui-next/components/button-variants";
-import { CollapsibleSidebarItem } from "@/sidebar/collapsible-sidebar-item";
+import type { HTMLAttributes } from "react";
+import { useGetServerInfo } from "@/data/config/use-get-server-info";
 
-export function ServerStatus() {
+export function ServerStatus({
+  className,
+  ...props
+}: HTMLAttributes<HTMLSpanElement>) {
+  const { isError } = useGetServerInfo();
+
   return (
-    <CollapsibleSidebarItem
-      collapsed={
-        <div
-          className={buttonVariants({ variant: "destructive", size: "icon" })}
-        >
-          <ServerCrash />
-        </div>
-      }
-      expanded={
-        <Item
-          variant="destructive"
-          size="xs"
-          render={
-            <Link to=".">
-              <ItemMedia variant="icon">
-                <ServerCrash />
-              </ItemMedia>
+    <span
+      hidden={!isError}
+      className={cn(
+        className,
+        buttonVariants({ variant: "destructive" }),
+        "hover:text-destructive h-12 justify-start",
+      )}
+      {...props}
+    >
+      <ServerCrash />
 
-              <ItemContent>
-                <ItemTitle>Server Not Connected</ItemTitle>
-                <ItemDescription>Check connection</ItemDescription>
-              </ItemContent>
-
-              <ItemActions>
-                <ChevronRight className="size-4" />
-              </ItemActions>
-            </Link>
-          }
-        />
-      }
-    />
+      <span className="w-full flex items-center justify-between">
+        <span className="flex flex-col items-start">
+          <span className="font-bold">Not connected</span>
+          <span className="text-xs opacity-80">Click for more details</span>
+        </span>
+        <ChevronRight />
+      </span>
+    </span>
   );
 }

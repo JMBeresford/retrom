@@ -1,6 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { buttonVariants } from "./button-variants";
-import type { VariantProps } from "class-variance-authority";
+import type { ButtonVariants } from "./button-variants";
 
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,7 @@ function Button({
   variant = "default",
   size = "default",
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props & ButtonVariants) {
   return (
     <ButtonPrimitive
       data-slot="button"

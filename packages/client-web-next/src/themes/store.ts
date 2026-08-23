@@ -8,15 +8,20 @@ export type Theme = "dark" | "light";
 export type ThemeContext = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 };
 
 export const useTheme = create<ThemeContext>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       theme: "dark",
       setTheme: (theme: Theme) => {
         applyTheme(theme);
         set({ theme });
+      },
+      toggleTheme: () => {
+        const newTheme = get().theme === "dark" ? "light" : "dark";
+        get().setTheme(newTheme);
       },
     }),
     {

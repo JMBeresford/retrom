@@ -22,8 +22,9 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
 } from "@retrom/ui-next/components/sidebar";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useSidebar } from "@retrom/ui-next/hooks/use-sidebar";
+import { Button } from "@retrom/ui-next/components/button";
 import type { ComponentPropsWithoutRef } from "react";
 import type {
   SidebarConfig,
@@ -130,16 +131,9 @@ function AppSidebarMenuItem({
 }) {
   const { open } = useSidebar();
   const { action, badge } = config;
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const ItemComponent = sub ? SidebarMenuSubItem : SidebarMenuItem;
   const size = sub ? "sm" : "default";
-  const isActive =
-    config.type === "link" &&
-    (pathname === config.route ||
-      (config.route &&
-        config.route !== "/app" &&
-        pathname.startsWith(config.route)));
 
   return (
     <ItemComponent>
@@ -147,7 +141,6 @@ function AppSidebarMenuItem({
         <SidebarMenuButton
           hidden={open === false}
           size={size}
-          isActive={isActive}
           render={
             <AccordionTrigger
               className="no-underline font-normal"
@@ -156,19 +149,32 @@ function AppSidebarMenuItem({
           }
         />
       ) : config.type === "link" ? (
-        <SidebarMenuButton
-          size={size}
-          isActive={isActive}
-          render={<Link to={config.route}>{config.label}</Link>}
-        ></SidebarMenuButton>
+        <Link
+          to={config.route}
+          activeOptions={{
+            exact: config.route === "/app",
+          }}
+        >
+          {({ isActive }) => (
+            <SidebarMenuButton
+              size={size}
+              isActive={isActive}
+              render={<Link to={config.route}>{config.label}</Link>}
+            ></SidebarMenuButton>
+          )}
+        </Link>
       ) : config.type === "inline" ? (
         <SidebarMenuButton
-          size="fit"
+          size={config.size ?? "fit"}
           variant="inline"
-          render={config.content}
+          render={config.render}
         />
       ) : (
-        <SidebarMenuButton size={size} isActive={isActive} {...config.label} />
+        <Button
+          variant={config.variant}
+          size={size}
+          render={(props) => <SidebarMenuButton {...config.label} {...props} />}
+        />
       )}
 
       {action ? <SidebarMenuAction render={action} /> : null}

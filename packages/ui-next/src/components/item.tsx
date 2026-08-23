@@ -191,6 +191,7 @@ function ItemFooter({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 export {
+  itemVariants,
   Item,
   ItemMedia,
   ItemContent,
