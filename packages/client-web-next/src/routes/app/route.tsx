@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@retrom/ui-next/lib/utils";
 import { Separator } from "@retrom/ui-next/components/separator";
+import { ScrollArea } from "@retrom/ui-next/components/scroll-area";
 import { InstallationTracker } from "./-components/installation-tracker";
 import { ServerStatus } from "./-components/server-status";
 import { SearchCommand } from "./-components/search-command";
@@ -26,26 +27,32 @@ export const Route = createFileRoute("/app")({
 function RouteComponent() {
   return (
     <AppSidebar config={sidebarConfig}>
-      <header
-        className={cn(
-          "sticky top-0 flex items-center justify-between px-2 pt-4 pb-2 h-14",
-          "bg-background border-b",
-        )}
-      >
-        <div className="flex items-center gap-2">
-          <SidebarTrigger size="icon-lg"></SidebarTrigger>
-          <Separator orientation="vertical" className="mr-2" />
-          <SearchCommand />
+      <div className="relative h-dvh max-w-dvw grid grid-rows-[auto_1fr]">
+        <header
+          className={cn(
+            "flex items-center justify-between px-2 pt-4 pb-2 h-14",
+            "bg-background border-b",
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <SidebarTrigger size="icon-lg"></SidebarTrigger>
+            <Separator orientation="vertical" className="mr-2" />
+            <SearchCommand />
+          </div>
+          <div></div>
+          <div></div>
+        </header>
+
+        <div className="relative h-full overflow-hidden flex flex-col">
+          <ScrollArea className="px-4 h-full">
+            <div className="py-4">
+              <Outlet />
+            </div>
+          </ScrollArea>
         </div>
-        <div></div>
-        <div></div>
-      </header>
 
-      <main className="p-4">
-        <Outlet />
-      </main>
-
-      <Toaster />
+        <Toaster />
+      </div>
     </AppSidebar>
   );
 }
@@ -90,15 +97,16 @@ const sidebarConfig: SidebarConfig = {
             },
             {
               type: "link",
-              route: "/app/games",
+              route: "/app/browse",
               label: (
                 <>
-                  <Gamepad /> Games
+                  <Gamepad /> Browse
                 </>
               ),
             },
             {
               type: "link",
+              hidden: true,
               route: "/app/platforms",
               label: (
                 <>

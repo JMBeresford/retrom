@@ -6,6 +6,7 @@ use retrom_codegen::{
         providers::igdb::v1::{
             igdb_fields::Selector,
             igdb_filters::{FilterOperator, FilterValue},
+            igdb_sort::SortOrder,
         },
         services::{
             config::v1::{config_service_client::ConfigServiceClient, GetServerConfigRequest},
@@ -34,6 +35,7 @@ pub enum IgdbSearchType {
 
 /// A raw IGDB search paired with the endpoint to target. [`IgdbSearchRequest`] carries the
 /// search query, filters, fields, and pagination.
+#[derive(Debug, Clone)]
 pub struct IgdbSearchQuery {
     pub search_type: IgdbSearchType,
     pub request: IgdbSearchRequest,
@@ -50,14 +52,20 @@ pub enum IgdbSearchData {
 pub fn default_game_fields() -> Vec<String> {
     [
         "name",
-        "cover",
-        "artworks",
-        "screenshots",
+        "cover.url",
+        "artworks.url",
+        "artworks.width",
+        "artworks.height",
+        "screenshots.url",
         "summary",
-        "websites",
-        "videos",
-        "genres",
-        "franchises",
+        "websites.url",
+        "websites.trusted",
+        "videos.name",
+        "videos.video_id",
+        "genres.name",
+        "genres.slug",
+        "franchises.name",
+        "franchises.slug",
         "similar_games",
     ]
     .into_iter()
@@ -72,9 +80,17 @@ pub fn default_platform_fields() -> Vec<String> {
     [
         "name",
         "summary",
-        "platform_logo",
-        "websites",
-        "platform_family",
+        "platform_logo.url",
+        "platform_logo.width",
+        "platform_logo.height",
+        "websites.url",
+        "websites.trusted",
+        "platform_family.name",
+        "platform_family.slug",
+        "versions.platform_logo.url",
+        "versions.platform_logo.width",
+        "versions.platform_logo.height",
+        "versions.platform_version_release_dates.date",
         "generation",
     ]
     .into_iter()
@@ -268,7 +284,7 @@ impl IGDBProvider {
         Ok(())
     }
 
-    #[instrument(level = Level::DEBUG, skip_all, fields(query = query.clone()))]
+    #[instrument(level = Level::INFO, skip(self))]
     async fn make_request(
         &self,
         path: String,
@@ -327,7 +343,7 @@ impl IGDBProvider {
         }
     }
 
-    #[instrument(level = Level::DEBUG, skip_all)]
+    #[instrument(level = Level::INFO, skip(self))]
     pub async fn search_metadata(&self, query: IgdbSearchQuery) -> Option<IgdbSearchData> {
         let IgdbSearchQuery {
             search_type,
@@ -395,8 +411,22 @@ impl IGDBProvider {
             _ => "".to_string(),
         };
 
+        let sort = request.sort.as_ref();
+
+        let sort_clause = match sort {
+            Some(sort) => format!(
+                "sort {} {};",
+                sort.field,
+                match sort.order() {
+                    SortOrder::Descending => "desc",
+                    _ => "asc",
+                }
+            ),
+            _ => "".to_string(),
+        };
+
         let query =
-            format!("{search_clause}{fields_clause}{filters_clause}{limit_clause}{offset_clause}",);
+            format!("{search_clause}{fields_clause}{sort_clause}{filters_clause}{limit_clause}{offset_clause}",);
 
         let target = match search_type {
             IgdbSearchType::Game => "games.pb".into(),
@@ -478,8 +508,8 @@ fn render_filter_operation(igdb_filter: (String, FilterValue)) -> String {
         FilterOperator::InfixMatch => format!("{field} ~ *{value}*"),
         FilterOperator::All => format!("{field} = [{value}]"),
         FilterOperator::Any => format!("{field} = ({value})"),
-        FilterOperator::NotAll => format!("{field} = ![{value}]"),
-        FilterOperator::None => format!("{field} = !({value})"),
+        FilterOperator::NotAll => format!("{field} != [{value}]"),
+        FilterOperator::None => format!("{field} != ({value})"),
         FilterOperator::Exact => format!("{field} = {{{value}}}"),
     }
 }

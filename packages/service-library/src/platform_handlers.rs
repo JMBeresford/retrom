@@ -95,7 +95,7 @@ pub async fn list_platforms(
 
     let mut platforms_builder = QueryBuilder::new(
         r#"
-        select p.id from platforms p
+        select distinct p.id from platforms p
         join platform_metadata pm on pm.platform_id = p.id
         "#,
     );

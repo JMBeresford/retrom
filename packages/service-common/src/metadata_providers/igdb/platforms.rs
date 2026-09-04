@@ -19,10 +19,30 @@ use tracing::{instrument, Level};
 
 impl ToPlatformMetadata for igdb::Platform {
     fn to_platform_metadata(&self, platform_id: &str) -> PlatformMetadata {
-        let logo_url = self
-            .platform_logo
-            .as_ref()
-            .map(|logo| logo.url.to_string().replace("//", "https://"));
+        let mut versions = self.versions.clone();
+        versions.sort_by_cached_key(|version| {
+            version
+                .platform_version_release_dates
+                .iter()
+                .min_by_key(|rd| rd.date)
+                .map(|rd| rd.date)
+        });
+
+        tracing::info!(
+            "Converting IGDB platform {} to PlatformMetadata with versions {:?}",
+            self.name,
+            versions
+        );
+
+        let logo_url = versions.iter().find_map(|v| {
+            v.platform_logo.as_ref().map(|logo| {
+                logo.url
+                    .clone()
+                    .replace("//", "https://")
+                    .replace("t_thumb", "t_1080p")
+                    .replace(".jpg", ".png")
+            })
+        });
 
         PlatformMetadata {
             id: Default::default(),
@@ -31,7 +51,7 @@ impl ToPlatformMetadata for igdb::Platform {
             platform: platform_id.to_string(),
             created_at: None,
             updated_at: None,
-            name: Some(self.name.clone()),
+            name: self.name.clone(),
             description: Some(self.summary.clone()),
             logo_url,
             background_url: None,
@@ -60,16 +80,6 @@ impl PlatformMetadataProvider for IGDBProvider {
                 "id".to_string(),
                 FilterValue {
                     value: igdb_id.to_string(),
-                    operator: Some(FilterOperator::Equal as i32),
-                },
-            );
-        }
-
-        if let Some(ref name) = &name {
-            filter_list.filters.insert(
-                "name".to_string(),
-                FilterValue {
-                    value: name.clone(),
                     operator: Some(FilterOperator::Equal as i32),
                 },
             );

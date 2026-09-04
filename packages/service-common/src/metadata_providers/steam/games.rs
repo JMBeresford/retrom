@@ -56,7 +56,7 @@ impl ToGameMetadata for SteamGameMetadata {
             provider: STEAM_PROVIDER_ID.to_string(),
             provider_game_id: app.appid.to_string(),
             game: game_id.to_string(),
-            name: app_details.name.clone(),
+            name: app_details.name.clone().unwrap_or_else(|| app.name.clone()),
             description: app_details.short_description.clone(),
             release_date: None,
             created_at: Default::default(),

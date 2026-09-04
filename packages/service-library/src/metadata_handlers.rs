@@ -12,16 +12,13 @@ use retrom_codegen::retrom::services::{
     metadata::v1::{DownloadGameMetadataRequest, DownloadPlatformMetadataRequest},
 };
 use sqlx::QueryBuilder;
-use tonic::{Request, Status};
+use tonic::{Code, Request, Status};
 use tracing::Instrument;
 
 pub async fn update_library_metadata(
     state: &LibraryServiceHandlers,
-    request: Request<UpdateLibraryMetadataRequest>,
+    _request: Request<UpdateLibraryMetadataRequest>,
 ) -> Result<UpdateLibraryMetadataResponse, Status> {
-    let request = request.into_inner();
-    let _overwrite = request.overwrite();
-
     let platform_metadata_job = state
         .job_manager
         .create_job(
@@ -188,10 +185,21 @@ pub async fn update_library_metadata(
 
                 tasks.spawn(
                     async move {
-                        metadata_svc
-                            .download_game_metadata(DownloadGameMetadataRequest { game_id })
+                        match metadata_svc
+                            .download_game_metadata(DownloadGameMetadataRequest {
+                                game_id: game_id.clone(),
+                            })
                             .await
-                            .map_err(|why| Status::internal(why.to_string()))?;
+                        {
+                            Ok(_) => {}
+                            Err(status) => match status.code() {
+                                Code::NotFound => tracing::warn!(
+                                    "No metadata found for game_id {game_id}: {}",
+                                    status.message()
+                                ),
+                                _ => return Err(status),
+                            },
+                        }
 
                         Ok::<(), Status>(())
                     }
@@ -206,13 +214,11 @@ pub async fn update_library_metadata(
                 match &join_result {
                     Err(why) => {
                         tracing::error!(
-                            "A task in the update library metadata job panicked: {why:#?}"
+                            "A task in the update library metadata job panicked: {why}"
                         );
                     }
                     Ok(Err(why)) => {
-                        tracing::error!(
-                            "A task in the update library metadata job failed: {why:#?}"
-                        );
+                        tracing::error!("A task in the update library metadata job failed: {why}");
                     }
                     _ => {}
                 };

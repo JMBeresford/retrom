@@ -8,6 +8,7 @@ import { FileExplorerService } from "@retrom/codegen/retrom/services/file_explor
 import { SavesService } from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { EmulatorSavesService } from "@retrom/codegen/retrom/services/saves/v2/emulator_saves_service_pb";
 import { ConfigService } from "@retrom/codegen/retrom/services/config/v1/config_service_pb";
+import { IgdbService } from "@retrom/codegen/retrom/services/metadata/v1/igdb_service_pb";
 import type { Transport } from "@connectrpc/connect";
 
 export class RetromClient {
@@ -20,6 +21,7 @@ export class RetromClient {
   readonly savesV1Client;
   readonly emulatorSavesClient;
   readonly configClient;
+  readonly igdbClient;
 
   constructor(protected transport: Transport) {
     this.libraryClient = createClient(LibraryService, transport);
@@ -31,5 +33,6 @@ export class RetromClient {
     this.fileExplorerClient = createClient(FileExplorerService, transport);
     this.emulatorSavesClient = createClient(EmulatorSavesService, transport);
     this.configClient = createClient(ConfigService, transport);
+    this.igdbClient = createClient(IgdbService, transport);
   }
 }

@@ -20,7 +20,7 @@ import { Button } from "@retrom/ui-next/components/button";
 import { Badge } from "@retrom/ui-next/components/badge";
 import { useEmulatorFormFieldContext } from "../defs";
 import type { PlatformMetadata } from "@retrom/codegen/retrom/services/metadata/v1/resources_pb";
-import { useListPlatformMetadata } from "@/data/metadata/use-list-metadata";
+import { useListPlatformMetadata } from "@/data/metadata/use-list-platform-metadata";
 
 export function PlatformsField() {
   const field = useEmulatorFormFieldContext<Array<string>>();

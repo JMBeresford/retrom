@@ -41,6 +41,8 @@ message IgdbSearchRequest {
   optional retrom.providers.igdb.v1.IgdbFilters filters = 3;
   // Fields to return in the IGDB search results, used for raw searches against IGDB's endpoint.
   optional retrom.providers.igdb.v1.IgdbFields fields = 4;
+  // Optional sorting parameters to control the order of the results returned, used for raw searches against IGDB's endpoint.
+  optional retrom.providers.igdb.v1.IgdbSort sort = 5;
 }
 
 // Search IGDB games by arbitrary search query, filters, and fields.

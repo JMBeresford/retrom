@@ -13,14 +13,17 @@ import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppPlatformsRouteRouteImport } from './routes/app/platforms/route'
 import { Route as AppLibrariesRouteRouteImport } from './routes/app/libraries/route'
-import { Route as AppGamesRouteRouteImport } from './routes/app/games/route'
 import { Route as AppDownloadsRouteRouteImport } from './routes/app/downloads/route'
 import { Route as AppConfigRouteRouteImport } from './routes/app/config/route'
+import { Route as AppBrowseRouteRouteImport } from './routes/app/browse/route'
 import { Route as AppEmulatorsIndexRouteImport } from './routes/app/emulators/index'
+import { Route as AppBrowseIndexRouteImport } from './routes/app/browse/index'
 import { Route as AppConfigMetadataRouteImport } from './routes/app/config/metadata'
 import { Route as AppConfigInterfaceRouteImport } from './routes/app/config/interface'
 import { Route as AppConfigCloudSavesRouteImport } from './routes/app/config/cloud-saves'
 import { Route as AppEmulatorsEmulatorIdRouteRouteImport } from './routes/app/emulators/$emulator-id/route'
+import { Route as AppBrowsePlatformIndexRouteImport } from './routes/app/browse/$platform/index'
+import { Route as AppBrowsePlatformGameIndexRouteImport } from './routes/app/browse/$platform/$game/index'
 
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/app',
@@ -42,11 +45,6 @@ const AppLibrariesRouteRoute = AppLibrariesRouteRouteImport.update({
   path: '/libraries',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const AppGamesRouteRoute = AppGamesRouteRouteImport.update({
-  id: '/games',
-  path: '/games',
-  getParentRoute: () => AppRouteRoute,
-} as any)
 const AppDownloadsRouteRoute = AppDownloadsRouteRouteImport.update({
   id: '/downloads',
   path: '/downloads',
@@ -57,10 +55,20 @@ const AppConfigRouteRoute = AppConfigRouteRouteImport.update({
   path: '/config',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppBrowseRouteRoute = AppBrowseRouteRouteImport.update({
+  id: '/browse',
+  path: '/browse',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppEmulatorsIndexRoute = AppEmulatorsIndexRouteImport.update({
   id: '/emulators/',
   path: '/emulators/',
   getParentRoute: () => AppRouteRoute,
+} as any)
+const AppBrowseIndexRoute = AppBrowseIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppBrowseRouteRoute,
 } as any)
 const AppConfigMetadataRoute = AppConfigMetadataRouteImport.update({
   id: '/metadata',
@@ -83,93 +91,120 @@ const AppEmulatorsEmulatorIdRouteRoute =
     path: '/emulators/$emulator-id',
     getParentRoute: () => AppRouteRoute,
   } as any)
+const AppBrowsePlatformIndexRoute = AppBrowsePlatformIndexRouteImport.update({
+  id: '/$platform/',
+  path: '/$platform/',
+  getParentRoute: () => AppBrowseRouteRoute,
+} as any)
+const AppBrowsePlatformGameIndexRoute =
+  AppBrowsePlatformGameIndexRouteImport.update({
+    id: '/$platform/$game/',
+    path: '/$platform/$game/',
+    getParentRoute: () => AppBrowseRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
+  '/app/browse': typeof AppBrowseRouteRouteWithChildren
   '/app/config': typeof AppConfigRouteRouteWithChildren
   '/app/downloads': typeof AppDownloadsRouteRoute
-  '/app/games': typeof AppGamesRouteRoute
   '/app/libraries': typeof AppLibrariesRouteRoute
   '/app/platforms': typeof AppPlatformsRouteRoute
   '/app/emulators/$emulator-id': typeof AppEmulatorsEmulatorIdRouteRoute
   '/app/config/cloud-saves': typeof AppConfigCloudSavesRoute
   '/app/config/interface': typeof AppConfigInterfaceRoute
   '/app/config/metadata': typeof AppConfigMetadataRoute
+  '/app/browse/': typeof AppBrowseIndexRoute
   '/app/emulators/': typeof AppEmulatorsIndexRoute
+  '/app/browse/$platform/': typeof AppBrowsePlatformIndexRoute
+  '/app/browse/$platform/$game/': typeof AppBrowsePlatformGameIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
   '/app/config': typeof AppConfigRouteRouteWithChildren
   '/app/downloads': typeof AppDownloadsRouteRoute
-  '/app/games': typeof AppGamesRouteRoute
   '/app/libraries': typeof AppLibrariesRouteRoute
   '/app/platforms': typeof AppPlatformsRouteRoute
   '/app/emulators/$emulator-id': typeof AppEmulatorsEmulatorIdRouteRoute
   '/app/config/cloud-saves': typeof AppConfigCloudSavesRoute
   '/app/config/interface': typeof AppConfigInterfaceRoute
   '/app/config/metadata': typeof AppConfigMetadataRoute
+  '/app/browse': typeof AppBrowseIndexRoute
   '/app/emulators': typeof AppEmulatorsIndexRoute
+  '/app/browse/$platform': typeof AppBrowsePlatformIndexRoute
+  '/app/browse/$platform/$game': typeof AppBrowsePlatformGameIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
+  '/app/browse': typeof AppBrowseRouteRouteWithChildren
   '/app/config': typeof AppConfigRouteRouteWithChildren
   '/app/downloads': typeof AppDownloadsRouteRoute
-  '/app/games': typeof AppGamesRouteRoute
   '/app/libraries': typeof AppLibrariesRouteRoute
   '/app/platforms': typeof AppPlatformsRouteRoute
   '/app/emulators/$emulator-id': typeof AppEmulatorsEmulatorIdRouteRoute
   '/app/config/cloud-saves': typeof AppConfigCloudSavesRoute
   '/app/config/interface': typeof AppConfigInterfaceRoute
   '/app/config/metadata': typeof AppConfigMetadataRoute
+  '/app/browse/': typeof AppBrowseIndexRoute
   '/app/emulators/': typeof AppEmulatorsIndexRoute
+  '/app/browse/$platform/': typeof AppBrowsePlatformIndexRoute
+  '/app/browse/$platform/$game/': typeof AppBrowsePlatformGameIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/app'
+    | '/app/browse'
     | '/app/config'
     | '/app/downloads'
-    | '/app/games'
     | '/app/libraries'
     | '/app/platforms'
     | '/app/emulators/$emulator-id'
     | '/app/config/cloud-saves'
     | '/app/config/interface'
     | '/app/config/metadata'
+    | '/app/browse/'
     | '/app/emulators/'
+    | '/app/browse/$platform/'
+    | '/app/browse/$platform/$game/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/app'
     | '/app/config'
     | '/app/downloads'
-    | '/app/games'
     | '/app/libraries'
     | '/app/platforms'
     | '/app/emulators/$emulator-id'
     | '/app/config/cloud-saves'
     | '/app/config/interface'
     | '/app/config/metadata'
+    | '/app/browse'
     | '/app/emulators'
+    | '/app/browse/$platform'
+    | '/app/browse/$platform/$game'
   id:
     | '__root__'
     | '/'
     | '/app'
+    | '/app/browse'
     | '/app/config'
     | '/app/downloads'
-    | '/app/games'
     | '/app/libraries'
     | '/app/platforms'
     | '/app/emulators/$emulator-id'
     | '/app/config/cloud-saves'
     | '/app/config/interface'
     | '/app/config/metadata'
+    | '/app/browse/'
     | '/app/emulators/'
+    | '/app/browse/$platform/'
+    | '/app/browse/$platform/$game/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -207,13 +242,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLibrariesRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/app/games': {
-      id: '/app/games'
-      path: '/games'
-      fullPath: '/app/games'
-      preLoaderRoute: typeof AppGamesRouteRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
     '/app/downloads': {
       id: '/app/downloads'
       path: '/downloads'
@@ -228,12 +256,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfigRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/browse': {
+      id: '/app/browse'
+      path: '/browse'
+      fullPath: '/app/browse'
+      preLoaderRoute: typeof AppBrowseRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/emulators/': {
       id: '/app/emulators/'
       path: '/emulators'
       fullPath: '/app/emulators/'
       preLoaderRoute: typeof AppEmulatorsIndexRouteImport
       parentRoute: typeof AppRouteRoute
+    }
+    '/app/browse/': {
+      id: '/app/browse/'
+      path: '/'
+      fullPath: '/app/browse/'
+      preLoaderRoute: typeof AppBrowseIndexRouteImport
+      parentRoute: typeof AppBrowseRouteRoute
     }
     '/app/config/metadata': {
       id: '/app/config/metadata'
@@ -263,8 +305,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmulatorsEmulatorIdRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/browse/$platform/': {
+      id: '/app/browse/$platform/'
+      path: '/$platform'
+      fullPath: '/app/browse/$platform/'
+      preLoaderRoute: typeof AppBrowsePlatformIndexRouteImport
+      parentRoute: typeof AppBrowseRouteRoute
+    }
+    '/app/browse/$platform/$game/': {
+      id: '/app/browse/$platform/$game/'
+      path: '/$platform/$game'
+      fullPath: '/app/browse/$platform/$game/'
+      preLoaderRoute: typeof AppBrowsePlatformGameIndexRouteImport
+      parentRoute: typeof AppBrowseRouteRoute
+    }
   }
 }
+
+interface AppBrowseRouteRouteChildren {
+  AppBrowseIndexRoute: typeof AppBrowseIndexRoute
+  AppBrowsePlatformIndexRoute: typeof AppBrowsePlatformIndexRoute
+  AppBrowsePlatformGameIndexRoute: typeof AppBrowsePlatformGameIndexRoute
+}
+
+const AppBrowseRouteRouteChildren: AppBrowseRouteRouteChildren = {
+  AppBrowseIndexRoute: AppBrowseIndexRoute,
+  AppBrowsePlatformIndexRoute: AppBrowsePlatformIndexRoute,
+  AppBrowsePlatformGameIndexRoute: AppBrowsePlatformGameIndexRoute,
+}
+
+const AppBrowseRouteRouteWithChildren = AppBrowseRouteRoute._addFileChildren(
+  AppBrowseRouteRouteChildren,
+)
 
 interface AppConfigRouteRouteChildren {
   AppConfigCloudSavesRoute: typeof AppConfigCloudSavesRoute
@@ -283,9 +355,9 @@ const AppConfigRouteRouteWithChildren = AppConfigRouteRoute._addFileChildren(
 )
 
 interface AppRouteRouteChildren {
+  AppBrowseRouteRoute: typeof AppBrowseRouteRouteWithChildren
   AppConfigRouteRoute: typeof AppConfigRouteRouteWithChildren
   AppDownloadsRouteRoute: typeof AppDownloadsRouteRoute
-  AppGamesRouteRoute: typeof AppGamesRouteRoute
   AppLibrariesRouteRoute: typeof AppLibrariesRouteRoute
   AppPlatformsRouteRoute: typeof AppPlatformsRouteRoute
   AppEmulatorsEmulatorIdRouteRoute: typeof AppEmulatorsEmulatorIdRouteRoute
@@ -293,9 +365,9 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppBrowseRouteRoute: AppBrowseRouteRouteWithChildren,
   AppConfigRouteRoute: AppConfigRouteRouteWithChildren,
   AppDownloadsRouteRoute: AppDownloadsRouteRoute,
-  AppGamesRouteRoute: AppGamesRouteRoute,
   AppLibrariesRouteRoute: AppLibrariesRouteRoute,
   AppPlatformsRouteRoute: AppPlatformsRouteRoute,
   AppEmulatorsEmulatorIdRouteRoute: AppEmulatorsEmulatorIdRouteRoute,

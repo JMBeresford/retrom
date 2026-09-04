@@ -93,7 +93,7 @@ pub async fn list_games(
     let platform_ids = request.platform_ids;
     let name = request.name;
 
-    let mut games_builder = QueryBuilder::<RetromDB>::new("select id from games");
+    let mut games_builder = QueryBuilder::<RetromDB>::new("select distinct id from games");
     let mut has_condition = false;
 
     if !ids.is_empty() {

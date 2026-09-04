@@ -14,6 +14,7 @@ use futures::{
     future::{join_all, try_join_all},
     FutureExt,
 };
+use retrom_codegen::retrom::services::metadata::v1::PlatformMetadataRow;
 use retrom_codegen::retrom::{
     providers::igdb::v1::{
         igdb_filters::{FilterOperator, FilterValue},
@@ -843,15 +844,18 @@ impl MetadataService for MetadataServiceHandlers {
         let game_id = request.game_id;
 
         let igdb_job = async {
-            let igdb_id: Option<String> =
-                QueryBuilder::new("select provider_game_id from game_metadata where game_id = ")
-                    .push_bind(&game_id)
-                    .push(" and provider_id = ")
-                    .push_bind(IGDB_PROVIDER_ID)
-                    .build_query_scalar()
-                    .fetch_optional(&self.db_pool)
-                    .await
-                    .map_err(|e| Status::internal(e.to_string()))?;
+            let existing: Option<GameMetadataRow> = QueryBuilder::new(
+                "select id, provider_game_id from game_metadata where game_id = ",
+            )
+            .push_bind(&game_id)
+            .push(" and provider_id = ")
+            .push_bind(IGDB_PROVIDER_ID)
+            .build_query_as()
+            .fetch_optional(&self.db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+            let igdb_id = existing.as_ref().map(|row| row.provider_game_id.clone());
 
             let mut igdb = self.igdb_svc_client.clone();
 
@@ -868,7 +872,7 @@ impl MetadataService for MetadataServiceHandlers {
                 ..Default::default()
             });
 
-            let igdb_metadata = igdb
+            let mut igdb_metadata = igdb
                 .get_igdb_game_metadata(GetIgdbGameMetadataRequest {
                     game_id: game_id.clone(),
                     search: igdb_search,
@@ -877,20 +881,51 @@ impl MetadataService for MetadataServiceHandlers {
                 .await?
                 .into_inner();
 
-            Self::handle_update_game_metadata(
-                self.db_pool.clone(),
-                UpdateGameMetadataRequest {
-                    metadata: Some(igdb_metadata),
-                    update_mask: None,
-                },
-            )
-            .await?;
+            tracing::info!(igdb_metadata = ?igdb_metadata, "Downloaded IGDB metadata for game");
+
+            if let Some(existing_row) = existing {
+                igdb_metadata.id = existing_row.id;
+                Self::handle_update_game_metadata(
+                    self.db_pool.clone(),
+                    UpdateGameMetadataRequest {
+                        metadata: Some(igdb_metadata),
+                        update_mask: None,
+                    },
+                )
+                .await?;
+            } else {
+                Self::handle_create_game_metadata(
+                    self.db_pool.clone(),
+                    CreateGameMetadataRequest {
+                        metadata: Some(igdb_metadata),
+                    },
+                )
+                .await?;
+            }
 
             Ok::<(), Status>(())
         }
+        .in_current_span()
         .boxed();
 
         let steam_job = async {
+            let steam_app_id: Option<String> =
+                QueryBuilder::new("select steam_app_id from games where id = ")
+                    .push_bind(&game_id)
+                    .build_query_scalar()
+                    .fetch_optional(&self.db_pool)
+                    .await
+                    .map_err(|e| Status::internal(e.to_string()))?;
+
+            if steam_app_id.is_none() {
+                tracing::debug!(
+                    "Game {} does not have a Steam App ID, skipping Steam metadata download",
+                    game_id
+                );
+
+                return Ok(());
+            }
+
             let mut steam = self.steam_svc_client.clone();
 
             let steam_metadata = steam
@@ -929,18 +964,21 @@ impl MetadataService for MetadataServiceHandlers {
         let request = request.into_inner();
         let platform_id = request.platform_id;
 
-        let igdb_id: Option<String> = QueryBuilder::new(
-            "select provider_platform_id from platform_metadata where platform_id = ",
-        )
-        .push_bind(&platform_id)
-        .push(" and provider_id = ")
-        .push_bind(IGDB_PROVIDER_ID)
-        .build_query_scalar()
-        .fetch_optional(&self.db_pool)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        let existing: Option<PlatformMetadataRow> =
+            QueryBuilder::new("select * from platform_metadata where platform_id = ")
+                .push_bind(&platform_id)
+                .push(" and provider_id = ")
+                .push_bind(IGDB_PROVIDER_ID)
+                .build_query_as()
+                .fetch_optional(&self.db_pool)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
 
         let mut igdb = self.igdb_svc_client.clone();
+
+        let igdb_id = existing
+            .as_ref()
+            .map(|row| row.provider_platform_id.clone());
 
         let igdb_search = igdb_id.map(|id| IgdbSearchRequest {
             filters: Some(IgdbFilters {
@@ -955,7 +993,7 @@ impl MetadataService for MetadataServiceHandlers {
             ..Default::default()
         });
 
-        let igdb_metadata = igdb
+        let mut igdb_metadata = igdb
             .get_igdb_platform_metadata(GetIgdbPlatformMetadataRequest {
                 platform_id: platform_id.clone(),
                 search: igdb_search,
@@ -963,14 +1001,27 @@ impl MetadataService for MetadataServiceHandlers {
             .await?
             .into_inner();
 
-        Self::handle_update_platform_metadata(
-            self.db_pool.clone(),
-            UpdatePlatformMetadataRequest {
-                metadata: Some(igdb_metadata),
-                update_mask: None,
-            },
-        )
-        .await?;
+        tracing::info!(igdb_metadata = ?igdb_metadata, "Downloaded IGDB metadata for game");
+
+        if let Some(existing_row) = existing {
+            igdb_metadata.id = existing_row.id;
+            Self::handle_update_platform_metadata(
+                self.db_pool.clone(),
+                UpdatePlatformMetadataRequest {
+                    metadata: Some(igdb_metadata),
+                    update_mask: None,
+                },
+            )
+            .await?;
+        } else {
+            Self::handle_create_platform_metadata(
+                self.db_pool.clone(),
+                CreatePlatformMetadataRequest {
+                    metadata: Some(igdb_metadata),
+                },
+            )
+            .await?;
+        }
 
         Ok(Response::new(DownloadPlatformMetadataResponse {}))
     }

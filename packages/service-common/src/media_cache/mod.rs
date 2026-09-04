@@ -382,7 +382,7 @@ mod integration_tests {
         let game_metadata = GameMetadata {
             id: "1".to_string(),
             game: "42".to_string(),
-            name: Some("Test Game".to_string()),
+            name: "Test Game".to_string(),
             ..Default::default()
         };
 
@@ -395,7 +395,7 @@ mod integration_tests {
         let platform_metadata = PlatformMetadata {
             id: "1".to_string(),
             platform: "1".to_string(),
-            name: Some("Test Platform".to_string()),
+            name: "Test Platform".to_string(),
             ..Default::default()
         };
 
@@ -467,7 +467,7 @@ mod integration_tests {
         let game_metadata = GameMetadata {
             id: "1".to_string(),
             game: "123".to_string(),
-            name: Some("Test Game".to_string()),
+            name: "Test Game".to_string(),
             ..Default::default()
         };
 

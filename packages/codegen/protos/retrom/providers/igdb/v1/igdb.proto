@@ -8,6 +8,25 @@ message IgdbSearch {
   string value = 1;
 }
 
+// IgdbSort represents the sorting parameters for IGDB queries.
+message IgdbSort {
+  // SortOrder represents the order in which to sort the results in IGDB queries.
+  enum SortOrder {
+    // Unspecified sort order.
+    SORT_ORDER_UNSPECIFIED = 0;
+    // Sort the results in ascending order.
+    SORT_ORDER_ASCENDING = 1;
+    // Sort the results in descending order.
+    SORT_ORDER_DESCENDING = 2;
+  }
+
+  // The field to sort by.
+  string field = 1;
+
+  // The order in which to sort the results. If not specified, a default order will be used.
+  optional SortOrder order = 2;
+}
+
 // IgdbPagination represents the pagination parameters for IGDB queries.
 message IgdbPagination {
   // The maximum number of results to return. If not specified, a default value will be used.

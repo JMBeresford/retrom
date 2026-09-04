@@ -20,7 +20,7 @@ message GameMetadataRow {
   // Timestamp for when the game metadata record was last updated.
   google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
   // The display name of the game.
-  optional string name = 7;
+  string name = 7;
   // A description of the game.
   optional string description = 8;
   // A URL to the game's cover image.
@@ -54,7 +54,7 @@ message PlatformMetadataRow {
   // Timestamp for when the platform metadata record was last updated.
   google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
   // The display name of the platform.
-  optional string name = 7;
+  string name = 7;
   // A description of the platform.
   optional string description = 8;
   // A URL to the platform's background image.

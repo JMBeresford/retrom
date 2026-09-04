@@ -80,10 +80,10 @@ function AppSidebarHeader({ config }: { config: SidebarHeaderConfig }) {
 }
 
 function AppSidebarGroup({ config }: { config: SidebarGroupConfig }) {
-  const { label, action, menus: items, content } = config;
+  const { label, action, menus: items, content, hidden } = config;
 
   return (
-    <SidebarGroup className="not-last:border-b border-border">
+    <SidebarGroup hidden={hidden} className="not-last:border-b border-border">
       {label ? <SidebarGroupLabel>{label}</SidebarGroupLabel> : null}
       {action ? <SidebarGroupAction>{action}</SidebarGroupAction> : null}
       {content ? <SidebarGroupContent>{content}</SidebarGroupContent> : null}
@@ -130,13 +130,13 @@ function AppSidebarMenuItem({
   sub?: boolean;
 }) {
   const { open } = useSidebar();
-  const { action, badge } = config;
+  const { action, badge, hidden } = config;
 
   const ItemComponent = sub ? SidebarMenuSubItem : SidebarMenuItem;
   const size = sub ? "sm" : "default";
 
   return (
-    <ItemComponent>
+    <ItemComponent hidden={hidden}>
       {config.type === "subMenu" ? (
         <SidebarMenuButton
           hidden={open === false}
@@ -156,11 +156,9 @@ function AppSidebarMenuItem({
           }}
         >
           {({ isActive }) => (
-            <SidebarMenuButton
-              size={size}
-              isActive={isActive}
-              render={<Link to={config.route}>{config.label}</Link>}
-            ></SidebarMenuButton>
+            <SidebarMenuButton size={size} isActive={isActive}>
+              {config.label}
+            </SidebarMenuButton>
           )}
         </Link>
       ) : config.type === "inline" ? (

@@ -5,7 +5,6 @@ import {
 } from "@tanstack/react-router";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { SidebarProvider } from "@retrom/ui-next/components/sidebar";
-import { ScrollArea } from "@retrom/ui-next/components/scroll-area";
 import TanStackQueryDevtools from "../devtools/tanstack-query";
 import TanStackRouterDevtools from "../devtools/tanstack-router";
 import TanStackFormDevtools from "../devtools/tanstack-form";
@@ -51,9 +50,7 @@ function RootDocument({ children }: { children: ReactNode }) {
     <>
       <HeadContent />
 
-      <ScrollArea className="h-dvh max-w-dvw">
-        <RenderRootProviders>{children}</RenderRootProviders>
-      </ScrollArea>
+      <RenderRootProviders>{children}</RenderRootProviders>
 
       <TanStackDevtools
         config={{

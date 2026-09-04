@@ -12,9 +12,11 @@ import { LoaderCircle } from "lucide-react";
 import { registerModalHandle } from "./use-modal-action";
 import type { ReactNode } from "react";
 import type { BaseModalActionProps } from "./modals";
+import type { ButtonVariants } from "@retrom/ui-next/components/button-variants";
 
 export type ConfirmModalProps = BaseModalActionProps & {
   content?: ReactNode;
+  variant?: ButtonVariants["variant"];
   onConfirm?: () => void | Promise<void>;
   onCancel?: () => void | Promise<void>;
 };
@@ -69,7 +71,7 @@ export function ConfirmDialog() {
 
               <Button
                 className="relative"
-                variant="destructive"
+                variant={payload?.variant}
                 disabled={status === "pending"}
                 onClick={() => {
                   close(true);

@@ -2,6 +2,9 @@ import { queryOptions } from "@tanstack/react-query";
 import type { ConnectError } from "@connectrpc/connect";
 import type {
   GetLibraryRequestSchema,
+  GetPlatformRequestSchema,
+  ListGamesRequestSchema,
+  ListGamesResponse,
   ListLibrariesRequestSchema,
   ListLibrariesResponse,
   ListPlatformsRequestSchema,
@@ -9,7 +12,10 @@ import type {
 } from "@retrom/codegen/retrom/services/library/v1/library_service_pb";
 import type { RetromClient } from "@/api-client/client";
 import type { MessageInitShape } from "@bufbuild/protobuf";
-import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
+import type {
+  Library,
+  Platform,
+} from "@retrom/codegen/retrom/services/library/v1/resources_pb";
 import type { QueryOptionsExt } from "../common";
 
 export type LibraryQueryKey<T extends keyof typeof libraryQueryKeys> =
@@ -24,6 +30,11 @@ export const libraryQueryKeys = {
   listLibraries: (
     request: MessageInitShape<typeof ListLibrariesRequestSchema>,
   ) => [...libraryQueryKeys.listAllLibraries(), request] as const,
+  listAllGames: () => [...libraryQueryKeys.all(), "listAllGames"] as const,
+  listGames: (request: MessageInitShape<typeof ListGamesRequestSchema>) =>
+    [...libraryQueryKeys.listAllGames(), request] as const,
+  getPlatform: (request: MessageInitShape<typeof GetPlatformRequestSchema>) =>
+    [...libraryQueryKeys.all(), "getPlatform", request] as const,
   listAllPlatforms: () =>
     [...libraryQueryKeys.all(), "listAllPlatforms"] as const,
   listPlatforms: (
@@ -61,6 +72,36 @@ export const libraryQueries = {
       ...options,
       queryKey: libraryQueryKeys.listLibraries(request),
       queryFn: () => retromClient.libraryClient.listLibraries(request),
+    }),
+  listGames: <TData>(
+    request: MessageInitShape<typeof ListGamesRequestSchema>,
+    retromClient: RetromClient,
+    options: QueryOptionsExt<
+      ListGamesResponse,
+      ConnectError,
+      TData,
+      LibraryQueryKey<"listGames">
+    > = {},
+  ) =>
+    queryOptions({
+      ...options,
+      queryKey: libraryQueryKeys.listGames(request),
+      queryFn: () => retromClient.libraryClient.listGames(request),
+    }),
+  getPlatform: <TData>(
+    request: MessageInitShape<typeof GetPlatformRequestSchema>,
+    retromClient: RetromClient,
+    options: QueryOptionsExt<
+      Platform,
+      ConnectError,
+      TData,
+      LibraryQueryKey<"getPlatform">
+    > = {},
+  ) =>
+    queryOptions({
+      ...options,
+      queryKey: libraryQueryKeys.getPlatform(request),
+      queryFn: () => retromClient.libraryClient.getPlatform(request),
     }),
   listPlatforms: <TData>(
     request: MessageInitShape<typeof ListPlatformsRequestSchema>,

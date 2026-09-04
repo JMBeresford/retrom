@@ -69,7 +69,7 @@ impl ToGameMetadata for igdb::Game {
             provider_game_id: self.id.to_string(),
             created_at: None,
             updated_at: None,
-            name: Some(self.name.clone()),
+            name: self.name.clone(),
             description: Some(self.summary.clone()),
             cover_url,
             icon_url,
@@ -107,16 +107,6 @@ impl GameMetadataProvider for IGDBProvider {
                 "id".to_string(),
                 FilterValue {
                     value: igdb_id.to_string(),
-                    operator: Some(FilterOperator::Equal as i32),
-                },
-            );
-        }
-
-        if let Some(ref name) = &name {
-            filter_list.filters.insert(
-                "name".to_string(),
-                FilterValue {
-                    value: name.clone(),
                     operator: Some(FilterOperator::Equal as i32),
                 },
             );

@@ -12,8 +12,8 @@ use retrom_service_common::metadata_providers::{
     igdb::provider::{
         IGDBProvider, IgdbSearchData, IgdbSearchQuery, IgdbSearchType, IGDB_PROVIDER_ID,
     },
-    GameMetadataProvider, GameMetadataSearchParams, PlatformMetadataProvider,
-    PlatformMetadataSearchParams, ToGameMetadata, ToPlatformMetadata,
+    GameMetadataProvider, GameMetadataSearchParams, MetadataProviderError,
+    PlatformMetadataProvider, PlatformMetadataSearchParams, ToGameMetadata, ToPlatformMetadata,
 };
 use sqlx::QueryBuilder;
 use std::sync::Arc;
@@ -122,12 +122,19 @@ impl IgdbService for IgdbServiceHandlers {
             provider_platform_id,
         };
 
-        let result = self
-            .igdb_client
-            .get_game_metadata(params)
-            .await
-            .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?;
+        let result = match self.igdb_client.get_game_metadata(params).await {
+            Ok(result) => result,
+            Err(MetadataProviderError::NoMatchesFound) => {
+                return Err(Status::not_found("No matches found"))
+            }
+            Err(other_error) => {
+                return Err(Status::internal(format!(
+                    "IGDB Provider error: {other_error}"
+                )))
+            }
+        };
 
+        tracing::info!(result = ?result, "Retrieved IGDB game metadata");
         let game_metadata = result.to_game_metadata(&game_id);
 
         Ok(Response::new(game_metadata))

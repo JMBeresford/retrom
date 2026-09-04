@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import type { Row } from "@tanstack/react-table";
 import type { EmulatorTableFeatures } from "../defs";
 import type { Emulator } from "@retrom/codegen/retrom/services/emulators/v1/emulator_pb";
-import { useListPlatformMetadata } from "@/data/metadata/use-list-metadata";
+import { useListPlatformMetadata } from "@/data/metadata/use-list-platform-metadata";
 
 export function Platforms({
   row,

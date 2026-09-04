@@ -22,6 +22,7 @@ export type SidebarGroupConfig = {
   action?: ReactNode;
   content?: ReactNode;
   menus: Array<SidebarMenuConfig>;
+  hidden?: boolean;
 };
 
 export type SidebarMenuConfig = {
@@ -31,6 +32,7 @@ export type SidebarMenuConfig = {
 export type SidebarMenuItemConfig = {
   action?: ReactElement;
   badge?: ReactNode;
+  hidden?: boolean;
 } & (
   | {
       type: "inline";

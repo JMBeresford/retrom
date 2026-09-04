@@ -1,0 +1,41 @@
+import { Loader2 } from "lucide-react";
+import { cn } from "@retrom/ui-next/lib/utils";
+import { Button } from "@retrom/ui-next/components/button";
+import { igdbSearchFormOptions, useIgdbSearchFormContext } from "./defs";
+
+export function SearchButton() {
+  const form = useIgdbSearchFormContext({ ...igdbSearchFormOptions });
+
+  const handleSubmit = () => {
+    form.handleSubmit().catch(console.error);
+  };
+
+  return (
+    <form.Subscribe>
+      {({ isValid, isSubmitting }) => (
+        <Button
+          type="button"
+          className="relative"
+          variant={isValid ? "secondary" : "destructive"}
+          disabled={!isValid || isSubmitting}
+          onClick={handleSubmit}
+        >
+          <span
+            className={cn(
+              "transition-opacity opacity-100",
+              isSubmitting && "opacity-0",
+            )}
+          >
+            Search
+          </span>
+          <Loader2
+            className={cn(
+              "animate-spin absolute transition-opacity opacity-0",
+              isSubmitting && "opacity-100",
+            )}
+          />
+        </Button>
+      )}
+    </form.Subscribe>
+  );
+}

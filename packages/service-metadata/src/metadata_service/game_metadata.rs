@@ -1,4 +1,4 @@
-use prost_reflect::{DynamicMessage, Value};
+use prost_reflect::{DynamicMessage, ReflectMessage, Value};
 use retrom_codegen::retrom::services::metadata::v1::{
     GameMetadata, GameMetadataArtworkRow, GameMetadataLinkRow, GameMetadataRow,
     GameMetadataScreenshotRow, GameMetadataVideoRow, SimilarGameRow,
@@ -331,11 +331,24 @@ pub async fn update_game_metadata(
         match value {
             Value::String(s) => separated.push_bind_unseparated(s),
             Value::I32(num) => separated.push_bind_unseparated(num),
-            _ => {
-                return Err(Status::internal(format!(
-                    "Unsupported value: {} for field: {}",
-                    value, field
-                )))
+            Value::Message(msg) => match msg.descriptor().full_name() {
+                "google.protobuf.Timestamp" => {
+                    let timestamp: retrom_codegen::timestamp::Timestamp = msg
+                        .transcode_to()
+                        .map_err(|e| Status::internal(e.to_string()))?;
+
+                    separated.push_bind_unseparated(timestamp)
+                }
+                other_msg => {
+                    tracing::warn!("Unsupported message type: {other_msg} for field: {field}",);
+
+                    continue;
+                }
+            },
+            ref other => {
+                tracing::warn!("Unsupported value: {value:?} of type {other:?} for field: {field}",);
+
+                continue;
             }
         };
     }
