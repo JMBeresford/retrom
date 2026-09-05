@@ -3,6 +3,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@retrom/ui-next/components/dropdown-menu";
 import { EllipsisVerticalIcon } from "lucide-react";
@@ -35,13 +36,14 @@ export function RowActions({
       />
       <DropdownMenuContent>
         <DropdownMenuGroup>
+          <DropdownMenuLabel>Manage Emulator</DropdownMenuLabel>
           <DropdownMenuItem
             render={
               <Link
                 to="/app/emulators/$emulator-id"
                 params={{ "emulator-id": row.original.id }}
               >
-                Manage
+                Profiles
               </Link>
             }
           />

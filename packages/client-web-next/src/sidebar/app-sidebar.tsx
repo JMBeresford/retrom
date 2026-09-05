@@ -60,7 +60,9 @@ export function AppSidebar({
         {footer ? <AppSidebarFooter config={footer} /> : null}
       </Sidebar>
 
-      <SidebarInset className="overflow-hidden">{children}</SidebarInset>
+      <SidebarInset className="overflow-hidden bg-transparent">
+        {children}
+      </SidebarInset>
     </>
   );
 }

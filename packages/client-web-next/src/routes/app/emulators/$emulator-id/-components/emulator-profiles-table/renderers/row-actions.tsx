@@ -3,6 +3,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@retrom/ui-next/components/dropdown-menu";
 import { EllipsisVerticalIcon } from "lucide-react";
@@ -32,8 +33,11 @@ export function RowActionsCell({
           </Button>
         }
       />
-      <DropdownMenuContent>
+      <DropdownMenuContent className="w-max">
         <DropdownMenuGroup>
+          <DropdownMenuLabel className="whitespace-nowrap">
+            Manage Profile
+          </DropdownMenuLabel>
           <DropdownMenuItem
             onClick={() => {
               emulatorProfileFormModal.openModal({

@@ -26,7 +26,8 @@ export function PathHeading({
             className={cn(
               "transition-colors",
               "font-heading text-4xl font-bold",
-              "hover:text-foreground",
+              "hover:text-foreground whitespace-nowrap",
+              index === segments.length - 1 && "overflow-hidden text-ellipsis",
             )}
             inactiveProps={{ className: "text-muted-foreground/50" }}
             activeProps={{ className: "text-foreground" }}

@@ -31,7 +31,7 @@ function RouteComponent() {
         <header
           className={cn(
             "flex items-center justify-between px-2 pt-4 pb-2 h-14",
-            "bg-background border-b",
+            "border-b z-49",
           )}
         >
           <div className="flex items-center gap-2">

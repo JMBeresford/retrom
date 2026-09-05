@@ -1,8 +1,11 @@
 import { queryOptions } from "@tanstack/react-query";
 import type { ConnectError } from "@connectrpc/connect";
 import type {
+  GetGameRequestSchema,
   GetLibraryRequestSchema,
   GetPlatformRequestSchema,
+  ListGameFilesRequestSchema,
+  ListGameFilesResponse,
   ListGamesRequestSchema,
   ListGamesResponse,
   ListLibrariesRequestSchema,
@@ -13,6 +16,7 @@ import type {
 import type { RetromClient } from "@/api-client/client";
 import type { MessageInitShape } from "@bufbuild/protobuf";
 import type {
+  Game,
   Library,
   Platform,
 } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
@@ -30,6 +34,8 @@ export const libraryQueryKeys = {
   listLibraries: (
     request: MessageInitShape<typeof ListLibrariesRequestSchema>,
   ) => [...libraryQueryKeys.listAllLibraries(), request] as const,
+  getGame: (request: MessageInitShape<typeof GetGameRequestSchema>) =>
+    [...libraryQueryKeys.all(), "getGame", request] as const,
   listAllGames: () => [...libraryQueryKeys.all(), "listAllGames"] as const,
   listGames: (request: MessageInitShape<typeof ListGamesRequestSchema>) =>
     [...libraryQueryKeys.listAllGames(), request] as const,
@@ -40,6 +46,11 @@ export const libraryQueryKeys = {
   listPlatforms: (
     request: MessageInitShape<typeof ListPlatformsRequestSchema>,
   ) => [...libraryQueryKeys.listAllPlatforms(), request] as const,
+  listAllGameFiles: () =>
+    [...libraryQueryKeys.all(), "listAllGameFiles"] as const,
+  listGameFiles: (
+    request: MessageInitShape<typeof ListGameFilesRequestSchema>,
+  ) => [...libraryQueryKeys.listAllGameFiles(), request] as const,
 };
 
 export const libraryQueries = {
@@ -72,6 +83,21 @@ export const libraryQueries = {
       ...options,
       queryKey: libraryQueryKeys.listLibraries(request),
       queryFn: () => retromClient.libraryClient.listLibraries(request),
+    }),
+  getGame: <TData>(
+    request: MessageInitShape<typeof GetGameRequestSchema>,
+    retromClient: RetromClient,
+    options: QueryOptionsExt<
+      Game,
+      ConnectError,
+      TData,
+      LibraryQueryKey<"getGame">
+    > = {},
+  ) =>
+    queryOptions({
+      ...options,
+      queryKey: libraryQueryKeys.getGame(request),
+      queryFn: () => retromClient.libraryClient.getGame(request),
     }),
   listGames: <TData>(
     request: MessageInitShape<typeof ListGamesRequestSchema>,
@@ -117,5 +143,20 @@ export const libraryQueries = {
       ...options,
       queryKey: libraryQueryKeys.listPlatforms(request),
       queryFn: () => retromClient.libraryClient.listPlatforms(request),
+    }),
+  listGameFiles: <TData>(
+    request: MessageInitShape<typeof ListGameFilesRequestSchema>,
+    retromClient: RetromClient,
+    options: QueryOptionsExt<
+      ListGameFilesResponse,
+      ConnectError,
+      TData,
+      LibraryQueryKey<"listGameFiles">
+    > = {},
+  ) =>
+    queryOptions({
+      ...options,
+      queryKey: libraryQueryKeys.listGameFiles(request),
+      queryFn: () => retromClient.libraryClient.listGameFiles(request),
     }),
 };

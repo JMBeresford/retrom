@@ -122,6 +122,7 @@ export function GameFormDialog() {
                       <Button
                         onClick={() =>
                           imageSearchDialog.openModal({
+                            initialSearch: gameForm.getFieldValue("name"),
                             game: {
                               field: "coverUrl",
                               onSubmit: field.handleChange,
@@ -148,6 +149,7 @@ export function GameFormDialog() {
                       <Button
                         onClick={() =>
                           imageSearchDialog.openModal({
+                            initialSearch: gameForm.getFieldValue("name"),
                             game: {
                               field: "backgroundUrl",
                               onSubmit: field.handleChange,
@@ -174,6 +176,7 @@ export function GameFormDialog() {
                       <Button
                         onClick={() =>
                           imageSearchDialog.openModal({
+                            initialSearch: gameForm.getFieldValue("name"),
                             game: {
                               field: "iconUrl",
                               onSubmit: field.handleChange,

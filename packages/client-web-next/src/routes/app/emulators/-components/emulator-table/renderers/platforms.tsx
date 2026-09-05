@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import type { Row } from "@tanstack/react-table";
 import type { EmulatorTableFeatures } from "../defs";
 import type { Emulator } from "@retrom/codegen/retrom/services/emulators/v1/emulator_pb";
+import type { PlatformMetadata } from "@retrom/codegen/retrom/services/metadata/v1/resources_pb";
 import { useListPlatformMetadata } from "@/data/metadata/use-list-platform-metadata";
 
 export function Platforms({
@@ -21,7 +22,16 @@ export function Platforms({
     },
     options: {
       enabled: row.original.platforms.length > 0,
-      select: (response) => response.metadata,
+      select: (response) =>
+        [...response.metadata]
+          .sort((a, b) => b.provider.localeCompare(a.provider))
+          .reduce((acc, meta) => {
+            if (!acc.find((p) => p.platform === meta.platform)) {
+              acc.push(meta);
+            }
+
+            return acc;
+          }, Array<PlatformMetadata>()),
     },
   });
 
