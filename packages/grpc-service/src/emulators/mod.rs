@@ -1,4 +1,4 @@
-use diesel::{prelude::*, upsert::excluded};
+use diesel::{prelude::*, result::DatabaseErrorKind, upsert::excluded};
 use diesel_async::RunQueryDsl;
 use retrom_codegen::retrom::{
     self, emulator_service_server::EmulatorService, CreateEmulatorsRequest,
@@ -20,6 +20,55 @@ impl EmulatorServiceHandlers {
     }
 }
 
+fn validate_name(name: &str, error_message: &'static str) -> Result<(), Status> {
+    if name.trim().is_empty() {
+        return Err(Status::invalid_argument(error_message));
+    }
+
+    Ok(())
+}
+
+fn emulator_conflict_message(emulator_name: Option<&str>) -> String {
+    match emulator_name.map(str::trim).filter(|name| !name.is_empty()) {
+        Some(name) => format!("An emulator named \"{}\" already exists.", name),
+        None => "An emulator with this name already exists.".to_string(),
+    }
+}
+
+fn profile_conflict_message(profile_name: Option<&str>) -> String {
+    match profile_name.map(str::trim).filter(|name| !name.is_empty()) {
+        Some(name) => format!(
+            "A profile named \"{}\" already exists for this emulator.",
+            name
+        ),
+        None => "A profile with this name already exists for this emulator.".to_string(),
+    }
+}
+
+fn map_emulator_write_error(error: diesel::result::Error, emulator_name: Option<&str>) -> Status {
+    match error {
+        diesel::result::Error::DatabaseError(DatabaseErrorKind::UniqueViolation, info)
+            if info.constraint_name() == Some("emulators_name_unique") =>
+        {
+            Status::invalid_argument(emulator_conflict_message(emulator_name))
+        }
+        diesel::result::Error::NotFound => Status::not_found("Emulator not found"),
+        other => Status::internal(other.to_string()),
+    }
+}
+
+fn map_profile_write_error(error: diesel::result::Error, profile_name: Option<&str>) -> Status {
+    match error {
+        diesel::result::Error::DatabaseError(DatabaseErrorKind::UniqueViolation, info)
+            if info.constraint_name() == Some("emulator_profiles_emulator_id_name_unique") =>
+        {
+            Status::invalid_argument(profile_conflict_message(profile_name))
+        }
+        diesel::result::Error::NotFound => Status::not_found("Emulator profile not found"),
+        other => Status::internal(other.to_string()),
+    }
+}
+
 #[tonic::async_trait]
 impl EmulatorService for EmulatorServiceHandlers {
     async fn create_emulators(
@@ -28,17 +77,23 @@ impl EmulatorService for EmulatorServiceHandlers {
     ) -> Result<Response<CreateEmulatorsResponse>, Status> {
         let emulators = request.into_inner().emulators;
 
+        for emulator in &emulators {
+            validate_name(&emulator.name, "Emulator names cannot be empty.")?;
+        }
+
         let mut conn = self
             .db_pool
             .get()
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
+        let emulator_name = (emulators.len() == 1).then(|| emulators[0].name.as_str());
+
         let emulators_created = diesel::insert_into(schema::emulators::table)
             .values(&emulators)
             .get_results(&mut conn)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(|why| map_emulator_write_error(why, emulator_name))?;
 
         Ok(Response::new(CreateEmulatorsResponse { emulators_created }))
     }
@@ -86,6 +141,12 @@ impl EmulatorService for EmulatorServiceHandlers {
     ) -> Result<Response<UpdateEmulatorsResponse>, Status> {
         let emulators = request.into_inner().emulators;
 
+        for emulator in &emulators {
+            if let Some(name) = emulator.name.as_deref() {
+                validate_name(name, "Emulator names cannot be empty.")?;
+            }
+        }
+
         let mut conn = self
             .db_pool
             .get()
@@ -95,12 +156,13 @@ impl EmulatorService for EmulatorServiceHandlers {
         let mut emulators_updated = vec![];
 
         for emulator in emulators {
+            let emulator_name = emulator.name.as_deref();
             let updated_emulator = diesel::update(schema::emulators::table)
                 .filter(schema::emulators::id.eq(emulator.id))
                 .set(&emulator)
                 .get_result::<Emulator>(&mut conn)
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+                .map_err(|why| map_emulator_write_error(why, emulator_name))?;
 
             emulators_updated.push(updated_emulator);
         }
@@ -135,17 +197,23 @@ impl EmulatorService for EmulatorServiceHandlers {
     ) -> Result<Response<retrom::CreateEmulatorProfilesResponse>, Status> {
         let profiles = request.into_inner().profiles;
 
+        for profile in &profiles {
+            validate_name(&profile.name, "Profile names cannot be empty.")?;
+        }
+
         let mut conn = self
             .db_pool
             .get()
             .await
             .map_err(|why| Status::internal(why.to_string()))?;
 
+        let profile_name = (profiles.len() == 1).then(|| profiles[0].name.as_str());
+
         let profiles_created = diesel::insert_into(schema::emulator_profiles::table)
             .values(&profiles)
             .get_results::<retrom::EmulatorProfile>(&mut conn)
             .await
-            .map_err(|why| Status::internal(why.to_string()))?;
+            .map_err(|why| map_profile_write_error(why, profile_name))?;
 
         Ok(Response::new(retrom::CreateEmulatorProfilesResponse {
             profiles_created,
@@ -194,6 +262,12 @@ impl EmulatorService for EmulatorServiceHandlers {
     ) -> Result<Response<retrom::UpdateEmulatorProfilesResponse>, Status> {
         let emulator_profiles = request.into_inner().profiles;
 
+        for profile in &emulator_profiles {
+            if let Some(name) = profile.name.as_deref() {
+                validate_name(name, "Profile names cannot be empty.")?;
+            }
+        }
+
         let mut conn = self
             .db_pool
             .get()
@@ -202,15 +276,16 @@ impl EmulatorService for EmulatorServiceHandlers {
 
         let mut profiles_updated = vec![];
 
-        for emulator in emulator_profiles {
-            let updated_emulator = diesel::update(schema::emulator_profiles::table)
-                .filter(schema::emulator_profiles::id.eq(emulator.id))
-                .set(&emulator)
+        for profile in emulator_profiles {
+            let profile_name = profile.name.as_deref();
+            let updated_profile = diesel::update(schema::emulator_profiles::table)
+                .filter(schema::emulator_profiles::id.eq(profile.id))
+                .set(&profile)
                 .get_result::<retrom::EmulatorProfile>(&mut conn)
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+                .map_err(|why| map_profile_write_error(why, profile_name))?;
 
-            profiles_updated.push(updated_emulator);
+            profiles_updated.push(updated_profile);
         }
 
         Ok(Response::new(retrom::UpdateEmulatorProfilesResponse {
