@@ -141,3 +141,20 @@
     @apply font-sans;
   }
 }
+
+@theme {
+  --animate-text-pan: text-pan 10s linear infinite;
+
+  @keyframes text-pan {
+    0%,
+    5%,
+    95%,
+    100% {
+      transform: translateX(0);
+    }
+    45%,
+    55% {
+      transform: translateX(-50%);
+    }
+  }
+}

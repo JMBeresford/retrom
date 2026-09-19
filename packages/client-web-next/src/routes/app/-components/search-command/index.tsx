@@ -8,6 +8,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@retrom/ui-next/components/command";
 import {
   InputGroup,
@@ -16,14 +17,18 @@ import {
 } from "@retrom/ui-next/components/input-group";
 import { useState } from "react";
 import { Search } from "lucide-react";
+import { SearchCommandContext } from "./context";
+import { GamesSearch } from "./games-search";
 
 export function SearchCommand() {
   const [open, setOpen] = useState(false);
+  const searchCtx = useState("");
+  const [search, setSearch] = searchCtx;
 
   useHotkey("Mod+K", () => setOpen(true));
 
   return (
-    <>
+    <SearchCommandContext.Provider value={searchCtx}>
       <InputGroup>
         <InputGroupInput
           readOnly
@@ -40,8 +45,26 @@ export function SearchCommand() {
       </InputGroup>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <Command>
-          <CommandInput placeholder="Type a command or search..." />
+        <Command
+          filter={(value, searchContent, keywords) => {
+            if (keywords?.includes("*")) {
+              return 1;
+            }
+
+            if (value.toLowerCase().includes(searchContent.toLowerCase())) {
+              return 1;
+            }
+
+            return 0;
+          }}
+        >
+          <CommandInput
+            placeholder="Type a command or search..."
+            value={search}
+            onInput={(event) => {
+              setSearch(event.currentTarget.value);
+            }}
+          />
 
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
@@ -51,9 +74,13 @@ export function SearchCommand() {
               <CommandItem>Platforms</CommandItem>
               <CommandItem>Emulators</CommandItem>
             </CommandGroup>
+
+            <CommandSeparator />
+
+            <GamesSearch />
           </CommandList>
         </Command>
       </CommandDialog>
-    </>
+    </SearchCommandContext.Provider>
   );
 }

@@ -1,9 +1,12 @@
+use crate::svc_definitions::METADATA_SVC_PORT;
 use retrom_codegen::retrom::services::metadata::v1::metadata_service_client::MetadataServiceClient;
 use tonic::transport::Channel;
+use tonic_tracing_opentelemetry::middleware::client::{OtelGrpcLayer, OtelGrpcService};
+use tower::ServiceBuilder;
 
-use crate::svc_definitions::METADATA_SVC_PORT;
+pub type InterceptedMetadataServiceClient = MetadataServiceClient<OtelGrpcService<Channel>>;
 
-pub fn get_metadata_svc_client(port: Option<u16>) -> MetadataServiceClient<Channel> {
+pub fn get_metadata_svc_client(port: Option<u16>) -> InterceptedMetadataServiceClient {
     let metadata_svc_port = port.unwrap_or_else(|| {
         std::env::var("RETROM_SVC_PORT")
             .ok()
@@ -18,11 +21,15 @@ pub fn get_metadata_svc_client(port: Option<u16>) -> MetadataServiceClient<Chann
 
     let metadata_svc_host = format!("http://localhost:{metadata_svc_port}");
 
-    let metadata_svc_transport = Channel::from_shared(metadata_svc_host.clone())
+    let channel = Channel::from_shared(metadata_svc_host.clone())
         .unwrap_or_else(|_| {
             panic!("Failed to create MetadataServiceClient with host {metadata_svc_host}")
         })
         .connect_lazy();
 
-    MetadataServiceClient::new(metadata_svc_transport)
+    let channel = ServiceBuilder::new()
+        .layer(OtelGrpcLayer::default())
+        .service(channel);
+
+    MetadataServiceClient::new(channel)
 }

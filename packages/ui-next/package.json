@@ -51,6 +51,8 @@
     "vite-plugin-dts": "catalog:"
   },
   "dependencies": {
-    "cmdk": "catalog:"
+    "cmdk": "catalog:",
+    "cn": "catalog:",
+    "embla-carousel-react": "catalog:"
   }
 }

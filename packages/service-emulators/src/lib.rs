@@ -143,6 +143,7 @@ fn profile_row_to_profile(
 
 #[tonic::async_trait]
 impl EmulatorService for EmulatorServiceHandlers {
+    #[tracing::instrument(skip_all)]
     async fn get_emulator(
         &self,
         request: Request<GetEmulatorRequest>,
@@ -174,6 +175,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         )))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn list_emulators(
         &self,
         request: Request<ListEmulatorsRequest>,
@@ -185,19 +187,24 @@ impl EmulatorService for EmulatorServiceHandlers {
         let mut query_builder = QueryBuilder::new("select distinct e.id from emulators e");
 
         if !supported_platform_ids.is_empty() {
-            query_builder.push(" join emulator_platforms ep on ep.emulator = e.id ");
+            query_builder.push(" left join emulator_platforms ep on ep.emulator = e.id ");
         }
 
         query_builder.push(" where e.id is not null ");
 
         if !supported_platform_ids.is_empty() {
-            query_builder.push(" and ep.platform in (");
+            // Include emulators w/ no configured 'supported platforms', as this
+            // implies any platform is supported.
+            query_builder.push(" and (ep.emulator is null");
+            query_builder.push(" or ep.platform in (");
             let mut separated = query_builder.separated(", ");
             for platform_id in &supported_platform_ids {
                 separated.push_bind(platform_id);
             }
-            separated.push_unseparated(")");
+
+            separated.push_unseparated("))");
         }
+
         if !ids.is_empty() {
             query_builder.push(" and e.id in (");
             let mut separated = query_builder.separated(", ");
@@ -248,6 +255,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         Ok(Response::new(ListEmulatorsResponse { emulators: result }))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn create_emulator(
         &self,
         request: Request<CreateEmulatorRequest>,
@@ -320,6 +328,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         )))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn update_emulator(
         &self,
         request: Request<UpdateEmulatorRequest>,
@@ -407,6 +416,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         )))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn delete_emulator(
         &self,
         request: Request<DeleteEmulatorRequest>,
@@ -429,6 +439,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         Ok(Response::new(Empty {}))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn get_emulator_profile(
         &self,
         request: Request<GetEmulatorProfileRequest>,
@@ -457,6 +468,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         )))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn list_emulator_profiles(
         &self,
         request: Request<ListEmulatorProfilesRequest>,
@@ -516,6 +528,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         }))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn create_emulator_profile(
         &self,
         request: Request<CreateEmulatorProfileRequest>,
@@ -577,6 +590,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         )))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn update_emulator_profile(
         &self,
         request: Request<UpdateEmulatorProfileRequest>,
@@ -639,6 +653,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         )))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn delete_emulator_profile(
         &self,
         request: Request<DeleteEmulatorProfileRequest>,
@@ -661,6 +676,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         Ok(Response::new(Empty {}))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn get_default_emulator_profile(
         &self,
         request: Request<GetDefaultEmulatorProfileRequest>,
@@ -691,6 +707,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         }))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn list_default_emulator_profiles(
         &self,
         request: Request<ListDefaultEmulatorProfilesRequest>,
@@ -739,6 +756,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         }))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn create_default_emulator_profile(
         &self,
         request: Request<CreateDefaultEmulatorProfileRequest>,
@@ -790,6 +808,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         }))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn update_default_emulator_profile(
         &self,
         request: Request<UpdateDefaultEmulatorProfileRequest>,
@@ -830,6 +849,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         }))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn delete_default_emulator_profile(
         &self,
         request: Request<DeleteDefaultEmulatorProfileRequest>,
@@ -850,6 +870,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         Ok(Response::new(Empty {}))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn get_local_emulator_config(
         &self,
         request: Request<GetLocalEmulatorConfigRequest>,
@@ -885,6 +906,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         }))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn list_local_emulator_configs(
         &self,
         request: Request<ListLocalEmulatorConfigsRequest>,
@@ -938,6 +960,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         }))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn create_local_emulator_config(
         &self,
         request: Request<CreateLocalEmulatorConfigRequest>,
@@ -1014,6 +1037,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         }))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn update_local_emulator_config(
         &self,
         request: Request<UpdateLocalEmulatorConfigRequest>,
@@ -1067,6 +1091,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         }))
     }
 
+    #[tracing::instrument(skip_all)]
     async fn delete_local_emulator_config(
         &self,
         request: Request<DeleteLocalEmulatorConfigRequest>,

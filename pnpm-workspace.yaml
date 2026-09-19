@@ -43,6 +43,7 @@ catalog:
   '@tanstack/eslint-plugin-query': ^5.101.2
   '@tanstack/react-form': ^1.33.0
   '@tanstack/react-form-devtools': ^0.2.33
+  '@tanstack/react-pacer': ^0.23.0
   '@tanstack/react-table': 9.0.0-beta.69
   '@tanstack/react-virtual': ^3.13.12
   '@tauri-apps/api': 2.8.0
@@ -63,8 +64,10 @@ catalog:
   class-variance-authority: ^0.7.1
   clsx: ^2.1.1
   cmdk: 1.1.1
+  cn: ^0.2.5
   conventional-changelog-conventionalcommits: ^9.1.0
   dotenv: ^16.5.0
+  embla-carousel-react: ^8.6.0
   eslint: ^9.0.0
   eslint-plugin-react: ^7.37.5
   eslint-plugin-react-hooks: ^7.0.1

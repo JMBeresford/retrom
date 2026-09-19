@@ -786,7 +786,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c12f905bb4b4203ff343aebbe1678e6fa268cf4a793e8c10455644e10e15050"
 dependencies = [
  "axum",
- "opentelemetry",
+ "opentelemetry 0.31.0",
  "tower-http",
  "tracing",
  "tracing-otel-extra",
@@ -6886,6 +6886,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry"
+version = "0.32.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0142c63252a9e054e68a4c61a5778f7b14f576274d593f8ce883d191a099682"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "js-sys",
+ "pin-project-lite",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "opentelemetry-http"
 version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6894,7 +6907,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "http 1.4.0",
- "opentelemetry",
+ "opentelemetry 0.31.0",
  "reqwest 0.12.28",
 ]
 
@@ -6906,7 +6919,7 @@ checksum = "1f69cd6acbb9af919df949cd1ec9e5e7fdc2ef15d234b6b795aaa525cc02f71f"
 dependencies = [
  "flate2",
  "http 1.4.0",
- "opentelemetry",
+ "opentelemetry 0.31.0",
  "opentelemetry-http",
  "opentelemetry-proto",
  "opentelemetry_sdk",
@@ -6924,7 +6937,7 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7175df06de5eaee9909d4805a3d07e28bb752c34cab57fa9cff549da596b30f"
 dependencies = [
- "opentelemetry",
+ "opentelemetry 0.31.0",
  "opentelemetry_sdk",
  "prost",
  "tonic",
@@ -6938,6 +6951,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e62e29dfe041afb8ed2a6c9737ab57db4907285d999ef8ad3a59092a36bdc846"
 
 [[package]]
+name = "opentelemetry-semantic-conventions"
+version = "0.32.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c913ac17a6c451661ee255f4625d143e51647ae78ebd969b75e41c4442f4fe47"
+
+[[package]]
 name = "opentelemetry_sdk"
 version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6946,7 +6965,7 @@ dependencies = [
  "futures-channel",
  "futures-executor",
  "futures-util",
- "opentelemetry",
+ "opentelemetry 0.31.0",
  "percent-encoding",
  "rand 0.9.2",
  "thiserror 2.0.18",
@@ -9035,7 +9054,7 @@ version = "0.8.4"
 dependencies = [
  "dotenvy",
  "openssl-sys",
- "opentelemetry",
+ "opentelemetry 0.31.0",
  "pq-sys",
  "retrom-codegen",
  "retrom-plugin-config",
@@ -9062,7 +9081,7 @@ dependencies = [
  "tauri-plugin-window-state",
  "tokio",
  "tracing",
- "tracing-opentelemetry",
+ "tracing-opentelemetry 0.32.1",
  "tracing-subscriber",
 ]
 
@@ -9349,6 +9368,7 @@ dependencies = [
  "futures",
  "http-body-util",
  "libcaesium",
+ "opentelemetry 0.31.0",
  "prost",
  "rayon",
  "reqwest 0.12.28",
@@ -9363,8 +9383,10 @@ dependencies = [
  "tokio-retry",
  "tonic",
  "tonic-reflection",
+ "tonic-tracing-opentelemetry",
  "tower 0.5.3",
  "tracing",
+ "tracing-opentelemetry 0.32.1",
  "url",
 ]
 
@@ -9556,14 +9578,14 @@ version = "0.8.4"
 dependencies = [
  "http 1.4.0",
  "hyper 1.9.0",
- "opentelemetry",
+ "opentelemetry 0.31.0",
  "opentelemetry-http",
  "opentelemetry-otlp",
- "opentelemetry-semantic-conventions",
+ "opentelemetry-semantic-conventions 0.31.0",
  "opentelemetry_sdk",
  "tower-http",
  "tracing",
- "tracing-opentelemetry",
+ "tracing-opentelemetry 0.32.1",
  "tracing-subscriber",
 ]
 
@@ -12820,6 +12842,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "tonic-tracing-opentelemetry"
+version = "0.38.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad2ced0841c6df7c8f1750b1bc68f714f169747b525e0689de6bba35860e114c"
+dependencies = [
+ "futures-core",
+ "futures-util",
+ "http 1.4.0",
+ "http-body 1.0.1",
+ "hyper 1.9.0",
+ "opentelemetry 0.32.0",
+ "pin-project-lite",
+ "tonic",
+ "tower 0.5.3",
+ "tracing",
+ "tracing-opentelemetry 0.33.0",
+ "tracing-opentelemetry-instrumentation-sdk",
+]
+
+[[package]]
 name = "tonic-web"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12966,13 +13008,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ac28f2d093c6c477eaa76b23525478f38de514fa9aeb1285738d4b97a9552fc"
 dependencies = [
  "js-sys",
- "opentelemetry",
+ "opentelemetry 0.31.0",
  "smallvec",
  "tracing",
  "tracing-core",
  "tracing-log",
  "tracing-subscriber",
  "web-time",
+]
+
+[[package]]
+name = "tracing-opentelemetry"
+version = "0.33.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adbc64cba7137545b8044cb1fe9814f7aacf3c6b5f9b45be8bb5db538befdb26"
+dependencies = [
+ "js-sys",
+ "opentelemetry 0.32.0",
+ "smallvec",
+ "tracing",
+ "tracing-core",
+ "tracing-log",
+ "tracing-subscriber",
+ "web-time",
+]
+
+[[package]]
+name = "tracing-opentelemetry-instrumentation-sdk"
+version = "0.38.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8884891560864c229e82653b02641a808711111fc34ce8555c0c47fec947b549"
+dependencies = [
+ "http 1.4.0",
+ "opentelemetry 0.32.0",
+ "opentelemetry-semantic-conventions 0.32.1",
+ "tracing",
+ "tracing-opentelemetry 0.33.0",
 ]
 
 [[package]]
@@ -12983,12 +13054,12 @@ checksum = "2752fa5a360636d0dbeb2ee3aa024be04421c328ee7b1c076e6a1aa13e1de9d3"
 dependencies = [
  "anyhow",
  "http 1.4.0",
- "opentelemetry",
+ "opentelemetry 0.31.0",
  "opentelemetry-http",
  "serde",
  "serde_json",
  "tracing",
- "tracing-opentelemetry",
+ "tracing-opentelemetry 0.32.1",
 ]
 
 [[package]]

@@ -10,6 +10,8 @@ import { GameCover } from "./-components/game-cover";
 import { Files } from "./-components/files";
 import { Description } from "./-components/description";
 import { SimilarGames } from "./-components/similar-games";
+import { GameDetailCard } from "./-components/game-detail-card";
+import { Media } from "./-components/media";
 import { PathHeading } from "@/routes/app/-components/path-heading";
 import { useListGameMetadata } from "@/data/metadata/use-list-game-metadata";
 import { useListPlatformMetadata } from "@/data/metadata/use-list-platform-metadata";
@@ -104,23 +106,20 @@ function RouteComponent() {
         </div>
 
         <LauncherContextProvider>
-          <div
-            className={cn(
-              "w-full flex flex-col justify-between gap-4",
-              "shadow-lg rounded-md border p-4 bg-background/30",
-            )}
+          <GameDetailCard
+            className={cn("w-full flex flex-col justify-between gap-4")}
           >
             <Launcher />
             <Separator />
             <Files />
             <Separator />
             <GameDates game={game} metadata={metadata} className="pb-4" />
-          </div>
+          </GameDetailCard>
         </LauncherContextProvider>
       </div>
 
       <Description metadata={metadata} />
-
+      <Media metadata={metadata} />
       <SimilarGames metadata={metadata} />
     </div>
   );

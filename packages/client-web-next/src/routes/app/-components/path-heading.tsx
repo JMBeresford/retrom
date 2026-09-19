@@ -1,6 +1,12 @@
 import { cn } from "@retrom/ui-next/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { Fragment } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@retrom/ui-next/components/tooltip";
+import { ChevronRightIcon } from "lucide-react";
 import type { LinkComponentProps } from "@tanstack/react-router";
 import type { HTMLAttributes } from "react";
 
@@ -19,29 +25,42 @@ export function PathHeading({
   ...props
 }: PathHeadingProps) {
   return (
-    <span className={cn("flex gap-2", className)} {...props}>
-      {segments.map(({ link, label }, index) => (
-        <Fragment key={index}>
-          <Link
-            className={cn(
-              "transition-colors",
-              "font-heading text-4xl font-bold",
-              "hover:text-foreground whitespace-nowrap",
-              index === segments.length - 1 && "overflow-hidden text-ellipsis",
-            )}
-            inactiveProps={{ className: "text-muted-foreground/50" }}
-            activeProps={{ className: "text-foreground" }}
-            activeOptions={{ exact: true }}
-            {...link}
-          >
-            {label}
-          </Link>
+    <TooltipProvider>
+      <span className={cn("flex gap-2 items-baseline", className)} {...props}>
+        {segments.map(({ link, label }, index) => (
+          <Tooltip key={index}>
+            <TooltipTrigger
+              disabled={index !== segments.length - 1}
+              render={
+                <Link
+                  className={cn(
+                    "transition-colors",
+                    "font-heading text-4xl font-bold",
+                    "hover:text-foreground dark:hover:text-foreground whitespace-nowrap",
+                    index === segments.length - 1 &&
+                      "overflow-hidden text-ellipsis",
+                  )}
+                  inactiveProps={{
+                    className:
+                      "text-foreground/50 dark:text-muted-foreground/50",
+                  }}
+                  activeProps={{ className: "text-foreground" }}
+                  activeOptions={{ exact: true }}
+                  {...link}
+                >
+                  {label}
+                </Link>
+              }
+            />
 
-          <span className="font-heading text-4xl font-bold text-muted-foreground last:hidden">
-            /
-          </span>
-        </Fragment>
-      ))}
-    </span>
+            <TooltipContent>{label}</TooltipContent>
+
+            <span className="text-muted-foreground last:hidden">
+              <ChevronRightIcon />
+            </span>
+          </Tooltip>
+        ))}
+      </span>
+    </TooltipProvider>
   );
 }

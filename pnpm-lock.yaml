@@ -123,6 +123,9 @@ catalogs:
     '@tanstack/react-form-devtools':
       specifier: ^0.2.33
       version: 0.2.33
+    '@tanstack/react-pacer':
+      specifier: ^0.23.0
+      version: 0.23.0
     '@tanstack/react-table':
       specifier: 9.0.0-beta.69
       version: 9.0.0-beta.69
@@ -183,12 +186,18 @@ catalogs:
     cmdk:
       specifier: 1.1.1
       version: 1.1.1
+    cn:
+      specifier: ^0.2.5
+      version: 0.2.5
     conventional-changelog-conventionalcommits:
       specifier: ^9.1.0
       version: 9.3.1
     dotenv:
       specifier: ^16.5.0
       version: 16.6.1
+    embla-carousel-react:
+      specifier: ^8.6.0
+      version: 8.6.0
     eslint:
       specifier: ^9.0.0
       version: 9.39.4
@@ -833,6 +842,9 @@ importers:
       '@tanstack/react-hotkeys':
         specifier: catalog:tanstack-next
         version: 0.10.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@tanstack/react-pacer':
+        specifier: 'catalog:'
+        version: 0.23.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tanstack/react-query':
         specifier: catalog:tanstack-next
         version: 5.101.2(react@19.2.7)
@@ -1249,6 +1261,12 @@ importers:
       cmdk:
         specifier: 'catalog:'
         version: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      cn:
+        specifier: 'catalog:'
+        version: 0.2.5
+      embla-carousel-react:
+        specifier: 'catalog:'
+        version: 8.6.0(react@19.2.7)
       lucide-react:
         specifier: 'catalog:'
         version: 1.23.0(react@19.2.7)
@@ -5405,6 +5423,10 @@ packages:
     resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
     engines: {node: '>=18'}
 
+  '@tanstack/pacer@0.22.0':
+    resolution: {integrity: sha512-Zq23KOn30tFiA6ZYWihs5x++ttHkOIcnIIjRrJq05tGrYx9+iHsmVaj8jb7UJVemEI+JRWGzJ9C+50YV4nRz0w==}
+    engines: {node: '>=18'}
+
   '@tanstack/query-core@5.101.2':
     resolution: {integrity: sha512-hH5MLoJhF7KaIGd7q3xTXGXvslI+GYlM1Z/35aSHHWaCJWB7XvTSHYuV3eM7tw+aE0mT/xMro4M4Q9rCGHT0lw==}
 
@@ -5439,6 +5461,13 @@ packages:
 
   '@tanstack/react-hotkeys@0.10.0':
     resolution: {integrity: sha512-GwOSndI5j3qBVYTmgP1mYyRTnlxb2MS17cwGlsavSxMQPSnmDf+m3LzMIpRMs+3zzQMjg3cYhHsFYizYlFI2tw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+
+  '@tanstack/react-pacer@0.23.0':
+    resolution: {integrity: sha512-Ec3h+kT8kYlpGb1M8F7836q+udE/M2RmE8KLr1rhs+UDBgvxjfmyR2bIUeaDEe9Zn1YXNI986RbErXyr5fEJIg==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=16.8'
@@ -5496,6 +5525,12 @@ packages:
 
   '@tanstack/react-store@0.11.0':
     resolution: {integrity: sha512-tX4YXh3PDkmpvGQWkWqKpzs/MSqbtuwY9dWdWhtV9Q50PmO+jOkUKIWIX4G85dwt7lxdHLXsiaEKPdKmC8F41w==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@tanstack/react-store@0.11.1':
+    resolution: {integrity: sha512-HaIGKI3YLmjBYIvy5DFDY23oNaYZIsTZfngey07Uh5iLVJgM3bIGCnZeOFOqzjFld9JHWcaHJnasD/bKoGKwJQ==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -5608,6 +5643,9 @@ packages:
 
   '@tanstack/store@0.11.0':
     resolution: {integrity: sha512-WlzzCt3xi0G6pCAJu1U+2jiECwabETDpQDi3hfkFZvJii9AuZqEKbOiVarX1/bWhTNjU486yQtJCCasi/0q+Cw==}
+
+  '@tanstack/store@0.11.1':
+    resolution: {integrity: sha512-mzTOBhypOuDJAy/D8n2MfUZ1HFkXnmSETviRyhqEC8LUE7/IZQExOTxMANj3KjTofYTkFNpBY67qaVrT41YccA==}
 
   '@tanstack/store@0.7.7':
     resolution: {integrity: sha512-xa6pTan1bcaqYDS9BDpSiS63qa6EoDkPN9RsRaxHuDdVDNntzq3xNwR5YKTU/V3SkSyC9T4YVOPh2zRQN0nhIQ==}
@@ -6740,6 +6778,11 @@ packages:
       react: ^18 || ^19 || ^19.0.0-rc
       react-dom: ^18 || ^19 || ^19.0.0-rc
 
+  cn@0.2.5:
+    resolution: {integrity: sha512-OCjZtMeQfXbI4Es1+EIjkd77gvWzaE689gD8KhfexlqjClC06qR1MQBR+Z35ZMSPNEBWyHiItW1Soy0UvwNv9w==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   code-block-writer@13.0.3:
     resolution: {integrity: sha512-Oofo0pq3IKnsFtuHqSF7TqBfr71aeyZDVJ0HpmqB7FBM2qEigL0iPONSCZSO9pE9dZTAxANe5XHG9Uy0YMv8cg==}
 
@@ -7456,6 +7499,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -16207,6 +16251,11 @@ snapshots:
 
   '@tanstack/pacer-lite@0.1.1': {}
 
+  '@tanstack/pacer@0.22.0':
+    dependencies:
+      '@tanstack/devtools-event-client': 0.5.0
+      '@tanstack/store': 0.11.1
+
   '@tanstack/query-core@5.101.2': {}
 
   '@tanstack/query-core@5.81.2': {}
@@ -16250,6 +16299,13 @@ snapshots:
     dependencies:
       '@tanstack/hotkeys': 0.8.0
       '@tanstack/react-store': 0.11.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
+  '@tanstack/react-pacer@0.23.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@tanstack/pacer': 0.22.0
+      '@tanstack/react-store': 0.11.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -16314,6 +16370,13 @@ snapshots:
   '@tanstack/react-store@0.11.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
       '@tanstack/store': 0.11.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      use-sync-external-store: 1.6.0(react@19.2.7)
+
+  '@tanstack/react-store@0.11.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@tanstack/store': 0.11.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       use-sync-external-store: 1.6.0(react@19.2.7)
@@ -16474,6 +16537,8 @@ snapshots:
       - supports-color
 
   '@tanstack/store@0.11.0': {}
+
+  '@tanstack/store@0.11.1': {}
 
   '@tanstack/store@0.7.7': {}
 
@@ -17708,6 +17773,8 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
+  cn@0.2.5: {}
+
   code-block-writer@13.0.3: {}
 
   color-convert@1.9.3:
@@ -18156,6 +18223,12 @@ snapshots:
       embla-carousel: 8.6.0
       embla-carousel-reactive-utils: 8.6.0(embla-carousel@8.6.0)
       react: 18.3.1
+
+  embla-carousel-react@8.6.0(react@19.2.7):
+    dependencies:
+      embla-carousel: 8.6.0
+      embla-carousel-reactive-utils: 8.6.0(embla-carousel@8.6.0)
+      react: 19.2.7
 
   embla-carousel-reactive-utils@8.6.0(embla-carousel@8.6.0):
     dependencies:

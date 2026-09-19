@@ -156,6 +156,7 @@ tonic = { version = "0.14.5", features = [
   "tls-webpki-roots",
   "zstd",
 ] }
+tonic-tracing-opentelemetry = "0.38.0"
 tonic-web = "0.14.2"
 tonic-prost = "0.14.2"
 prost = "0.14.1"

@@ -26,10 +26,13 @@ use retrom_codegen::retrom::services::{
     metadata::v1::metadata_service_client::MetadataServiceClient,
 };
 use retrom_db::DbPool;
-use retrom_service_common::grpc_clients::metadata_svc::get_metadata_svc_client;
+use retrom_service_common::grpc_clients::metadata_svc::{
+    get_metadata_svc_client, InterceptedMetadataServiceClient,
+};
 use retrom_service_jobs::job_manager::JobManager;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
+use tracing::Instrument;
 
 #[cfg(test)]
 pub mod tests;
@@ -47,7 +50,7 @@ pub mod scan_handlers;
 pub struct LibraryServiceHandlers {
     pub db_pool: DbPool,
     pub job_manager: Arc<JobManager>,
-    metadata_svc_client: MetadataServiceClient<tonic::transport::Channel>,
+    metadata_svc_client: InterceptedMetadataServiceClient,
 }
 
 impl LibraryServiceHandlers {

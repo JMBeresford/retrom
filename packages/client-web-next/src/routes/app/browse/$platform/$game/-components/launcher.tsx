@@ -31,8 +31,12 @@ export type LauncherCardProps = Omit<
 export function Launcher({ className, ...props }: LauncherCardProps) {
   return (
     <div className={cn("flex gap-4", className)} {...props}>
-      <Button size="lg" className="px-6 h-full font-bold text-xl">
-        <PlayIcon className="size-5 fill-primary-foreground" /> PLAY
+      <Button
+        size="lg"
+        variant="accent"
+        className="px-6 h-full font-bold text-xl"
+      >
+        <PlayIcon className="size-5 fill-accent-foreground" /> PLAY
       </Button>
 
       <EmulatorSelect className="basis-0 grow" />
