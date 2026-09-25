@@ -81,9 +81,12 @@ jobs:
           - id: macos-aarch64
             os: macos-latest
             target: aarch64-apple-darwin
-          - id: macos-x86_64
-            os: macos-latest
-            target: x86_64-apple-darwin
+          # TODO: Re-enable when a more robust fix replacing homebrew is implemented.
+          # Intel macOS builds are disabled because homebrew discontinued support for intel Macs,
+          # causing CI failures on these runners.
+          # - id: macos-x86_64
+          #   os: macos-latest
+          #   target: x86_64-apple-darwin
           - id: windows
             os: windows-latest
           - id: linux-x86_64
