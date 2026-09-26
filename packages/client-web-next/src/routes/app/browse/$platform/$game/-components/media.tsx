@@ -87,7 +87,7 @@ function ImageCarousel({ images }: { images: Array<string> }) {
             <div
               className={cn(
                 "relative grid place-items-center w-full h-max",
-                "rounded-lg overflow-hidden aspect-video",
+                "rounded overflow-hidden aspect-video",
               )}
             >
               <img
@@ -148,7 +148,7 @@ function VideoCarouselContent(props: { videos: Array<string> }) {
               // @ts-expect-error -- types out of date
               // eslint-disable-next-line react/no-unknown-property
               credentialless="true"
-              className="w-full aspect-video rounded-lg"
+              className="w-full aspect-video rounded"
               src={video}
             />
           )}

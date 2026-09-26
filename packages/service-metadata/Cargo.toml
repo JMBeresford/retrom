@@ -33,6 +33,9 @@ sqlx = { workspace = true }
 uuid = { workspace = true }
 prost-reflect = { workspace = true }
 once_cell = { workspace = true }
+matchit = { workspace = true }
+tracing-opentelemetry = { workspace = true }
+tonic-tracing-opentelemetry = { workspace = true }
 
 [features]
 default = ["client"]

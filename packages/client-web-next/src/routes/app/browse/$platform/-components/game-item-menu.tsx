@@ -73,7 +73,7 @@ export function GameItemMenu({
                   title: "Search IGDB",
                   description: "Search IGDB for metadata for this game.",
                   initialValue: {
-                    name: metadata.name,
+                    name: metadata.title,
                   },
                   searchType: "game",
                   gameId: metadata.game,
@@ -85,10 +85,7 @@ export function GameItemMenu({
                       onConfirm: () => {
                         updateGameMetadata(
                           {
-                            metadata: {
-                              ...selectedMetadata,
-                              id: metadata.id || selectedMetadata.id,
-                            },
+                            metadata: selectedMetadata,
                           },
                           {
                             onError: (error) => {

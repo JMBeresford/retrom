@@ -1,7 +1,7 @@
 use super::provider::{IGDBProvider, IgdbSearchData, IgdbSearchQuery, IgdbSearchType};
 use crate::metadata_providers::{
-    igdb::provider::IGDB_PROVIDER_ID, MetadataProviderError, PlatformMetadataProvider,
-    PlatformMetadataSearchParams, Result, ToPlatformMetadata,
+    MetadataProviderError, PlatformMetadataProvider, PlatformMetadataSearchParams, Result,
+    ToPlatformMetadata,
 };
 use prost::Message;
 use retrom_codegen::{
@@ -28,12 +28,6 @@ impl ToPlatformMetadata for igdb::Platform {
                 .map(|rd| rd.date)
         });
 
-        tracing::info!(
-            "Converting IGDB platform {} to PlatformMetadata with versions {:?}",
-            self.name,
-            versions
-        );
-
         let logo_url = versions.iter().find_map(|v| {
             v.platform_logo.as_ref().map(|logo| {
                 logo.url
@@ -45,13 +39,11 @@ impl ToPlatformMetadata for igdb::Platform {
         });
 
         PlatformMetadata {
-            id: Default::default(),
-            provider: IGDB_PROVIDER_ID.to_string(),
-            provider_platform_id: self.id.to_string(),
+            name: format!("platforms/{}/metadata", platform_id),
             platform: platform_id.to_string(),
             created_at: None,
             updated_at: None,
-            name: self.name.clone(),
+            title: self.name.clone(),
             description: Some(self.summary.clone()),
             logo_url,
             background_url: None,

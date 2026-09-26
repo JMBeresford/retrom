@@ -1,8 +1,12 @@
 use crate::svc_definitions::CONFIG_SVC_PORT;
 use retrom_codegen::retrom::services::config::v1::config_service_client::ConfigServiceClient;
+use retrom_telemetry::grpc::{GrpcClientSpanLayer, GrpcClientSpanService};
 use tonic::transport::Channel;
+use tower::ServiceBuilder;
 
-pub fn get_config_svc_client(port: Option<u16>) -> ConfigServiceClient<Channel> {
+pub type CommonConfigServiceClient = ConfigServiceClient<GrpcClientSpanService<Channel>>;
+
+pub fn get_config_svc_client(port: Option<u16>) -> CommonConfigServiceClient {
     let config_svc_port = port.unwrap_or_else(|| {
         std::env::var("RETROM_SVC_PORT")
             .ok()
@@ -17,11 +21,15 @@ pub fn get_config_svc_client(port: Option<u16>) -> ConfigServiceClient<Channel> 
 
     let config_svc_host = format!("http://localhost:{config_svc_port}");
 
-    let config_svc_transport = Channel::from_shared(config_svc_host.clone())
+    let channel = Channel::from_shared(config_svc_host.clone())
         .unwrap_or_else(|_| {
             panic!("Failed to create ConfigServiceClient with host {config_svc_host}")
         })
         .connect_lazy();
 
-    ConfigServiceClient::new(config_svc_transport)
+    let svc = ServiceBuilder::new()
+        .layer(GrpcClientSpanLayer::new())
+        .service(channel);
+
+    ConfigServiceClient::new(svc)
 }

@@ -39,6 +39,7 @@ hyper-util = { workspace = true }
 http = { workspace = true }
 config = { workspace = true }
 opentelemetry-otlp = { workspace = true }
+tonic-tracing-opentelemetry = { workspace = true }
 
 [features]
 default = []

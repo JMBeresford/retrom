@@ -20,6 +20,7 @@ dotenvy = { workspace = true }
 reqwest = { workspace = true }
 tower = { workspace = true }
 retrom-codegen = { workspace = true }
+retrom-telemetry = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
 axum = { workspace = true }

@@ -4,8 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { PlatformItemMenu } from "./platform-item-menu";
 import type { HTMLAttributes, PropsWithChildren } from "react";
 import logo from "@/assets/Logo.png";
-import { useListPlatformMetadata } from "@/data/metadata/use-list-platform-metadata";
 import { useListGames } from "@/data/libraries/use-list-games";
+import { useGetPlatformMetadata } from "@/data/metadata/use-get-platform-metadata";
 
 export type PlatformItemProps = PropsWithChildren<
   {
@@ -18,15 +18,9 @@ export function PlatformItem({
   className,
   ...props
 }: PlatformItemProps) {
-  const platformMetadataQuery = useListPlatformMetadata({
+  const platformMetadataQuery = useGetPlatformMetadata({
     request: {
-      platformIds: [platformId],
-    },
-    options: {
-      select: (response) =>
-        [...response.metadata].sort((a, b) =>
-          b.provider.localeCompare(a.provider),
-        ),
+      name: `platforms/${platformId}/metadata`,
     },
   });
 
@@ -43,7 +37,7 @@ export function PlatformItem({
     return <Skeleton className="h-30 w-full" />;
   }
 
-  if (isError || !platformMetadataQuery.data.length) {
+  if (isError) {
     return (
       <div
         className={cn(
@@ -57,7 +51,7 @@ export function PlatformItem({
     );
   }
 
-  const metadata = platformMetadataQuery.data.at(0);
+  const metadata = platformMetadataQuery.data;
   const numGames = gamesQuery.data.games.length;
 
   return (
@@ -74,14 +68,14 @@ export function PlatformItem({
         className={cn(
           "aspect-square h-full shrink-0",
           "relative overflow-hidden bg-accent/30",
-          metadata?.logoUrl &&
+          metadata.logoUrl &&
             "dark:bg-[color-mix(in_oklch,var(--primary)_90%,white)]",
         )}
       >
         <img
-          src={metadata?.logoUrl ?? logo}
+          src={metadata.logoUrl ?? logo}
           className={cn(
-            metadata?.logoUrl
+            metadata.logoUrl
               ? "p-2 scale-100 group-hover:scale-110"
               : "scale-105 group-hover:scale-115",
             "aspect-square transition-transform",
@@ -97,7 +91,7 @@ export function PlatformItem({
               "group-hover:underline",
             )}
           >
-            {metadata?.name}
+            {metadata.title}
           </h3>
           <p className="text-sm text-muted-foreground">
             {numGames} {numGames === 1 ? "game" : "games"}

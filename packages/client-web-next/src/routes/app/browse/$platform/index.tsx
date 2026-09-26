@@ -3,10 +3,9 @@ import { Loader2 } from "lucide-react";
 import { PathHeading } from "../../-components/path-heading";
 import { platformHeadingSegments } from "./-components/platform-heading";
 import { GameItem } from "./-components/game-item";
-import type { PlatformMetadata } from "@retrom/codegen/retrom/services/metadata/v1/resources_pb";
-import { useListPlatformMetadata } from "@/data/metadata/use-list-platform-metadata";
 import { useListGames } from "@/data/libraries/use-list-games";
 import { GameFormDialog } from "@/modals/game-form-dialog/dialog";
+import { useGetPlatformMetadata } from "@/data/metadata/use-get-platform-metadata";
 
 export const Route = createFileRoute("/app/browse/$platform/")({
   component: RouteComponent,
@@ -15,15 +14,9 @@ export const Route = createFileRoute("/app/browse/$platform/")({
 function RouteComponent() {
   const { platform } = Route.useParams();
 
-  const platformMetadataQuery = useListPlatformMetadata({
+  const platformMetadataQuery = useGetPlatformMetadata({
     request: {
-      platformIds: [platform],
-    },
-    options: {
-      select: (response) =>
-        [...response.metadata].sort((a, b) =>
-          b.provider.localeCompare(a.provider),
-        ),
+      name: `platforms/${platform}/metadata`,
     },
   });
 
@@ -35,14 +28,6 @@ function RouteComponent() {
 
   const isPending = platformMetadataQuery.isPending || gamesQuery.isPending;
   const isError = platformMetadataQuery.isError || gamesQuery.isError;
-
-  const getMetadataField = <T extends keyof PlatformMetadata>(field: T) => {
-    for (const metadata of platformMetadataQuery.data ?? []) {
-      if (metadata[field] !== undefined) {
-        return metadata[field];
-      }
-    }
-  };
 
   if (isPending) {
     return (
@@ -68,7 +53,7 @@ function RouteComponent() {
         <PathHeading
           segments={platformHeadingSegments(
             platform,
-            getMetadataField("name") ?? "unknown",
+            platformMetadataQuery.data.title,
           )}
         />
 

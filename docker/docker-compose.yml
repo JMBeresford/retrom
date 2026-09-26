@@ -49,7 +49,7 @@ services:
       - retrom-db
 
   jaeger:
-    image: jaegertracing/jaeger:2.2.0
+    image: jaegertracing/jaeger:2.21.0
     ports:
       - 16686:16686 # web client
       - 4317:4317

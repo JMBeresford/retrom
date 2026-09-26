@@ -20,13 +20,15 @@ export function SimilarGames({
 }: SimilarGamesProps) {
   const similarGameMetasQuery = useListGameMetadata({
     request: {
-      gameIds: metadata.similarGames,
+      gameIds: metadata.similarGames.concat(["-1"]),
     },
     options: {
       select: (response) =>
-        response.metadata.filter((m) => !!m.coverUrl).slice(0, 20),
+        response.gameMetadata.filter((m) => !!m.coverUrl).slice(0, 20),
     },
   });
+
+  console.log({ similarGameMetasQuery, metadata });
 
   const isPending = similarGameMetasQuery.isPending;
   const isError = similarGameMetasQuery.isError;
@@ -51,10 +53,17 @@ export function SimilarGames({
             <div className="flex h-full gap-4">
               {similarGameMetasQuery.data.map((similarGameMeta) => (
                 <SimilarGameCover
-                  key={similarGameMeta.id}
+                  key={similarGameMeta.name}
                   metadata={similarGameMeta}
                 />
               ))}
+
+              <div
+                hidden={similarGameMetasQuery.data.length > 0}
+                className="flex w-full h-30 justify-center items-center"
+              >
+                No similar games found.
+              </div>
             </div>
 
             <ScrollBar orientation="horizontal" />

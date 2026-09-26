@@ -87,7 +87,7 @@ export function PlatformItemMenu({
                           {
                             metadata: {
                               ...selectedMetadata,
-                              id: metadata.id || selectedMetadata.id,
+                              name: metadata.name || selectedMetadata.name,
                             },
                           },
                           {

@@ -7,17 +7,20 @@ use retrom_db::RetromDB;
 use sqlx::{Executor, QueryBuilder};
 use std::collections::HashSet;
 use tonic::Status;
-use tracing::warn;
+use tracing::{instrument, warn};
 
-pub fn game_metadata_row_from_metadata(metadata: &GameMetadata) -> GameMetadataRow {
+pub fn game_metadata_row_from_metadata(
+    metadata: &GameMetadata,
+    provider_id: &str,
+    provider_game_id: &Option<String>,
+) -> GameMetadataRow {
     GameMetadataRow {
-        id: metadata.id.clone(),
-        provider_id: metadata.provider.clone(),
-        provider_game_id: metadata.provider_game_id.clone(),
+        provider_id: provider_id.to_string(),
+        provider_game_id: provider_game_id.clone(),
         created_at: metadata.created_at,
         updated_at: metadata.updated_at,
         game_id: metadata.game.clone(),
-        name: metadata.name.clone(),
+        title: metadata.title.clone(),
         description: metadata.description.clone(),
         release_date: metadata.release_date,
         last_played: metadata.last_played,
@@ -55,13 +58,11 @@ pub fn game_metadata_from_rows(rows: GameMetadataRows) -> GameMetadata {
         .collect();
 
     GameMetadata {
-        id: row.id,
-        provider: row.provider_id,
-        provider_game_id: row.provider_game_id,
+        name: format!("games/{}/metadata", row.game_id),
         created_at: row.created_at,
         updated_at: row.updated_at,
         game: row.game_id,
-        name: row.name,
+        title: row.title,
         description: row.description,
         release_date: row.release_date,
         last_played: row.last_played,
@@ -79,61 +80,72 @@ pub fn game_metadata_from_rows(rows: GameMetadataRows) -> GameMetadata {
 }
 
 pub fn game_screenshot_rows_from_data(
-    metadata_id: &str,
+    game_id: &str,
+    provider_id: &str,
     urls: Vec<String>,
 ) -> Vec<GameMetadataScreenshotRow> {
-    if metadata_id.is_empty() {
-        warn!("GameMetadata id is empty, the resulting screenshot rows may be invalid");
+    if game_id.is_empty() {
+        warn!("Game id is empty, the resulting screenshot rows may be invalid");
     }
 
     urls.into_iter()
         .map(|url| GameMetadataScreenshotRow {
-            game_metadata_id: metadata_id.to_string(),
+            game_id: game_id.to_string(),
+            provider_id: provider_id.to_string(),
             url: url.clone(),
         })
         .collect()
 }
 
 pub fn game_artwork_rows_from_data(
-    metadata_id: &str,
+    game_id: &str,
+    provider_id: &str,
     urls: Vec<String>,
 ) -> Vec<GameMetadataArtworkRow> {
-    if metadata_id.is_empty() {
-        warn!("GameMetadata id is empty, the resulting artwork rows may be invalid");
+    if game_id.is_empty() {
+        warn!("Game id is empty, the resulting artwork rows may be invalid");
     }
 
     urls.into_iter()
         .map(|url| GameMetadataArtworkRow {
-            game_metadata_id: metadata_id.to_string(),
+            game_id: game_id.to_string(),
+            provider_id: provider_id.to_string(),
             url: url.clone(),
         })
         .collect()
 }
 
 pub fn game_video_rows_from_data(
-    metadata_id: &str,
+    game_id: &str,
+    provider_id: &str,
     urls: Vec<String>,
 ) -> Vec<GameMetadataVideoRow> {
-    if metadata_id.is_empty() {
-        warn!("GameMetadata id is empty, the resulting video rows may be invalid");
+    if game_id.is_empty() {
+        warn!("Game id is empty, the resulting video rows may be invalid");
     }
 
     urls.into_iter()
         .map(|url| GameMetadataVideoRow {
-            game_metadata_id: metadata_id.to_string(),
+            game_id: game_id.to_string(),
+            provider_id: provider_id.to_string(),
             url: url.clone(),
         })
         .collect()
 }
 
-pub fn game_link_rows_from_data(metadata_id: &str, urls: Vec<String>) -> Vec<GameMetadataLinkRow> {
-    if metadata_id.is_empty() {
-        warn!("GameMetadata id is empty, the resulting link rows may be invalid");
+pub fn game_link_rows_from_data(
+    game_id: &str,
+    provider_id: &str,
+    urls: Vec<String>,
+) -> Vec<GameMetadataLinkRow> {
+    if game_id.is_empty() {
+        warn!("Game id is empty, the resulting link rows may be invalid");
     }
 
     urls.into_iter()
         .map(|url| GameMetadataLinkRow {
-            game_metadata_id: metadata_id.to_string(),
+            game_id: game_id.to_string(),
+            provider_id: provider_id.to_string(),
             url: url.clone(),
         })
         .collect()
@@ -157,66 +169,127 @@ pub fn similar_game_rows_from_data(
         .collect()
 }
 
+#[instrument(err, skip(conn))]
+pub async fn select_game_metadata_row(
+    conn: impl Executor<'_, Database = RetromDB>,
+    game_id: &str,
+    provider_id: &str,
+) -> Result<GameMetadataRow, Status> {
+    let mut builder = QueryBuilder::new("select * from game_metadata where game_id = ");
+
+    builder.push_bind(game_id);
+    builder.push(" and provider_id = ");
+    builder.push_bind(provider_id);
+    builder.push(" limit 1 ");
+
+    let row = match builder
+        .build_query_as::<GameMetadataRow>()
+        .fetch_optional(conn)
+        .await
+    {
+        Ok(Some(row)) => row,
+        Ok(None) => {
+            return Err(Status::not_found(format!(
+                "Game metadata not found for game_id: {} and provider_id: {}",
+                game_id, provider_id
+            )))
+        }
+        Err(e) => {
+            return Err(Status::internal(format!(
+                "Failed to fetch game metadata for game_id: {} and provider_id: {}. Error: {}",
+                game_id, provider_id, e
+            )))
+        }
+    };
+
+    Ok(row)
+}
+
+#[instrument(err, skip(conn))]
 pub async fn select_game_metadata_artworks(
     conn: impl Executor<'_, Database = RetromDB>,
-    game_metadata_id: &str,
+    game_id: &str,
+    provider_id: &str,
 ) -> Result<Vec<GameMetadataArtworkRow>, Status> {
-    let artworks: Vec<GameMetadataArtworkRow> =
-        QueryBuilder::new("select * from game_metadata_artworks where game_metadata_id = ")
-            .push_bind(game_metadata_id)
-            .build_query_as()
-            .fetch_all(conn)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+    let mut builder = QueryBuilder::new("select * from game_metadata_artworks where game_id = ");
+
+    builder.push_bind(game_id);
+    builder.push(" and provider_id = ");
+    builder.push_bind(provider_id);
+
+    let artworks: Vec<GameMetadataArtworkRow> = builder
+        .build_query_as()
+        .fetch_all(conn)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(artworks)
 }
 
+#[instrument(err, skip(conn))]
 pub async fn select_game_metadata_screenshots(
     conn: impl Executor<'_, Database = RetromDB>,
-    game_metadata_id: &str,
+    game_id: &str,
+    provider_id: &str,
 ) -> Result<Vec<GameMetadataScreenshotRow>, Status> {
-    let screenshots: Vec<GameMetadataScreenshotRow> =
-        QueryBuilder::new("select * from game_metadata_screenshots where game_metadata_id = ")
-            .push_bind(game_metadata_id)
-            .build_query_as()
-            .fetch_all(conn)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+    let mut builder = QueryBuilder::new("select * from game_metadata_screenshots where game_id = ");
+
+    builder.push_bind(game_id);
+    builder.push(" and provider_id = ");
+    builder.push_bind(provider_id);
+
+    let screenshots: Vec<GameMetadataScreenshotRow> = builder
+        .build_query_as()
+        .fetch_all(conn)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(screenshots)
 }
 
+#[instrument(err, skip(conn))]
 pub async fn select_game_metadata_videos(
     conn: impl Executor<'_, Database = RetromDB>,
-    game_metadata_id: &str,
+    game_id: &str,
+    provider_id: &str,
 ) -> Result<Vec<GameMetadataVideoRow>, Status> {
-    let videos: Vec<GameMetadataVideoRow> =
-        QueryBuilder::new("select * from game_metadata_videos where game_metadata_id = ")
-            .push_bind(game_metadata_id)
-            .build_query_as()
-            .fetch_all(conn)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+    let mut builder = QueryBuilder::new("select * from game_metadata_videos where game_id = ");
+
+    builder.push_bind(game_id);
+    builder.push(" and provider_id = ");
+    builder.push_bind(provider_id);
+
+    let videos: Vec<GameMetadataVideoRow> = builder
+        .build_query_as()
+        .fetch_all(conn)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(videos)
 }
 
+#[instrument(err, skip(conn))]
 pub async fn select_game_metadata_links(
     conn: impl Executor<'_, Database = RetromDB>,
-    game_metadata_id: &str,
+    game_id: &str,
+    provider_id: &str,
 ) -> Result<Vec<GameMetadataLinkRow>, Status> {
-    let links: Vec<GameMetadataLinkRow> =
-        QueryBuilder::new("select * from game_metadata_links where game_metadata_id = ")
-            .push_bind(game_metadata_id)
-            .build_query_as()
-            .fetch_all(conn)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+    let mut builder = QueryBuilder::new("select * from game_metadata_links where game_id = ");
+
+    builder.push_bind(game_id);
+    builder.push(" and provider_id = ");
+    builder.push_bind(provider_id);
+
+    let links: Vec<GameMetadataLinkRow> = builder
+        .build_query_as()
+        .fetch_all(conn)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
     Ok(links)
 }
 
+#[instrument(err, skip(conn))]
 pub async fn select_similar_games(
     conn: impl Executor<'_, Database = RetromDB>,
     game_id: &str,
@@ -234,6 +307,7 @@ pub async fn select_similar_games(
     Ok(similar_games)
 }
 
+#[instrument(err, skip_all)]
 pub async fn insert_game_metadata(
     conn: impl Executor<'_, Database = RetromDB>,
     metadata: &GameMetadataRow,
@@ -241,11 +315,10 @@ pub async fn insert_game_metadata(
     let mut builder = QueryBuilder::new(
         r#"
         insert into game_metadata (
-            id, 
             game_id, 
             provider_id, 
             provider_game_id, 
-            name, 
+            title, 
             description, 
             release_date, 
             cover_url, 
@@ -257,11 +330,10 @@ pub async fn insert_game_metadata(
         "#,
     );
     let mut separated = builder.separated(", ");
-    separated.push_bind(uuid::Uuid::now_v7().to_string());
     separated.push_bind(&metadata.game_id);
     separated.push_bind(&metadata.provider_id);
     separated.push_bind(&metadata.provider_game_id);
-    separated.push_bind(&metadata.name);
+    separated.push_bind(&metadata.title);
     separated.push_bind(&metadata.description);
     separated.push_bind(metadata.release_date);
     separated.push_bind(&metadata.cover_url);
@@ -280,14 +352,15 @@ pub async fn insert_game_metadata(
     Ok(row)
 }
 
+#[instrument(err, skip_all)]
 pub async fn update_game_metadata(
     conn: impl Executor<'_, Database = RetromDB>,
     metadata: &GameMetadataRow,
     field_mask: &HashSet<String>,
 ) -> Result<GameMetadataRow, Status> {
     let message_descriptor = super::descriptor_pool::DESCRIPTOR_POOL
-        .get_message_by_name("retrom.services.metadata.v1.GameMetadata")
-        .ok_or_else(|| Status::internal("Failed to get message descriptor for GameMetadata"))?;
+        .get_message_by_name("retrom.services.metadata.v1.GameMetadataRow")
+        .ok_or_else(|| Status::internal("Failed to get message descriptor for GameMetadataRow"))?;
 
     let mut reflection = DynamicMessage::new(message_descriptor);
     reflection
@@ -297,7 +370,7 @@ pub async fn update_game_metadata(
     let empty_mask = field_mask.is_empty();
 
     let fields_to_update: Vec<String> = vec![
-        "name",
+        "title",
         "description",
         "cover_url",
         "background_url",
@@ -353,12 +426,12 @@ pub async fn update_game_metadata(
         };
     }
 
-    builder.push("where id = ");
-    builder.push_bind(&metadata.id);
-    builder.push(" returning *");
+    builder.push("where game_id = ");
+    builder.push_bind(&metadata.game_id);
+    builder.push(" and provider_id = ");
+    builder.push_bind(&metadata.provider_id);
 
-    let sql = builder.sql();
-    tracing::info!("Executing SQL: {}", sql);
+    builder.push(" returning * ");
 
     let row: GameMetadataRow = builder
         .build_query_as()
@@ -369,6 +442,7 @@ pub async fn update_game_metadata(
     Ok(row)
 }
 
+#[instrument(err, skip_all)]
 pub async fn upsert_game_screenshots(
     conn: impl Executor<'_, Database = RetromDB>,
     screenshots: Vec<GameMetadataScreenshotRow>,
@@ -378,16 +452,17 @@ pub async fn upsert_game_screenshots(
     }
 
     let mut builder =
-        QueryBuilder::new("insert into game_metadata_screenshots (game_metadata_id, url) ");
+        QueryBuilder::new("insert into game_metadata_screenshots (game_id, provider_id, url) ");
 
     builder.push_values(&screenshots, |mut b, screenshot| {
-        b.push_bind(&screenshot.game_metadata_id);
+        b.push_bind(&screenshot.game_id);
+        b.push_bind(&screenshot.provider_id);
         b.push_bind(&screenshot.url);
     });
 
     builder.push(
         r#" 
-        on conflict (game_metadata_id, url) do update 
+        on conflict (game_id, provider_id, url) do update 
             set url = excluded.url 
         returning *
         "#,
@@ -400,6 +475,7 @@ pub async fn upsert_game_screenshots(
         .map_err(|e| Status::internal(e.to_string()))
 }
 
+#[instrument(err, skip_all)]
 pub async fn upsert_game_artworks(
     conn: impl Executor<'_, Database = RetromDB>,
     artworks: Vec<GameMetadataArtworkRow>,
@@ -409,16 +485,17 @@ pub async fn upsert_game_artworks(
     }
 
     let mut builder =
-        QueryBuilder::new("insert into game_metadata_artworks (game_metadata_id, url) ");
+        QueryBuilder::new("insert into game_metadata_artworks (game_id, provider_id, url) ");
 
     builder.push_values(&artworks, |mut b, artwork| {
-        b.push_bind(&artwork.game_metadata_id);
+        b.push_bind(&artwork.game_id);
+        b.push_bind(&artwork.provider_id);
         b.push_bind(&artwork.url);
     });
 
     builder.push(
         r#" 
-        on conflict (game_metadata_id, url) do update 
+        on conflict (game_id, provider_id, url) do update 
             set url = excluded.url 
         returning *
         "#,
@@ -431,6 +508,7 @@ pub async fn upsert_game_artworks(
         .map_err(|e| Status::internal(e.to_string()))
 }
 
+#[instrument(err, skip_all)]
 pub async fn upsert_game_videos(
     conn: impl Executor<'_, Database = RetromDB>,
     videos: Vec<GameMetadataVideoRow>,
@@ -440,16 +518,17 @@ pub async fn upsert_game_videos(
     }
 
     let mut builder =
-        QueryBuilder::new("insert into game_metadata_videos (game_metadata_id, url) ");
+        QueryBuilder::new("insert into game_metadata_videos (game_id, provider_id, url) ");
 
     builder.push_values(&videos, |mut b, video| {
-        b.push_bind(&video.game_metadata_id);
+        b.push_bind(&video.game_id);
+        b.push_bind(&video.provider_id);
         b.push_bind(&video.url);
     });
 
     builder.push(
         r#" 
-        on conflict (game_metadata_id, url) do update 
+        on conflict (game_id, provider_id, url) do update 
             set url = excluded.url 
         returning *
         "#,
@@ -462,6 +541,7 @@ pub async fn upsert_game_videos(
         .map_err(|e| Status::internal(e.to_string()))
 }
 
+#[instrument(err, skip(conn))]
 pub async fn upsert_game_links(
     conn: impl Executor<'_, Database = RetromDB>,
     links: Vec<GameMetadataLinkRow>,
@@ -470,16 +550,18 @@ pub async fn upsert_game_links(
         return Ok(vec![]);
     }
 
-    let mut builder = QueryBuilder::new("insert into game_metadata_links (game_metadata_id, url) ");
+    let mut builder =
+        QueryBuilder::new("insert into game_metadata_links (game_id, provider_id, url) ");
 
     builder.push_values(&links, |mut b, link| {
-        b.push_bind(&link.game_metadata_id);
+        b.push_bind(&link.game_id);
+        b.push_bind(&link.provider_id);
         b.push_bind(&link.url);
     });
 
     builder.push(
         r#" 
-        on conflict (game_metadata_id, url) do update 
+        on conflict (game_id, provider_id, url) do update 
             set url = excluded.url 
         returning *
         "#,
@@ -492,6 +574,7 @@ pub async fn upsert_game_links(
         .map_err(|e| Status::internal(e.to_string()))
 }
 
+#[instrument(err, skip(conn))]
 pub async fn upsert_similar_games(
     conn: impl Executor<'_, Database = RetromDB>,
     similar_games: Vec<SimilarGameRow>,

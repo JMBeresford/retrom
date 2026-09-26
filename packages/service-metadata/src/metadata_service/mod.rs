@@ -1,54 +1,55 @@
-use crate::metadata_service::game_metadata::{
-    game_artwork_rows_from_data, game_link_rows_from_data, game_metadata_from_rows,
-    game_metadata_row_from_metadata, game_screenshot_rows_from_data, game_video_rows_from_data,
-    insert_game_metadata, select_game_metadata_artworks, select_game_metadata_links,
-    select_game_metadata_screenshots, select_game_metadata_videos, select_similar_games,
-    similar_game_rows_from_data, upsert_game_artworks, upsert_game_links, upsert_game_screenshots,
-    upsert_game_videos, upsert_similar_games, GameMetadataRows,
-};
-use crate::metadata_service::platform_metadata::{
-    insert_platform_metadata, platform_metadata_from_rows, rows_from_platform_metadata,
-    update_platform_metadata as update_platform_metadata_row,
+use crate::metadata_service::{
+    game_metadata::{
+        game_artwork_rows_from_data, game_link_rows_from_data, game_metadata_from_rows,
+        game_metadata_row_from_metadata, game_screenshot_rows_from_data, game_video_rows_from_data,
+        insert_game_metadata, select_game_metadata_artworks, select_game_metadata_links,
+        select_game_metadata_row, select_game_metadata_screenshots, select_game_metadata_videos,
+        select_similar_games, similar_game_rows_from_data, upsert_game_artworks, upsert_game_links,
+        upsert_game_screenshots, upsert_game_videos, upsert_similar_games, GameMetadataRows,
+    },
+    platform_metadata::{
+        insert_platform_metadata, platform_metadata_from_rows, rows_from_platform_metadata,
+        update_platform_metadata as update_platform_metadata_row,
+    },
 };
 use futures::{
     future::{join_all, try_join_all},
     FutureExt,
 };
-use retrom_codegen::retrom::services::metadata::v1::PlatformMetadataRow;
 use retrom_codegen::retrom::{
     providers::igdb::v1::{
         igdb_filters::{FilterOperator, FilterValue},
         IgdbFilters,
     },
     services::{
-        config::v1::{
-            config_service_client::ConfigServiceClient, GetServerConfigRequest, MetadataConfig,
-        },
+        config::v1::{GetServerConfigRequest, MetadataConfig},
         jobs::v1::JobStatus,
         metadata::v1::{
-            igdb_service_client::IgdbServiceClient, metadata_service_server::MetadataService,
-            steam_service_client::SteamServiceClient, BulkCreateGameMetadataRequest,
-            BulkCreateGameMetadataResponse, BulkCreatePlatformMetadataRequest,
-            BulkCreatePlatformMetadataResponse, BulkGetGameMetadataRequest,
+            metadata_service_server::MetadataService, BulkGetGameMetadataRequest,
             BulkGetGameMetadataResponse, BulkGetPlatformMetadataRequest,
-            BulkGetPlatformMetadataResponse, CreateGameMetadataRequest,
-            CreatePlatformMetadataRequest, DownloadGameMetadataRequest,
+            BulkGetPlatformMetadataResponse, DownloadGameMetadataRequest,
             DownloadGameMetadataResponse, DownloadPlatformMetadataRequest,
-            DownloadPlatformMetadataResponse, GameMetadata, GameMetadataRow,
-            GetGameMetadataRequest, GetIgdbGameMetadataRequest, GetIgdbPlatformMetadataRequest,
-            GetPlatformMetadataRequest, GetSteamGameMetadataRequest, IgdbSearchRequest,
-            ListGameMetadataRequest, ListGameMetadataResponse, ListPlatformMetadataRequest,
-            ListPlatformMetadataResponse, PlatformMetadata, PurgeLocalMetadataRequest,
-            PurgeLocalMetadataResponse, StatLocalMetadataRequest, StatLocalMetadataResponse,
-            UpdateGameMetadataRequest, UpdatePlatformMetadataRequest,
+            DownloadPlatformMetadataResponse, GameMetadata, GetGameMetadataRequest,
+            GetIgdbGameMetadataRequest, GetIgdbPlatformMetadataRequest, GetPlatformMetadataRequest,
+            GetSteamGameMetadataRequest, IgdbSearchRequest, ListGameMetadataRequest,
+            ListGameMetadataResponse, ListPlatformMetadataRequest, ListPlatformMetadataResponse,
+            PlatformMetadata, PurgeLocalMetadataRequest, PurgeLocalMetadataResponse,
+            StatLocalMetadataRequest, StatLocalMetadataResponse, UpdateGameMetadataRequest,
+            UpdatePlatformMetadataRequest,
         },
     },
 };
 use retrom_db::DbPool;
 use retrom_service_common::{
-    grpc_clients::{igdb_svc::get_igdb_svc_client, steam_svc::get_steam_svc_client},
+    grpc_clients::{
+        config_svc::CommonConfigServiceClient,
+        igdb_svc::{get_igdb_svc_client, CommonIgdbServiceClient},
+        steam_svc::{get_steam_svc_client, CommonSteamServiceClient},
+    },
     media_cache::{cacheable_media::CacheableMetadata, MediaCache},
-    metadata_providers::igdb::provider::IGDB_PROVIDER_ID,
+    metadata_providers::{
+        igdb::provider::IGDB_PROVIDER_ID, steam::provider::STEAM_PROVIDER_ID, MANUAL_PROVIDER_ID,
+    },
     retrom_dirs::RetromDirs,
 };
 use retrom_service_jobs::job_manager::JobManager;
@@ -59,9 +60,10 @@ use std::{
     future::Future,
     sync::Arc,
 };
-use tokio::try_join;
-use tonic::{transport::Channel, Request, Response, Status};
-use tracing::{error, Instrument};
+use tokio::{join, try_join};
+use tonic::{Code, Request, Response, Status};
+use tracing::{error, instrument, Instrument, Span};
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 use walkdir::WalkDir;
 
 pub(crate) mod descriptor_pool;
@@ -74,9 +76,9 @@ pub struct MetadataServiceHandlers {
     pub db_pool: DbPool,
     pub media_cache: Arc<MediaCache>,
     pub job_manager: Arc<JobManager>,
-    config_client: ConfigServiceClient<Channel>,
-    igdb_svc_client: IgdbServiceClient<tonic::transport::Channel>,
-    steam_svc_client: SteamServiceClient<tonic::transport::Channel>,
+    config_client: CommonConfigServiceClient,
+    igdb_svc_client: CommonIgdbServiceClient,
+    steam_svc_client: CommonSteamServiceClient,
 }
 
 impl MetadataServiceHandlers {
@@ -84,7 +86,7 @@ impl MetadataServiceHandlers {
         db_pool: DbPool,
         media_cache: Arc<MediaCache>,
         job_manager: Arc<JobManager>,
-        config_client: ConfigServiceClient<Channel>,
+        config_client: CommonConfigServiceClient,
     ) -> Self {
         Self {
             db_pool,
@@ -96,75 +98,29 @@ impl MetadataServiceHandlers {
         }
     }
 
-    async fn handle_get_game_metadata(
-        db_pool: DbPool,
-        request: GetGameMetadataRequest,
-    ) -> Result<GameMetadata, Status> {
-        let id = request.id;
-
-        let mut builder = QueryBuilder::new("select * from game_metadata where id = ");
-
-        builder.push_bind(&id);
-        builder.push(" limit 1 ");
-
-        let row: GameMetadataRow = builder
-            .build_query_as()
-            .fetch_one(&db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-
-        let (artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) = try_join!(
-            select_game_metadata_artworks(&db_pool, &row.id),
-            select_game_metadata_screenshots(&db_pool, &row.id),
-            select_game_metadata_videos(&db_pool, &row.id),
-            select_game_metadata_links(&db_pool, &row.id),
-            select_similar_games(&db_pool, &row.game_id)
-        )?;
-
-        Ok(game_metadata_from_rows(GameMetadataRows {
-            metadata_row: row,
-            artwork_rows,
-            screenshot_rows,
-            video_rows,
-            link_rows,
-            similar_game_rows,
-        }))
-    }
-
+    #[tracing::instrument(skip(db_pool, metadata))]
     async fn handle_create_game_metadata(
         db_pool: DbPool,
-        request: CreateGameMetadataRequest,
+        metadata: GameMetadata,
+        provider_id: &str,
+        provider_game_id: &Option<String>,
     ) -> Result<GameMetadata, Status> {
-        let metadata = match request.metadata {
-            Some(metadata) => metadata,
-            None => {
-                return Err(Status::invalid_argument(
-                    "metadata field is required for creating game metadata".to_string(),
-                ));
-            }
-        };
-
-        if metadata.game.trim().is_empty() {
+        let game_id = metadata.game.trim();
+        if game_id.is_empty() {
             return Err(Status::invalid_argument(
                 "game field is required for creating game metadata".to_string(),
             ));
         }
 
-        if metadata.provider.trim().is_empty() {
-            return Err(Status::invalid_argument(
-                "provider field is required for creating game metadata".to_string(),
-            ));
-        }
-
-        let to_create = game_metadata_row_from_metadata(&metadata);
+        let to_create = game_metadata_row_from_metadata(&metadata, provider_id, provider_game_id);
         let row = insert_game_metadata(&db_pool, &to_create).await?;
 
         let (artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) = (
-            game_artwork_rows_from_data(&row.id, metadata.artworks.clone()),
-            game_screenshot_rows_from_data(&row.id, metadata.screenshots.clone()),
-            game_video_rows_from_data(&row.id, metadata.videos.clone()),
-            game_link_rows_from_data(&row.id, metadata.links.clone()),
-            similar_game_rows_from_data(&row.game_id, metadata.similar_games.clone()),
+            game_artwork_rows_from_data(game_id, provider_id, metadata.artworks.clone()),
+            game_screenshot_rows_from_data(game_id, provider_id, metadata.screenshots.clone()),
+            game_video_rows_from_data(game_id, provider_id, metadata.videos.clone()),
+            game_link_rows_from_data(game_id, provider_id, metadata.links.clone()),
+            similar_game_rows_from_data(game_id, metadata.similar_games.clone()),
         );
 
         let (artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) = try_join!(
@@ -185,6 +141,218 @@ impl MetadataServiceHandlers {
         }))
     }
 
+    #[tracing::instrument(err, skip_all)]
+    async fn handle_get_game_metadata_by_provider(
+        db_pool: DbPool,
+        game_id: &str,
+        provider_id: &str,
+    ) -> Result<GameMetadata, Status> {
+        let (row, artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) = try_join!(
+            select_game_metadata_row(&db_pool, game_id, provider_id),
+            select_game_metadata_artworks(&db_pool, game_id, provider_id),
+            select_game_metadata_screenshots(&db_pool, game_id, provider_id),
+            select_game_metadata_videos(&db_pool, game_id, provider_id),
+            select_game_metadata_links(&db_pool, game_id, provider_id),
+            select_similar_games(&db_pool, game_id)
+        )?;
+
+        Ok(game_metadata_from_rows(GameMetadataRows {
+            metadata_row: row,
+            artwork_rows,
+            screenshot_rows,
+            video_rows,
+            link_rows,
+            similar_game_rows,
+        }))
+    }
+
+    /// A helper function to select a field from a vector of optional `GameMetadata` values using a
+    /// selector function. If the selector returns `None`, the function
+    /// will continue to the next `GameMetadata` in the vector. If the selector returns `Some(value)`,
+    /// the function will return that value.
+    pub(super) fn select_field_from_game_metadata<T>(
+        metadata: Vec<&Option<GameMetadata>>,
+        selector: fn(&GameMetadata) -> Option<&T>,
+    ) -> Vec<&T> {
+        metadata
+            .into_iter()
+            .filter_map(|m| m.as_ref().and_then(selector))
+            .collect::<Vec<_>>()
+    }
+
+    #[tracing::instrument(err, skip_all)]
+    async fn handle_get_game_metadata(
+        db_pool: DbPool,
+        request: GetGameMetadataRequest,
+    ) -> Result<GameMetadata, Status> {
+        let name = request.name;
+        let mut router = matchit::Router::new();
+
+        router
+            .insert("games/{game_id}/metadata", "game_metadata_singleton")
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let game_id = match router
+            .at(&name)
+            .map(|matched| matched.params.get("game_id").map(|s| s.to_string()))
+        {
+            Ok(Some(game_id)) => game_id,
+            _ => {
+                return Err(Status::invalid_argument(format!(
+                    "Invalid game metadata name: {}",
+                    name
+                )))
+            }
+        };
+
+        let (manual_metadata, igdb_metadata, steam_metadata) = join!(
+            Self::handle_get_game_metadata_by_provider(
+                db_pool.clone(),
+                &game_id,
+                MANUAL_PROVIDER_ID
+            ),
+            Self::handle_get_game_metadata_by_provider(db_pool.clone(), &game_id, IGDB_PROVIDER_ID),
+            Self::handle_get_game_metadata_by_provider(
+                db_pool.clone(),
+                &game_id,
+                STEAM_PROVIDER_ID
+            )
+        );
+
+        let not_found_to_option = |result: Result<GameMetadata, Status>| match result {
+            Ok(metadata) => Ok(Some(metadata)),
+            Err(status) => match status.code() {
+                Code::NotFound => Ok(None),
+                _ => Err(status),
+            },
+        };
+
+        let (manual_metadata, igdb_metadata, steam_metadata) = (
+            Some(manual_metadata?),
+            not_found_to_option(igdb_metadata)?,
+            not_found_to_option(steam_metadata)?,
+        );
+
+        // The most recently updated metadata should be used to determine the
+        // updated_at timestamp for the returned metadata.
+        let updated_at = Self::select_field_from_game_metadata(
+            vec![&igdb_metadata, &steam_metadata, &manual_metadata],
+            |m| m.updated_at.as_ref(),
+        )
+        .into_iter()
+        .max()
+        .cloned();
+
+        let title = Self::select_field_from_game_metadata(
+            vec![&igdb_metadata, &steam_metadata, &manual_metadata],
+            |m| Some(&m.title),
+        )
+        .into_iter()
+        .next()
+        .cloned()
+        .unwrap_or_else(|| "Unknown Game".to_string());
+
+        let description = Self::select_field_from_game_metadata(
+            vec![&manual_metadata, &igdb_metadata, &steam_metadata],
+            |m| m.description.as_ref(),
+        )
+        .into_iter()
+        .next()
+        .cloned();
+
+        let cover_url = Self::select_field_from_game_metadata(
+            vec![&manual_metadata, &igdb_metadata, &steam_metadata],
+            |m| m.cover_url.as_ref(),
+        )
+        .into_iter()
+        .next()
+        .cloned();
+
+        let background_url = Self::select_field_from_game_metadata(
+            vec![&manual_metadata, &igdb_metadata, &steam_metadata],
+            |m| m.background_url.as_ref(),
+        )
+        .into_iter()
+        .next()
+        .cloned();
+
+        let icon_url = Self::select_field_from_game_metadata(
+            vec![&manual_metadata, &igdb_metadata, &steam_metadata],
+            |m| m.icon_url.as_ref(),
+        )
+        .into_iter()
+        .next()
+        .cloned();
+
+        let logo_url = Self::select_field_from_game_metadata(
+            vec![&manual_metadata, &igdb_metadata, &steam_metadata],
+            |m| m.logo_url.as_ref(),
+        )
+        .into_iter()
+        .next()
+        .cloned();
+
+        let release_date = Self::select_field_from_game_metadata(
+            vec![&manual_metadata, &igdb_metadata, &steam_metadata],
+            |m| m.release_date.as_ref(),
+        )
+        .into_iter()
+        .next()
+        .cloned();
+
+        let artworks = [&manual_metadata, &igdb_metadata, &steam_metadata]
+            .iter()
+            .filter_map(|x| x.as_ref().map(|m| m.artworks.clone()))
+            .flatten()
+            .collect::<Vec<_>>();
+
+        let screenshots = [&manual_metadata, &igdb_metadata, &steam_metadata]
+            .iter()
+            .filter_map(|x| x.as_ref().map(|m| m.screenshots.clone()))
+            .flatten()
+            .collect::<Vec<_>>();
+
+        let videos = [&manual_metadata, &igdb_metadata, &steam_metadata]
+            .iter()
+            .filter_map(|x| x.as_ref().map(|m| m.videos.clone()))
+            .flatten()
+            .collect::<Vec<_>>();
+
+        let links = [&manual_metadata, &igdb_metadata, &steam_metadata]
+            .iter()
+            .filter_map(|x| x.as_ref().map(|m| m.links.clone()))
+            .flatten()
+            .collect::<Vec<_>>();
+
+        let similar_games = [&manual_metadata, &igdb_metadata, &steam_metadata]
+            .iter()
+            .filter_map(|x| x.as_ref().map(|m| m.similar_games.clone()))
+            .flatten()
+            .collect::<Vec<_>>();
+
+        Ok(GameMetadata {
+            name,
+            game: game_id,
+            created_at: manual_metadata.as_ref().and_then(|m| m.created_at),
+            updated_at,
+            title,
+            description,
+            cover_url,
+            background_url,
+            icon_url,
+            logo_url,
+            release_date,
+            last_played: manual_metadata.as_ref().and_then(|m| m.last_played),
+            minutes_played: manual_metadata.as_ref().and_then(|m| m.minutes_played),
+            artworks,
+            screenshots,
+            videos,
+            links,
+            similar_games,
+        })
+    }
+
+    #[instrument(err, skip_all)]
     async fn cache_metadata<T: CacheableMetadata>(
         &self,
         metadata: &T,
@@ -212,9 +380,12 @@ impl MetadataServiceHandlers {
         Ok(())
     }
 
+    #[instrument(err, skip(db_pool, request))]
     async fn handle_update_game_metadata(
         db_pool: DbPool,
         request: UpdateGameMetadataRequest,
+        provider_id: &str,
+        provider_game_id: &Option<String>,
     ) -> Result<GameMetadata, Status> {
         let field_mask: HashSet<String> = request
             .update_mask
@@ -232,33 +403,24 @@ impl MetadataServiceHandlers {
             }
         };
 
-        if metadata.id.trim().is_empty() {
-            return Err(Status::invalid_argument(
-                "id field is required for updating game metadata".to_string(),
-            ));
-        }
-
         if metadata.game.trim().is_empty() {
             return Err(Status::invalid_argument(
                 "game field is required for updating game metadata".to_string(),
             ));
         }
 
-        if metadata.provider.trim().is_empty() {
-            return Err(Status::invalid_argument(
-                "provider field is required for updating game metadata".to_string(),
-            ));
-        }
-
         let empty_mask = field_mask.is_empty();
 
-        let (row, artworks, screenshots, videos, links, similar_games) = (
-            game_metadata_row_from_metadata(&metadata),
-            game_artwork_rows_from_data(&metadata.id, metadata.artworks.clone()),
-            game_screenshot_rows_from_data(&metadata.id, metadata.screenshots.clone()),
-            game_video_rows_from_data(&metadata.id, metadata.videos.clone()),
-            game_link_rows_from_data(&metadata.id, metadata.links.clone()),
-            similar_game_rows_from_data(&metadata.game, metadata.similar_games.clone()),
+        let row = game_metadata_row_from_metadata(&metadata, provider_id, provider_game_id);
+        let game_id = &row.game_id;
+        let provider_id = &row.provider_id;
+
+        let (artworks, screenshots, videos, links, similar_games) = (
+            game_artwork_rows_from_data(game_id, provider_id, metadata.artworks.clone()),
+            game_screenshot_rows_from_data(game_id, provider_id, metadata.screenshots.clone()),
+            game_video_rows_from_data(game_id, provider_id, metadata.videos.clone()),
+            game_link_rows_from_data(game_id, provider_id, metadata.links.clone()),
+            similar_game_rows_from_data(game_id, metadata.similar_games.clone()),
         );
 
         let row_future = game_metadata::update_game_metadata(&db_pool, &row, &field_mask);
@@ -268,7 +430,7 @@ impl MetadataServiceHandlers {
                 game_metadata::upsert_game_artworks(&db_pool, artworks).await?;
             }
 
-            game_metadata::select_game_metadata_artworks(&db_pool, &row.id).await
+            game_metadata::select_game_metadata_artworks(&db_pool, game_id, provider_id).await
         };
 
         let screenshot_rows_future = async {
@@ -276,7 +438,7 @@ impl MetadataServiceHandlers {
                 game_metadata::upsert_game_screenshots(&db_pool, screenshots).await?;
             }
 
-            game_metadata::select_game_metadata_screenshots(&db_pool, &row.id).await
+            game_metadata::select_game_metadata_screenshots(&db_pool, game_id, provider_id).await
         };
 
         let video_rows_future = async {
@@ -284,7 +446,7 @@ impl MetadataServiceHandlers {
                 game_metadata::upsert_game_videos(&db_pool, videos).await?;
             }
 
-            game_metadata::select_game_metadata_videos(&db_pool, &row.id).await
+            game_metadata::select_game_metadata_videos(&db_pool, game_id, provider_id).await
         };
 
         let link_rows_future = async {
@@ -292,7 +454,7 @@ impl MetadataServiceHandlers {
                 game_metadata::upsert_game_links(&db_pool, links).await?;
             }
 
-            game_metadata::select_game_metadata_links(&db_pool, &row.id).await
+            game_metadata::select_game_metadata_links(&db_pool, game_id, provider_id).await
         };
 
         let similar_game_rows_future = async {
@@ -300,7 +462,7 @@ impl MetadataServiceHandlers {
                 game_metadata::upsert_similar_games(&db_pool, similar_games).await?;
             }
 
-            game_metadata::select_similar_games(&db_pool, &row.game_id).await
+            game_metadata::select_similar_games(&db_pool, game_id).await
         };
 
         let (row, artwork_rows, screenshot_rows, video_rows, link_rows, similar_game_rows) = try_join!(
@@ -322,14 +484,37 @@ impl MetadataServiceHandlers {
         }))
     }
 
+    #[instrument(err, skip_all)]
     async fn handle_get_platform_metadata(
         db_pool: DbPool,
         request: GetPlatformMetadataRequest,
     ) -> Result<PlatformMetadata, Status> {
-        let id = request.id;
+        let name = request.name;
+        let mut router = matchit::Router::new();
 
-        let mut builder = QueryBuilder::new("select * from platform_metadata where id = ");
-        builder.push_bind(&id);
+        router
+            .insert(
+                "platforms/{platform_id}/metadata",
+                "platform_metadata_singleton",
+            )
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let platform_id = match router
+            .at(&name)
+            .map(|matched| matched.params.get("platform_id").map(|s| s.to_string()))
+        {
+            Ok(Some(platform_id)) => platform_id,
+            _ => {
+                return Err(Status::invalid_argument(format!(
+                    "Invalid platform metadata name: {}",
+                    name
+                )))
+            }
+        };
+
+        let mut builder = QueryBuilder::new("select * from platform_metadata where platform_id = ");
+        builder.push_bind(&platform_id);
+        builder.push(" order by provider_id desc ");
         builder.push(" limit 1");
 
         let row: retrom_codegen::retrom::services::metadata::v1::PlatformMetadataRow = builder
@@ -341,40 +526,37 @@ impl MetadataServiceHandlers {
         Ok(platform_metadata_from_rows(row))
     }
 
+    #[instrument(err, skip_all)]
     async fn handle_create_platform_metadata(
         db_pool: DbPool,
-        request: CreatePlatformMetadataRequest,
+        metadata: PlatformMetadata,
+        provider_id: &str,
+        provider_platform_id: &Option<String>,
     ) -> Result<PlatformMetadata, Status> {
-        let metadata = match request.metadata {
-            Some(metadata) => metadata,
-            None => {
-                return Err(Status::invalid_argument(
-                    "metadata field is required for creating platform metadata".to_string(),
-                ));
-            }
-        };
-
         if metadata.platform.trim().is_empty() {
             return Err(Status::invalid_argument(
                 "platform field is required for creating platform metadata".to_string(),
             ));
         }
 
-        if metadata.provider.trim().is_empty() {
+        if metadata.name.trim().is_empty() {
             return Err(Status::invalid_argument(
-                "provider field is required for creating platform metadata".to_string(),
+                "name field is required for creating platform metadata".to_string(),
             ));
         }
 
-        let row = rows_from_platform_metadata(metadata);
+        let row = rows_from_platform_metadata(metadata, provider_id, provider_platform_id);
         let row = insert_platform_metadata(&db_pool, row).await?;
 
         Ok(platform_metadata_from_rows(row))
     }
 
+    #[instrument(err, skip_all)]
     async fn handle_update_platform_metadata(
         db_pool: DbPool,
         request: UpdatePlatformMetadataRequest,
+        provider_id: &str,
+        platform_provider_id: &Option<String>,
     ) -> Result<PlatformMetadata, Status> {
         let field_mask: HashSet<String> = request
             .update_mask
@@ -392,13 +574,13 @@ impl MetadataServiceHandlers {
             }
         };
 
-        if metadata.id.trim().is_empty() {
+        if metadata.name.trim().is_empty() {
             return Err(Status::invalid_argument(
-                "id field is required for updating platform metadata".to_string(),
+                "name field is required for updating platform metadata".to_string(),
             ));
         }
 
-        let row = rows_from_platform_metadata(metadata);
+        let row = rows_from_platform_metadata(metadata, provider_id, platform_provider_id);
         let row = update_platform_metadata_row(&db_pool, &row, &field_mask).await?;
 
         Ok(platform_metadata_from_rows(row))
@@ -418,7 +600,11 @@ where
     let job = job_manager
         .create_job(job_name.clone(), "Queued media cache job".to_string())
         .await;
+
     let job_id = job.id;
+
+    let span = tracing::info_span!("cache_job", job_name = %job_name);
+    span.follows_from(Span::current());
 
     tokio::spawn(
         async move {
@@ -451,13 +637,12 @@ where
                 )
                 .await;
         }
-        .instrument(tracing::info_span!("cache_job", job_name = %job_name)),
+        .instrument(span),
     );
 }
 
 #[tonic::async_trait]
 impl MetadataService for MetadataServiceHandlers {
-    #[tracing::instrument(skip(self))]
     async fn get_game_metadata(
         &self,
         request: Request<GetGameMetadataRequest>,
@@ -468,38 +653,17 @@ impl MetadataService for MetadataServiceHandlers {
         Ok(Response::new(metadata))
     }
 
-    #[tracing::instrument(skip(self))]
-    async fn create_game_metadata(
-        &self,
-        request: Request<CreateGameMetadataRequest>,
-    ) -> Result<Response<GameMetadata>, Status> {
-        let metadata =
-            Self::handle_create_game_metadata(self.db_pool.clone(), request.into_inner()).await?;
-
-        Ok(Response::new(metadata))
-    }
-
-    #[tracing::instrument(skip(self))]
     async fn list_game_metadata(
         &self,
         request: Request<ListGameMetadataRequest>,
     ) -> Result<Response<ListGameMetadataResponse>, Status> {
         let request = request.into_inner();
-        let ids = request.ids;
         let game_ids = request.game_ids;
-        let provider_ids = request.provider_ids;
+        let title = request.title;
 
-        let mut builder = QueryBuilder::new("select id from game_metadata where id is not null ");
-
-        if !ids.is_empty() {
-            builder.push(" and id in (");
-            let mut separated = builder.separated(", ");
-            for id in ids {
-                separated.push_bind(id);
-            }
-
-            separated.push_unseparated(")");
-        }
+        let mut builder = QueryBuilder::new(
+            "select distinct game_id from game_metadata where game_id is not null ",
+        );
 
         if !game_ids.is_empty() {
             builder.push(" and game_id in (");
@@ -511,14 +675,9 @@ impl MetadataService for MetadataServiceHandlers {
             separated.push_unseparated(")");
         }
 
-        if !provider_ids.is_empty() {
-            builder.push(" and provider in (");
-            let mut separated = builder.separated(", ");
-            for provider_id in provider_ids {
-                separated.push_bind(provider_id);
-            }
-
-            separated.push_unseparated(")");
+        if let Some(title) = title {
+            builder.push(" and title ilike ");
+            builder.push_bind(format!("%{}%", title));
         }
 
         let ids: Vec<String> = builder
@@ -527,19 +686,23 @@ impl MetadataService for MetadataServiceHandlers {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let metadata =
-            try_join_all(ids.into_iter().map(|id| {
-                let db_pool = self.db_pool.clone();
-                async move {
-                    Self::handle_get_game_metadata(db_pool, GetGameMetadataRequest { id }).await
-                }
-            }))
-            .await?;
+        let game_metadata = try_join_all(ids.into_iter().map(|game_id| {
+            let db_pool = self.db_pool.clone();
+            async move {
+                Self::handle_get_game_metadata(
+                    db_pool,
+                    GetGameMetadataRequest {
+                        name: format!("games/{game_id}/metadata"),
+                    },
+                )
+                .await
+            }
+        }))
+        .await?;
 
-        Ok(Response::new(ListGameMetadataResponse { metadata }))
+        Ok(Response::new(ListGameMetadataResponse { game_metadata }))
     }
 
-    #[tracing::instrument(skip(self))]
     async fn update_game_metadata(
         &self,
         request: Request<UpdateGameMetadataRequest>,
@@ -582,46 +745,33 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        let metadata = Self::handle_update_game_metadata(self.db_pool.clone(), request).await?;
+        let metadata = Self::handle_update_game_metadata(
+            self.db_pool.clone(),
+            request,
+            MANUAL_PROVIDER_ID,
+            &None,
+        )
+        .await?;
 
         Ok(Response::new(metadata))
     }
 
-    #[tracing::instrument(skip(self))]
     async fn bulk_get_game_metadata(
         &self,
         request: Request<BulkGetGameMetadataRequest>,
     ) -> Result<Response<BulkGetGameMetadataResponse>, Status> {
         let requests = request.into_inner().requests;
 
-        let metadata = try_join_all(requests.into_iter().map(|r| {
+        let game_metadata = try_join_all(requests.into_iter().map(|r| {
             let db_pool = self.db_pool.clone();
 
             async move { Self::handle_get_game_metadata(db_pool, r).await }
         }))
         .await?;
 
-        Ok(Response::new(BulkGetGameMetadataResponse { metadata }))
+        Ok(Response::new(BulkGetGameMetadataResponse { game_metadata }))
     }
 
-    #[tracing::instrument(skip(self))]
-    async fn bulk_create_game_metadata(
-        &self,
-        request: Request<BulkCreateGameMetadataRequest>,
-    ) -> Result<Response<BulkCreateGameMetadataResponse>, Status> {
-        let requests = request.into_inner().requests;
-
-        let metadata = try_join_all(requests.into_iter().map(|r| {
-            let db_pool = self.db_pool.clone();
-
-            async move { Self::handle_create_game_metadata(db_pool, r).await }
-        }))
-        .await?;
-
-        Ok(Response::new(BulkCreateGameMetadataResponse { metadata }))
-    }
-
-    #[tracing::instrument(skip(self))]
     async fn get_platform_metadata(
         &self,
         request: Request<GetPlatformMetadataRequest>,
@@ -632,39 +782,17 @@ impl MetadataService for MetadataServiceHandlers {
         Ok(Response::new(metadata))
     }
 
-    #[tracing::instrument(skip(self))]
-    async fn create_platform_metadata(
-        &self,
-        request: Request<CreatePlatformMetadataRequest>,
-    ) -> Result<Response<PlatformMetadata>, Status> {
-        let metadata =
-            Self::handle_create_platform_metadata(self.db_pool.clone(), request.into_inner())
-                .await?;
-
-        Ok(Response::new(metadata))
-    }
-
-    #[tracing::instrument(skip(self))]
     async fn list_platform_metadata(
         &self,
         request: Request<ListPlatformMetadataRequest>,
     ) -> Result<Response<ListPlatformMetadataResponse>, Status> {
         let request = request.into_inner();
-        let ids = request.ids;
         let platform_ids = request.platform_ids;
-        let provider_ids = request.provider_ids;
+        let title = request.title;
 
-        let mut builder =
-            QueryBuilder::new("select id from platform_metadata where id is not null ");
-
-        if !ids.is_empty() {
-            builder.push(" and id in (");
-            let mut separated = builder.separated(", ");
-            for id in ids {
-                separated.push_bind(id);
-            }
-            separated.push_unseparated(")");
-        }
+        let mut builder = QueryBuilder::new(
+            "select distinct id from platform_metadata where platform_id is not null ",
+        );
 
         if !platform_ids.is_empty() {
             builder.push(" and platform_id in (");
@@ -675,13 +803,9 @@ impl MetadataService for MetadataServiceHandlers {
             separated.push_unseparated(")");
         }
 
-        if !provider_ids.is_empty() {
-            builder.push(" and provider_id in (");
-            let mut separated = builder.separated(", ");
-            for provider_id in provider_ids {
-                separated.push_bind(provider_id);
-            }
-            separated.push_unseparated(")");
+        if let Some(title) = title {
+            builder.push(" and name ilike ");
+            builder.push_bind(format!("%{}% ", title));
         }
 
         let ids: Vec<String> = builder
@@ -693,7 +817,13 @@ impl MetadataService for MetadataServiceHandlers {
         let metadata = try_join_all(ids.into_iter().map(|id| {
             let db_pool = self.db_pool.clone();
             async move {
-                Self::handle_get_platform_metadata(db_pool, GetPlatformMetadataRequest { id }).await
+                Self::handle_get_platform_metadata(
+                    db_pool,
+                    GetPlatformMetadataRequest {
+                        name: format!("platforms/{}/metadata", id),
+                    },
+                )
+                .await
             }
         }))
         .await?;
@@ -701,7 +831,6 @@ impl MetadataService for MetadataServiceHandlers {
         Ok(Response::new(ListPlatformMetadataResponse { metadata }))
     }
 
-    #[tracing::instrument(skip(self))]
     async fn update_platform_metadata(
         &self,
         request: Request<UpdatePlatformMetadataRequest>,
@@ -744,12 +873,17 @@ impl MetadataService for MetadataServiceHandlers {
             }
         };
 
-        let metadata = Self::handle_update_platform_metadata(self.db_pool.clone(), request).await?;
+        let metadata = Self::handle_update_platform_metadata(
+            self.db_pool.clone(),
+            request,
+            MANUAL_PROVIDER_ID,
+            &None,
+        )
+        .await?;
 
         Ok(Response::new(metadata))
     }
 
-    #[tracing::instrument(skip(self))]
     async fn bulk_get_platform_metadata(
         &self,
         request: Request<BulkGetPlatformMetadataRequest>,
@@ -766,26 +900,6 @@ impl MetadataService for MetadataServiceHandlers {
         Ok(Response::new(BulkGetPlatformMetadataResponse { metadata }))
     }
 
-    #[tracing::instrument(skip(self))]
-    async fn bulk_create_platform_metadata(
-        &self,
-        request: Request<BulkCreatePlatformMetadataRequest>,
-    ) -> Result<Response<BulkCreatePlatformMetadataResponse>, Status> {
-        let requests = request.into_inner().requests;
-
-        let metadata = try_join_all(requests.into_iter().map(|r| {
-            let db_pool = self.db_pool.clone();
-
-            async move { Self::handle_create_platform_metadata(db_pool, r).await }
-        }))
-        .await?;
-
-        Ok(Response::new(BulkCreatePlatformMetadataResponse {
-            metadata,
-        }))
-    }
-
-    #[tracing::instrument(skip(self))]
     async fn stat_local_metadata(
         &self,
         _request: Request<StatLocalMetadataRequest>,
@@ -819,7 +933,6 @@ impl MetadataService for MetadataServiceHandlers {
         Ok(Response::new(response))
     }
 
-    #[tracing::instrument(skip(self))]
     async fn purge_local_metadata(
         &self,
         _request: Request<PurgeLocalMetadataRequest>,
@@ -835,17 +948,21 @@ impl MetadataService for MetadataServiceHandlers {
         Ok(Response::new(PurgeLocalMetadataResponse {}))
     }
 
-    #[tracing::instrument(skip(self))]
     async fn download_game_metadata(
         &self,
         request: Request<DownloadGameMetadataRequest>,
     ) -> Result<Response<DownloadGameMetadataResponse>, Status> {
         let request = request.into_inner();
+        let overwrite = request.overwrite;
         let game_id = request.game_id;
 
+        let span = Span::current();
+        span.set_attribute("retrom.game.id", game_id.clone());
+        span.set_attribute("retrom.overwrite", overwrite);
+
         let igdb_job = async {
-            let existing: Option<GameMetadataRow> = QueryBuilder::new(
-                "select id, provider_game_id from game_metadata where game_id = ",
+            let existing: Option<(String, Option<String>)> = QueryBuilder::new(
+                "select game_id, provider_game_id from game_metadata where game_id = ",
             )
             .push_bind(&game_id)
             .push(" and provider_id = ")
@@ -855,16 +972,18 @@ impl MetadataService for MetadataServiceHandlers {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-            let igdb_id = existing.as_ref().map(|row| row.provider_game_id.clone());
+            let igdb_id = existing
+                .as_ref()
+                .and_then(|(_, provider_game_id)| provider_game_id.clone());
 
             let mut igdb = self.igdb_svc_client.clone();
 
-            let igdb_search = igdb_id.map(|id| IgdbSearchRequest {
+            let igdb_search = igdb_id.as_ref().map(|id| IgdbSearchRequest {
                 filters: Some(IgdbFilters {
                     filters: HashMap::from([(
                         "id".to_string(),
                         FilterValue {
-                            value: id,
+                            value: id.to_string(),
                             operator: Some(FilterOperator::Equal as i32),
                         },
                     )]),
@@ -872,40 +991,57 @@ impl MetadataService for MetadataServiceHandlers {
                 ..Default::default()
             });
 
-            let mut igdb_metadata = igdb
-                .get_igdb_game_metadata(GetIgdbGameMetadataRequest {
-                    game_id: game_id.clone(),
-                    search: igdb_search,
-                    ..Default::default()
-                })
-                .await?
-                .into_inner();
-
-            tracing::info!(igdb_metadata = ?igdb_metadata, "Downloaded IGDB metadata for game");
-
-            if let Some(existing_row) = existing {
-                igdb_metadata.id = existing_row.id;
-                Self::handle_update_game_metadata(
-                    self.db_pool.clone(),
-                    UpdateGameMetadataRequest {
-                        metadata: Some(igdb_metadata),
-                        update_mask: None,
+            let igdb_metadata = if existing.is_none() || overwrite {
+                match igdb
+                    .get_igdb_game_metadata(GetIgdbGameMetadataRequest {
+                        game_id: game_id.clone(),
+                        search: igdb_search,
+                        ..Default::default()
+                    })
+                    .await
+                {
+                    Ok(response) => response.into_inner(),
+                    Err(status) => match status.code() {
+                        Code::NotFound => {
+                            return Ok(None);
+                        }
+                        _ => {
+                            return Err(status);
+                        }
                     },
-                )
-                .await?;
+                }
             } else {
-                Self::handle_create_game_metadata(
-                    self.db_pool.clone(),
-                    CreateGameMetadataRequest {
-                        metadata: Some(igdb_metadata),
-                    },
-                )
-                .await?;
-            }
+                return Ok(None);
+            };
 
-            Ok::<(), Status>(())
+            if existing.is_some() {
+                Some(
+                    Self::handle_update_game_metadata(
+                        self.db_pool.clone(),
+                        UpdateGameMetadataRequest {
+                            metadata: Some(igdb_metadata),
+                            update_mask: None,
+                        },
+                        IGDB_PROVIDER_ID,
+                        &igdb_id,
+                    )
+                    .await,
+                )
+                .transpose()
+            } else {
+                Some(
+                    Self::handle_create_game_metadata(
+                        self.db_pool.clone(),
+                        igdb_metadata,
+                        IGDB_PROVIDER_ID,
+                        &igdb_id,
+                    )
+                    .await,
+                )
+                .transpose()
+            }
         }
-        .in_current_span()
+        .instrument(tracing::info_span!("download_igdb_metadata"))
         .boxed();
 
         let steam_job = async {
@@ -913,7 +1049,7 @@ impl MetadataService for MetadataServiceHandlers {
                 QueryBuilder::new("select steam_app_id from games where id = ")
                     .push_bind(&game_id)
                     .build_query_scalar()
-                    .fetch_optional(&self.db_pool)
+                    .fetch_one(&self.db_pool)
                     .await
                     .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -923,69 +1059,118 @@ impl MetadataService for MetadataServiceHandlers {
                     game_id
                 );
 
-                return Ok(());
+                return Ok(None);
             }
+
+            let existing: Option<(String, Option<String>)> = QueryBuilder::new(
+                "select game_id, provider_game_id from game_metadata where game_id = ",
+            )
+            .push_bind(&game_id)
+            .push(" and provider_id = ")
+            .push_bind(STEAM_PROVIDER_ID)
+            .build_query_as()
+            .fetch_optional(&self.db_pool)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
             let mut steam = self.steam_svc_client.clone();
 
-            let steam_metadata = steam
-                .get_steam_game_metadata(Request::new(GetSteamGameMetadataRequest {
-                    game_id: game_id.clone(),
-                }))
-                .await?
-                .into_inner();
+            let steam_metadata = if existing.is_some() {
+                match steam
+                    .get_steam_game_metadata(Request::new(GetSteamGameMetadataRequest {
+                        game_id: game_id.clone(),
+                    }))
+                    .await
+                {
+                    Ok(response) => response.into_inner(),
+                    Err(status) => match status.code() {
+                        Code::NotFound => {
+                            return Ok(None);
+                        }
+                        _ => {
+                            return Err(status);
+                        }
+                    },
+                }
+            } else {
+                return Ok(None);
+            };
 
-            Self::handle_update_game_metadata(
-                self.db_pool.clone(),
-                UpdateGameMetadataRequest {
-                    metadata: Some(steam_metadata),
-                    update_mask: None,
-                },
-            )
-            .await?;
-
-            Ok::<(), Status>(())
+            if existing.is_some() {
+                Some(
+                    Self::handle_update_game_metadata(
+                        self.db_pool.clone(),
+                        UpdateGameMetadataRequest {
+                            metadata: Some(steam_metadata),
+                            update_mask: None,
+                        },
+                        STEAM_PROVIDER_ID,
+                        &steam_app_id,
+                    )
+                    .await,
+                )
+                .transpose()
+            } else {
+                Some(
+                    Self::handle_create_game_metadata(
+                        self.db_pool.clone(),
+                        steam_metadata,
+                        STEAM_PROVIDER_ID,
+                        &steam_app_id,
+                    )
+                    .await,
+                )
+                .transpose()
+            }
         }
+        .instrument(tracing::info_span!("download_steam_metadata"))
         .boxed();
 
-        join_all(vec![igdb_job, steam_job])
-            .await
-            .into_iter()
-            .try_for_each(|res| res.map_err(|e| Status::internal(e.to_string())))?;
+        for result in join_all(vec![igdb_job, steam_job]).await {
+            if let Err(status) = result {
+                match status.code() {
+                    Code::NotFound => {}
+                    _ => {
+                        return Err(status);
+                    }
+                }
+            }
+        }
 
         Ok(Response::new(DownloadGameMetadataResponse {}))
     }
 
-    #[tracing::instrument(skip(self))]
     async fn download_platform_metadata(
         &self,
         request: Request<DownloadPlatformMetadataRequest>,
     ) -> Result<Response<DownloadPlatformMetadataResponse>, Status> {
         let request = request.into_inner();
         let platform_id = request.platform_id;
+        let overwrite = request.overwrite;
 
-        let existing: Option<PlatformMetadataRow> =
-            QueryBuilder::new("select * from platform_metadata where platform_id = ")
-                .push_bind(&platform_id)
-                .push(" and provider_id = ")
-                .push_bind(IGDB_PROVIDER_ID)
-                .build_query_as()
-                .fetch_optional(&self.db_pool)
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?;
+        let existing: Option<(String, Option<String>)> = QueryBuilder::new(
+            "select platform_id, provider_platform_id from platform_metadata where platform_id = ",
+        )
+        .push_bind(&platform_id)
+        .push(" and provider_id = ")
+        .push_bind(IGDB_PROVIDER_ID)
+        .build_query_as()
+        .fetch_optional(&self.db_pool)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
         let mut igdb = self.igdb_svc_client.clone();
 
         let igdb_id = existing
             .as_ref()
-            .map(|row| row.provider_platform_id.clone());
+            .and_then(|(_, provider_platform_id)| provider_platform_id.clone());
 
-        let igdb_search = igdb_id.map(|id| IgdbSearchRequest {
+        let igdb_search = igdb_id.as_ref().map(|id| IgdbSearchRequest {
             filters: Some(IgdbFilters {
                 filters: HashMap::from([(
                     "id".to_string(),
                     FilterValue {
-                        value: id,
+                        value: id.to_string(),
                         operator: Some(FilterOperator::Equal as i32),
                     },
                 )]),
@@ -993,32 +1178,45 @@ impl MetadataService for MetadataServiceHandlers {
             ..Default::default()
         });
 
-        let mut igdb_metadata = igdb
-            .get_igdb_platform_metadata(GetIgdbPlatformMetadataRequest {
-                platform_id: platform_id.clone(),
-                search: igdb_search,
-            })
-            .await?
-            .into_inner();
+        let igdb_metadata = if existing.is_none() || overwrite {
+            match igdb
+                .get_igdb_platform_metadata(GetIgdbPlatformMetadataRequest {
+                    platform_id: platform_id.clone(),
+                    search: igdb_search,
+                })
+                .await
+            {
+                Ok(response) => response.into_inner(),
+                Err(status) => match status.code() {
+                    Code::NotFound => {
+                        return Ok(Response::new(DownloadPlatformMetadataResponse {}));
+                    }
+                    _ => {
+                        return Err(status);
+                    }
+                },
+            }
+        } else {
+            return Ok(Response::new(DownloadPlatformMetadataResponse {}));
+        };
 
-        tracing::info!(igdb_metadata = ?igdb_metadata, "Downloaded IGDB metadata for game");
-
-        if let Some(existing_row) = existing {
-            igdb_metadata.id = existing_row.id;
+        if existing.is_some() {
             Self::handle_update_platform_metadata(
                 self.db_pool.clone(),
                 UpdatePlatformMetadataRequest {
                     metadata: Some(igdb_metadata),
                     update_mask: None,
                 },
+                IGDB_PROVIDER_ID,
+                &igdb_id,
             )
             .await?;
         } else {
             Self::handle_create_platform_metadata(
                 self.db_pool.clone(),
-                CreatePlatformMetadataRequest {
-                    metadata: Some(igdb_metadata),
-                },
+                igdb_metadata,
+                IGDB_PROVIDER_ID,
+                &igdb_id,
             )
             .await?;
         }

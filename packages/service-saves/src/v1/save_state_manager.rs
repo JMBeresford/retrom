@@ -3,16 +3,17 @@ use futures::future::join_all;
 use retrom_codegen::retrom::{
     files::v1::FileStat,
     services::{
-        config::v1::{config_service_client::ConfigServiceClient, GetServerConfigRequest},
+        config::v1::GetServerConfigRequest,
         emulators::v1::EmulatorRow,
         library::v1::Game,
         saves::v1::{BackupStats, SaveStates, SaveStatesStat},
     },
 };
 use retrom_db::DbPool;
-use retrom_service_common::retrom_dirs::RetromDirs;
+use retrom_service_common::{
+    grpc_clients::config_svc::CommonConfigServiceClient, retrom_dirs::RetromDirs,
+};
 use std::path::PathBuf;
-use tonic::transport::Channel;
 use tracing::instrument;
 use walkdir::WalkDir;
 
@@ -35,15 +36,11 @@ type Result<T> = std::result::Result<T, SaveStateManagerError>;
 pub struct GameSaveStateManager {
     game: Game,
     db_pool: DbPool,
-    config_svc_client: ConfigServiceClient<Channel>,
+    config_svc_client: CommonConfigServiceClient,
 }
 
 impl GameSaveStateManager {
-    pub fn new(
-        game: Game,
-        db_pool: DbPool,
-        config_svc_client: ConfigServiceClient<Channel>,
-    ) -> Self {
+    pub fn new(game: Game, db_pool: DbPool, config_svc_client: CommonConfigServiceClient) -> Self {
         Self {
             game,
             db_pool,

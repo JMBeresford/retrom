@@ -19,7 +19,7 @@ export function useUpdateGameMetadata() {
       retromClient.metadataClient.updateGameMetadata(request),
     onSuccess: async (_, { metadata }) => {
       queryClient.setQueryData(
-        metadataQueryKeys.getGameMetadata({ id: metadata?.id }),
+        metadataQueryKeys.getGameMetadata({ name: metadata?.name }),
         metadata,
       );
 

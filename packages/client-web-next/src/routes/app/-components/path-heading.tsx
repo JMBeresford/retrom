@@ -30,7 +30,6 @@ export function PathHeading({
         {segments.map(({ link, label }, index) => (
           <Tooltip key={index}>
             <TooltipTrigger
-              disabled={index !== segments.length - 1}
               render={
                 <Link
                   className={cn(

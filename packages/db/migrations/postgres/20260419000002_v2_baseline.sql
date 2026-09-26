@@ -84,62 +84,66 @@ create table if not exists default_game_files (
 -- ────────────────────────────────────────────────────────────────────────────
 
 create table if not exists platform_metadata (
-    id text not null primary key,
     platform_id text not null references platforms (id) on delete cascade,
     provider_id text not null references metadata_providers (id) on delete cascade,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     provider_platform_id text,
-    name text not null,
+    title text not null,
     description text,
     background_url text,
     logo_url text,
-    created_at text not null default current_timestamp,
-    updated_at text not null default current_timestamp,
     icon_url text,
+    primary key (platform_id, provider_id),
     constraint platform_metadata_platform_provider_unique unique (platform_id, provider_id)
 );
 
 create table if not exists game_metadata (
-    id text not null primary key,
     game_id text not null references games (id) on delete cascade,
     provider_id text not null references metadata_providers (id) on delete cascade,
+    created_at text not null default current_timestamp,
+    updated_at text not null default current_timestamp,
     provider_game_id text,
-    name text not null,
+    title text not null,
     description text,
     cover_url text,
     background_url text,
     icon_url text,
-    created_at text not null default current_timestamp,
-    updated_at text not null default current_timestamp,
+    logo_url text,
     release_date text default null,
     last_played text default null,
     minutes_played integer,
-    logo_url text,
+    primary key (game_id, provider_id),
     constraint game_metadata_game_provider_unique unique (game_id, provider_id)
 );
 
 -- Relational replacements for the v1 array columns on game_metadata
 create table if not exists game_metadata_links (
-    game_metadata_id text not null references game_metadata (id) on delete cascade,
+    game_id text not null references games (id) on delete cascade,
+    provider_id text references metadata_providers (id) on delete cascade,
     url text not null,
-    primary key (game_metadata_id, url)
+    primary key (game_id, provider_id, url)
 );
 
 create table if not exists game_metadata_videos (
-    game_metadata_id text not null references game_metadata (id) on delete cascade,
+    game_id text not null references games (id) on delete cascade,
+    provider_id text references metadata_providers (id) on delete cascade,
     url text not null,
-    primary key (game_metadata_id, url)
+    primary key (game_id, provider_id, url)
 );
 
 create table if not exists game_metadata_screenshots (
-    game_metadata_id text not null references game_metadata (id) on delete cascade,
+    game_id text not null references games (id) on delete cascade,
+    provider_id text references metadata_providers (id) on delete cascade,
     url text not null,
-    primary key (game_metadata_id, url)
+    primary key (game_id, provider_id, url)
 );
 
 create table if not exists game_metadata_artworks (
-    game_metadata_id text not null references game_metadata (id) on delete cascade,
+    game_id text not null references games (id) on delete cascade,
+    provider_id text references metadata_providers (id) on delete cascade,
     url text not null,
-    primary key (game_metadata_id, url)
+    primary key (game_id, provider_id, url)
 );
 
 -- ────────────────────────────────────────────────────────────────────────────
@@ -758,10 +762,9 @@ on conflict do nothing;
 --  Seed steam platform metadata
 --  ────────────────────────────────────────────────────────────────────────────
 insert into platform_metadata (
-    id, platform_id, provider_id, name
+    platform_id, provider_id, title
 ) values
 (
-    '00000000-0000-0000-0000-000000000001',
     '00000000-0000-0000-0000-000000000001',
     '00000000-0000-0000-0000-000000000003',
     'Steam'

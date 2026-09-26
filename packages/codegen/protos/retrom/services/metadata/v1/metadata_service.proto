@@ -11,29 +11,21 @@ import "retrom/services/metadata/v1/resources.proto";
 service MetadataService {
   // Get metadata for a singular game by its unique identifier
   rpc GetGameMetadata(GetGameMetadataRequest) returns (GameMetadata);
-  // Create metadata for a singular game by its unique identifier.
-  rpc CreateGameMetadata(CreateGameMetadataRequest) returns (GameMetadata);
   // List all game metadata matching the given filter criteria.
   rpc ListGameMetadata(ListGameMetadataRequest) returns (ListGameMetadataResponse);
   // Update metadata for a singular game by its unique identifier.
   rpc UpdateGameMetadata(UpdateGameMetadataRequest) returns (GameMetadata);
   // Get metadata for multiple games by their unique identifiers.
   rpc BulkGetGameMetadata(BulkGetGameMetadataRequest) returns (BulkGetGameMetadataResponse);
-  // Create metadata for multiple games by their unique identifiers.
-  rpc BulkCreateGameMetadata(BulkCreateGameMetadataRequest) returns (BulkCreateGameMetadataResponse);
 
   // Get metadata for a singular platform by its unique identifier
   rpc GetPlatformMetadata(GetPlatformMetadataRequest) returns (PlatformMetadata);
-  // Create metadata for a singular platform by its unique identifier.
-  rpc CreatePlatformMetadata(CreatePlatformMetadataRequest) returns (PlatformMetadata);
   // List all platform metadata matching the given filter criteria.
   rpc ListPlatformMetadata(ListPlatformMetadataRequest) returns (ListPlatformMetadataResponse);
   // Update metadata for a singular platform by its unique identifier.
   rpc UpdatePlatformMetadata(UpdatePlatformMetadataRequest) returns (PlatformMetadata);
   // Get metadata for multiple platforms by their unique identifiers.
   rpc BulkGetPlatformMetadata(BulkGetPlatformMetadataRequest) returns (BulkGetPlatformMetadataResponse);
-  // Create metadata for multiple platforms by their unique identifiers.
-  rpc BulkCreatePlatformMetadata(BulkCreatePlatformMetadataRequest) returns (BulkCreatePlatformMetadataResponse);
 
   // Get the status of local metadata stored on disk, including total byte size and number of files.
   rpc StatLocalMetadata(StatLocalMetadataRequest) returns (StatLocalMetadataResponse);
@@ -50,42 +42,36 @@ service MetadataService {
 
 // Request message for GetGameMetadata.
 message GetGameMetadataRequest {
-  // The unique identifier of the game to retrieve metadata for.
-  string id = 1 [
+  // The unique resource name of the game metadata to retrieve.
+  string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.services.metadata.v1.MetadataService/GameMetadata"}
   ];
 }
 
-// Request message for CreateGameMetadata.
-message CreateGameMetadataRequest {
-  // The GameMetadata object containing the metadata values for the game to create.
-  GameMetadata metadata = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
 // Request message for ListGameMetadata.
 message ListGameMetadataRequest {
-  // An optional list of GameMetadata identifiers to filter the results by.
-  repeated string ids = 1;
   // An optional list of Game identifiers to filter the results by. If game_ids is provided,
   // only metadata for the specified games will be returned.
-  repeated string game_ids = 2;
-  // An optional list of metadata provider identifiers to filter the results by. If provider_ids is provided,
-  // only metadata from the specified providers will be returned.
-  repeated string provider_ids = 3;
+  repeated string game_ids = 1 [(google.api.field_behavior) = OPTIONAL];
+
+  // An optional title to filter the results by. If title is provided, only metadata for games
+  // with a title containing the specified string will be returned.
+  optional string title = 2 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Response message for ListGameMetadata.
 message ListGameMetadataResponse {
   // A list of GameMetadata objects containing the metadata for each requested game, sourced from the specified
   // metadata provider if provider_ids were specified in the request, or from all providers if provider_ids were not specified.
-  repeated GameMetadata metadata = 1;
+  repeated GameMetadata game_metadata = 1;
 }
 
 // Request message for UpdateGameMetadata.
 message UpdateGameMetadataRequest {
   // The updated GameMetadata object containing the new metadata values for the game.
   GameMetadata metadata = 1 [(google.api.field_behavior) = REQUIRED];
+
   // A field mask specifying which fields in the GameMetadata should be updated. If update_mask is not provided,
   // all fields in the GameMetadata will be updated.
   google.protobuf.FieldMask update_mask = 2;
@@ -100,46 +86,28 @@ message BulkGetGameMetadataRequest {
 // Response message for BulkGetGameMetadata.
 message BulkGetGameMetadataResponse {
   // A list of GameMetadata objects containing the metadata for each requested game.
-  repeated GameMetadata metadata = 1;
-}
-
-// Request message for BulkCreateGameMetadata.
-message BulkCreateGameMetadataRequest {
-  // A list of CreateGameMetadataRequest objects defining the metadata to create for each game.
-  repeated CreateGameMetadataRequest requests = 1;
-}
-
-// Response message for BulkCreateGameMetadata.
-message BulkCreateGameMetadataResponse {
-  // A list of GameMetadata objects containing the metadata for each created game.
-  repeated GameMetadata metadata = 1;
+  repeated GameMetadata game_metadata = 1;
 }
 
 // Request message for GetPlatformMetadata.
 message GetPlatformMetadataRequest {
-  // The unique identifier of the metadata to retrieve.
-  string id = 1 [
+  // The unique resource name of the platform metadata to retrieve.
+  // Format: platforms/{platform_id}/metadata
+  string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.services.metadata.v1.MetadataService/PlatformMetadata"}
   ];
 }
 
-// Request message for CreatePlatformMetadata.
-message CreatePlatformMetadataRequest {
-  // The PlatformMetadata object containing the metadata values for the platform to create.
-  PlatformMetadata metadata = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
 // Request message for ListPlatformMetadata.
 message ListPlatformMetadataRequest {
-  // An optional list of PlatformMetadata identifiers to filter the results by.
-  repeated string ids = 1;
   // An optional list of Platform identifiers to filter the results by. If platform_ids is provided,
   // only metadata for the specified platforms will be returned.
-  repeated string platform_ids = 2;
-  // An optional list of metadata provider identifiers to filter the results by. If provider_ids is provided,
-  // only metadata from the specified providers will be returned.
-  repeated string provider_ids = 3;
+  repeated string platform_ids = 1 [(google.api.field_behavior) = OPTIONAL];
+
+  // An optional title to filter the results by. If title is provided, only metadata for platforms
+  // with a title containing the specified string will be returned.
+  optional string title = 2 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Response message for ListPlatformMetadata.
@@ -172,12 +140,6 @@ message BulkGetPlatformMetadataResponse {
   repeated PlatformMetadata metadata = 1;
 }
 
-// Request message for BulkCreatePlatformMetadata.
-message BulkCreatePlatformMetadataRequest {
-  // A list of CreatePlatformMetadataRequest objects defning the metadata to create for each platform.
-  repeated CreatePlatformMetadataRequest requests = 1;
-}
-
 // Response message for BulkCreatePlatformMetadata.
 message BulkCreatePlatformMetadataResponse {
   // A list of PlatformMetadataView objects containing the metadata for each created platform.
@@ -205,6 +167,9 @@ message PurgeLocalMetadataResponse {}
 message DownloadGameMetadataRequest {
   // The unique identifier of the game to download metadata for.
   string game_id = 1;
+
+  // Whether to overwrite existing metadata for the game if it already exists in the database.
+  bool overwrite = 2;
 }
 
 // Response message for DownloadGameMetadata.
@@ -214,6 +179,9 @@ message DownloadGameMetadataResponse {}
 message DownloadPlatformMetadataRequest {
   // The unique identifier of the platform to download metadata for.
   string platform_id = 1;
+
+  // Whether to overwrite existing metadata for the platform if it already exists in the database.
+  bool overwrite = 2;
 }
 
 // Response message for DownloadPlatformMetadata.

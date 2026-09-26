@@ -294,14 +294,14 @@ async fn upsert_platform(db_pool: &DbPool, library_id: &str, path: &str) -> Resu
         }
     };
 
-    let name = match PathBuf::from(path)
+    let title = match PathBuf::from(path)
         .file_name()
-        .and_then(|name| name.to_str())
+        .and_then(|title| title.to_str())
     {
-        Some(name) => name.to_string(),
+        Some(title) => title.to_string(),
         None => {
             return Err(ScanError::Parser(ParserError::Other(
-                "Could not extract platform name from path".to_string(),
+                "Could not extract platform title from path".to_string(),
             )))
         }
     };
@@ -309,18 +309,16 @@ async fn upsert_platform(db_pool: &DbPool, library_id: &str, path: &str) -> Resu
     let mut builder = QueryBuilder::new(
         r#"
             insert into platform_metadata
-                (id, platform_id, provider_id, provider_platform_id, name)
+                (platform_id, provider_id, title)
             values (
         "#,
     );
 
     let mut separated = builder.separated(", ");
     separated
-        .push_bind(uuid::Uuid::now_v7().to_string())
         .push_bind(&platform_id)
         .push_bind(MANUAL_PROVIDER_ID)
-        .push_bind(&platform_id)
-        .push_bind(name)
+        .push_bind(title)
         .push_unseparated(") on conflict do nothing");
 
     builder.build().execute(&mut *tx).await?;
@@ -386,14 +384,14 @@ async fn upsert_game(db_pool: &DbPool, platform_id: &str, path: &str) -> Result<
         }
     };
 
-    let name = match PathBuf::from(path)
+    let title = match PathBuf::from(path)
         .file_name()
-        .and_then(|name| name.to_str())
+        .and_then(|title| title.to_str())
     {
-        Some(name) => name.to_string(),
+        Some(title) => title.to_string(),
         None => {
             return Err(ScanError::Parser(ParserError::Other(
-                "Could not extract game name from path".to_string(),
+                "Could not extract game title from path".to_string(),
             )))
         }
     };
@@ -401,18 +399,16 @@ async fn upsert_game(db_pool: &DbPool, platform_id: &str, path: &str) -> Result<
     let mut builder = QueryBuilder::new(
         r#"
             insert into game_metadata
-                (id, game_id, provider_id, provider_game_id, name)
+                (game_id, provider_id, title)
             values (
         "#,
     );
 
     let mut separated = builder.separated(", ");
     separated
-        .push_bind(uuid::Uuid::now_v7().to_string())
         .push_bind(&game_id)
         .push_bind(MANUAL_PROVIDER_ID)
-        .push_bind(&game_id)
-        .push_bind(name)
+        .push_bind(&title)
         .push_unseparated(") on conflict do nothing");
 
     builder.build().execute(&mut *tx).await?;

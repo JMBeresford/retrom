@@ -1,36 +1,32 @@
 use super::save_file_manager::{GameSaveFileManager, SaveFileManager};
 use super::save_state_manager::{GameSaveStateManager, SaveStateManager};
-use retrom_codegen::retrom::services::library::v1::library_service_client::LibraryServiceClient;
 use retrom_codegen::retrom::services::library::v1::GetGameRequest;
-use retrom_codegen::retrom::services::{
-    config::v1::config_service_client::ConfigServiceClient,
-    saves::v1::{
-        saves_service_server::SavesService, DeleteSaveFilesRequest, DeleteSaveFilesResponse,
-        DeleteSaveStatesRequest, DeleteSaveStatesResponse, GetSaveFilesRequest,
-        GetSaveFilesResponse, GetSaveStatesRequest, GetSaveStatesResponse,
-        RestoreSaveFilesFromBackupRequest, RestoreSaveFilesFromBackupResponse,
-        RestoreSaveStatesFromBackupRequest, RestoreSaveStatesFromBackupResponse, SaveFiles,
-        SaveStates, StatSaveFilesRequest, StatSaveFilesResponse, StatSaveStatesRequest,
-        StatSaveStatesResponse, UpdateSaveFilesRequest, UpdateSaveFilesResponse,
-        UpdateSaveStatesRequest, UpdateSaveStatesResponse,
-    },
+use retrom_codegen::retrom::services::saves::v1::{
+    saves_service_server::SavesService, DeleteSaveFilesRequest, DeleteSaveFilesResponse,
+    DeleteSaveStatesRequest, DeleteSaveStatesResponse, GetSaveFilesRequest, GetSaveFilesResponse,
+    GetSaveStatesRequest, GetSaveStatesResponse, RestoreSaveFilesFromBackupRequest,
+    RestoreSaveFilesFromBackupResponse, RestoreSaveStatesFromBackupRequest,
+    RestoreSaveStatesFromBackupResponse, SaveFiles, SaveStates, StatSaveFilesRequest,
+    StatSaveFilesResponse, StatSaveStatesRequest, StatSaveStatesResponse, UpdateSaveFilesRequest,
+    UpdateSaveFilesResponse, UpdateSaveStatesRequest, UpdateSaveStatesResponse,
 };
 use retrom_db::DbPool;
+use retrom_service_common::grpc_clients::config_svc::CommonConfigServiceClient;
+use retrom_service_common::grpc_clients::library_svc::CommonLibraryServiceClient;
 use std::path::PathBuf;
-use tonic::transport::Channel;
 use tracing::instrument;
 
 pub struct SavesServiceHandlers {
     db_pool: DbPool,
-    config_svc_client: ConfigServiceClient<Channel>,
-    library_svc_client: LibraryServiceClient<Channel>,
+    config_svc_client: CommonConfigServiceClient,
+    library_svc_client: CommonLibraryServiceClient,
 }
 
 impl SavesServiceHandlers {
     pub fn new(
         db_pool: DbPool,
-        config_svc_client: ConfigServiceClient<Channel>,
-        library_svc_client: LibraryServiceClient<Channel>,
+        config_svc_client: CommonConfigServiceClient,
+        library_svc_client: CommonLibraryServiceClient,
     ) -> Self {
         Self {
             db_pool,

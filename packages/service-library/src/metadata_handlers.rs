@@ -13,12 +13,15 @@ use retrom_codegen::retrom::services::{
 };
 use sqlx::QueryBuilder;
 use tonic::{Code, Request, Status};
-use tracing::Instrument;
+use tracing::{Instrument, Span};
 
 pub async fn update_library_metadata(
     state: &LibraryServiceHandlers,
-    _request: Request<UpdateLibraryMetadataRequest>,
+    request: Request<UpdateLibraryMetadataRequest>,
 ) -> Result<UpdateLibraryMetadataResponse, Status> {
+    let request = request.into_inner();
+    let overwrite = request.overwrite();
+
     let platform_metadata_job = state
         .job_manager
         .create_job(
@@ -49,6 +52,11 @@ pub async fn update_library_metadata(
     let metadata_svc = state.metadata_svc_client.clone();
     let job_manager = state.job_manager.clone();
 
+    let current_span = Span::current();
+
+    let platform_update_span = tracing::info_span!(parent: None, "update_platform_metadata_job");
+    platform_update_span.follows_from(&current_span);
+
     tokio::spawn(
         async move {
             job_manager
@@ -76,19 +84,26 @@ pub async fn update_library_metadata(
             let mut tasks = tokio::task::JoinSet::new();
             all_platform_ids.into_iter().for_each(|platform_id| {
                 let mut metadata_svc = metadata_svc.clone();
-                tasks.spawn(
-                    async move {
-                        metadata_svc
-                            .download_platform_metadata(DownloadPlatformMetadataRequest {
-                                platform_id,
-                            })
-                            .await
-                            .map_err(|why| Status::internal(why.to_string()))?;
+                tasks.spawn(async move {
+                    match metadata_svc
+                        .download_platform_metadata(DownloadPlatformMetadataRequest {
+                            platform_id: platform_id.clone(),
+                            overwrite,
+                        })
+                        .await
+                    {
+                        Ok(_) => {}
+                        Err(status) => match status.code() {
+                            Code::NotFound => tracing::debug!(
+                                "No metadata found for platform_id {platform_id}: {}",
+                                status.message()
+                            ),
+                            _ => return Err(status),
+                        },
+                    };
 
-                        Ok::<(), Status>(())
-                    }
-                    .in_current_span(),
-                );
+                    Ok::<(), Status>(())
+                });
             });
 
             let total_tasks = tasks.len();
@@ -138,7 +153,7 @@ pub async fn update_library_metadata(
 
             Ok::<_, Status>(())
         }
-        .instrument(tracing::info_span!("update_platform_metadata_job")),
+        .instrument(platform_update_span),
     );
 
     let db_pool = state.db_pool.clone();
@@ -146,6 +161,9 @@ pub async fn update_library_metadata(
     let platform_metadata_job_id = platform_metadata_job.id.clone();
     let game_metadata_job_id = game_metadata_job.id.clone();
     let metadata_svc = state.metadata_svc_client.clone();
+
+    let game_update_span = tracing::info_span!(parent: None, "update_game_metadata_job");
+    game_update_span.follows_from(&current_span);
 
     tokio::spawn(
         async move {
@@ -183,28 +201,26 @@ pub async fn update_library_metadata(
             all_game_ids.into_iter().for_each(|game_id| {
                 let mut metadata_svc = metadata_svc.clone();
 
-                tasks.spawn(
-                    async move {
-                        match metadata_svc
-                            .download_game_metadata(DownloadGameMetadataRequest {
-                                game_id: game_id.clone(),
-                            })
-                            .await
-                        {
-                            Ok(_) => {}
-                            Err(status) => match status.code() {
-                                Code::NotFound => tracing::warn!(
-                                    "No metadata found for game_id {game_id}: {}",
-                                    status.message()
-                                ),
-                                _ => return Err(status),
-                            },
-                        }
-
-                        Ok::<(), Status>(())
+                tasks.spawn(async move {
+                    match metadata_svc
+                        .download_game_metadata(DownloadGameMetadataRequest {
+                            game_id: game_id.clone(),
+                            overwrite,
+                        })
+                        .await
+                    {
+                        Ok(_) => {}
+                        Err(status) => match status.code() {
+                            Code::NotFound => tracing::debug!(
+                                "No metadata found for game_id {game_id}: {}",
+                                status.message()
+                            ),
+                            _ => return Err(status),
+                        },
                     }
-                    .in_current_span(),
-                );
+
+                    Ok::<(), Status>(())
+                });
             });
 
             let total_tasks = tasks.len();
@@ -252,11 +268,15 @@ pub async fn update_library_metadata(
 
             Ok::<_, Status>(())
         }
-        .instrument(tracing::info_span!("update_game_metadata_job")),
+        .instrument(game_update_span),
     );
 
     let job_manager = state.job_manager.clone();
     let db_pool = state.db_pool.clone();
+
+    let extra_metadata_update_span = tracing::info_span!(parent: None, "update_extra_metadata_job");
+    extra_metadata_update_span.follows_from(&current_span);
+
     tokio::spawn(
         async move {
             job_manager
@@ -279,53 +299,49 @@ pub async fn update_library_metadata(
             all_game_ids.into_iter().for_each(|game_id| {
                 let db_pool = db_pool.clone();
 
-                tasks.spawn(
-                    async move {
-                        // Collect IDs of other games that share tags with this game.
-                        let similar_game_ids: Vec<String> = QueryBuilder::new(
-                            r#"
+                tasks.spawn(async move {
+                    // Collect IDs of other games that share tags with this game.
+                    let similar_game_ids: Vec<String> = QueryBuilder::new(
+                        r#"
                             select distinct other_tags.game_id
                             from game_tags this_tags
                             join game_tags other_tags on this_tags.tag_id = other_tags.tag_id
                             where this_tags.game_id = 
                             "#,
-                        )
-                        .push_bind(&game_id)
-                        .push(" and other_tags.game_id != ")
-                        .push_bind(&game_id)
-                        .build_query_scalar()
-                        .fetch_all(&db_pool)
+                    )
+                    .push_bind(&game_id)
+                    .push(" and other_tags.game_id != ")
+                    .push_bind(&game_id)
+                    .build_query_scalar()
+                    .fetch_all(&db_pool)
+                    .await
+                    .map_err(|why| Status::internal(why.to_string()))?;
+
+                    if similar_game_ids.is_empty() {
+                        return Ok::<(), Status>(());
+                    }
+
+                    let mut insert_builder =
+                        QueryBuilder::new("insert into similar_games (game_id, similar_game_id) ");
+
+                    insert_builder.push_values(
+                        similar_game_ids.iter(),
+                        |mut row, similar_game_id| {
+                            row.push_bind(&game_id);
+                            row.push_bind(similar_game_id);
+                        },
+                    );
+
+                    insert_builder.push(" on conflict do nothing");
+
+                    insert_builder
+                        .build()
+                        .execute(&db_pool)
                         .await
                         .map_err(|why| Status::internal(why.to_string()))?;
 
-                        if similar_game_ids.is_empty() {
-                            return Ok::<(), Status>(());
-                        }
-
-                        let mut insert_builder = QueryBuilder::new(
-                            "insert into similar_games (game_id, similar_game_id) ",
-                        );
-
-                        insert_builder.push_values(
-                            similar_game_ids.iter(),
-                            |mut row, similar_game_id| {
-                                row.push_bind(&game_id);
-                                row.push_bind(similar_game_id);
-                            },
-                        );
-
-                        insert_builder.push(" on conflict do nothing");
-
-                        insert_builder
-                            .build()
-                            .execute(&db_pool)
-                            .await
-                            .map_err(|why| Status::internal(why.to_string()))?;
-
-                        Ok::<(), Status>(())
-                    }
-                    .in_current_span(),
-                );
+                    Ok::<(), Status>(())
+                });
             });
 
             let total_tasks = tasks.len();
@@ -375,7 +391,7 @@ pub async fn update_library_metadata(
 
             Ok::<(), Status>(())
         }
-        .instrument(tracing::info_span!("update_extra_metadata_job")),
+        .instrument(extra_metadata_update_span),
     );
 
     Ok(UpdateLibraryMetadataResponse {

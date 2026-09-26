@@ -741,7 +741,7 @@ dependencies = [
  "hyper 1.9.0",
  "hyper-util",
  "itoa",
- "matchit",
+ "matchit 0.8.4",
  "memchr",
  "mime",
  "percent-encoding",
@@ -5839,6 +5839,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 
 [[package]]
+name = "matchit"
+version = "0.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8863b587001c1b9a8a4e36008cebc6b3612cb1226fe2de94858e06092687b608"
+
+[[package]]
 name = "maybe-rayon"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9328,6 +9334,7 @@ dependencies = [
  "signal-hook",
  "signal-hook-tokio",
  "tokio",
+ "tonic-tracing-opentelemetry",
  "tonic-web",
  "tower 0.5.3",
  "tower-http",
@@ -9373,6 +9380,7 @@ dependencies = [
  "rayon",
  "reqwest 0.12.28",
  "retrom-codegen",
+ "retrom-telemetry",
  "serde",
  "serde_json",
  "sevenz-rust2",
@@ -9509,6 +9517,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "futures",
+ "matchit 0.9.2",
  "once_cell",
  "prost-reflect",
  "retrom-codegen",
@@ -9521,8 +9530,10 @@ dependencies = [
  "tokio",
  "tonic",
  "tonic-reflection",
+ "tonic-tracing-opentelemetry",
  "tonic-web",
  "tracing",
+ "tracing-opentelemetry 0.32.1",
  "uuid",
  "walkdir",
 ]
@@ -9576,6 +9587,7 @@ dependencies = [
 name = "retrom-telemetry"
 version = "0.8.4"
 dependencies = [
+ "futures-util",
  "http 1.4.0",
  "hyper 1.9.0",
  "opentelemetry 0.31.0",
@@ -9583,6 +9595,8 @@ dependencies = [
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions 0.31.0",
  "opentelemetry_sdk",
+ "tonic",
+ "tower 0.5.3",
  "tower-http",
  "tracing",
  "tracing-opentelemetry 0.32.1",

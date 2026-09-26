@@ -380,9 +380,9 @@ mod integration_tests {
     async fn test_media_cache_basic_functionality() {
         // Test that cache directories are created correctly using trait implementations
         let game_metadata = GameMetadata {
-            id: "1".to_string(),
+            name: "games/42/metadata".to_string(),
             game: "42".to_string(),
-            name: "Test Game".to_string(),
+            title: "Test Game".to_string(),
             ..Default::default()
         };
 
@@ -390,12 +390,12 @@ mod integration_tests {
         // Check that the cache dir has the correct structure (ends with correct path)
         assert!(cache_dir
             .to_string_lossy()
-            .ends_with("media/game_metadata/1"));
+            .ends_with("media/game_metadata/42"));
 
         let platform_metadata = PlatformMetadata {
-            id: "1".to_string(),
+            name: "platforms/1/metadata".to_string(),
             platform: "1".to_string(),
-            name: "Test Platform".to_string(),
+            title: "Test Platform".to_string(),
             ..Default::default()
         };
 
@@ -465,9 +465,9 @@ mod integration_tests {
     async fn test_subdirectory_organization() {
         // Create test game metadata with artwork and screenshot URLs
         let game_metadata = GameMetadata {
-            id: "1".to_string(),
+            name: "games/123/metadata".to_string(),
             game: "123".to_string(),
-            name: "Test Game".to_string(),
+            title: "Test Game".to_string(),
             ..Default::default()
         };
 
@@ -504,7 +504,7 @@ mod integration_tests {
         let cache = MediaCache::new();
 
         let game_metadata = GameMetadata {
-            id: "123".to_string(),
+            name: "games/123/metadata".to_string(),
             game: "123".to_string(),
             ..Default::default()
         };

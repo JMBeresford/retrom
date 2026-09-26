@@ -1,4 +1,6 @@
-use crate::metadata_providers::RetryAttempts;
+use crate::{
+    grpc_clients::config_svc::CommonConfigServiceClient, metadata_providers::RetryAttempts,
+};
 use prost::Message;
 use retrom_codegen::{
     igdb,
@@ -8,10 +10,7 @@ use retrom_codegen::{
             igdb_filters::{FilterOperator, FilterValue},
             igdb_sort::SortOrder,
         },
-        services::{
-            config::v1::{config_service_client::ConfigServiceClient, GetServerConfigRequest},
-            metadata::v1::IgdbSearchRequest,
-        },
+        services::{config::v1::GetServerConfigRequest, metadata::v1::IgdbSearchRequest},
     },
 };
 use std::{
@@ -117,7 +116,7 @@ type IGDBSenderMsg = (
 
 pub struct IGDBProvider {
     auth: RwLock<IGDBAuth>,
-    config_client: ConfigServiceClient<tonic::transport::Channel>,
+    config_client: CommonConfigServiceClient,
     request_tx: mpsc::Sender<IGDBSenderMsg>,
     pub game_fields: Vec<String>,
     pub platform_fields: Vec<String>,
@@ -134,7 +133,7 @@ impl IGDBAuth {
 }
 
 impl IGDBProvider {
-    pub fn new(config_client: ConfigServiceClient<tonic::transport::Channel>) -> Self {
+    pub fn new(config_client: CommonConfigServiceClient) -> Self {
         let http_client = reqwest::Client::new();
 
         let (tx, mut rx) = mpsc::channel::<IGDBSenderMsg>(IGDB_CONCURRENT_REQUESTS_LIMIT);

@@ -1,8 +1,12 @@
 use crate::svc_definitions::METADATA_SVC_PORT;
 use retrom_codegen::retrom::services::metadata::v1::steam_service_client::SteamServiceClient;
+use retrom_telemetry::grpc::{GrpcClientSpanLayer, GrpcClientSpanService};
 use tonic::transport::Channel;
+use tower::ServiceBuilder;
 
-pub fn get_steam_svc_client(port: Option<u16>) -> SteamServiceClient<Channel> {
+pub type CommonSteamServiceClient = SteamServiceClient<GrpcClientSpanService<Channel>>;
+
+pub fn get_steam_svc_client(port: Option<u16>) -> CommonSteamServiceClient {
     let metadata_svc_port = port.unwrap_or_else(|| {
         std::env::var("RETROM_SVC_PORT")
             .ok()
@@ -17,11 +21,15 @@ pub fn get_steam_svc_client(port: Option<u16>) -> SteamServiceClient<Channel> {
 
     let metadata_svc_host = format!("http://localhost:{metadata_svc_port}");
 
-    let metadata_svc_transport = Channel::from_shared(metadata_svc_host.clone())
+    let channel = Channel::from_shared(metadata_svc_host.clone())
         .unwrap_or_else(|_| {
             panic!("Failed to create SteamServiceClient with host {metadata_svc_host}")
         })
         .connect_lazy();
 
-    SteamServiceClient::new(metadata_svc_transport)
+    let svc = ServiceBuilder::new()
+        .layer(GrpcClientSpanLayer::new())
+        .service(channel);
+
+    SteamServiceClient::new(svc)
 }

@@ -1,7 +1,6 @@
 use super::provider::{IGDBProvider, IgdbSearchData, IgdbSearchQuery, IgdbSearchType};
 use crate::metadata_providers::{
-    igdb::provider::IGDB_PROVIDER_ID, GameMetadataProvider, GameMetadataSearchParams,
-    MetadataProviderError, Result, ToGameMetadata,
+    GameMetadataProvider, GameMetadataSearchParams, MetadataProviderError, Result, ToGameMetadata,
 };
 use prost::Message;
 use retrom_codegen::{
@@ -63,13 +62,11 @@ impl ToGameMetadata for igdb::Game {
         };
 
         GameMetadata {
-            id: Default::default(),
+            name: format!("games/{game_id}/metadata"),
             game: game_id.to_string(),
-            provider: IGDB_PROVIDER_ID.to_string(),
-            provider_game_id: self.id.to_string(),
             created_at: None,
             updated_at: None,
-            name: self.name.clone(),
+            title: self.name.clone(),
             description: Some(self.summary.clone()),
             cover_url,
             icon_url,

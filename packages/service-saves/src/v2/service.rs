@@ -17,6 +17,7 @@ use std::{path::PathBuf, time::SystemTime};
 use tonic::{Request, Response, Status};
 use tracing::instrument;
 
+#[derive(Default)]
 pub struct EmulatorSavesServiceHandlers {}
 
 impl EmulatorSavesServiceHandlers {
@@ -160,14 +161,14 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
 
         let restore_jobs: Vec<_> = selectors
             .into_iter()
-            .filter_map(|selector| {
+            .map(|selector| {
                 let backup_id = selector.backup.map(|b| b.backup_id);
                 let emulator_id = selector.emulator_id;
 
                 let dir = LudusaviManager::get_emulator_save_dir(&emulator_id);
                 let mut ludusavi_manager = LudusaviManager::new(&[&emulator_id], SaveKind::Saves);
 
-                Some(tokio::task::spawn_blocking(move || {
+                tokio::task::spawn_blocking(move || {
                     if let Some(true) = dry_run {
                         tracing::debug!(
                             "Performing dry run restore for backup_id: {:?}",
@@ -185,7 +186,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
                     }
 
                     ludusavi_manager.restore(backup_id, dry_run)
-                }))
+                })
             })
             .collect();
 
@@ -332,7 +333,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
 
         let restore_jobs = selectors
             .into_iter()
-            .filter_map(|selector| {
+            .map(|selector| {
                 let backup_id = selector.backup.map(|b| b.backup_id);
                 let emulator_id = selector.emulator_id;
 
@@ -340,7 +341,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
                 let mut ludusavi_manager =
                     LudusaviManager::new(&[&emulator_id], SaveKind::SaveStates);
 
-                Some(tokio::task::spawn_blocking(move || {
+                tokio::task::spawn_blocking(move || {
                     if let Some(true) = dry_run {
                         tracing::debug!(
                             "Performing dry run restore for backup_id: {:?}",
@@ -358,7 +359,7 @@ impl EmulatorSavesService for EmulatorSavesServiceHandlers {
                     }
 
                     ludusavi_manager.restore(backup_id, dry_run)
-                }))
+                })
             })
             .collect::<Vec<_>>();
 

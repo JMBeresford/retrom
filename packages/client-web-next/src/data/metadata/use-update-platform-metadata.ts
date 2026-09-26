@@ -19,7 +19,7 @@ export function useUpdatePlatformMetadata() {
       retromClient.metadataClient.updatePlatformMetadata(request),
     onSuccess: async (_, { metadata }) => {
       queryClient.setQueryData(
-        metadataQueryKeys.getPlatformMetadata({ id: metadata?.id }),
+        metadataQueryKeys.getPlatformMetadata({ name: metadata?.name }),
         metadata,
       );
 

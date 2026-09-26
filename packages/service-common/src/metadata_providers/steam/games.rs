@@ -1,7 +1,6 @@
 use super::{models, provider::SteamWebApiProvider};
 use crate::metadata_providers::{
-    steam::provider::STEAM_PROVIDER_ID, GameMetadataProvider, GameMetadataSearchParams,
-    MetadataProviderError, Result, ToGameMetadata,
+    GameMetadataProvider, GameMetadataSearchParams, MetadataProviderError, Result, ToGameMetadata,
 };
 use chrono::DateTime;
 use retrom_codegen::{retrom::services::metadata::v1::GameMetadata, timestamp::Timestamp};
@@ -52,11 +51,9 @@ impl ToGameMetadata for SteamGameMetadata {
         };
 
         GameMetadata {
-            id: Default::default(),
-            provider: STEAM_PROVIDER_ID.to_string(),
-            provider_game_id: app.appid.to_string(),
+            name: format!("games/{game_id}/metadata"),
             game: game_id.to_string(),
-            name: app_details.name.clone().unwrap_or_else(|| app.name.clone()),
+            title: app_details.name.clone().unwrap_or_else(|| app.name.clone()),
             description: app_details.short_description.clone(),
             release_date: None,
             created_at: Default::default(),

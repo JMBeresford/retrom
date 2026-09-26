@@ -1,10 +1,10 @@
-use crate::metadata_providers::{steam::models, RetryAttempts};
-use retrom_codegen::retrom::services::config::v1::{
-    config_service_client::ConfigServiceClient, GetServerConfigRequest,
+use crate::{
+    grpc_clients::config_svc::CommonConfigServiceClient,
+    metadata_providers::{steam::models, RetryAttempts},
 };
+use retrom_codegen::retrom::services::config::v1::GetServerConfigRequest;
 use std::{str::FromStr, time::Duration};
 use tokio::sync::{mpsc, oneshot};
-use tonic::transport::Channel;
 use tower::{Service, ServiceExt};
 use tracing::{instrument, Instrument};
 
@@ -20,11 +20,11 @@ pub struct SteamWebApiProvider {
     base_url: String,
     store_base_url: String,
     request_tx: mpsc::Sender<SteamSenderMsg>,
-    config_svc_client: ConfigServiceClient<Channel>,
+    config_svc_client: CommonConfigServiceClient,
 }
 
 impl SteamWebApiProvider {
-    pub fn new(config_svc_client: ConfigServiceClient<Channel>) -> Self {
+    pub fn new(config_svc_client: CommonConfigServiceClient) -> Self {
         let base_url = "https://api.steampowered.com".into();
         let store_base_url = "https://store.steampowered.com/api".into();
         let http_client = reqwest::Client::new();

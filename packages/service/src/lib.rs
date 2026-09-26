@@ -33,6 +33,10 @@ use retrom_service_tags::router::tags_router;
 use retrom_webdav_service::webdav_service;
 use std::{net::SocketAddr, process::exit};
 use tokio::{net::TcpListener, task::JoinHandle};
+use tower_http::{
+    classify::{GrpcErrorsAsFailures, SharedClassifier},
+    trace::TraceLayer,
+};
 use tracing::Instrument;
 
 mod reverse_proxy;
@@ -133,6 +137,13 @@ pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr
     .merge(metadata_router(db_pool.clone()))
     .merge(saves_router(db_pool.clone()))
     .merge(tags_router(db_pool))
+    .layer(
+        TraceLayer::new(SharedClassifier::new(
+            GrpcErrorsAsFailures::new().with_success(tower_http::classify::GrpcCode::NotFound),
+        ))
+        .make_span_with(retrom_telemetry::grpc::GrpcServerSpanHandler::new())
+        .on_response(retrom_telemetry::grpc::GrpcServerSpanHandler::new()),
+    )
     .layer(tonic_web::GrpcWebLayer::new());
 
     let router = rest_service

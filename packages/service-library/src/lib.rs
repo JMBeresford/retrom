@@ -1,38 +1,32 @@
 use pbjson_types::Empty;
-use retrom_codegen::retrom::services::{
-    library::v1::{
-        library_service_server::LibraryService, AddGameRootDirectoryRequest,
-        AddGameRootDirectoryResponse, AddLibraryRootDirectoryRequest,
-        AddLibraryRootDirectoryResponse, AddPlatformRootDirectoryRequest,
-        AddPlatformRootDirectoryResponse, BatchCreateGamesRequest, BatchCreateGamesResponse,
-        BatchCreateLibrariesRequest, BatchCreateLibrariesResponse, BatchCreatePlatformsRequest,
-        BatchCreatePlatformsResponse, BatchCreateRootDirectoriesRequest,
-        BatchCreateRootDirectoriesResponse, BatchDeleteGameFilesRequest,
-        BatchDeleteGameFilesResponse, BatchDeleteGamesRequest, BatchDeleteGamesResponse,
-        BatchDeletePlatformsRequest, BatchDeletePlatformsResponse, BatchGetPlatformsRequest,
-        BatchGetPlatformsResponse, BatchUpdatePlatformsRequest, BatchUpdatePlatformsResponse,
-        CreateGameRequest, CreateLibraryRequest, CreatePlatformRequest, CreateRootDirectoryRequest,
-        DeleteGameFileRequest, DeleteGameRequest, DeleteLibraryRequest,
-        DeleteMissingEntriesRequest, DeleteMissingEntriesResponse, DeletePlatformRequest,
-        DeleteRootDirectoryRequest, Game, GameFile, GetGameFileRequest, GetGameRequest,
-        GetLibraryRequest, GetPlatformRequest, GetRootDirectoryRequest, Library,
-        ListGameFilesRequest, ListGameFilesResponse, ListGamesRequest, ListGamesResponse,
-        ListLibrariesRequest, ListLibrariesResponse, ListPlatformsRequest, ListPlatformsResponse,
-        ListRootDirectoriesRequest, ListRootDirectoriesResponse, Platform, RootDirectory,
-        ScanLibraryRequest, ScanLibraryResponse, UpdateGameFileRequest, UpdateGameRequest,
-        UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdateLibraryRequest,
-        UpdatePlatformRequest,
-    },
-    metadata::v1::metadata_service_client::MetadataServiceClient,
+use retrom_codegen::retrom::services::library::v1::{
+    library_service_server::LibraryService, AddGameRootDirectoryRequest,
+    AddGameRootDirectoryResponse, AddLibraryRootDirectoryRequest, AddLibraryRootDirectoryResponse,
+    AddPlatformRootDirectoryRequest, AddPlatformRootDirectoryResponse, BatchCreateGamesRequest,
+    BatchCreateGamesResponse, BatchCreateLibrariesRequest, BatchCreateLibrariesResponse,
+    BatchCreatePlatformsRequest, BatchCreatePlatformsResponse, BatchCreateRootDirectoriesRequest,
+    BatchCreateRootDirectoriesResponse, BatchDeleteGameFilesRequest, BatchDeleteGameFilesResponse,
+    BatchDeleteGamesRequest, BatchDeleteGamesResponse, BatchDeletePlatformsRequest,
+    BatchDeletePlatformsResponse, BatchGetPlatformsRequest, BatchGetPlatformsResponse,
+    BatchUpdatePlatformsRequest, BatchUpdatePlatformsResponse, CreateGameRequest,
+    CreateLibraryRequest, CreatePlatformRequest, CreateRootDirectoryRequest, DeleteGameFileRequest,
+    DeleteGameRequest, DeleteLibraryRequest, DeleteMissingEntriesRequest,
+    DeleteMissingEntriesResponse, DeletePlatformRequest, DeleteRootDirectoryRequest, Game,
+    GameFile, GetGameFileRequest, GetGameRequest, GetLibraryRequest, GetPlatformRequest,
+    GetRootDirectoryRequest, Library, ListGameFilesRequest, ListGameFilesResponse,
+    ListGamesRequest, ListGamesResponse, ListLibrariesRequest, ListLibrariesResponse,
+    ListPlatformsRequest, ListPlatformsResponse, ListRootDirectoriesRequest,
+    ListRootDirectoriesResponse, Platform, RootDirectory, ScanLibraryRequest, ScanLibraryResponse,
+    UpdateGameFileRequest, UpdateGameRequest, UpdateLibraryMetadataRequest,
+    UpdateLibraryMetadataResponse, UpdateLibraryRequest, UpdatePlatformRequest,
 };
 use retrom_db::DbPool;
 use retrom_service_common::grpc_clients::metadata_svc::{
-    get_metadata_svc_client, InterceptedMetadataServiceClient,
+    get_metadata_svc_client, CommonMetadataServiceClient,
 };
 use retrom_service_jobs::job_manager::JobManager;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
-use tracing::Instrument;
 
 #[cfg(test)]
 pub mod tests;
@@ -50,7 +44,7 @@ pub mod scan_handlers;
 pub struct LibraryServiceHandlers {
     pub db_pool: DbPool,
     pub job_manager: Arc<JobManager>,
-    metadata_svc_client: InterceptedMetadataServiceClient,
+    metadata_svc_client: CommonMetadataServiceClient,
 }
 
 impl LibraryServiceHandlers {
@@ -65,7 +59,6 @@ impl LibraryServiceHandlers {
 
 #[tonic::async_trait]
 impl LibraryService for LibraryServiceHandlers {
-    #[tracing::instrument(skip(self))]
     async fn scan_library(
         &self,
         request: Request<ScanLibraryRequest>,
@@ -75,7 +68,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn update_library_metadata(
         &self,
         request: Request<UpdateLibraryMetadataRequest>,
@@ -85,7 +77,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn delete_missing_entries(
         &self,
         request: Request<DeleteMissingEntriesRequest>,
@@ -95,7 +86,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn get_library(
         &self,
         request: Request<GetLibraryRequest>,
@@ -105,7 +95,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn list_libraries(
         &self,
         request: Request<ListLibrariesRequest>,
@@ -115,7 +104,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn create_library(
         &self,
         request: Request<CreateLibraryRequest>,
@@ -125,7 +113,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn update_library(
         &self,
         request: Request<UpdateLibraryRequest>,
@@ -135,7 +122,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn delete_library(
         &self,
         request: Request<DeleteLibraryRequest>,
@@ -145,7 +131,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn batch_create_libraries(
         &self,
         request: Request<BatchCreateLibrariesRequest>,
@@ -155,7 +140,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn get_root_directory(
         &self,
         request: Request<GetRootDirectoryRequest>,
@@ -165,7 +149,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn list_root_directories(
         &self,
         request: Request<ListRootDirectoriesRequest>,
@@ -175,7 +158,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn create_root_directory(
         &self,
         request: Request<CreateRootDirectoryRequest>,
@@ -185,7 +167,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn delete_root_directory(
         &self,
         request: Request<DeleteRootDirectoryRequest>,
@@ -195,7 +176,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn batch_create_root_directories(
         &self,
         request: Request<BatchCreateRootDirectoriesRequest>,
@@ -208,7 +188,6 @@ impl LibraryService for LibraryServiceHandlers {
         .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn add_library_root_directory(
         &self,
         request: Request<AddLibraryRootDirectoryRequest>,
@@ -221,7 +200,6 @@ impl LibraryService for LibraryServiceHandlers {
         .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn add_platform_root_directory(
         &self,
         request: Request<AddPlatformRootDirectoryRequest>,
@@ -234,7 +212,6 @@ impl LibraryService for LibraryServiceHandlers {
         .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn add_game_root_directory(
         &self,
         request: Request<AddGameRootDirectoryRequest>,
@@ -244,7 +221,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn get_platform(
         &self,
         request: Request<GetPlatformRequest>,
@@ -254,7 +230,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn list_platforms(
         &self,
         request: Request<ListPlatformsRequest>,
@@ -264,7 +239,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn create_platform(
         &self,
         request: Request<CreatePlatformRequest>,
@@ -274,7 +248,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn delete_platform(
         &self,
         request: Request<DeletePlatformRequest>,
@@ -284,7 +257,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn update_platform(
         &self,
         request: Request<UpdatePlatformRequest>,
@@ -294,7 +266,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn batch_get_platforms(
         &self,
         request: Request<BatchGetPlatformsRequest>,
@@ -304,7 +275,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn batch_create_platforms(
         &self,
         request: Request<BatchCreatePlatformsRequest>,
@@ -314,7 +284,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn batch_update_platforms(
         &self,
         request: Request<BatchUpdatePlatformsRequest>,
@@ -324,7 +293,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn batch_delete_platforms(
         &self,
         request: Request<BatchDeletePlatformsRequest>,
@@ -334,14 +302,12 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn get_game(&self, request: Request<GetGameRequest>) -> Result<Response<Game>, Status> {
         game_handlers::get_game(self.db_pool.clone(), request.into_inner())
             .await
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn list_games(
         &self,
         request: Request<ListGamesRequest>,
@@ -351,7 +317,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn create_game(
         &self,
         request: Request<CreateGameRequest>,
@@ -361,7 +326,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn delete_game(
         &self,
         request: Request<DeleteGameRequest>,
@@ -371,7 +335,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn update_game(
         &self,
         request: Request<UpdateGameRequest>,
@@ -381,7 +344,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn batch_create_games(
         &self,
         request: Request<BatchCreateGamesRequest>,
@@ -391,7 +353,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn batch_delete_games(
         &self,
         request: Request<BatchDeleteGamesRequest>,
@@ -401,7 +362,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn get_game_file(
         &self,
         request: Request<GetGameFileRequest>,
@@ -411,7 +371,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn list_game_files(
         &self,
         request: Request<ListGameFilesRequest>,
@@ -421,7 +380,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn update_game_file(
         &self,
         request: Request<UpdateGameFileRequest>,
@@ -431,7 +389,6 @@ impl LibraryService for LibraryServiceHandlers {
             .map(Response::new)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn delete_game_file(
         &self,
         request: Request<DeleteGameFileRequest>,

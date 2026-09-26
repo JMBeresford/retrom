@@ -18,7 +18,6 @@ use retrom_service_common::metadata_providers::{
 use sqlx::QueryBuilder;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
-use tracing::instrument;
 
 pub(crate) mod router;
 
@@ -39,7 +38,6 @@ impl IgdbServiceHandlers {
 
 #[tonic::async_trait]
 impl IgdbService for IgdbServiceHandlers {
-    #[instrument(skip(self))]
     async fn search_igdb_games(
         &self,
         request: Request<SearchIgdbGamesRequest>,
@@ -63,7 +61,6 @@ impl IgdbService for IgdbServiceHandlers {
         Ok(Response::new(result))
     }
 
-    #[instrument(skip(self))]
     async fn search_igdb_platforms(
         &self,
         request: Request<SearchIgdbPlatformsRequest>,
@@ -87,7 +84,6 @@ impl IgdbService for IgdbServiceHandlers {
         Ok(Response::new(result))
     }
 
-    #[instrument(skip(self))]
     async fn get_igdb_game_metadata(
         &self,
         request: Request<GetIgdbGameMetadataRequest>,
@@ -97,9 +93,10 @@ impl IgdbService for IgdbServiceHandlers {
         let provider_platform_id = request.igdb_platform_id;
 
         let name: Option<String> =
-            QueryBuilder::new("select name from game_metadata where game_id = ")
+            QueryBuilder::new("select title from game_metadata where game_id = ")
                 .push_bind(&game_id)
-                .push(" order by provider_id desc")
+                .push(" and title is not null and title != '' ")
+                .push(" order by provider_id desc limit 1")
                 .build_query_scalar()
                 .fetch_optional(&self.db_pool)
                 .await
@@ -134,13 +131,12 @@ impl IgdbService for IgdbServiceHandlers {
             }
         };
 
-        tracing::info!(result = ?result, "Retrieved IGDB game metadata");
+        tracing::debug!(result = ?result, "Retrieved IGDB game metadata");
         let game_metadata = result.to_game_metadata(&game_id);
 
         Ok(Response::new(game_metadata))
     }
 
-    #[instrument(skip(self))]
     async fn list_igdb_game_metadata(
         &self,
         request: Request<ListIgdbGameMetadataRequest>,
@@ -167,7 +163,6 @@ impl IgdbService for IgdbServiceHandlers {
         }))
     }
 
-    #[instrument(skip(self))]
     async fn get_igdb_platform_metadata(
         &self,
         request: Request<GetIgdbPlatformMetadataRequest>,
@@ -186,9 +181,10 @@ impl IgdbService for IgdbServiceHandlers {
         .await
         .map_err(|e| Status::internal(format!("Database error: {}", e)))?;
 
-        let name: Option<String> =
-            QueryBuilder::new("select name from platform_metadata where platform_id = ")
+        let title: Option<String> =
+            QueryBuilder::new("select title from platform_metadata where platform_id = ")
                 .push_bind(&platform_id)
+                .push(" and title is not null and title != '' ")
                 .push(" order by provider_id desc")
                 .build_query_scalar()
                 .fetch_optional(&self.db_pool)
@@ -198,20 +194,24 @@ impl IgdbService for IgdbServiceHandlers {
         let params = PlatformMetadataSearchParams {
             platform_id: platform_id.clone(),
             provider_platform_id: provider_platform_id.and_then(|id| id.parse::<u64>().ok()),
-            name,
+            name: title,
         };
 
-        let platform_metadata = self
-            .igdb_client
-            .get_platform_metadata(params)
-            .await
-            .map(|platform| platform.to_platform_metadata(&platform_id))
-            .map_err(|e| Status::internal(format!("IGDB Provider error: {}", e)))?;
+        let platform_metadata = match self.igdb_client.get_platform_metadata(params).await {
+            Ok(platform_match) => platform_match.to_platform_metadata(&platform_id),
+            Err(MetadataProviderError::NoMatchesFound) => {
+                return Err(Status::not_found("No matches found"));
+            }
+            Err(other_error) => {
+                return Err(Status::internal(format!(
+                    "IGDB Provider error: {other_error}"
+                )));
+            }
+        };
 
         Ok(Response::new(platform_metadata))
     }
 
-    #[instrument(skip(self))]
     async fn list_igdb_platform_metadata(
         &self,
         request: Request<ListIgdbPlatformMetadataRequest>,

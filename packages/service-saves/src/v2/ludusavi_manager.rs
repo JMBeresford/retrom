@@ -94,7 +94,7 @@ impl LudusaviManager {
         manifest.add_custom_games(&config);
 
         Self {
-            emulator_ids: emulator_ids.into_iter().map(|s| s.to_string()).collect(),
+            emulator_ids: emulator_ids.iter().map(|s| s.to_string()).collect(),
             ludusavi: Ludusavi::new(config, manifest),
         }
     }

@@ -1,12 +1,12 @@
 use crate::svc_definitions::METADATA_SVC_PORT;
 use retrom_codegen::retrom::services::metadata::v1::metadata_service_client::MetadataServiceClient;
+use retrom_telemetry::grpc::{GrpcClientSpanLayer, GrpcClientSpanService};
 use tonic::transport::Channel;
-use tonic_tracing_opentelemetry::middleware::client::{OtelGrpcLayer, OtelGrpcService};
 use tower::ServiceBuilder;
 
-pub type InterceptedMetadataServiceClient = MetadataServiceClient<OtelGrpcService<Channel>>;
+pub type CommonMetadataServiceClient = MetadataServiceClient<GrpcClientSpanService<Channel>>;
 
-pub fn get_metadata_svc_client(port: Option<u16>) -> InterceptedMetadataServiceClient {
+pub fn get_metadata_svc_client(port: Option<u16>) -> CommonMetadataServiceClient {
     let metadata_svc_port = port.unwrap_or_else(|| {
         std::env::var("RETROM_SVC_PORT")
             .ok()
@@ -27,9 +27,9 @@ pub fn get_metadata_svc_client(port: Option<u16>) -> InterceptedMetadataServiceC
         })
         .connect_lazy();
 
-    let channel = ServiceBuilder::new()
-        .layer(OtelGrpcLayer::default())
+    let svc = ServiceBuilder::new()
+        .layer(GrpcClientSpanLayer::new())
         .service(channel);
 
-    MetadataServiceClient::new(channel)
+    MetadataServiceClient::new(svc)
 }

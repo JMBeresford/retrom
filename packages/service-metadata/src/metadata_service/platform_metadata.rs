@@ -4,16 +4,15 @@ use retrom_db::RetromDB;
 use sqlx::{Executor, QueryBuilder};
 use std::collections::HashSet;
 use tonic::Status;
+use tracing::instrument;
 
 pub fn platform_metadata_from_rows(row: PlatformMetadataRow) -> PlatformMetadata {
     PlatformMetadata {
-        id: row.id,
+        name: format!("platforms/{}/metadata", row.platform_id),
         platform: row.platform_id,
-        provider: row.provider_id,
-        provider_platform_id: row.provider_platform_id,
         created_at: row.created_at,
         updated_at: row.updated_at,
-        name: row.name,
+        title: row.title,
         description: row.description,
         background_url: row.background_url,
         icon_url: row.icon_url,
@@ -21,15 +20,18 @@ pub fn platform_metadata_from_rows(row: PlatformMetadataRow) -> PlatformMetadata
     }
 }
 
-pub fn rows_from_platform_metadata(metadata: PlatformMetadata) -> PlatformMetadataRow {
+pub fn rows_from_platform_metadata(
+    metadata: PlatformMetadata,
+    provider_id: &str,
+    provider_platform_id: &Option<String>,
+) -> PlatformMetadataRow {
     PlatformMetadataRow {
-        id: metadata.id,
         platform_id: metadata.platform,
-        provider_id: metadata.provider,
-        provider_platform_id: metadata.provider_platform_id,
+        provider_id: provider_id.to_string(),
+        provider_platform_id: provider_platform_id.clone(),
         created_at: metadata.created_at,
         updated_at: metadata.updated_at,
-        name: metadata.name,
+        title: metadata.title,
         description: metadata.description,
         background_url: metadata.background_url,
         icon_url: metadata.icon_url,
@@ -37,6 +39,7 @@ pub fn rows_from_platform_metadata(metadata: PlatformMetadata) -> PlatformMetada
     }
 }
 
+#[instrument(err, skip_all)]
 pub async fn insert_platform_metadata(
     conn: impl Executor<'_, Database = RetromDB>,
     metadata: PlatformMetadataRow,
@@ -44,11 +47,10 @@ pub async fn insert_platform_metadata(
     let mut builder = QueryBuilder::new(
         r#"
         insert into platform_metadata (
-            id,
             platform_id,
             provider_id,
             provider_platform_id,
-            name,
+            title,
             description,
             background_url,
             icon_url,
@@ -59,11 +61,10 @@ pub async fn insert_platform_metadata(
     );
 
     let mut separated = builder.separated(", ");
-    separated.push_bind(uuid::Uuid::now_v7().to_string());
     separated.push_bind(&metadata.platform_id);
     separated.push_bind(&metadata.provider_id);
     separated.push_bind(&metadata.provider_platform_id);
-    separated.push_bind(&metadata.name);
+    separated.push_bind(&metadata.title);
     separated.push_bind(&metadata.description);
     separated.push_bind(&metadata.background_url);
     separated.push_bind(&metadata.icon_url);
@@ -80,14 +81,17 @@ pub async fn insert_platform_metadata(
     Ok(row)
 }
 
+#[instrument(err, skip_all)]
 pub async fn update_platform_metadata(
     conn: impl Executor<'_, Database = RetromDB>,
     metadata: &PlatformMetadataRow,
     field_mask: &HashSet<String>,
 ) -> Result<PlatformMetadataRow, Status> {
     let message_descriptor = super::descriptor_pool::DESCRIPTOR_POOL
-        .get_message_by_name("retrom.services.metadata.v1.PlatformMetadata")
-        .ok_or_else(|| Status::internal("Failed to get message descriptor for PlatformMetadata"))?;
+        .get_message_by_name("retrom.services.metadata.v1.PlatformMetadataRow")
+        .ok_or_else(|| {
+            Status::internal("Failed to get message descriptor for PlatformMetadataRow")
+        })?;
 
     let mut reflection = DynamicMessage::new(message_descriptor);
     reflection
@@ -97,7 +101,7 @@ pub async fn update_platform_metadata(
     let empty_mask = field_mask.is_empty();
 
     let fields_to_update: Vec<String> = vec![
-        "name",
+        "title",
         "description",
         "background_url",
         "icon_url",
@@ -135,8 +139,10 @@ pub async fn update_platform_metadata(
         };
     }
 
-    builder.push(" where id = ");
-    builder.push_bind(&metadata.id);
+    builder.push(" where platform_id = ");
+    builder.push_bind(&metadata.platform_id);
+    builder.push(" and provider_id = ");
+    builder.push_bind(&metadata.provider_id);
     builder.push(" returning *");
 
     let row: PlatformMetadataRow = builder

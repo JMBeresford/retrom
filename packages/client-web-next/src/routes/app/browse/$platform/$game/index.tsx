@@ -13,9 +13,9 @@ import { SimilarGames } from "./-components/similar-games";
 import { GameDetailCard } from "./-components/game-detail-card";
 import { Media } from "./-components/media";
 import { PathHeading } from "@/routes/app/-components/path-heading";
-import { useListGameMetadata } from "@/data/metadata/use-list-game-metadata";
-import { useListPlatformMetadata } from "@/data/metadata/use-list-platform-metadata";
 import { useGetGame } from "@/data/libraries/use-get-game";
+import { useGetGameMetadata } from "@/data/metadata/use-get-game-metadata";
+import { useGetPlatformMetadata } from "@/data/metadata/use-get-platform-metadata";
 
 export const Route = createFileRoute("/app/browse/$platform/$game/")({
   component: RouteComponent,
@@ -30,27 +30,15 @@ function RouteComponent() {
     },
   });
 
-  const gameMetadataQuery = useListGameMetadata({
+  const gameMetadataQuery = useGetGameMetadata({
     request: {
-      gameIds: [gameId],
-    },
-    options: {
-      select: (response) =>
-        [...response.metadata].sort((a, b) =>
-          b.provider.localeCompare(a.provider),
-        ),
+      name: `games/${gameId}/metadata`,
     },
   });
 
-  const platformMetadataQuery = useListPlatformMetadata({
+  const platformMetadataQuery = useGetPlatformMetadata({
     request: {
-      platformIds: [platformId],
-    },
-    options: {
-      select: (response) =>
-        [...response.metadata].sort((a, b) =>
-          b.provider.localeCompare(a.provider),
-        ),
+      name: `platforms/${platformId}/metadata`,
     },
   });
 
@@ -77,16 +65,8 @@ function RouteComponent() {
   }
 
   const game = gameQuery.data;
-  const metadata = gameMetadataQuery.data.at(0);
-  const platformMetadata = platformMetadataQuery.data.at(0);
-
-  if (!metadata || !platformMetadata) {
-    return (
-      <p className="text-destructive">
-        No metadata found for game ID: {gameId}
-      </p>
-    );
-  }
+  const metadata = gameMetadataQuery.data;
+  const platformMetadata = platformMetadataQuery.data;
 
   return (
     <div className="flex flex-col gap-4">
@@ -94,8 +74,8 @@ function RouteComponent() {
       <PathHeading
         className="mb-4"
         segments={gameHeadingSegments({
-          platformName: platformMetadata.name,
-          gameName: metadata.name,
+          platformName: platformMetadata.title,
+          gameName: metadata.title,
           gameId,
         })}
       />

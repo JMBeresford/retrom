@@ -295,7 +295,7 @@ function GameMetadataItem({
 
       <div className="relative flex flex-col gap-1 h-full overflow-hidden w-full">
         <h3 className="font-semibold whitespace-nowrap overflow-hidden text-ellipsis shrink-0">
-          {metadata.name}
+          {metadata.title}
         </h3>
 
         <ScrollArea className="h-full">

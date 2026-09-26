@@ -22,7 +22,7 @@ export function GamesSearch() {
 
   const listGameMetadataQuery = useListGameMetadata({
     options: {
-      select: ({ metadata }) => metadata,
+      select: ({ gameMetadata }) => gameMetadata,
     },
     request: {
       gameIds: [debouncedSearch],
@@ -58,9 +58,7 @@ export function GamesSearch() {
   return (
     <Group>
       {listGameMetadataQuery.data.map((metadata) => (
-        <CommandItem key={metadata.id} value={metadata.game}>
-          {metadata.name}
-        </CommandItem>
+        <CommandItem key={metadata.name}>{metadata.title}</CommandItem>
       ))}
     </Group>
   );

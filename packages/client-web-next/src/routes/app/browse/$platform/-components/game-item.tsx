@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { GameItemMenu } from "./game-item-menu";
 import type { HTMLAttributes, PropsWithChildren } from "react";
 import logo from "@/assets/Logo-9x16.png?url";
-import { useListGameMetadata } from "@/data/metadata/use-list-game-metadata";
+import { useGetGameMetadata } from "@/data/metadata/use-get-game-metadata";
 
 export type GameItemProps = PropsWithChildren<
   {
@@ -14,15 +14,13 @@ export type GameItemProps = PropsWithChildren<
 >;
 
 export function GameItem({ gameId, className, ...props }: GameItemProps) {
-  const { data, isPending, isError } = useListGameMetadata({
+  const {
+    data: metadata,
+    isPending,
+    isError,
+  } = useGetGameMetadata({
     request: {
-      gameIds: [gameId],
-    },
-    options: {
-      select: (response) =>
-        [...response.metadata].sort((a, b) =>
-          b.provider.localeCompare(a.provider),
-        ),
+      name: `games/${gameId}/metadata`,
     },
   });
 
@@ -30,7 +28,7 @@ export function GameItem({ gameId, className, ...props }: GameItemProps) {
     return <Skeleton className="h-30 w-full" />;
   }
 
-  if (isError || !data.length) {
+  if (isError) {
     return (
       <div
         className={cn(
@@ -43,8 +41,6 @@ export function GameItem({ gameId, className, ...props }: GameItemProps) {
       </div>
     );
   }
-
-  const metadata = data.at(0);
 
   return (
     <Link
@@ -66,9 +62,9 @@ export function GameItem({ gameId, className, ...props }: GameItemProps) {
         )}
       >
         <img
-          src={metadata?.coverUrl || logo}
+          src={metadata.coverUrl || logo}
           className={cn(
-            metadata?.coverUrl
+            metadata.coverUrl
               ? "scale-100 group-hover:scale-110 object-contain"
               : "scale-105 group-hover:scale-115 object-cover",
             "aspect-3/4 transition-transform",
@@ -90,10 +86,10 @@ export function GameItem({ gameId, className, ...props }: GameItemProps) {
               "group-hover:underline",
             )}
           >
-            {metadata?.name}
+            {metadata.title}
           </h3>
           <p className="text-muted-foreground text-sm">
-            {metadata?.lastPlayed
+            {metadata.lastPlayed
               ? `Last played: ${timestampDate(
                   metadata.lastPlayed,
                 ).toLocaleString(undefined, {
@@ -103,7 +99,7 @@ export function GameItem({ gameId, className, ...props }: GameItemProps) {
           </p>
 
           <p className="text-muted-foreground text-sm">
-            {metadata?.minutesPlayed
+            {metadata.minutesPlayed
               ? `Played for ${metadata.minutesPlayed} minutes`
               : ""}
           </p>

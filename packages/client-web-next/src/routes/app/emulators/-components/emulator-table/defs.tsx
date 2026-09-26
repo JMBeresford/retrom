@@ -5,7 +5,7 @@ import {
   tableFeatures,
 } from "@tanstack/react-table";
 import { Link } from "@tanstack/react-router";
-import { Check, CheckCircle2 } from "lucide-react";
+import { Check } from "lucide-react";
 import { RowActions } from "./renderers/row-actions";
 import { Platforms } from "./renderers/platforms";
 import { OperatingSystems } from "./renderers/operating-systems";
