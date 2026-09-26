@@ -60,9 +60,12 @@ jobs:
           - platform: "macos-latest" # for Arm based macs (M1 and above).
             cache-key-prefix: "macos-latest-aarch64"
             target: "aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel based macs.
-            cache-key-prefix: "macos-latest-x86_64"
-            target: "x86_64-apple-darwin"
+          # TODO: Re-enable when a more robust fix replacing homebrew is implemented.
+          # Intel macOS builds are disabled because homebrew discontinued support for intel Macs,
+          # causing CI failures on these runners.
+          # - platform: "macos-latest" # for Intel based macs.
+          #   cache-key-prefix: "macos-latest-x86_64"
+          #   target: "x86_64-apple-darwin"
           - platform: "ubuntu-24.04"
             cache-key-prefix: "ubuntu-24.04-x64"
           - platform: "ubuntu-24.04-arm"
