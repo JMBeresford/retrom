@@ -256,6 +256,20 @@ message AlternativeName {
   string checksum = 5;
 }
 
+message ExecutableResult {
+  repeated Executable executables = 1;
+}
+
+message Executable {
+  uint64 id = 1;
+  Game game = 2;
+  string name = 3;
+  string store = 4;
+  Platform platform = 5;
+  string file_path = 6;
+  string checksum = 7;
+}
+
 message ArtworkResult {
   repeated Artwork artworks = 1;
 }
@@ -861,6 +875,7 @@ message Game {
   repeated Collection collections = 58;
   GameStatus game_status = 59;
   GameType game_type = 60;
+  repeated Executable executables = 61;
 }
 
 enum GameCategoryEnum {
