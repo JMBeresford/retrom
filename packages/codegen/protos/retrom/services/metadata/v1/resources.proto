@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 // GameMetadata represents a collection of metadata for a specific game.
 message GameMetadata {
   option (google.api.resource) = {
-    type: "retrom.services.metadata.v1.MetadataService/GameMetadata"
+    type: "retrom.jmberesford.github.io/GameMetadata"
     singular: "gameMetadata"
     plural: "gameMetadata"
   };
@@ -60,7 +60,7 @@ message GameMetadata {
 // PlatformMetadata represents a collection of metadata for a specific platform.
 message PlatformMetadata {
   option (google.api.resource) = {
-    type: "retrom.services.metadata.v1.MetadataService/PlatformMetadata"
+    type: "retrom.jmberesford.github.io/PlatformMetadata"
     singular: "platformMetadata"
     plural: "platformMetadata"
   };

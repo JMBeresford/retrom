@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 message EmulatorProfile {
   option (google.api.resource) = {
     name_field: "id"
-    type: "retrom.services.emulators.v1.EmulatorService/EmulatorProfile"
+    type: "retrom.jmberesford.github.io/EmulatorProfile"
     singular: "emulatorProfile"
     plural: "emulatorProfiles"
   };
@@ -21,7 +21,7 @@ message EmulatorProfile {
     (google.api.field_behavior) = IDENTIFIER
   ];
   // The unique identifier of the emulator that this profile belongs to.
-  string emulator = 2 [(google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/Emulator"}];
+  string emulator = 2 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Emulator"}];
   // The name of the emulator profile, e.g. "Default" or "Fullscreen".
   string name = 3;
   // Custom arguments to be passed to the emulator when launching a game with this profile.

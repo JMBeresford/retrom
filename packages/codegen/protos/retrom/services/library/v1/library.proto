@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package retrom.services.library.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+
+// Library represents a collection of games and platforms that can be scanned for game files.
+message Library {
+  option (google.api.resource) = {
+    type: "retrom.jmberesford.github.io/Library"
+    singular: "library"
+    plural: "libraries"
+    pattern: "libraries/{library}"
+  };
+
+  // The unique resource name of the library.
+  string name = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+
+  // Human-readable name for this library.
+  string display_name = 2 [(google.api.field_behavior) = REQUIRED];
+
+  // structure_definition is a parameterized path template that describes how the
+  // library's file tree maps to game entities.  Well-known tokens:
+  //   {library}  — the root directory for this library
+  //   {platform} — a platform sub-directory
+  //   {game}     — a game sub-directory
+  //
+  // Example: "{library}/{platform}/{game}" means each sub-directory of the root
+  // represents a platform, and each sub-directory of a platform represents a game.
+  //
+  // Arbitrary tokens (e.g. {region}) are also supported and will eventually be used
+  // to populate tag values for library items during library scans.
+  // Path template describing how filesystem paths map to library entities.
+  string structure_definition = 3 [(google.api.field_behavior) = REQUIRED];
+
+  // Timestamp when the library row was created.
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Timestamp when the library row was last updated.
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Resource name of the root directory for this library.
+  // E.g. "files/{file_id}"
+  string file_root = 6 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
+  ];
+
+  // Regex patterns used to ignore files/directories during library scans.
+  repeated string ignore_patterns = 7;
+}
+
+// LibraryRow represents a row in the `libraries` table.
+message LibraryRow {
+  // set by the server on create; include for update targets.
+  string id = 1;
+
+  // Human-readable name for this library.
+  string display_name = 2;
+
+  // structure_definition is a parameterized path template that describes how the
+  // library's file tree maps to game entities.  Well-known tokens:
+  //   {library}  — the root directory for this library
+  //   {platform} — a platform sub-directory
+  //   {game}     — a game sub-directory
+  //
+  // Example: "{library}/{platform}/{game}" means each sub-directory of the root
+  // represents a platform, and each sub-directory of a platform represents a game.
+  //
+  // Arbitrary tokens (e.g. {region}) are also supported and will eventually be used
+  // to populate tag values for library items during library scans.
+  // Path template describing how filesystem paths map to library entities.
+  string structure_definition = 3;
+  // Timestamp when the library row was created.
+  google.protobuf.Timestamp created_at = 4;
+  // Timestamp when the library row was last updated.
+  google.protobuf.Timestamp updated_at = 5;
+
+  // Identifier of the root directory for this library in the `files` table.
+  string file_root_id = 6;
+}
+
+// LibraryIgnorePatternRow represents a row in the `library_ignore_patterns` table.
+message LibraryIgnorePatternRow {
+  // Library ID this ignore pattern belongs to.
+  string library_id = 1;
+  // Regex pattern used to ignore files/directories during scans.
+  string pattern = 2;
+  // Timestamp when this ignore pattern row was created.
+  google.protobuf.Timestamp created_at = 3;
+  // Timestamp when this ignore pattern row was last updated.
+  google.protobuf.Timestamp updated_at = 4;
+}

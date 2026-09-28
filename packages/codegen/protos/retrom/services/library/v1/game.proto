@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package retrom.services.library.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+
+// Game represents a game that can be associated with a parent platform. For example,
+// "Final Fantasy VII" or "Sonic the Hedgehog".
+message Game {
+  option (google.api.resource) = {
+    type: "retrom.jmberesford.github.io/Game"
+    singular: "game"
+    plural: "games"
+    pattern: "platforms/{platform}/games/{game}"
+  };
+
+  // The unique resource name of the game.
+  string name = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+
+  // The resource name for the parent platform that this game belongs to.
+  // E.g. `platforms/{platform}`.
+  string parent = 2 [
+    (google.api.field_behavior) = OPTIONAL,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}
+  ];
+
+  // The resource name of the root file for this game.
+  // This can be either a single file (for 1-game-1-rom examples) or a directory (for multi-file games).
+  // E.g. `files/{file_id}`.
+  string file_root = 3 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
+  ];
+
+  // Timestamp when the game row was created.
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Timestamp when the game row was last updated.
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Timestamp when this game was soft-deleted.
+  google.protobuf.Timestamp deleted_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Whether this game is soft-deleted.
+  bool is_deleted = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Whether this game originated from a third-party source.
+  bool third_party = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Steam AppID associated with this game when available.
+  optional string steam_app_id = 9;
+}
+
+// GameRow represents a row in the `games` table.
+message GameRow {
+  // The unique identifier of the game row.
+  string id = 1;
+
+  // The unique identifier of the parent platform that this game belongs to
+  // in the `platforms` table.
+  string platform_id = 2;
+
+  // Timestamp when the game row was created.
+  google.protobuf.Timestamp created_at = 3;
+
+  // Timestamp when the game row was last updated.
+  google.protobuf.Timestamp updated_at = 4;
+
+  // Timestamp when this game was soft-deleted.
+  google.protobuf.Timestamp deleted_at = 5;
+
+  // Whether this game is soft-deleted.
+  bool is_deleted = 6;
+
+  // Whether this game originated from a third-party source.
+  bool third_party = 7;
+
+  // Steam AppID associated with this game when available.
+  optional string steam_app_id = 8;
+}

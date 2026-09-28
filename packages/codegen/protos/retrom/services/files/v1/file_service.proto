@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package retrom.services.files.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "retrom/services/files/v1/file.proto";
+
+// FileService defines the gRPC service for exploring the filesystem in Retrom.
+service FileService {
+  // GetFile retrieves a file from the filesystem based on its unique resource name.
+  rpc GetFile(GetFileRequest) returns (File);
+
+  // ListFiles lists all files in a specified parent on the filesystem.
+  rpc ListFiles(ListFilesRequest) returns (ListFilesResponse);
+
+  // DeleteFile deletes a file from the filesystem based on its unique resource name.
+  rpc DeleteFile(DeleteFileRequest) returns (File);
+
+  // UpdateFile updates a given file in the filesystem.
+  rpc UpdateFile(UpdateFileRequest) returns (File);
+
+  // ExploreHostPaths explores the host filesystem and returns a list of files and directories
+  // for tentative registration in the DB `files` table.
+  rpc ExploreHostPaths(ExploreHostPathsRequest) returns (ExploreHostPathsResponse);
+
+  // RegisterHostFile registers a file or directory from the host filesystem into the DB `files` table.
+  rpc RegisterHostFile(RegisterHostFileRequest) returns (RegisterHostFileResponse);
+}
+
+// GetFileRequest is the request message for the GetFile RPC method.
+message GetFileRequest {
+  // The unique resource name of the file to retrieve.
+  // Format: `files/{file_id}`
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
+  ];
+}
+
+// ListFilesRequest is the request message for the ListFiles RPC method.
+message ListFilesRequest {
+  // The unique resource name of the parent directory to list files from.
+  // Format: `files/{parent_id}`
+  string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
+  ];
+
+  // The maximum number of files to return in the response.
+  int32 page_size = 2;
+
+  // A token identifying a page of results the server should return.
+  string page_token = 3;
+}
+
+// ListFilesResponse is the response message for the ListFiles RPC method.
+message ListFilesResponse {
+  // The list of files in the specified parent directory.
+  repeated File files = 1;
+
+  // A token to retrieve the next page of results. If this field is empty, there are no more results.
+  string next_page_token = 2;
+}
+
+// DeleteFileRequest is the request message for the DeleteFile RPC method.
+message DeleteFileRequest {
+  // The unique resource name of the file to delete.
+  // Format: `files/{file_id}`
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
+  ];
+}
+
+// UpdateFileRequest is the request message for the UpdateFile RPC method.
+message UpdateFileRequest {
+  // The updated file.
+  File file = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
+  ];
+}
+
+// ExploreHostPathsRequest is the request message for the ExploreHostPaths RPC method.
+message ExploreHostPathsRequest {
+  // The absolute path on the host filesystem to explore.
+  // If omitted, the service will explore the root directory of the host filesystem.
+  // In the case of a windows host, an omitted path will explore all drives (C:\, D:\, etc.).
+  string absolute_path = 1 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// ExploreHostPathsResponse is the response message for the ExploreHostPaths RPC method.
+message ExploreHostPathsResponse {
+  // HostNode represents a file or directory found in the specified absolute path on the host filesystem.
+  message HostNode {
+    // The absolute path of the file or directory on the host filesystem.
+    string absolute_path = 1;
+    // The name of the file or directory.
+    string file_name = 2;
+    // Whether the node is a directory (true) or a file (false).
+    bool is_directory = 3;
+    // Whether the node is already tracked in the DB `files` table.
+    bool is_tracked = 4;
+  }
+
+  // The list of files and directories found in the specified absolute path on the host filesystem.
+  repeated HostNode nodes = 1;
+}
+
+// RegisterHostFileRequest is the request message for the RegisterHostFile RPC method.
+message RegisterHostFileRequest {
+  // The absolute path of the file or directory on the host filesystem to register.
+  string absolute_path = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // The human-readable name for this file or directory in the DB `files` table.
+  string display_name = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// RegisterHostFileResponse is the response message for the RegisterHostFile RPC method.
+message RegisterHostFileResponse {
+  // The registered file or directory in the DB `files` table.
+  File file = 1;
+}

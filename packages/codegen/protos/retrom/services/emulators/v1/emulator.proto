@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 message Emulator {
   option (google.api.resource) = {
     name_field: "id"
-    type: "retrom.services.emulators.v1.EmulatorService/Emulator"
+    type: "retrom.jmberesford.github.io/Emulator"
     singular: "emulator"
     plural: "emulators"
   };
@@ -45,7 +45,7 @@ message Emulator {
   // The name of the emulator in the libretro ecosystem, if applicable.
   optional string libretro_name = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
   // A list of IDs of platforms that the emulator supports.
-  repeated string platforms = 7 [(google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/Platform"}];
+  repeated string platforms = 7 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}];
   // A list of IDs of operating systems that the emulator supports.
   repeated OperatingSystem operating_systems = 8;
 }
@@ -80,7 +80,7 @@ message EmulatorPlatformRow {
 // EmulatorOperatingSystem represents a row in the emulator_operating_systems table.
 message EmulatorOperatingSystemRow {
   // The unique identifier of the emulator.
-  string emulator = 1 [(google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/Emulator"}];
+  string emulator = 1 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Emulator"}];
   // The unique identifier of the operating system that the emulator supports.
   string operating_system = 2;
 }

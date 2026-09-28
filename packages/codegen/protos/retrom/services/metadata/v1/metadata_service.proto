@@ -45,7 +45,7 @@ message GetGameMetadataRequest {
   // The unique resource name of the game metadata to retrieve.
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.metadata.v1.MetadataService/GameMetadata"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/GameMetadata"}
   ];
 }
 
@@ -95,7 +95,7 @@ message GetPlatformMetadataRequest {
   // Format: platforms/{platform_id}/metadata
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.metadata.v1.MetadataService/PlatformMetadata"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/PlatformMetadata"}
   ];
 }
 

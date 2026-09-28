@@ -5,6 +5,9 @@ package retrom.services.library.v1;
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
+import "retrom/services/library/v1/game.proto";
+import "retrom/services/library/v1/library.proto";
+import "retrom/services/library/v1/platform.proto";
 import "retrom/services/library/v1/resources.proto";
 
 // LibraryService provides CRUD and maintenance operations for library entities.
@@ -134,7 +137,7 @@ message GetLibraryRequest {
   // ID of the library to fetch.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/Library"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Library"}
   ];
 }
 
@@ -167,7 +170,7 @@ message DeleteLibraryRequest {
   // ID of the library to delete.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/Library"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Library"}
   ];
 }
 
@@ -188,7 +191,7 @@ message GetRootDirectoryRequest {
   // ID of the root directory to fetch.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/RootDirectory"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/RootDirectory"}
   ];
 }
 
@@ -227,7 +230,7 @@ message DeleteRootDirectoryRequest {
   // ID of the root directory to delete.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/RootDirectory"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/RootDirectory"}
   ];
 }
 
@@ -308,7 +311,7 @@ message GetPlatformRequest {
   // ID of the platform to fetch.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/Platform"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}
   ];
 }
 
@@ -345,7 +348,7 @@ message DeletePlatformRequest {
   // ID of the platform to delete.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/Platform"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}
   ];
 
   // When true, delete associated filesystem entries from disk. This
@@ -419,7 +422,7 @@ message GetGameRequest {
   // ID of the game to fetch.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/Game"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Game"}
   ];
 }
 
@@ -458,7 +461,7 @@ message DeleteGameRequest {
   // ID of the game to delete.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/Game"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Game"}
   ];
 
   // When true, delete associated filesystem entries from disk.
@@ -499,7 +502,7 @@ message GetGameFileRequest {
   // Game file ID to fetch.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/GameFile"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/GameFile"}
   ];
 }
 
@@ -530,7 +533,7 @@ message DeleteGameFileRequest {
   // ID of the game file to delete.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.library.v1.LibraryService/GameFile"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/GameFile"}
   ];
 
   // When true, delete the game file from disk.

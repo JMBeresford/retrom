@@ -63,7 +63,7 @@ message GetEmulatorRequest {
   // ID of the emulator to fetch.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/Emulator"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Emulator"}
   ];
 }
 
@@ -98,7 +98,7 @@ message DeleteEmulatorRequest {
   // ID of the emulator to delete.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/Emulator"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Emulator"}
   ];
 }
 
@@ -107,7 +107,7 @@ message GetEmulatorProfileRequest {
   // ID of the emulator profile to fetch.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/EmulatorProfile"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/EmulatorProfile"}
   ];
 }
 
@@ -142,7 +142,7 @@ message DeleteEmulatorProfileRequest {
   // ID of the emulator profile to delete.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/EmulatorProfile"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/EmulatorProfile"}
   ];
 }
 
@@ -151,7 +151,7 @@ message GetDefaultEmulatorProfileRequest {
   // ID of the default emulator profile to fetch.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/DefaultEmulatorProfile"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/DefaultEmulatorProfile"}
   ];
 }
 
@@ -186,7 +186,7 @@ message DeleteDefaultEmulatorProfileRequest {
   // ID of the default emulator profile to delete.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/DefaultEmulatorProfile"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/DefaultEmulatorProfile"}
   ];
 }
 
@@ -195,7 +195,7 @@ message GetLocalEmulatorConfigRequest {
   // ID of the local emulator configuration to fetch.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/LocalEmulatorConfig"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/LocalEmulatorConfig"}
   ];
 }
 
@@ -230,6 +230,6 @@ message DeleteLocalEmulatorConfigRequest {
   // ID of the local emulator configuration to delete.
   string id = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/LocalEmulatorConfig"}
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/LocalEmulatorConfig"}
   ];
 }

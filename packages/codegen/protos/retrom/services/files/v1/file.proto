@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package retrom.services.files.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+
+// The type of a filesystem entry, which can be either a directory or a regular file.
+enum FileType {
+  // Unspecified file type.
+  FILE_TYPE_UNSPECIFIED = 0;
+  // The file is a directory.
+  FILE_TYPE_DIRECTORY = 1;
+  // The file is a regular file.
+  FILE_TYPE_FILE = 2;
+}
+
+// File represents a single node in the filesystem, which can be either a directory or a regular file.
+message File {
+  option (google.api.resource) = {
+    type: "retrom.jmberesford.github.io/File"
+    singular: "file"
+    plural: "files"
+    pattern: "files/{file}"
+  };
+
+  // The unique resource name of the file.
+  string name = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+
+  // The resource name for the parent directory that this file belongs to.
+  string parent = 2 [
+    (google.api.field_behavior) = OPTIONAL,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
+  ];
+
+  // The file-name of this filesystem entry, which is required and must be unique within its
+  // parent directory.
+  // E.g. "SaveData" or "config.yaml".
+  string file_name = 3 [(google.api.field_behavior) = REQUIRED];
+
+  // The type of this filesystem entry.
+  FileType file_type = 4 [(google.api.field_behavior) = REQUIRED];
+
+  // The download URI for this file, if applicable. This URI can be used to download the file's
+  // content.
+  // E.g. "https://example.com/downloads/config.yaml" or "https://example.com/downloads/SaveData".
+  string download_uri = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // The size of the file in bytes. This field is only applicable if the file type is FILE_TYPE_FILE.
+  optional uint64 byte_size = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // The etag of the file, which is a unique identifier that changes whenever the file is updated.
+  string etag = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // When the file was created. Not all systems support this, so it may be omitted.
+  optional google.protobuf.Timestamp created_at = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // When the file was last updated.
+  google.protobuf.Timestamp updated_at = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// FileRow represents a row in the `files` table of the database.
+message FileRow {
+  // The unique identifier of the file row.
+  string id = 1;
+
+  // The unique identifier of the parent file row, if applicable.
+  optional string parent_id = 2;
+
+  // The file-name of this filesystem entry, which is required and must be unique within its
+  // parent directory.
+  // E.g. "SaveData" or "config.yaml".
+  string file_name = 3;
+
+  // The type of this filesystem entry.
+  FileType file_type = 4;
+
+  // The size of the file in bytes. This field is only applicable if the file type is FILE_TYPE_FILE.
+  optional uint64 byte_size = 5;
+
+  // The sha256 hash of the file on disk. Omitted for directories. If omitted on a regular file, the
+  // hash is still being calculated and this record will be updated once complete.
+  optional string sha256_hash = 6;
+
+  // The absolute path of the file or directory on disk.
+  string absolute_path = 7;
+
+  // When the file was created. Not all systems support this, so it may be omitted.
+  // Note this represents the time the file was created on disk, not when the row was created in the database.
+  optional google.protobuf.Timestamp created_at = 8;
+
+  // When the file was last updated.
+  google.protobuf.Timestamp updated_at = 9;
+}

@@ -5,8 +5,11 @@ package retrom.services.library.v1;
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
 
+option deprecated = true;
+
 // RootDirectoryRow represents a row in the `root_directories` table.
 message RootDirectoryRow {
+  option deprecated = true;
   // OUTPUT_ONLY — set by the server on create; include for update targets.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Absolute path for this root directory.
@@ -17,80 +20,9 @@ message RootDirectoryRow {
   google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
-// LibraryRow represents a row in the `libraries` table.
-message LibraryRow {
-  // OUTPUT_ONLY — set by the server on create; include for update targets.
-  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // Human-readable name for this library.
-  string name = 2;
-
-  // structure_definition is a parameterized path template that describes how the
-  // library's file tree maps to game entities.  Well-known tokens:
-  //   {library}  — the root directory for this library
-  //   {platform} — a platform sub-directory
-  //   {game}     — a game sub-directory
-  //
-  // Example: "{library}/{platform}/{game}" means each sub-directory of the root
-  // represents a platform, and each sub-directory of a platform represents a game.
-  //
-  // Arbitrary tokens (e.g. {region}) are also supported and will eventually be used
-  // to populate tag values for library items during library scans.
-  // Path template describing how filesystem paths map to library entities.
-  string structure_definition = 3;
-  // Timestamp when the library row was created.
-  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // Timestamp when the library row was last updated.
-  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
-}
-
-// LibraryIgnorePatternRow represents a row in the `library_ignore_patterns` table.
-message LibraryIgnorePatternRow {
-  // Library ID this ignore pattern belongs to.
-  string library_id = 1;
-  // Regex pattern used to ignore files/directories during scans.
-  string pattern = 2;
-  // Timestamp when this ignore pattern row was created.
-  google.protobuf.Timestamp created_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // Timestamp when this ignore pattern row was last updated.
-  google.protobuf.Timestamp updated_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-}
-
-// PlatformRow represents a row in the `platforms` table.
-message PlatformRow {
-  // OUTPUT_ONLY — set by the server on create; include for update targets.
-  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // Timestamp when the platform row was created.
-  google.protobuf.Timestamp created_at = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // Timestamp when the platform row was last updated.
-  google.protobuf.Timestamp updated_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // Timestamp when this platform was soft-deleted.
-  google.protobuf.Timestamp deleted_at = 4;
-  // Whether this platform is soft-deleted.
-  bool is_deleted = 5;
-  // Whether this platform originated from a third-party source.
-  bool third_party = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
-}
-
-// GameRow represents a row in the `games` table.
-message GameRow {
-  // OUTPUT_ONLY — set by the server on create; include for update targets.
-  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // Timestamp when the game row was created.
-  google.protobuf.Timestamp created_at = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // Timestamp when the game row was last updated.
-  google.protobuf.Timestamp updated_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // Timestamp when this game was soft-deleted.
-  google.protobuf.Timestamp deleted_at = 4;
-  // Whether this game is soft-deleted.
-  bool is_deleted = 5;
-  // Whether this game originated from a third-party source.
-  bool third_party = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // Steam AppID associated with this game when available.
-  optional string steam_app_id = 7;
-}
-
 // GameFileRow represents a row in the `game_files` table.
 message GameFileRow {
+  option deprecated = true;
   // OUTPUT_ONLY — set by the server on create; include for update targets.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
   // Size in bytes of the file on disk.

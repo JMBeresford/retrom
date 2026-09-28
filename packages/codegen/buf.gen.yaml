@@ -38,6 +38,7 @@ plugins:
       - type_attribute=retrom.services.emulators.v1.LocalEmulatorConfigRow=#[derive(sqlx::FromRow)]#[sqlx(default)]
       - type_attribute=retrom.services.tags.v1.TagDomain=#[derive(sqlx::FromRow)]#[sqlx(default)]
       - type_attribute=retrom.services.tags.v1.Tag=#[derive(sqlx::FromRow)]#[sqlx(default)]
+      - type_attribute=retrom.services.files.v1.FileRow=#[derive(sqlx::FromRow)]#[sqlx(default)]
       - file_descriptor_set
 
   - remote: buf.build/community/neoeinstein-prost-serde:v0.4.0

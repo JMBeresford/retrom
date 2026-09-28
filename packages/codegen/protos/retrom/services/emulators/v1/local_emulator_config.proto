@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 message LocalEmulatorConfig {
   option (google.api.resource) = {
     name_field: "id"
-    type: "retrom.services.emulators.v1.EmulatorService/LocalEmulatorConfig"
+    type: "retrom.jmberesford.github.io/LocalEmulatorConfig"
     singular: "localEmulatorConfig"
     plural: "localEmulatorConfigs"
   };
@@ -21,9 +21,9 @@ message LocalEmulatorConfig {
     (google.api.field_behavior) = IDENTIFIER
   ];
   // The unique identifier of the emulator.
-  string emulator = 2 [(google.api.resource_reference) = {type: "retrom.services.emulators.v1.EmulatorService/Emulator"}];
+  string emulator = 2 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Emulator"}];
   // The unique identifier of the client.
-  string client = 3 [(google.api.resource_reference) = {type: "retrom.services.client.v1.ClientService/Client"}];
+  string client = 3 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Client"}];
   // The timestamp when the local emulator configuration was created.
   google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
   // The timestamp when the local emulator configuration was last updated.
