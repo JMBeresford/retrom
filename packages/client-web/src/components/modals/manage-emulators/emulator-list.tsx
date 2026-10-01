@@ -7,6 +7,7 @@ import {
   TrashIcon,
   X,
 } from "lucide-react";
+import { Code, ConnectError } from "@connectrpc/connect";
 import { getFileStub } from "@/lib/utils";
 import { cn } from "@retrom/ui/lib/utils";
 import {
@@ -56,14 +57,13 @@ import {
   AccordionTrigger,
 } from "@retrom/ui/components/accordion";
 import { useModalAction } from "@/providers/modal-action";
-import { useToast } from "@retrom/ui/hooks/use-toast";
 import { changesetSchema, ChangesetSchema, PlatformWithMetadata } from ".";
 import {
   operatingSystemDisplayMap,
   PlatformsDropdown,
   saveStrategyDisplayMap,
 } from "./utils";
-import { ConnectError } from "@connectrpc/connect";
+import { toast } from "@retrom/ui/hooks/use-toast";
 
 export function EmulatorList(props: {
   platforms: PlatformWithMetadata[];
@@ -71,9 +71,10 @@ export function EmulatorList(props: {
 }) {
   const { platforms, emulators } = props;
   const { openModal: confirm } = useModalAction("confirmModal");
-  const { toast } = useToast();
 
-  const { mutateAsync: updateEmulators, isPending } = useUpdateEmulators();
+  const { mutateAsync: updateEmulators, isPending } = useUpdateEmulators({
+    showErrorToast: false,
+  });
   const { mutateAsync: deleteEmulators, isPending: deletionPending } =
     useDeleteEmulators();
 
@@ -92,6 +93,8 @@ export function EmulatorList(props: {
   const handleSubmit = useCallback(
     async (values: ChangesetSchema) => {
       try {
+        form.clearErrors();
+
         const { emulatorsUpdated: emulators } = await updateEmulators({
           emulators: Object.values(values.emulators),
         });
@@ -104,17 +107,37 @@ export function EmulatorList(props: {
         });
       } catch (e) {
         console.error(e);
-        const description =
-          e instanceof ConnectError ? e.message : "An error occurred";
+
+        if (e instanceof ConnectError && e.code === Code.InvalidArgument) {
+          const conflictName = e.message.match(
+            /^An emulator named "(.+)" already exists\.$/,
+          )?.[1];
+
+          Object.entries(values.emulators).forEach(([id, emulator]) => {
+            if (
+              conflictName === undefined ||
+              emulator.name.trim() === conflictName
+            ) {
+              form.setError(`emulators.${id}.name`, {
+                message: e.message,
+              });
+            }
+          });
+
+          return;
+        }
 
         toast({
           title: "Failed to update emulators",
-          description,
+          description:
+            e instanceof ConnectError
+              ? e.message
+              : "Check the console for more information.",
           variant: "destructive",
         });
       }
     },
-    [updateEmulators, form, toast],
+    [updateEmulators, form],
   );
 
   const pending = isPending || deletionPending;
@@ -193,6 +216,12 @@ export function EmulatorList(props: {
                                   <FormControl>
                                     <Input
                                       {...field}
+                                      onChange={(event) => {
+                                        form.clearErrors(
+                                          `emulators.${emulator.id}.name`,
+                                        );
+                                        field.onChange(event);
+                                      }}
                                       placeholder="Enter emulator name"
                                     />
                                   </FormControl>
