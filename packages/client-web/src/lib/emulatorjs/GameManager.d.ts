@@ -5,6 +5,7 @@ interface EJSModule extends EmscriptenModule {
 export declare class EJS_GameManager {
   FS: typeof FS;
   Module: EJSModule;
+  EJS: import("./emulator").EmulatorJS;
 
   functions: {
     saveStateInfo: () => unknown;
