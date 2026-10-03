@@ -43,24 +43,31 @@ message File {
   string file_name = 3 [(google.api.field_behavior) = REQUIRED];
 
   // The type of this filesystem entry.
-  FileType file_type = 4 [(google.api.field_behavior) = REQUIRED];
+  FileType file_type = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // The download URI for this file, if applicable. This URI can be used to download the file's
   // content.
   // E.g. "https://example.com/downloads/config.yaml" or "https://example.com/downloads/SaveData".
   string download_uri = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  // The size of the file in bytes. This field is only applicable if the file type is FILE_TYPE_FILE.
-  optional uint64 byte_size = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The size of the file in bytes.
+  uint64 byte_size = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // The sha256 hash of the file on disk. Omitted for directories. If omitted on a regular file, the
+  // hash is still being calculated and this record will be updated once complete.
+  optional string sha256_hash = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // The etag of the file, which is a unique identifier that changes whenever the file is updated.
-  string etag = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string etag = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // When the file was created. Not all systems support this, so it may be omitted.
-  optional google.protobuf.Timestamp created_at = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+  optional google.protobuf.Timestamp created_at = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // When the file was last updated.
-  google.protobuf.Timestamp updated_at = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Whether the file has been deleted. This is a soft-delete flag, and the file may still exist on disk.
+  bool is_deleted = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // FileRow represents a row in the `files` table of the database.
@@ -79,8 +86,8 @@ message FileRow {
   // The type of this filesystem entry.
   FileType file_type = 4;
 
-  // The size of the file in bytes. This field is only applicable if the file type is FILE_TYPE_FILE.
-  optional uint64 byte_size = 5;
+  // The size of the file in bytes.
+  uint64 byte_size = 5;
 
   // The sha256 hash of the file on disk. Omitted for directories. If omitted on a regular file, the
   // hash is still being calculated and this record will be updated once complete.
@@ -95,4 +102,7 @@ message FileRow {
 
   // When the file was last updated.
   google.protobuf.Timestamp updated_at = 9;
+
+  // Whether the file has been deleted. This is a soft-delete flag, and the file may still exist on disk.
+  bool is_deleted = 10;
 }

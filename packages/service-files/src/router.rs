@@ -1,10 +1,10 @@
-use retrom_codegen::retrom::services::file_explorer::v1::file_explorer_service_server::FileExplorerServiceServer;
+use crate::FileServiceHandlers;
+use retrom_codegen::retrom::services::files::v1::file_service_server::FileServiceServer;
+use retrom_db::DbPool;
 
-use crate::FileExplorerServiceHandlers;
-
-/// Build an [`axum::Router`] that serves the [`FileExplorerService`] gRPC endpoints.
-pub fn files_router() -> axum::Router {
-    let file_explorer_service = FileExplorerServiceServer::new(FileExplorerServiceHandlers::new());
+/// Build an [`axum::Router`] that serves the [`FileService`] gRPC endpoints.
+pub fn files_router(db_pool: DbPool) -> axum::Router {
+    let file_explorer_service = FileServiceServer::new(FileServiceHandlers::new(db_pool));
 
     let mut routes_builder = tonic::service::Routes::builder();
     routes_builder.add_service(file_explorer_service);

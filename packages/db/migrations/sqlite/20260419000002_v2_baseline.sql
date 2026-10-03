@@ -34,6 +34,26 @@ create table if not exists root_directories (
     constraint root_directories_path_unique unique (path)
 );
 
+create table if not exists files (
+    id text not null primary key,
+    parent_id text references files (id) on delete cascade,
+    file_name text not null,
+    -- 0 = unknown, 1 = directory, 2 = file
+    file_type integer not null,
+    byte_size integer not null,
+    sha256_hash text,
+    absolute_path text not null,
+    -- The *file system* creation time of the file, not the time it was added to the database.
+    -- Note that not all file systems support creation time, so this may be null.
+    created_at text,
+    -- The *file system* last modified time of the file, not the time it was added to the database.
+    updated_at text not null,
+    constraint files_absolute_path_unique unique (absolute_path),
+    constraint files_parent_id_file_name_unique unique (parent_id, file_name),
+    constraint files_file_type_check check (file_type in (0, 1, 2)),
+    constraint files_byte_size_check check (file_type != 2 or byte_size is not null)
+);
+
 -- ────────────────────────────────────────────────────────────────────────────
 -- Core entity tables
 -- ────────────────────────────────────────────────────────────────────────────

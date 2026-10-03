@@ -1,5 +1,5 @@
 use retrom_codegen::retrom::services::config::v1::GetServerConfigRequest;
-use retrom_codegen::retrom::services::file_explorer::v1::FILE_DESCRIPTOR_SET;
+use retrom_codegen::retrom::services::files::v1::FILE_DESCRIPTOR_SET;
 use retrom_service_common::{
     grpc_clients::config_svc::get_config_svc_client, reflection::reflection_router,
     svc_definitions::FILE_SVC_PORT,
@@ -31,9 +31,17 @@ async fn main() {
 
     init_tracing_subscriber(telemetry_enabled, "retrom-service-files.log").await;
 
+    let db_pool = retrom_db::connect()
+        .await
+        .expect("Failed to connect to database");
+
+    retrom_db::run_migrations(&db_pool)
+        .await
+        .expect("Failed to run database migrations");
+
     let addr: SocketAddr = format!("0.0.0.0:{FILE_SVC_PORT}").parse().unwrap();
 
-    let router = files_router()
+    let router = files_router(db_pool)
         .layer(tonic_web::GrpcWebLayer::new())
         .merge(reflection_router(&[FILE_DESCRIPTOR_SET]));
 

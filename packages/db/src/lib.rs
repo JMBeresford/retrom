@@ -1,3 +1,5 @@
+pub mod page_cursor;
+
 #[cfg(not(feature = "postgres"))]
 pub type RetromDB = sqlx::Sqlite;
 

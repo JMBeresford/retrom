@@ -11,6 +11,9 @@ service FileService {
   // GetFile retrieves a file from the filesystem based on its unique resource name.
   rpc GetFile(GetFileRequest) returns (File);
 
+  // CreateFile creates a new file in the filesystem.
+  rpc CreateFile(CreateFileRequest) returns (File);
+
   // ListFiles lists all files in a specified parent on the filesystem.
   rpc ListFiles(ListFilesRequest) returns (ListFilesResponse);
 
@@ -24,7 +27,7 @@ service FileService {
   // for tentative registration in the DB `files` table.
   rpc ExploreHostPaths(ExploreHostPathsRequest) returns (ExploreHostPathsResponse);
 
-  // RegisterHostFile registers a file or directory from the host filesystem into the DB `files` table.
+  // RegisterHostFile registers a new root file or directory from the host filesystem into the DB `files` table.
   rpc RegisterHostFile(RegisterHostFileRequest) returns (RegisterHostFileResponse);
 }
 
@@ -38,20 +41,37 @@ message GetFileRequest {
   ];
 }
 
-// ListFilesRequest is the request message for the ListFiles RPC method.
-message ListFilesRequest {
-  // The unique resource name of the parent directory to list files from.
+// CreateFileRequest is the request message for the CreateFile RPC method.
+message CreateFileRequest {
+  // The parent directory where the new file will be created.
   // Format: `files/{parent_id}`
   string parent = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
   ];
 
+  // The unique resource name of the file to create. If omitted, the server will generate a unique ID.
+  optional string file_id = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // The file to create.
+  File file = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// ListFilesRequest is the request message for the ListFiles RPC method.
+message ListFilesRequest {
+  // The unique resource name of the parent directory to list files from.
+  // Omitting this field will list root-level files.
+  // Format: `files/{parent_id}`
+  optional string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
+  ];
+
   // The maximum number of files to return in the response.
-  int32 page_size = 2;
+  optional int32 page_size = 2;
 
   // A token identifying a page of results the server should return.
-  string page_token = 3;
+  optional string page_token = 3;
 }
 
 // ListFilesResponse is the response message for the ListFiles RPC method.
@@ -60,7 +80,7 @@ message ListFilesResponse {
   repeated File files = 1;
 
   // A token to retrieve the next page of results. If this field is empty, there are no more results.
-  string next_page_token = 2;
+  optional string next_page_token = 2;
 }
 
 // DeleteFileRequest is the request message for the DeleteFile RPC method.
@@ -71,6 +91,12 @@ message DeleteFileRequest {
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
   ];
+
+  // Whether to perform a soft delete (mark the file as deleted) or a hard delete (remove the DB entry).
+  optional bool soft_delete = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // Whether to delete the file from disk.
+  optional bool delete_from_disk = 3 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // UpdateFileRequest is the request message for the UpdateFile RPC method.
@@ -112,9 +138,6 @@ message ExploreHostPathsResponse {
 message RegisterHostFileRequest {
   // The absolute path of the file or directory on the host filesystem to register.
   string absolute_path = 1 [(google.api.field_behavior) = REQUIRED];
-
-  // The human-readable name for this file or directory in the DB `files` table.
-  string display_name = 2 [(google.api.field_behavior) = REQUIRED];
 }
 
 // RegisterHostFileResponse is the response message for the RegisterHostFile RPC method.
