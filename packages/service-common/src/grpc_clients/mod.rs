@@ -1,4 +1,5 @@
 pub mod config_svc;
+pub mod files_svc;
 pub mod igdb_svc;
 pub mod library_svc;
 pub mod metadata_svc;

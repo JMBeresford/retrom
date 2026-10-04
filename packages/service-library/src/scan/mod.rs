@@ -25,6 +25,9 @@ pub enum ScanError {
 
     #[error(transparent)]
     Db(#[from] sqlx::Error),
+
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, ScanError>;
@@ -34,7 +37,7 @@ pub type Result<T> = std::result::Result<T, ScanError>;
 pub struct LibraryScanTarget {
     pub library_id: String,
     pub structure_definition: String,
-    pub root_paths: Vec<String>,
+    pub root_path: String,
     pub ignore_patterns: Vec<String>,
 }
 
@@ -57,99 +60,94 @@ pub async fn scan_library_target(db_pool: &DbPool, target: &LibraryScanTarget) -
     let platform_depth = parser.platform_depth();
     let game_depth_from_platform = parser.game_depth_from_platform();
 
-    for root_path in &target.root_paths {
-        let root = PathBuf::from(root_path);
-        let root_canonical = match root.canonicalize().ok() {
+    let root = PathBuf::from(&target.root_path);
+    let root_canonical = root.canonicalize()?;
+
+    // Patterns are matched against paths relative to the library root's
+    // parent so that anchors like `^` and `$` refer to the visible
+    // library hierarchy rather than the machine's absolute filesystem.
+    let ignore_base = root_canonical
+        .parent()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| root_canonical.clone());
+
+    if is_ignored_path(
+        &ignore_patterns,
+        &relative_path_str(&root_canonical, &ignore_base),
+    ) {
+        tracing::debug!(
+            root_path = ?root_canonical,
+            library_path = &relative_path_str(&root_canonical, &ignore_base),
+            ?ignore_patterns,
+            "Library root path ignored",
+        );
+
+        return Ok(());
+    }
+
+    let platform_dirs: Vec<PathBuf> = WalkDir::new(&root)
+        .min_depth(platform_depth)
+        .max_depth(platform_depth)
+        .into_iter()
+        .filter_map(|entry| match entry {
+            Ok(entry) => Some(entry.into_path()),
+            Err(why) => {
+                warn!("Could not read directory node: {:?}", why);
+                None
+            }
+        })
+        .filter(|path| path.is_dir())
+        .collect();
+
+    for platform_dir in platform_dirs {
+        let platform_canonical = match platform_dir.canonicalize().ok() {
             Some(path) => path,
             None => continue,
         };
-
-        // Patterns are matched against paths relative to the library root's
-        // parent so that anchors like `^` and `$` refer to the visible
-        // library hierarchy rather than the machine's absolute filesystem.
-        let ignore_base = root_canonical
-            .parent()
-            .map(|p| p.to_path_buf())
-            .unwrap_or_else(|| root_canonical.clone());
+        let platform_path = match platform_canonical.to_str() {
+            Some(s) => s.to_string(),
+            None => continue,
+        };
 
         if is_ignored_path(
             &ignore_patterns,
-            &relative_path_str(&root_canonical, &ignore_base),
+            &relative_path_str(&platform_canonical, &ignore_base),
         ) {
             tracing::debug!(
-                root_path = ?root_canonical,
-                library_path = &relative_path_str(&root_canonical, &ignore_base),
+                platform_root_path = ?platform_canonical,
+                platform_path = &relative_path_str(&platform_canonical, &ignore_base),
                 ?ignore_patterns,
-                "Library root path ignored",
+                "Platform root path ignored"
             );
-
             continue;
         }
 
-        let platform_dirs: Vec<PathBuf> = WalkDir::new(&root)
-            .min_depth(platform_depth)
-            .max_depth(platform_depth)
+        let platform_id = upsert_platform(db_pool, &target.library_id, &platform_path).await?;
+
+        let game_entries: Vec<PathBuf> = WalkDir::new(&platform_dir)
+            .min_depth(game_depth_from_platform)
+            .max_depth(game_depth_from_platform)
             .into_iter()
             .filter_map(|entry| match entry {
                 Ok(entry) => Some(entry.into_path()),
                 Err(why) => {
-                    warn!("Could not read directory node: {:?}", why);
+                    warn!("Could not read game node: {:?}", why);
                     None
                 }
             })
-            .filter(|path| path.is_dir())
             .collect();
 
-        for platform_dir in platform_dirs {
-            let platform_canonical = match platform_dir.canonicalize().ok() {
-                Some(path) => path,
-                None => continue,
-            };
-            let platform_path = match platform_canonical.to_str() {
-                Some(s) => s.to_string(),
-                None => continue,
-            };
-
-            if is_ignored_path(
+        for game_entry in game_entries {
+            if let Err(why) = scan_game_entry(
+                db_pool,
+                &platform_id,
+                &game_entry,
                 &ignore_patterns,
-                &relative_path_str(&platform_canonical, &ignore_base),
-            ) {
-                tracing::debug!(
-                    platform_root_path = ?platform_canonical,
-                    platform_path = &relative_path_str(&platform_canonical, &ignore_base),
-                    ?ignore_patterns,
-                    "Platform root path ignored"
-                );
-                continue;
-            }
-
-            let platform_id = upsert_platform(db_pool, &target.library_id, &platform_path).await?;
-
-            let game_entries: Vec<PathBuf> = WalkDir::new(&platform_dir)
-                .min_depth(game_depth_from_platform)
-                .max_depth(game_depth_from_platform)
-                .into_iter()
-                .filter_map(|entry| match entry {
-                    Ok(entry) => Some(entry.into_path()),
-                    Err(why) => {
-                        warn!("Could not read game node: {:?}", why);
-                        None
-                    }
-                })
-                .collect();
-
-            for game_entry in game_entries {
-                if let Err(why) = scan_game_entry(
-                    db_pool,
-                    &platform_id,
-                    &game_entry,
-                    &ignore_patterns,
-                    &ignore_base,
-                )
-                .await
-                {
-                    warn!("Failed to scan game entry {:?}: {}", game_entry, why);
-                }
+                &ignore_base,
+            )
+            .await
+            {
+                warn!("Failed to scan game entry {:?}: {}", game_entry, why);
             }
         }
     }
@@ -187,43 +185,7 @@ async fn scan_game_entry(
         return Ok(());
     }
 
-    let game_id = upsert_game(db_pool, platform_id, &game_path).await?;
-
-    if game_entry.is_dir() {
-        let walk_files: Vec<PathBuf> = WalkDir::new(game_entry)
-            .into_iter()
-            .filter_map(|entry| entry.ok())
-            .map(|entry| entry.into_path())
-            .filter(|path| path.is_file())
-            .collect();
-
-        for file in walk_files {
-            if let Ok(file_canonical) = file.canonicalize() {
-                let file_path = match file_canonical.to_str() {
-                    Some(s) => s.to_string(),
-                    None => continue,
-                };
-                if is_ignored_path(
-                    ignore_patterns,
-                    &relative_path_str(&file_canonical, ignore_base),
-                ) {
-                    tracing::debug!(
-                        file_root_path = ?file_canonical,
-                        file_path = &relative_path_str(&file_canonical, ignore_base),
-                        ?ignore_patterns,
-                        "Game file path ignored",
-                    );
-                    continue;
-                }
-
-                let byte_size = file_byte_size(&file);
-                insert_game_file(db_pool, &game_id, platform_id, &file_path, byte_size).await?;
-            }
-        }
-    } else {
-        let byte_size = file_byte_size(game_entry);
-        insert_game_file(db_pool, &game_id, platform_id, &game_path, byte_size).await?;
-    }
+    upsert_game(db_pool, platform_id, &game_path).await?;
 
     Ok(())
 }
@@ -243,21 +205,19 @@ fn relative_path_str(path: &Path, base: &Path) -> String {
 }
 
 async fn upsert_platform(db_pool: &DbPool, library_id: &str, path: &str) -> Result<String> {
-    let root_directory_id = upsert_root_directory(db_pool, path).await?;
+    let file_root_id = get_file_root(db_pool, path).await?;
 
     let mut select_builder = QueryBuilder::new(
         r#"
             select
                 p.id from platforms p
-            join platform_root_directories prd
-                on prd.platform_id = p.id
-            join root_directories rd
-                on rd.id = prd.root_directory_id
-            where rd.path = 
+            join files f 
+                on f.id = p.file_root_id
+            where f.id = 
         "#,
     );
 
-    select_builder.push_bind(path);
+    select_builder.push_bind(&file_root_id);
 
     let existing: Option<String> = select_builder
         .build_query_scalar()
@@ -270,25 +230,24 @@ async fn upsert_platform(db_pool: &DbPool, library_id: &str, path: &str) -> Resu
         Some(id) => id,
         None => {
             let id = uuid::Uuid::now_v7().to_string();
-            let mut insert_platform =
-                QueryBuilder::new("insert into platforms (id, is_deleted, third_party) values (");
+            let mut insert_platform = QueryBuilder::new(
+                r#"
+                    insert into platforms (
+                        id,
+                        library_id,
+                        file_root_id,
+                        third_party
+                    ) values (
+                "#,
+            );
 
             let mut separated = insert_platform.separated(", ");
             separated.push_bind(&id);
-            separated.push_bind(false);
+            separated.push_bind(library_id);
+            separated.push_bind(&file_root_id);
             separated.push_bind(false);
             separated.push_unseparated(")");
             insert_platform.build().execute(&mut *tx).await?;
-
-            let mut insert_map = QueryBuilder::new(
-                "insert into platform_root_directories (platform_id, root_directory_id) values (",
-            );
-
-            let mut separated = insert_map.separated(", ");
-            separated.push_bind(&id);
-            separated.push_bind(&root_directory_id);
-            separated.push_unseparated(") on conflict do nothing");
-            insert_map.build().execute(&mut *tx).await?;
 
             id
         }
@@ -323,31 +282,26 @@ async fn upsert_platform(db_pool: &DbPool, library_id: &str, path: &str) -> Resu
 
     builder.build().execute(&mut *tx).await?;
 
-    let mut link_builder =
-        QueryBuilder::new("insert into platform_libraries (platform_id, library_id) values (");
-
-    let mut separated = link_builder.separated(", ");
-    separated.push_bind(&platform_id);
-    separated.push_bind(library_id);
-    separated.push_unseparated(") on conflict do nothing");
-    link_builder.build().execute(&mut *tx).await?;
-
     tx.commit().await?;
 
     Ok(platform_id)
 }
 
 async fn upsert_game(db_pool: &DbPool, platform_id: &str, path: &str) -> Result<String> {
-    let root_directory_id = upsert_root_directory(db_pool, path).await?;
+    let file_root_id = get_file_root(db_pool, path).await?;
 
     let mut select_builder = QueryBuilder::new(
-        "select g.id from games g \
-         join game_root_directories grd on grd.game_id = g.id \
-         join root_directories rd on rd.id = grd.root_directory_id \
-         where rd.path = ",
+        r#"
+            select
+                g.id from games g
+            join files f
+                on f.id = g.file_root_id
+            where f.id =
+        "#,
     );
 
-    select_builder.push_bind(path);
+    select_builder.push_bind(&file_root_id);
+
     let existing: Option<String> = select_builder
         .build_query_scalar()
         .fetch_optional(db_pool)
@@ -360,25 +314,24 @@ async fn upsert_game(db_pool: &DbPool, platform_id: &str, path: &str) -> Result<
         None => {
             let id = uuid::Uuid::now_v7().to_string();
 
-            let mut insert_game =
-                QueryBuilder::new("insert into games (id, is_deleted, third_party) values (");
+            let mut insert_game = QueryBuilder::new(
+                r#"
+                    insert into games (
+                        id,
+                        platform_id,
+                        file_root_id,
+                        third_party
+                    ) values (
+                "#,
+            );
 
             let mut separated = insert_game.separated(", ");
             separated.push_bind(&id);
-            separated.push_bind(false);
+            separated.push_bind(platform_id);
+            separated.push_bind(&file_root_id);
             separated.push_bind(false);
             separated.push_unseparated(")");
             insert_game.build().execute(&mut *tx).await?;
-
-            let mut insert_map = QueryBuilder::new(
-                "insert into game_root_directories (game_id, root_directory_id) values (",
-            );
-
-            let mut separated = insert_map.separated(", ");
-            separated.push_bind(&id);
-            separated.push_bind(&root_directory_id);
-            separated.push_unseparated(") on conflict do nothing");
-            insert_map.build().execute(&mut *tx).await?;
 
             id
         }
@@ -413,79 +366,16 @@ async fn upsert_game(db_pool: &DbPool, platform_id: &str, path: &str) -> Result<
 
     builder.build().execute(&mut *tx).await?;
 
-    let mut link_builder =
-        QueryBuilder::new("insert into game_platforms (game_id, platform_id) values (");
-
-    let mut separated = link_builder.separated(", ");
-    separated.push_bind(&game_id);
-    separated.push_bind(platform_id);
-    separated.push_unseparated(") on conflict do nothing");
-    link_builder.build().execute(&mut *tx).await?;
-
     tx.commit().await?;
 
     Ok(game_id)
 }
 
-async fn upsert_root_directory(db_pool: &DbPool, path: &str) -> Result<String> {
-    let id = uuid::Uuid::now_v7().to_string();
+async fn get_file_root(db_pool: &DbPool, path: &str) -> Result<String> {
+    let mut builder = QueryBuilder::new("select id from files where absolute_path = ");
+    builder.push_bind(path);
 
-    let mut insert_builder = QueryBuilder::new("insert into root_directories (id, path) values (");
-    let mut separated = insert_builder.separated(", ");
-    separated.push_bind(&id);
-    separated.push_bind(path);
-    separated.push_unseparated(") on conflict do nothing returning id");
-
-    let inserted: Option<String> = insert_builder
-        .build_query_scalar()
-        .fetch_optional(db_pool)
-        .await?;
-
-    if let Some(id) = inserted {
-        return Ok(id);
-    }
-
-    let mut select_builder = QueryBuilder::new("select id from root_directories where path = ");
-    select_builder.push_bind(path);
-
-    let existing: String = select_builder
-        .build_query_scalar()
-        .fetch_one(db_pool)
-        .await?;
+    let existing: String = builder.build_query_scalar().fetch_one(db_pool).await?;
 
     Ok(existing)
-}
-
-async fn insert_game_file(
-    db_pool: &DbPool,
-    game_id: &str,
-    platform_id: &str,
-    path: &str,
-    byte_size: i64,
-) -> Result<()> {
-    let mut builder = QueryBuilder::new(
-        "insert into game_files (id, byte_size, path, game_id, platform_id) values (",
-    );
-
-    let mut separated = builder.separated(", ");
-    separated.push_bind(uuid::Uuid::now_v7().to_string());
-    separated.push_bind(byte_size);
-    separated.push_bind(path);
-    separated.push_bind(game_id);
-    separated.push_bind(platform_id);
-    separated.push_unseparated(") on conflict do nothing");
-
-    builder.build().execute(db_pool).await?;
-
-    Ok(())
-}
-
-fn file_byte_size(path: &Path) -> i64 {
-    match path.metadata() {
-        Ok(metadata) => i64::try_from(metadata.len()).unwrap_or(0),
-        Err(why) => {
-            warn!("Could not read metadata for {:?}: {}", path, why);
-            0
-        }
-    }
 }

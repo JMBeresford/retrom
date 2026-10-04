@@ -8,7 +8,6 @@ import "google/protobuf/empty.proto";
 import "retrom/services/library/v1/game.proto";
 import "retrom/services/library/v1/library.proto";
 import "retrom/services/library/v1/platform.proto";
-import "retrom/services/library/v1/resources.proto";
 
 // LibraryService provides CRUD and maintenance operations for library entities.
 service LibraryService {
@@ -29,25 +28,6 @@ service LibraryService {
   rpc UpdateLibrary(UpdateLibraryRequest) returns (Library);
   // Deletes one library by ID.
   rpc DeleteLibrary(DeleteLibraryRequest) returns (google.protobuf.Empty);
-  // Creates one or more libraries.
-  rpc BatchCreateLibraries(BatchCreateLibrariesRequest) returns (BatchCreateLibrariesResponse);
-
-  // Get one root directory by ID.
-  rpc GetRootDirectory(GetRootDirectoryRequest) returns (RootDirectory);
-  // Creates a root directory.
-  rpc CreateRootDirectory(CreateRootDirectoryRequest) returns (RootDirectory);
-  // Lists root directories.
-  rpc ListRootDirectories(ListRootDirectoriesRequest) returns (ListRootDirectoriesResponse);
-  // Deletes one root directory.
-  rpc DeleteRootDirectory(DeleteRootDirectoryRequest) returns (google.protobuf.Empty);
-  // Creates one or more root directories.
-  rpc BatchCreateRootDirectories(BatchCreateRootDirectoriesRequest) returns (BatchCreateRootDirectoriesResponse);
-  // Adds a root directory to the specified library.
-  rpc AddLibraryRootDirectory(AddLibraryRootDirectoryRequest) returns (AddLibraryRootDirectoryResponse);
-  // Adds a root directory to the specified platform.
-  rpc AddPlatformRootDirectory(AddPlatformRootDirectoryRequest) returns (AddPlatformRootDirectoryResponse);
-  // Adds a root directory to the specified game.
-  rpc AddGameRootDirectory(AddGameRootDirectoryRequest) returns (AddGameRootDirectoryResponse);
 
   // Gets one platform by ID.
   rpc GetPlatform(GetPlatformRequest) returns (Platform);
@@ -61,12 +41,6 @@ service LibraryService {
   rpc DeletePlatform(DeletePlatformRequest) returns (Platform);
   // Gets one or more platforms by ID.
   rpc BatchGetPlatforms(BatchGetPlatformsRequest) returns (BatchGetPlatformsResponse);
-  // Creates one or more platforms.
-  rpc BatchCreatePlatforms(BatchCreatePlatformsRequest) returns (BatchCreatePlatformsResponse);
-  // Deletes one or more platforms.
-  rpc BatchDeletePlatforms(BatchDeletePlatformsRequest) returns (BatchDeletePlatformsResponse);
-  // Updates one or more platforms.
-  rpc BatchUpdatePlatforms(BatchUpdatePlatformsRequest) returns (BatchUpdatePlatformsResponse);
 
   // Gets one game by ID.
   rpc GetGame(GetGameRequest) returns (Game);
@@ -78,21 +52,6 @@ service LibraryService {
   rpc UpdateGame(UpdateGameRequest) returns (Game);
   // Deletes one game by ID.
   rpc DeleteGame(DeleteGameRequest) returns (Game);
-  // Creates one or more games.
-  rpc BatchCreateGames(BatchCreateGamesRequest) returns (BatchCreateGamesResponse);
-  // Deletes one or more games.
-  rpc BatchDeleteGames(BatchDeleteGamesRequest) returns (BatchDeleteGamesResponse);
-
-  // Gets one game file by ID.
-  rpc GetGameFile(GetGameFileRequest) returns (GameFile);
-  // Lists game files by filters.
-  rpc ListGameFiles(ListGameFilesRequest) returns (ListGameFilesResponse);
-  // Updates one game file.
-  rpc UpdateGameFile(UpdateGameFileRequest) returns (GameFile);
-  // Deletes one game file by ID.
-  rpc DeleteGameFile(DeleteGameFileRequest) returns (GameFile);
-  // Deletes one or more game files.
-  rpc BatchDeleteGameFiles(BatchDeleteGameFilesRequest) returns (BatchDeleteGameFilesResponse);
 }
 
 // ScanLibraryRequest starts a full library scan/update.
@@ -124,33 +83,43 @@ message DeleteMissingEntriesRequest {
 
 // DeleteMissingEntriesResponse reports entities deleted by cleanup.
 message DeleteMissingEntriesResponse {
-  // Platforms deleted during cleanup.
-  repeated Platform platforms = 1;
-  // Games deleted during cleanup.
-  repeated Game games = 2;
-  // Game files deleted during cleanup.
-  repeated GameFile game_files = 3;
+  // Unique resource names of platforms deleted during cleanup.
+  repeated string platforms = 1;
+
+  // Unique resource names of games deleted during cleanup.
+  repeated string games = 2;
 }
 
 // Request to fetch a library by ID.
 message GetLibraryRequest {
-  // ID of the library to fetch.
-  string id = 1 [
+  // Unique resource name of the library to fetch.
+  // E.g. `libraries/{library}`.
+  string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Library"}
   ];
 }
 
-// Request to fetch libraries by ID.
+// Request to fetch libraries.
 message ListLibrariesRequest {
-  // Optional library IDs to filter by.
-  repeated string ids = 1;
+  // The page size to return in the response. If not specified, a default page size will be used.
+  optional int32 page_size = 1;
+
+  // A token identifying a page of results the server should return. This is typically obtained from
+  // the `next_page_token` field of a previous response.
+  optional string page_token = 2;
+
+  // Optional filter to match libraries by display name. This is a case-insensitive substring match.
+  optional string display_name = 3;
 }
 
 // Response containing matching libraries.
 message ListLibrariesResponse {
   // Libraries matching the requested filters.
   repeated Library libraries = 1;
+
+  // A token identifying the next page of results, or empty if there are no more results.
+  optional string next_page_token = 2;
 }
 
 // Request to create a library.
@@ -167,149 +136,17 @@ message UpdateLibraryRequest {
 
 // DeleteLibraryRequest deletes the specified library by ID.
 message DeleteLibraryRequest {
-  // ID of the library to delete.
-  string id = 1 [
+  // Unique resource name of the library to delete.
+  string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Library"}
   ];
 }
 
-// Request to create libraries.
-message BatchCreateLibrariesRequest {
-  // Libraries to create.
-  repeated Library libraries = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response containing created libraries.
-message BatchCreateLibrariesResponse {
-  // Libraries created by the operation.
-  repeated Library libraries = 1;
-}
-
-// Request to fetch a root directory by ID.
-message GetRootDirectoryRequest {
-  // ID of the root directory to fetch.
-  string id = 1 [
-    (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/RootDirectory"}
-  ];
-}
-
-// Request to fetch root directories.
-message ListRootDirectoriesRequest {
-  // Optional root directory IDs to filter by.
-  repeated string root_directory_ids = 1;
-  // Optional library IDs to filter root-directory mappings by.
-  repeated string library_ids = 2;
-  // Optional platform IDs to filter root-directory mappings by.
-  repeated string platform_ids = 3;
-  // Optional game IDs to filter root-directory mappings by.
-  repeated string game_ids = 4;
-}
-
-// Response containing matching root directories.
-message ListRootDirectoriesResponse {
-  // Root directories matching the requested filters.
-  repeated RootDirectory root_directories = 1;
-}
-
-// Request to create a root directory.
-message CreateRootDirectoryRequest {
-  // Absolute path of the root directory to create.
-  string path = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Request to update a root directory.
-message UpdateRootDirectoryRequest {
-  // Root directory to update.
-  RootDirectory root_directory = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Request to delete a root directory.
-message DeleteRootDirectoryRequest {
-  // ID of the root directory to delete.
-  string id = 1 [
-    (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/RootDirectory"}
-  ];
-}
-
-// Request to create root directories.
-message BatchCreateRootDirectoriesRequest {
-  // Requests to create root directories.
-  repeated CreateRootDirectoryRequest requests = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response containing created root directories.
-message BatchCreateRootDirectoriesResponse {
-  // Root directories created by the operation.
-  repeated RootDirectory root_directories = 1;
-}
-
-// Request to update root directories.
-message BatchUpdateRootDirectoriesRequest {
-  // Root directories to update.
-  repeated RootDirectory root_directories = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response containing updated root directories.
-message BatchUpdateRootDirectoriesResponse {
-  // Root directories updated by the operation.
-  repeated RootDirectory root_directories = 1;
-}
-
-// Request to delete root directories.
-message BatchDeleteRootDirectoriesRequest {
-  // Root directory IDs to delete.
-  repeated string ids = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Request to add a root directory to a library.
-message AddLibraryRootDirectoryRequest {
-  // Library ID to add the root directory to.
-  string library_id = 1 [(google.api.field_behavior) = REQUIRED];
-  // Absolute path of the root directory to add to the library.
-  string path = 2 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response after adding a root directory to a library.
-message AddLibraryRootDirectoryResponse {
-  // Root directory added to the library.
-  RootDirectory root_directory = 1;
-}
-
-// Request to add a root directory to a platform.
-message AddPlatformRootDirectoryRequest {
-  // Platform ID to add the root directory to.
-  string platform_id = 1 [(google.api.field_behavior) = REQUIRED];
-  // Absolute path of the root directory to add to the platform.
-  string path = 2 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response after adding a root directory to a platform.
-message AddPlatformRootDirectoryResponse {
-  // Root directory added to the platform.
-  RootDirectory root_directory = 1;
-}
-
-// Request to add a root directory to a game.
-message AddGameRootDirectoryRequest {
-  // Game ID to add the root directory to.
-  string game_id = 1 [(google.api.field_behavior) = REQUIRED];
-  // Absolute path of the root directory to add to the game.
-  string path = 2 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response after adding a root directory to a game.
-message AddGameRootDirectoryResponse {
-  // Root directory added to the game.
-  RootDirectory root_directory = 1;
-}
-
 // Request to fetch a platform by ID.
 message GetPlatformRequest {
-  // ID of the platform to fetch.
-  string id = 1 [
+  // Unique resource name of the platform to fetch.
+  string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}
   ];
@@ -317,18 +154,34 @@ message GetPlatformRequest {
 
 // Request to fetch platforms.
 message ListPlatformsRequest {
-  // Optional platform IDs to filter by.
-  repeated string ids = 1;
+  // The page size to return in the response. If not specified, a default page size will be used.
+  optional int32 page_size = 1;
+
+  // A token identifying a page of results the server should return. This is typically obtained from
+  // the `next_page_token` field of a previous response.
+  optional string page_token = 2;
+
+  // Optional resource name of the parent library to filter platforms by. If specified, only platforms belonging
+  // to this library will be returned.
+  optional string parent = 3 [
+    (google.api.field_behavior) = OPTIONAL,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Library"}
+  ];
+
   // When true, include soft-deleted platforms.
-  optional bool include_deleted = 2;
-  // Optional name filter to match platforms by name. This is a case-insensitive substring match.
-  optional string name = 3;
+  optional bool include_deleted = 4;
+
+  // Optional filter to match platforms by title. This is a case-insensitive substring match.
+  optional string title = 5;
 }
 
 // Response containing platforms and optional metadata.
 message ListPlatformsResponse {
   // Platforms matching the requested filters.
   repeated Platform platforms = 1;
+
+  // A token identifying the next page of results, or empty if there are no more results.
+  optional string next_page_token = 2;
 }
 
 // Request to create a platform.
@@ -345,25 +198,25 @@ message UpdatePlatformRequest {
 
 // Request to delete a platform.
 message DeletePlatformRequest {
-  // ID of the platform to delete.
-  string id = 1 [
+  // Unique resource name of the platform to delete.
+  string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}
   ];
 
   // When true, delete associated filesystem entries from disk. This
   // includes games and game files associated with the platform.
-  bool delete_from_disk = 2;
+  optional bool delete_from_disk = 2 [(google.api.field_behavior) = OPTIONAL];
 
   // When true, soft-delete this platform's entries, such as games and game files, instead of hard-deleting.
   // Soft-deleted items will be excluded from normal queries but remain in the database for
   // potential recovery.
-  bool soft_delete = 3;
+  optional bool soft_delete = 3 [(google.api.field_behavior) = OPTIONAL];
 }
 
-// Request to fetch platforms by ID.
+// Request to fetch multiple platforms.
 message BatchGetPlatformsRequest {
-  // Requests to fetch platforms by ID.
+  // Requests to fetch platforms.
   repeated GetPlatformRequest requests = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
@@ -373,54 +226,10 @@ message BatchGetPlatformsResponse {
   repeated Platform platforms = 1;
 }
 
-// Request to create platforms.
-message BatchCreatePlatformsRequest {
-  // Platforms to create.
-  repeated Platform platforms = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response containing created platforms.
-message BatchCreatePlatformsResponse {
-  // Platforms created by the operation.
-  repeated Platform platforms = 1;
-}
-
-// Request to delete platforms.
-message BatchDeletePlatformsRequest {
-  // Platform IDs to delete.
-  repeated string ids = 1 [(google.api.field_behavior) = REQUIRED];
-
-  // When true, delete associated filesystem entries from disk. This includes
-  // games and game files associated with the platforms.
-  bool delete_from_disk = 2;
-
-  // When true, soft-delete records instead of hard-deleting. Soft-deleted items will be
-  // excluded from normal queries but remain in the database for potential recovery.
-  bool soft_delete = 3;
-}
-
-// Response containing deleted platforms.
-message BatchDeletePlatformsResponse {
-  // Platforms deleted by the operation.
-  repeated Platform platforms = 1;
-}
-
-// Request to update platforms.
-message BatchUpdatePlatformsRequest {
-  // Platforms to update.
-  repeated Platform platforms = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response containing updated platforms.
-message BatchUpdatePlatformsResponse {
-  // Platforms updated by the operation.
-  repeated Platform platforms = 1;
-}
-
-// Request to fetch a game by ID.
+// Request to fetch a game.
 message GetGameRequest {
-  // ID of the game to fetch.
-  string id = 1 [
+  // Unique resource name of the game to fetch.
+  string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Game"}
   ];
@@ -428,20 +237,34 @@ message GetGameRequest {
 
 // Request to fetch games.
 message ListGamesRequest {
-  // Optional platform IDs used to filter games by game/platform mappings.
-  repeated string platform_ids = 1;
-  // Optional game IDs to filter by.
-  repeated string ids = 2;
+  // The page size to return in the response. If not specified, a default page size will be used.
+  optional int32 page_size = 1 [(google.api.field_behavior) = OPTIONAL];
+
+  // A token identifying a page of results the server should return. This is typically obtained from
+  // the `next_page_token` field of a previous response.
+  optional string page_token = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional resource name of the parent platform to filter games by. If specified, only games belonging
+  // to this platform will be returned.
+  optional string parent = 3 [
+    (google.api.field_behavior) = OPTIONAL,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}
+  ];
+
   // When true, include soft-deleted games.
-  optional bool include_deleted = 3;
-  // Optional name filter to match games by name. This is a case-insensitive substring match.
-  optional string name = 4;
+  optional bool include_deleted = 4 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional filter to match games by title. This is a case-insensitive substring match.
+  optional string title = 5 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Response containing games, metadata, and game files.
 message ListGamesResponse {
   // Games matching the requested filters.
   repeated Game games = 1;
+
+  // A token identifying the next page of results, or empty if there are no more results.
+  optional string next_page_token = 2;
 }
 
 // Request to create a game.
@@ -458,101 +281,17 @@ message UpdateGameRequest {
 
 // Request to delete a game.
 message DeleteGameRequest {
-  // ID of the game to delete.
-  string id = 1 [
+  // Unique resource name of the game to delete.
+  string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Game"}
   ];
 
   // When true, delete associated filesystem entries from disk.
-  bool delete_from_disk = 2;
+  optional bool delete_from_disk = 2 [(google.api.field_behavior) = OPTIONAL];
 
   // When true, soft-delete the game instead of hard-deleting. Soft-deleted
   // games will be excluded from normal queries but remain in the database for
   // potential recovery.
-  bool soft_delete = 3;
-}
-
-// Request to create games.
-message BatchCreateGamesRequest {
-  // Requests to create games.
-  repeated CreateGameRequest requests = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response containing created games.
-message BatchCreateGamesResponse {
-  // Games created by the operation.
-  repeated Game games = 1;
-}
-
-// Request to delete games.
-message BatchDeleteGamesRequest {
-  // Requests to delete games.
-  repeated DeleteGameRequest requests = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response containing deleted games.
-message BatchDeleteGamesResponse {
-  // Games deleted by the operation.
-  repeated Game games = 1;
-}
-
-// Request to fetch a game file by ID.
-message GetGameFileRequest {
-  // Game file ID to fetch.
-  string id = 1 [
-    (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/GameFile"}
-  ];
-}
-
-// Request to fetch game files.
-message ListGameFilesRequest {
-  // Optional game file IDs to filter by.
-  repeated string ids = 1;
-  // When true, include soft-deleted game files.
-  optional bool include_deleted = 2;
-  // Optional game IDs used to filter files by owning game.
-  repeated string game_ids = 3;
-}
-
-// Response containing matching game files.
-message ListGameFilesResponse {
-  // Game files matching the requested filters.
-  repeated GameFile game_files = 1;
-}
-
-// Request to update a game file.
-message UpdateGameFileRequest {
-  // Game file to update.
-  GameFile game_file = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Request to delete a game file.
-message DeleteGameFileRequest {
-  // ID of the game file to delete.
-  string id = 1 [
-    (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/GameFile"}
-  ];
-
-  // When true, delete the game file from disk.
-  bool delete_from_disk = 2;
-
-  // When true, soft-delete the game file instead of hard-deleting. Soft-deleted
-  // game files will be excluded from normal queries but remain in the database for
-  // potential recovery.
-  bool soft_delete = 3;
-}
-
-// Request to delete game files.
-message BatchDeleteGameFilesRequest {
-  // Requests to delete game files.
-  repeated DeleteGameFileRequest requests = 1 [(google.api.field_behavior) = REQUIRED];
-}
-
-// Response containing deleted game files.
-message BatchDeleteGameFilesResponse {
-  // Game files deleted by the operation.
-  repeated GameFile game_files = 1;
+  optional bool soft_delete = 3 [(google.api.field_behavior) = OPTIONAL];
 }

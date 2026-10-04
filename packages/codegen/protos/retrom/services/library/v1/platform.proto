@@ -24,25 +24,32 @@ message Platform {
 
   // The parent library that this platform belongs to.
   // E.g. `libraries/{library}`.
-  string parent = 9 [
+  string parent = 2 [
     (google.api.field_behavior) = OPTIONAL,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Library"}
   ];
 
+  // The resource name of the root file for this platform.
+  // E.g. `files/{file_id}`.
+  string file_root = 3 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/File"}
+  ];
+
   // Timestamp when the platform row was created.
-  google.protobuf.Timestamp created_at = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Timestamp when the platform row was last updated.
-  google.protobuf.Timestamp updated_at = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Timestamp when this platform was soft-deleted.
-  google.protobuf.Timestamp deleted_at = 4;
+  google.protobuf.Timestamp deleted_at = 6;
 
   // Whether this platform is soft-deleted.
-  bool is_deleted = 5;
+  bool is_deleted = 7;
 
   // Whether this platform originated from a third-party source.
-  bool third_party = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  bool third_party = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // PlatformRow represents a row in the `platforms` table.
@@ -54,18 +61,21 @@ message PlatformRow {
   // in the `libraries` table.
   string library_id = 2;
 
+  // The unique identifier of the root file for this platform in the `files` table.
+  string file_root_id = 3;
+
   // Timestamp when the platform row was created.
-  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp created_at = 4;
 
   // Timestamp when the platform row was last updated.
-  google.protobuf.Timestamp updated_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
 
   // Timestamp when this platform was soft-deleted.
-  google.protobuf.Timestamp deleted_at = 5;
+  google.protobuf.Timestamp deleted_at = 6;
 
   // Whether this platform is soft-deleted.
-  bool is_deleted = 6;
+  bool is_deleted = 7;
 
   // Whether this platform originated from a third-party source.
-  bool third_party = 7;
+  bool third_party = 8;
 }

@@ -1,145 +1,189 @@
+use std::{path::PathBuf, sync::OnceLock};
+
 use futures::future::join_all;
 use retrom_codegen::retrom::services::library::v1::{
-    AddPlatformRootDirectoryRequest, BatchCreatePlatformsRequest, BatchCreatePlatformsResponse,
-    BatchDeleteGamesRequest, BatchDeletePlatformsRequest, BatchDeletePlatformsResponse,
-    BatchGetPlatformsRequest, BatchGetPlatformsResponse, BatchUpdatePlatformsRequest,
-    BatchUpdatePlatformsResponse, CreatePlatformRequest, DeleteGameRequest, DeletePlatformRequest,
-    GetPlatformRequest, ListPlatformsRequest, ListPlatformsResponse, Platform, PlatformRow,
-    UpdatePlatformRequest,
+    BatchGetPlatformsRequest, BatchGetPlatformsResponse, CreatePlatformRequest,
+    DeletePlatformRequest, GetPlatformRequest, ListPlatformsRequest, ListPlatformsResponse,
+    Platform, PlatformRow, UpdatePlatformRequest,
 };
-use retrom_db::DbPool;
+use retrom_db::{page_cursor::PageCursor, DbPool};
+use serde::{Deserialize, Serialize};
 use sqlx::QueryBuilder;
 use tonic::Status;
 
-use crate::{
-    game_handlers::batch_delete_games, root_directory_handlers::add_platform_root_directory,
-};
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+struct PlatformQueryFilter {
+    parent: Option<String>,
+    include_deleted: bool,
+    title: Option<String>,
+}
 
-fn platform_row_to_platform(
-    row: PlatformRow,
-    paths: Vec<String>,
-    libraries: Vec<String>,
-) -> Platform {
+type PlatformCursor = PageCursor<PlatformQueryFilter>;
+
+static NAME_MATCH_ROUTER: OnceLock<matchit::Router<&'static str>> = OnceLock::new();
+
+fn get_name_matcher() -> &'static matchit::Router<&'static str> {
+    NAME_MATCH_ROUTER.get_or_init(|| {
+        let mut router = matchit::Router::new();
+
+        router
+            .insert("platforms/{platform_id}", "Libraries handler")
+            .expect("Failed to insert platforms route");
+
+        router
+            .insert("libraries/{library_id}", "Libraries handler")
+            .expect("Failed to insert libraries route");
+
+        router
+    })
+}
+
+fn match_platform_id(name: &str) -> Result<String, Status> {
+    let platform_id = get_name_matcher()
+        .at(name)
+        .map(|matched| matched.params.get("platform_id").map(|s| s.to_string()))
+        .map_err(|_| Status::invalid_argument("Invalid platform name"))?;
+
+    match platform_id {
+        Some(id) => Ok(id),
+        None => Err(Status::invalid_argument(format!(
+            "Platform ID not found in name: {name}"
+        ))),
+    }
+}
+
+fn match_library_id(name: &str) -> Result<String, Status> {
+    let library_id = get_name_matcher()
+        .at(name)
+        .map(|matched| matched.params.get("library_id").map(|s| s.to_string()))
+        .map_err(|_| Status::invalid_argument("Invalid library name"))?;
+
+    match library_id {
+        Some(id) => Ok(id),
+        None => Err(Status::invalid_argument(format!(
+            "Library ID not found in name: {name}"
+        ))),
+    }
+}
+
+fn platform_row_to_platform(row: PlatformRow) -> Platform {
     Platform {
-        id: row.id,
+        name: format!("platforms/{}", row.id),
+        parent: format!("libraries/{}", row.library_id),
+        file_root: format!("files/{}", row.file_root_id),
         created_at: row.created_at,
         updated_at: row.updated_at,
         deleted_at: row.deleted_at,
         is_deleted: row.is_deleted,
         third_party: row.third_party,
-        paths,
-        libraries,
     }
-}
-
-async fn get_platform_paths(db_pool: &DbPool, platform_id: &str) -> Result<Vec<String>, Status> {
-    let paths: Vec<String> = QueryBuilder::new(
-        r#"
-        select rd.path from root_directories rd
-        join platform_root_directories prd on prd.root_directory_id = rd.id
-        where prd.platform_id = 
-        "#,
-    )
-    .push_bind(platform_id)
-    .build_query_scalar()
-    .fetch_all(db_pool)
-    .await
-    .map_err(|e| Status::internal(e.to_string()))?;
-
-    Ok(paths)
-}
-
-async fn get_platform_libraries(
-    db_pool: &DbPool,
-    platform_id: &str,
-) -> Result<Vec<String>, Status> {
-    QueryBuilder::new("select library_id from platform_libraries where platform_id = ")
-        .push_bind(platform_id)
-        .build_query_scalar()
-        .fetch_all(db_pool)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))
 }
 
 pub async fn get_platform(
     db_pool: DbPool,
     request: GetPlatformRequest,
 ) -> Result<Platform, Status> {
-    let id = request.id;
+    let platform_id = match_platform_id(&request.name)?;
 
-    if id.is_empty() {
-        return Err(Status::invalid_argument("Platform ID must be provided"));
-    }
-
-    let row: PlatformRow = QueryBuilder::new("select * from platforms where id = ")
-        .push_bind(&id)
+    let row: Option<PlatformRow> = QueryBuilder::new("select * from platforms where id = ")
+        .push_bind(&platform_id)
+        .push(" limit 1")
         .build_query_as()
-        .fetch_one(&db_pool)
+        .fetch_optional(&db_pool)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    let paths = get_platform_paths(&db_pool, &id).await?;
-
-    let libraries = get_platform_libraries(&db_pool, &id).await?;
-
-    Ok(platform_row_to_platform(row, paths, libraries))
+    if let Some(row) = row {
+        Ok(platform_row_to_platform(row))
+    } else {
+        Err(Status::not_found(format!(
+            "Platform with ID {} not found",
+            platform_id
+        )))
+    }
 }
 
 pub async fn list_platforms(
     db_pool: DbPool,
     request: ListPlatformsRequest,
 ) -> Result<ListPlatformsResponse, Status> {
-    let include_deleted = request.include_deleted();
-    let name = request.name;
-    let ids = request.ids;
+    let cursor = match PlatformCursor::deserialize(request.page_token()) {
+        Some(cursor) => cursor,
+        None => {
+            let parsed_limit = match request.page_size() {
+                0 => 250, // Default page size
+                n if n < 0 => {
+                    return Err(Status::invalid_argument("Page size must be non-negative"))
+                }
+                n if n > 1000 => 1000, // Max page size
+                n => n as u32,
+            };
 
-    let mut platforms_builder = QueryBuilder::new(
-        r#"
-        select distinct p.id from platforms p
-        join platform_metadata pm on pm.platform_id = p.id
-        "#,
-    );
+            let initial_filter = PlatformQueryFilter {
+                include_deleted: request.include_deleted(),
+                parent: request.parent,
+                title: request.title,
+            };
 
-    // Omit empty third-party platforms (e.g., Steam)
-    platforms_builder.push(" where (third_party = ");
-    platforms_builder.push_bind(false);
-    platforms_builder.push(" or exists(select 1 from game_platforms where platform_id = p.id))");
-
-    if !ids.is_empty() {
-        platforms_builder.push(" and p.id in (");
-        let mut separated = platforms_builder.separated(", ");
-        for id in &ids {
-            separated.push_bind(id);
+            PlatformCursor {
+                offset: 0,
+                page_size: parsed_limit,
+                filter: initial_filter,
+            }
         }
-        separated.push_unseparated(")");
+    };
+
+    let current_filter = cursor.filter.clone();
+    let query_limit = cursor.page_size + 1; // Fetch one extra to determine if there's a next page
+
+    let mut builder = QueryBuilder::new("select * from platforms where id is not null ");
+
+    if let Some(ref parent) = current_filter.parent {
+        let library_id = match_library_id(parent)?;
+        builder.push(" and library_id = ");
+        builder.push_bind(library_id);
     }
 
-    if !include_deleted {
-        platforms_builder.push(" and is_deleted = ");
-        platforms_builder.push_bind(false);
+    if let Some(ref title) = current_filter.title {
+        builder.push(" and lower(title) like ");
+        builder.push_bind(format!("%{}%", title.to_lowercase()));
     }
 
-    if let Some(name) = name {
-        platforms_builder.push(" and pm.name like ");
-        platforms_builder.push_bind(format!("%{}%", name));
-    }
+    builder.push(" and is_deleted = ");
+    builder.push_bind(current_filter.include_deleted);
+    builder.push(" order by created_at desc limit ");
+    builder.push_bind(query_limit);
+    builder.push(" offset ");
+    builder.push_bind(cursor.offset);
 
-    let platform_ids: Vec<String> = platforms_builder
-        .build_query_scalar()
+    let rows: Vec<PlatformRow> = builder
+        .build_query_as()
         .fetch_all(&db_pool)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    let platforms = join_all(platform_ids.into_iter().map(|id| {
-        let db_pool = db_pool.clone();
-        async move { get_platform(db_pool.clone(), GetPlatformRequest { id }).await }
-    }))
-    .await
-    .into_iter()
-    .map(|result| result.map_err(|e| Status::internal(e.to_string())))
-    .collect::<Result<Vec<Platform>, Status>>()?;
+    let mut platforms = Vec::new();
+    let num_row_to_process = std::cmp::min(rows.len(), cursor.page_size as usize);
 
-    Ok(ListPlatformsResponse { platforms })
+    let next_page_token = if rows.len() > num_row_to_process {
+        let next_cursor = PlatformCursor {
+            offset: cursor.offset + num_row_to_process as u32,
+            page_size: cursor.page_size,
+            filter: current_filter,
+        };
+        Some(next_cursor.serialize())
+    } else {
+        None
+    };
+
+    for row in rows.into_iter().take(num_row_to_process) {
+        platforms.push(platform_row_to_platform(row));
+    }
+
+    Ok(ListPlatformsResponse {
+        platforms,
+        next_page_token,
+    })
 }
 
 pub async fn create_platform(
@@ -151,55 +195,35 @@ pub async fn create_platform(
         .ok_or_else(|| Status::invalid_argument("Platform must be provided"))?;
 
     let platform_id = uuid::Uuid::now_v7().to_string();
+    let library_id = match_library_id(&platform.parent)?;
+    let file_root_id = match_library_id(&platform.file_root)?;
 
-    let row: PlatformRow = QueryBuilder::new("insert into platforms (id, third_party) ")
-        .push_values(&[(&platform_id, false)], |mut b, (id, third_party)| {
-            b.push_bind(id);
-            b.push_bind(third_party);
-        })
-        .push(" returning *")
+    let mut builder = QueryBuilder::new(
+        r#"
+        insert into platforms (
+            id,
+            library_id,
+            file_root_id,
+            third_party
+        ) values (
+        "#,
+    );
+
+    let mut separated = builder.separated(", ");
+    separated.push_bind(&platform_id);
+    separated.push_bind(&library_id);
+    separated.push_bind(&file_root_id);
+    separated.push_bind(false);
+
+    builder.push(") returning *");
+
+    let row: PlatformRow = builder
         .build_query_as()
         .fetch_one(&db_pool)
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    if !platform.libraries.is_empty() {
-        QueryBuilder::new("insert into platform_libraries (platform_id, library_id) ")
-            .push_values(&platform.libraries, |mut row, library_id| {
-                row.push_bind(&platform_id);
-                row.push_bind(library_id);
-            })
-            .build()
-            .execute(&db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-    }
-
-    let paths = if !platform.paths.is_empty() {
-        let responses = join_all(platform.paths.into_iter().map(|path| {
-            let db_pool = db_pool.clone();
-            let platform_id = platform_id.clone();
-            async move {
-                add_platform_root_directory(
-                    db_pool,
-                    AddPlatformRootDirectoryRequest { platform_id, path },
-                )
-                .await
-            }
-        }))
-        .await
-        .into_iter()
-        .collect::<Result<Vec<_>, Status>>()?;
-
-        responses
-            .into_iter()
-            .filter_map(|r| r.root_directory.map(|rd| rd.path))
-            .collect::<Vec<String>>()
-    } else {
-        vec![]
-    };
-
-    Ok(platform_row_to_platform(row, paths, platform.libraries))
+    Ok(platform_row_to_platform(row))
 }
 
 pub async fn update_platform(
@@ -210,202 +234,84 @@ pub async fn update_platform(
         .platform
         .ok_or_else(|| Status::invalid_argument("Platform must be provided"))?;
 
-    if platform.id.is_empty() {
-        return Err(Status::invalid_argument("Platform ID must be provided"));
-    }
+    let platform_id = match_platform_id(&platform.name)?;
 
-    let mut tx = db_pool
-        .begin()
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
-
-    if !platform.libraries.is_empty() {
-        let current_libraries: Vec<String> =
-            QueryBuilder::new("select library_id from platform_libraries where platform_id = ")
-                .push_bind(&platform.id)
-                .build_query_scalar()
-                .fetch_all(&mut *tx)
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?;
-
-        let libraries_to_add: Vec<String> = platform
-            .libraries
-            .iter()
-            .filter(|l| !current_libraries.contains(l))
-            .cloned()
-            .collect();
-
-        if !libraries_to_add.is_empty() {
-            QueryBuilder::new("insert into platform_libraries (platform_id, library_id) ")
-                .push_values(&libraries_to_add, |mut row, library_id| {
-                    row.push_bind(&platform.id);
-                    row.push_bind(library_id);
-                })
-                .build()
-                .execute(&mut *tx)
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?;
-        }
-
-        let libraries_to_remove: Vec<String> = current_libraries
-            .iter()
-            .filter(|l| !platform.libraries.contains(l))
-            .cloned()
-            .collect();
-
-        if !libraries_to_remove.is_empty() {
-            let mut builder =
-                QueryBuilder::new("delete from platform_libraries where platform_id = ");
-            builder.push_bind(&platform.id);
-            builder.push(" and library_id in (");
-
-            let mut separated = builder.separated(", ");
-            for library_id in &libraries_to_remove {
-                separated.push_bind(library_id);
-            }
-            separated.push_unseparated(")");
-
-            builder
-                .build()
-                .execute(&mut *tx)
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?;
-        }
-    }
-
-    let current_paths = get_platform_paths(&db_pool, &platform.id).await?;
-    let paths_to_add: Vec<String> = platform
-        .paths
-        .iter()
-        .filter(|p| !current_paths.contains(p))
-        .cloned()
-        .collect();
-
-    let paths_to_remove: Vec<String> = current_paths
-        .iter()
-        .filter(|p| !platform.paths.contains(p))
-        .cloned()
-        .collect();
-
-    if !paths_to_remove.is_empty() {
-        let mut builder =
-            QueryBuilder::new("delete from platform_root_directories where platform_id = ");
-        builder.push_bind(&platform.id);
-        builder.push(" and root_directory_id in (select id from root_directories where path in (");
-
-        let mut separated = builder.separated(", ");
-        for path in &paths_to_remove {
-            separated.push_bind(path);
-        }
-        separated.push_unseparated("))");
-
-        builder
-            .build()
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-    }
-
-    let row: PlatformRow = QueryBuilder::new("update platforms set deleted_at = ")
-        .push_bind(platform.deleted_at)
-        .push(", is_deleted = ")
-        .push_bind(platform.is_deleted)
-        .push(" where id = ")
-        .push_bind(&platform.id)
-        .push(" returning *")
-        .build_query_as()
-        .fetch_one(&mut *tx)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
-
-    tx.commit()
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
-
-    if !paths_to_add.is_empty() {
-        join_all(paths_to_add.into_iter().map(|path| {
-            let db_pool = db_pool.clone();
-            let platform_id = platform.id.clone();
-            async move {
-                add_platform_root_directory(
-                    db_pool,
-                    AddPlatformRootDirectoryRequest { platform_id, path },
-                )
-                .await
-            }
-        }))
-        .await
-        .into_iter()
-        .collect::<Result<Vec<_>, Status>>()?;
-    }
-
-    let paths = get_platform_paths(&db_pool, &platform.id).await?;
-    let libraries = get_platform_libraries(&db_pool, &platform.id).await?;
-
-    Ok(platform_row_to_platform(row, paths, libraries))
+    // UpdatePlatform is currently a no-op since we don't have any mutable fields
+    // on the Platform resource.
+    get_platform(
+        db_pool,
+        GetPlatformRequest {
+            name: format!("platforms/{}", platform_id),
+        },
+    )
+    .await
 }
 
 pub async fn delete_platform(
     db_pool: DbPool,
     request: DeletePlatformRequest,
 ) -> Result<Platform, Status> {
-    let id = request.id;
-    let soft_delete = request.soft_delete;
-    let delete_from_disk = request.delete_from_disk;
+    let platform_id = match_platform_id(&request.name)?;
 
-    if id.is_empty() {
-        return Err(Status::invalid_argument("Platform ID must be provided"));
-    }
+    let soft_delete = request.soft_delete();
+    let delete_from_disk = request.delete_from_disk();
 
-    let paths = get_platform_paths(&db_pool, &id).await?;
-    let libraries = get_platform_libraries(&db_pool, &id).await?;
+    let mut tx = db_pool
+        .begin()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
 
-    let game_ids: Vec<String> =
-        QueryBuilder::new("select distinct game_id from game_platforms where platform_id = ")
-            .push_bind(&id)
-            .build_query_scalar()
-            .fetch_all(&db_pool)
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-
-    if !game_ids.is_empty() {
-        batch_delete_games(
-            db_pool.clone(),
-            BatchDeleteGamesRequest {
-                requests: game_ids
-                    .into_iter()
-                    .map(|game_id| DeleteGameRequest {
-                        id: game_id,
-                        delete_from_disk,
-                        soft_delete,
-                    })
-                    .collect(),
-            },
-        )
-        .await?;
-    }
-
-    let row: PlatformRow = if soft_delete {
+    let row: Option<PlatformRow> = if soft_delete {
         QueryBuilder::new("update platforms set is_deleted = ")
             .push_bind(true)
             .push(", deleted_at = current_timestamp where id = ")
-            .push_bind(&id)
+            .push_bind(&platform_id)
             .push(" returning *")
             .build_query_as()
-            .fetch_one(&db_pool)
+            .fetch_optional(&mut *tx)
             .await
             .map_err(|e| Status::internal(e.to_string()))?
     } else {
         QueryBuilder::new("delete from platforms where id = ")
-            .push_bind(&id)
+            .push_bind(&platform_id)
             .push(" returning *")
             .build_query_as()
-            .fetch_one(&db_pool)
+            .fetch_optional(&mut *tx)
             .await
             .map_err(|e| Status::internal(e.to_string()))?
     };
 
-    Ok(platform_row_to_platform(row, paths, libraries))
+    let row = row
+        .ok_or_else(|| Status::not_found(format!("Platform with ID {} not found", platform_id)))?;
+
+    if delete_from_disk {
+        let absolute_path: String = QueryBuilder::new(
+            r#"
+                select f.absolute_path from files f
+                join platforms p on f.id = p.file_root_id
+                where p.id =
+            "#,
+        )
+        .push_bind(&platform_id)
+        .build_query_scalar()
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+        let path = PathBuf::from(&absolute_path);
+
+        if path.exists() {
+            tokio::fs::remove_dir_all(path)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?;
+        }
+    }
+
+    tx.commit()
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    Ok(platform_row_to_platform(row))
 }
 
 pub async fn batch_get_platforms(
@@ -429,244 +335,4 @@ pub async fn batch_get_platforms(
     .collect::<Result<Vec<Platform>, Status>>()?;
 
     Ok(BatchGetPlatformsResponse { platforms })
-}
-
-pub async fn batch_create_platforms(
-    db_pool: DbPool,
-    request: BatchCreatePlatformsRequest,
-) -> Result<BatchCreatePlatformsResponse, Status> {
-    if request.platforms.is_empty() {
-        return Err(Status::invalid_argument(
-            "At least one platform must be provided",
-        ));
-    }
-
-    let platforms = join_all(request.platforms.into_iter().map(|platform| {
-        let db_pool = db_pool.clone();
-        async move {
-            create_platform(
-                db_pool,
-                CreatePlatformRequest {
-                    platform: Some(platform),
-                },
-            )
-            .await
-        }
-    }))
-    .await
-    .into_iter()
-    .collect::<Result<Vec<Platform>, Status>>()?;
-
-    Ok(BatchCreatePlatformsResponse { platforms })
-}
-
-pub async fn batch_delete_platforms(
-    db_pool: DbPool,
-    request: BatchDeletePlatformsRequest,
-) -> Result<BatchDeletePlatformsResponse, Status> {
-    if request.ids.is_empty() {
-        return Err(Status::invalid_argument(
-            "At least one platform ID must be provided",
-        ));
-    }
-
-    let platforms = join_all(request.ids.into_iter().map(|id| {
-        let db_pool = db_pool.clone();
-        let soft_delete = request.soft_delete;
-        let delete_from_disk = request.delete_from_disk;
-        async move {
-            delete_platform(
-                db_pool,
-                DeletePlatformRequest {
-                    id,
-                    delete_from_disk,
-                    soft_delete,
-                },
-            )
-            .await
-        }
-    }))
-    .await
-    .into_iter()
-    .collect::<Result<Vec<Platform>, Status>>()?;
-
-    Ok(BatchDeletePlatformsResponse { platforms })
-}
-
-pub async fn batch_update_platforms(
-    db_pool: DbPool,
-    request: BatchUpdatePlatformsRequest,
-) -> Result<BatchUpdatePlatformsResponse, Status> {
-    if request.platforms.is_empty() {
-        return Err(Status::invalid_argument(
-            "At least one platform must be provided",
-        ));
-    }
-
-    let platforms = join_all(request.platforms.into_iter().map(|platform| {
-        let db_pool = db_pool.clone();
-        async move {
-            update_platform(
-                db_pool,
-                UpdatePlatformRequest {
-                    platform: Some(platform),
-                },
-            )
-            .await
-        }
-    }))
-    .await
-    .into_iter()
-    .collect::<Result<Vec<Platform>, Status>>()?;
-
-    Ok(BatchUpdatePlatformsResponse { platforms })
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::library_handlers::*;
-    use crate::platform_handlers::*;
-    use crate::tests::{create_test_library_dir, create_test_platform_dir, get_test_db_pool};
-    use retrom_codegen::retrom::services::library::v1::{
-        CreateLibraryRequest, CreatePlatformRequest, GetPlatformRequest, Library, Platform,
-    };
-
-    #[tokio::test]
-    async fn test_get_platform() -> Result<(), tonic::Status> {
-        let db_pool = get_test_db_pool().await;
-        let library_dir = create_test_library_dir().await;
-        let platform_dir = create_test_platform_dir(&library_dir, "PlayStation").await;
-
-        let library_path = library_dir
-            .path()
-            .to_str()
-            .expect("Failed to convert library path to string")
-            .to_string();
-        let platform_path = platform_dir
-            .canonicalize()
-            .expect("Failed to canonicalize platform path")
-            .to_str()
-            .expect("Failed to convert platform path to string")
-            .to_string();
-
-        let library = create_library(
-            db_pool.clone(),
-            CreateLibraryRequest {
-                library: Some(Library {
-                    name: "test_library".to_string(),
-                    path: library_path,
-                    structure_definition: "{library}/{platform}/{game}".to_string(),
-                    ..Default::default()
-                }),
-            },
-        )
-        .await?;
-
-        let created = create_platform(
-            db_pool.clone(),
-            CreatePlatformRequest {
-                platform: Some(Platform {
-                    paths: vec![platform_path.clone()],
-                    libraries: vec![library.id.clone()],
-                    ..Default::default()
-                }),
-            },
-        )
-        .await?;
-
-        let platform = get_platform(
-            db_pool,
-            GetPlatformRequest {
-                id: created.id.clone(),
-            },
-        )
-        .await?;
-
-        assert_eq!(platform.id, created.id);
-        assert_eq!(platform.paths, vec![platform_path]);
-        assert_eq!(platform.libraries, vec![library.id]);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_create_platform() -> Result<(), tonic::Status> {
-        let db_pool = get_test_db_pool().await;
-        let library_dir = create_test_library_dir().await;
-        let platform_dir = create_test_platform_dir(&library_dir, "PlayStation").await;
-
-        let library_path = library_dir
-            .path()
-            .to_str()
-            .expect("Failed to convert library path to string")
-            .to_string();
-        let platform_path = platform_dir
-            .canonicalize()
-            .expect("Failed to canonicalize platform path")
-            .to_str()
-            .expect("Failed to convert platform path to string")
-            .to_string();
-
-        let library = create_library(
-            db_pool.clone(),
-            CreateLibraryRequest {
-                library: Some(Library {
-                    name: "test_library".to_string(),
-                    path: library_path,
-                    structure_definition: "{library}/{platform}/{game}".to_string(),
-                    ..Default::default()
-                }),
-            },
-        )
-        .await?;
-
-        let platform = create_platform(
-            db_pool.clone(),
-            CreatePlatformRequest {
-                platform: Some(Platform {
-                    paths: vec![platform_path.clone()],
-                    libraries: vec![library.id.clone()],
-                    ..Default::default()
-                }),
-            },
-        )
-        .await?;
-
-        assert!(!platform.id.is_empty());
-        assert_eq!(platform.paths, vec![platform_path.clone()]);
-        assert_eq!(platform.libraries, vec![library.id.clone()]);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_create_platform_with_no_library() -> Result<(), tonic::Status> {
-        let db_pool = get_test_db_pool().await;
-        let library_dir = create_test_library_dir().await;
-        let platform_dir = create_test_platform_dir(&library_dir, "Dreamcast").await;
-
-        let platform_path = platform_dir
-            .canonicalize()
-            .expect("Failed to canonicalize platform path")
-            .to_str()
-            .expect("Failed to convert platform path to string")
-            .to_string();
-
-        let platform = create_platform(
-            db_pool.clone(),
-            CreatePlatformRequest {
-                platform: Some(Platform {
-                    paths: vec![platform_path.clone()],
-                    ..Default::default()
-                }),
-            },
-        )
-        .await?;
-
-        assert!(!platform.id.is_empty());
-        assert_eq!(platform.paths, vec![platform_path.clone()]);
-        assert!(platform.libraries.is_empty());
-
-        Ok(())
-    }
 }

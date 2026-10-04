@@ -25,10 +25,10 @@ struct FileQueryFilter {
 
 type FileCursor = PageCursor<FileQueryFilter>;
 
-static ROUTER: OnceLock<matchit::Router<&'static str>> = OnceLock::new();
+static NAME_MATCH_ROUTER: OnceLock<matchit::Router<&'static str>> = OnceLock::new();
 
-fn get_router() -> &'static matchit::Router<&'static str> {
-    ROUTER.get_or_init(|| {
+fn get_name_matcher() -> &'static matchit::Router<&'static str> {
+    NAME_MATCH_ROUTER.get_or_init(|| {
         let mut router = matchit::Router::new();
         router
             .insert("files/{file_id}", "File handler")
@@ -115,10 +115,10 @@ async fn calculate_sha256_hash(file_path: impl AsRef<Path>) -> Result<String, St
 }
 
 fn match_file_id(name: &str) -> Result<String, Status> {
-    let file_id = get_router()
+    let file_id = get_name_matcher()
         .at(name)
         .map(|matched| matched.params.get("file_id").map(|s| s.to_string()))
-        .map_err(|_| Status::invalid_argument("Invalid file path"))?;
+        .map_err(|_| Status::invalid_argument(format!("Invalid file name: {name}")))?;
 
     match file_id {
         Some(id) => Ok(id),
@@ -128,134 +128,127 @@ fn match_file_id(name: &str) -> Result<String, Status> {
     }
 }
 
-#[tonic::async_trait]
-impl FileService for FileServiceHandlers {
-    async fn get_file(&self, request: Request<GetFileRequest>) -> Result<Response<File>, Status> {
-        let request = request.into_inner();
-        let file_id = match_file_id(&request.name)?;
+async fn handle_get_file(db_pool: DbPool, request: GetFileRequest) -> Result<File, Status> {
+    let file_id = match_file_id(&request.name)?;
 
-        let file_row: Option<FileRow> = QueryBuilder::new("select * from files where id = ")
-            .push_bind(&file_id)
-            .push(" limit 1")
-            .build_query_as()
-            .fetch_optional(&self.db_pool)
+    let file_row: Option<FileRow> = QueryBuilder::new("select * from files where id = ")
+        .push_bind(&file_id)
+        .push(" limit 1")
+        .build_query_as()
+        .fetch_optional(&db_pool)
+        .await
+        .map_err(|e| Status::internal(format!("Internal server error: {e}")))?;
+
+    let mut file_row = match file_row {
+        Some(file) => file,
+        None => {
+            return Err(Status::not_found("File not found"));
+        }
+    };
+
+    let file_meta = match tokio::fs::metadata(&file_row.absolute_path).await {
+        Ok(meta) => meta,
+        Err(_) => {
+            return Err(Status::not_found("File not found on disk"));
+        }
+    };
+
+    let curr_byte_size = file_meta.len();
+    let curr_updated_at: Timestamp = file_meta
+        .modified()
+        .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+        .into();
+
+    // Disk modified w/o notifying the database, trigger an update to the database record with the new size
+    // and updated_at timestamp along with a background job to calculate the new SHA256 hash of
+    // the file.
+    if curr_byte_size != file_row.byte_size || Some(curr_updated_at) != file_row.updated_at {
+        // TODO: Update the file record in the database with the new size and updated_at
+        // timestamp
+
+        file_row.byte_size = curr_byte_size;
+        file_row.updated_at = Some(curr_updated_at);
+    }
+
+    let etag = calculate_etag_from_file_row(&file_row).await;
+
+    Ok(file_row_to_file(file_row, &etag))
+}
+
+async fn handle_create_file(db_pool: DbPool, request: CreateFileRequest) -> Result<File, Status> {
+    let parent_id = match_file_id(&request.parent)?;
+    let to_create_id = request
+        .file_id
+        .unwrap_or_else(|| uuid::Uuid::now_v7().to_string());
+
+    let to_create = match request.file {
+        Some(file) => file,
+        None => return Err(Status::invalid_argument("Missing file data")),
+    };
+
+    let parent_path: Option<String> =
+        QueryBuilder::new("select absolute_path from files where id = ")
+            .push_bind(&parent_id)
+            .build_query_scalar()
+            .fetch_optional(&db_pool)
             .await
             .map_err(|e| Status::internal(format!("Internal server error: {e}")))?;
 
-        let mut file_row = match file_row {
-            Some(file) => file,
-            None => {
-                return Err(Status::not_found("File not found"));
+    let parent_path = match parent_path {
+        Some(path) => PathBuf::from(path),
+        None => return Err(Status::not_found("Parent file not found")),
+    };
+
+    let file_path = parent_path.join(&to_create.file_name);
+
+    if !file_path.exists() {
+        match to_create.file_type() {
+            FileType::Directory => {
+                tokio::fs::create_dir(&file_path)
+                    .await
+                    .map_err(|e| Status::internal(format!("Failed to create directory: {e}")))?;
+            }
+            FileType::File => {
+                tokio::fs::File::create(&file_path)
+                    .await
+                    .map_err(|e| Status::internal(format!("Failed to create file: {e}")))?;
+            }
+            FileType::Unspecified => {
+                return Err(Status::invalid_argument(
+                    "File type must be specified for creation",
+                ));
             }
         };
-
-        let file_meta = match tokio::fs::metadata(&file_row.absolute_path).await {
-            Ok(meta) => meta,
-            Err(_) => {
-                return Err(Status::not_found("File not found on disk"));
-            }
-        };
-
-        let curr_byte_size = file_meta.len();
-        let curr_updated_at: Timestamp = file_meta
-            .modified()
-            .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
-            .into();
-
-        // Disk modified w/o notifying the database, trigger an update to the database record with the new size
-        // and updated_at timestamp along with a background job to calculate the new SHA256 hash of
-        // the file.
-        if curr_byte_size != file_row.byte_size || Some(curr_updated_at) != file_row.updated_at {
-            // TODO: Update the file record in the database with the new size and updated_at
-            // timestamp
-
-            file_row.byte_size = curr_byte_size;
-            file_row.updated_at = Some(curr_updated_at);
-        }
-
-        let etag = calculate_etag_from_file_row(&file_row).await;
-
-        Ok(Response::new(file_row_to_file(file_row, &etag)))
     }
 
-    async fn create_file(
-        &self,
-        request: Request<CreateFileRequest>,
-    ) -> Result<Response<File>, Status> {
-        let request = request.into_inner();
-        let parent_id = match_file_id(&request.parent)?;
-        let to_create_id = request
-            .file_id
-            .unwrap_or_else(|| uuid::Uuid::now_v7().to_string());
+    let absolute_path = file_path
+        .canonicalize()
+        .map(|p| p.to_string_lossy().to_string())
+        .map_err(|e| Status::internal(format!("Failed to canonicalize path: {e}")))?;
 
-        let to_create = match request.file {
-            Some(file) => file,
-            None => return Err(Status::invalid_argument("Missing file data")),
-        };
+    let metadata = tokio::fs::metadata(&file_path)
+        .await
+        .map_err(|e| Status::internal(format!("Failed to get file metadata: {e}")))?;
 
-        let parent_path: Option<String> =
-            QueryBuilder::new("select absolute_path from files where id = ")
-                .push_bind(&parent_id)
-                .build_query_scalar()
-                .fetch_optional(&self.db_pool)
-                .await
-                .map_err(|e| Status::internal(format!("Internal server error: {e}")))?;
+    let file_type = match file_path.is_dir() {
+        true => FileType::Directory as i32,
+        false => FileType::File as i32,
+    };
 
-        let parent_path = match parent_path {
-            Some(path) => PathBuf::from(path),
-            None => return Err(Status::not_found("Parent file not found")),
-        };
+    let byte_size = metadata.len();
 
-        let file_path = parent_path.join(&to_create.file_name);
+    let sha256_hash = if file_path.is_file() && byte_size < 10 * 1000000 {
+        Some(calculate_sha256_hash(&file_path).await?)
+    } else {
+        // TODO: Trigger a background job to calculate the SHA256 hash for large files
+        None
+    };
 
-        if !file_path.exists() {
-            match to_create.file_type() {
-                FileType::Directory => {
-                    tokio::fs::create_dir(&file_path).await.map_err(|e| {
-                        Status::internal(format!("Failed to create directory: {e}"))
-                    })?;
-                }
-                FileType::File => {
-                    tokio::fs::File::create(&file_path)
-                        .await
-                        .map_err(|e| Status::internal(format!("Failed to create file: {e}")))?;
-                }
-                FileType::Unspecified => {
-                    return Err(Status::invalid_argument(
-                        "File type must be specified for creation",
-                    ));
-                }
-            };
-        }
+    let created_at: Option<Timestamp> = metadata.created().ok().map(|t| t.into());
+    let updated_at: Option<Timestamp> = metadata.modified().ok().map(|t| t.into());
 
-        let absolute_path = file_path
-            .canonicalize()
-            .map(|p| p.to_string_lossy().to_string())
-            .map_err(|e| Status::internal(format!("Failed to canonicalize path: {e}")))?;
-
-        let metadata = tokio::fs::metadata(&file_path)
-            .await
-            .map_err(|e| Status::internal(format!("Failed to get file metadata: {e}")))?;
-
-        let file_type = match file_path.is_dir() {
-            true => FileType::Directory as i32,
-            false => FileType::File as i32,
-        };
-
-        let byte_size = metadata.len();
-
-        let sha256_hash = if file_path.is_file() && byte_size < 10 * 1000000 {
-            Some(calculate_sha256_hash(&file_path).await?)
-        } else {
-            // TODO: Trigger a background job to calculate the SHA256 hash for large files
-            None
-        };
-
-        let created_at: Option<Timestamp> = metadata.created().ok().map(|t| t.into());
-        let updated_at: Option<Timestamp> = metadata.modified().ok().map(|t| t.into());
-
-        let mut builder = QueryBuilder::new(
-            r#"
+    let mut builder = QueryBuilder::new(
+        r#"
             insert into files (
                 id,
                 parent_id,
@@ -268,32 +261,130 @@ impl FileService for FileServiceHandlers {
                 updated_at
             ) values (
             "#,
-        );
+    );
 
-        let mut sep = builder.separated(", ");
-        sep.push_bind(&to_create_id);
-        sep.push_bind(&parent_id);
-        sep.push_bind(&to_create.file_name);
-        sep.push_bind(file_type);
-        sep.push_bind(byte_size as i64);
-        sep.push_bind(&sha256_hash);
-        sep.push_bind(&absolute_path);
-        sep.push_bind(created_at);
-        sep.push_bind(updated_at);
+    let mut sep = builder.separated(", ");
+    sep.push_bind(&to_create_id);
+    sep.push_bind(&parent_id);
+    sep.push_bind(&to_create.file_name);
+    sep.push_bind(file_type);
+    sep.push_bind(byte_size as i64);
+    sep.push_bind(&sha256_hash);
+    sep.push_bind(&absolute_path);
+    sep.push_bind(created_at);
+    sep.push_bind(updated_at);
 
-        builder.push(") returning *");
+    builder.push(") returning *");
 
-        let file_row: FileRow = builder
-            .build_query_as()
-            .fetch_one(&self.db_pool)
+    let file_row: FileRow = builder
+        .build_query_as()
+        .fetch_one(&db_pool)
+        .await
+        .map_err(|e| {
+            Status::internal(format!("Failed to insert file record into database: {e}"))
+        })?;
+
+    let etag = calculate_etag_from_file_row(&file_row).await;
+
+    Ok(file_row_to_file(file_row, &etag))
+}
+
+async fn register_root_file_children(db_pool: &DbPool, root_file: File) -> Result<(), Status> {
+    let mut file_roots = std::collections::VecDeque::new();
+    file_roots.push_back(root_file);
+
+    while let Some(current_root) = file_roots.pop_front() {
+        let file_id = match_file_id(&current_root.name)?;
+        let absolute_path: String =
+            QueryBuilder::new("select absolute_path from files where id = ")
+                .push_bind(&file_id)
+                .build_query_scalar()
+                .fetch_one(db_pool)
+                .await
+                .map_err(|e| Status::internal(format!("Internal server error: {e}")))?;
+
+        let path = PathBuf::from(&absolute_path);
+
+        let mut entries = tokio::fs::read_dir(&path)
             .await
-            .map_err(|e| {
-                Status::internal(format!("Failed to insert file record into database: {e}"))
-            })?;
+            .map_err(|e| Status::internal(format!("Failed to read directory: {e}")))?;
 
-        let etag = calculate_etag_from_file_row(&file_row).await;
+        while let Some(entry) = entries
+            .next_entry()
+            .await
+            .map_err(|e| Status::internal(format!("Failed to read directory entry: {e}")))?
+        {
+            let path = entry.path();
+            let file_name = path
+                .file_name()
+                .and_then(|name| name.to_str().map(|s| s.to_string()))
+                .ok_or_else(|| {
+                    Status::invalid_argument(format!("Invalid file name: {:?}", path.file_name()))
+                })?;
 
-        Ok(Response::new(file_row_to_file(file_row, &etag)))
+            let file_type = if path.is_dir() {
+                FileType::Directory
+            } else {
+                FileType::File
+            };
+
+            let absolute_path = path
+                .canonicalize()
+                .map_err(|e| Status::internal(format!("Failed to canonicalize path: {e}")))?
+                .to_string_lossy()
+                .to_string();
+
+            let existing_file: Option<FileRow> =
+                QueryBuilder::new("select * from files where absolute_path = ")
+                    .push_bind(&absolute_path)
+                    .build_query_as()
+                    .fetch_optional(db_pool)
+                    .await
+                    .map_err(|e| Status::internal(format!("Internal server error: {e}")))?;
+
+            let file = if let Some(existing_file) = existing_file {
+                let etag = calculate_etag_from_file_row(&existing_file).await;
+                file_row_to_file(existing_file, &etag)
+            } else {
+                handle_create_file(
+                    db_pool.clone(),
+                    CreateFileRequest {
+                        parent: current_root.name.clone(),
+                        file_id: None,
+                        file: Some(File {
+                            file_name,
+                            file_type: file_type as i32,
+                            ..Default::default()
+                        }),
+                    },
+                )
+                .await?
+            };
+
+            if file_type == FileType::Directory {
+                file_roots.push_back(file)
+            }
+        }
+    }
+
+    Ok(())
+}
+
+#[tonic::async_trait]
+impl FileService for FileServiceHandlers {
+    async fn get_file(&self, request: Request<GetFileRequest>) -> Result<Response<File>, Status> {
+        let request = request.into_inner();
+        let file = handle_get_file(self.db_pool.clone(), request).await?;
+        Ok(Response::new(file))
+    }
+
+    async fn create_file(
+        &self,
+        request: Request<CreateFileRequest>,
+    ) -> Result<Response<File>, Status> {
+        let request = request.into_inner();
+        let file = handle_create_file(self.db_pool.clone(), request).await?;
+        Ok(Response::new(file))
     }
 
     async fn list_files(
@@ -583,11 +674,19 @@ impl FileService for FileServiceHandlers {
             return Err(Status::not_found("Path does not exist"));
         }
 
-        let aboslute_path = path
+        let absolute_path = path
             .canonicalize()
             .map_err(|e| Status::invalid_argument(format!("Invalid path: {e}")))?
             .to_string_lossy()
             .to_string();
+
+        let existing_file: Option<FileRow> =
+            QueryBuilder::new("select * from files where absolute_path = ")
+                .push_bind(&absolute_path)
+                .build_query_as()
+                .fetch_optional(&self.db_pool)
+                .await
+                .map_err(|e| Status::internal(format!("Internal server error: {e}")))?;
 
         let file_name = path
             .file_name()
@@ -601,7 +700,7 @@ impl FileService for FileServiceHandlers {
             FileType::File
         };
 
-        let metadata = tokio::fs::metadata(&aboslute_path)
+        let metadata = tokio::fs::metadata(&absolute_path)
             .await
             .map_err(|e| Status::internal(format!("Failed to get file metadata: {e}")))?;
 
@@ -631,23 +730,32 @@ impl FileService for FileServiceHandlers {
         sep.push_bind(&file_name);
         sep.push_bind(file_type as i32);
         sep.push_bind(byte_size as i64);
-        sep.push_bind(&aboslute_path);
+        sep.push_bind(&absolute_path);
         sep.push_bind(created_at);
         sep.push_bind(updated_at);
 
         builder.push(") returning *");
 
-        let file_row: FileRow = builder
-            .build_query_as()
-            .fetch_one(&self.db_pool)
-            .await
-            .map_err(|e| {
-                Status::internal(format!("Failed to insert file record into database: {e}"))
-            })?;
+        let file_row: FileRow = if let Some(existing_row) = existing_file {
+            existing_row
+        } else {
+            builder
+                .build_query_as()
+                .fetch_one(&self.db_pool)
+                .await
+                .map_err(|e| {
+                    Status::internal(format!("Failed to insert file record into database: {e}"))
+                })?
+        };
 
         let etag = calculate_etag_from_file_row(&file_row).await;
-        let file = file_row_to_file(file_row, &etag).into();
+        let file = file_row_to_file(file_row, &etag);
 
-        Ok(Response::new(RegisterHostFileResponse { file }))
+        // Resursively register child files if the path is a directory
+        if file_type == FileType::Directory {
+            register_root_file_children(&self.db_pool, file.clone()).await?;
+        }
+
+        Ok(Response::new(RegisterHostFileResponse { file: Some(file) }))
     }
 }

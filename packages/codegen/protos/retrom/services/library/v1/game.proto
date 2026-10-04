@@ -13,7 +13,7 @@ message Game {
     type: "retrom.jmberesford.github.io/Game"
     singular: "game"
     plural: "games"
-    pattern: "platforms/{platform}/games/{game}"
+    pattern: "games/{game}"
   };
 
   // The unique resource name of the game.
@@ -25,7 +25,7 @@ message Game {
   // The resource name for the parent platform that this game belongs to.
   // E.g. `platforms/{platform}`.
   string parent = 2 [
-    (google.api.field_behavior) = OPTIONAL,
+    (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}
   ];
 
@@ -65,21 +65,24 @@ message GameRow {
   // in the `platforms` table.
   string platform_id = 2;
 
+  // The unique identifier of the root file for this game in the `files` table.
+  string file_root_id = 3;
+
   // Timestamp when the game row was created.
-  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp created_at = 4;
 
   // Timestamp when the game row was last updated.
-  google.protobuf.Timestamp updated_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
 
   // Timestamp when this game was soft-deleted.
-  google.protobuf.Timestamp deleted_at = 5;
+  google.protobuf.Timestamp deleted_at = 6;
 
   // Whether this game is soft-deleted.
-  bool is_deleted = 6;
+  bool is_deleted = 7;
 
   // Whether this game originated from a third-party source.
-  bool third_party = 7;
+  bool third_party = 8;
 
   // Steam AppID associated with this game when available.
-  optional string steam_app_id = 8;
+  optional string steam_app_id = 9;
 }

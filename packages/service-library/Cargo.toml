@@ -35,6 +35,8 @@ dotenvy = { workspace = true }
 uuid = { workspace = true }
 sqlx = { workspace = true }
 pbjson-types = { workspace = true }
+serde = { workspace = true }
+matchit = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

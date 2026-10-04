@@ -3,6 +3,7 @@ use super::{
     LibraryServiceHandlers,
 };
 use retrom_codegen::retrom::services::{
+    files::v1::RegisterHostFileRequest,
     jobs::v1::JobStatus,
     library::v1::{ScanLibraryRequest, ScanLibraryResponse},
 };
@@ -23,6 +24,15 @@ pub async fn scan_library(
 
     if targets.is_empty() {
         return Err(Status::internal("No library content found"));
+    }
+
+    for target in targets.iter() {
+        let mut file_client = state.file_svc_client.clone();
+        file_client
+            .register_host_file(RegisterHostFileRequest {
+                absolute_path: target.root_path.clone(),
+            })
+            .await?;
     }
 
     let job = state
@@ -80,22 +90,14 @@ pub async fn scan_library(
 }
 
 async fn load_scan_targets(db_pool: &DbPool) -> Result<Vec<LibraryScanTarget>, sqlx::Error> {
-    let libraries: Vec<(String, String)> =
-        sqlx::query_as("select id, structure_definition from libraries")
+    let libraries: Vec<(String, String, String)> =
+        sqlx::query_as("select id, file_root_id, structure_definition from libraries")
             .fetch_all(db_pool)
             .await?;
 
     let mut targets = Vec::with_capacity(libraries.len());
 
-    for (library_id, structure_definition) in libraries {
-        let mut builder = QueryBuilder::new(
-            "select rd.path from root_directories rd \
-             join library_root_directories lrd on lrd.root_directory_id = rd.id \
-             where lrd.library_id = ",
-        );
-        builder.push_bind(&library_id);
-
-        let root_paths: Vec<String> = builder.build_query_scalar().fetch_all(db_pool).await?;
+    for (library_id, file_root_id, structure_definition) in libraries {
         let ignore_patterns: Vec<String> =
             QueryBuilder::new("select pattern from library_ignore_patterns where library_id = ")
                 .push_bind(&library_id)
@@ -104,14 +106,16 @@ async fn load_scan_targets(db_pool: &DbPool) -> Result<Vec<LibraryScanTarget>, s
                 .fetch_all(db_pool)
                 .await?;
 
-        if root_paths.is_empty() {
-            continue;
-        }
+        let root_path: String = QueryBuilder::new("select absolute_path from files where id = ")
+            .push_bind(&file_root_id)
+            .build_query_scalar()
+            .fetch_one(db_pool)
+            .await?;
 
         targets.push(LibraryScanTarget {
             library_id,
             structure_definition,
-            root_paths,
+            root_path,
             ignore_patterns,
         });
     }

@@ -1,6 +1,5 @@
-use std::path::{Path, PathBuf};
-
 use retrom_db::DbPool;
+use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
 pub async fn get_test_db_pool() -> DbPool {

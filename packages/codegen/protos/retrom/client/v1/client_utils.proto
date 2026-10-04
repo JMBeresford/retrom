@@ -4,8 +4,8 @@ package retrom.client.v1;
 
 import "retrom/services/emulators/v1/emulator.proto";
 import "retrom/services/emulators/v1/emulator_profile.proto";
+import "retrom/services/files/v1/file.proto";
 import "retrom/services/library/v1/game.proto";
-import "retrom/services/library/v1/resources.proto";
 
 // RetromHostInfo represents the information needed to connect to a Retrom host.
 message RetromHostInfo {
@@ -36,7 +36,7 @@ message PlayGamePayload {
   // The emulator to be used for playing the game.
   retrom.services.emulators.v1.Emulator emulator = 3;
   // The game file to be used for playing the game.
-  retrom.services.library.v1.GameFile file = 4;
+  retrom.services.files.v1.File file = 4;
 }
 
 // StopGamePayload represents the payload for a request to stop playing a game.
