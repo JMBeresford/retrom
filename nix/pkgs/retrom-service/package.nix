@@ -68,6 +68,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
     openssl
   ];
 
+  env.OPENSSL_NO_VENDOR = "1";
+
   preBuild = ''
     export CI=true
     export NX_NO_CLOUD=true
@@ -78,28 +80,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
     # See https://github.com/nrwl/nx/issues/22445
     faketty pnpm nx build retrom-client-web
-
-    # Work around for https://github.com/pnpm/pnpm/issues/5315
-    mkdir -p web
-
-    cp -r packages/client-web/dist web
-
-    cp pnpm-workspace.yaml web
-    cp pnpm-lock.yaml web
-    cp package.json web
-    cp README.md web
-    cp packages/client-web/vite.config.ts web
-
-    pushd web
-    pnpm install --prod --offline --frozen-lockfile
-
-    rm -f pnpm-workspace.yaml pnpm-lock.yaml
-    popd
   '';
 
   postInstall = ''
-    mkdir -p $out/share
-    cp -r web $out/share/retrom
+    mkdir -p $out/share/retrom
+    cp -r packages/client-web/dist $out/share/retrom
   '';
 
   postFixup = ''
