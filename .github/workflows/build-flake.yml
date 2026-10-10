@@ -29,3 +29,12 @@ jobs:
 
       - name: Build packages
         run: nix build .#retrom-unwrapped .#retrom-service
+
+      - name: Pin release builds
+        if: github.ref_type == 'tag' && !contains(github.ref_name, '-')
+        run: |
+          for pkg in retrom-unwrapped retrom-service; do
+            path="$(nix path-info ".#$pkg")"
+            cachix push retrom "$path"
+            cachix pin retrom "$pkg" "$path" --keep-revisions 2
+          done
