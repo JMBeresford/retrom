@@ -19,6 +19,7 @@ import {
   W3CBaggagePropagator,
   W3CTraceContextPropagator,
 } from "@opentelemetry/core";
+import { configStore } from "@/providers/config";
 
 export function initOtel() {
   const contextManager = new ZoneContextManager();
@@ -39,6 +40,8 @@ export function initOtel() {
 
   const dsn = import.meta.env.VITE_UPTRACE_DSN;
 
+  const telemetryEnabled = configStore.getState().telemetry?.enabled ?? false;
+
   const version = import.meta.env.VITE_RETROM_VERSION;
 
   const serviceName =
@@ -51,7 +54,7 @@ export function initOtel() {
     [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: import.meta.env.MODE,
   });
 
-  if (dsn) {
+  if (dsn && telemetryEnabled) {
     console.log("Using Uptrace OpenTelemetry configuration");
 
     configureOpentelemetry({
@@ -61,7 +64,7 @@ export function initOtel() {
       textMapPropagator: propagator,
       instrumentations,
     });
-  } else {
+  } else if (import.meta.env.DEV) {
     const url = new URL("/v1/traces", window.location.origin).toString();
     console.log("Using custom OpenTelemetry configuration: ", url);
 
