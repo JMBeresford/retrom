@@ -73,6 +73,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
     gst_all_1.gst-plugins-good
   ];
 
+  env.OPENSSL_NO_VENDOR = "1";
+
   preBuild = ''
     export CI=true
     export NX_NO_CLOUD=true
