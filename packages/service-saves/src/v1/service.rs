@@ -65,7 +65,7 @@ impl SavesService for SavesServiceHandlers {
                 .library_svc_client
                 .clone()
                 .get_game(GetGameRequest {
-                    id: game_id.clone(),
+                    name: format!("games/{}", game_id),
                 })
                 .await?
                 .into_inner();
@@ -108,7 +108,7 @@ impl SavesService for SavesServiceHandlers {
                 .library_svc_client
                 .clone()
                 .get_game(GetGameRequest {
-                    id: game_id.clone(),
+                    name: format!("games/{}", game_id),
                 })
                 .await?
                 .into_inner();
@@ -148,7 +148,7 @@ impl SavesService for SavesServiceHandlers {
                 .library_svc_client
                 .clone()
                 .get_game(GetGameRequest {
-                    id: game_id.clone(),
+                    name: format!("games/{}", game_id),
                 })
                 .await?
                 .into_inner();
@@ -226,7 +226,7 @@ impl SavesService for SavesServiceHandlers {
                 .library_svc_client
                 .clone()
                 .get_game(GetGameRequest {
-                    id: game_id.clone(),
+                    name: format!("games/{}", game_id),
                 })
                 .await?
                 .into_inner();
@@ -311,7 +311,7 @@ impl SavesService for SavesServiceHandlers {
                 .library_svc_client
                 .clone()
                 .get_game(GetGameRequest {
-                    id: game_id.clone(),
+                    name: format!("games/{}", game_id),
                 })
                 .await?
                 .into_inner();
@@ -360,7 +360,7 @@ impl SavesService for SavesServiceHandlers {
                 .library_svc_client
                 .clone()
                 .get_game(GetGameRequest {
-                    id: game_id.clone(),
+                    name: format!("games/{}", game_id),
                 })
                 .await?
                 .into_inner();
@@ -399,7 +399,7 @@ impl SavesService for SavesServiceHandlers {
                 .library_svc_client
                 .clone()
                 .get_game(GetGameRequest {
-                    id: game_id.clone(),
+                    name: format!("games/{}", game_id),
                 })
                 .await?
                 .into_inner();
@@ -436,7 +436,7 @@ impl SavesService for SavesServiceHandlers {
                 .library_svc_client
                 .clone()
                 .get_game(GetGameRequest {
-                    id: game_id.clone(),
+                    name: format!("games/{}", game_id),
                 })
                 .await?
                 .into_inner();
@@ -484,7 +484,7 @@ impl SavesService for SavesServiceHandlers {
                 .library_svc_client
                 .clone()
                 .get_game(GetGameRequest {
-                    id: game_id.clone(),
+                    name: format!("games/{}", game_id),
                 })
                 .await?
                 .into_inner();
@@ -577,7 +577,7 @@ impl SavesService for SavesServiceHandlers {
                 .library_svc_client
                 .clone()
                 .get_game(GetGameRequest {
-                    id: game_id.clone(),
+                    name: format!("games/{}", game_id),
                 })
                 .await?
                 .into_inner();

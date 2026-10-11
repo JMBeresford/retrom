@@ -9567,6 +9567,7 @@ dependencies = [
  "dotenvy",
  "futures",
  "ludusavi",
+ "matchit 0.9.2",
  "retrom-codegen",
  "retrom-db",
  "retrom-service-common",

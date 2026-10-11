@@ -13,7 +13,7 @@ use retrom_db::DbPool;
 use retrom_service_common::{
     grpc_clients::config_svc::CommonConfigServiceClient, retrom_dirs::RetromDirs,
 };
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::OnceLock};
 use tracing::instrument;
 use walkdir::WalkDir;
 
@@ -32,6 +32,41 @@ pub enum SaveFileManagerError {
 }
 
 type Result<T> = std::result::Result<T, SaveFileManagerError>;
+
+static NAME_MATCH_ROUTER: OnceLock<matchit::Router<&'static str>> = OnceLock::new();
+
+fn get_name_matcher() -> &'static matchit::Router<&'static str> {
+    NAME_MATCH_ROUTER.get_or_init(|| {
+        let mut router = matchit::Router::new();
+        router
+            .insert("games/{game_id}", "Game handler")
+            .expect("Failed to insert game route");
+
+        router
+            .insert("platforms/{platform_id}", "Platform handler")
+            .expect("Failed to insert platform route");
+
+        router
+            .insert("files/{file_id}", "Files handler")
+            .expect("Failed to insert files route");
+
+        router
+    })
+}
+
+fn match_game_id(name: &str) -> Result<String> {
+    let game_id = get_name_matcher()
+        .at(name)
+        .map(|matched| matched.params.get("game_id").map(|s| s.to_string()))
+        .map_err(|_| SaveFileManagerError::InvalidArgument("Invalid game name".to_string()))?;
+
+    match game_id {
+        Some(id) => Ok(id),
+        None => Err(SaveFileManagerError::InvalidArgument(format!(
+            "Game ID not found in name: {name}"
+        ))),
+    }
+}
 
 pub struct GameSaveFileManager {
     game: Game,
@@ -95,7 +130,7 @@ impl SaveFileManager for GameSaveFileManager {
             let mut query = sqlx::QueryBuilder::<retrom_db::RetromDB>::new(
                 "select platform_id from game_platforms where game_id = ",
             );
-            query.push_bind(&self.game.id);
+            query.push_bind(match_game_id(&self.game.name)?);
             query
                 .build_query_scalar::<String>()
                 .fetch_all(&self.db_pool)
@@ -214,7 +249,7 @@ impl SaveFileManager for GameSaveFileManager {
                 file_stats,
                 backups,
                 emulator_id: Some(emulator_id.clone()),
-                game_id: self.game.id.clone(),
+                game_id: match_game_id(&self.game.name)?,
                 save_path,
                 created_at,
             });
@@ -225,7 +260,7 @@ impl SaveFileManager for GameSaveFileManager {
         Ok(files)
     }
 
-    #[instrument(skip(self), fields(game_id = self.game.id))]
+    #[instrument(skip(self), fields(game_name = self.game.name))]
     async fn reindex_backups(&self, emulator_id: Option<&str>) -> Result<()> {
         let mut config_svc_client = self.config_svc_client.clone();
         let config = config_svc_client
@@ -251,7 +286,7 @@ impl SaveFileManager for GameSaveFileManager {
                     tracing::info!(
                         "Evicting save file backup {} for game {}",
                         backup.backup_path,
-                        self.game.id
+                        self.game.name
                     );
 
                     tokio::fs::remove_dir_all(&backup.backup_path).await?;
@@ -262,7 +297,7 @@ impl SaveFileManager for GameSaveFileManager {
         Ok(())
     }
 
-    #[instrument(skip(self), fields(game_id = self.game.id))]
+    #[instrument(skip(self), fields(game_name = self.game.name))]
     fn get_saves_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf> {
         let saves_dir = RetromDirs::new().data_dir().join("saves");
 
@@ -275,10 +310,12 @@ impl SaveFileManager for GameSaveFileManager {
             }
         };
 
-        Ok(saves_dir.join(emulator_id).join(&self.game.id))
+        Ok(saves_dir
+            .join(emulator_id)
+            .join(match_game_id(&self.game.name)?))
     }
 
-    #[instrument(skip(self), fields(game_id = self.game.id))]
+    #[instrument(skip(self), fields(game_name = self.game.name))]
     fn get_saves_backup_dir(&self, emulator_id: Option<&str>) -> Result<PathBuf> {
         let backup_dir = RetromDirs::new().saves_backups_dir();
 
@@ -291,10 +328,12 @@ impl SaveFileManager for GameSaveFileManager {
             }
         };
 
-        Ok(backup_dir.join(emulator_id).join(&self.game.id))
+        Ok(backup_dir
+            .join(emulator_id)
+            .join(match_game_id(&self.game.name)?))
     }
 
-    #[instrument(skip(self), fields(game_id = self.game.id))]
+    #[instrument(skip(self), fields(game_name = self.game.name))]
     async fn backup_save_files(
         &self,
         emulator_id: Option<&str>,
@@ -392,7 +431,7 @@ impl SaveFileManager for GameSaveFileManager {
         Ok(all_save_files)
     }
 
-    #[instrument(skip_all, fields(game_id = self.game.id))]
+    #[instrument(skip_all, fields(game_name = self.game.name))]
     async fn update_save_files(&self, save_files: SaveFiles, dry_run: bool) -> Result<()> {
         let save_dir = self.get_saves_dir(save_files.emulator_id.as_deref())?;
         self.backup_save_files(save_files.emulator_id.as_deref(), dry_run)
@@ -445,7 +484,7 @@ impl SaveFileManager for GameSaveFileManager {
         Ok(())
     }
 
-    #[instrument(skip(self), fields(game_id = self.game.id))]
+    #[instrument(skip(self), fields(game_name = self.game.name))]
     async fn delete_save_files(&self, emulator_id: Option<&str>, dry_run: bool) -> Result<()> {
         let mut all_save_files = self.resolve_save_files(false).await?;
 

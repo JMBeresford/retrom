@@ -31,6 +31,7 @@ walkdir = { workspace = true }
 thiserror = { workspace = true }
 chrono = { workspace = true }
 ludusavi = { workspace = true }
+matchit = { workspace = true }
 
 [features]
 default = []
