@@ -77,28 +77,6 @@ create table if not exists games (
     steam_app_id text
 );
 
-create table if not exists game_files (
-    id text not null primary key,
-    byte_size integer not null,
-    path text not null,
-    game_id text not null references games (id) on delete cascade,
-    platform_id text not null references platforms (id) on delete cascade,
-    created_at text not null default current_timestamp,
-    updated_at text not null default current_timestamp,
-    deleted_at text,
-    is_deleted integer not null default 0,
-    constraint game_files_path_unique unique (path)
-);
-
-create table if not exists default_game_files (
-    game_id text not null references games (id) on delete cascade,
-    platform_id text not null references platforms (id) on delete cascade,
-    game_file_id text not null references game_files (id) on delete cascade,
-    created_at text not null default current_timestamp,
-    updated_at text not null default current_timestamp,
-    primary key (game_id, platform_id)
-);
-
 -- ────────────────────────────────────────────────────────────────────────────
 -- Metadata tables
 -- ────────────────────────────────────────────────────────────────────────────
@@ -232,12 +210,12 @@ on conflict do nothing;
 
 create table if not exists emulators (
     id text not null primary key,
-    name text not null,
+    display_name text not null,
     built_in boolean not null default false,
     libretro_name text,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
-    constraint emulators_name_unique unique (name)
+    constraint emulators_display_name_unique unique (display_name)
 );
 
 -- Relational replacement for emulators.supported_platforms integer[]
@@ -257,12 +235,12 @@ create table if not exists emulator_operating_systems (
 create table if not exists emulator_profiles (
     id text not null primary key,
     emulator text not null references emulators (id) on delete cascade,
-    name text not null,
+    display_name text not null,
     custom_args text not null default '',
     built_in boolean not null default false,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
-    constraint emulator_profiles_emulator_name_unique unique (emulator, name)
+    constraint emulator_profiles_emulator_display_name_unique unique (emulator, display_name)
 );
 
 -- Relational replacement for emulator_profiles.supported_extensions text[]
@@ -381,7 +359,7 @@ on conflict do nothing;
 -- All built-ins: os = Web (WASM), custom_args = '{file}'
 -- ────────────────────────────────────────────────────────────────────────────
 
-insert into emulators (id, name, libretro_name, built_in) values
+insert into emulators (id, display_name, libretro_name, built_in) values
 ('00000000-0000-0000-0001-000000000001', 'mGBA', 'mgba', true),
 ('00000000-0000-0000-0001-000000000002', 'Atari 5200', 'a5200', true),
 ('00000000-0000-0000-0001-000000000003', 'Beetle VB', 'beetle_vb', true),
@@ -471,7 +449,7 @@ insert into emulator_operating_systems (emulator, operating_system) values
 ('00000000-0000-0000-0001-00000000002a', '00000000-0000-0000-0003-000000000004')
 on conflict do nothing;
 
-insert into emulator_profiles (id, emulator, name, built_in, custom_args) values
+insert into emulator_profiles (id, emulator, display_name, built_in, custom_args) values
 (
     '00000000-0000-0000-0002-000000000001',
     '00000000-0000-0000-0001-000000000001',
@@ -795,11 +773,6 @@ on conflict do nothing;
 -- Performance indexes
 -- ────────────────────────────────────────────────────────────────────────────
 
-create index if not exists idx_game_files_game_id on game_files (game_id);
-create index if not exists idx_game_files_platform_id on game_files (platform_id);
-create index if not exists idx_game_files_is_deleted on game_files (is_deleted);
-create index if not exists idx_game_files_game_id_is_deleted on game_files (game_id, is_deleted);
-create index if not exists idx_default_game_files_game_id on default_game_files (game_id);
 create index if not exists idx_games_is_deleted on games (is_deleted);
 create index if not exists idx_games_steam_app_id on games (steam_app_id);
 create index if not exists idx_similar_games_game_id on similar_games (game_id);

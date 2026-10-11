@@ -1,13 +1,13 @@
 use crate::reverse_proxy::reverse_proxy;
 use axum::Router;
 use retrom_codegen::retrom::{
-    files::v1::FILE_DESCRIPTOR_SET as FILES_FILE_DESCRIPTOR_SET,
+    files::v1::FILE_DESCRIPTOR_SET as FILES_V1_FILE_DESCRIPTOR_SET,
     providers::igdb::v1::FILE_DESCRIPTOR_SET as IGDB_FILE_DESCRIPTOR_SET,
     services::{
         clients::v1::FILE_DESCRIPTOR_SET as CLIENTS_FILE_DESCRIPTOR_SET,
         config::v1::FILE_DESCRIPTOR_SET as CONFIG_FILE_DESCRIPTOR_SET,
         emulators::v1::FILE_DESCRIPTOR_SET as EMULATORS_FILE_DESCRIPTOR_SET,
-        file_explorer::v1::FILE_DESCRIPTOR_SET as FILE_EXPLORER_FILE_DESCRIPTOR_SET,
+        files::v1::FILE_DESCRIPTOR_SET as FILES_FILE_DESCRIPTOR_SET,
         jobs::v1::FILE_DESCRIPTOR_SET as JOBS_FILE_DESCRIPTOR_SET,
         library::v1::FILE_DESCRIPTOR_SET as LIBRARY_FILE_DESCRIPTOR_SET,
         metadata::v1::FILE_DESCRIPTOR_SET as METADATA_FILE_DESCRIPTOR_SET,
@@ -121,7 +121,7 @@ pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr
         CLIENTS_FILE_DESCRIPTOR_SET,
         CONFIG_FILE_DESCRIPTOR_SET,
         EMULATORS_FILE_DESCRIPTOR_SET,
-        FILE_EXPLORER_FILE_DESCRIPTOR_SET,
+        FILES_V1_FILE_DESCRIPTOR_SET,
         FILES_FILE_DESCRIPTOR_SET,
         JOBS_FILE_DESCRIPTOR_SET,
         SAVES_V1_FILE_DESCRIPTOR_SET,
@@ -131,7 +131,7 @@ pub async fn get_server() -> (JoinHandle<Result<(), std::io::Error>>, SocketAddr
     .merge(config_router(None))
     .merge(clients_router(db_pool.clone()))
     .merge(emulators_router(db_pool.clone()))
-    .merge(files_router())
+    .merge(files_router(db_pool.clone()))
     .merge(jobs_router())
     .merge(library_router(db_pool.clone()))
     .merge(metadata_router(db_pool.clone()))

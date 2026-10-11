@@ -7,7 +7,6 @@ use axum::{
     Extension, Router,
 };
 use futures_util::TryStreamExt;
-use retrom_codegen::retrom::services::library::v1::GameFileRow;
 use retrom_db::DbPool;
 use tokio::fs::File;
 use tokio_util::io::ReaderStream;
@@ -20,19 +19,23 @@ pub async fn file_handler(
     Extension(pool): Extension<DbPool>,
     Path(file_id): Path<String>,
 ) -> Result<Response, StatusCode> {
-    let game_file: GameFileRow = {
-        let mut query = sqlx::QueryBuilder::new("select * from game_files where id = ");
+    let file_path: Option<String> = {
+        let mut query = sqlx::QueryBuilder::new("select absolute_path from files where id = ");
         query.push_bind(&file_id);
         query.push(" and is_deleted = ");
         query.push_bind(false);
         query
-            .build_query_as()
-            .fetch_one(&pool)
+            .build_query_scalar()
+            .fetch_optional(&pool)
             .await
-            .map_err(|_| StatusCode::NOT_FOUND)?
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
     };
 
-    let file_path = game_file.path;
+    let file_path = match file_path {
+        Some(path) => path,
+        None => return Err(StatusCode::NOT_FOUND),
+    };
+
     let file = File::open(&file_path)
         .await
         .map_err(|_| StatusCode::NOT_FOUND)?;

@@ -6,11 +6,11 @@ use axum::{
     routing::get,
     Extension, Router,
 };
-use retrom_codegen::retrom::services::library::v1::{GameFileRow, RootDirectoryRow};
 use retrom_db::DbPool;
 use std::path::PathBuf;
 use tokio_util::{compat::FuturesAsyncWriteCompatExt, io::ReaderStream};
 use tracing::{instrument, warn};
+use walkdir::WalkDir;
 
 pub fn download_routes() -> Router {
     Router::new().route("/{platform_id}/{game_id}", get(game_handler))
@@ -21,62 +21,32 @@ async fn game_handler(
     Extension(pool): Extension<DbPool>,
     Path((platform_id, game_id)): Path<(String, String)>,
 ) -> Result<Response, (StatusCode, String)> {
-    let game_files: Vec<GameFileRow> = {
-        let mut query = sqlx::QueryBuilder::new("select * from game_files where game_id = ");
-        query.push_bind(&game_id);
-        query.push(" and platform_id = ");
-        query.push_bind(&platform_id);
-        query.push(" and is_deleted = ");
-        query.push_bind(false);
-        query.build_query_as().fetch_all(&pool).await.map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Database error: {}", e),
-            )
-        })?
-    };
+    let game_root_file: Option<String> = sqlx::QueryBuilder::new(
+        r#"
+            select f.absolute_path
+            from files f
+            join games g
+            on g.file_root_id = f.id
+            where g.id =
+            "#,
+    )
+    .push_bind(&game_id)
+    .push(" and g.platform_id = ")
+    .push_bind(&platform_id)
+    .push(" and f.is_deleted = ")
+    .push_bind(false)
+    .build_query_scalar()
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Database query failed: {:?}", e),
+        )
+    })?;
 
-    // Find the root directory for this `(platform, game)` pair, by joining
-    // the `root_directories`, `platform_root_diretories`, and `game_root_directories` tables.
-    // A game will have a single `root_directory` where `root_directory.path` is like
-    // `{prd}%` and `prd` is a platform's `root_directory.path`.
-    let platform_root_dirs: Vec<RootDirectoryRow> = {
-        let mut query =
-            sqlx::QueryBuilder::new("select * from root_directories where platform_id = ");
-        query.push_bind(&platform_id);
-        query.build_query_as().fetch_all(&pool).await.map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Database error: {}", e),
-            )
-        })?
-    };
-
-    let game_root_dir: Option<RootDirectoryRow> = {
-        let mut query = sqlx::QueryBuilder::new("select * from root_directories where game_id = ");
-        query.push_bind(&game_id);
-        query.push(" and (path like ");
-        let mut separated = query.separated(" or path like ");
-        platform_root_dirs.iter().for_each(|prd| {
-            separated.push_bind(format!("{}%", prd.path));
-        });
-
-        separated.push_unseparated(")");
-
-        query
-            .build_query_as()
-            .fetch_optional(&pool)
-            .await
-            .map_err(|e| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Database error: {}", e),
-                )
-            })?
-    };
-
-    let game_root = match game_root_dir {
-        Some(root_dir) => root_dir.path,
+    let game_root = match game_root_file {
+        Some(root) => root,
         None => {
             return Err((
                 StatusCode::NOT_FOUND,
@@ -85,33 +55,32 @@ async fn game_handler(
         }
     };
 
-    let src_dir = PathBuf::from(&game_root);
+    let root_path = PathBuf::from(&game_root);
 
     tracing::debug!("Downloading game files for game ID {game_id} from root directory {game_root}");
 
-    if game_files.is_empty() {
-        return Err((
-            StatusCode::NOT_FOUND,
-            "No game files found for the specified game ID and platform ID".to_string(),
-        ));
-    }
-
-    let file_name = if src_dir.is_dir() {
-        src_dir.file_name()
+    let file_name = if root_path.is_dir() {
+        root_path.file_name()
     } else {
-        src_dir.file_stem()
+        root_path.file_stem()
     }
     .unwrap_or_else(|| std::ffi::OsStr::new(&game_id))
     .to_string_lossy();
 
     tracing::info!("Creating zip archive for game with ID {game_id}");
 
-    let (w, r) = tokio::io::duplex(4096);
+    let (w, r) = tokio::io::duplex(65536);
+
+    let game_files: Vec<PathBuf> = WalkDir::new(&game_root)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file())
+        .map(|e| e.into_path())
+        .collect();
     tokio::spawn(async move {
         let mut writer = ZipFileWriter::with_tokio(w);
 
-        for game_file in &game_files {
-            let game_file_path = PathBuf::from(&game_file.path);
+        for game_file_path in &game_files {
             let relative = match game_file_path.strip_prefix(&game_root) {
                 Ok(rel) => rel,
                 Err(e) => {
