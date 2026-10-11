@@ -9,25 +9,40 @@ import "google/protobuf/timestamp.proto";
 // DefaultEmulatorProfile represents the default emulator profile for a given platform and client.
 message DefaultEmulatorProfile {
   option (google.api.resource) = {
-    name_field: "id"
     type: "retrom.jmberesford.github.io/DefaultEmulatorProfile"
     singular: "defaultEmulatorProfile"
     plural: "defaultEmulatorProfiles"
+    pattern: "default_emulator_profiles/{default_emulator_profile}"
   };
 
-  // The unique identifier of the default emulator profile.
-  string id = 1 [
+  // The unique resource name of the default emulator profile.
+  // e.g. `default_emulator_profiles/{default_emulator_profile_id}`
+  string name = 1 [
     (google.api.field_behavior) = OUTPUT_ONLY,
     (google.api.field_behavior) = IDENTIFIER
   ];
+
   // The unique identifier of the platform.
-  string platform = 2 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}];
+  string platform = 2 [
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"},
+    (google.api.field_behavior) = REQUIRED
+  ];
+
   // The unique identifier of the client.
-  string client = 3 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Client"}];
+  string client = 3 [
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Client"},
+    (google.api.field_behavior) = REQUIRED
+  ];
+
   // The unique identifier of the emulator profile.
-  string emulator_profile = 4 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/EmulatorProfile"}];
+  string emulator_profile = 4 [
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/EmulatorProfile"},
+    (google.api.field_behavior) = REQUIRED
+  ];
+
   // The timestamp when the default emulator profile was created.
   google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
   // The timestamp when the default emulator profile was last updated.
   google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
@@ -35,18 +50,20 @@ message DefaultEmulatorProfile {
 // DefaultEmulatorProfileRow represents a row in the default_emulator_profiles table.
 message DefaultEmulatorProfileRow {
   // The unique identifier of the default emulator profile.
-  string id = 1 [
-    (google.api.field_behavior) = OUTPUT_ONLY,
-    (google.api.field_behavior) = IDENTIFIER
-  ];
+  string id = 1;
+
   // The unique identifier of the platform.
   string platform = 2;
+
   // The unique identifier of the client.
   string client = 3;
+
   // The unique identifier of the emulator profile.
   string emulator_profile = 4;
+
   // The timestamp when the default emulator profile was created.
   google.protobuf.Timestamp created_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
   // The timestamp when the default emulator profile was last updated.
   google.protobuf.Timestamp updated_at = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 }

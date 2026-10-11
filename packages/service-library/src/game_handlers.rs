@@ -107,9 +107,8 @@ pub async fn get_game(db_pool: DbPool, request: GetGameRequest) -> Result<Game, 
         .await
         .map_err(|e| Status::internal(e.to_string()))?;
 
-    Ok(row
-        .map(game_row_to_game)
-        .ok_or_else(|| Status::not_found(format!("Game with ID {} not found", game_id)))?)
+    row.map(game_row_to_game)
+        .ok_or_else(|| Status::not_found(format!("Game with ID {} not found", game_id)))
 }
 
 pub async fn list_games(

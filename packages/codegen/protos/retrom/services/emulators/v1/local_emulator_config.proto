@@ -9,61 +9,88 @@ import "google/protobuf/timestamp.proto";
 // Represents the configuration of a local emulator installation on a given client machine.
 message LocalEmulatorConfig {
   option (google.api.resource) = {
-    name_field: "id"
     type: "retrom.jmberesford.github.io/LocalEmulatorConfig"
     singular: "localEmulatorConfig"
     plural: "localEmulatorConfigs"
+    pattern: "local_emulator_configs/{local_emulator_config}"
   };
 
-  // The unique identifier of the local emulator configuration.
-  string id = 1 [
+  // The unique resource name of the local emulator configuration.
+  // e.g. `local_emulator_configs/{local_emulator_config_id}`
+  string name = 1 [
     (google.api.field_behavior) = OUTPUT_ONLY,
     (google.api.field_behavior) = IDENTIFIER
   ];
+
   // The unique identifier of the emulator.
-  string emulator = 2 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Emulator"}];
+  string emulator = 2 [
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Emulator"},
+    (google.api.field_behavior) = REQUIRED
+  ];
+
   // The unique identifier of the client.
-  string client = 3 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Client"}];
+  string client = 3 [
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Client"},
+    (google.api.field_behavior) = REQUIRED
+  ];
+
   // The timestamp when the local emulator configuration was created.
   google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
   // The timestamp when the local emulator configuration was last updated.
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
   // The path to the emulator executable on the client machine.
-  string executable_path = 6;
+  string executable_path = 6 [(google.api.field_behavior) = REQUIRED];
+
   // An optional nickname for the local emulator configuration.
-  optional string nickname = 7;
+  optional string nickname = 7 [(google.api.field_behavior) = OPTIONAL];
+
   // The path to the directory where save data is stored on the client machine.
-  optional string save_data_path = 8;
+  optional string save_data_path = 8 [(google.api.field_behavior) = OPTIONAL];
+
   // The path to the directory where save states are stored on the client machine.
-  optional string save_states_path = 9;
+  optional string save_states_path = 9 [(google.api.field_behavior) = OPTIONAL];
+
   // The path to the directory where BIOS files are stored on the client machine.
-  optional string bios_directory = 11;
+  optional string bios_directory = 11 [(google.api.field_behavior) = OPTIONAL];
+
   // The path to the directory where extra files are stored on the client machine.
-  optional string extra_files_directory = 12;
+  optional string extra_files_directory = 12 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // LocalEmulatorConfigRow represents a row in the local_emulator_configs table.
 message LocalEmulatorConfigRow {
   // The unique identifier of the local emulator configuration.
   string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
   // The unique identifier of the emulator.
   string emulator = 2;
+
   // The unique identifier of the client.
   string client = 3;
+
   // The timestamp when the local emulator configuration was created.
   google.protobuf.Timestamp created_at = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
   // The timestamp when the local emulator configuration was last updated.
   google.protobuf.Timestamp updated_at = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
   // The path to the emulator executable on the client machine.
   string executable_path = 6;
+
   // An optional nickname for the local emulator configuration.
   optional string nickname = 7;
+
   // The path to the directory where save data is stored on the client machine.
   optional string save_data_path = 8;
+
   // The path to the directory where save states are stored on the client machine.
   optional string save_states_path = 9;
+
   // The path to the directory where BIOS files are stored on the client machine.
   optional string bios_directory = 11;
+
   // The path to the directory where extra files are stored on the client machine.
   optional string extra_files_directory = 12;
 }

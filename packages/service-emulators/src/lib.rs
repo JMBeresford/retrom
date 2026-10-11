@@ -15,15 +15,174 @@ use retrom_codegen::retrom::services::emulators::v1::{
     UpdateDefaultEmulatorProfileRequest, UpdateEmulatorProfileRequest, UpdateEmulatorRequest,
     UpdateLocalEmulatorConfigRequest,
 };
-use retrom_db::DbPool;
+use retrom_db::{page_cursor::PageCursor, DbPool};
+use serde::{Deserialize, Serialize};
 use sqlx::QueryBuilder;
+use std::sync::OnceLock;
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
 
 pub mod router;
 
-#[cfg(test)]
-mod tests;
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+struct EmulatorQueryFilter {
+    display_name: Option<String>,
+    platforms: Vec<String>,
+}
+
+type EmulatorCursor = PageCursor<EmulatorQueryFilter>;
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+struct EmulatorProfileQueryFilter {
+    display_name: Option<String>,
+    emulators: Vec<String>,
+}
+
+type EmulatorProfileCursor = PageCursor<EmulatorProfileQueryFilter>;
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+struct DefaultEmulatorProfileQueryFilter {
+    platforms: Vec<String>,
+    clients: Vec<String>,
+}
+
+type DefaultEmulatorProfileCursor = PageCursor<DefaultEmulatorProfileQueryFilter>;
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+struct LocalEmulatorConfigQueryFilter {
+    emulators: Vec<String>,
+    clients: Vec<String>,
+}
+
+type LocalEmulatorConfigCursor = PageCursor<LocalEmulatorConfigQueryFilter>;
+
+static NAME_MATCH_ROUTER: OnceLock<matchit::Router<&'static str>> = OnceLock::new();
+
+fn get_name_matcher() -> &'static matchit::Router<&'static str> {
+    NAME_MATCH_ROUTER.get_or_init(|| {
+        let mut router = matchit::Router::new();
+        router
+            .insert("emulators/{emulator_id}", "Emulator handler")
+            .expect("Failed to insert emulator route");
+
+        router
+            .insert("emulator_profiles/{profile_id}", "Emulator profile handler")
+            .expect("Failed to insert emulator profile route");
+
+        router
+            .insert(
+                "default_emulator_profiles/{default_profile_id}",
+                "Default emulator profile handler",
+            )
+            .expect("Failed to insert default emulator profile route");
+
+        router
+            .insert("clients/{client_id}", "Client handler")
+            .expect("Failed to insert client route");
+
+        router
+            .insert(
+                "local_emulator_configs/{config_id}",
+                "Local emulator config handler",
+            )
+            .expect("Failed to insert local emulator config route");
+
+        router
+            .insert("platforms/{platform_id}", "Platform handler")
+            .expect("Failed to insert platform route");
+
+        router
+    })
+}
+
+fn match_emulator_id(name: &str) -> Result<String, Status> {
+    let emulator_id = get_name_matcher()
+        .at(name)
+        .map(|matched| matched.params.get("emulator_id").map(|s| s.to_string()))
+        .map_err(|_| Status::invalid_argument("Invalid emulator name"))?;
+
+    match emulator_id {
+        Some(id) => Ok(id),
+        None => Err(Status::invalid_argument(format!(
+            "Emulator ID not found in name: {name}"
+        ))),
+    }
+}
+
+fn match_profile_id(name: &str) -> Result<String, Status> {
+    let profile_id = get_name_matcher()
+        .at(name)
+        .map(|matched| matched.params.get("profile_id").map(|s| s.to_string()))
+        .map_err(|_| Status::invalid_argument("Invalid emulator profile name"))?;
+
+    match profile_id {
+        Some(id) => Ok(id),
+        None => Err(Status::invalid_argument(format!(
+            "Emulator profile ID not found in name: {name}"
+        ))),
+    }
+}
+
+fn match_default_profile_id(name: &str) -> Result<String, Status> {
+    let default_profile_id = get_name_matcher()
+        .at(name)
+        .map(|matched| {
+            matched
+                .params
+                .get("default_profile_id")
+                .map(|s| s.to_string())
+        })
+        .map_err(|_| Status::invalid_argument("Invalid default emulator profile name"))?;
+
+    match default_profile_id {
+        Some(id) => Ok(id),
+        None => Err(Status::invalid_argument(format!(
+            "Default emulator profile ID not found in name: {name}"
+        ))),
+    }
+}
+
+fn match_local_emulator_config_id(name: &str) -> Result<String, Status> {
+    let config_id = get_name_matcher()
+        .at(name)
+        .map(|matched| matched.params.get("config_id").map(|s| s.to_string()))
+        .map_err(|_| Status::invalid_argument("Invalid local emulator config name"))?;
+
+    match config_id {
+        Some(id) => Ok(id),
+        None => Err(Status::invalid_argument(format!(
+            "Local emulator config ID not found in name: {name}"
+        ))),
+    }
+}
+
+fn match_platform_id(name: &str) -> Result<String, Status> {
+    let platform_id = get_name_matcher()
+        .at(name)
+        .map(|matched| matched.params.get("platform_id").map(|s| s.to_string()))
+        .map_err(|_| Status::invalid_argument("Invalid platform name"))?;
+
+    match platform_id {
+        Some(id) => Ok(id),
+        None => Err(Status::invalid_argument(format!(
+            "Platform ID not found in name: {name}"
+        ))),
+    }
+}
+
+fn match_client_id(name: &str) -> Result<String, Status> {
+    let client_id = get_name_matcher()
+        .at(name)
+        .map(|matched| matched.params.get("client_id").map(|s| s.to_string()))
+        .map_err(|_| Status::invalid_argument("Invalid client name"))?;
+
+    match client_id {
+        Some(id) => Ok(id),
+        None => Err(Status::invalid_argument(format!(
+            "Client ID not found in name: {name}"
+        ))),
+    }
+}
 
 pub struct EmulatorServiceHandlers {
     pub db_pool: DbPool,
@@ -62,7 +221,7 @@ fn enum_to_os_id(os: emulator::OperatingSystem) -> Option<&'static str> {
     }
 }
 
-async fn get_emulator_platforms(
+async fn select_emulator_platforms(
     db_pool: &DbPool,
     emulator_id: &str,
 ) -> Result<Vec<String>, Status> {
@@ -74,7 +233,7 @@ async fn get_emulator_platforms(
         .map_err(sqlx_err_to_status)
 }
 
-async fn get_emulator_operating_systems(
+async fn select_emulator_operating_systems(
     db_pool: &DbPool,
     emulator_id: &str,
 ) -> Result<Vec<emulator::OperatingSystem>, Status> {
@@ -99,14 +258,14 @@ async fn get_emulator_operating_systems(
         .collect())
 }
 
-fn emulator_row_to_emulator(
+fn emulator_rows_to_emulator(
     row: EmulatorRow,
     platforms: Vec<String>,
     operating_systems: Vec<i32>,
 ) -> Emulator {
     Emulator {
-        id: row.id,
-        name: row.name,
+        name: format!("emulators/{}", row.id),
+        display_name: row.display_name,
         created_at: row.created_at,
         updated_at: row.updated_at,
         built_in: row.built_in,
@@ -116,7 +275,10 @@ fn emulator_row_to_emulator(
     }
 }
 
-async fn get_profile_extensions(db_pool: &DbPool, profile_id: &str) -> Result<Vec<String>, Status> {
+async fn select_profile_extensions(
+    db_pool: &DbPool,
+    profile_id: &str,
+) -> Result<Vec<String>, Status> {
     QueryBuilder::new("select extension from emulator_profile_extensions where emulator_profile = ")
         .push_bind(profile_id)
         .build_query_scalar()
@@ -130,9 +292,9 @@ fn profile_row_to_profile(
     supported_extensions: Vec<String>,
 ) -> EmulatorProfile {
     EmulatorProfile {
-        id: row.id,
-        emulator: row.emulator,
-        name: row.name,
+        name: format!("emulator_profiles/{}", row.id),
+        parent: format!("emulators/{}", row.emulator),
+        display_name: row.display_name,
         custom_args: row.custom_args,
         built_in: row.built_in,
         created_at: row.created_at,
@@ -141,78 +303,188 @@ fn profile_row_to_profile(
     }
 }
 
+fn default_profile_row_to_default_profile(
+    row: DefaultEmulatorProfileRow,
+) -> DefaultEmulatorProfile {
+    DefaultEmulatorProfile {
+        name: format!("default_emulator_profiles/{}", row.id),
+        platform: format!("platforms/{}", row.platform),
+        client: format!("clients/{}", row.client),
+        emulator_profile: format!("emulator_profiles/{}", row.emulator_profile),
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+    }
+}
+
+fn local_emulator_profile_config_row_to_local_emulator_config(
+    row: LocalEmulatorConfigRow,
+) -> LocalEmulatorConfig {
+    LocalEmulatorConfig {
+        name: format!("local_emulator_configs/{}", row.id),
+        emulator: format!("emulators/{}", row.emulator),
+        client: format!("clients/{}", row.client),
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        executable_path: row.executable_path,
+        nickname: row.nickname,
+        save_data_path: row.save_data_path,
+        save_states_path: row.save_states_path,
+        bios_directory: row.bios_directory,
+        extra_files_directory: row.extra_files_directory,
+    }
+}
+
+async fn handle_get_emulator(db_pool: &DbPool, id: &str) -> Result<Emulator, Status> {
+    let row: EmulatorRow = QueryBuilder::new("select * from emulators where id = ")
+        .push_bind(id)
+        .build_query_as()
+        .fetch_one(db_pool)
+        .await
+        .map_err(sqlx_err_to_status)?;
+
+    let platforms = select_emulator_platforms(db_pool, id).await?;
+    let operating_systems = select_emulator_operating_systems(db_pool, id)
+        .await?
+        .into_iter()
+        .map(i32::from)
+        .collect();
+
+    Ok(emulator_rows_to_emulator(row, platforms, operating_systems))
+}
+
+async fn handle_get_emulator_profile(
+    db_pool: &DbPool,
+    id: &str,
+) -> Result<EmulatorProfile, Status> {
+    let row: EmulatorProfileRow = QueryBuilder::new("select * from emulator_profiles where id = ")
+        .push_bind(id)
+        .build_query_as()
+        .fetch_one(db_pool)
+        .await
+        .map_err(sqlx_err_to_status)?;
+
+    let supported_extensions = select_profile_extensions(db_pool, id).await?;
+
+    Ok(profile_row_to_profile(row, supported_extensions))
+}
+
+async fn handle_get_default_emulator_profile(
+    db_pool: &DbPool,
+    id: &str,
+) -> Result<DefaultEmulatorProfile, Status> {
+    let row: DefaultEmulatorProfileRow =
+        QueryBuilder::new("select * from default_emulator_profiles where id = ")
+            .push_bind(id)
+            .build_query_as()
+            .fetch_one(db_pool)
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+    Ok(default_profile_row_to_default_profile(row))
+}
+
+async fn handle_get_local_emulator_profile_config(
+    db_pool: &DbPool,
+    id: &str,
+) -> Result<LocalEmulatorConfig, Status> {
+    let row: LocalEmulatorConfigRow =
+        QueryBuilder::new("select * from local_emulator_configs where id = ")
+            .push_bind(id)
+            .build_query_as()
+            .fetch_one(db_pool)
+            .await
+            .map_err(sqlx_err_to_status)?;
+
+    Ok(local_emulator_profile_config_row_to_local_emulator_config(
+        row,
+    ))
+}
+
 #[tonic::async_trait]
 impl EmulatorService for EmulatorServiceHandlers {
-    #[tracing::instrument(skip_all)]
     async fn get_emulator(
         &self,
         request: Request<GetEmulatorRequest>,
     ) -> Result<Response<Emulator>, Status> {
-        let id = request.into_inner().id;
+        let id = match_emulator_id(&request.into_inner().name)?;
 
-        if id.is_empty() {
-            return Err(Status::invalid_argument("Emulator ID must be provided"));
-        }
-
-        let row: EmulatorRow = QueryBuilder::new("select * from emulators where id = ")
-            .push_bind(&id)
-            .build_query_as()
-            .fetch_one(&self.db_pool)
-            .await
-            .map_err(sqlx_err_to_status)?;
-
-        let platforms = get_emulator_platforms(&self.db_pool, &id).await?;
-        let operating_systems = get_emulator_operating_systems(&self.db_pool, &id)
-            .await?
-            .into_iter()
-            .map(i32::from)
-            .collect();
-
-        Ok(Response::new(emulator_row_to_emulator(
-            row,
-            platforms,
-            operating_systems,
-        )))
+        Ok(Response::new(
+            handle_get_emulator(&self.db_pool, &id).await?,
+        ))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn list_emulators(
         &self,
         request: Request<ListEmulatorsRequest>,
     ) -> Result<Response<ListEmulatorsResponse>, Status> {
-        let req = request.into_inner();
-        let ids = req.ids;
-        let supported_platform_ids = req.supported_platform_ids;
+        let request = request.into_inner();
+        let cursor = match EmulatorCursor::deserialize(request.page_token()) {
+            Some(cursor) => cursor,
+            None => {
+                let parsed_limit = match request.page_size() {
+                    0 => 250, // Default page size
+                    n if n < 0 => {
+                        return Err(Status::invalid_argument("Page size must be non-negative"))
+                    }
+                    n if n > 1000 => 1000, // Max page size
+                    n => n as u32,
+                };
+
+                let display_name = request.display_name;
+                let platforms = request.platforms;
+
+                let initial_filter = EmulatorQueryFilter {
+                    display_name,
+                    platforms,
+                };
+
+                EmulatorCursor {
+                    offset: 0,
+                    page_size: parsed_limit,
+                    filter: initial_filter,
+                }
+            }
+        };
+
+        let current_filter = cursor.filter.clone();
+        let query_limit = cursor.page_size + 1; // Fetch one extra to determine if there's a next page
+
+        let platform_ids = current_filter
+            .platforms
+            .iter()
+            .map(|p| match_emulator_id(p))
+            .collect::<Result<Vec<String>, _>>()?;
 
         let mut query_builder = QueryBuilder::new("select distinct e.id from emulators e");
 
-        if !supported_platform_ids.is_empty() {
+        if !platform_ids.is_empty() {
             query_builder.push(" left join emulator_platforms ep on ep.emulator = e.id ");
         }
 
         query_builder.push(" where e.id is not null ");
 
-        if !supported_platform_ids.is_empty() {
+        if !platform_ids.is_empty() {
             // Include emulators w/ no configured 'supported platforms', as this
             // implies any platform is supported.
             query_builder.push(" and (ep.emulator is null");
             query_builder.push(" or ep.platform in (");
             let mut separated = query_builder.separated(", ");
-            for platform_id in &supported_platform_ids {
+            for platform_id in &platform_ids {
                 separated.push_bind(platform_id);
             }
 
             separated.push_unseparated("))");
         }
 
-        if !ids.is_empty() {
-            query_builder.push(" and e.id in (");
-            let mut separated = query_builder.separated(", ");
-            for id in &ids {
-                separated.push_bind(id);
-            }
-            separated.push_unseparated(")");
+        if let Some(display_name) = &current_filter.display_name {
+            query_builder.push(" and lower(e.display_name) like ");
+            query_builder.push_bind(format!("%{}%", display_name.to_lowercase()));
         }
+
+        query_builder.push(" limit ");
+        query_builder.push_bind(query_limit);
+        query_builder.push(" offset ");
+        query_builder.push_bind(cursor.offset);
 
         let emulator_ids: Vec<String> = query_builder
             .build_query_scalar()
@@ -220,42 +492,43 @@ impl EmulatorService for EmulatorServiceHandlers {
             .await
             .map_err(sqlx_err_to_status)?;
 
-        let platforms_futures: Vec<_> = emulator_ids
-            .iter()
+        let mut emulators = Vec::new();
+        let num_rows_to_process = std::cmp::min(emulator_ids.len(), cursor.page_size as usize);
+
+        let next_page_token = if emulator_ids.len() > cursor.page_size as usize {
+            let next_cursor = EmulatorCursor {
+                offset: cursor.offset + cursor.page_size,
+                page_size: cursor.page_size,
+                filter: cursor.filter,
+            };
+
+            Some(next_cursor.serialize())
+        } else {
+            None
+        };
+
+        let emulator_futures = emulator_ids
+            .into_iter()
+            .take(num_rows_to_process)
             .map(|id| {
                 let db_pool = self.db_pool.clone();
-                let id = id.clone();
-                async move { get_emulator_platforms(&db_pool, &id).await.map(|p| (id, p)) }
-            })
-            .collect();
 
-        let emulators_with_platforms = join_all(platforms_futures)
-            .await
-            .into_iter()
-            .collect::<Result<Vec<(String, Vec<String>)>, Status>>()?;
+                async move { handle_get_emulator(&db_pool, &id).await }
+            });
 
-        let mut result = vec![];
-        for (emulator_id, platforms) in emulators_with_platforms {
-            let row: EmulatorRow = QueryBuilder::new("select * from emulators where id = ")
-                .push_bind(&emulator_id)
-                .build_query_as()
-                .fetch_one(&self.db_pool)
-                .await
-                .map_err(sqlx_err_to_status)?;
-
-            let operating_systems = get_emulator_operating_systems(&self.db_pool, &emulator_id)
-                .await?
-                .into_iter()
-                .map(i32::from)
-                .collect();
-
-            result.push(emulator_row_to_emulator(row, platforms, operating_systems));
+        for emulator_result in join_all(emulator_futures).await {
+            match emulator_result {
+                Ok(emulator) => emulators.push(emulator),
+                Err(e) => return Err(e),
+            }
         }
 
-        Ok(Response::new(ListEmulatorsResponse { emulators: result }))
+        Ok(Response::new(ListEmulatorsResponse {
+            emulators,
+            next_page_token,
+        }))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn create_emulator(
         &self,
         request: Request<CreateEmulatorRequest>,
@@ -265,8 +538,10 @@ impl EmulatorService for EmulatorServiceHandlers {
             .emulator
             .ok_or_else(|| Status::invalid_argument("Emulator must be provided"))?;
 
-        if emulator.name.is_empty() {
-            return Err(Status::invalid_argument("Emulator name must be provided"));
+        if emulator.display_name.is_empty() {
+            return Err(Status::invalid_argument(
+                "Emulator display name must be provided",
+            ));
         }
 
         let emulator_id = Uuid::now_v7().to_string();
@@ -274,7 +549,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         let mut tx = self.db_pool.begin().await.map_err(sqlx_err_to_status)?;
 
         let row: EmulatorRow =
-            QueryBuilder::new("insert into emulators (id, name, built_in) values (")
+            QueryBuilder::new("insert into emulators (id, display_name, built_in) values (")
                 .push_bind(&emulator_id)
                 .push(", ")
                 .push_bind(&emulator.name)
@@ -286,9 +561,15 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .await
                 .map_err(sqlx_err_to_status)?;
 
-        if !emulator.platforms.is_empty() {
+        let platform_ids = emulator
+            .platforms
+            .iter()
+            .map(|p| match_emulator_id(p))
+            .collect::<Result<Vec<String>, _>>()?;
+
+        if !platform_ids.is_empty() {
             QueryBuilder::new("insert into emulator_platforms (emulator, platform) ")
-                .push_values(&emulator.platforms, |mut b, platform_id| {
+                .push_values(&platform_ids, |mut b, platform_id| {
                     b.push_bind(&emulator_id);
                     b.push_bind(platform_id);
                 })
@@ -321,14 +602,13 @@ impl EmulatorService for EmulatorServiceHandlers {
 
         tx.commit().await.map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(emulator_row_to_emulator(
+        Ok(Response::new(emulator_rows_to_emulator(
             row,
             emulator.platforms,
             emulator.operating_systems,
         )))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn update_emulator(
         &self,
         request: Request<UpdateEmulatorRequest>,
@@ -338,20 +618,20 @@ impl EmulatorService for EmulatorServiceHandlers {
             .emulator
             .ok_or_else(|| Status::invalid_argument("Emulator must be provided"))?;
 
-        if emulator.id.is_empty() {
-            return Err(Status::invalid_argument("Emulator ID must be provided"));
-        }
+        let emulator_id = match_emulator_id(&emulator.name)?;
 
-        if emulator.name.is_empty() {
-            return Err(Status::invalid_argument("Emulator name must be provided"));
+        if emulator.display_name.is_empty() {
+            return Err(Status::invalid_argument(
+                "Emulator display name must be provided",
+            ));
         }
 
         let mut tx = self.db_pool.begin().await.map_err(sqlx_err_to_status)?;
 
-        let row: EmulatorRow = QueryBuilder::new("update emulators set name = ")
+        let row: EmulatorRow = QueryBuilder::new("update emulators set display_name = ")
             .push_bind(&emulator.name)
             .push(" where id = ")
-            .push_bind(&emulator.id)
+            .push_bind(&emulator_id)
             .push(" returning *")
             .build_query_as()
             .fetch_one(&mut *tx)
@@ -360,24 +640,30 @@ impl EmulatorService for EmulatorServiceHandlers {
 
         // Delete existing platforms and operating systems
         QueryBuilder::new("delete from emulator_platforms where emulator = ")
-            .push_bind(&emulator.id)
+            .push_bind(&emulator_id)
             .build()
             .execute(&mut *tx)
             .await
             .map_err(sqlx_err_to_status)?;
 
         QueryBuilder::new("delete from emulator_operating_systems where emulator = ")
-            .push_bind(&emulator.id)
+            .push_bind(&emulator_id)
             .build()
             .execute(&mut *tx)
             .await
             .map_err(sqlx_err_to_status)?;
 
+        let platform_ids = emulator
+            .platforms
+            .iter()
+            .map(|p| match_emulator_id(p))
+            .collect::<Result<Vec<String>, _>>()?;
+
         // Insert new platforms and operating systems
-        if !emulator.platforms.is_empty() {
+        if !platform_ids.is_empty() {
             QueryBuilder::new("insert into emulator_platforms (emulator, platform) ")
-                .push_values(&emulator.platforms, |mut b, platform_id| {
-                    b.push_bind(&emulator.id);
+                .push_values(&platform_ids, |mut b, platform_id| {
+                    b.push_bind(&emulator_id);
                     b.push_bind(platform_id);
                 })
                 .build()
@@ -398,7 +684,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 "insert into emulator_operating_systems (emulator, operating_system) ",
             )
             .push_values(&os_ids, |mut b, os_id| {
-                b.push_bind(&emulator.id);
+                b.push_bind(&emulator_id);
                 b.push_bind(os_id);
             })
             .build()
@@ -409,26 +695,22 @@ impl EmulatorService for EmulatorServiceHandlers {
 
         tx.commit().await.map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(emulator_row_to_emulator(
+        Ok(Response::new(emulator_rows_to_emulator(
             row,
             emulator.platforms,
             emulator.operating_systems,
         )))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn delete_emulator(
         &self,
         request: Request<DeleteEmulatorRequest>,
     ) -> Result<Response<Empty>, Status> {
-        let id = request.into_inner().id;
-
-        if id.is_empty() {
-            return Err(Status::invalid_argument("Emulator ID must be provided"));
-        }
+        let request = request.into_inner();
+        let emulator_id = match_emulator_id(&request.name)?;
 
         QueryBuilder::new("delete from emulators where id = ")
-            .push_bind(&id)
+            .push_bind(&emulator_id)
             .push(" and built_in = ")
             .push_bind(false)
             .build()
@@ -439,54 +721,66 @@ impl EmulatorService for EmulatorServiceHandlers {
         Ok(Response::new(Empty {}))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn get_emulator_profile(
         &self,
         request: Request<GetEmulatorProfileRequest>,
     ) -> Result<Response<EmulatorProfile>, Status> {
-        let id = request.into_inner().id;
+        let request = request.into_inner();
+        let profile_id = match_profile_id(&request.name)?;
 
-        if id.is_empty() {
-            return Err(Status::invalid_argument(
-                "Emulator profile ID must be provided",
-            ));
-        }
-
-        let row: EmulatorProfileRow =
-            QueryBuilder::new("select * from emulator_profiles where id = ")
-                .push_bind(&id)
-                .build_query_as()
-                .fetch_one(&self.db_pool)
-                .await
-                .map_err(sqlx_err_to_status)?;
-
-        let supported_extensions = get_profile_extensions(&self.db_pool, &id).await?;
-
-        Ok(Response::new(profile_row_to_profile(
-            row,
-            supported_extensions,
-        )))
+        Ok(Response::new(
+            handle_get_emulator_profile(&self.db_pool, &profile_id).await?,
+        ))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn list_emulator_profiles(
         &self,
         request: Request<ListEmulatorProfilesRequest>,
     ) -> Result<Response<ListEmulatorProfilesResponse>, Status> {
-        let req = request.into_inner();
-        let ids = req.ids;
-        let emulator_ids = req.emulator_ids;
+        let request = request.into_inner();
+        let cursor = match EmulatorProfileCursor::deserialize(request.page_token()) {
+            Some(cursor) => cursor,
+            None => {
+                let parsed_limit = match request.page_size() {
+                    0 => 250, // Default page size
+                    n if n < 0 => {
+                        return Err(Status::invalid_argument("Page size must be non-negative"))
+                    }
+                    n if n > 1000 => 1000, // Max page size
+                    n => n as u32,
+                };
+
+                let display_name = request.display_name;
+                let emulators = request.emulators;
+
+                let initial_filter = EmulatorProfileQueryFilter {
+                    display_name,
+                    emulators,
+                };
+
+                EmulatorProfileCursor {
+                    offset: 0,
+                    page_size: parsed_limit,
+                    filter: initial_filter,
+                }
+            }
+        };
+
+        let current_filter = cursor.filter.clone();
+        let query_limit = cursor.page_size + 1; // Fetch one extra to determine if there's a next page
+
+        let emulator_ids = current_filter
+            .emulators
+            .iter()
+            .map(|e| match_emulator_id(e))
+            .collect::<Result<Vec<String>, _>>()?;
 
         let mut query_builder = QueryBuilder::new("select id from emulator_profiles");
         query_builder.push(" where id is not null ");
 
-        if !ids.is_empty() {
-            query_builder.push(" and id in (");
-            let mut separated = query_builder.separated(", ");
-            for id in &ids {
-                separated.push_bind(id);
-            }
-            separated.push_unseparated(")");
+        if let Some(display_name) = &current_filter.display_name {
+            query_builder.push(" and lower(display_name) like ");
+            query_builder.push_bind(format!("%{}%", display_name.to_lowercase()));
         }
 
         if !emulator_ids.is_empty() {
@@ -498,6 +792,11 @@ impl EmulatorService for EmulatorServiceHandlers {
             separated.push_unseparated(")");
         }
 
+        query_builder.push(" limit ");
+        query_builder.push_bind(query_limit);
+        query_builder.push(" offset ");
+        query_builder.push_bind(cursor.offset);
+
         let profile_ids: Vec<String> = query_builder
             .build_query_scalar()
             .fetch_all(&self.db_pool)
@@ -506,18 +805,8 @@ impl EmulatorService for EmulatorServiceHandlers {
 
         let emulator_profiles = join_all(profile_ids.into_iter().map(|id| {
             let db_pool = self.db_pool.clone();
-            async move {
-                let row: EmulatorProfileRow =
-                    QueryBuilder::new("select * from emulator_profiles where id = ")
-                        .push_bind(&id)
-                        .build_query_as()
-                        .fetch_one(&db_pool)
-                        .await
-                        .map_err(sqlx_err_to_status)?;
 
-                let extensions = get_profile_extensions(&db_pool, &id).await?;
-                Ok(profile_row_to_profile(row, extensions))
-            }
+            async move { handle_get_emulator_profile(&db_pool, &id).await }
         }))
         .await
         .into_iter()
@@ -528,34 +817,38 @@ impl EmulatorService for EmulatorServiceHandlers {
         }))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn create_emulator_profile(
         &self,
         request: Request<CreateEmulatorProfileRequest>,
     ) -> Result<Response<EmulatorProfile>, Status> {
+        let request = request.into_inner();
+
+        let emulator_id = match_emulator_id(&request.parent)?;
+
         let profile = request
-            .into_inner()
             .emulator_profile
             .ok_or_else(|| Status::invalid_argument("Emulator profile must be provided"))?;
 
-        if profile.emulator.is_empty() {
-            return Err(Status::invalid_argument("Emulator ID must be provided"));
+        if profile.display_name.is_empty() {
+            return Err(Status::invalid_argument(
+                "Profile display name must be provided",
+            ));
         }
 
-        if profile.name.is_empty() {
-            return Err(Status::invalid_argument("Profile name must be provided"));
-        }
-
-        let profile_id = Uuid::now_v7().to_string();
+        let profile_id = if let Some(name) = request.name {
+            match_profile_id(&name)?
+        } else {
+            Uuid::now_v7().to_string()
+        };
 
         let mut tx = self.db_pool.begin().await.map_err(sqlx_err_to_status)?;
 
         let row: EmulatorProfileRow = QueryBuilder::new(
-            "insert into emulator_profiles (id, emulator, name, custom_args, built_in) values (",
+            "insert into emulator_profiles (id, emulator, display_name, custom_args, built_in) values (",
         )
         .push_bind(&profile_id)
         .push(", ")
-        .push_bind(&profile.emulator)
+        .push_bind(&emulator_id)
         .push(", ")
         .push_bind(&profile.name)
         .push(", ")
@@ -590,41 +883,42 @@ impl EmulatorService for EmulatorServiceHandlers {
         )))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn update_emulator_profile(
         &self,
         request: Request<UpdateEmulatorProfileRequest>,
     ) -> Result<Response<EmulatorProfile>, Status> {
+        let request = request.into_inner();
+
         let profile = request
-            .into_inner()
             .emulator_profile
             .ok_or_else(|| Status::invalid_argument("Emulator profile must be provided"))?;
 
-        if profile.id.is_empty() {
-            return Err(Status::invalid_argument("Profile ID must be provided"));
-        }
+        let profile_id = match_profile_id(&profile.name)?;
 
-        if profile.name.is_empty() {
-            return Err(Status::invalid_argument("Profile name must be provided"));
+        if profile.display_name.is_empty() {
+            return Err(Status::invalid_argument(
+                "Profile display name must be provided",
+            ));
         }
 
         let mut tx = self.db_pool.begin().await.map_err(sqlx_err_to_status)?;
 
-        let row: EmulatorProfileRow = QueryBuilder::new("update emulator_profiles set name = ")
-            .push_bind(&profile.name)
-            .push(", custom_args = ")
-            .push_bind(&profile.custom_args)
-            .push(" where id = ")
-            .push_bind(&profile.id)
-            .push(" returning *")
-            .build_query_as()
-            .fetch_one(&mut *tx)
-            .await
-            .map_err(sqlx_err_to_status)?;
+        let row: EmulatorProfileRow =
+            QueryBuilder::new("update emulator_profiles set display_name = ")
+                .push_bind(&profile.display_name)
+                .push(", custom_args = ")
+                .push_bind(&profile.custom_args)
+                .push(" where id = ")
+                .push_bind(&profile_id)
+                .push(" returning *")
+                .build_query_as()
+                .fetch_one(&mut *tx)
+                .await
+                .map_err(sqlx_err_to_status)?;
 
         // Delete existing extensions
         QueryBuilder::new("delete from emulator_profile_extensions where emulator_profile = ")
-            .push_bind(&profile.id)
+            .push_bind(&profile_id)
             .build()
             .execute(&mut *tx)
             .await
@@ -636,7 +930,7 @@ impl EmulatorService for EmulatorServiceHandlers {
                 "insert into emulator_profile_extensions (emulator_profile, extension) ",
             )
             .push_values(&profile.supported_extensions, |mut b, ext| {
-                b.push_bind(&profile.id);
+                b.push_bind(&profile_id);
                 b.push_bind(ext);
             })
             .build()
@@ -653,19 +947,19 @@ impl EmulatorService for EmulatorServiceHandlers {
         )))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn delete_emulator_profile(
         &self,
         request: Request<DeleteEmulatorProfileRequest>,
     ) -> Result<Response<Empty>, Status> {
-        let id = request.into_inner().id;
+        let request = request.into_inner();
+        let profile_id = match_profile_id(&request.name)?;
 
-        if id.is_empty() {
+        if profile_id.is_empty() {
             return Err(Status::invalid_argument("Profile ID must be provided"));
         }
 
         QueryBuilder::new("delete from emulator_profiles where id = ")
-            .push_bind(&id)
+            .push_bind(&profile_id)
             .push(" and built_in = ")
             .push_bind(false)
             .build()
@@ -676,35 +970,16 @@ impl EmulatorService for EmulatorServiceHandlers {
         Ok(Response::new(Empty {}))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn get_default_emulator_profile(
         &self,
         request: Request<GetDefaultEmulatorProfileRequest>,
     ) -> Result<Response<DefaultEmulatorProfile>, Status> {
-        let id = request.into_inner().id;
+        let request = request.into_inner();
+        let id = match_profile_id(&request.name)?;
 
-        if id.is_empty() {
-            return Err(Status::invalid_argument(
-                "Default emulator profile ID must be provided",
-            ));
-        }
-
-        let row: DefaultEmulatorProfileRow =
-            QueryBuilder::new("select * from default_emulator_profiles where id = ")
-                .push_bind(&id)
-                .build_query_as()
-                .fetch_one(&self.db_pool)
-                .await
-                .map_err(sqlx_err_to_status)?;
-
-        Ok(Response::new(DefaultEmulatorProfile {
-            id: row.id,
-            platform: row.platform,
-            client: row.client,
-            emulator_profile: row.emulator_profile,
-            created_at: row.created_at,
-            updated_at: row.updated_at,
-        }))
+        Ok(Response::new(
+            handle_get_default_emulator_profile(&self.db_pool, &id).await?,
+        ))
     }
 
     #[tracing::instrument(skip_all)]
@@ -712,9 +987,46 @@ impl EmulatorService for EmulatorServiceHandlers {
         &self,
         request: Request<ListDefaultEmulatorProfilesRequest>,
     ) -> Result<Response<ListDefaultEmulatorProfilesResponse>, Status> {
-        let req = request.into_inner();
-        let platform_ids = req.platform_ids;
-        let client_id = req.client_id;
+        let request = request.into_inner();
+        let cursor = match DefaultEmulatorProfileCursor::deserialize(request.page_token()) {
+            Some(cursor) => cursor,
+            None => {
+                let parsed_limit = match request.page_size() {
+                    0 => 250, // Default page size
+                    n if n < 0 => {
+                        return Err(Status::invalid_argument("Page size must be non-negative"))
+                    }
+                    n if n > 1000 => 1000, // Max page size
+                    n => n as u32,
+                };
+
+                let platforms = request.platforms;
+                let clients = request.clients;
+
+                let initial_filter = DefaultEmulatorProfileQueryFilter { platforms, clients };
+
+                DefaultEmulatorProfileCursor {
+                    offset: 0,
+                    page_size: parsed_limit,
+                    filter: initial_filter,
+                }
+            }
+        };
+
+        let current_filter = cursor.filter.clone();
+        let query_limit = cursor.page_size + 1; // Fetch one extra to determine if there's a next page
+
+        let platform_ids = current_filter
+            .platforms
+            .iter()
+            .map(|p| match_platform_id(p))
+            .collect::<Result<Vec<String>, _>>()?;
+
+        let client_ids = current_filter
+            .clients
+            .iter()
+            .map(|c| match_client_id(c))
+            .collect::<Result<Vec<String>, _>>()?;
 
         let mut query_builder = QueryBuilder::new("select * from default_emulator_profiles");
         query_builder.push(" where id is not null ");
@@ -728,10 +1040,19 @@ impl EmulatorService for EmulatorServiceHandlers {
             separated.push_unseparated(")");
         }
 
-        if let Some(client) = &client_id {
-            query_builder.push(" and client = ");
-            query_builder.push_bind(client);
+        if !client_ids.is_empty() {
+            query_builder.push(" and client in (");
+            let mut separated = query_builder.separated(", ");
+            for client_id in &client_ids {
+                separated.push_bind(client_id);
+            }
+            separated.push_unseparated(")");
         }
+
+        query_builder.push(" limit ");
+        query_builder.push_bind(query_limit);
+        query_builder.push(" offset ");
+        query_builder.push_bind(cursor.offset);
 
         let rows: Vec<DefaultEmulatorProfileRow> = query_builder
             .build_query_as()
@@ -739,129 +1060,102 @@ impl EmulatorService for EmulatorServiceHandlers {
             .await
             .map_err(sqlx_err_to_status)?;
 
-        let default_emulator_profiles = rows
-            .into_iter()
-            .map(|row| DefaultEmulatorProfile {
-                id: row.id,
-                platform: row.platform,
-                client: row.client,
-                emulator_profile: row.emulator_profile,
-                created_at: row.created_at,
-                updated_at: row.updated_at,
-            })
-            .collect();
+        let mut default_emulator_profiles = Vec::new();
+        let num_rows_to_process = std::cmp::min(rows.len(), cursor.page_size as usize);
+
+        let next_page_token = if rows.len() > cursor.page_size as usize {
+            let next_cursor = DefaultEmulatorProfileCursor {
+                offset: cursor.offset + cursor.page_size,
+                page_size: cursor.page_size,
+                filter: cursor.filter,
+            };
+
+            Some(next_cursor.serialize())
+        } else {
+            None
+        };
+
+        for row in rows.into_iter().take(num_rows_to_process) {
+            default_emulator_profiles.push(default_profile_row_to_default_profile(row));
+        }
 
         Ok(Response::new(ListDefaultEmulatorProfilesResponse {
             default_emulator_profiles,
+            next_page_token,
         }))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn create_default_emulator_profile(
         &self,
         request: Request<CreateDefaultEmulatorProfileRequest>,
     ) -> Result<Response<DefaultEmulatorProfile>, Status> {
+        let request = request.into_inner();
+
         let profile = request
-            .into_inner()
             .default_emulator_profile
             .ok_or_else(|| Status::invalid_argument("Default emulator profile must be provided"))?;
 
-        if profile.platform.is_empty() {
-            return Err(Status::invalid_argument("Platform ID must be provided"));
-        }
+        let profile_id = match_profile_id(&profile.emulator_profile)?;
+        let platform_id = match_platform_id(&profile.platform)?;
+        let client_id = match_client_id(&profile.client)?;
 
-        if profile.client.is_empty() {
-            return Err(Status::invalid_argument("Client ID must be provided"));
-        }
-
-        if profile.emulator_profile.is_empty() {
-            return Err(Status::invalid_argument(
-                "Emulator profile ID must be provided",
-            ));
-        }
-
-        let profile_id = Uuid::now_v7().to_string();
+        let default_profile_id = Uuid::now_v7().to_string();
 
         let row: DefaultEmulatorProfileRow = QueryBuilder::new(
             "insert into default_emulator_profiles (id, platform, client, emulator_profile) values (",
         )
+        .push_bind(&default_profile_id)
+        .push(", ")
+        .push_bind(&platform_id)
+        .push(", ")
+        .push_bind(&client_id)
+        .push(", ")
         .push_bind(&profile_id)
-        .push(", ")
-        .push_bind(&profile.platform)
-        .push(", ")
-        .push_bind(&profile.client)
-        .push(", ")
-        .push_bind(&profile.emulator_profile)
         .push(") returning *")
         .build_query_as()
         .fetch_one(&self.db_pool)
         .await
         .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(DefaultEmulatorProfile {
-            id: row.id,
-            platform: row.platform,
-            client: row.client,
-            emulator_profile: row.emulator_profile,
-            created_at: row.created_at,
-            updated_at: row.updated_at,
-        }))
+        Ok(Response::new(default_profile_row_to_default_profile(row)))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn update_default_emulator_profile(
         &self,
         request: Request<UpdateDefaultEmulatorProfileRequest>,
     ) -> Result<Response<DefaultEmulatorProfile>, Status> {
-        let profile = request
-            .into_inner()
+        let request = request.into_inner();
+
+        let default_profile = request
             .default_emulator_profile
             .ok_or_else(|| Status::invalid_argument("Default emulator profile must be provided"))?;
 
-        if profile.id.is_empty() {
-            return Err(Status::invalid_argument("Profile ID must be provided"));
-        }
-
-        if profile.emulator_profile.is_empty() {
-            return Err(Status::invalid_argument(
-                "Emulator profile ID must be provided",
-            ));
-        }
+        let default_profile_id = match_emulator_id(&default_profile.name)?;
+        let profile_id = match_emulator_id(&default_profile.emulator_profile)?;
 
         let row: DefaultEmulatorProfileRow =
             QueryBuilder::new("update default_emulator_profiles set emulator_profile = ")
-                .push_bind(&profile.emulator_profile)
+                .push_bind(&profile_id)
                 .push(" where id = ")
-                .push_bind(&profile.id)
+                .push_bind(&default_profile_id)
                 .push(" returning *")
                 .build_query_as()
                 .fetch_one(&self.db_pool)
                 .await
                 .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(DefaultEmulatorProfile {
-            id: row.id,
-            platform: row.platform,
-            client: row.client,
-            emulator_profile: row.emulator_profile,
-            created_at: row.created_at,
-            updated_at: row.updated_at,
-        }))
+        Ok(Response::new(default_profile_row_to_default_profile(row)))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn delete_default_emulator_profile(
         &self,
         request: Request<DeleteDefaultEmulatorProfileRequest>,
     ) -> Result<Response<Empty>, Status> {
-        let id = request.into_inner().id;
-
-        if id.is_empty() {
-            return Err(Status::invalid_argument("Profile ID must be provided"));
-        }
+        let request = request.into_inner();
+        let default_profile_id = match_default_profile_id(&request.name)?;
 
         QueryBuilder::new("delete from default_emulator_profiles where id = ")
-            .push_bind(&id)
+            .push_bind(&default_profile_id)
             .build()
             .execute(&self.db_pool)
             .await
@@ -870,50 +1164,63 @@ impl EmulatorService for EmulatorServiceHandlers {
         Ok(Response::new(Empty {}))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn get_local_emulator_config(
         &self,
         request: Request<GetLocalEmulatorConfigRequest>,
     ) -> Result<Response<LocalEmulatorConfig>, Status> {
-        let id = request.into_inner().id;
+        let request = request.into_inner();
+        let local_config_id = match_local_emulator_config_id(&request.name)?;
 
-        if id.is_empty() {
-            return Err(Status::invalid_argument(
-                "Local emulator config ID must be provided",
-            ));
-        }
-
-        let row: LocalEmulatorConfigRow =
-            QueryBuilder::new("select * from local_emulator_configs where id = ")
-                .push_bind(&id)
-                .build_query_as()
-                .fetch_one(&self.db_pool)
-                .await
-                .map_err(sqlx_err_to_status)?;
-
-        Ok(Response::new(LocalEmulatorConfig {
-            id: row.id,
-            emulator: row.emulator,
-            client: row.client,
-            created_at: row.created_at,
-            updated_at: row.updated_at,
-            executable_path: row.executable_path,
-            nickname: row.nickname,
-            save_data_path: row.save_data_path,
-            save_states_path: row.save_states_path,
-            bios_directory: row.bios_directory,
-            extra_files_directory: row.extra_files_directory,
-        }))
+        Ok(Response::new(
+            handle_get_local_emulator_profile_config(&self.db_pool, &local_config_id).await?,
+        ))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn list_local_emulator_configs(
         &self,
         request: Request<ListLocalEmulatorConfigsRequest>,
     ) -> Result<Response<ListLocalEmulatorConfigsResponse>, Status> {
-        let req = request.into_inner();
-        let emulator_ids = req.emulator_ids;
-        let client_id = req.client_id;
+        let request = request.into_inner();
+
+        let cursor = match LocalEmulatorConfigCursor::deserialize(request.page_token()) {
+            Some(cursor) => cursor,
+            None => {
+                let parsed_limit = match request.page_size() {
+                    0 => 250, // Default page size
+                    n if n < 0 => {
+                        return Err(Status::invalid_argument("Page size must be non-negative"))
+                    }
+                    n if n > 1000 => 1000, // Max page size
+                    n => n as u32,
+                };
+
+                let emulators = request.emulators;
+                let clients = request.clients;
+
+                let initial_filter = LocalEmulatorConfigQueryFilter { emulators, clients };
+
+                LocalEmulatorConfigCursor {
+                    offset: 0,
+                    page_size: parsed_limit,
+                    filter: initial_filter,
+                }
+            }
+        };
+
+        let current_filter = cursor.filter.clone();
+        let query_limit = cursor.page_size + 1; // Fetch one extra to determine if there's a next page
+
+        let emulator_ids = current_filter
+            .emulators
+            .iter()
+            .map(|e| match_emulator_id(e))
+            .collect::<Result<Vec<String>, _>>()?;
+
+        let client_ids = current_filter
+            .clients
+            .iter()
+            .map(|c| match_client_id(c))
+            .collect::<Result<Vec<String>, _>>()?;
 
         let mut query_builder = QueryBuilder::new("select * from local_emulator_configs");
         query_builder.push(" where id is not null ");
@@ -927,10 +1234,19 @@ impl EmulatorService for EmulatorServiceHandlers {
             separated.push_unseparated(")");
         }
 
-        if let Some(client) = &client_id {
-            query_builder.push(" and client = ");
-            query_builder.push_bind(client);
+        if !client_ids.is_empty() {
+            query_builder.push(" and client in (");
+            let mut separated = query_builder.separated(", ");
+            for client_id in &client_ids {
+                separated.push_bind(client_id);
+            }
+            separated.push_unseparated(")");
         }
+
+        query_builder.push(" limit ");
+        query_builder.push_bind(query_limit);
+        query_builder.push(" offset ");
+        query_builder.push_bind(cursor.offset);
 
         let rows: Vec<LocalEmulatorConfigRow> = query_builder
             .build_query_as()
@@ -938,25 +1254,30 @@ impl EmulatorService for EmulatorServiceHandlers {
             .await
             .map_err(sqlx_err_to_status)?;
 
-        let local_emulator_configs = rows
-            .into_iter()
-            .map(|row| LocalEmulatorConfig {
-                id: row.id,
-                emulator: row.emulator,
-                client: row.client,
-                created_at: row.created_at,
-                updated_at: row.updated_at,
-                executable_path: row.executable_path,
-                nickname: row.nickname,
-                save_data_path: row.save_data_path,
-                save_states_path: row.save_states_path,
-                bios_directory: row.bios_directory,
-                extra_files_directory: row.extra_files_directory,
-            })
-            .collect();
+        let next_page_token = if rows.len() > cursor.page_size as usize {
+            let next_cursor = LocalEmulatorConfigCursor {
+                offset: cursor.offset + cursor.page_size,
+                page_size: cursor.page_size,
+                filter: cursor.filter,
+            };
+
+            Some(next_cursor.serialize())
+        } else {
+            None
+        };
+
+        let mut local_emulator_configs = Vec::new();
+        let num_rows_to_process = std::cmp::min(rows.len(), cursor.page_size as usize);
+
+        for row in rows.into_iter().take(num_rows_to_process) {
+            local_emulator_configs.push(
+                local_emulator_profile_config_row_to_local_emulator_config(row),
+            );
+        }
 
         Ok(Response::new(ListLocalEmulatorConfigsResponse {
             local_emulator_configs,
+            next_page_token,
         }))
     }
 
@@ -965,18 +1286,14 @@ impl EmulatorService for EmulatorServiceHandlers {
         &self,
         request: Request<CreateLocalEmulatorConfigRequest>,
     ) -> Result<Response<LocalEmulatorConfig>, Status> {
+        let request = request.into_inner();
+
         let config = request
-            .into_inner()
             .local_emulator_config
             .ok_or_else(|| Status::invalid_argument("Local emulator config must be provided"))?;
 
-        if config.emulator.is_empty() {
-            return Err(Status::invalid_argument("Emulator ID must be provided"));
-        }
-
-        if config.client.is_empty() {
-            return Err(Status::invalid_argument("Client ID must be provided"));
-        }
+        let emulator_id = match_emulator_id(&config.emulator)?;
+        let client_id = match_client_id(&config.client)?;
 
         if config.executable_path.is_empty() {
             return Err(Status::invalid_argument("Executable path must be provided"));
@@ -1001,9 +1318,9 @@ impl EmulatorService for EmulatorServiceHandlers {
         )
         .push_bind(&config_id)
         .push(", ")
-        .push_bind(&config.emulator)
+        .push_bind(&emulator_id)
         .push(", ")
-        .push_bind(&config.client)
+        .push_bind(&client_id)
         .push(", ")
         .push_bind(&config.executable_path)
         .push(", ")
@@ -1022,34 +1339,21 @@ impl EmulatorService for EmulatorServiceHandlers {
         .await
         .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(LocalEmulatorConfig {
-            id: row.id,
-            emulator: row.emulator,
-            client: row.client,
-            created_at: row.created_at,
-            updated_at: row.updated_at,
-            executable_path: row.executable_path,
-            nickname: row.nickname,
-            save_data_path: row.save_data_path,
-            save_states_path: row.save_states_path,
-            bios_directory: row.bios_directory,
-            extra_files_directory: row.extra_files_directory,
-        }))
+        Ok(Response::new(
+            local_emulator_profile_config_row_to_local_emulator_config(row),
+        ))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn update_local_emulator_config(
         &self,
         request: Request<UpdateLocalEmulatorConfigRequest>,
     ) -> Result<Response<LocalEmulatorConfig>, Status> {
+        let request = request.into_inner();
         let config = request
-            .into_inner()
             .local_emulator_config
             .ok_or_else(|| Status::invalid_argument("Local emulator config must be provided"))?;
 
-        if config.id.is_empty() {
-            return Err(Status::invalid_argument("Config ID must be provided"));
-        }
+        let config_id = match_local_emulator_config_id(&config.name)?;
 
         if config.executable_path.is_empty() {
             return Err(Status::invalid_argument("Executable path must be provided"));
@@ -1069,41 +1373,27 @@ impl EmulatorService for EmulatorServiceHandlers {
                 .push(", extra_files_directory = ")
                 .push_bind(config.extra_files_directory)
                 .push(" where id = ")
-                .push_bind(&config.id)
+                .push_bind(&config_id)
                 .push(" returning *")
                 .build_query_as()
                 .fetch_one(&self.db_pool)
                 .await
                 .map_err(sqlx_err_to_status)?;
 
-        Ok(Response::new(LocalEmulatorConfig {
-            id: row.id,
-            emulator: row.emulator,
-            client: row.client,
-            created_at: row.created_at,
-            updated_at: row.updated_at,
-            executable_path: row.executable_path,
-            nickname: row.nickname,
-            save_data_path: row.save_data_path,
-            save_states_path: row.save_states_path,
-            bios_directory: row.bios_directory,
-            extra_files_directory: row.extra_files_directory,
-        }))
+        Ok(Response::new(
+            local_emulator_profile_config_row_to_local_emulator_config(row),
+        ))
     }
 
-    #[tracing::instrument(skip_all)]
     async fn delete_local_emulator_config(
         &self,
         request: Request<DeleteLocalEmulatorConfigRequest>,
     ) -> Result<Response<Empty>, Status> {
-        let id = request.into_inner().id;
-
-        if id.is_empty() {
-            return Err(Status::invalid_argument("Config ID must be provided"));
-        }
+        let request = request.into_inner();
+        let config_id = match_local_emulator_config_id(&request.name)?;
 
         QueryBuilder::new("delete from local_emulator_configs where id = ")
-            .push_bind(&id)
+            .push_bind(&config_id)
             .build()
             .execute(&self.db_pool)
             .await

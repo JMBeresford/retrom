@@ -33,6 +33,8 @@ dotenvy = { workspace = true }
 uuid = { workspace = true }
 sqlx = { workspace = true }
 futures = { workspace = true }
+matchit = { workspace = true }
+serde = { workspace = true }
 
 [features]
 default = []
