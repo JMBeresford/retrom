@@ -7,7 +7,7 @@ import {
 import { Input } from "@retrom/ui-next/components/input";
 import { useLibraryFormFieldContext } from "../defs";
 
-export function NameField() {
+export function DisplayNameField() {
   const field = useLibraryFormFieldContext<string>();
 
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;

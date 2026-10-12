@@ -4,6 +4,7 @@ import { PathHeading } from "../-components/path-heading";
 import { PlatformItem } from "./-components/platform-item";
 import { browseHeadingSegments } from "./-components/browse-heading";
 import { useListPlatforms } from "@/data/libraries/use-list-platforms";
+import { platformIdSchema } from "@/data/libraries/resources";
 
 export const Route = createFileRoute("/app/browse/")({
   component: RouteComponent,
@@ -39,7 +40,10 @@ function RouteComponent() {
 
         <div className="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6">
           {data.map((platform) => (
-            <PlatformItem key={platform.id} platformId={platform.id} />
+            <PlatformItem
+              key={platform.name}
+              platformId={platformIdSchema.parse(platform.name)}
+            />
           ))}
         </div>
       </div>

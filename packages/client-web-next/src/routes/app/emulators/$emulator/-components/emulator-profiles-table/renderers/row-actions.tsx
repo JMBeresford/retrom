@@ -57,13 +57,13 @@ export function RowActionsCell({
                 title: "Delete Emulator Profile",
                 description: (
                   <p>
-                    This will remove the emulator {row.original.name} and all
-                    associated data.
+                    This will remove the emulator {row.original.displayName} and
+                    all associated data.
                   </p>
                 ),
                 onConfirm: () => {
                   deleteEmulatorProfile(
-                    { id: row.original.id },
+                    { name: row.original.name },
                     {
                       onError: (error) => {
                         toast.add({

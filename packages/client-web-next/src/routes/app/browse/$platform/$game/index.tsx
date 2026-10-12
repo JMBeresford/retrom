@@ -26,7 +26,7 @@ function RouteComponent() {
 
   const gameQuery = useGetGame({
     request: {
-      id: gameId,
+      name: `games/${gameId}`,
     },
   });
 

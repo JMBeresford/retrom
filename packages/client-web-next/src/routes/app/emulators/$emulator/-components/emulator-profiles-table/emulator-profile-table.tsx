@@ -15,7 +15,7 @@ import {
   emulatorProfileTableColumns,
   emulatorProfileTableFeatures,
 } from "./defs";
-import { Route } from "@/routes/app/emulators/$emulator-id/route";
+import { Route } from "@/routes/app/emulators/$emulator/route";
 import { useListEmulatorProfiles } from "@/data/emulators/use-list-emulator-profiles";
 
 export const EmulatorProfileTableKey = "emulator-profile-table" as const;
@@ -34,11 +34,11 @@ function alignClassName(align?: "start" | "center" | "end") {
 }
 
 export function EmulatorProfileTable() {
-  const emulatorId = Route.useParams()["emulator-id"];
+  const emulatorId = Route.useParams()["emulator"];
   const { data, isPending, isError, error, isFetching } =
     useListEmulatorProfiles({
       request: {
-        emulatorIds: [emulatorId],
+        emulators: [`emulators/${emulatorId}`],
       },
       options: {
         select: (response) => response.emulatorProfiles,

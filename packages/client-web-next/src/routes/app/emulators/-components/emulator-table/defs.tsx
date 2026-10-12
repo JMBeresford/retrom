@@ -10,6 +10,7 @@ import { RowActions } from "./renderers/row-actions";
 import { Platforms } from "./renderers/platforms";
 import { OperatingSystems } from "./renderers/operating-systems";
 import type { Emulator } from "@retrom/codegen/retrom/services/emulators/v1/emulator_pb";
+import { emulatorIdSchema } from "@/data/emulators/resources";
 
 export type EmulatorTableColumnMeta = {
   align?: "start" | "center" | "end";
@@ -34,8 +35,8 @@ export const emulatorTableColumns = columns([
     header: "Name",
     cell: ({ row }) => (
       <Link
-        to={`/app/emulators/$emulator-id`}
-        params={{ "emulator-id": row.original.id }}
+        to={`/app/emulators/$emulator`}
+        params={{ emulator: emulatorIdSchema.parse(row.original.name) }}
         className="underline"
       >
         {row.original.name}

@@ -19,7 +19,7 @@ export function useDeleteEmulatorProfile() {
       retromClient.emulatorClient.deleteEmulatorProfile(request),
     onSuccess: async (_, request) => {
       await queryClient.invalidateQueries({
-        queryKey: emulatorQueryKeys.getEmulatorProfile({ id: request.id }),
+        queryKey: emulatorQueryKeys.getEmulatorProfile({ name: request.name }),
       });
 
       await queryClient.invalidateQueries({

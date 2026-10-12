@@ -15,6 +15,7 @@ import type { EmulatorTableFeatures } from "../defs";
 import type { Emulator } from "@retrom/codegen/retrom/services/emulators/v1/emulator_pb";
 import { useModalAction } from "@/modals/use-modal-action";
 import { useDeleteEmulator } from "@/data/emulators/use-delete-emulator";
+import { emulatorIdSchema } from "@/data/emulators/resources";
 
 export function RowActions({
   row,
@@ -40,8 +41,8 @@ export function RowActions({
           <DropdownMenuItem
             render={
               <Link
-                to="/app/emulators/$emulator-id"
-                params={{ "emulator-id": row.original.id }}
+                to="/app/emulators/$emulator"
+                params={{ emulator: emulatorIdSchema.parse(row.original.name) }}
               >
                 Profiles
               </Link>
@@ -75,7 +76,7 @@ export function RowActions({
                 ),
                 onConfirm: () => {
                   deleteEmulator(
-                    { id: row.original.id },
+                    { name: row.original.name },
                     {
                       onError: (error) => {
                         toast.add({

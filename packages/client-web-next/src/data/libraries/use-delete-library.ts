@@ -14,7 +14,7 @@ export function useDeleteLibrary() {
     ) => retromClient.libraryClient.deleteLibrary(request),
     onSuccess: async (_, request) => {
       await queryClient.invalidateQueries({
-        queryKey: libraryQueryKeys.getLibrary({ id: request.id }),
+        queryKey: libraryQueryKeys.getLibrary({ name: request.name }),
       });
 
       await queryClient.invalidateQueries({

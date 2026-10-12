@@ -8,6 +8,7 @@ import type { GameMetadata } from "@retrom/codegen/retrom/services/metadata/v1/r
 import type { HTMLAttributes } from "react";
 import { useListGameMetadata } from "@/data/metadata/use-list-game-metadata";
 import { useGetGame } from "@/data/libraries/use-get-game";
+import { gameIdSchema, platformIdSchema } from "@/data/libraries/resources";
 
 export type SimilarGamesProps = {
   metadata: GameMetadata;
@@ -77,7 +78,7 @@ export function SimilarGames({
 function SimilarGameCover({ metadata }: { metadata: GameMetadata }) {
   const gameQuery = useGetGame({
     request: {
-      id: metadata.game,
+      name: `games/${metadata.game}`,
     },
   });
 
@@ -89,8 +90,8 @@ function SimilarGameCover({ metadata }: { metadata: GameMetadata }) {
     return;
   }
 
-  const gameId = gameQuery.data.id;
-  const platformId = gameQuery.data.platforms.at(0);
+  const gameId = gameIdSchema.parse(gameQuery.data.name);
+  const platformId = platformIdSchema.parse(gameQuery.data.parent);
 
   if (!platformId) {
     return;

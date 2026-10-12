@@ -15,7 +15,7 @@ import {
   libraryFormOptions,
 } from "./library-form/defs";
 import type { BaseModalActionProps } from "@/modals/modals";
-import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
+import type { Library } from "@retrom/codegen/retrom/services/library/v1/library_pb";
 import { useCreateLibrary } from "@/data/libraries/use-create-library";
 import { registerModalHandle } from "@/modals/use-modal-action";
 import { useUpdateLibrary } from "@/data/libraries/use-update-library";
@@ -120,12 +120,12 @@ export function LibraryFormDialog() {
                   libraryForm.handleSubmit().catch(console.error);
                 }}
               >
-                <libraryForm.AppField name="name">
-                  {(field) => <field.NameField />}
+                <libraryForm.AppField name="displayName">
+                  {(field) => <field.DisplayNameField />}
                 </libraryForm.AppField>
 
-                <libraryForm.AppField name="path">
-                  {(field) => <field.PathField />}
+                <libraryForm.AppField name="fileRoot">
+                  {(field) => <field.FileRootField />}
                 </libraryForm.AppField>
 
                 <libraryForm.AppField name="ignorePatterns">

@@ -8,15 +8,18 @@ import { EmulatorProfileFormDialog } from "./-components/emulator-profile-form-d
 import { useGetEmulator } from "@/data/emulators/use-get-emulator";
 import { ConfirmDialog } from "@/modals/confirm-modal";
 import { useModalAction } from "@/modals/use-modal-action";
+import { emulatorIdSchema } from "@/data/emulators/resources";
 
-export const Route = createFileRoute("/app/emulators/$emulator-id")({
+export const Route = createFileRoute("/app/emulators/$emulator")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const emulatorId = Route.useParams()["emulator-id"];
+  const emulatorId = Route.useParams()["emulator"];
   const emulatorProfileFormModal = useModalAction("emulatorProfileForm");
-  const emulatorQuery = useGetEmulator({ request: { id: emulatorId } });
+  const emulatorQuery = useGetEmulator({
+    request: { name: `emulators/${emulatorId}` },
+  });
 
   if (emulatorQuery.isPending) {
     return (
@@ -56,9 +59,9 @@ function RouteComponent() {
               onClick={() =>
                 emulatorProfileFormModal.openModal({
                   title: "Add Emulator Profile",
-                  description: `Configure Retrom to track a new emulator profile for ${emulatorQuery.data.name}.`,
+                  description: `Configure Retrom to track a new emulator profile for ${emulatorQuery.data.displayName}.`,
                   action: "create",
-                  emulator: emulatorQuery.data.id,
+                  emulator: emulatorIdSchema.parse(emulatorQuery.data.name),
                 })
               }
             >

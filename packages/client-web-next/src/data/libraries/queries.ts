@@ -4,8 +4,6 @@ import type {
   GetGameRequestSchema,
   GetLibraryRequestSchema,
   GetPlatformRequestSchema,
-  ListGameFilesRequestSchema,
-  ListGameFilesResponse,
   ListGamesRequestSchema,
   ListGamesResponse,
   ListLibrariesRequestSchema,
@@ -15,12 +13,10 @@ import type {
 } from "@retrom/codegen/retrom/services/library/v1/library_service_pb";
 import type { RetromClient } from "@/api-client/client";
 import type { MessageInitShape } from "@bufbuild/protobuf";
-import type {
-  Game,
-  Library,
-  Platform,
-} from "@retrom/codegen/retrom/services/library/v1/resources_pb";
 import type { QueryOptionsExt } from "../common";
+import type { Library } from "@retrom/codegen/retrom/services/library/v1/library_pb";
+import type { Game } from "@retrom/codegen/retrom/services/library/v1/game_pb";
+import type { Platform } from "@retrom/codegen/retrom/services/library/v1/platform_pb";
 
 export type LibraryQueryKey<T extends keyof typeof libraryQueryKeys> =
   ReturnType<(typeof libraryQueryKeys)[T]>;
@@ -48,9 +44,6 @@ export const libraryQueryKeys = {
   ) => [...libraryQueryKeys.listAllPlatforms(), request] as const,
   listAllGameFiles: () =>
     [...libraryQueryKeys.all(), "listAllGameFiles"] as const,
-  listGameFiles: (
-    request: MessageInitShape<typeof ListGameFilesRequestSchema>,
-  ) => [...libraryQueryKeys.listAllGameFiles(), request] as const,
 };
 
 export const libraryQueries = {
@@ -143,20 +136,5 @@ export const libraryQueries = {
       ...options,
       queryKey: libraryQueryKeys.listPlatforms(request),
       queryFn: () => retromClient.libraryClient.listPlatforms(request),
-    }),
-  listGameFiles: <TData>(
-    request: MessageInitShape<typeof ListGameFilesRequestSchema>,
-    retromClient: RetromClient,
-    options: QueryOptionsExt<
-      ListGameFilesResponse,
-      ConnectError,
-      TData,
-      LibraryQueryKey<"listGameFiles">
-    > = {},
-  ) =>
-    queryOptions({
-      ...options,
-      queryKey: libraryQueryKeys.listGameFiles(request),
-      queryFn: () => retromClient.libraryClient.listGameFiles(request),
     }),
 };

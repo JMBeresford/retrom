@@ -67,11 +67,14 @@ function EmulatorSelect({
 
   const emulatorsQuery = useListEmulators({
     request: {
-      supportedPlatformIds: [state.platformId],
+      platforms: [`platforms/${state.platformId}`],
     },
     options: {
       select: (response) =>
-        response.emulators.map((e) => ({ label: e.name, value: e.id })),
+        response.emulators.map((e) => ({
+          label: e.displayName,
+          value: e.name,
+        })),
     },
   });
 
@@ -148,7 +151,7 @@ function EmulatorProfileSelect({
 
   const defaultProfileQuery = useListDefaultEmulatorProfiles({
     request: {
-      platformIds: [state.platformId],
+      platforms: [`platforms/${state.platformId}`],
     },
     options: {
       select: (response) =>
@@ -158,14 +161,15 @@ function EmulatorProfileSelect({
 
   const profilesQuery = useListEmulatorProfiles({
     request: {
-      emulatorIds: state.emulatorId !== undefined ? [state.emulatorId] : [],
+      emulators:
+        state.emulatorId !== undefined ? [`emulators/${state.emulatorId}`] : [],
     },
     options: {
       enabled: state.emulatorId !== undefined,
       select: (response) =>
         response.emulatorProfiles.map((profile) => ({
-          label: profile.name,
-          value: profile.id,
+          label: profile.displayName,
+          value: profile.name,
         })),
     },
   });

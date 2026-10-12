@@ -5,7 +5,7 @@ import type { MessageInitShape } from "@bufbuild/protobuf";
 import type { QueryOptionsExt } from "../common";
 import type { ConnectError } from "@connectrpc/connect";
 import type { GetGameRequestSchema } from "@retrom/codegen/retrom/services/library/v1/library_service_pb";
-import type { Game } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
+import type { Game } from "@retrom/codegen/retrom/services/library/v1/game_pb";
 import { useRetromClient } from "@/api-client/context";
 
 export function useGetGame<TData = Game>(

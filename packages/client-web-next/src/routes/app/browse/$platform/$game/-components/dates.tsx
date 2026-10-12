@@ -2,8 +2,8 @@ import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { cn } from "@retrom/ui-next/lib/utils";
 import { Fragment } from "react";
 import type { HTMLAttributes } from "react";
-import type { Game } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
 import type { GameMetadata } from "@retrom/codegen/retrom/services/metadata/v1/resources_pb";
+import type { Game } from "@retrom/codegen/retrom/services/library/v1/game_pb";
 
 export type GameDatesProps = {
   game: Game;

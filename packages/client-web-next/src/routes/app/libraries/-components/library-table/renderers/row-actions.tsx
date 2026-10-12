@@ -9,9 +9,9 @@ import {
 import { EllipsisVerticalIcon } from "lucide-react";
 import { Button } from "@retrom/ui-next/components/button";
 import { toast } from "@retrom/ui-next/components/toast";
-import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
 import type { Row } from "@tanstack/react-table";
 import type { LibraryTableFeatures } from "../defs";
+import type { Library } from "@retrom/codegen/retrom/services/library/v1/library_pb";
 import { useDeleteLibrary } from "@/data/libraries/use-delete-library";
 import { useModalAction } from "@/modals/use-modal-action";
 
@@ -61,7 +61,7 @@ export function RowActions({
                 ),
                 onConfirm: () => {
                   deleteLibrary(
-                    { id: row.original.id },
+                    { name: row.original.name },
                     {
                       onError: (error) => {
                         toast.add({

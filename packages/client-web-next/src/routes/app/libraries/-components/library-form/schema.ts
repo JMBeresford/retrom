@@ -1,6 +1,6 @@
 import z from "zod";
-import type { LibrarySchema } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
 import type { MessageShape } from "@bufbuild/protobuf";
+import type { LibrarySchema } from "@retrom/codegen/retrom/services/library/v1/library_pb";
 
 export const builtinMacros = ["{library}", "{platform}", "{game}"];
 
@@ -84,10 +84,10 @@ export const structureDefinitionValidationSchema = z.literal("").or(
 );
 
 export const libraryValidationSchema = z.object({
-  path: z.string().min(1),
-  name: z.string().min(1),
+  displayName: z.string().min(1),
+  fileRoot: z.string().min(1),
   structureDefinition: structureDefinitionValidationSchema,
   ignorePatterns: z.string().array(),
 }) satisfies z.ZodType<
-  Omit<MessageShape<typeof LibrarySchema>, "$typeName" | "id">
+  Omit<MessageShape<typeof LibrarySchema>, "$typeName" | "name">
 >;

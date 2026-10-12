@@ -14,7 +14,7 @@ import ShikiHighlighter from "react-shiki/core";
 import { Button } from "@retrom/ui-next/components/button";
 import type { Row } from "@tanstack/react-table";
 import type { LibraryTableFeatures } from "../defs";
-import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
+import type { Library } from "@retrom/codegen/retrom/services/library/v1/library_pb";
 
 const highlighter = await createHighlighterCore({
   themes: [import("@shikijs/themes/one-dark-pro")],

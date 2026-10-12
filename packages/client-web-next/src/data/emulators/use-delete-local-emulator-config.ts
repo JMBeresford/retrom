@@ -19,7 +19,9 @@ export function useDeleteLocalEmulatorConfig() {
       retromClient.emulatorClient.deleteLocalEmulatorConfig(request),
     onSuccess: async (_, request) => {
       await queryClient.invalidateQueries({
-        queryKey: emulatorQueryKeys.getLocalEmulatorConfig({ id: request.id }),
+        queryKey: emulatorQueryKeys.getLocalEmulatorConfig({
+          name: request.name,
+        }),
       });
 
       await queryClient.invalidateQueries({

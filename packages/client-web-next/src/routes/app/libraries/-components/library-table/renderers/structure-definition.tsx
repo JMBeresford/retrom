@@ -1,6 +1,6 @@
 import type { Row } from "@tanstack/react-table";
 import type { LibraryTableFeatures } from "../defs";
-import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
+import type { Library } from "@retrom/codegen/retrom/services/library/v1/library_pb";
 
 export function StructureDefinition({
   row,

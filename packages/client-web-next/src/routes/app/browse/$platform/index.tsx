@@ -6,6 +6,7 @@ import { GameItem } from "./-components/game-item";
 import { useListGames } from "@/data/libraries/use-list-games";
 import { GameFormDialog } from "@/modals/game-form-dialog/dialog";
 import { useGetPlatformMetadata } from "@/data/metadata/use-get-platform-metadata";
+import { gameIdSchema } from "@/data/libraries/resources";
 
 export const Route = createFileRoute("/app/browse/$platform/")({
   component: RouteComponent,
@@ -22,7 +23,7 @@ function RouteComponent() {
 
   const gamesQuery = useListGames({
     request: {
-      platformIds: [platform],
+      parent: `platforms/${platform}`,
     },
   });
 
@@ -59,7 +60,7 @@ function RouteComponent() {
 
         <div className="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6 mt-4">
           {games.map((game) => (
-            <GameItem key={game.id} gameId={game.id} />
+            <GameItem key={game.name} gameId={gameIdSchema.parse(game.name)} />
           ))}
         </div>
       </div>

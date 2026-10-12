@@ -6,8 +6,8 @@ import {
 import { libraryValidationSchema } from "./schema";
 import { StructureDefinitionField } from "./fields/structure-definition-dialog";
 import { SubmitButton } from "./submit-button";
-import { NameField } from "./fields/name";
-import { PathField } from "./fields/path";
+import { DisplayNameField } from "./fields/display-name";
+import { FileRootField } from "./fields/file-root";
 import { IgnorePatternsField } from "./fields/ignore-patterns";
 import type z from "zod";
 
@@ -19,8 +19,8 @@ export const {
 } = createFormHookContexts();
 
 export const defaultLibraryFormValues = {
-  name: "",
-  path: "",
+  displayName: "",
+  fileRoot: "",
   structureDefinition: "{library}/{platform}/{game}",
   ignorePatterns: Array<string>(),
 } satisfies z.output<typeof libraryValidationSchema>;
@@ -37,8 +37,8 @@ export const { useAppForm: useLibraryForm } = createFormHook({
   fieldContext: libraryFormFieldContext,
   formContext: libraryFormContext,
   fieldComponents: {
-    NameField,
-    PathField,
+    DisplayNameField,
+    FileRootField,
     IgnorePatternsField,
     StructureDefinitionField,
   },

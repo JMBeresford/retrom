@@ -14,7 +14,7 @@ import { FolderOpenIcon } from "lucide-react";
 import { useLibraryFormFieldContext } from "../defs";
 import { useModalAction } from "@/modals/use-modal-action";
 
-export function PathField() {
+export function FileRootField() {
   const field = useLibraryFormFieldContext<string>();
   const fileExplorerDialog = useModalAction("fileExplorer");
 
