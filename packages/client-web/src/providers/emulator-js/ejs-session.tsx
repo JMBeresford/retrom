@@ -58,12 +58,20 @@ export function EJSSessionStateProvider(props: PropsWithChildren) {
 
     emulatorJS.gameManager.saveSaveFiles();
 
-    const fullPath: string = emulatorJS.gameManager?.getSaveFilePath() ?? "";
+    let fullPath: string = emulatorJS.gameManager?.getSaveFilePath() ?? "";
     if (!fullPath) {
       return;
     }
 
     const FS = emulatorJS.gameManager.FS;
+
+    if (!FS.analyzePath(fullPath).exists && fullPath.endsWith(".srm")) {
+      const pureZipPath = fullPath.replace(/\.srm$/, ".pure.zip");
+      if (FS.analyzePath(pureZipPath).exists) {
+        fullPath = pureZipPath;
+      }
+    }
+
     if (!FS.analyzePath(fullPath).exists) {
       console.warn(
         `Save file not found (is this core supported?): ${fullPath}`,
