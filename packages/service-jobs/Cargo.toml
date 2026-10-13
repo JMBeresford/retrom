@@ -1,7 +1,8 @@
 [package]
 name = "retrom-service-jobs"
-resolver = "2"
+resolver = "3"
 version.workspace = true
+rust-version.workspace = true
 authors.workspace = true
 repository.workspace = true
 license.workspace = true

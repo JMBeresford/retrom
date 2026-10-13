@@ -20,7 +20,7 @@ export function useDeleteDefaultEmulatorProfile() {
     onSuccess: async (_, request) => {
       await queryClient.invalidateQueries({
         queryKey: emulatorQueryKeys.getDefaultEmulatorProfile({
-          id: request.id,
+          name: request.name,
         }),
       });
 

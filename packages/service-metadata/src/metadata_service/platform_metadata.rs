@@ -9,7 +9,7 @@ use tracing::instrument;
 pub fn platform_metadata_from_rows(row: PlatformMetadataRow) -> PlatformMetadata {
     PlatformMetadata {
         name: format!("platforms/{}/metadata", row.platform_id),
-        platform: row.platform_id,
+        platform: format!("platforms/{}", row.platform_id),
         created_at: row.created_at,
         updated_at: row.updated_at,
         title: row.title,

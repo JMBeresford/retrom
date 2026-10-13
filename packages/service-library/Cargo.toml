@@ -1,6 +1,7 @@
 [package]
 name = "retrom-service-library"
-resolver = "2"
+resolver = "3"
+rust-version.workspace = true
 version.workspace = true
 authors.workspace = true
 repository.workspace = true

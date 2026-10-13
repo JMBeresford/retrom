@@ -10,6 +10,8 @@ export function SubmitButton() {
     form.handleSubmit().catch(console.error);
   };
 
+  console.log({ formState: form.state });
+
   return (
     <form.Subscribe>
       {({ isValid, isSubmitting }) => (

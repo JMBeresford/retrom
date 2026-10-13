@@ -22,6 +22,7 @@ import type { LauncherContextValue } from "./launcher-context";
 import { useListEmulators } from "@/data/emulators/use-list-emulators";
 import { useListEmulatorProfiles } from "@/data/emulators/use-list-emulator-profiles";
 import { useListDefaultEmulatorProfiles } from "@/data/emulators/use-list-default-emulator-profiles";
+import { emulatorIdSchema } from "@/data/emulators/resources";
 
 export type LauncherCardProps = Omit<
   HTMLAttributes<HTMLDivElement>,
@@ -73,7 +74,7 @@ function EmulatorSelect({
       select: (response) =>
         response.emulators.map((e) => ({
           label: e.displayName,
-          value: e.name,
+          value: emulatorIdSchema.parse(e.name),
         })),
     },
   });
@@ -230,8 +231,8 @@ function EmulatorProfileSelect({
                 No valid emulator profiles found. Please{" "}
                 <Link
                   className="text-primary underline"
-                  to="/app/emulators/$emulator-id"
-                  params={{ "emulator-id": state.emulatorId }}
+                  to="/app/emulators/$emulator"
+                  params={{ emulator: state.emulatorId }}
                 >
                   configure the emulator
                 </Link>{" "}

@@ -19,41 +19,34 @@ import { Separator } from "@retrom/ui-next/components/separator";
 import { Button } from "@retrom/ui-next/components/button";
 import { Badge } from "@retrom/ui-next/components/badge";
 import { useEmulatorFormFieldContext } from "../defs";
-import type { PlatformMetadata } from "@retrom/codegen/retrom/services/metadata/v1/resources_pb";
 import { useListPlatformMetadata } from "@/data/metadata/use-list-platform-metadata";
 
 export function PlatformsField() {
   const field = useEmulatorFormFieldContext<Array<string>>();
 
-  const {
-    data: allPlatformMetadata,
-    isPending,
-    isError,
-  } = useListPlatformMetadata({
-    options: {
-      select: ({ metadata }) => {
-        const metaByPlatformId = new Map<string, Array<PlatformMetadata>>();
+  const { data, isPending, isError } = useListPlatformMetadata();
 
-        for (const meta of metadata) {
-          if (!metaByPlatformId.has(meta.platform)) {
-            metaByPlatformId.set(meta.platform, []);
-          }
+  const fieldErrors = field.state.meta.errors as Array<Error>;
+  const childErrors = Object.entries(field.form.getAllErrors().fields)
+    .filter(([path]) => path.startsWith(field.name))
+    .map(([path, errorState]) => {
+      const error = errorState.errors.at(0);
 
-          metaByPlatformId.get(meta.platform)?.push(meta);
-        }
+      const message =
+        error && typeof error === "object" && "message" in error
+          ? error.message
+          : "Unknown error";
 
-        return metaByPlatformId;
-      },
-    },
-  });
+      return new Error(`${path}: ${String(message)}`);
+    });
 
-  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-  const items = allPlatformMetadata
-    ? Array.from(allPlatformMetadata.entries()).map(([value, metas]) => ({
-        value,
-        label: metas.at(0)?.name ?? "Unknown Platform",
-      }))
-    : [];
+  const allErrors = [...childErrors, ...fieldErrors];
+
+  const items =
+    data?.metadata.map((meta) => ({
+      value: meta.platform,
+      label: meta.title,
+    })) ?? [];
 
   const value = field.state.value;
 
@@ -71,7 +64,8 @@ export function PlatformsField() {
           field.removeValue(idx);
         }}
       >
-        {allPlatformMetadata.get(platform)?.at(0)?.name ?? "Unknown Platform"}
+        {data.metadata.find((p) => p.platform === platform)?.title ??
+          "Unknown Platform"}
         <XIcon data-icon="inline-end" />
       </Badge>
     ))
@@ -135,7 +129,7 @@ export function PlatformsField() {
         launch games that belong to the selected platforms.
       </FieldDescription>
 
-      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+      {allErrors.length > 0 && <FieldError errors={allErrors} />}
     </Field>
   );
 }

@@ -26,7 +26,7 @@ export function PlatformItem({
 
   const gamesQuery = useListGames({
     request: {
-      platformIds: [platformId],
+      parent: `platforms/${platformId}`,
     },
   });
 

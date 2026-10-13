@@ -4,8 +4,12 @@ package retrom.files.v1;
 
 import "google/protobuf/timestamp.proto";
 
+option deprecated = true;
+
 // FilesystemNodeType represents the type of a filesystem node, which can be either a directory or a file.
 enum FilesystemNodeType {
+  option deprecated = true;
+
   // Unspecified node type.
   FILESYSTEM_NODE_TYPE_UNSPECIFIED = 0;
   // The node is a directory.
@@ -16,6 +20,8 @@ enum FilesystemNodeType {
 
 // FilesystemNode represents a single node in the filesystem, which can be either a directory or a file.
 message FilesystemNode {
+  option deprecated = true;
+
   // Absolute path to the node, e.g. "C:/Games/MyGame/SaveData" or "/home/user/.config/retrom/config.yaml".
   string path = 1;
   // The name of the node, e.g. "SaveData" or "config.yaml".
@@ -26,6 +32,8 @@ message FilesystemNode {
 
 // FileStat represents the metadata of a file, including its path, creation and update timestamps, type, size, and etag.
 message FileStat {
+  option deprecated = true;
+
   /* Relative path to the file, usually from the public directory */
   string path = 1;
   // The timestamp when the file was created.
@@ -42,6 +50,8 @@ message FileStat {
 
 // File represents a file in the filesystem, including its metadata and content.
 message File {
+  option deprecated = true;
+
   // The metadata of the file, such as its path, creation and update timestamps, type, size, and etag.
   FileStat stat = 1;
   // The content of the file in bytes. This field is only applicable if the node type is FILE.

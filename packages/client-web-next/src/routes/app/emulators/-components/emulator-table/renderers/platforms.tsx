@@ -17,7 +17,7 @@ export function Platforms({
     isError,
   } = useListPlatformMetadata({
     request: {
-      platformIds: row.original.platforms,
+      platforms: row.original.platforms,
     },
     options: {
       enabled: row.original.platforms.length > 0,

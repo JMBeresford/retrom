@@ -2,8 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { libraryQueryKeys } from "./queries";
 import type { MessageInitShape } from "@bufbuild/protobuf";
 import type { CreateLibraryRequestSchema } from "@retrom/codegen/retrom/services/library/v1/library_service_pb";
-import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
 import type { ConnectError } from "@connectrpc/connect";
+import type { Library } from "@retrom/codegen/retrom/services/library/v1/library_pb";
 import { useRetromClient } from "@/api-client/context";
 
 export function useCreateLibrary() {

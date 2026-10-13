@@ -1,5 +1,5 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = [
   "packages/client",
   "packages/codegen",
@@ -39,6 +39,7 @@ exclude = [
 
 [workspace.package]
 edition = "2021"
+rust-version = "1.99"
 version = "0.8.4"
 authors = ["John Beresford <jberesford@volcaus.com>"]
 license = "GPL-3.0"

@@ -72,6 +72,11 @@ message ListFilesRequest {
 
   // A token identifying a page of results the server should return.
   optional string page_token = 3;
+
+  // Whether to list all tracked descendants of the specified parent directory recursively.
+  // If false, only immediate children will be listed. The server may impose a maximum
+  // depth limit for recursive listing to prevent excessive resource usage.
+  optional bool recursive = 4 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // ListFilesResponse is the response message for the ListFiles RPC method.

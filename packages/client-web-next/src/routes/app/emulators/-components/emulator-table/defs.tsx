@@ -31,7 +31,7 @@ const { columns, accessor, display } = createColumnHelper<
 >();
 
 export const emulatorTableColumns = columns([
-  accessor("name", {
+  accessor("displayName", {
     header: "Name",
     cell: ({ row }) => (
       <Link
@@ -39,7 +39,7 @@ export const emulatorTableColumns = columns([
         params={{ emulator: emulatorIdSchema.parse(row.original.name) }}
         className="underline"
       >
-        {row.original.name}
+        {row.original.displayName}
       </Link>
     ),
   }),

@@ -45,9 +45,9 @@ message Emulator {
   bool built_in = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
   // The name of the emulator in the libretro ecosystem, if applicable.
   optional string libretro_name = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
-  // A list of IDs of platforms that the emulator supports.
+  // A list of platforms that the emulator supports.
   repeated string platforms = 7 [(google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}];
-  // A list of IDs of operating systems that the emulator supports.
+  // A list of operating systems that the emulator supports.
   repeated OperatingSystem operating_systems = 8;
 }
 

@@ -3,11 +3,10 @@ import {
   createColumnHelper,
   tableFeatures,
 } from "@tanstack/react-table";
-import { FilePath } from "@retrom/ui-next/components/file-path";
 import { StructureDefinition } from "./renderers/structure-definition";
 import { RowActions } from "./renderers/row-actions";
 import { IgnorePatterns } from "./renderers/ignore-patterns";
-import type { Library } from "@retrom/codegen/retrom/services/library/v1/resources_pb";
+import type { Library } from "@retrom/codegen/retrom/services/library/v1/library_pb";
 
 export type LibraryTableFeatures = typeof libraryTableFeatures;
 export const libraryTableFeatures = tableFeatures({
@@ -20,12 +19,8 @@ const { columns, accessor, display } = createColumnHelper<
 >();
 
 export const libraryTableColumns = columns([
-  accessor("name", {
+  accessor("displayName", {
     header: "Name",
-  }),
-  accessor("path", {
-    header: "Path",
-    cell: (info) => <FilePath>{info.getValue()}</FilePath>,
   }),
   accessor("structureDefinition", {
     header: "Structure Definition",

@@ -1,12 +1,13 @@
 [package]
 name = "retrom-client"
+resolver = "3"
 version.workspace = true
+rust-version.workspace = true
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
 edition.workspace = true
 description = "The Retrom video game library client"
-rust-version = "1.80"
 
 [[bin]]
 name = "Retrom"

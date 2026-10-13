@@ -1,4 +1,3 @@
-import { FilesystemNodeType } from "@retrom/codegen/retrom/files/v1/files_pb";
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -35,14 +34,17 @@ import {
 } from "@retrom/ui-next/components/table";
 import { Button } from "@retrom/ui-next/components/button";
 import { keepPreviousData } from "@tanstack/react-query";
+import { FileType } from "@retrom/codegen/retrom/services/files/v1/file_pb";
 import { registerModalHandle } from "./use-modal-action";
 import type { ReactElement } from "react";
 import type { LucideProps } from "lucide-react";
 import type { BaseModalActionProps } from "./modals";
-import { useGetFilesystemNode } from "@/data/file-explorer/use-get-filesystem-node";
+import type { MessageInitShape } from "@bufbuild/protobuf";
+import type { ExploreHostPathsRequestSchema } from "@retrom/codegen/retrom/services/files/v1/file_service_pb";
+import { useExploreHostPaths } from "@/data/files/use-explore-host-paths";
 
 export type FileExplorerDialogProps = BaseModalActionProps & {
-  onConfirm: (path: string) => void;
+  onConfirm: (path: string) => void | Promise<void>;
   initialPath?: string;
 };
 
@@ -58,37 +60,43 @@ const handle = Dialog.createHandle<FileExplorerDialogProps>();
 registerModalHandle("fileExplorer", handle);
 
 const FilesystemNodeIcon: Record<
-  FilesystemNodeType,
+  FileType,
   (props: LucideProps) => ReactElement
 > = {
-  [FilesystemNodeType.DIRECTORY]: ({ className, ...props }) => (
+  [FileType.DIRECTORY]: ({ className, ...props }) => (
     <FolderIcon {...props} className={cn("fill-primary stroke-0", className)} />
   ),
-  [FilesystemNodeType.FILE]: ({ className, ...props }) => (
+  [FileType.FILE]: ({ className, ...props }) => (
     <FileIcon
       className={cn("fill-muted-foreground stroke-2 stroke-muted", className)}
       {...props}
     />
   ),
-  [FilesystemNodeType.UNSPECIFIED]: () => <></>,
+  [FileType.UNSPECIFIED]: () => <></>,
 };
 
 const MAX_CRUMBS = 3;
 
 export function FileExplorerDialog() {
-  const [path, setPath] = useState<string>("./");
+  const [path, setPath] = useState<string>("");
   const [selectedPath, setSelectedPath] = useState<string | undefined>();
 
-  const request = useMemo(() => ({ path }), [path]);
+  const request = useMemo(
+    () =>
+      ({ absolutePath: path }) satisfies MessageInitShape<
+        typeof ExploreHostPathsRequestSchema
+      >,
+    [path],
+  );
 
-  const { data, isError, isFetching } = useGetFilesystemNode({
+  const { data, isError, isFetching } = useExploreHostPaths({
     request,
     options: {
       placeholderData: keepPreviousData,
     },
   });
 
-  const pathParts = data?.node?.path.split("/").filter(Boolean) ?? [];
+  const pathParts = path.split("/").filter(Boolean);
 
   return (
     <Dialog
@@ -96,16 +104,16 @@ export function FileExplorerDialog() {
       onOpenChange={(open) => {
         const { payload } = handle.store.getSnapshot();
         if (open) {
-          setPath(payload?.initialPath || "./");
+          setPath(payload?.initialPath || "");
         } else {
-          setPath("./");
+          setPath("");
         }
       }}
     >
       {({ payload }) => {
-        const confirm = (currentPath?: string) => {
+        const confirm = async (currentPath?: string) => {
           if (currentPath !== undefined) {
-            payload?.onConfirm(currentPath);
+            await payload?.onConfirm(currentPath);
           }
 
           handle.close();
@@ -213,21 +221,23 @@ export function FileExplorerDialog() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data?.children.map((child) => {
-                      const Icon = FilesystemNodeIcon[child.nodeType];
+                    {data?.nodes.map((node) => {
+                      const Icon = node.isDirectory
+                        ? FilesystemNodeIcon[FileType.DIRECTORY]
+                        : FilesystemNodeIcon[FileType.FILE];
 
                       return (
                         <TableRow
-                          key={child.name}
-                          onClick={() => setSelectedPath(child.path)}
+                          key={node.absolutePath}
+                          onClick={() => setSelectedPath(node.absolutePath)}
                           onDoubleClick={() =>
-                            child.nodeType === FilesystemNodeType.DIRECTORY
-                              ? setPath(child.path)
-                              : confirm(child.path)
+                            node.isDirectory
+                              ? setPath(node.absolutePath)
+                              : confirm(node.absolutePath)
                           }
                           className={cn(
                             "cursor-pointer *:py-2 border-b last:border-b-0 first:border-t-0",
-                            selectedPath === child.path &&
+                            selectedPath === node.absolutePath &&
                               "bg-accent/30 hover:bg-accent/30",
                           )}
                         >
@@ -235,7 +245,7 @@ export function FileExplorerDialog() {
                             <Icon size={"1rem"} />
                           </TableCell>
                           <TableCell className="w-full select-none font-mono">
-                            {child.name}
+                            {node.fileName}
                           </TableCell>
                         </TableRow>
                       );

@@ -101,9 +101,12 @@ message GetPlatformMetadataRequest {
 
 // Request message for ListPlatformMetadata.
 message ListPlatformMetadataRequest {
-  // An optional list of Platform identifiers to filter the results by. If platform_ids is provided,
+  // An optional list of Platform resource names to filter the results by. If platforms is provided,
   // only metadata for the specified platforms will be returned.
-  repeated string platform_ids = 1 [(google.api.field_behavior) = OPTIONAL];
+  repeated string platforms = 1 [
+    (google.api.field_behavior) = OPTIONAL,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Platform"}
+  ];
 
   // An optional title to filter the results by. If title is provided, only metadata for platforms
   // with a title containing the specified string will be returned.

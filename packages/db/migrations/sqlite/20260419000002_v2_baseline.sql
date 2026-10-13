@@ -20,8 +20,9 @@ create table if not exists metadata_providers (
 
 create table if not exists libraries (
     id text not null primary key,
-    name text not null,
+    display_name text not null,
     structure_definition text not null,
+    file_root_id text not null references files (id) on delete cascade,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp
 );
@@ -48,6 +49,9 @@ create table if not exists files (
     created_at text,
     -- The *file system* last modified time of the file, not the time it was added to the database.
     updated_at text not null,
+    is_deleted boolean not null default false,
+    deleted_at text,
+
     constraint files_absolute_path_unique unique (absolute_path),
     constraint files_parent_id_file_name_unique unique (parent_id, file_name),
     constraint files_file_type_check check (file_type in (0, 1, 2)),
@@ -60,6 +64,8 @@ create table if not exists files (
 
 create table if not exists platforms (
     id text not null primary key,
+    library_id text references libraries (id) on delete cascade,
+    file_root_id text references files (id) on delete cascade,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     deleted_at text,
@@ -69,6 +75,8 @@ create table if not exists platforms (
 
 create table if not exists games (
     id text not null primary key,
+    platform_id text not null references platforms (id) on delete cascade,
+    file_root_id text references files (id) on delete cascade,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     deleted_at text,

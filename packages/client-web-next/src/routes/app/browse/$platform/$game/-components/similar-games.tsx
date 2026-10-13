@@ -29,8 +29,6 @@ export function SimilarGames({
     },
   });
 
-  console.log({ similarGameMetasQuery, metadata });
-
   const isPending = similarGameMetasQuery.isPending;
   const isError = similarGameMetasQuery.isError;
 

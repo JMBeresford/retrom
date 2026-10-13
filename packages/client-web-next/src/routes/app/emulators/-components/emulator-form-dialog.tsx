@@ -65,6 +65,8 @@ export function EmulatorFormDialog() {
       const action =
         modalState.action === "create" ? createEmulator : updateEmulator;
 
+      console.log("Submitting emulator form with value:", value);
+
       action(
         { emulator: value },
         {
@@ -136,8 +138,8 @@ export function EmulatorFormDialog() {
                   emulatorForm.handleSubmit().catch(console.error);
                 }}
               >
-                <emulatorForm.AppField name="name">
-                  {(field) => <field.NameField />}
+                <emulatorForm.AppField name="displayName">
+                  {(field) => <field.DisplayNameField />}
                 </emulatorForm.AppField>
 
                 <emulatorForm.AppField name="platforms">

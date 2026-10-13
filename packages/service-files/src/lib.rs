@@ -11,6 +11,7 @@ use retrom_db::{page_cursor::PageCursor, DbPool};
 use serde::{Deserialize, Serialize};
 use sqlx::QueryBuilder;
 use std::{
+    cmp::Reverse,
     path::{Path, PathBuf},
     sync::OnceLock,
 };
@@ -21,6 +22,7 @@ pub mod router;
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 struct FileQueryFilter {
     parent_id: Option<String>,
+    recursive: bool,
 }
 
 type FileCursor = PageCursor<FileQueryFilter>;
@@ -413,6 +415,7 @@ impl FileService for FileServiceHandlers {
 
                 let initial_filter = FileQueryFilter {
                     parent_id: parsed_parent_id,
+                    recursive: request.recursive(),
                 };
 
                 FileCursor {
@@ -426,16 +429,54 @@ impl FileService for FileServiceHandlers {
         let current_filter = cursor.filter.clone();
         let query_limit = cursor.page_size + 1; // Fetch one extra to determine if there's a next page
 
-        let mut builder = QueryBuilder::new("select * from files where parent_id ");
-        if let Some(ref parent_id) = current_filter.parent_id {
-            builder.push("= ");
-            builder.push_bind(parent_id);
-        } else {
-            builder.push("is null");
+        if current_filter.recursive && current_filter.parent_id.is_none() {
+            return Err(Status::invalid_argument(
+                "Recursive listing requires a parent_id",
+            ));
         }
 
-        builder.push(" order by file_name asc, id asc ");
-        builder.push("limit ");
+        let mut builder = if current_filter.recursive {
+            QueryBuilder::new(
+                r#"
+                with recursive descendants as (
+                    select id, parent_id
+                    from files
+                    where parent_id
+                "#,
+            )
+        } else {
+            QueryBuilder::new("select * from files where parent_id ")
+        };
+
+        if let Some(ref parent_id) = current_filter.parent_id {
+            builder.push(" = ");
+            builder.push_bind(parent_id);
+        } else {
+            builder.push(" is null ");
+        }
+
+        if current_filter.recursive {
+            builder.push(
+                r#"
+                    and is_deleted = false
+                    union all
+
+                    select f.id, f.parent_id
+                    from files f
+                    inner join descendants d on f.parent_id = d.id
+                    where f.is_deleted = false
+                )
+
+                select * from files
+                where id in (select id from descendants)
+                "#,
+            );
+        } else {
+            builder.push(" and is_deleted = false ");
+        }
+
+        builder.push(" order by absolute_path asc, id asc ");
+        builder.push(" limit ");
         builder.push_bind(query_limit);
         builder.push(" offset ");
         builder.push_bind(cursor.offset);
@@ -451,7 +492,7 @@ impl FileService for FileServiceHandlers {
 
         let next_page_token = if rows.len() > cursor.page_size as usize {
             let next_cursor = FileCursor {
-                offset: cursor.offset + cursor.page_size as u32,
+                offset: cursor.offset + cursor.page_size,
                 page_size: cursor.page_size,
                 filter: cursor.filter,
             };
@@ -602,9 +643,35 @@ impl FileService for FileServiceHandlers {
         request: Request<ExploreHostPathsRequest>,
     ) -> Result<Response<ExploreHostPathsResponse>, Status> {
         let request = request.into_inner();
-        let path = PathBuf::from(&request.absolute_path);
+        #[cfg(windows)]
+        if request.absolute_path.is_empty() {
+            let disks = sysinfo::Disks::new_with_refreshed_list();
 
-        let parent_absolute_path = path
+            let nodes: Vec<HostNode> = disks
+                .iter()
+                .map(|disk| {
+                    let absolute_path = disk.mount_point().to_string_lossy().to_string();
+                    let file_name = disk.name().to_string_lossy().to_string();
+
+                    HostNode {
+                        absolute_path,
+                        file_name,
+                        is_directory: true,
+                        is_tracked: false,
+                    }
+                })
+                .collect();
+
+            return Ok(Response::new(ExploreHostPathsResponse { nodes }));
+        }
+
+        let path = if request.absolute_path.is_empty() {
+            PathBuf::from("/")
+        } else {
+            PathBuf::from(&request.absolute_path)
+        };
+
+        let absolute_path = path
             .canonicalize()
             .map_err(|e| Status::invalid_argument(format!("Invalid path: {e}")))?
             .to_string_lossy()
@@ -621,13 +688,13 @@ impl FileService for FileServiceHandlers {
             where p.absolute_path = 
             "#,
         )
-        .push_bind(&parent_absolute_path)
+        .push_bind(&absolute_path)
         .build_query_scalar()
         .fetch_all(&self.db_pool)
         .await
         .map_err(|e| Status::internal(format!("Internal server error: {e}")))?;
 
-        let nodes: Vec<HostNode> = match path.read_dir().ok().map(|rd| {
+        let mut nodes: Vec<HostNode> = match path.read_dir().ok().map(|rd| {
             rd.filter_map(Result::ok)
                 .filter_map(|entry| {
                     let metadata = entry.metadata().ok()?;
@@ -655,10 +722,42 @@ impl FileService for FileServiceHandlers {
             None => {
                 return Err(Status::not_found(format!(
                     "Path not found or inaccessible: {}",
-                    parent_absolute_path
+                    absolute_path
                 )))
             }
         };
+
+        nodes.sort_by_key(|node| (Reverse(node.is_directory), node.file_name.to_lowercase()));
+
+        if let Some(parent) = path.parent() {
+            let parent_absolute_path = parent
+                .canonicalize()
+                .map_err(|e| Status::invalid_argument(format!("Invalid parent path: {e}")))?
+                .to_string_lossy()
+                .to_string();
+
+            let is_tracked: bool = QueryBuilder::new(
+                r#"
+                select exists (
+                    select 1 from files where absolute_path = 
+                "#,
+            )
+            .push_bind(&parent_absolute_path)
+            .push(")")
+            .build_query_scalar()
+            .fetch_one(&self.db_pool)
+            .await
+            .map_err(|e| Status::internal(format!("Internal server error: {e}")))?;
+
+            let parent_node = HostNode {
+                absolute_path: parent_absolute_path,
+                file_name: "..".to_string(),
+                is_directory: true,
+                is_tracked,
+            };
+
+            nodes.insert(0, parent_node);
+        }
 
         Ok(Response::new(ExploreHostPathsResponse { nodes }))
     }

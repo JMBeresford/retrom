@@ -34,6 +34,10 @@ fn get_name_matcher() -> &'static matchit::Router<&'static str> {
             .expect("Failed to insert libraries route");
 
         router
+            .insert("files/{file_id}", "Files handler")
+            .expect("Failed to insert files route");
+
+        router
     })
 }
 
@@ -47,6 +51,20 @@ fn match_library_id(name: &str) -> Result<String, Status> {
         Some(id) => Ok(id),
         None => Err(Status::invalid_argument(format!(
             "Library ID not found in name: {name}"
+        ))),
+    }
+}
+
+fn match_file_id(name: &str) -> Result<String, Status> {
+    let file_id = get_name_matcher()
+        .at(name)
+        .map(|matched| matched.params.get("file_id").map(|s| s.to_string()))
+        .map_err(|_| Status::invalid_argument("Invalid file name"))?;
+
+    match file_id {
+        Some(id) => Ok(id),
+        None => Err(Status::invalid_argument(format!(
+            "File ID not found in name: {name}"
         ))),
     }
 }
@@ -75,7 +93,7 @@ async fn file_resource_exists(db_pool: &DbPool, file_id: &str) -> bool {
 
     let path = PathBuf::from(&absolute_path);
 
-    match PathBuf::from(path).try_exists() {
+    match path.try_exists() {
         Ok(true) => true,
         Ok(false) => false,
         Err(why) => {
@@ -382,7 +400,7 @@ pub async fn list_libraries(
 
     let next_page_token = if library_ids.len() > cursor.page_size as usize {
         let next_cursor = LibraryCursor {
-            offset: cursor.offset + cursor.page_size as u32,
+            offset: cursor.offset + cursor.page_size,
             page_size: cursor.page_size,
             filter: cursor.filter,
         };
@@ -418,10 +436,12 @@ pub async fn create_library(
     db_pool: DbPool,
     request: CreateLibraryRequest,
 ) -> Result<Library, Status> {
-    let library = request
+    let library_id = uuid::Uuid::now_v7().to_string();
+    let mut library = request
         .library
         .ok_or_else(|| Status::invalid_argument("Library must be provided"))?;
 
+    library.name = format!("libraries/{library_id}");
     validate_library_payload(&library)?;
 
     let mut tx = db_pool
@@ -433,10 +453,11 @@ pub async fn create_library(
         "insert into libraries (id, file_root_id, display_name, structure_definition) values (",
     );
 
+    let file_root_id = match_file_id(&library.file_root)?;
+
     let mut separated = library_builder.separated(", ");
-    let library_id = uuid::Uuid::now_v7().to_string();
     separated.push_bind(&library_id);
-    separated.push_bind(&library.file_root);
+    separated.push_bind(&file_root_id);
     separated.push_bind(&library.display_name);
     separated.push_bind(&library.structure_definition);
     separated.push_unseparated(")");

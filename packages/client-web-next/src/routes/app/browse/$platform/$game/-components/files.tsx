@@ -2,10 +2,11 @@ import { Skeleton } from "@retrom/ui-next/components/skeleton";
 import { cn } from "@retrom/ui-next/lib/utils";
 import { useLauncherContext } from "./launcher-context";
 import type { HTMLAttributes, ReactNode } from "react";
-import { useListGameFiles } from "@/data/libraries/use-list-game-files";
 import { readableByteSize } from "@/common/files";
 import { useStatSaveFiles } from "@/data/saves/use-stat-save-files";
 import { useStatSaveStates } from "@/data/saves/use-stat-save-states";
+import { useGetGame } from "@/data/libraries/use-get-game";
+import { useListFiles } from "@/data/files/use-list-files";
 
 export type FilesProps = {} & HTMLAttributes<HTMLDivElement>;
 
@@ -29,12 +30,19 @@ export function Files({ className, ...props }: FilesProps) {
 function GameFiles() {
   const [launcherState] = useLauncherContext();
 
-  const gameFilesQuery = useListGameFiles({
+  const gameQuery = useGetGame({
     request: {
-      gameIds: [launcherState.gameId],
+      name: `games/${launcherState.gameId}`,
+    },
+  });
+
+  const gameFilesQuery = useListFiles({
+    request: {
+      parent: gameQuery.data?.fileRoot,
+      recursive: true,
     },
     options: {
-      select: (response) => response.gameFiles,
+      enabled: !!gameQuery.data?.fileRoot,
     },
   });
 
@@ -46,7 +54,7 @@ function GameFiles() {
     return <Skeleton className="h-full w-full" />;
   }
 
-  const bytes = gameFilesQuery.data.reduce(
+  const bytes = gameFilesQuery.data.files.reduce(
     (acc, curr) => acc + curr.byteSize,
     0n,
   );
@@ -56,7 +64,7 @@ function GameFiles() {
       <FileItem label="Total Size" value={readableByteSize(bytes)} />
       <FileItem
         label="File Count"
-        value={`${gameFilesQuery.data.length} file(s)`}
+        value={`${gameFilesQuery.data.files.length} file(s)`}
       />
     </div>
   );

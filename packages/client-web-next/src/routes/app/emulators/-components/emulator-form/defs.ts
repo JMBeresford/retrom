@@ -6,7 +6,7 @@ import {
 import { EmulatorSchema } from "@retrom/codegen/retrom/services/emulators/v1/emulator_pb";
 import { create } from "@bufbuild/protobuf";
 import { emulatorValidationSchema } from "./schema";
-import { NameField } from "./fields/name";
+import { DisplayNameField } from "./fields/display-name";
 import { PlatformsField } from "./fields/platforms";
 import { SubmitButton } from "./submit-button";
 import { OperatingSystemsField } from "./fields/operating-systems";
@@ -37,7 +37,7 @@ export const {
   fieldContext: emulatorFormFieldContext,
   formContext: emulatorFormContext,
   fieldComponents: {
-    NameField,
+    DisplayNameField,
     PlatformsField,
     OperatingSystemsField,
   },

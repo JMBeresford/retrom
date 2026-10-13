@@ -58,7 +58,7 @@ use std::{
     collections::{HashMap, HashSet},
     fmt::Display,
     future::Future,
-    sync::Arc,
+    sync::{Arc, OnceLock},
 };
 use tokio::{join, try_join};
 use tonic::{Code, Request, Response, Status};
@@ -70,6 +70,34 @@ pub(crate) mod descriptor_pool;
 mod game_metadata;
 mod platform_metadata;
 pub(super) mod router;
+
+static NAME_MATCH_ROUTER: OnceLock<matchit::Router<&'static str>> = OnceLock::new();
+
+fn get_name_matcher() -> &'static matchit::Router<&'static str> {
+    NAME_MATCH_ROUTER.get_or_init(|| {
+        let mut router = matchit::Router::new();
+
+        router
+            .insert("platforms/{platform_id}", "Platform handler")
+            .expect("Failed to insert platform route");
+
+        router
+    })
+}
+
+fn match_platform_id(name: &str) -> Result<String, Status> {
+    let platform_id = get_name_matcher()
+        .at(name)
+        .map(|matched| matched.params.get("platform_id").map(|s| s.to_string()))
+        .map_err(|_| Status::invalid_argument("Invalid platform name"))?;
+
+    match platform_id {
+        Some(id) => Ok(id),
+        None => Err(Status::invalid_argument(format!(
+            "Platform ID not found in name: {name}"
+        ))),
+    }
+}
 
 #[derive(Clone)]
 pub struct MetadataServiceHandlers {
@@ -787,11 +815,16 @@ impl MetadataService for MetadataServiceHandlers {
         request: Request<ListPlatformMetadataRequest>,
     ) -> Result<Response<ListPlatformMetadataResponse>, Status> {
         let request = request.into_inner();
-        let platform_ids = request.platform_ids;
+        let platform_ids = request
+            .platforms
+            .iter()
+            .map(|p| match_platform_id(p))
+            .collect::<Result<Vec<String>, _>>()?;
+
         let title = request.title;
 
         let mut builder = QueryBuilder::new(
-            "select distinct id from platform_metadata where platform_id is not null ",
+            "select distinct platform_id from platform_metadata where platform_id is not null ",
         );
 
         if !platform_ids.is_empty() {

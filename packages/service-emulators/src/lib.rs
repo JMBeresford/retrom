@@ -99,7 +99,7 @@ fn match_emulator_id(name: &str) -> Result<String, Status> {
     let emulator_id = get_name_matcher()
         .at(name)
         .map(|matched| matched.params.get("emulator_id").map(|s| s.to_string()))
-        .map_err(|_| Status::invalid_argument("Invalid emulator name"))?;
+        .map_err(|_| Status::invalid_argument(format!("Invalid emulator name: {name}")))?;
 
     match emulator_id {
         Some(id) => Ok(id),
@@ -270,7 +270,10 @@ fn emulator_rows_to_emulator(
         updated_at: row.updated_at,
         built_in: row.built_in,
         libretro_name: row.libretro_name,
-        platforms,
+        platforms: platforms
+            .into_iter()
+            .map(|p| format!("platforms/{}", p))
+            .collect(),
         operating_systems,
     }
 }
@@ -452,7 +455,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         let platform_ids = current_filter
             .platforms
             .iter()
-            .map(|p| match_emulator_id(p))
+            .map(|p| match_platform_id(p))
             .collect::<Result<Vec<String>, _>>()?;
 
         let mut query_builder = QueryBuilder::new("select distinct e.id from emulators e");
@@ -552,7 +555,7 @@ impl EmulatorService for EmulatorServiceHandlers {
             QueryBuilder::new("insert into emulators (id, display_name, built_in) values (")
                 .push_bind(&emulator_id)
                 .push(", ")
-                .push_bind(&emulator.name)
+                .push_bind(&emulator.display_name)
                 .push(", ")
                 .push_bind(false)
                 .push(") returning *")
@@ -564,7 +567,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         let platform_ids = emulator
             .platforms
             .iter()
-            .map(|p| match_emulator_id(p))
+            .map(|p| match_platform_id(p))
             .collect::<Result<Vec<String>, _>>()?;
 
         if !platform_ids.is_empty() {
@@ -629,7 +632,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         let mut tx = self.db_pool.begin().await.map_err(sqlx_err_to_status)?;
 
         let row: EmulatorRow = QueryBuilder::new("update emulators set display_name = ")
-            .push_bind(&emulator.name)
+            .push_bind(&emulator.display_name)
             .push(" where id = ")
             .push_bind(&emulator_id)
             .push(" returning *")
@@ -656,7 +659,7 @@ impl EmulatorService for EmulatorServiceHandlers {
         let platform_ids = emulator
             .platforms
             .iter()
-            .map(|p| match_emulator_id(p))
+            .map(|p| match_platform_id(p))
             .collect::<Result<Vec<String>, _>>()?;
 
         // Insert new platforms and operating systems
@@ -1130,8 +1133,8 @@ impl EmulatorService for EmulatorServiceHandlers {
             .default_emulator_profile
             .ok_or_else(|| Status::invalid_argument("Default emulator profile must be provided"))?;
 
-        let default_profile_id = match_emulator_id(&default_profile.name)?;
-        let profile_id = match_emulator_id(&default_profile.emulator_profile)?;
+        let default_profile_id = match_default_profile_id(&default_profile.name)?;
+        let profile_id = match_profile_id(&default_profile.emulator_profile)?;
 
         let row: DefaultEmulatorProfileRow =
             QueryBuilder::new("update default_emulator_profiles set emulator_profile = ")

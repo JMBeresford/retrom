@@ -11,7 +11,7 @@ import {
   useEmulatorFormFieldContext,
 } from "../defs";
 
-export function NameField() {
+export function DisplayNameField() {
   const form = useEmulatorFormContext({ ...emulatorFormOptions });
   const field = useEmulatorFormFieldContext<string>();
 

@@ -4,7 +4,7 @@ import { EmulatorService } from "@retrom/codegen/retrom/services/emulators/v1/em
 import { MetadataService } from "@retrom/codegen/retrom/services/metadata/v1/metadata_service_pb";
 import { ClientService } from "@retrom/codegen/retrom/services/clients/v1/clients_service_pb";
 import { JobService } from "@retrom/codegen/retrom/services/jobs/v1/job_service_pb";
-import { FileExplorerService } from "@retrom/codegen/retrom/services/file_explorer/v1/file_explorer_service_pb";
+import { FileService } from "@retrom/codegen/retrom/services/files/v1/file_service_pb";
 import { SavesService } from "@retrom/codegen/retrom/services/saves/v1/saves-service_pb";
 import { EmulatorSavesService } from "@retrom/codegen/retrom/services/saves/v2/emulator_saves_service_pb";
 import { ConfigService } from "@retrom/codegen/retrom/services/config/v1/config_service_pb";
@@ -17,7 +17,7 @@ export class RetromClient {
   readonly metadataClient;
   readonly clientsClient;
   readonly jobClient;
-  readonly fileExplorerClient;
+  readonly filesClient;
   readonly savesV1Client;
   readonly emulatorSavesClient;
   readonly configClient;
@@ -30,7 +30,7 @@ export class RetromClient {
     this.clientsClient = createClient(ClientService, transport);
     this.savesV1Client = createClient(SavesService, transport);
     this.jobClient = createClient(JobService, transport);
-    this.fileExplorerClient = createClient(FileExplorerService, transport);
+    this.filesClient = createClient(FileService, transport);
     this.emulatorSavesClient = createClient(EmulatorSavesService, transport);
     this.configClient = createClient(ConfigService, transport);
     this.igdbClient = createClient(IgdbService, transport);

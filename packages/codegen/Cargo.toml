@@ -1,6 +1,8 @@
 [package]
 name = "retrom-codegen"
+resolver = "3"
 version.workspace = true
+rust-version.workspace = true
 description = "Code generation for Retrom"
 authors.workspace = true
 repository.workspace = true
