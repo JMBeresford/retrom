@@ -1,6 +1,7 @@
 name: Build Nix Flake
 
 on:
+  pull_request:
   workflow_call:
     secrets:
       CACHIX_TOKEN:
@@ -23,6 +24,7 @@ jobs:
         run: nix-instantiate --eval -E '(import <nixpkgs> {}).lib.version'
 
       - uses: cachix/cachix-action@v17
+        if: github.event_name != 'pull_request'
         with:
           name: retrom
           authToken: "${{ secrets.CACHIX_TOKEN }}"
@@ -31,7 +33,7 @@ jobs:
         run: nix build .#retrom-unwrapped .#retrom-service
 
       - name: Pin release builds
-        if: github.ref_type == 'tag' && !contains(github.ref_name, '-')
+        if: github.event_name != 'pull_request' && github.ref_type == 'tag' && !contains(github.ref_name, '-')
         run: |
           for pkg in retrom-unwrapped retrom-service; do
             path="$(nix path-info ".#$pkg")"
