@@ -73,11 +73,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
     gst_all_1.gst-plugins-good
   ];
 
-  preBuild = ''
-    export CI=true
-    export NX_NO_CLOUD=true
-    export NX_DAEMON=false
+  env = {
+    CI = "true";
+    NX_NO_CLOUD = "true";
+    NX_DAEMON = "false";
+    OPENSSL_NO_VENDOR = "1";
+  };
 
+  preBuild = ''
     # See https://github.com/nrwl/nx/issues/22445
     faketty pnpm nx build:desktop retrom-client-web
   '';
