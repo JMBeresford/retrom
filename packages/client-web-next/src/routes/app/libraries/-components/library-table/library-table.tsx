@@ -16,6 +16,19 @@ import { useListLibraries } from "@/data/libraries/use-list-libraries";
 
 export const LibraryTableKey = "library-table" as const;
 
+function alignClassName(align?: "start" | "center" | "end") {
+  switch (align) {
+    case "start":
+      return "text-left";
+    case "center":
+      return "text-center";
+    case "end":
+      return "text-right";
+    default:
+      return "";
+  }
+}
+
 export function LibraryTable() {
   const { data, isPending, isError, error, isFetching } = useListLibraries({
     options: {
@@ -35,6 +48,9 @@ export function LibraryTable() {
   const table = useTable({
     key: LibraryTableKey,
     features: libraryTableFeatures,
+    defaultColumn: {
+      size: undefined,
+    },
     columns: libraryTableColumns,
     data: data ?? [],
     initialState: {
@@ -49,14 +65,21 @@ export function LibraryTable() {
 
   return (
     <ScrollArea className="w-full pb-2">
-      <Table className="w-max min-w-full">
+      <Table className="w-max min-w-full table-auto">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <TableHead
+                  style={{
+                    ["--col-size"]: header.column.columnDef.size
+                      ? `${header.column.columnDef.size}px`
+                      : "unset",
+                  }}
                   className={cn(
-                    "text-sm bg-background text-muted-foreground font-semibold",
+                    "w-(--col-size)",
+                    alignClassName(header.column.columnDef.meta?.align),
+                    "text-sm bg-background text-muted-foreground font-semibold min-w-0",
                     header.column.getIsPinned() &&
                       "sticky right-0 inset-shadow-[1px_0_0_0] inset-shadow-border",
                   )}
@@ -84,6 +107,8 @@ export function LibraryTable() {
                   <TableCell
                     key={cell.id}
                     className={cn(
+                      "min-w-0",
+                      alignClassName(cell.column.columnDef.meta?.align),
                       cell.column.getIsPinned() &&
                         "sticky right-0 bg-inherit text-center inset-shadow-[1px_0_0_0] inset-shadow-border",
                     )}
