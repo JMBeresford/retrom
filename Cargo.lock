@@ -9496,10 +9496,13 @@ version = "0.8.4"
 dependencies = [
  "axum",
  "futures",
+ "pbjson-types",
  "retrom-codegen",
+ "retrom-db",
  "retrom-service-common",
  "retrom-service-config",
  "retrom-telemetry",
+ "serde",
  "thiserror 1.0.69",
  "tokio",
  "tokio-stream",

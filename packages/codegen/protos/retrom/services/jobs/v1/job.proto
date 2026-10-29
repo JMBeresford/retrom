@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package retrom.services.jobs.v1;
+
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+
+// JobStatus represents the current status of a job.
+enum JobStatus {
+  // Unspecified status.
+  JOB_STATUS_UNSPECIFIED = 0;
+  // The job is pending and has not yet started.
+  JOB_STATUS_PENDING = 1;
+  // The job is currently running.
+  JOB_STATUS_RUNNING = 2;
+  // The job has completed successfully.
+  JOB_STATUS_COMPLETE = 3;
+  // The job has failed.
+  JOB_STATUS_FAILED = 4;
+}
+
+// Job represents a unit of work in Retrom.
+message Job {
+  option (google.api.resource) = {
+    type: "retrom.jmberesford.github.io/Job"
+    singular: "job"
+    plural: "jobs"
+    pattern: "jobs/{job}"
+    pattern: "libraries/{library}/jobs/{job}"
+  };
+
+  // Unique resource name of the job.
+  string name = 1 [
+    (google.api.field_behavior) = OUTPUT_ONLY,
+    (google.api.field_behavior) = IDENTIFIER
+  ];
+
+  // Optional resource name for the parent of this Job. This could be
+  // another Job, or a different resource type that this Job relates to.
+  //
+  // Format:
+  //   - jobs/{job_id}
+  //   - libraries/{library_id}
+  optional string parent = 2 [
+    (google.api.field_behavior) = OPTIONAL,
+    (google.api.resource_reference) = {child_type: "retrom.jmberesford.github.io/Job"}
+  ];
+
+  // Required display name for the job, which will be used in the UI and logs.
+  string display_name = 3 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.field_behavior) = IMMUTABLE
+  ];
+
+  // Current status of the job.
+  JobStatus status = 4 [(google.api.field_behavior) = REQUIRED];
+
+  // Completion ratio in the range [0.0, 1.0].
+  float percent_complete = 5 [(google.api.field_behavior) = REQUIRED];
+
+  // Optional message providing additional context or details about the job's progress.
+  optional string message = 6 [(google.api.field_behavior) = OPTIONAL];
+
+  // Timestamp when the job was created.
+  google.protobuf.Timestamp created_at = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Timestamp when the job was last updated.
+  google.protobuf.Timestamp updated_at = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Populated when the job reaches a terminal state (complete or failed).
+  optional google.protobuf.Timestamp finished_at = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+}

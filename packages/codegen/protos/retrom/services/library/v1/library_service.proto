@@ -5,6 +5,7 @@ package retrom.services.library.v1;
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
+import "retrom/services/jobs/v1/job.proto";
 import "retrom/services/library/v1/game.proto";
 import "retrom/services/library/v1/library.proto";
 import "retrom/services/library/v1/platform.proto";
@@ -12,7 +13,7 @@ import "retrom/services/library/v1/platform.proto";
 // LibraryService provides CRUD and maintenance operations for library entities.
 service LibraryService {
   // Starts a full library update scan.
-  rpc ScanLibrary(ScanLibraryRequest) returns (ScanLibraryResponse);
+  rpc ScanAllLibraries(ScanAllLibrariesRequest) returns (ScanAllLibrariesResponse);
   // Starts metadata refresh jobs.
   rpc UpdateLibraryMetadata(UpdateLibraryMetadataRequest) returns (UpdateLibraryMetadataResponse);
   // Deletes entries that no longer exist on disk.
@@ -54,13 +55,13 @@ service LibraryService {
   rpc DeleteGame(DeleteGameRequest) returns (Game);
 }
 
-// ScanLibraryRequest starts a full library scan/update.
-message ScanLibraryRequest {}
+// ScanAllLibrariesRequest starts a full library scan/update.
+message ScanAllLibrariesRequest {}
 
-// ScanLibraryResponse contains job IDs started by ScanLibrary.
-message ScanLibraryResponse {
-  // Job IDs started by the scan operation.
-  repeated string job_ids = 1;
+// ScanAllLibrariesResponse contains the job started by ScanAllLibraries.
+message ScanAllLibrariesResponse {
+  // Job started by the scan operation.
+  retrom.services.jobs.v1.Job job = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // UpdateLibraryMetadataRequest starts metadata refresh jobs.
@@ -69,10 +70,10 @@ message UpdateLibraryMetadataRequest {
   optional bool overwrite = 1;
 }
 
-// UpdateLibraryMetadataResponse contains metadata refresh job IDs.
+// UpdateLibraryMetadataResponse contains metadata refresh jobs.
 message UpdateLibraryMetadataResponse {
-  // Job IDs started by the scan operation.
-  repeated string job_ids = 1;
+  // Jobs started by the scan operation.
+  repeated retrom.services.jobs.v1.Job jobs = 1;
 }
 
 // DeleteMissingEntriesRequest removes records for missing filesystem entries.

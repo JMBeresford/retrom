@@ -6,14 +6,22 @@
 //! all persistence is performed locally with [`sqlx::QueryBuilder`].
 
 use crate::LibraryServiceHandlers;
+use pbjson_types::FieldMask;
 use retrom_codegen::retrom::services::{
-    jobs::v1::JobStatus,
+    jobs::v1::{
+        CreateJobRequest, DeleteJobRequest, GetJobRequest, Job, JobStatus, UpdateJobRequest,
+        WatchJobRequest,
+    },
     library::v1::{UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse},
     metadata::v1::{DownloadGameMetadataRequest, DownloadPlatformMetadataRequest},
 };
 use sqlx::QueryBuilder;
 use tonic::{Code, Request, Status};
 use tracing::{Instrument, Span};
+
+const UPDATE_PLATFORM_METADATA_JOB_NAME: &str = "jobs/update_platform_metadata";
+const UPDATE_GAME_METADATA_JOB_NAME: &str = "jobs/update_game_metadata";
+const UPDATE_EXTRA_METADATA_JOB_NAME: &str = "jobs/update_extra_metadata";
 
 pub async fn update_library_metadata(
     state: &LibraryServiceHandlers,
@@ -22,52 +30,108 @@ pub async fn update_library_metadata(
     let request = request.into_inner();
     let overwrite = request.overwrite();
 
-    let platform_metadata_job = state
-        .job_manager
-        .create_job(
-            "Updating Platform Metadata".to_string(),
-            "Discovering and updating metadata for all platforms".to_string(),
-        )
-        .await;
+    let mut job_svc_client = state.job_svc_client.clone();
 
-    let game_metadata_job = state
-        .job_manager
-        .create_job(
-            "Updating Game Metadata".to_string(),
-            "Discovering and updating metadata for all games".to_string(),
-        )
-        .await;
+    for job_name in [
+        UPDATE_PLATFORM_METADATA_JOB_NAME,
+        UPDATE_GAME_METADATA_JOB_NAME,
+        UPDATE_EXTRA_METADATA_JOB_NAME,
+    ] {
+        if let Ok(response) = job_svc_client
+            .get_job(GetJobRequest {
+                name: job_name.to_string(),
+            })
+            .await
+        {
+            let job = response.into_inner();
+            match job.status() {
+                JobStatus::Complete | JobStatus::Failed => {
+                    job_svc_client
+                        .delete_job(DeleteJobRequest {
+                            name: job_name.to_string(),
+                        })
+                        .await?;
+                }
+                _ => {
+                    return Err(Status::failed_precondition(format!(
+                        "A {job_name} job is already in progress"
+                    )));
+                }
+            }
+        };
+    }
 
-    let extra_metadata_job = state
-        .job_manager
-        .create_job(
-            "Updating Extra Metadata".to_string(),
-            "Discovering and updating extra metadata for all library entries".to_string(),
-        )
-        .await;
+    let platform_metadata_job = job_svc_client
+        .create_job(CreateJobRequest {
+            parent: None,
+            job_name: Some(UPDATE_PLATFORM_METADATA_JOB_NAME.to_string()),
+            job: Some(Job {
+                status: JobStatus::Pending as i32,
+                display_name: "Updating Platform Metadata".to_string(),
+                percent_complete: 0.0,
+                message: Some("Downloading platform metadata".to_string()),
+                ..Default::default()
+            }),
+        })
+        .await?
+        .into_inner();
+
+    let game_metadata_job = job_svc_client
+        .create_job(CreateJobRequest {
+            parent: None,
+            job_name: Some(UPDATE_GAME_METADATA_JOB_NAME.to_string()),
+            job: Some(Job {
+                status: JobStatus::Pending as i32,
+                display_name: "Updating Game Metadata".to_string(),
+                percent_complete: 0.0,
+                message: Some("Downloading game metadata".to_string()),
+                ..Default::default()
+            }),
+        })
+        .await?
+        .into_inner();
+
+    let extra_metadata_job = job_svc_client
+        .create_job(CreateJobRequest {
+            parent: None,
+            job_name: Some(UPDATE_EXTRA_METADATA_JOB_NAME.to_string()),
+            job: Some(Job {
+                status: JobStatus::Pending as i32,
+                display_name: "Updating Extra Metadata".to_string(),
+                percent_complete: 0.0,
+                message: Some("Downloading extra metadata".to_string()),
+                ..Default::default()
+            }),
+        })
+        .await?
+        .into_inner();
 
     let db_pool = state.db_pool.clone();
-    let platform_metadata_job_id = platform_metadata_job.id.clone();
-    let extra_metadata_job_id = extra_metadata_job.id.clone();
     let metadata_svc = state.metadata_svc_client.clone();
-    let job_manager = state.job_manager.clone();
 
     let current_span = Span::current();
 
     let platform_update_span = tracing::info_span!(parent: None, "update_platform_metadata_job");
     platform_update_span.follows_from(&current_span);
 
+    let mut job_svc_client = state.job_svc_client.clone();
     tokio::spawn(
         async move {
-            job_manager
-                .update_job(
-                    &platform_metadata_job_id,
-                    Some(0.0),
-                    Some(JobStatus::Running),
-                    None,
-                )
+            if let Err(why) = job_svc_client
+                .update_job(UpdateJobRequest {
+                    job: Some(Job {
+                        name: UPDATE_PLATFORM_METADATA_JOB_NAME.to_string(),
+                        status: JobStatus::Running as i32,
+                        ..Default::default()
+                    }),
+                    update_mask: Some(FieldMask {
+                        paths: vec!["status".to_string()],
+                    }),
+                })
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+            {
+                tracing::error!("Failed to update job status to running: {}", why);
+            };
 
             let all_platform_ids: Vec<String> = match QueryBuilder::new("select id from platforms")
                 .build_query_scalar()
@@ -124,32 +188,46 @@ pub async fn update_library_metadata(
                     _ => {}
                 };
 
-                job_manager
-                    .update_job(
-                        &platform_metadata_job_id,
-                        Some(percent_complete),
-                        if join_result.is_err() {
-                            Some(JobStatus::Failed)
-                        } else {
-                            None
-                        },
-                        None,
-                    )
+                if let Err(why) = job_svc_client
+                    .update_job(UpdateJobRequest {
+                        job: Some(Job {
+                            name: UPDATE_PLATFORM_METADATA_JOB_NAME.to_string(),
+                            percent_complete,
+                            ..Default::default()
+                        }),
+                        update_mask: Some(FieldMask {
+                            paths: vec!["percent_complete".to_string()],
+                        }),
+                    })
                     .await
-                    .map_err(|why| Status::internal(why.to_string()))?;
+                {
+                    tracing::error!("Failed to update job progress: {}", why);
+                };
 
                 completed_tasks += 1;
             }
 
-            job_manager
-                .update_job(
-                    &platform_metadata_job_id,
-                    Some(100.0),
-                    Some(JobStatus::Complete),
-                    None,
-                )
+            if let Err(why) = job_svc_client
+                .update_job(UpdateJobRequest {
+                    job: Some(Job {
+                        name: UPDATE_PLATFORM_METADATA_JOB_NAME.to_string(),
+                        status: JobStatus::Complete as i32,
+                        percent_complete: 100.0,
+                        message: Some("Platform metadata update complete".to_string()),
+                        ..Default::default()
+                    }),
+                    update_mask: Some(FieldMask {
+                        paths: vec![
+                            "status".to_string(),
+                            "percent_complete".to_string(),
+                            "message".to_string(),
+                        ],
+                    }),
+                })
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+            {
+                tracing::error!("Failed to update job status to complete: {}", why);
+            };
 
             Ok::<_, Status>(())
         }
@@ -157,33 +235,46 @@ pub async fn update_library_metadata(
     );
 
     let db_pool = state.db_pool.clone();
-    let job_manager = state.job_manager.clone();
-    let platform_metadata_job_id = platform_metadata_job.id.clone();
-    let game_metadata_job_id = game_metadata_job.id.clone();
     let metadata_svc = state.metadata_svc_client.clone();
 
     let game_update_span = tracing::info_span!(parent: None, "update_game_metadata_job");
     game_update_span.follows_from(&current_span);
 
+    let mut job_svc_client = state.job_svc_client.clone();
     tokio::spawn(
         async move {
-            let mut sub = job_manager.subscribe(platform_metadata_job_id);
+            let mut sub = job_svc_client
+                .watch_job(WatchJobRequest {
+                    name: UPDATE_PLATFORM_METADATA_JOB_NAME.to_string(),
+                })
+                .await?
+                .into_inner();
 
-            while let Ok(update) = sub.recv().await {
-                if update.status() == JobStatus::Complete {
+            while let Some(response) = sub.message().await? {
+                let job = response
+                    .job
+                    .ok_or_else(|| Status::internal("Received a watch job response with no job"))?;
+
+                if matches!(job.status(), JobStatus::Complete | JobStatus::Failed) {
                     break;
                 }
             }
 
-            job_manager
-                .update_job(
-                    &game_metadata_job_id,
-                    Some(0.0),
-                    Some(JobStatus::Running),
-                    None,
-                )
+            if let Err(why) = job_svc_client
+                .update_job(UpdateJobRequest {
+                    job: Some(Job {
+                        name: UPDATE_GAME_METADATA_JOB_NAME.to_string(),
+                        status: JobStatus::Running as i32,
+                        ..Default::default()
+                    }),
+                    update_mask: Some(FieldMask {
+                        paths: vec!["status".to_string()],
+                    }),
+                })
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+            {
+                tracing::error!("Failed to update job status to running: {}", why);
+            };
 
             let all_game_ids: Vec<String> = match QueryBuilder::new("select id from games")
                 .build_query_scalar()
@@ -239,55 +330,92 @@ pub async fn update_library_metadata(
                     _ => {}
                 };
 
-                job_manager
-                    .update_job(
-                        &game_metadata_job_id,
-                        Some(percent_complete),
-                        if join_result.is_err() {
-                            Some(JobStatus::Failed)
-                        } else {
-                            None
-                        },
-                        None,
-                    )
+                if let Err(why) = job_svc_client
+                    .update_job(UpdateJobRequest {
+                        job: Some(Job {
+                            name: UPDATE_GAME_METADATA_JOB_NAME.to_string(),
+                            percent_complete,
+                            ..Default::default()
+                        }),
+                        update_mask: Some(FieldMask {
+                            paths: vec!["percent_complete".to_string()],
+                        }),
+                    })
                     .await
-                    .map_err(|why| Status::internal(why.to_string()))?;
+                {
+                    tracing::error!("Failed to update job progress: {}", why);
+                };
 
                 completed_tasks += 1;
             }
 
-            job_manager
-                .update_job(
-                    &game_metadata_job_id,
-                    Some(100.0),
-                    Some(JobStatus::Complete),
-                    None,
-                )
+            if let Err(why) = job_svc_client
+                .update_job(UpdateJobRequest {
+                    job: Some(Job {
+                        name: UPDATE_GAME_METADATA_JOB_NAME.to_string(),
+                        status: JobStatus::Complete as i32,
+                        percent_complete: 100.0,
+                        message: Some("Game metadata update complete".to_string()),
+                        ..Default::default()
+                    }),
+                    update_mask: Some(FieldMask {
+                        paths: vec![
+                            "status".to_string(),
+                            "percent_complete".to_string(),
+                            "message".to_string(),
+                        ],
+                    }),
+                })
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+            {
+                tracing::error!("Failed to update job status to complete: {}", why);
+            };
 
             Ok::<_, Status>(())
         }
         .instrument(game_update_span),
     );
 
-    let job_manager = state.job_manager.clone();
     let db_pool = state.db_pool.clone();
 
     let extra_metadata_update_span = tracing::info_span!(parent: None, "update_extra_metadata_job");
     extra_metadata_update_span.follows_from(&current_span);
 
+    let mut job_svc_client = state.job_svc_client.clone();
     tokio::spawn(
         async move {
-            job_manager
-                .update_job(
-                    &extra_metadata_job_id,
-                    Some(0.0),
-                    Some(JobStatus::Running),
-                    None,
-                )
+            let mut sub = job_svc_client
+                .watch_job(WatchJobRequest {
+                    name: UPDATE_GAME_METADATA_JOB_NAME.to_string(),
+                })
+                .await?
+                .into_inner();
+
+            while let Some(response) = sub.message().await? {
+                let job = response
+                    .job
+                    .ok_or_else(|| Status::internal("Received a watch job response with no job"))?;
+
+                if matches!(job.status(), JobStatus::Complete | JobStatus::Failed) {
+                    break;
+                }
+            }
+
+            if let Err(why) = job_svc_client
+                .update_job(UpdateJobRequest {
+                    job: Some(Job {
+                        name: UPDATE_EXTRA_METADATA_JOB_NAME.to_string(),
+                        status: JobStatus::Running as i32,
+                        ..Default::default()
+                    }),
+                    update_mask: Some(FieldMask {
+                        paths: vec!["status".to_string()],
+                    }),
+                })
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+            {
+                tracing::error!("Failed to update job status to running: {}", why);
+            };
 
             let all_game_ids: Vec<String> = QueryBuilder::new("select id from games")
                 .build_query_scalar()
@@ -362,32 +490,46 @@ pub async fn update_library_metadata(
                     _ => {}
                 };
 
-                job_manager
-                    .update_job(
-                        &extra_metadata_job_id,
-                        Some(percent_complete),
-                        if join_result.is_err() {
-                            Some(JobStatus::Failed)
-                        } else {
-                            None
-                        },
-                        None,
-                    )
+                if let Err(why) = job_svc_client
+                    .update_job(UpdateJobRequest {
+                        job: Some(Job {
+                            name: UPDATE_EXTRA_METADATA_JOB_NAME.to_string(),
+                            percent_complete,
+                            ..Default::default()
+                        }),
+                        update_mask: Some(FieldMask {
+                            paths: vec!["percent_complete".to_string()],
+                        }),
+                    })
                     .await
-                    .map_err(|why| Status::internal(why.to_string()))?;
+                {
+                    tracing::error!("Failed to update job progress: {}", why);
+                };
 
                 completed_tasks += 1;
             }
 
-            job_manager
-                .update_job(
-                    &extra_metadata_job_id,
-                    Some(100.0),
-                    Some(JobStatus::Complete),
-                    None,
-                )
+            if let Err(why) = job_svc_client
+                .update_job(UpdateJobRequest {
+                    job: Some(Job {
+                        name: UPDATE_EXTRA_METADATA_JOB_NAME.to_string(),
+                        status: JobStatus::Complete as i32,
+                        percent_complete: 100.0,
+                        message: Some("Extra metadata update complete".to_string()),
+                        ..Default::default()
+                    }),
+                    update_mask: Some(FieldMask {
+                        paths: vec![
+                            "status".to_string(),
+                            "percent_complete".to_string(),
+                            "message".to_string(),
+                        ],
+                    }),
+                })
                 .await
-                .map_err(|why| Status::internal(why.to_string()))?;
+            {
+                tracing::error!("Failed to update job status to complete: {}", why);
+            };
 
             Ok::<(), Status>(())
         }
@@ -395,10 +537,6 @@ pub async fn update_library_metadata(
     );
 
     Ok(UpdateLibraryMetadataResponse {
-        job_ids: vec![
-            platform_metadata_job.id,
-            game_metadata_job.id,
-            extra_metadata_job.id,
-        ],
+        jobs: vec![platform_metadata_job, game_metadata_job, extra_metadata_job],
     })
 }

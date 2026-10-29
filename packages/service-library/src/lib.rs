@@ -5,13 +5,14 @@ use retrom_codegen::retrom::services::library::v1::{
     DeleteLibraryRequest, DeleteMissingEntriesRequest, DeleteMissingEntriesResponse,
     DeletePlatformRequest, Game, GetGameRequest, GetLibraryRequest, GetPlatformRequest, Library,
     ListGamesRequest, ListGamesResponse, ListLibrariesRequest, ListLibrariesResponse,
-    ListPlatformsRequest, ListPlatformsResponse, Platform, ScanLibraryRequest, ScanLibraryResponse,
-    UpdateGameRequest, UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse,
-    UpdateLibraryRequest, UpdatePlatformRequest,
+    ListPlatformsRequest, ListPlatformsResponse, Platform, ScanAllLibrariesRequest,
+    ScanAllLibrariesResponse, UpdateGameRequest, UpdateLibraryMetadataRequest,
+    UpdateLibraryMetadataResponse, UpdateLibraryRequest, UpdatePlatformRequest,
 };
 use retrom_db::DbPool;
 use retrom_service_common::grpc_clients::{
     files_svc::{get_file_svc_client, CommonFileServiceClient},
+    jobs_svc::{get_job_svc_client, CommonJobServiceClient},
     metadata_svc::{get_metadata_svc_client, CommonMetadataServiceClient},
 };
 use retrom_service_jobs::job_manager::JobManager;
@@ -32,29 +33,29 @@ pub(crate) mod scan_handlers;
 #[derive(Clone)]
 pub struct LibraryServiceHandlers {
     pub db_pool: DbPool,
-    pub job_manager: Arc<JobManager>,
     metadata_svc_client: CommonMetadataServiceClient,
     file_svc_client: CommonFileServiceClient,
+    job_svc_client: CommonJobServiceClient,
 }
 
 impl LibraryServiceHandlers {
-    pub fn new(db_pool: DbPool, job_manager: Arc<JobManager>) -> Self {
+    pub fn new(db_pool: DbPool) -> Self {
         Self {
             db_pool,
-            job_manager,
             metadata_svc_client: get_metadata_svc_client(None),
             file_svc_client: get_file_svc_client(None),
+            job_svc_client: get_job_svc_client(None),
         }
     }
 }
 
 #[tonic::async_trait]
 impl LibraryService for LibraryServiceHandlers {
-    async fn scan_library(
+    async fn scan_all_libraries(
         &self,
-        request: Request<ScanLibraryRequest>,
-    ) -> Result<Response<ScanLibraryResponse>, Status> {
-        scan_handlers::scan_library(self, request.into_inner())
+        request: Request<ScanAllLibrariesRequest>,
+    ) -> Result<Response<ScanAllLibrariesResponse>, Status> {
+        scan_handlers::scan_all_libraries(self, request.into_inner())
             .await
             .map(Response::new)
     }
