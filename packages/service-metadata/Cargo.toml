@@ -37,6 +37,7 @@ once_cell = { workspace = true }
 matchit = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 tonic-tracing-opentelemetry = { workspace = true }
+pbjson-types = { workspace = true }
 
 [features]
 default = ["client"]

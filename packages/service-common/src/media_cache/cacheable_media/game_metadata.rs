@@ -37,6 +37,7 @@ impl CacheableMetadata for GameMetadata {
                 cache_dir: cache_dir.clone(),
                 semantic_name: Some("cover".to_string()),
                 base_dir: None,
+                optimize: true,
             });
         }
 
@@ -46,6 +47,7 @@ impl CacheableMetadata for GameMetadata {
                 cache_dir: cache_dir.clone(),
                 semantic_name: Some("background".to_string()),
                 base_dir: None,
+                optimize: true,
             });
         }
 
@@ -55,6 +57,7 @@ impl CacheableMetadata for GameMetadata {
                 cache_dir: cache_dir.clone(),
                 semantic_name: Some("icon".to_string()),
                 base_dir: None,
+                optimize: true,
             });
         }
 
@@ -64,6 +67,7 @@ impl CacheableMetadata for GameMetadata {
                 cache_dir: cache_dir.clone(),
                 semantic_name: None,
                 base_dir: Some(PathBuf::from("screenshots")),
+                optimize: true,
             });
         });
 
@@ -73,6 +77,7 @@ impl CacheableMetadata for GameMetadata {
                 cache_dir: cache_dir.clone(),
                 semantic_name: None,
                 base_dir: Some(PathBuf::from("artwork")),
+                optimize: true,
             });
         });
 
@@ -82,6 +87,7 @@ impl CacheableMetadata for GameMetadata {
                 cache_dir: cache_dir.clone(),
                 semantic_name: None,
                 base_dir: Some(PathBuf::from("videos")),
+                optimize: false,
             });
         });
 

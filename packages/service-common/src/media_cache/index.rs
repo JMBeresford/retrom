@@ -275,6 +275,7 @@ mod tests {
             cache_dir: cache_dir.to_path_buf(),
             semantic_name: Some("cover".to_string()),
             base_dir: None,
+            optimize: false,
         };
 
         // Update entry in empty index
@@ -290,6 +291,7 @@ mod tests {
             cache_dir: cache_dir.to_path_buf(),
             semantic_name: Some("cover".to_string()),
             base_dir: None,
+            optimize: false,
         };
 
         manager.update_entry(&new_opts).await.unwrap();
@@ -314,6 +316,7 @@ mod tests {
             cache_dir: cache_dir.to_path_buf(),
             semantic_name: Some("cover".to_string()),
             base_dir: None,
+            optimize: false,
         };
 
         // Add an entry
@@ -339,6 +342,7 @@ mod tests {
             cache_dir: cache_dir.to_path_buf(),
             semantic_name: Some("image".to_string()),
             base_dir: Some(PathBuf::from("artwork")),
+            optimize: false,
         };
 
         let relative = manager.get_relative_path(&opts).await.unwrap();
@@ -358,6 +362,7 @@ mod tests {
             cache_dir: cache_dir.to_path_buf(),
             semantic_name: Some("cover".to_string()),
             base_dir: None,
+            optimize: false,
         };
 
         let background = CacheMediaOpts {
@@ -365,6 +370,7 @@ mod tests {
             cache_dir: cache_dir.to_path_buf(),
             semantic_name: Some("background".to_string()),
             base_dir: None,
+            optimize: false,
         };
 
         let artwork = CacheMediaOpts {
@@ -372,6 +378,7 @@ mod tests {
             cache_dir: cache_dir.to_path_buf(),
             semantic_name: Some("art1".to_string()),
             base_dir: Some(PathBuf::from("artwork")),
+            optimize: false,
         };
 
         // Add multiple entries
@@ -418,6 +425,7 @@ mod tests {
             cache_dir: cache_dir.to_path_buf(),
             semantic_name: Some("test".to_string()),
             base_dir: None,
+            optimize: false,
         };
 
         manager.update_entry(&opts).await.unwrap();
@@ -441,6 +449,7 @@ mod tests {
             cache_dir: cache_dir.to_path_buf(),
             semantic_name: Some("test".to_string()),
             base_dir: None,
+            optimize: false,
         };
 
         manager.update_entry(&new_opts).await.unwrap();

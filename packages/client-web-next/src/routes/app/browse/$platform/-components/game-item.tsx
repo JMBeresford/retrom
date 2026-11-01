@@ -6,6 +6,7 @@ import { GameItemMenu } from "./game-item-menu";
 import type { HTMLAttributes, PropsWithChildren } from "react";
 import logo from "@/assets/Logo-9x16.png?url";
 import { useGetGameMetadata } from "@/data/metadata/use-get-game-metadata";
+import { usePublicUrl } from "@/api-client/use-public-url";
 
 export type GameItemProps = PropsWithChildren<
   {
@@ -23,6 +24,8 @@ export function GameItem({ gameId, className, ...props }: GameItemProps) {
       name: `games/${gameId}/metadata`,
     },
   });
+
+  const publicCoverUrl = usePublicUrl(metadata?.coverUrl);
 
   if (isPending) {
     return <Skeleton className="h-30 w-full" />;
@@ -62,9 +65,9 @@ export function GameItem({ gameId, className, ...props }: GameItemProps) {
         )}
       >
         <img
-          src={metadata.coverUrl || logo}
+          src={publicCoverUrl || logo}
           className={cn(
-            metadata.coverUrl
+            publicCoverUrl
               ? "scale-100 group-hover:scale-110 object-contain"
               : "scale-105 group-hover:scale-115 object-cover",
             "aspect-3/4 transition-transform",

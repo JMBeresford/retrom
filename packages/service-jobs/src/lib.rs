@@ -46,7 +46,7 @@ impl JobService for JobServiceHandlers {
             .ok_or_else(|| Status::invalid_argument("Missing job"))?;
 
         let name = if let Some(ref name) = request.job_name {
-            format!("jobs/{name}")
+            name.clone()
         } else {
             let id = uuid::Uuid::now_v7().to_string();
             if let Some(ref parent) = &request.parent {
@@ -216,6 +216,10 @@ impl JobService for JobServiceHandlers {
 
         if update_mask.paths.contains(&"status".to_string()) {
             job.status = updated_job.status;
+
+            if matches!(job.status(), JobStatus::Complete | JobStatus::Failed) {
+                job.finished_at = Some(SystemTime::now().into());
+            }
         }
 
         if update_mask.paths.contains(&"message".to_string()) {

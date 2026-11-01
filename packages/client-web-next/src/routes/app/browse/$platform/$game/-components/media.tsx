@@ -17,6 +17,7 @@ import { useCallback, useLayoutEffect, useState } from "react";
 import { GameDetailCard } from "./game-detail-card";
 import type { HTMLAttributes } from "react";
 import type { GameMetadata } from "@retrom/codegen/retrom/services/metadata/v1/resources_pb";
+import { usePublicUrl } from "@/api-client/use-public-url";
 
 export type MediaProps = {
   metadata: GameMetadata;
@@ -74,32 +75,39 @@ export function Media({ metadata, className, ...props }: MediaProps) {
   );
 }
 
+function ImageCarouselItem({ image }: { image: string }) {
+  return (
+    <CarouselItem>
+      <div
+        className={cn(
+          "relative grid place-items-center w-full h-max",
+          "rounded overflow-hidden aspect-video",
+        )}
+      >
+        <img
+          src={image}
+          className={cn(
+            "absolute inset-0 blur-3xl z-[-1] object-center",
+            "min-h-full min-w-full",
+          )}
+        />
+        <img src={image} className="object-cover w-full" />
+      </div>
+    </CarouselItem>
+  );
+}
+
 function ImageCarousel({ images }: { images: Array<string> }) {
-  if (images.length === 0) {
+  const publicUrls = images.map(usePublicUrl);
+  if (publicUrls.length === 0) {
     return;
   }
 
   return (
     <Carousel>
       <CarouselContent className="aspect-video">
-        {images.map((image, idx) => (
-          <CarouselItem key={idx}>
-            <div
-              className={cn(
-                "relative grid place-items-center w-full h-max",
-                "rounded overflow-hidden aspect-video",
-              )}
-            >
-              <img
-                src={image}
-                className={cn(
-                  "absolute inset-0 blur-3xl z-[-1] object-center",
-                  "min-h-full min-w-full",
-                )}
-              />
-              <img src={image} className="object-cover w-full" />
-            </div>
-          </CarouselItem>
+        {publicUrls.map((image, idx) => (
+          <ImageCarouselItem key={idx} image={image} />
         ))}
       </CarouselContent>
 
@@ -108,6 +116,7 @@ function ImageCarousel({ images }: { images: Array<string> }) {
     </Carousel>
   );
 }
+
 function VideoCarousel({ videos }: { videos: Array<string> }) {
   return (
     <Carousel>

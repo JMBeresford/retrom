@@ -1,6 +1,7 @@
 import { cn } from "@retrom/ui-next/lib/utils";
 import type { GameMetadata } from "@retrom/codegen/retrom/services/metadata/v1/resources_pb";
 import type { HTMLAttributes } from "react";
+import { usePublicUrl } from "@/api-client/use-public-url";
 
 export type GameBackgroundProps = {
   metadata: GameMetadata;
@@ -12,6 +13,8 @@ export function GameBackground({
   className,
   ...props
 }: GameBackgroundProps) {
+  const publicUrl = usePublicUrl(metadata.backgroundUrl);
+
   return (
     <div
       className={cn(
@@ -22,7 +25,7 @@ export function GameBackground({
       {...props}
     >
       <img
-        src={metadata.backgroundUrl}
+        src={publicUrl}
         className={cn(
           "object-cover max-w-full h-full w-full blur-3xl",
           "animate-[spin_60s_linear_infinite]",

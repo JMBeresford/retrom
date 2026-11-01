@@ -14,16 +14,17 @@ use crate::metadata_service::{
 };
 use futures::{
     future::{join_all, try_join_all},
-    FutureExt,
+    stream, FutureExt, StreamExt,
 };
+use pbjson_types::FieldMask;
 use retrom_codegen::retrom::{
     providers::igdb::v1::{
         igdb_filters::{FilterOperator, FilterValue},
         IgdbFilters,
     },
     services::{
-        config::v1::{GetServerConfigRequest, MetadataConfig},
-        jobs::v1::JobStatus,
+        config::v1::GetServerConfigRequest,
+        jobs::v1::{CreateJobRequest, Job, JobStatus, UpdateJobRequest},
         metadata::v1::{
             metadata_service_server::MetadataService, BulkGetGameMetadataRequest,
             BulkGetGameMetadataResponse, BulkGetPlatformMetadataRequest,
@@ -44,15 +45,15 @@ use retrom_service_common::{
     grpc_clients::{
         config_svc::CommonConfigServiceClient,
         igdb_svc::{get_igdb_svc_client, CommonIgdbServiceClient},
+        jobs_svc::{get_job_svc_client, CommonJobServiceClient},
         steam_svc::{get_steam_svc_client, CommonSteamServiceClient},
     },
-    media_cache::{cacheable_media::CacheableMetadata, MediaCache},
+    media_cache::{cacheable_media::CacheableMetadata, get_public_url, CacheMediaOpts, MediaCache},
     metadata_providers::{
         igdb::provider::IGDB_PROVIDER_ID, steam::provider::STEAM_PROVIDER_ID, MANUAL_PROVIDER_ID,
     },
     retrom_dirs::RetromDirs,
 };
-use retrom_service_jobs::job_manager::JobManager;
 use sqlx::QueryBuilder;
 use std::{
     collections::{HashMap, HashSet},
@@ -103,26 +104,25 @@ fn match_platform_id(name: &str) -> Result<String, Status> {
 pub struct MetadataServiceHandlers {
     pub db_pool: DbPool,
     pub media_cache: Arc<MediaCache>,
-    pub job_manager: Arc<JobManager>,
     config_client: CommonConfigServiceClient,
     igdb_svc_client: CommonIgdbServiceClient,
     steam_svc_client: CommonSteamServiceClient,
+    job_svc_client: CommonJobServiceClient,
 }
 
 impl MetadataServiceHandlers {
     pub fn new(
         db_pool: DbPool,
         media_cache: Arc<MediaCache>,
-        job_manager: Arc<JobManager>,
         config_client: CommonConfigServiceClient,
     ) -> Self {
         Self {
             db_pool,
             media_cache,
-            job_manager,
             config_client,
             igdb_svc_client: get_igdb_svc_client(None),
             steam_svc_client: get_steam_svc_client(None),
+            job_svc_client: get_job_svc_client(None),
         }
     }
 
@@ -169,7 +169,7 @@ impl MetadataServiceHandlers {
         }))
     }
 
-    #[tracing::instrument(err, skip_all)]
+    #[tracing::instrument(skip_all)]
     async fn handle_get_game_metadata_by_provider(
         db_pool: DbPool,
         game_id: &str,
@@ -261,6 +261,41 @@ impl MetadataServiceHandlers {
             not_found_to_option(steam_metadata)?,
         );
 
+        let cacheable_media_opts_map: HashMap<String, CacheMediaOpts> =
+            [&manual_metadata, &igdb_metadata, &steam_metadata]
+                .iter()
+                .filter_map(|x| x.as_ref())
+                .flat_map(|meta| meta.get_cacheable_media_opts())
+                .map(|opts| (opts.remote_url.clone(), opts))
+                .collect();
+
+        let maybe_cached = async |remote_url: &str| {
+            let cached_path = match cacheable_media_opts_map.get(remote_url) {
+                Some(opts) => opts.get_item_path().await.ok(),
+                None => None,
+            };
+
+            let public_path = if let Some(cached_path) = cached_path {
+                if cached_path.exists() {
+                    get_public_url(&cached_path).ok()
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
+            public_path.or(Some(remote_url.to_string()))
+        };
+
+        let maybe_cached_vec = |urls: Vec<String>| {
+            stream::iter(urls)
+                .map(|url| async move { maybe_cached(&url).await })
+                .buffer_unordered(5)
+                .filter_map(|url| async move { url })
+                .collect::<Vec<String>>()
+        };
+
         // The most recently updated metadata should be used to determine the
         // updated_at timestamp for the returned metadata.
         let updated_at = Self::select_field_from_game_metadata(
@@ -288,37 +323,49 @@ impl MetadataServiceHandlers {
         .next()
         .cloned();
 
-        let cover_url = Self::select_field_from_game_metadata(
+        let cover_url = match Self::select_field_from_game_metadata(
             vec![&manual_metadata, &igdb_metadata, &steam_metadata],
             |m| m.cover_url.as_ref(),
         )
         .into_iter()
         .next()
-        .cloned();
+        {
+            Some(url) => maybe_cached(url).await,
+            None => None,
+        };
 
-        let background_url = Self::select_field_from_game_metadata(
+        let background_url = match Self::select_field_from_game_metadata(
             vec![&manual_metadata, &igdb_metadata, &steam_metadata],
             |m| m.background_url.as_ref(),
         )
         .into_iter()
         .next()
-        .cloned();
+        {
+            Some(url) => maybe_cached(url).await,
+            None => None,
+        };
 
-        let icon_url = Self::select_field_from_game_metadata(
+        let icon_url = match Self::select_field_from_game_metadata(
             vec![&manual_metadata, &igdb_metadata, &steam_metadata],
             |m| m.icon_url.as_ref(),
         )
         .into_iter()
         .next()
-        .cloned();
+        {
+            Some(url) => maybe_cached(url).await,
+            None => None,
+        };
 
-        let logo_url = Self::select_field_from_game_metadata(
+        let logo_url = match Self::select_field_from_game_metadata(
             vec![&manual_metadata, &igdb_metadata, &steam_metadata],
             |m| m.logo_url.as_ref(),
         )
         .into_iter()
         .next()
-        .cloned();
+        {
+            Some(url) => maybe_cached(url).await,
+            None => None,
+        };
 
         let release_date = Self::select_field_from_game_metadata(
             vec![&manual_metadata, &igdb_metadata, &steam_metadata],
@@ -328,23 +375,32 @@ impl MetadataServiceHandlers {
         .next()
         .cloned();
 
-        let artworks = [&manual_metadata, &igdb_metadata, &steam_metadata]
-            .iter()
-            .filter_map(|x| x.as_ref().map(|m| m.artworks.clone()))
-            .flatten()
-            .collect::<Vec<_>>();
+        let artworks = maybe_cached_vec(
+            [&manual_metadata, &igdb_metadata, &steam_metadata]
+                .iter()
+                .filter_map(|x| x.as_ref().map(|m| m.artworks.clone()))
+                .flatten()
+                .collect(),
+        )
+        .await;
 
-        let screenshots = [&manual_metadata, &igdb_metadata, &steam_metadata]
-            .iter()
-            .filter_map(|x| x.as_ref().map(|m| m.screenshots.clone()))
-            .flatten()
-            .collect::<Vec<_>>();
+        let screenshots = maybe_cached_vec(
+            [&manual_metadata, &igdb_metadata, &steam_metadata]
+                .iter()
+                .filter_map(|x| x.as_ref().map(|m| m.screenshots.clone()))
+                .flatten()
+                .collect(),
+        )
+        .await;
 
-        let videos = [&manual_metadata, &igdb_metadata, &steam_metadata]
-            .iter()
-            .filter_map(|x| x.as_ref().map(|m| m.videos.clone()))
-            .flatten()
-            .collect::<Vec<_>>();
+        let videos = maybe_cached_vec(
+            [&manual_metadata, &igdb_metadata, &steam_metadata]
+                .iter()
+                .filter_map(|x| x.as_ref().map(|m| m.videos.clone()))
+                .flatten()
+                .collect(),
+        )
+        .await;
 
         let links = [&manual_metadata, &igdb_metadata, &steam_metadata]
             .iter()
@@ -384,26 +440,47 @@ impl MetadataServiceHandlers {
     async fn cache_metadata<T: CacheableMetadata>(
         &self,
         metadata: &T,
-        job_name: &str,
-        config: Option<MetadataConfig>,
+        job_display_name: &str,
+        parent: &str,
     ) -> Result<(), Status> {
+        let mut config_svc_client = self.config_client.clone();
+        let server_config = config_svc_client
+            .get_server_config(GetServerConfigRequest {})
+            .await?
+            .into_inner();
+
+        let store_metadata = server_config
+            .metadata
+            .map(|m| m.store_metadata_locally)
+            .unwrap_or(false);
+
         if let Err(e) = metadata.clean_cache().await {
             error!("Failed to clean cache for metadata: {}", e);
         }
 
-        let tasks = metadata
-            .get_cacheable_media_opts()
-            .into_iter()
-            .map({
-                let cache = self.media_cache.clone();
-                move |opt| {
-                    let cache = cache.clone();
-                    async move { cache.cache_media_file(&opt, config).await }
-                }
-            })
-            .collect();
+        if store_metadata {
+            let tasks = metadata
+                .get_cacheable_media_opts()
+                .into_iter()
+                .map({
+                    let cache = self.media_cache.clone();
+                    move |opt| {
+                        let cache = cache.clone();
+                        async move { cache.cache_media_file(&opt, server_config.metadata).await }
+                    }
+                })
+                .collect();
 
-        spawn_cache_job(self.job_manager.clone(), job_name.to_string(), tasks).await;
+            spawn_cache_job(
+                &self.job_svc_client,
+                CacheJobOpts {
+                    job_display_name: job_display_name.to_string(),
+                    parent: parent.to_string(),
+                    tasks,
+                },
+            )
+            .await;
+        }
 
         Ok(())
     }
@@ -615,55 +692,96 @@ impl MetadataServiceHandlers {
     }
 }
 
-async fn spawn_cache_job<T, E, F>(job_manager: Arc<JobManager>, job_name: String, tasks: Vec<F>)
+struct CacheJobOpts<T, E, F>
 where
     T: Send + 'static,
     E: Display + Send + 'static,
     F: Future<Output = Result<T, E>> + Send + 'static,
 {
-    if tasks.is_empty() {
+    job_display_name: String,
+    parent: String,
+    tasks: Vec<F>,
+}
+
+async fn spawn_cache_job<T, E, F>(
+    job_svc_client: &CommonJobServiceClient,
+    opts: CacheJobOpts<T, E, F>,
+) where
+    T: Send + 'static,
+    E: Display + Send + 'static,
+    F: Future<Output = Result<T, E>> + Send + 'static,
+{
+    if opts.tasks.is_empty() {
         return;
     }
 
-    let job = job_manager
-        .create_job(job_name.clone(), "Queued media cache job".to_string())
-        .await;
+    let job_name = format!("{}/jobs/cache", opts.parent);
+    let mut job_svc_client = job_svc_client.clone();
+    if let Err(why) = job_svc_client
+        .create_job(CreateJobRequest {
+            parent: Some(opts.parent),
+            job_name: Some(job_name.clone()),
+            job: Some(Job {
+                display_name: opts.job_display_name,
+                status: JobStatus::Pending as i32,
+                ..Default::default()
+            }),
+        })
+        .await
+    {
+        tracing::error!("Failed to create job for caching media files: {}", why);
+        return;
+    };
 
-    let job_id = job.id;
-
-    let span = tracing::info_span!("cache_job", job_name = %job_name);
+    let span = tracing::info_span!("metadata_cache_job", job_name = %job_name);
     span.follows_from(Span::current());
 
     tokio::spawn(
         async move {
-            let _ = job_manager
-                .update_job(
-                    &job_id,
-                    Some(0.0),
-                    Some(JobStatus::Running),
-                    Some("Caching media files".to_string()),
-                )
-                .await;
+            if let Err(why) = job_svc_client
+                .update_job(UpdateJobRequest {
+                    job: Some(Job {
+                        name: job_name.clone(),
+                        status: JobStatus::Running as i32,
+                        ..Default::default()
+                    }),
+                    update_mask: Some(FieldMask {
+                        paths: vec!["status".to_string()],
+                    }),
+                })
+                .await
+            {
+                tracing::debug!("Failed to update job status to running: {}", why);
+            };
 
-            let results = join_all(tasks).await;
-            let failed = results.iter().any(Result::is_err);
+            let results = join_all(opts.tasks).await;
+            let mut failed = false;
             for result in results {
                 if let Err(err) = result {
                     tracing::warn!("Failed to cache media file: {}", err);
+                    failed = true;
                 }
             }
 
-            let _ = job_manager
-                .complete_job(
-                    &job_id,
-                    failed,
-                    if failed {
-                        "Media cache job completed with errors".to_string()
-                    } else {
-                        "Media cache job completed".to_string()
-                    },
-                )
-                .await;
+            if let Err(why) = job_svc_client
+                .update_job(UpdateJobRequest {
+                    job: Some(Job {
+                        name: job_name.clone(),
+                        status: if failed {
+                            JobStatus::Failed as i32
+                        } else {
+                            JobStatus::Complete as i32
+                        },
+                        ..Default::default()
+                    }),
+                    update_mask: Some(FieldMask {
+                        paths: vec!["status".to_string()],
+                    }),
+                })
+                .await
+            {
+                tracing::debug!("Failed to update job status to complete/failed: {}", why);
+            }
         }
         .instrument(span),
     );
@@ -737,41 +855,14 @@ impl MetadataService for MetadataServiceHandlers {
     ) -> Result<Response<GameMetadata>, Status> {
         let request = request.into_inner();
 
-        let mut config_svc_client = self.config_client.clone();
-        let config = config_svc_client
-            .get_server_config(GetServerConfigRequest {})
-            .await?
-            .into_inner();
-
-        let store_metadata = config
-            .metadata
-            .map(|m| m.store_metadata_locally)
-            .unwrap_or(false);
-
         if let Some(ref metadata) = request.metadata {
-            if let Err(e) = metadata.clean_cache().await {
-                error!("Failed to clean cache for metadata: {}", e);
-            }
+            self.cache_metadata(
+                metadata,
+                &format!("Caching Metadata: {}", metadata.title),
+                &metadata.name,
+            )
+            .await?;
         }
-
-        if store_metadata {
-            if let Some(ref metadata) = request.metadata {
-                let metadata_config = self
-                    .config_client
-                    .clone()
-                    .get_server_config(GetServerConfigRequest {})
-                    .await?
-                    .into_inner()
-                    .metadata;
-
-                self.cache_metadata(
-                    metadata,
-                    &format!("Cache Media Files For Game {}", metadata.game),
-                    metadata_config,
-                )
-                .await?;
-            }
-        };
 
         let metadata = Self::handle_update_game_metadata(
             self.db_pool.clone(),
@@ -870,41 +961,14 @@ impl MetadataService for MetadataServiceHandlers {
     ) -> Result<Response<PlatformMetadata>, Status> {
         let request = request.into_inner();
 
-        let mut config_svc_client = self.config_client.clone();
-        let config = config_svc_client
-            .get_server_config(GetServerConfigRequest {})
-            .await?
-            .into_inner();
-
-        let store_metadata = config
-            .metadata
-            .map(|m| m.store_metadata_locally)
-            .unwrap_or(false);
-
         if let Some(ref metadata) = request.metadata {
-            if let Err(e) = metadata.clean_cache().await {
-                error!("Failed to clean cache for metadata: {}", e);
-            }
+            self.cache_metadata(
+                metadata,
+                &format!("Caching Metadata: {}", metadata.title),
+                &metadata.name,
+            )
+            .await?;
         }
-
-        if store_metadata {
-            if let Some(ref metadata) = request.metadata {
-                let metadata_config = self
-                    .config_client
-                    .clone()
-                    .get_server_config(GetServerConfigRequest {})
-                    .await?
-                    .into_inner()
-                    .metadata;
-
-                self.cache_metadata(
-                    metadata,
-                    &format!("Cache Media Files For Platform {}", metadata.platform),
-                    metadata_config,
-                )
-                .await?;
-            }
-        };
 
         let metadata = Self::handle_update_platform_metadata(
             self.db_pool.clone(),
@@ -1170,6 +1234,21 @@ impl MetadataService for MetadataServiceHandlers {
             }
         }
 
+        let metadata = Self::handle_get_game_metadata(
+            self.db_pool.clone(),
+            GetGameMetadataRequest {
+                name: format!("games/{game_id}/metadata"),
+            },
+        )
+        .await?;
+
+        self.cache_metadata(
+            &metadata,
+            &format!("Caching Metadata: {}", metadata.title),
+            &metadata.name,
+        )
+        .await?;
+
         Ok(Response::new(DownloadGameMetadataResponse {}))
     }
 
@@ -1253,6 +1332,21 @@ impl MetadataService for MetadataServiceHandlers {
             )
             .await?;
         }
+
+        let metadata = Self::handle_get_platform_metadata(
+            self.db_pool.clone(),
+            GetPlatformMetadataRequest {
+                name: format!("platforms/{}/metadata", platform_id),
+            },
+        )
+        .await?;
+
+        self.cache_metadata(
+            &metadata,
+            &format!("Caching Metadata: {}", metadata.name),
+            &metadata.name,
+        )
+        .await?;
 
         Ok(Response::new(DownloadPlatformMetadataResponse {}))
     }

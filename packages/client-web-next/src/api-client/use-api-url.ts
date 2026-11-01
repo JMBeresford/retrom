@@ -7,8 +7,7 @@ export function useApiUrl() {
 
   return useMemo(() => {
     if (!IS_DESKTOP) {
-      const url = new URL(window.location.origin);
-      url.pathname = "/api/v1";
+      const url = new URL("/api/v1/", window.location.origin);
 
       return url;
     }

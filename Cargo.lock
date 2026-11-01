@@ -9554,6 +9554,7 @@ dependencies = [
  "futures",
  "matchit 0.9.2",
  "once_cell",
+ "pbjson-types",
  "prost-reflect",
  "retrom-codegen",
  "retrom-db",

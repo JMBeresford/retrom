@@ -4,7 +4,6 @@ use retrom_db::DbPool;
 use retrom_service_common::{
     grpc_clients::config_svc::CommonConfigServiceClient, media_cache::MediaCache,
 };
-use retrom_service_jobs::job_manager::JobManager;
 use std::sync::Arc;
 
 pub fn metadata_router(
@@ -12,12 +11,10 @@ pub fn metadata_router(
     config_svc_client: CommonConfigServiceClient,
 ) -> axum::Router {
     let media_cache = Arc::new(MediaCache::new());
-    let job_manager = Arc::new(JobManager::new());
 
     let svc = MetadataServiceServer::new(MetadataServiceHandlers::new(
         db_pool,
         media_cache,
-        job_manager,
         config_svc_client,
     ));
 

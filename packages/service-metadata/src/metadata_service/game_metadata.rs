@@ -169,7 +169,7 @@ pub fn similar_game_rows_from_data(
         .collect()
 }
 
-#[instrument(err, skip(conn))]
+#[instrument(skip(conn))]
 pub async fn select_game_metadata_row(
     conn: impl Executor<'_, Database = RetromDB>,
     game_id: &str,

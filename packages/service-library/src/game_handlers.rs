@@ -183,7 +183,7 @@ pub async fn list_games(
 
     let next_page_token = if rows.len() > cursor.page_size as usize {
         let next_cursor = GameCursor {
-            offset: cursor.offset + cursor.page_size as u32,
+            offset: cursor.offset + cursor.page_size,
             page_size: cursor.page_size,
             filter: cursor.filter,
         };

@@ -7,6 +7,7 @@ import {
 import { Input } from "@retrom/ui-next/components/input";
 import type { BaseFieldComponentProps } from "../field-component";
 import type { ReactNode } from "react";
+import { usePublicUrl } from "@/api-client/use-public-url";
 
 export type ImageUrlFieldProps = {
   children?:
@@ -25,15 +26,19 @@ export function ImageUrlField({ children, ...fieldProps }: ImageUrlFieldProps) {
     placeholder = "https://example.com/image.jpg",
     state,
   } = fieldProps;
+  const publicImageUrl = usePublicUrl(value);
   const isInvalid = state.meta.isTouched && !state.meta.isValid;
 
   return (
     <Field>
       {label && <FieldLabel>{label}</FieldLabel>}
 
-      {value && (
+      {publicImageUrl && (
         <div className="relative w-full p-4 rounded-md bg-input/50">
-          <img src={value} className="w-full max-h-40 object-contain" />
+          <img
+            src={publicImageUrl}
+            className="w-full max-h-40 object-contain"
+          />
         </div>
       )}
 
@@ -41,7 +46,6 @@ export function ImageUrlField({ children, ...fieldProps }: ImageUrlFieldProps) {
         {typeof children === "function" ? children(fieldProps) : children}
         <Input
           name={name}
-          value={value ?? ""}
           onBlur={onBlur}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}

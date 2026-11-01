@@ -14,7 +14,7 @@ impl CacheableMetadata for PlatformMetadata {
         Some(
             RetromDirs::new()
                 .media_dir()
-                .join("platforms")
+                .join("platform_metadata")
                 .join(&self.platform),
         )
     }
@@ -36,6 +36,7 @@ impl CacheableMetadata for PlatformMetadata {
                 cache_dir: cache_dir.clone(),
                 semantic_name: Some("background".to_string()),
                 base_dir: None,
+                optimize: true,
             });
         }
 
@@ -45,6 +46,7 @@ impl CacheableMetadata for PlatformMetadata {
                 cache_dir: cache_dir.clone(),
                 semantic_name: Some("logo".to_string()),
                 base_dir: None,
+                optimize: true,
             });
         }
 

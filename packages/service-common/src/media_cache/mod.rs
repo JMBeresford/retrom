@@ -71,6 +71,10 @@ pub struct CacheMediaOpts {
     /// Optional base directory within cache_dir for organizing files (e.g., "artwork", "screenshots")
     /// Must be a relative path - absolute paths will return an error
     pub base_dir: Option<PathBuf>,
+    /// Whether or not the media should be optimized (compressed) when cached.
+    /// Only certain media types (e.g., images) will be optimized. If false, the media will be
+    /// cached as-is.
+    pub optimize: bool,
 }
 
 /// Ensure the cache directory exists
@@ -91,7 +95,7 @@ async fn ensure_cache_dir(cache_dir: &PathBuf) -> Result<()> {
 pub fn get_public_url(cache_path: &Path) -> Result<String> {
     let media_dir = RetromDirs::new().media_dir();
     if let Ok(relative_path) = cache_path.strip_prefix(&media_dir) {
-        Ok(PathBuf::from_str("media")?
+        Ok(PathBuf::from_str("retrom://rest/public/media")?
             .join(relative_path)
             .to_string_lossy()
             .into())
@@ -286,46 +290,56 @@ impl MediaCache {
             .unwrap_or(ImageFormat::Jpeg.into());
 
         let thread_pool = self.compression_threads.clone();
-        let compressed_bytes = tokio::task::spawn_blocking(move || {
-            thread_pool.install(move || {
-                let initial_bytes = bytes.to_vec();
-                let converted_bytes = match ImageFormat::try_from(image_format).ok() {
-                    Some(ImageFormat::Jpeg) => {
-                        convert_in_memory(initial_bytes, &params, caesium::SupportedFileTypes::Jpeg)
-                    }
-                    Some(ImageFormat::Png) => {
-                        convert_in_memory(initial_bytes, &params, caesium::SupportedFileTypes::Png)
-                    }
-                    Some(ImageFormat::Webp) => {
-                        convert_in_memory(initial_bytes, &params, caesium::SupportedFileTypes::WebP)
-                    }
-                    _ => Ok(initial_bytes),
-                };
+        let final_bytes = if opts.optimize {
+            tokio::task::spawn_blocking(move || {
+                thread_pool.install(move || {
+                    let initial_bytes = bytes.to_vec();
+                    let converted_bytes = match ImageFormat::try_from(image_format).ok() {
+                        Some(ImageFormat::Jpeg) => convert_in_memory(
+                            initial_bytes,
+                            &params,
+                            caesium::SupportedFileTypes::Jpeg,
+                        ),
+                        Some(ImageFormat::Png) => convert_in_memory(
+                            initial_bytes,
+                            &params,
+                            caesium::SupportedFileTypes::Png,
+                        ),
+                        Some(ImageFormat::Webp) => convert_in_memory(
+                            initial_bytes,
+                            &params,
+                            caesium::SupportedFileTypes::WebP,
+                        ),
+                        _ => Ok(initial_bytes),
+                    };
 
-                let compressed_bytes = match converted_bytes {
-                    Ok(b) => compress_in_memory(b, &params),
-                    Err(e) => {
-                        warn!("Image conversion failed, using original bytes: {:?}", e);
-                        return bytes.to_vec();
-                    }
-                };
+                    let compressed_bytes = match converted_bytes {
+                        Ok(b) => compress_in_memory(b, &params),
+                        Err(e) => {
+                            warn!("Image conversion failed, using original bytes: {:?}", e);
+                            return bytes.to_vec();
+                        }
+                    };
 
-                match compressed_bytes {
-                    Ok(b) => b,
-                    Err(e) => {
-                        warn!("Image compression failed, using original bytes: {:?}", e);
-                        bytes.to_vec()
+                    match compressed_bytes {
+                        Ok(b) => b,
+                        Err(e) => {
+                            warn!("Image compression failed, using original bytes: {:?}", e);
+                            bytes.to_vec()
+                        }
                     }
-                }
+                })
             })
-        })
-        .instrument(tracing::info_span!(
-            "compression_task",
-            config = ?optimization_config
-        ))
-        .await?;
+            .instrument(tracing::info_span!(
+                "compression_task",
+                config = ?optimization_config
+            ))
+            .await?
+        } else {
+            bytes.to_vec()
+        };
 
-        fs::write(&cache_path, compressed_bytes).await?;
+        fs::write(&cache_path, final_bytes).await?;
 
         if let Err(e) = self.index_manager.update_entry(opts).await {
             warn!("Failed to update cache index for {cache_path:?}: {e:?}");
@@ -517,6 +531,7 @@ mod integration_tests {
             cache_dir: cache_dir.clone(),
             semantic_name: Some("cover".to_string()),
             base_dir: None,
+            optimize: false,
         };
 
         // Simulate caching a file (without actual HTTP request)
@@ -547,6 +562,7 @@ mod integration_tests {
             cache_dir: cache_dir.clone(),
             semantic_name: Some("artwork1".to_string()),
             base_dir: Some(PathBuf::from("artwork")),
+            optimize: false,
         };
 
         let artwork_file = opts_2.get_item_path().await.unwrap();
@@ -594,6 +610,7 @@ mod integration_tests {
                     cache_dir: cache_dir.clone(),
                     semantic_name: Some("test".to_string()),
                     base_dir: Some(PathBuf::from("/absolute/path")),
+                    optimize: false,
                 },
                 None,
             )
@@ -617,6 +634,7 @@ mod integration_tests {
             cache_dir: cache_dir.clone(),
             semantic_name: Some("cover".to_string()),
             base_dir: None,
+            optimize: false,
         };
 
         // Manually create a test file to simulate an existing cached file
@@ -661,6 +679,7 @@ mod integration_tests {
             cache_dir: cache_dir.clone(),
             semantic_name: Some("cover".to_string()),
             base_dir: None,
+            optimize: false,
         };
 
         let different_content = b"new image data";

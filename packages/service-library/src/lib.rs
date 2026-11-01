@@ -15,8 +15,6 @@ use retrom_service_common::grpc_clients::{
     jobs_svc::{get_job_svc_client, CommonJobServiceClient},
     metadata_svc::{get_metadata_svc_client, CommonMetadataServiceClient},
 };
-use retrom_service_jobs::job_manager::JobManager;
-use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
 #[cfg(test)]
