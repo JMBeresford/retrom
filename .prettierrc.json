@@ -6,6 +6,13 @@
         "quoteProps": "preserve",
         "trailingComma": "none"
       }
+    },
+    {
+      "files": ["*.md"],
+      "options": {
+        "printWidth": 100,
+        "proseWrap": "always"
+      }
     }
   ]
 }
