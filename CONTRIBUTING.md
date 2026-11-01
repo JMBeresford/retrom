@@ -1,11 +1,12 @@
 # CONTRIBUTING
 
-Thank you for considering contributing to Retrom! This document provides a high-level overview of the project and instructions for getting started as a contributor.
+Thank you for considering contributing to Retrom! This document provides a high-level overview of
+the project and instructions for getting started as a contributor.
 
-> [!WARNING]
-> If you are planning to contribute anything more complex than a simple bug/documentation fix,
-> please first begin with a **discussion** by opening a PR. This way we can align on the design/
-> proposed changes before you invest time in implementing something that might not be accepted.
+> [!WARNING] If you are planning to contribute anything more complex than a simple bug/documentation
+> fix, please first begin with a **discussion** by opening a PR. This way we can align on the
+> design/ proposed changes before you invest time in implementing something that might not be
+> accepted.
 
 ## Setting up a development environment
 
@@ -14,9 +15,12 @@ Thank you for considering contributing to Retrom! This document provides a high-
 - [Node.js](https://nodejs.org/) (LTS version recommended)
 - [Rust](https://www.rust-lang.org/tools/install) (stable toolchain)
 - [PNPM](https://pnpm.io/installation) for JavaScript package management
-- [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) (comes with Rust) for Rust package management
-- [PostgreSQL](https://www.postgresql.org/download/) (required for the database package)
-- [Perl](https://www.perl.org/) Required to compile some of the Rust packages. On Windows, Strawberry Perl is recommended.
+- [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) (comes with Rust) for
+  Rust package management
+- [PostgreSQL](https://www.postgresql.org/download/) (optionally required for the database package
+  using `feature=postgres`)
+- [Perl](https://www.perl.org/) Required to compile some of the Rust packages. On Windows,
+  Strawberry Perl is recommended.
 - [Protobuf](https://protobuf.dev/) Required to compile some of the Rust packages.
 
 ### Initial setup
@@ -44,11 +48,15 @@ Thank you for considering contributing to Retrom! This document provides a high-
 
 #### Build task for the retrom-service Rust app exits midway without error
 
-If when using NX to start the `retrom-service` Rust app the compiling job exits midway without displaying an error message, navigate to the `packages\service` directory and run the `cargo build` command directly from there. The build command might display additional information on why the Rust build is failing.
+If when using NX to start the `retrom-service` Rust app the compiling job exits midway without
+displaying an error message, navigate to the `packages\service` directory and run the `cargo build`
+command directly from there. The build command might display additional information on why the Rust
+build is failing.
 
 ## Monorepo structure
 
-This project is organized as a monorepo containing both TypeScript and Rust packages. Most packages are part of both the PNPM workspace (TypeScript) and Cargo workspace (Rust).
+This project is organized as a monorepo containing both TypeScript and Rust packages. Most packages
+are part of both the PNPM workspace (TypeScript) and Cargo workspace (Rust).
 
 ### Main directories
 
@@ -64,7 +72,8 @@ This project is organized as a monorepo containing both TypeScript and Rust pack
 - `plugins/` - Tauri plugins for the desktop client
   - Various plugins for functionality like launching games, Steam integration, etc.
 
-For more detailed information about specific packages, please refer to their respective README.md files.
+For more detailed information about specific packages, please refer to their respective README.md
+files.
 
 ## Tooling
 
@@ -128,7 +137,8 @@ This project uses several tools to manage development workflows:
   pnpm nx cargo:run retrom-service
   ```
 
-For more details on available commands, see the [Tooling](#tooling) section in the repository documentation.
+For more details on available commands, see the [Tooling](#tooling) section in the repository
+documentation.
 
 ## Code standards
 
@@ -160,7 +170,9 @@ Before committing changes, ensure:
 
 Agent sync
 
-This repository uses an agent-agnostic layout under `.agents/`. If your change touches agent skills (`.agents/skills/*`) or MCP servers (`.agents/mcp/servers.json`), please run the sync scripts locally and commit any generated outputs before opening a PR:
+This repository uses an agent-agnostic layout under `.agents/`. If your change touches agent skills
+(`.agents/skills/*`) or MCP servers (`.agents/mcp/servers.json`), please run the sync scripts
+locally and commit any generated outputs before opening a PR:
 
 Symlink targets: .claude, .cursor, .codex
 
@@ -169,7 +181,8 @@ Symlink targets: .claude, .cursor, .codex
 .agents/scripts/sync-mcp.sh
 ```
 
-Use `sync-mcp.sh check` in CI to validate generated MCP files; a dedicated GitHub Actions job will enforce this on pull requests.
+Use `sync-mcp.sh check` in CI to validate generated MCP files; a dedicated GitHub Actions job will
+enforce this on pull requests.
 
 ## Pushing changes
 
@@ -181,7 +194,8 @@ Use `sync-mcp.sh check` in CI to validate generated MCP files; a dedicated GitHu
 
 2. **Make small, focused commits**: Keep commits focused on a single logical change
 
-3. **Write clear commit messages**: Follow the [conventional commits](https://www.conventionalcommits.org/) format
+3. **Write clear commit messages**: Follow the
+   [conventional commits](https://www.conventionalcommits.org/) format
 
 4. **Run pre-commit checks**:
 
