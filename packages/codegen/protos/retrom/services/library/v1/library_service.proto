@@ -29,6 +29,8 @@ service LibraryService {
   rpc UpdateLibrary(UpdateLibraryRequest) returns (Library);
   // Deletes one library by ID.
   rpc DeleteLibrary(DeleteLibraryRequest) returns (google.protobuf.Empty);
+  // Start a scan for a specific library by ID.
+  rpc ScanLibrary(GetLibraryRequest) returns (retrom.services.jobs.v1.Job);
 
   // Gets one platform by ID.
   rpc GetPlatform(GetPlatformRequest) returns (Platform);
@@ -138,6 +140,15 @@ message UpdateLibraryRequest {
 // DeleteLibraryRequest deletes the specified library by ID.
 message DeleteLibraryRequest {
   // Unique resource name of the library to delete.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Library"}
+  ];
+}
+
+// ScanLibraryRequest starts a scan for the specified library by ID.
+message ScanLibraryRequest {
+  // Unique resource name of the library to scan.
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "retrom.jmberesford.github.io/Library"}
