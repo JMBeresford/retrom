@@ -77,8 +77,7 @@ export const filesQueries = {
     queryOptions({
       ...options,
       queryKey: filesQueryKeys.exploreHostPaths(request),
-      queryFn: async () =>
-        retromClient.filesClient.exploreHostPaths(request),
+      queryFn: async () => retromClient.filesClient.exploreHostPaths(request),
     }),
   registerHostFile: <TData>(
     request: MessageInitShape<typeof RegisterHostFileRequestSchema>,
@@ -93,7 +92,6 @@ export const filesQueries = {
     queryOptions({
       ...options,
       queryKey: filesQueryKeys.registerHostFile(request),
-      queryFn: async () =>
-        retromClient.filesClient.registerHostFile(request),
+      queryFn: async () => retromClient.filesClient.registerHostFile(request),
     }),
 };

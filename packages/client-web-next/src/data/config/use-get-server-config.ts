@@ -22,5 +22,7 @@ export function useGetServerConfig<TData>(
   const { request = {}, options = {} } = params;
   const retromClient = useRetromClient();
 
-  return useQuery(configQueries.getServerConfig(request, retromClient, options));
+  return useQuery(
+    configQueries.getServerConfig(request, retromClient, options),
+  );
 }
