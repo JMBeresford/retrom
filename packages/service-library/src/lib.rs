@@ -1,13 +1,17 @@
 use pbjson_types::Empty;
-use retrom_codegen::retrom::services::library::v1::{
-    library_service_server::LibraryService, BatchGetPlatformsRequest, BatchGetPlatformsResponse,
-    CreateGameRequest, CreateLibraryRequest, CreatePlatformRequest, DeleteGameRequest,
-    DeleteLibraryRequest, DeleteMissingEntriesRequest, DeleteMissingEntriesResponse,
-    DeletePlatformRequest, Game, GetGameRequest, GetLibraryRequest, GetPlatformRequest, Library,
-    ListGamesRequest, ListGamesResponse, ListLibrariesRequest, ListLibrariesResponse,
-    ListPlatformsRequest, ListPlatformsResponse, Platform, ScanAllLibrariesRequest,
-    ScanAllLibrariesResponse, UpdateGameRequest, UpdateLibraryMetadataRequest,
-    UpdateLibraryMetadataResponse, UpdateLibraryRequest, UpdatePlatformRequest,
+use retrom_codegen::retrom::services::{
+    jobs::v1::Job,
+    library::v1::{
+        library_service_server::LibraryService, BatchGetPlatformsRequest,
+        BatchGetPlatformsResponse, CreateGameRequest, CreateLibraryRequest, CreatePlatformRequest,
+        DeleteGameRequest, DeleteLibraryRequest, DeleteMissingEntriesRequest,
+        DeleteMissingEntriesResponse, DeletePlatformRequest, Game, GetGameRequest,
+        GetLibraryRequest, GetPlatformRequest, Library, ListGamesRequest, ListGamesResponse,
+        ListLibrariesRequest, ListLibrariesResponse, ListPlatformsRequest, ListPlatformsResponse,
+        Platform, ScanAllLibrariesRequest, ScanAllLibrariesResponse, UpdateGameRequest,
+        UpdateLibraryMetadataRequest, UpdateLibraryMetadataResponse, UpdateLibraryRequest,
+        UpdatePlatformRequest,
+    },
 };
 use retrom_db::DbPool;
 use retrom_service_common::grpc_clients::{
@@ -51,9 +55,36 @@ impl LibraryServiceHandlers {
 impl LibraryService for LibraryServiceHandlers {
     async fn scan_all_libraries(
         &self,
-        request: Request<ScanAllLibrariesRequest>,
+        _request: Request<ScanAllLibrariesRequest>,
     ) -> Result<Response<ScanAllLibrariesResponse>, Status> {
-        scan_handlers::scan_all_libraries(self, request.into_inner())
+        let library_ids = self.list_library_ids_for_scan().await?;
+        if library_ids.is_empty() {
+            return Err(Status::internal("No library content found"));
+        }
+
+        let mut jobs: Vec<Job> = Vec::with_capacity(library_ids.len());
+
+        for library_id in library_ids {
+            let request = Request::new(GetLibraryRequest {
+                name: format!("libraries/{library_id}"),
+            });
+
+            match self.scan_library(request).await {
+                Ok(response) => jobs.push(response.into_inner()),
+                Err(why) => {
+                    tracing::warn!("Failed to start scan for library {}: {}", library_id, why)
+                }
+            }
+        }
+
+        Ok(Response::new(ScanAllLibrariesResponse { jobs }))
+    }
+
+    async fn scan_library(
+        &self,
+        request: Request<GetLibraryRequest>,
+    ) -> Result<Response<Job>, Status> {
+        self.scan_library_inner(request.into_inner())
             .await
             .map(Response::new)
     }

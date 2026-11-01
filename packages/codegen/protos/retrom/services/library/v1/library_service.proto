@@ -62,8 +62,8 @@ message ScanAllLibrariesRequest {}
 
 // ScanAllLibrariesResponse contains the job started by ScanAllLibraries.
 message ScanAllLibrariesResponse {
-  // Job started by the scan operation.
-  retrom.services.jobs.v1.Job job = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Jobs started by the scan operation.
+  repeated retrom.services.jobs.v1.Job jobs = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // UpdateLibraryMetadataRequest starts metadata refresh jobs.
