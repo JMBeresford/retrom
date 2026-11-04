@@ -24,6 +24,7 @@ export declare class EmulatorJS {
   isSlowMotion: boolean;
   paused: boolean;
   coreName: Core;
+  fileName: string;
   saveFileExt: string | false;
   functions?: { [key: string]: Array<() => unknown> };
   touch?: boolean;
@@ -87,7 +88,8 @@ export declare class EmulatorJS {
   };
   requiresThreads(core: unknown): unknown;
   requiresWebGL2(core: unknown): unknown;
-  getCore(generic: unknown): unknown;
+  getCore(generic?: boolean): string;
+  getBaseFileName(force?: boolean): string;
   createElement(type: unknown): unknown;
   addEventListener(
     element: unknown,
@@ -114,7 +116,7 @@ export declare class EmulatorJS {
   createStartButton(): void;
   startButtonClicked(e: unknown): void;
   createText(): void;
-  localization(text: unknown, log: unknown): unknown;
+  localization(text: unknown, log?: unknown): string;
   checkCompression(data: unknown, msg: unknown, fileCbFunc: unknown): unknown;
   checkCoreCompatibility(version: unknown): void;
   startGameError(message: unknown): void;
@@ -133,6 +135,7 @@ export declare class EmulatorJS {
   downloadGamePatch(): unknown;
   downloadGameParent(): unknown;
   downloadBios(): unknown;
+  textElem: HTMLElement;
   downloadRom(): unknown;
   downloadFiles(): void;
   initModule(wasmData: unknown, threadData: unknown): void;
